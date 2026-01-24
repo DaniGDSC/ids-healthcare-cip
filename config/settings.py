@@ -1,44 +1,69 @@
-"""Global settings for IDS Healthcare CIP."""
+"""
+Global settings for Healthcare IDPS
+"""
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Project paths
 PROJECT_ROOT = Path(__file__).parent.parent
-CONFIG_DIR = PROJECT_ROOT / "config"
+DATA_DIR = PROJECT_ROOT / "data"
+MODELS_DIR = PROJECT_ROOT / "models"
+RESULTS_DIR = PROJECT_ROOT / "results"
+LOGS_DIR = PROJECT_ROOT / "logs"
 
-# Random seed for reproducibility
-RANDOM_SEED = 42
+# Create directories if they don't exist
+for directory in [DATA_DIR, MODELS_DIR, RESULTS_DIR, LOGS_DIR]:
+    directory.mkdir(parents=True, exist_ok=True)
 
-# Multiprocessing
-N_JOBS = -1  # Use all cores
+# Data paths
+RAW_DATA_DIR = DATA_DIR / "raw" / "CSE-CIC-IDS2018"
+PROCESSED_DATA_DIR = DATA_DIR / "processed"
+FEATURES_DATA_DIR = DATA_DIR / "features"
+LATENT_DATA_DIR = DATA_DIR / "latent"
+SPLITS_DIR = DATA_DIR / "splits"
 
-# Logging
-LOG_LEVEL = "INFO"
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# Model paths
+SCALER_DIR = MODELS_DIR / "scalers"
+PHASE3_MODEL_DIR = MODELS_DIR / "phase3"
+PHASE5_MODEL_DIR = MODELS_DIR / "phase5"
+
+# Results paths
+PHASE1_RESULTS = RESULTS_DIR / "phase1"
+PHASE2_RESULTS = RESULTS_DIR / "phase2"
+PHASE3_RESULTS = RESULTS_DIR / "phase3"
+PHASE4_RESULTS = RESULTS_DIR / "phase4"
+PHASE5_RESULTS = RESULTS_DIR / "phase5"
+REPORTS_DIR = RESULTS_DIR / "reports"
+
+# Global settings
+RANDOM_STATE = 42
+N_JOBS = -1  # Use all CPU cores
+
+# Train/Val/Test split ratios
+TRAIN_RATIO = 0.60
+VAL_RATIO = 0.20
+TEST_RATIO = 0.20
 
 # HIPAA Compliance
-HIPAA_ENABLED = True
-ENCRYPTION_KEY_PATH = os.getenv("ENCRYPTION_KEY_PATH", None)
+ENABLE_HIPAA_DEIDENTIFICATION = True
+PSEUDONYMIZE_IPS = True
+TRUNCATE_TIMESTAMPS = True
 
-# Dataset configuration
-DATASET_NAME = "CIC-IDS-2018"
-ATTACK_CLASSES = [
-    "Benign",
-    "FTP-BruteForce",
-    "SSH-BruteForce", 
-    "DoS-GoldenEye",
-    "DoS-Slowloris",
-    "DoS-SlowHTTPTest",
-    "DoS-Hulk",
-    "DDoS-LOIC-UDP",
-    "DDoS-HOIC",
-    "Brute-Force",
-    "SQL-Injection",
-    "Infiltration",
-    "Bot"
-]
+# Logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-# Memory optimization
-USE_REDUCED_PRECISION = True  # Use float32 instead of float64
-CHUNK_SIZE = 10000  # For chunked data processing
+# Performance
+USE_GPU = True
+GPU_MEMORY_FRACTION = 0.8  # Use 80% of GPU memory
+
+# Visualization
+DPI = 300  # High resolution for thesis figures
+FIGSIZE = (12, 8)
+
+print(f"✅ Settings loaded. Project root: {PROJECT_ROOT}")
