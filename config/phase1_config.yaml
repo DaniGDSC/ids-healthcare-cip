@@ -1,47 +1,61 @@
 # Phase 1: Data Preprocessing Configuration
 
-data:
-  input_dir: "data/raw/CSE-CIC-IDS2018"
-  output_dir: "data/processed"
-  splits_dir: "data/splits"
-  
-  # Data splitting ratios
-  train_ratio: 0.7
-  val_ratio: 0.15
-  test_ratio: 0.15
-  
-  # Stratification
-  stratify: true
-  stratify_column: "Label"
+data_loading:
+  file_pattern: "*.csv"
+  encoding: "utf-8"
+  low_memory: false
+  chunksize: null  # Load entire file at once
 
-preprocessing:
-  # Missing value handling
-  drop_na_threshold: 0.5  # Drop columns with >50% missing values
-  fill_strategy: "median"  # Options: mean, median, mode, zero
-  
-  # Infinite value handling
-  replace_inf: true
-  inf_replacement_value: 0
-  
-  # Normalization
-  normalization_method: "standard"  # Options: standard, minmax, robust
-  
-  # Feature engineering
+cleaning:
+  remove_missing_threshold: 0.95  # Remove columns with >95% missing
   remove_duplicates: true
-  remove_constant_features: true
-  constant_threshold: 0.01  # Variance threshold
+  remove_infinite: true
+  handle_negatives: true  # Remove negative values in positive-only features
 
-hipaa:
-  enabled: true
-  anonymize_ips: true
-  log_access: true
-  encryption_at_rest: false
+hipaa_compliance:
+  enable_deidentification: true
+  remove_columns:
+    - "Timestamp"
+    - "Src IP"
+    - "Dst IP"
+  pseudonymize_columns: []  # Already removed
+  truncate_timestamps: true  # Year/month only
+
+label_normalization:
+  mapping:
+    "Benign": "Benign"
+    "DDoS attacks-LOIC-HTTP": "DDoS"
+    "DDoS attacks-LOIC-UDP": "DDoS"
+    "DDoS attacks-HOIC": "DDoS"
+    "DoS attacks-GoldenEye": "DoS"
+    "DoS attacks-Slowloris": "DoS"
+    "DoS attacks-SlowHTTPTest": "DoS"
+    "DoS attacks-Hulk": "DoS"
+    "Brute Force -Web": "BruteForce"
+    "Brute Force -XSS": "BruteForce"
+    "SSH-Bruteforce": "BruteForce"
+    "FTP-BruteForce": "BruteForce"
+    "SQL Injection": "WebAttack"
+    "Infiltration": "Infiltration"
+    "Bot": "Bot"
+
+correlation_removal:
+  threshold: 0.95  # Remove features with correlation > 0.95
+  method: "pearson"
+
+splitting:
+  train_ratio: 0.60
+  val_ratio: 0.20
+  test_ratio: 0.20
+  stratify: true
+  random_state: 42
+
+normalization:
+  method: "standard"  # StandardScaler
+  with_mean: true
+  with_std: true
 
 output:
-  save_format: "npz"  # Compressed numpy format
+  save_csv: false  # Save space
+  save_npz: true   # Compressed format
   save_metadata: true
-  compression: true
-
-logging:
-  level: "INFO"
-  file: "logs/phase1.log"
