@@ -1,0 +1,108 @@
+# Phase 5: Classification Configuration
+
+data:
+  input_dir: "data/latent"
+  output_dir: "results/phase5"
+  model_dir: "models/phase5"
+  labels_source: "data/processed"  # Original labels
+
+classification:
+  # Multi-class classification
+  task: "multiclass"
+  
+  # Class balancing
+  balance_classes: true
+  balancing_method: "smote"  # Options: smote, adasyn, random_oversample, random_undersample
+  
+  # Models
+  models:
+    svm:
+      enabled: true
+      kernel: "rbf"
+      C: 1.0
+      gamma: "scale"
+      probability: true
+      cache_size: 1000
+      
+    decision_tree:
+      enabled: true
+      max_depth: 15
+      min_samples_split: 10
+      min_samples_leaf: 5
+      criterion: "gini"
+      
+    random_forest:
+      enabled: false
+      n_estimators: 100
+      max_depth: 15
+      min_samples_split: 10
+      
+    gradient_boosting:
+      enabled: false
+      n_estimators: 100
+      learning_rate: 0.1
+      max_depth: 5
+      
+  # Ensemble strategy
+  ensemble:
+    enabled: true
+    method: "voting"  # Options: voting, stacking
+    voting_type: "soft"  # Options: hard, soft
+    weights: null  # Auto-weight based on validation performance
+
+hyperparameter_tuning:
+  enabled: false
+  method: "grid_search"  # Options: grid_search, random_search, bayesian
+  cv_folds: 5
+  n_iter: 50  # For random search
+  
+evaluation:
+  # Metrics
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "roc_auc"
+    - "confusion_matrix"
+    
+  # Per-class metrics
+  per_class_metrics: true
+  
+  # Cross-validation
+  cross_validation: true
+  cv_folds: 5
+  
+visualization:
+  # Confusion matrix
+  plot_confusion_matrix: true
+  normalize_cm: true
+  
+  # ROC curves
+  plot_roc_curves: true
+  plot_per_class_roc: true
+  
+  # Feature importance
+  plot_feature_importance: true
+  
+  # Plot settings
+  plot_format: "png"
+  dpi: 300
+  
+reporting:
+  # Generate comprehensive report
+  generate_report: true
+  report_format: "markdown"  # Options: markdown, html, pdf
+  include_plots: true
+  
+  # Save predictions
+  save_predictions: true
+  save_probabilities: true
+
+output:
+  save_models: true
+  model_format: "joblib"
+
+logging:
+  level: "INFO"
+  file: "logs/phase5.log"

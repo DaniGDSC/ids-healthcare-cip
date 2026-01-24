@@ -1,0 +1,57 @@
+# Phase 4: Clustering Configuration
+
+data:
+  input_dir: "data/latent"
+  output_dir: "results/phase4"
+  
+clustering:
+  # DBSCAN parameters
+  dbscan:
+    eps: 0.5  # Maximum distance between samples
+    min_samples: 5  # Minimum samples in neighborhood
+    metric: "euclidean"  # Distance metric
+    algorithm: "auto"  # Options: auto, ball_tree, kd_tree, brute
+    leaf_size: 30
+    
+  # Alternative: HDBSCAN (if enabled)
+  hdbscan:
+    enabled: false
+    min_cluster_size: 5
+    min_samples: 5
+    metric: "euclidean"
+
+analysis:
+  # Cluster evaluation metrics
+  compute_silhouette: true
+  compute_davies_bouldin: true
+  compute_calinski_harabasz: true
+  
+  # Cluster profiling
+  profile_clusters: true
+  profile_top_features: 10
+  
+visualization:
+  # Dimensionality reduction for plotting
+  plot_method: "tsne"  # Options: tsne, umap, pca
+  tsne_perplexity: 30
+  umap_n_neighbors: 15
+  
+  # Plot settings
+  plot_clusters: true
+  plot_size: [12, 8]
+  plot_format: "png"
+  dpi: 300
+  
+  # Interactive plots
+  interactive: false
+  plotly_enabled: false
+
+output:
+  save_cluster_labels: true
+  save_cluster_centers: true
+  save_cluster_statistics: true
+  save_plots: true
+
+logging:
+  level: "INFO"
+  file: "logs/phase4.log"

@@ -1,0 +1,47 @@
+# Phase 1: Data Preprocessing Configuration
+
+data:
+  input_dir: "data/raw/CSE-CIC-IDS2018"
+  output_dir: "data/processed"
+  splits_dir: "data/splits"
+  
+  # Data splitting ratios
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  
+  # Stratification
+  stratify: true
+  stratify_column: "Label"
+
+preprocessing:
+  # Missing value handling
+  drop_na_threshold: 0.5  # Drop columns with >50% missing values
+  fill_strategy: "median"  # Options: mean, median, mode, zero
+  
+  # Infinite value handling
+  replace_inf: true
+  inf_replacement_value: 0
+  
+  # Normalization
+  normalization_method: "standard"  # Options: standard, minmax, robust
+  
+  # Feature engineering
+  remove_duplicates: true
+  remove_constant_features: true
+  constant_threshold: 0.01  # Variance threshold
+
+hipaa:
+  enabled: true
+  anonymize_ips: true
+  log_access: true
+  encryption_at_rest: false
+
+output:
+  save_format: "npz"  # Compressed numpy format
+  save_metadata: true
+  compression: true
+
+logging:
+  level: "INFO"
+  file: "logs/phase1.log"

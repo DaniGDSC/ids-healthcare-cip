@@ -1,0 +1,46 @@
+# Phase 2: Feature Selection Configuration
+
+data:
+  input_dir: "data/processed"
+  output_dir: "data/features"
+  
+feature_selection:
+  # Target number of features
+  n_features: 35
+  
+  # Information Gain
+  information_gain:
+    enabled: true
+    discretization_bins: 10
+    
+  # Random Forest Feature Importance
+  random_forest:
+    enabled: true
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 10
+    random_state: 42
+    
+  # Recursive Feature Elimination (RFE)
+  rfe:
+    enabled: true
+    estimator: "random_forest"  # Options: random_forest, svm, logistic
+    step: 5  # Remove 5 features at each iteration
+    
+  # Feature selection strategy
+  selection_strategy: "union"  # Options: union, intersection, voting
+  voting_threshold: 2  # If voting, feature must appear in N methods
+
+validation:
+  cross_validation: true
+  cv_folds: 5
+  scoring: "f1_macro"
+
+output:
+  save_format: "npz"
+  save_feature_names: true
+  save_importance_scores: true
+
+logging:
+  level: "INFO"
+  file: "logs/phase2.log"
