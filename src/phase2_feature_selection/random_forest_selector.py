@@ -2,6 +2,7 @@
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 from typing import List
 import logging
 
@@ -16,7 +17,9 @@ class RandomForestSelector:
                  n_estimators: int = 100,
                  max_depth: int = 10,
                  min_samples_split: int = 10,
-                 random_state: int = 42):
+                 random_state: int = 42,
+                 use_sampling: bool = False,
+                 sample_size: float = 0.15):
         """
         Initialize Random Forest selector.
         
@@ -26,8 +29,12 @@ class RandomForestSelector:
             max_depth: Maximum depth of trees
             min_samples_split: Minimum samples required to split
             random_state: Random seed
+            use_sampling: Train on stratified sample instead of full data
+            sample_size: Fraction of data to use for training (0.15 = 15%)
         """
         self.n_features = n_features
+        self.use_sampling = use_sampling
+        self.sample_size = sample_size
         self.rf = RandomForestClassifier(
             n_estimators=n_estimators,
             max_depth=max_depth,
@@ -47,9 +54,23 @@ class RandomForestSelector:
             y: Target labels
             feature_names: Optional feature names
         """
-        logger.info(f"Training Random Forest with {X.shape[1]} features...")
+        X_train = X
+        y_train = y
         
-        self.rf.fit(X, y)
+        # Use stratified sampling if enabled
+        if self.use_sampling:
+            logger.info(f"Using sampling: {int(self.sample_size*100)}% of {X.shape[0]} samples")
+            X_train, _, y_train, _ = train_test_split(
+                X, y,
+                train_size=self.sample_size,
+                stratify=y,
+                random_state=42
+            )
+            logger.info(f"  Sample size: {X_train.shape[0]} samples, {X_train.shape[1]} features")
+        
+        logger.info(f"Training Random Forest with {X_train.shape[1]} features...")
+        
+        self.rf.fit(X_train, y_train)
         self.feature_importances_ = self.rf.feature_importances_
         
         # Get top features

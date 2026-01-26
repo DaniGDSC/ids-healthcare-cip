@@ -1,10 +1,12 @@
-"""Run Phase 4: Clustering."""
+"""Run Phase 4: Clustering on anomalies only (DBSCAN)."""
 
 import sys
 import logging
 from pathlib import Path
 import yaml
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+import json
 
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
@@ -29,12 +31,27 @@ def load_config():
         return yaml.safe_load(f)
 
 
-def load_latent():
+def load_latent_and_labels():
     latent_dir = project_root / 'data' / 'latent'
-    train = np.load(latent_dir / 'train_latent_8d.npz')
-    val = np.load(latent_dir / 'val_latent_8d.npz')
-    test = np.load(latent_dir / 'test_latent_8d.npz')
-    return train['X'], val['X'], test['X']
+    features_dir = project_root / 'data' / 'features'
+    preds_dir = project_root / 'results' / 'phase3'
+    train_latent = np.load(latent_dir / 'train_latent_8d.npz')['X']
+    val_latent = np.load(latent_dir / 'val_latent_8d.npz')['X']
+    test_latent = np.load(latent_dir / 'test_latent_8d.npz')['X']
+
+    y_train = np.load(features_dir / 'train_35features.npz')['y']
+    y_val = np.load(features_dir / 'val_35features.npz')['y']
+    y_test = np.load(features_dir / 'test_35features.npz')['y']
+
+    pred_train = np.load(preds_dir / 'train_predictions.npy')
+    pred_val = np.load(preds_dir / 'val_predictions.npy')
+    pred_test = np.load(preds_dir / 'test_predictions.npy')
+
+    return (
+        train_latent, val_latent, test_latent,
+        y_train, y_val, y_test,
+        pred_train, pred_val, pred_test
+    )
 
 
 def main():
@@ -48,7 +65,25 @@ def main():
     logger.info('=' * 80)
 
     try:
-        X_train, X_val, X_test = load_latent()
+        (X_train_latent, X_val_latent, X_test_latent,
+         y_train, y_val, y_test,
+         pred_train, pred_val, pred_test) = load_latent_and_labels()
+
+        # STEP 1: Filter anomalies only (use validation set for clustering)
+        logger.info('\n' + '=' * 80)
+        logger.info('STEP 1: FILTER ANOMALIES (validation set)')
+        logger.info('=' * 80)
+        anomaly_mask_val = pred_val.reshape(-1) == 1
+        X_val_anom = X_val_latent[anomaly_mask_val]
+        y_val_anom = y_val[anomaly_mask_val]
+        logger.info(f"Validation anomalies: {X_val_anom.shape[0]}/{X_val_latent.shape[0]}")
+
+        # STEP 2: Normalize latent features to [0,1]
+        logger.info('\n' + '=' * 80)
+        logger.info('STEP 2: NORMALIZE LATENT (MinMaxScaler)')
+        logger.info('=' * 80)
+        scaler = MinMaxScaler()
+        X_val_norm = scaler.fit_transform(X_val_anom)
 
         db_cfg = config['clustering']['dbscan']
         clusterer = DBSCANClustering(
@@ -59,9 +94,10 @@ def main():
             leaf_size=db_cfg['leaf_size']
         )
 
-        labels_train = clusterer.fit_predict(X_train)
-        labels_val = clusterer.fit_predict(X_val)
-        labels_test = clusterer.fit_predict(X_test)
+        logger.info('\n' + '=' * 80)
+        logger.info('STEP 3: DBSCAN CLUSTERING (validation anomalies)')
+        logger.info('=' * 80)
+        labels_val = clusterer.fit_predict(X_val_norm)
 
         analyzer = ClusterAnalyzer(
             compute_silhouette=config['analysis']['compute_silhouette'],
@@ -69,18 +105,40 @@ def main():
             compute_ch=config['analysis']['compute_calinski_harabasz']
         )
 
-        metrics = analyzer.evaluate(X_val, labels_val)
+        # STEP 4/5: Analysis & metrics (purity, dominant label, centroids)
+        metrics = analyzer.evaluate(X_val_norm, labels_val)
+        stats, centroids = analyzer.cluster_stats(X_val_norm, labels_val, y_val_anom)
+
+        # STEP 6: Dimensionality reduction for visualization (optional) skipped here
 
         output_dir = project_root / config['data']['output_dir']
         output_dir.mkdir(parents=True, exist_ok=True)
-        np.save(output_dir / 'train_clusters.npy', labels_train)
-        np.save(output_dir / 'val_clusters.npy', labels_val)
-        np.save(output_dir / 'test_clusters.npy', labels_test)
 
-        # Save metrics
-        import json
+        # STEP 7: Save outputs
+        np.save(output_dir / 'val_clusters.npy', labels_val)
+        np.save(output_dir / 'cluster_centroids_8d.npy', centroids)
+
+        # Assignments CSV
+        import csv
+        assignments_path = output_dir / 'cluster_assignments.csv'
+        with open(assignments_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['index', 'cluster', 'true_label'])
+            for idx, (c, t) in enumerate(zip(labels_val, y_val_anom)):
+                writer.writerow([idx, c, t])
+
+        # Cluster statistics CSV
+        stats_path = output_dir / 'cluster_statistics.csv'
+        with open(stats_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['cluster', 'size', 'purity', 'dominant_label'])
+            for row in stats:
+                writer.writerow([row['cluster'], row['size'], row['purity'], row['dominant_label']])
+
         with open(output_dir / 'cluster_metrics.json', 'w') as f:
             json.dump(metrics, f, indent=2)
+        with open(output_dir / 'cluster_mapping.json', 'w') as f:
+            json.dump(stats, f, indent=2)
 
         logger.info('\n' + '=' * 80)
         logger.info('PHASE 4 COMPLETE!')

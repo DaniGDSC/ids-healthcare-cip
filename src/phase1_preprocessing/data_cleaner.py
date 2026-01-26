@@ -14,7 +14,11 @@ class DataCleaner:
     def __init__(self, 
                  drop_na_threshold: float = 0.5,
                  fill_strategy: str = 'median',
-                 replace_inf: bool = True):
+                 replace_inf: bool = True,
+                 inf_replacement_value: float = 0.0,
+                 remove_duplicates: bool = True,
+                 remove_constant_features: bool = True,
+                 constant_threshold: float = 0.01):
         """
         Initialize DataCleaner.
         
@@ -22,10 +26,18 @@ class DataCleaner:
             drop_na_threshold: Drop columns with missing rate > threshold
             fill_strategy: Strategy for filling missing values (mean/median/mode/zero)
             replace_inf: Whether to replace infinite values
+            inf_replacement_value: Value to substitute for infinite entries
+            remove_duplicates: Whether to drop duplicate rows
+            remove_constant_features: Whether to drop near-constant columns
+            constant_threshold: Variance threshold for constant feature removal
         """
         self.drop_na_threshold = drop_na_threshold
         self.fill_strategy = fill_strategy
         self.replace_inf = replace_inf
+        self.inf_replacement_value = inf_replacement_value
+        self.remove_duplicates_flag = remove_duplicates
+        self.remove_constant_features_flag = remove_constant_features
+        self.constant_threshold = constant_threshold
     
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -42,7 +54,8 @@ class DataCleaner:
         df = df.copy()
         
         # Remove duplicates
-        df = self._remove_duplicates(df)
+        if self.remove_duplicates_flag:
+            df = self._remove_duplicates(df)
         
         # Handle missing values
         df = self._handle_missing_values(df)
@@ -52,7 +65,8 @@ class DataCleaner:
             df = self._handle_infinite_values(df)
         
         # Remove constant features
-        df = self._remove_constant_features(df)
+        if self.remove_constant_features_flag:
+            df = self._remove_constant_features(df, threshold=self.constant_threshold)
         
         logger.info(f"Cleaning complete. Final shape: {df.shape}")
         
@@ -86,8 +100,12 @@ class DataCleaner:
             df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
         elif self.fill_strategy == 'median':
             df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].median())
+        elif self.fill_strategy == 'mode':
+            df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mode().iloc[0])
         elif self.fill_strategy == 'zero':
             df[numeric_cols] = df[numeric_cols].fillna(0)
+        else:
+            raise ValueError(f"Unsupported fill strategy: {self.fill_strategy}")
         
         # Drop any remaining rows with missing values
         rows_before = len(df)
@@ -106,8 +124,8 @@ class DataCleaner:
         inf_count = np.isinf(df[numeric_cols]).sum().sum()
         
         if inf_count > 0:
-            logger.info(f"Replacing {inf_count} infinite values with 0")
-            df[numeric_cols] = df[numeric_cols].replace([np.inf, -np.inf], 0)
+            logger.info(f"Replacing {inf_count} infinite values with {self.inf_replacement_value}")
+            df[numeric_cols] = df[numeric_cols].replace([np.inf, -np.inf], self.inf_replacement_value)
         
         return df
     

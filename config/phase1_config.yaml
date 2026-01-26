@@ -14,14 +14,42 @@ cleaning:
 
 hipaa_compliance:
   enable_deidentification: true
+  anonymize_ips: true
+  log_access: true
+  remove_phi_columns: true
   remove_columns:
     - "Timestamp"
+    - "Flow Timestamp"
     - "Src IP"
     - "Dst IP"
+    - "Source IP"
+    - "Destination IP"
+    - "Source Port"
+    - "Destination Port"
   pseudonymize_columns: []  # Already removed
   truncate_timestamps: true  # Year/month only
+  encryption_at_rest: false
+
+correlation_removal:
+  enabled: true
+  threshold: 0.95  # Remove features with correlation > 0.95
+  method: "pearson"
+
+splitting:
+  train_ratio: 0.60
+  val_ratio: 0.20
+  test_ratio: 0.20
+  stratify: true
+  random_state: 42
+
+normalization:
+  method: "standard"  # StandardScaler
+  with_mean: true
+  with_std: true
 
 label_normalization:
+  enabled: true
+  drop_unknown: true
   mapping:
     "Benign": "Benign"
     "DDoS attacks-LOIC-HTTP": "DDoS"
@@ -38,22 +66,6 @@ label_normalization:
     "SQL Injection": "WebAttack"
     "Infiltration": "Infiltration"
     "Bot": "Bot"
-
-correlation_removal:
-  threshold: 0.95  # Remove features with correlation > 0.95
-  method: "pearson"
-
-splitting:
-  train_ratio: 0.60
-  val_ratio: 0.20
-  test_ratio: 0.20
-  stratify: true
-  random_state: 42
-
-normalization:
-  method: "standard"  # StandardScaler
-  with_mean: true
-  with_std: true
 
 output:
   save_csv: false  # Save space

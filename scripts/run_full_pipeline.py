@@ -1,14 +1,40 @@
 """Run full IDS Healthcare CIP pipeline."""
 
 import subprocess
+import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def run(cmd: str):
+    """
+    Execute a command safely without shell injection vulnerabilities.
+    
+    Args:
+        cmd: Command string to execute (will be parsed into arguments)
+    
+    Raises:
+        subprocess.CalledProcessError: If command execution fails
+    """
     print(f"\n>>> {cmd}")
-    subprocess.check_call(cmd, shell=True, cwd=PROJECT_ROOT)
+    # Parse command string into argument list safely
+    args = cmd.split()
+    try:
+        result = subprocess.run(
+            args,
+            cwd=PROJECT_ROOT,
+            shell=False,
+            check=True,
+            capture_output=False
+        )
+        return result.returncode
+    except subprocess.CalledProcessError as e:
+        print(f"\n❌ Error: Command failed with exit code {e.returncode}")
+        sys.exit(e.returncode)
+    except FileNotFoundError as e:
+        print(f"\n❌ Error: Command not found - {e}")
+        sys.exit(1)
 
 
 def main():

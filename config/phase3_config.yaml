@@ -5,6 +5,14 @@ data:
   output_dir: "data/latent"
   model_dir: "models/phase3"
   
+ml_filter:
+  n_estimators: 100
+  max_depth: 12
+  min_samples_split: 8
+  random_state: 42
+  n_jobs: -1
+  recall_target: 0.995
+  
 architecture:
   # Input dimension (from Phase 2)
   input_dim: 35
@@ -12,30 +20,29 @@ architecture:
   # Latent space dimension
   latent_dim: 8
   
-  # Encoder layers
+  # Encoder layers (per spec: 28 → 16)
   encoder_layers:
-    - 32
+    - 28
     - 16
-    - 8
     
-  # Decoder layers (mirror of encoder)
+  # Decoder layers (mirror per spec: 16 → 28)
   decoder_layers:
     - 16
-    - 32
+    - 28
     
   # Activation functions
   activation: "relu"
   output_activation: "sigmoid"
   
   # Regularization
-  dropout_rate: 0.2
+  dropout_rate: 0.3
   use_batch_normalization: true
   l2_regularization: 0.001
 
 training:
   # Optimization
   optimizer: "adam"
-  learning_rate: 0.001
+  learning_rate: 0.0005
   batch_size: 256
   epochs: 100
   
@@ -48,10 +55,7 @@ training:
     
   # Learning rate reduction
   reduce_lr:
-    enabled: true
-    patience: 10
-    factor: 0.5
-    min_lr: 0.00001
+    enabled: false
     
   # Validation
   validation_split: 0.0  # Use separate validation set
@@ -81,5 +85,5 @@ output:
 logging:
   level: "INFO"
   file: "logs/phase3.log"
-  tensorboard: true
+  tensorboard: false
   tensorboard_dir: "results/phase3/tensorboard"

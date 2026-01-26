@@ -8,7 +8,7 @@ clustering:
   # DBSCAN parameters
   dbscan:
     eps: 0.5  # Maximum distance between samples
-    min_samples: 5  # Minimum samples in neighborhood
+    min_samples: 50  # Minimum samples in neighborhood (per spec)
     metric: "euclidean"  # Distance metric
     algorithm: "auto"  # Options: auto, ball_tree, kd_tree, brute
     leaf_size: 30
