@@ -23,13 +23,14 @@ feature_selection:
   stage2_random_forest:
     enabled: true
     n_features: 40  # Target for Stage 2
-    n_estimators: 100
+    n_estimators: 100  # Full production mode; set to 20-50 for exploratory runs
     max_depth: 20
     min_samples_split: 10
-    # OPTIMIZATION: Sampling-based approximation
+    # OPTIMIZATION: Sampling-based approximation (default enabled)
     use_sampling: true  # Train on stratified sample of full dataset
-    sample_size: 0.15   # Use 15% of data for training (~60k samples if 332k total)
-    # Est. time: ~3 minutes with sampling (vs ~15 min full data)
+    sample_size: 0.15   # Use 15% of data (tunable: 0.10-0.20 for speedup trade-off)
+    exploratory: false  # Set true for fast feature exploration (uses 20 estimators)
+    # Est. time: ~3 minutes with sampling, exploratory ~1 min (vs ~15 min full data)
     # Validation: Feature importance computed from sample, applied to full dataset
     
   # STAGE 3: Recursive Feature Elimination (RFE)

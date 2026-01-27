@@ -46,20 +46,28 @@ training:
   batch_size: 256
   epochs: 100
   
-  # Early stopping
+  # Early stopping (enabled by default for stability)
   early_stopping:
     enabled: true
     patience: 15
     monitor: "val_loss"
     restore_best_weights: true
     
-  # Learning rate reduction
+  # Learning rate reduction (enabled by default for fine-tuning)
   reduce_lr:
-    enabled: false
+    enabled: true
+    monitor: "val_loss"
+    patience: 5
+    factor: 0.5
+    min_lr: 0.000001
     
   # Validation
   validation_split: 0.0  # Use separate validation set
   shuffle: true
+  
+  # Performance optimizations
+  mixed_precision: false  # Set to true for GPU speedup (requires GPU with FP16 support)
+  use_xla: false          # Set to true for XLA JIT compilation speedup (requires TensorFlow 2.4+)
 
 anomaly_detection:
   # Threshold optimization

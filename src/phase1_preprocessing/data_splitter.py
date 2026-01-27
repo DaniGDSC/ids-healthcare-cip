@@ -13,9 +13,9 @@ class DataSplitter:
     """Split data into train/validation/test sets."""
     
     def __init__(self,
-                 train_ratio: float = 0.7,
-                 val_ratio: float = 0.15,
-                 test_ratio: float = 0.15,
+                 train_ratio: float = 0.6,
+                 val_ratio: float = 0.2,
+                 test_ratio: float = 0.2,
                  random_state: int = 42,
                  stratify: bool = True):
         """

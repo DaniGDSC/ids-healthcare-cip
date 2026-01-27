@@ -43,7 +43,7 @@ class HIPAACompliance:
         
         for col in ip_columns:
             if col in df.columns:
-                df[col] = df[col].apply(self._hash_value)
+                df[col] = self._hash_series(df[col])
                 logger.info(f"  Anonymized column: {col}")
         
         return df
@@ -64,6 +64,23 @@ class HIPAACompliance:
         # Convert to string and hash
         hash_object = hashlib.sha256(str(value).encode())
         return hash_object.hexdigest()[:16]  # Return first 16 chars
+
+    def _hash_series(self, series: pd.Series) -> pd.Series:
+        """Vectorized hashing with de-duplication to avoid per-row Python calls."""
+        if series.empty:
+            return series
+
+        mask = series.notna()
+        if not mask.any():
+            return series
+
+        values = series.loc[mask].astype(str)
+        unique_values = pd.unique(values)
+        hashed_lookup = {val: hashlib.sha256(val.encode()).hexdigest()[:16] for val in unique_values}
+
+        result = series.copy()
+        result.loc[mask] = values.map(hashed_lookup)
+        return result
     
     def log_data_access(self, 
                        user: str, 

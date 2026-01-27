@@ -3,7 +3,8 @@
 import sys
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Tuple, Callable
 import yaml
 import numpy as np
 import pandas as pd
@@ -18,6 +19,7 @@ from src.phase1_preprocessing import (
     DataLoader, DataCleaner, DataSplitter, 
     Normalizer, HIPAACompliance
 )
+from src.phase1_preprocessing.interfaces import DataLoaderProtocol, PreprocessingStep
 
 # Default label mapping to reduce CIC-IDS-2018 labels to 7 categories
 DEFAULT_LABEL_MAPPING: Dict[str, str] = {
@@ -83,6 +85,7 @@ class Phase1Pipeline:
         self.corr_removed: List[str] = []
         self.dropped_counts: Dict[str, int] = {}
         self.mapping = config.get('label_normalization', {}).get('mapping', DEFAULT_LABEL_MAPPING)
+        self.loader_name = config.get('data', {}).get('loader', 'default')
 
     @staticmethod
     def load_config(config_path: Path) -> dict:
@@ -100,10 +103,43 @@ class Phase1Pipeline:
             ]
         )
 
+    def _get_data_loader(self) -> DataLoaderProtocol:
+        loaders = {
+            'default': DataLoader,
+        }
+        if self.loader_name not in loaders:
+            raise ValueError(f"Unknown data loader '{self.loader_name}'")
+        return loaders[self.loader_name](
+            self.data_dir,
+            io_retries=self.config.get("io_retries", 1),
+            io_retry_delay_seconds=self.config.get("io_retry_delay_seconds", 1),
+            read_timeout_seconds=self.config.get("read_timeout_seconds", 0),
+            quarantine_dir=self.config.get("quarantine_dir"),
+            skip_on_error=self.config.get("skip_on_error", False),
+        )
+
     def _load_data(self) -> pd.DataFrame:
         self.logger.info("\n--- Step 1: Loading Data ---")
-        loader = DataLoader(self.data_dir)
-        df = loader.load_csv_files()
+        loader = self._get_data_loader()
+        
+        # Use smart loading with automatic chunking for large files
+        # This prevents memory exhaustion on large datasets
+        use_chunking = self.config.get('data', {}).get('use_smart_loading', True)
+        memory_threshold = self.config.get('data', {}).get('memory_threshold_mb', 2000)
+        io_workers = self.config.get('data', {}).get('io_workers', 1)
+        
+        if use_chunking:
+            self.logger.info(f"Smart loading enabled (memory threshold: {memory_threshold} MB)")
+            df = loader.smart_load(
+                pattern="*.csv",
+                memory_threshold_mb=memory_threshold,
+                chunksize=200_000,
+                io_workers=io_workers
+            )
+        else:
+            self.logger.info("Using direct loading (legacy mode)")
+            df = loader.load_csv_files(use_smart_loading=False, io_workers=io_workers)
+        
         self.logger.info(f"Loaded dataset shape: {df.shape}")
         return df
 
@@ -131,6 +167,24 @@ class Phase1Pipeline:
                 record_count=len(df)
             )
         return df
+
+    @dataclass
+    class _Step:
+        name: str
+        func: Callable[[pd.DataFrame], pd.DataFrame]
+        enabled: bool = True
+
+        def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+            return self.func(df)
+
+    def _build_preprocessing_steps(self) -> List[PreprocessingStep]:
+        steps: List[PreprocessingStep] = [
+            self._Step("clean_data", self._clean_data, True),
+            self._Step("hipaa_deid", self._hipaa_deid, self.config['hipaa'].get('enabled', True)),
+            self._Step("correlation_filter", self._correlation_filter, self.config.get('correlation_filter', {}).get('enabled', True)),
+            self._Step("label_normalization", self._normalize_labels, True),
+        ]
+        return steps
 
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         self.logger.info("\n--- Step 2: Data Cleaning ---")
@@ -261,10 +315,13 @@ class Phase1Pipeline:
 
     def run(self):
         df = self._load_data()
-        df = self._clean_data(df)
-        df = self._hipaa_deid(df)
-        df = self._correlation_filter(df)
-        df = self._normalize_labels(df)
+        steps = self._build_preprocessing_steps()
+        for step in steps:
+            if not step.enabled:
+                self.logger.info(f"Skipping step: {step.name}")
+                continue
+            self.logger.info(f"Running step: {step.name}")
+            df = step.apply(df)
         X, y, feature_names = self._separate_features_labels(df)
         X_train, X_val, X_test, y_train, y_val, y_test = self._split_data(X, y)
         X_train_norm, X_val_norm, X_test_norm = self._normalize_features(X_train, X_val, X_test)

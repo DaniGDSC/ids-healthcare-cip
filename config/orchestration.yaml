@@ -1,0 +1,29 @@
+orchestration:
+  resume: true  # Skip completed phases if checkpoint exists
+  checkpoints_dir: "results/checkpoints"
+  phases:
+    - name: phase1
+      command: "python src/phase1_preprocessing/run_phase1.py"
+      timeout_seconds: 3600
+      retries: 2
+      retry_delay_seconds: 60
+    - name: phase2
+      command: "python src/phase2_feature_selection/run_phase2.py"
+      timeout_seconds: 3600
+      retries: 2
+      retry_delay_seconds: 60
+    - name: phase3
+      command: "python src/phase3_autoencoder/run_phase3.py"
+      timeout_seconds: 5400
+      retries: 1
+      retry_delay_seconds: 120
+    - name: phase4
+      command: "python src/phase4_clustering/run_phase4.py"
+      timeout_seconds: 3600
+      retries: 1
+      retry_delay_seconds: 60
+    - name: phase5
+      command: "python src/phase5_classification/run_phase5.py"
+      timeout_seconds: 3600
+      retries: 1
+      retry_delay_seconds: 60

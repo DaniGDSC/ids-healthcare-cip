@@ -157,7 +157,9 @@ def main():
             early_stopping=trainer_cfg['early_stopping'],
             reduce_lr=trainer_cfg['reduce_lr'],
             validation_split=trainer_cfg['validation_split'],
-            shuffle=trainer_cfg['shuffle']
+            shuffle=trainer_cfg['shuffle'],
+            mixed_precision=trainer_cfg.get('mixed_precision', False),
+            use_xla=trainer_cfg.get('use_xla', False)
         )
 
         trainer.compile_model(model)

@@ -5,6 +5,22 @@ data_loading:
   encoding: "utf-8"
   low_memory: false
   chunksize: null  # Load entire file at once
+  
+  # Advanced data loading options
+  use_smart_loading: true  # Auto-chunk large files
+  memory_threshold_mb: 2000  # Chunk if files exceed 2GB
+  io_workers: 4  # Parallel file reads to reduce synchronous I/O bottlenecks
+  loader: "default"  # Pluggable data loader strategy
+  io_retries: 2  # Retry count for transient I/O errors
+  io_retry_delay_seconds: 2  # Delay between retries
+  read_timeout_seconds: 30  # Timeout per file read (POSIX only)
+  skip_on_error: true  # Skip/quarantine files that keep failing
+  quarantine_dir: "data/quarantine"
+  
+  # Data directories
+  input_dir: "data/raw/CSE-CIC-IDS2018"
+  output_dir: "data/processed"
+  splits_dir: "data/splits"
 
 cleaning:
   remove_missing_threshold: 0.95  # Remove columns with >95% missing
