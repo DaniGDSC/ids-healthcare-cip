@@ -4,7 +4,7 @@ import sys
 import logging
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Callable
+from typing import Dict, List, Tuple, Callable, Optional, Any
 import yaml
 import numpy as np
 import pandas as pd
@@ -20,6 +20,8 @@ from src.phase1_preprocessing import (
     Normalizer, HIPAACompliance
 )
 from src.phase1_preprocessing.interfaces import DataLoaderProtocol, PreprocessingStep
+from src.utils.checkpoint_manager import CheckpointManager
+from src.utils.config_safety import validate_loader_limits
 
 # Default label mapping to reduce CIC-IDS-2018 labels to 7 categories
 DEFAULT_LABEL_MAPPING: Dict[str, str] = {
@@ -75,7 +77,7 @@ def load_config(config_path: str) -> dict:
 class Phase1Pipeline:
     """Phase 1 preprocessing pipeline organized into testable steps."""
 
-    def __init__(self, config: dict, logger: logging.Logger):
+    def __init__(self, config: dict, logger: logging.Logger, checkpoint_dir: str = "results/checkpoints"):
         self.config = config
         self.logger = logger
         self.data_dir = project_root / config['data']['input_dir']
@@ -86,6 +88,10 @@ class Phase1Pipeline:
         self.dropped_counts: Dict[str, int] = {}
         self.mapping = config.get('label_normalization', {}).get('mapping', DEFAULT_LABEL_MAPPING)
         self.loader_name = config.get('data', {}).get('loader', 'default')
+        self.checkpoint_mgr = CheckpointManager(checkpoint_dir)
+        self.enable_checkpoints = config.get('checkpointing', {}).get('enabled', True)
+        self.allow_resume = config.get('checkpointing', {}).get('allow_resume', True)
+        self.loader_cfg = self._build_loader_config()
 
     @staticmethod
     def load_config(config_path: Path) -> dict:
@@ -103,6 +109,32 @@ class Phase1Pipeline:
             ]
         )
 
+    def _build_loader_config(self) -> Dict[str, Any]:
+        """Collect and validate loader-related configuration with bounds."""
+        loader_cfg: Dict[str, Any] = {}
+        loader_sources = [self.config, self.config.get("data", {}), self.config.get("data_loading", {})]
+        keys = [
+            "io_retries",
+            "io_retry_delay_seconds",
+            "read_timeout_seconds",
+            "skip_on_error",
+            "quarantine_dir",
+            "use_smart_loading",
+            "memory_threshold_mb",
+            "io_workers",
+            "chunksize",
+            "max_file_size_mb",
+            "max_total_size_mb",
+            "max_memory_mb",
+        ]
+        for source in loader_sources:
+            for key in keys:
+                if key in source and key not in loader_cfg:
+                    loader_cfg[key] = source[key]
+
+        safety_cfg = self.config.get("config_safety", {})
+        return validate_loader_limits(loader_cfg, safety_cfg)
+
     def _get_data_loader(self) -> DataLoaderProtocol:
         loaders = {
             'default': DataLoader,
@@ -111,11 +143,14 @@ class Phase1Pipeline:
             raise ValueError(f"Unknown data loader '{self.loader_name}'")
         return loaders[self.loader_name](
             self.data_dir,
-            io_retries=self.config.get("io_retries", 1),
-            io_retry_delay_seconds=self.config.get("io_retry_delay_seconds", 1),
-            read_timeout_seconds=self.config.get("read_timeout_seconds", 0),
-            quarantine_dir=self.config.get("quarantine_dir"),
-            skip_on_error=self.config.get("skip_on_error", False),
+            io_retries=self.loader_cfg["io_retries"],
+            io_retry_delay_seconds=self.loader_cfg["io_retry_delay_seconds"],
+            read_timeout_seconds=self.loader_cfg["read_timeout_seconds"],
+            quarantine_dir=self.loader_cfg.get("quarantine_dir"),
+            skip_on_error=self.loader_cfg["skip_on_error"],
+            max_file_size_mb=self.loader_cfg["max_file_size_mb"],
+            max_total_size_mb=self.loader_cfg["max_total_size_mb"],
+            max_memory_mb=self.loader_cfg["max_memory_mb"],
         )
 
     def _load_data(self) -> pd.DataFrame:
@@ -124,16 +159,17 @@ class Phase1Pipeline:
         
         # Use smart loading with automatic chunking for large files
         # This prevents memory exhaustion on large datasets
-        use_chunking = self.config.get('data', {}).get('use_smart_loading', True)
-        memory_threshold = self.config.get('data', {}).get('memory_threshold_mb', 2000)
-        io_workers = self.config.get('data', {}).get('io_workers', 1)
+        use_chunking = self.loader_cfg.get('use_smart_loading', True)
+        memory_threshold = self.loader_cfg.get('memory_threshold_mb', 2000)
+        io_workers = self.loader_cfg.get('io_workers', 1)
+        chunksize = self.loader_cfg.get('chunksize', 200_000)
         
         if use_chunking:
             self.logger.info(f"Smart loading enabled (memory threshold: {memory_threshold} MB)")
             df = loader.smart_load(
                 pattern="*.csv",
                 memory_threshold_mb=memory_threshold,
-                chunksize=200_000,
+                chunksize=chunksize,
                 io_workers=io_workers
             )
         else:
@@ -245,7 +281,41 @@ class Phase1Pipeline:
         self.logger.info(f"Post-label-normalization shape: {df.shape}")
         return df
 
-    def _separate_features_labels(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    def _try_load_checkpoint(self, artifact_name: str) -> Optional[pd.DataFrame]:
+        """Try to load a checkpoint if enabled and available."""
+        if not self.enable_checkpoints or not self.allow_resume:
+            return None
+        try:
+            df, meta = self.checkpoint_mgr.load_dataframe("phase1", artifact_name)
+            self.logger.info(json.dumps({
+                "event": "phase1",
+                "action": "checkpoint_resumed",
+                "artifact": artifact_name,
+                "shape": list(df.shape),
+                "version": meta.get("version", "unknown")
+            }))
+            return df
+        except FileNotFoundError:
+            return None
+        except Exception as e:
+            self.logger.warning(f"Failed to load checkpoint {artifact_name}: {e}")
+            return None
+
+    def _save_checkpoint(self, df: pd.DataFrame, artifact_name: str, stats: Optional[Dict] = None):
+        """Save a checkpoint if enabled."""
+        if not self.enable_checkpoints:
+            return
+        try:
+            self.checkpoint_mgr.save_dataframe(
+                df,
+                phase="phase1",
+                artifact_name=artifact_name,
+                config=self.config,
+                stats=stats
+            )
+        except Exception as e:
+            self.logger.error(f"Failed to save checkpoint {artifact_name}: {e}")
+
         self.logger.info("\n--- Step 6: Separating Features and Labels ---")
         y = df[self.label_col].values
         X_df = df.drop(columns=[self.label_col])
@@ -314,14 +384,24 @@ class Phase1Pipeline:
         self.logger.info(f"Metadata saved to {metadata_path}")
 
     def run(self):
-        df = self._load_data()
-        steps = self._build_preprocessing_steps()
-        for step in steps:
-            if not step.enabled:
-                self.logger.info(f"Skipping step: {step.name}")
-                continue
-            self.logger.info(f"Running step: {step.name}")
-            df = step.apply(df)
+        # Try to resume from checkpoint
+        df = None
+        if self.allow_resume:
+            df = self._try_load_checkpoint("preprocessed_data")
+        
+        if df is None:
+            # Load and preprocess from scratch
+            df = self._load_data()
+            steps = self._build_preprocessing_steps()
+            for step in steps:
+                if not step.enabled:
+                    self.logger.info(f"Skipping step: {step.name}")
+                    continue
+                self.logger.info(f"Running step: {step.name}")
+                df = step.apply(df)
+            # Save intermediate checkpoint
+            self._save_checkpoint(df, "preprocessed_data")
+        
         X, y, feature_names = self._separate_features_labels(df)
         X_train, X_val, X_test, y_train, y_val, y_test = self._split_data(X, y)
         X_train_norm, X_val_norm, X_test_norm = self._normalize_features(X_train, X_val, X_test)
@@ -331,6 +411,7 @@ class Phase1Pipeline:
         self.logger.info("PHASE 1 COMPLETE!")
         self.logger.info("="*80)
         self.logger.info(f"\nOutput files saved to: {self.output_dir}")
+
 
 
 def main():

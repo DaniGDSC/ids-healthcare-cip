@@ -30,6 +30,7 @@ from src.phase5_classification.ensemble_classifier import (
 from src.phase5_classification.evaluator import ClassificationEvaluator
 from src.phase5_classification.visualizations import generate_all_visualizations
 from src.utils.logger import get_logger, log_alert
+from src.utils.checkpoint_manager import CheckpointManager
 
 logger = logging.getLogger(__name__)
 
@@ -375,10 +376,11 @@ def save_outputs(
     feature_names: list,
     y_train: np.ndarray,
     y_val: np.ndarray,
-    y_test: np.ndarray
+    y_test: np.ndarray,
+    checkpoint_mgr: CheckpointManager = None
 ) -> Dict[str, Path]:
     """
-    Save all models, predictions, and reports.
+    Save all models, predictions, and reports with versioning.
     
     Parameters
     ----------
@@ -390,6 +392,8 @@ def save_outputs(
         Feature names
     y_train, y_val, y_test : np.ndarray
         Ground truth labels
+    checkpoint_mgr : CheckpointManager, optional
+        Checkpoint manager for model versioning
     
     Returns
     -------
@@ -409,10 +413,31 @@ def save_outputs(
     model_dir.mkdir(parents=True, exist_ok=True)
     result_dir.mkdir(parents=True, exist_ok=True)
     
-    # Save models
+    # Save models (legacy path)
     logger.info("Saving trained models...")
     model_files = ensemble.save(model_dir)
     saved_paths['models'] = model_files
+    
+    # Save versioned models with checkpoint manager if provided
+    if checkpoint_mgr:
+        logger.info("Saving versioned model checkpoint...")
+        model_metrics = {
+            'test_accuracy': float(results['test']['accuracy']),
+            'test_f1_weighted': float(results['test']['f1_weighted']),
+            'val_accuracy': float(results['validation']['accuracy']),
+            'val_f1_weighted': float(results['validation']['f1_weighted']),
+        }
+        checkpoint_mgr.save_model(
+            ensemble,
+            phase="phase5",
+            model_name="ensemble_classifier",
+            config={'ensemble': {
+                'svm_weight': float(ensemble.svm_weight),
+                'dt_weight': float(ensemble.dt_weight),
+            }},
+            metrics=model_metrics
+        )
+        logger.info("Model checkpoint saved with version tracking")
     
     # Save predictions
     logger.info("Saving predictions...")
@@ -517,6 +542,9 @@ def main():
         # Load configuration
         config = load_config()
         
+        # Initialize checkpoint manager
+        checkpoint_mgr = CheckpointManager(config.get('checkpointing', {}).get('checkpoint_dir', 'results/checkpoints'))
+        
         # Load data
         logger.info("\n" + "=" * 80)
         logger.info("LOADING DATA")
@@ -542,9 +570,10 @@ def main():
             feature_names
         )
         
-        # Save outputs
+        # Save outputs with versioning
         saved_paths = save_outputs(
-            ensemble, results, feature_names, y_train, y_val, y_test
+            ensemble, results, feature_names, y_train, y_val, y_test,
+            checkpoint_mgr=checkpoint_mgr
         )
         
         # Generate visualizations

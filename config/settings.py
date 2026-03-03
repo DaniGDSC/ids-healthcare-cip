@@ -66,4 +66,10 @@ GPU_MEMORY_FRACTION = 0.8  # Use 80% of GPU memory
 DPI = 300  # High resolution for thesis figures
 FIGSIZE = (12, 8)
 
-print(f"✅ Settings loaded. Project root: {PROJECT_ROOT}")
+
+def get_project_info() -> str:
+    """
+    Get project information string.
+    Call this explicitly when you need to display settings info.
+    """
+    return f"Settings loaded. Project root: {PROJECT_ROOT}"
