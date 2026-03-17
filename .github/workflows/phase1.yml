@@ -1,0 +1,403 @@
+name: Phase 1 — Lint · Test · Integration · Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: ["Phase 0 — Lint · Security · Test · Build"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel in-progress runs on new pushes to the same branch
+concurrency:
+  group: phase1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # 1. Lint Phase 1 code (ruff + black)
+  # ─────────────────────────────────────────────────────────────────
+  lint-phase1:
+    runs-on: ubuntu-latest
+    # Skip if triggered by workflow_run and Phase 0 failed
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: pip install ruff black
+
+      - name: Ruff — Phase 1
+        run: ruff check src/phase1_preprocessing/ tests/test_phase1.py
+
+      - name: Black — Phase 1
+        run: black --check src/phase1_preprocessing/ tests/test_phase1.py
+
+  # ─────────────────────────────────────────────────────────────────
+  # 2. Unit tests for Phase 1 (coverage ≥ 80%)
+  # ─────────────────────────────────────────────────────────────────
+  test-phase1:
+    runs-on: ubuntu-latest
+    needs: lint-phase1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest-cov
+
+      - name: Run Phase 1 unit tests with coverage
+        run: >
+          python -m pytest
+          src/phase1_preprocessing/phase1/tests/
+          -v
+          --cov=src/phase1_preprocessing/phase1
+          --cov-report=xml:coverage-phase1.xml
+          --cov-report=term-missing
+          --cov-fail-under=80
+
+      - name: Upload Phase 1 coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-phase1
+          path: coverage-phase1.xml
+
+  # ─────────────────────────────────────────────────────────────────
+  # 3. Security scan (Phase 1 additions)
+  # ─────────────────────────────────────────────────────────────────
+  security-scan-phase1:
+    runs-on: ubuntu-latest
+    needs: lint-phase1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install security tools + dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install bandit[toml] pip-audit cyclonedx-bom
+
+      - name: Bandit — Phase 1 static analysis
+        run: bandit -r src/phase1_preprocessing/ -c pyproject.toml -ll
+
+      - name: pip-audit — dependency vulnerabilities
+        run: pip-audit --strict --desc
+
+      - name: CycloneDX SBOM (Phase 0 + Phase 1 combined)
+        run: cyclonedx-py requirements -i requirements.txt -o sbom-phase1.json --format json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-phase1
+          path: sbom-phase1.json
+
+  # ─────────────────────────────────────────────────────────────────
+  # 4. Integration test — Phase 0 → Phase 1 end-to-end
+  # ─────────────────────────────────────────────────────────────────
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: [test-phase1, security-scan-phase1]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Create 100-row test subset
+        run: |
+          python -c "
+          import pandas as pd, numpy as np, os, json, hashlib
+
+          # Read full dataset header + 100 rows with balanced classes
+          df = pd.read_csv('data/raw/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv', low_memory=False)
+          normal = df[df['Label'] == 0].head(80)
+          attack = df[df['Label'] == 1].head(20)
+          subset = pd.concat([normal, attack], ignore_index=True)
+
+          # Write subset
+          os.makedirs('data/ci_test/WUSTL-EHMS', exist_ok=True)
+          subset_path = 'data/ci_test/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv'
+          subset.to_csv(subset_path, index=False)
+
+          # Create integrity baseline for the subset
+          os.makedirs('results/ci_test', exist_ok=True)
+          h = hashlib.sha256()
+          with open(subset_path, 'rb') as f:
+              while chunk := f.read(65536):
+                  h.update(chunk)
+          digest = h.hexdigest()
+          metadata = {subset_path: {'sha256': digest, 'verified_at': '2026-01-01T00:00:00+00:00'}}
+          with open('results/ci_test/dataset_integrity.json', 'w') as f:
+              json.dump(metadata, f, indent=2)
+
+          print(f'Subset: {len(subset)} rows, SHA-256: {digest[:16]}…')
+          "
+
+      - name: Generate Phase 0 artifacts for subset
+        run: |
+          python -c "
+          import pandas as pd, numpy as np, json, os
+
+          # Read the CI test subset
+          df = pd.read_csv('data/ci_test/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv', low_memory=False)
+          os.makedirs('results/ci_test', exist_ok=True)
+
+          # stats_report.json (minimal)
+          numeric_df = df.select_dtypes(include='number')
+          stats = {
+              'descriptive_statistics': {col: {'mean': float(numeric_df[col].mean())} for col in numeric_df.columns},
+              'missing_values': {col: int(df[col].isna().sum()) for col in df.columns},
+              'class_distribution': {'Normal': {'count': int((df['Label']==0).sum())}, 'Attack': {'count': int((df['Label']==1).sum())}},
+          }
+          with open('results/ci_test/stats_report.json', 'w') as f:
+              json.dump(stats, f, indent=2)
+
+          # high_correlations.csv
+          corr = numeric_df.drop(columns=['Label'], errors='ignore').corr().abs()
+          pairs = []
+          for i in range(len(corr)):
+              for j in range(i+1, len(corr)):
+                  if corr.iloc[i,j] >= 0.95:
+                      pairs.append({'feature_a': corr.index[i], 'feature_b': corr.columns[j], 'correlation': round(float(corr.iloc[i,j]), 6)})
+          pd.DataFrame(pairs).to_csv('results/ci_test/high_correlations.csv', index=False)
+          print(f'Phase 0 artifacts: stats OK, {len(pairs)} high-correlation pairs')
+          "
+
+      - name: Create CI test config
+        run: |
+          cat > config/ci_test_phase1.yaml << 'YAMLEOF'
+          data:
+            input_dir: "data/ci_test/WUSTL-EHMS"
+            output_dir: "data/ci_test/processed"
+            file_pattern: "*.csv"
+            label_column: "Label"
+
+          hipaa:
+            enabled: true
+            remove_columns:
+              - "SrcAddr"
+              - "DstAddr"
+              - "Sport"
+              - "Dport"
+              - "SrcMac"
+              - "DstMac"
+              - "Dir"
+              - "Flgs"
+
+          missing_values:
+            biometric_strategy: "ffill"
+            biometric_columns:
+              - "Temp"
+              - "SpO2"
+              - "Pulse_Rate"
+              - "SYS"
+              - "DIA"
+              - "Heart_rate"
+              - "Resp_Rate"
+              - "ST"
+            network_strategy: "dropna"
+
+          correlation_removal:
+            enabled: true
+            threshold: 0.95
+            phase0_corr_file: "results/ci_test/high_correlations.csv"
+
+          splitting:
+            train_ratio: 0.70
+            test_ratio: 0.30
+            stratify: true
+            random_state: 42
+
+          smote:
+            enabled: true
+            sampling_strategy: "auto"
+            k_neighbors: 3
+            random_state: 42
+
+          normalization:
+            method: "robust"
+
+          output:
+            train_parquet: "train_phase1.parquet"
+            test_parquet: "test_phase1.parquet"
+            scaler_file: "robust_scaler.pkl"
+            report_file: "phase1_report.json"
+          YAMLEOF
+
+      - name: Run Phase 1 pipeline on subset
+        run: |
+          python -c "
+          import logging, time
+          logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+
+          from pathlib import Path
+          from src.phase1_preprocessing.phase1.config import Phase1Config
+          from src.phase1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
+          from src.phase1_preprocessing.phase1.pipeline import PreprocessingPipeline
+
+          PROJECT_ROOT = Path.cwd()
+          config = Phase1Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase1.yaml')
+
+          reader = Phase0ArtifactReader(
+              project_root=PROJECT_ROOT,
+              stats_file=Path('results/ci_test/stats_report.json'),
+              corr_file=config.phase0_corr_file,
+              integrity_file=Path('results/ci_test/dataset_integrity.json'),
+          )
+
+          pipeline = PreprocessingPipeline(config, reader, PROJECT_ROOT)
+          t0 = time.perf_counter()
+          report = pipeline.run()
+          elapsed = time.perf_counter() - t0
+          print(f'Pipeline completed in {elapsed:.2f}s')
+          "
+
+      - name: Integration assertions
+        run: |
+          python -c "
+          import pandas as pd, joblib, numpy as np, json, sys
+
+          errors = []
+
+          # 1. train.parquet exists and non-empty
+          try:
+              train = pd.read_parquet('data/ci_test/processed/train_phase1.parquet')
+              assert len(train) > 0, 'train.parquet is empty'
+              assert train.shape[1] > 1, 'train.parquet has no features'
+              n_features = train.shape[1] - 1  # exclude Label
+              print(f'PASS  train.parquet exists: {train.shape}')
+          except Exception as e:
+              errors.append(f'FAIL  train.parquet: {e}')
+              print(f'FAIL  train.parquet: {e}')
+
+          # 2. test.parquet exists and non-empty
+          try:
+              test = pd.read_parquet('data/ci_test/processed/test_phase1.parquet')
+              assert len(test) > 0, 'test.parquet is empty'
+              print(f'PASS  test.parquet exists: {test.shape}')
+          except Exception as e:
+              errors.append(f'FAIL  test.parquet: {e}')
+              print(f'FAIL  test.parquet: {e}')
+
+          # 3. scaler.pkl loadable
+          try:
+              scaler = joblib.load('models/scalers/robust_scaler.pkl')
+              assert hasattr(scaler, 'transform'), 'scaler has no transform method'
+              print(f'PASS  scaler.pkl loadable: {type(scaler).__name__}')
+          except Exception as e:
+              errors.append(f'FAIL  scaler.pkl: {e}')
+              print(f'FAIL  scaler.pkl: {e}')
+
+          # 4. Feature count matches between train and test
+          try:
+              assert train.shape[1] == test.shape[1], f'Column mismatch: train={train.shape[1]} test={test.shape[1]}'
+              print(f'PASS  Feature count: train={train.shape[1]-1}, test={test.shape[1]-1}')
+          except Exception as e:
+              errors.append(f'FAIL  Feature count: {e}')
+              print(f'FAIL  Feature count: {e}')
+
+          # 5. No train/test overlap (compare all rows)
+          try:
+              train_set = set(map(tuple, train.values))
+              test_set = set(map(tuple, test.values))
+              overlap = len(train_set & test_set)
+              assert overlap == 0, f'{overlap} overlapping rows'
+              print(f'PASS  No train/test overlap: 0 shared rows')
+          except Exception as e:
+              errors.append(f'FAIL  Overlap: {e}')
+              print(f'FAIL  Overlap: {e}')
+
+          # 6. Class distribution preserved after stratified split
+          try:
+              train_rate = train['Label'].mean()
+              test_rate = test['Label'].mean()
+              assert abs(train_rate - test_rate) < 0.10, f'Class imbalance: train={train_rate:.3f} test={test_rate:.3f}'
+              print(f'PASS  Stratified split: train attack={train_rate:.3f}, test attack={test_rate:.3f}')
+          except Exception as e:
+              errors.append(f'FAIL  Stratification: {e}')
+              print(f'FAIL  Stratification: {e}')
+
+          # 7. SMOTE increased minority class (train has more samples than 70% of original)
+          try:
+              original_train_approx = int(100 * 0.70)
+              assert len(train) > original_train_approx, f'SMOTE did not augment: {len(train)} ≤ {original_train_approx}'
+              print(f'PASS  SMOTE augmentation: {original_train_approx} → {len(train)}')
+          except Exception as e:
+              errors.append(f'FAIL  SMOTE: {e}')
+              print(f'FAIL  SMOTE: {e}')
+
+          # 8. Report JSON exists
+          try:
+              with open('data/ci_test/processed/phase1_report.json') as f:
+                  report = json.load(f)
+              assert 'smote' in report, 'Report missing SMOTE section'
+              assert 'split' in report, 'Report missing split section'
+              print(f'PASS  phase1_report.json: {len(report)} sections')
+          except Exception as e:
+              errors.append(f'FAIL  Report: {e}')
+              print(f'FAIL  Report: {e}')
+
+          if errors:
+              print(f'\n{len(errors)} FAILURES:')
+              for e in errors:
+                  print(f'  {e}')
+              sys.exit(1)
+          else:
+              print(f'\nAll 8 integration tests PASSED')
+          "
+
+      - name: Upload Phase 1 artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-integration-artifacts
+          path: |
+            data/ci_test/processed/
+            results/phase0_analysis/report_section_*.md
+
+  # ─────────────────────────────────────────────────────────────────
+  # 5. Docker build (Phase 0 + Phase 1)
+  # ─────────────────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    needs: integration-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build combined Docker image
+        run: docker build -t analyst/phase0-phase1:${{ github.sha }} .
+
+      - name: Verify Phase 0 + Phase 1 imports
+        run: >
+          docker run --rm analyst/phase0-phase1:${{ github.sha }}
+          -c "
+          from src.phase0_dataset_analysis.phase0 import Phase0Config, DataLoader;
+          from src.phase1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
+          print('Phase 0 + Phase 1: OK')
+          "
+
+      - name: Tag as v2.0
+        run: docker tag analyst/phase0-phase1:${{ github.sha }} analyst/phase0-phase1:2.0

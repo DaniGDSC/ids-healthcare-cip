@@ -1,0 +1,132 @@
+name: Phase 0 — Lint · Security · Test · Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # 1. Lint (ruff + black)
+  # ─────────────────────────────────────────────────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: pip install ruff black
+
+      - name: Ruff check
+        run: ruff check src/ tests/
+
+      - name: Black format check
+        run: black --check src/ tests/
+
+  # ─────────────────────────────────────────────────────────────────
+  # 2. Security scan (bandit + pip-audit + SBOM)
+  # ─────────────────────────────────────────────────────────────────
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install security tools
+        run: pip install bandit[toml] pip-audit cyclonedx-bom
+
+      - name: Bandit — static security analysis
+        run: bandit -r src/ -c pyproject.toml -f json -o bandit-report.json || true
+
+      - name: Bandit — fail on high/critical
+        run: bandit -r src/ -c pyproject.toml -ll
+
+      - name: pip-audit — dependency vulnerabilities
+        run: pip install -r requirements.txt && pip-audit --strict --desc
+
+      - name: CycloneDX SBOM generation
+        run: cyclonedx-py requirements -i requirements.txt -o sbom.json --format json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  # ─────────────────────────────────────────────────────────────────
+  # 3. Test (pytest + coverage ≥ 80%)
+  # ─────────────────────────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest-cov
+
+      - name: Run Phase 0 tests with coverage
+        run: >
+          python -m pytest
+          src/phase0_dataset_analysis/phase0/tests/
+          tests/test_phase0.py
+          -v
+          --cov=src/phase0_dataset_analysis
+          --cov-report=xml:coverage.xml
+          --cov-report=term-missing
+          --cov-fail-under=80
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      - name: Upload thesis report sections
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thesis-reports
+          path: results/phase0_analysis/report_section_*.md
+          if-no-files-found: ignore
+
+  # ─────────────────────────────────────────────────────────────────
+  # 4. Docker build
+  # ─────────────────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t analyst/phase0:${{ github.sha }} .
+
+      - name: Verify Phase 0 imports
+        run: >
+          docker run --rm analyst/phase0:${{ github.sha }}
+          -c "from src.phase0_dataset_analysis.phase0 import Phase0Config, DataLoader; print('OK')"

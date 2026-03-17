@@ -1,112 +1,86 @@
-# Phase 1: Data Preprocessing Configuration
+# Phase 1: Data Preprocessing & Sanitization Configuration
+# Target dataset: WUSTL-EHMS-2020 (Enhanced Healthcare Monitoring System)
+#
+# Actual CSV columns (45):
+#   Network:   Dir, Flgs, SrcAddr, DstAddr, Sport, Dport, SrcBytes, DstBytes,
+#              SrcLoad, DstLoad, SrcGap, DstGap, SIntPkt, DIntPkt, SIntPktAct,
+#              DIntPktAct, SrcJitter, DstJitter, sMaxPktSz, dMaxPktSz,
+#              sMinPktSz, dMinPktSz, Dur, Trans, TotPkts, TotBytes, Load,
+#              Loss, pLoss, pSrcLoss, pDstLoss, Rate, SrcMac, DstMac, Packet_num
+#   Biometric: Temp, SpO2, Pulse_Rate, SYS, DIA, Heart_rate, Resp_Rate, ST
+#   Labels:    Attack Category, Label
 
-data_loading:
-  # Note: Loader defaults are defined in config/loader_schema.py DEFAULT_LOADER_CONFIG
-  # Only specify overrides here to avoid duplication with orchestration.yaml
-  
-  # File discovery (override defaults if needed)
-  # file_pattern: "*.csv"  # Default
-  # encoding: "utf-8"      # Default
-  # low_memory: false      # Default
-  # chunksize: null        # Default (load entire file)
-  
-  # Smart loading (override defaults if needed)
-  # use_smart_loading: true         # Default
-  # memory_threshold_mb: 2000       # Default (2 GB)
-  # io_workers: 4                   # Default
-  # loader: "default"               # Default
-  
-  # Retry/timeout (override defaults if needed)
-  # io_retries: 2                   # Default
-  # io_retry_delay_seconds: 2       # Default
-  # read_timeout_seconds: 30        # Default
-  # skip_on_error: true             # Default
-  # quarantine_dir: "data/quarantine"  # Default
-  
-  # Size limits - OVERRIDE THESE if your dataset is larger than defaults
-  # Defaults from orchestration.yaml config_safety.defaults:
-  #   max_file_size_mb: 10240 (10 GB)
-  #   max_total_size_mb: 51200 (50 GB)
-  #   max_memory_mb: 32768 (32 GB)
-  #
-  # For CSE-CIC-IDS2018, we need higher limits:
-  max_file_size_mb: 12000     # 12 GB (larger than default for big daily files)
-  max_total_size_mb: 60000    # 60 GB (accommodate full dataset)
-  # max_memory_mb: 32768      # Keep default (32 GB is sufficient)
-  
-  # Data directories
-  input_dir: "data/raw/CSE-CIC-IDS2018"
+data:
+  input_dir: "data/raw/WUSTL-EHMS"
   output_dir: "data/processed"
-  splits_dir: "data/splits"
+  file_pattern: "*.csv"
+  label_column: "Label"
 
-cleaning:
-  remove_missing_threshold: 0.95  # Remove columns with >95% missing
-  remove_duplicates: true
-  remove_infinite: true
-  handle_negatives: true  # Remove negative values in positive-only features
-
-hipaa_compliance:
-  enable_deidentification: true
-  anonymize_ips: true
-  log_access: true
-  remove_phi_columns: true
+# ── Step 2: HIPAA Safe Harbor Sanitization ──────────────────────────────
+hipaa:
+  enabled: true
+  # Columns to DROP (actual CSV names for network + temporal identifiers)
   remove_columns:
-    - "Timestamp"
-    - "Flow Timestamp"
-    - "Src IP"
-    - "Dst IP"
-    - "Source IP"
-    - "Destination IP"
-    - "Source Port"
-    - "Destination Port"
-  pseudonymize_columns: []  # Already removed
-  truncate_timestamps: true  # Year/month only
-  encryption_at_rest: false
+    # Network Identifiers
+    - "SrcAddr"
+    - "DstAddr"
+    - "Sport"
+    - "Dport"
+    # MAC Identifiers
+    - "SrcMac"
+    - "DstMac"
+    # Direction / Flag metadata (not features, but flow metadata)
+    - "Dir"
+    - "Flgs"
 
+# ── Step 3: Context-Aware Missing Value Handling ────────────────────────
+missing_values:
+  biometric_strategy: "ffill"
+  biometric_columns:
+    - "Temp"
+    - "SpO2"
+    - "Pulse_Rate"
+    - "SYS"
+    - "DIA"
+    - "Heart_rate"
+    - "Resp_Rate"
+    - "ST"
+  network_strategy: "dropna"
+  network_missing_threshold: 0.05
+
+# ── Step 4: Redundancy Elimination ──────────────────────────────────────
 correlation_removal:
   enabled: true
-  threshold: 0.95  # Remove features with correlation > 0.95
-  method: "pearson"
+  threshold: 0.95
+  phase0_corr_file: "results/phase0_analysis/high_correlations.csv"
 
+# ── Step 5: Stratified Train/Test Split ─────────────────────────────────
 splitting:
-  train_ratio: 0.60
-  val_ratio: 0.20
-  test_ratio: 0.20
+  train_ratio: 0.70
+  test_ratio: 0.30
   stratify: true
   random_state: 42
 
-normalization:
-  method: "standard"  # StandardScaler
-  with_mean: true
-  with_std: true
-
-label_normalization:
+# ── Step 6: SMOTE (train set only) ──────────────────────────────────────
+smote:
   enabled: true
-  drop_unknown: true
-  mapping:
-    "Benign": "Benign"
-    "DDoS attacks-LOIC-HTTP": "DDoS"
-    "DDoS attacks-LOIC-UDP": "DDoS"
-    "DDoS attacks-HOIC": "DDoS"
-    "DoS attacks-GoldenEye": "DoS"
-    "DoS attacks-Slowloris": "DoS"
-    "DoS attacks-SlowHTTPTest": "DoS"
-    "DoS attacks-Hulk": "DoS"
-    "Brute Force -Web": "BruteForce"
-    "Brute Force -XSS": "BruteForce"
-    "SSH-Bruteforce": "BruteForce"
-    "FTP-BruteForce": "BruteForce"
-    "SQL Injection": "WebAttack"
-    "Infiltration": "Infiltration"
-    "Bot": "Bot"
+  # "auto" balances minority to majority (1:1). Use a float (e.g. 0.5) for
+  # a partial resample (minority:majority = 1:2), which is less aggressive
+  # and preserves some natural imbalance signal for downstream models.
+  sampling_strategy: "auto"
+  k_neighbors: 5       # k for the k-NN interpolation; reduce to 3 on very small minority classes
+  random_state: 42
 
+# ── Step 7: Data Scaling (RobustScaler) ─────────────────────────────────
+normalization:
+  method: "robust"  # IQR-based; robust to outliers; preserves attack signature morphology for XAI
+
+# ── Step 8: Artifact Export ─────────────────────────────────────────────
 output:
-  save_csv: false  # Save space
-  save_npz: true   # Compressed format
-  save_metadata: true
+  train_parquet: "train_phase1.parquet"
+  test_parquet: "test_phase1.parquet"
+  scaler_file: "robust_scaler.pkl"
+  report_file: "phase1_report.json"
 
-checkpointing:
-  enabled: true                 # Enable checkpoint save/load
-  allow_resume: true            # Resume from last checkpoint if available
-  checkpoint_dir: "results/checkpoints"
-  keep_latest: 2                # Keep N latest versions per phase
+logging:
+  file: "logs/phase1_preprocessing.log"

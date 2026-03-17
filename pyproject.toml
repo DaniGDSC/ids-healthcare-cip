@@ -1,0 +1,22 @@
+[project]
+name = "ids-healthcare-cip"
+version = "2.0.0"
+description = "Healthcare IoMT Intrusion Detection System — IEEE Q1 research"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "src/phase0_dataset_analysis/phase0/tests", "src/phase1_preprocessing/phase1/tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src/phase0_dataset_analysis/phase0/tests", "src/phase1_preprocessing/phase1/tests"]
+addopts = "-v --tb=short"

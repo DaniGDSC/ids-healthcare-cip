@@ -1,0 +1,129 @@
+{
+  "phase": "Phase 2 \u2014 Detection Engine",
+  "model_name": "detection_engine",
+  "architecture": "CNN\u2192BiLSTM\u2192Attention",
+  "total_parameters": 474496,
+  "trainable_parameters": 474496,
+  "layers": [
+    {
+      "name": "conv1",
+      "type": "Conv1D",
+      "output_shape": "(None, 20, 64)",
+      "params": 5632
+    },
+    {
+      "name": "pool1",
+      "type": "MaxPooling1D",
+      "output_shape": "(None, 10, 64)",
+      "params": 0
+    },
+    {
+      "name": "conv2",
+      "type": "Conv1D",
+      "output_shape": "(None, 10, 128)",
+      "params": 24704
+    },
+    {
+      "name": "pool2",
+      "type": "MaxPooling1D",
+      "output_shape": "(None, 5, 128)",
+      "params": 0
+    },
+    {
+      "name": "bilstm1",
+      "type": "Bidirectional",
+      "output_shape": "(None, 5, 256)",
+      "params": 263168
+    },
+    {
+      "name": "drop1",
+      "type": "Dropout",
+      "output_shape": "(None, 5, 256)",
+      "params": 0
+    },
+    {
+      "name": "bilstm2",
+      "type": "Bidirectional",
+      "output_shape": "(None, 5, 128)",
+      "params": 164352
+    },
+    {
+      "name": "drop2",
+      "type": "Dropout",
+      "output_shape": "(None, 5, 128)",
+      "params": 0
+    },
+    {
+      "name": "attention",
+      "type": "BahdanauAttention",
+      "output_shape": "(None, 128)",
+      "params": 16640
+    }
+  ],
+  "hyperparameters": {
+    "timesteps": 20,
+    "stride": 1,
+    "cnn_filters": [
+      64,
+      128
+    ],
+    "cnn_kernel_size": 3,
+    "cnn_activation": "relu",
+    "cnn_pool_size": 2,
+    "bilstm_units": [
+      128,
+      64
+    ],
+    "dropout_rate": 0.3,
+    "attention_units": 128,
+    "random_state": 42
+  },
+  "input_features": [
+    "SrcBytes",
+    "DstBytes",
+    "SrcLoad",
+    "DstLoad",
+    "SrcGap",
+    "DstGap",
+    "SIntPkt",
+    "DIntPkt",
+    "SIntPktAct",
+    "DIntPktAct",
+    "sMaxPktSz",
+    "dMaxPktSz",
+    "sMinPktSz",
+    "dMinPktSz",
+    "Dur",
+    "Trans",
+    "TotBytes",
+    "Load",
+    "pSrcLoss",
+    "pDstLoss",
+    "Packet_num",
+    "Temp",
+    "SpO2",
+    "Pulse_Rate",
+    "SYS",
+    "DIA",
+    "Heart_rate",
+    "Resp_Rate",
+    "ST"
+  ],
+  "n_features": 29,
+  "output_dim": 128,
+  "shapes": {
+    "train_windows": "(19961, 20, 29)",
+    "test_windows": "(4877, 20, 29)",
+    "train_context": "(19961, 128)",
+    "test_context": "(4877, 128)"
+  },
+  "elapsed_seconds": 5.947,
+  "timestamp": "2026-03-17T15:54:23.110301+00:00",
+  "environment": {
+    "python": "3.12.3",
+    "tensorflow": "2.20.0",
+    "numpy": "2.4.1",
+    "pandas": "3.0.0",
+    "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39"
+  }
+}

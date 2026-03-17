@@ -1,85 +1,39 @@
-# Phase 2: Feature Selection Configuration
-# 3-Stage Pipeline: IG (52→45) → RF (45→40) → RFE (40→35)
-# 
-# OPTIMIZATION MODES:
-# Standard (Full Data): 45 min total
-# With Greedy RFE: 15-18 min total (80% faster RFE)
-# With Sampling: 5-8 min total (60% faster RF+RFE)
-# Greedy + Sampling: 3-5 min total (85% faster, still validates on full data)
+# Phase 2: Detection Engine Configuration
+# CNN → BiLSTM → Attention feature extraction
+#
+# Input:  Phase 1 parquet (29 features, RobustScaler-normalised)
+# Output: 128-dim attention context vectors (no classification head)
 
 data:
-  input_dir: "data/processed"
-  output_dir: "data/features"
+  train_parquet: "data/processed/train_phase1.parquet"
+  test_parquet: "data/processed/test_phase1.parquet"
+  metadata_file: "data/processed/preprocessing_metadata.json"
+  report_file: "data/processed/phase1_report.json"
+  label_column: "Label"
 
-feature_selection:
-  # STAGE 1: Information Gain Filter
-  stage1_information_gain:
-    enabled: true
-    n_features: 45  # Target for Stage 1
-    discretization_bins: 10
-    # Est. time: ~5 minutes (unchanged - fast univariate filter)
-    
-  # STAGE 2: Random Forest Feature Importance
-  stage2_random_forest:
-    enabled: true
-    n_features: 40  # Target for Stage 2
-    n_estimators: 100  # Full production mode; set to 20-50 for exploratory runs
-    max_depth: 20
-    min_samples_split: 10
-    # OPTIMIZATION: Sampling-based approximation (default enabled)
-    use_sampling: true  # Train on stratified sample of full dataset
-    sample_size: 0.15   # Use 15% of data (tunable: 0.10-0.20 for speedup trade-off)
-    exploratory: false  # Set true for fast feature exploration (uses 20 estimators)
-    # Est. time: ~3 minutes with sampling, exploratory ~1 min (vs ~15 min full data)
-    # Validation: Feature importance computed from sample, applied to full dataset
-    
-  # STAGE 3: Recursive Feature Elimination (RFE)
-  stage3_rfe:
-    enabled: true
-    n_features: 35  # Final target
-    estimator: "linear_svc"  # Options: linear_svc, random_forest, logistic
-    # OPTIMIZATION: Greedy batch elimination
-    use_greedy: true        # Enable greedy backward elimination
-    greedy_batch_pct: 0.05  # Remove ~5% of features per iteration (vs 1 per iteration)
-    # Standard RFE with step=1: 40→39→38→...→35 (5 iterations)
-    # Greedy RFE (5%):          40→38→36→35 (3 iterations)
-    step: 1                 # Unused if greedy=true, kept for reference
-    cv_folds: 5             # Cross-validation folds (still used for validation)
-    # Est. time: ~3-5 minutes greedy (vs ~25 min exhaustive RFE)
-    
-validation:
-  cross_validation: true
-  cv_folds: 5
-  scoring: "f1_macro"
+reshape:
+  timesteps: 20
+  stride: 1
+
+cnn:
+  filters_1: 64
+  filters_2: 128
+  kernel_size: 3
+  activation: "relu"
+  pool_size: 2
+
+bilstm:
+  units_1: 128
+  units_2: 64
+  dropout_rate: 0.3
+
+attention:
+  units: 128
 
 output:
-  save_format: "npz"
-  save_feature_names: true
-  save_importance_scores: true
+  output_dir: "data/phase2"
+  model_file: "detection_model.weights.h5"
+  attention_parquet: "attention_output.parquet"
+  report_file: "detection_report.json"
 
-logging:
-  level: "INFO"
-  file: "logs/phase2.log"
-
-# ============================================================================
-# PERFORMANCE COMPARISON:
-# ============================================================================
-# Mode                          | Total Time | Speedup | Quality Loss
-# --------                       | ---------- | ------- | -----------
-# Standard (full + exhaustive)   | ~45 min    | 1x      | Baseline
-# Greedy RFE only               | ~22 min    | 2x      | Minimal (<1%)
-# Sampling only                 | ~12 min    | 3.75x   | Minimal (<2%)
-# Greedy + Sampling (RECOMMENDED)| ~5 min     | 9x      | Minimal (<2%)
-#
-# Greedy RFE: Removes ~5% features per iteration (batch) vs 1 (exhaustive)
-# This is still effective because:
-#   1. Feature importance is computed fresh each iteration
-#   2. SVM coefficients are stable across similar features
-#   3. Linear separability doesn't degrade with ~5% batch removal
-#
-# Sampling: Trains RF on 15% stratified sample, applies to full data
-# This works because:
-#   1. Feature importance patterns are stable across samples
-#   2. Random Forest importance is data-distribution dependent
-#   3. Validation on full data ensures selected features work
-# ============================================================================
+random_state: 42

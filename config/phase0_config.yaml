@@ -1,0 +1,20 @@
+# Phase 0: Dataset Analysis Configuration
+# Analyses the raw WUSTL-EHMS-2020 dataset before any preprocessing.
+
+data:
+  input_dir: "data/raw/WUSTL-EHMS"
+  output_dir: "results/phase0_analysis"
+  file_pattern: "*.csv"
+  label_column: "Label"
+
+profiling:
+  # Flag pairs above this absolute Pearson correlation as high-correlation
+  correlation_threshold: 0.95
+  # IQR outlier detection multiplier (standard = 1.5, strict = 3.0)
+  outlier_method: "iqr"
+  outlier_iqr_multiplier: 1.5
+  # Max number of high-correlation pairs to include in the report
+  top_n_correlations: 20
+
+logging:
+  file: "logs/phase0_dataset_analysis.log"

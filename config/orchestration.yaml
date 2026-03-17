@@ -58,6 +58,11 @@ orchestration:
         max: 131072
   
   phases:
+    - name: phase0
+      command: "python src/phase0_dataset_analysis/run_phase0.py"
+      timeout_seconds: 600
+      retries: 1
+      retry_delay_seconds: 30
     - name: phase1
       command: "python src/phase1_preprocessing/run_phase1.py"
       timeout_seconds: 3600

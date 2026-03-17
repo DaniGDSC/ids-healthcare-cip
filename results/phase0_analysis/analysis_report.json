@@ -1,0 +1,1091 @@
+{
+  "shape": {
+    "n_rows": 16318,
+    "n_columns": 45
+  },
+  "dtypes": {
+    "Dir": "str",
+    "Flgs": "str",
+    "SrcAddr": "str",
+    "DstAddr": "str",
+    "Sport": "str",
+    "Dport": "int64",
+    "SrcBytes": "int64",
+    "DstBytes": "int64",
+    "SrcLoad": "float64",
+    "DstLoad": "float64",
+    "SrcGap": "int64",
+    "DstGap": "int64",
+    "SIntPkt": "float64",
+    "DIntPkt": "float64",
+    "SIntPktAct": "float64",
+    "DIntPktAct": "int64",
+    "SrcJitter": "float64",
+    "DstJitter": "float64",
+    "sMaxPktSz": "int64",
+    "dMaxPktSz": "int64",
+    "sMinPktSz": "int64",
+    "dMinPktSz": "int64",
+    "Dur": "float64",
+    "Trans": "int64",
+    "TotPkts": "int64",
+    "TotBytes": "int64",
+    "Load": "float64",
+    "Loss": "int64",
+    "pLoss": "float64",
+    "pSrcLoss": "float64",
+    "pDstLoss": "float64",
+    "Rate": "float64",
+    "SrcMac": "str",
+    "DstMac": "str",
+    "Packet_num": "int64",
+    "Temp": "float64",
+    "SpO2": "int64",
+    "Pulse_Rate": "int64",
+    "SYS": "int64",
+    "DIA": "int64",
+    "Heart_rate": "int64",
+    "Resp_Rate": "int64",
+    "ST": "float64",
+    "Attack Category": "str",
+    "Label": "int64"
+  },
+  "missing": {
+    "Dir": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Flgs": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SrcAddr": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DstAddr": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Sport": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Dport": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SrcBytes": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DstBytes": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SrcLoad": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DstLoad": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SrcGap": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DstGap": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SIntPkt": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DIntPkt": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SIntPktAct": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DIntPktAct": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SrcJitter": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DstJitter": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "sMaxPktSz": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "dMaxPktSz": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "sMinPktSz": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "dMinPktSz": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Dur": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Trans": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "TotPkts": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "TotBytes": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Load": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Loss": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "pLoss": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "pSrcLoss": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "pDstLoss": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Rate": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SrcMac": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DstMac": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Packet_num": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Temp": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SpO2": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Pulse_Rate": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "SYS": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "DIA": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Heart_rate": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Resp_Rate": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "ST": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Attack Category": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    },
+    "Label": {
+      "missing_count": 0,
+      "missing_pct": 0.0
+    }
+  },
+  "descriptive_stats": {
+    "Dport": {
+      "mean": 1111.0,
+      "std": 0.0,
+      "min": 1111.0,
+      "p25": 1111.0,
+      "p50": 1111.0,
+      "p75": 1111.0,
+      "max": 1111.0
+    },
+    "SrcBytes": {
+      "mean": 496.650264,
+      "std": 28.584642,
+      "min": 310.0,
+      "p25": 496.0,
+      "p50": 496.0,
+      "p75": 496.0,
+      "max": 2298.0
+    },
+    "DstBytes": {
+      "mean": 187.077706,
+      "std": 18.688525,
+      "min": 120.0,
+      "p25": 186.0,
+      "p50": 186.0,
+      "p75": 186.0,
+      "max": 882.0
+    },
+    "SrcLoad": {
+      "mean": 211840.633005,
+      "std": 79429.880071,
+      "min": 0.0,
+      "p25": 199053.5,
+      "p50": 236679.0,
+      "p75": 261557.0,
+      "max": 1134000.0
+    },
+    "DstLoad": {
+      "mean": 71024.35494,
+      "std": 45308.106133,
+      "min": 507.447,
+      "p25": 66355.0,
+      "p50": 78893.0,
+      "p75": 87193.0,
+      "max": 3938000.0
+    },
+    "SrcGap": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 0.0
+    },
+    "DstGap": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 0.0
+    },
+    "SIntPkt": {
+      "mean": 10.946755,
+      "std": 101.230484,
+      "min": 0.875,
+      "p25": 3.792667,
+      "p50": 4.191333,
+      "p75": 4.984167,
+      "max": 9497.338
+    },
+    "DIntPkt": {
+      "mean": 8.515423,
+      "std": 52.50456,
+      "min": 0.7305,
+      "p25": 2.226,
+      "p50": 2.56225,
+      "p75": 3.136375,
+      "max": 2445.732
+    },
+    "SIntPktAct": {
+      "mean": 1.286918,
+      "std": 62.123452,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 3002.812
+    },
+    "DIntPktAct": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 0.0
+    },
+    "SrcJitter": {
+      "mean": 32.025841,
+      "std": 1266.374694,
+      "min": 0.0,
+      "p25": 2.814472,
+      "p50": 3.053852,
+      "p75": 3.680555,
+      "max": 66099.19414
+    },
+    "DstJitter": {
+      "mean": 8.546796,
+      "std": 49.667244,
+      "min": 0.6755,
+      "p25": 2.1715,
+      "p50": 2.50575,
+      "p75": 3.086,
+      "max": 2268.882
+    },
+    "sMaxPktSz": {
+      "mean": 310.000429,
+      "std": 0.020708,
+      "min": 310.0,
+      "p25": 310.0,
+      "p50": 310.0,
+      "p75": 310.0,
+      "max": 311.0
+    },
+    "dMaxPktSz": {
+      "mean": 65.999632,
+      "std": 0.04697,
+      "min": 60.0,
+      "p25": 66.0,
+      "p50": 66.0,
+      "p75": 66.0,
+      "max": 66.0
+    },
+    "sMinPktSz": {
+      "mean": 60.061282,
+      "std": 3.913782,
+      "min": 60.0,
+      "p25": 60.0,
+      "p50": 60.0,
+      "p75": 60.0,
+      "max": 310.0
+    },
+    "dMinPktSz": {
+      "mean": 60.0,
+      "std": 0.0,
+      "min": 60.0,
+      "p25": 60.0,
+      "p50": 60.0,
+      "p75": 60.0,
+      "max": 60.0
+    },
+    "Dur": {
+      "mean": 0.039227,
+      "std": 0.2499,
+      "min": 0.000128,
+      "p25": 0.011376,
+      "p50": 0.012574,
+      "p75": 0.01495,
+      "max": 5.08852
+    },
+    "Trans": {
+      "mean": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "p25": 1.0,
+      "p50": 1.0,
+      "p75": 1.0,
+      "max": 1.0
+    },
+    "TotPkts": {
+      "mean": 7.018201,
+      "std": 0.341381,
+      "min": 3.0,
+      "p25": 7.0,
+      "p50": 7.0,
+      "p75": 7.0,
+      "max": 23.0
+    },
+    "TotBytes": {
+      "mean": 683.727969,
+      "std": 41.832695,
+      "min": 436.0,
+      "p25": 682.0,
+      "p50": 682.0,
+      "p75": 682.0,
+      "max": 3180.0
+    },
+    "Load": {
+      "mean": 282864.995695,
+      "std": 111324.975308,
+      "min": 538.98,
+      "p25": 265418.0,
+      "p50": 315572.0,
+      "p75": 348774.0,
+      "max": 3938000.0
+    },
+    "Loss": {
+      "mean": 0.00239,
+      "std": 0.08679,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 4.0
+    },
+    "pLoss": {
+      "mean": 0.018954,
+      "std": 0.634312,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 28.571429
+    },
+    "pSrcLoss": {
+      "mean": 0.015933,
+      "std": 0.526854,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 20.0
+    },
+    "pDstLoss": {
+      "mean": 0.018044,
+      "std": 0.748675,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 33.333333
+    },
+    "Rate": {
+      "mean": 428.72025,
+      "std": 215.539362,
+      "min": 1.79,
+      "p25": 401.338,
+      "p50": 477.175,
+      "p75": 527.38,
+      "max": 15625.0
+    },
+    "Packet_num": {
+      "mean": 8156.3088,
+      "std": 4709.735634,
+      "min": 1.0,
+      "p25": 4077.25,
+      "p50": 8156.5,
+      "p75": 12234.75,
+      "max": 16314.0
+    },
+    "Temp": {
+      "mean": 26.906815,
+      "std": 0.919766,
+      "min": 23.6,
+      "p25": 26.6,
+      "p50": 27.0,
+      "p75": 27.6,
+      "max": 29.2
+    },
+    "SpO2": {
+      "mean": 97.808861,
+      "std": 1.496269,
+      "min": 0.0,
+      "p25": 98.0,
+      "p50": 98.0,
+      "p75": 98.0,
+      "max": 100.0
+    },
+    "Pulse_Rate": {
+      "mean": 76.723741,
+      "std": 7.431914,
+      "min": 0.0,
+      "p25": 73.0,
+      "p50": 73.0,
+      "p75": 79.0,
+      "max": 194.0
+    },
+    "SYS": {
+      "mean": 142.846611,
+      "std": 8.493933,
+      "min": 0.0,
+      "p25": 142.0,
+      "p50": 144.0,
+      "p75": 148.0,
+      "max": 149.0
+    },
+    "DIA": {
+      "mean": 80.09419,
+      "std": 6.125289,
+      "min": 0.0,
+      "p25": 76.0,
+      "p50": 83.0,
+      "p75": 84.0,
+      "max": 95.0
+    },
+    "Heart_rate": {
+      "mean": 75.443927,
+      "std": 6.609102,
+      "min": 0.0,
+      "p25": 73.0,
+      "p50": 73.0,
+      "p75": 79.0,
+      "max": 119.0
+    },
+    "Resp_Rate": {
+      "mean": 19.695551,
+      "std": 7.325856,
+      "min": 0.0,
+      "p25": 18.0,
+      "p50": 19.0,
+      "p75": 24.0,
+      "max": 73.0
+    },
+    "ST": {
+      "mean": 0.258007,
+      "std": 0.10398,
+      "min": -0.3,
+      "p25": 0.2,
+      "p50": 0.3,
+      "p75": 0.3,
+      "max": 1.0
+    },
+    "Label": {
+      "mean": 0.125383,
+      "std": 0.331163,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 1.0
+    }
+  },
+  "class_balance": {
+    "n_classes": 2,
+    "total_labeled": 16318,
+    "imbalance_ratio": 6.9756,
+    "distribution": {
+      "0": {
+        "count": 14272,
+        "pct": 87.4617
+      },
+      "1": {
+        "count": 2046,
+        "pct": 12.5383
+      }
+    }
+  },
+  "high_correlations": [
+    {
+      "feature_a": "SIntPktAct",
+      "feature_b": "SrcJitter",
+      "correlation": 0.997285
+    },
+    {
+      "feature_a": "Loss",
+      "feature_b": "pLoss",
+      "correlation": 0.985985
+    },
+    {
+      "feature_a": "DstLoad",
+      "feature_b": "Rate",
+      "correlation": 0.977307
+    },
+    {
+      "feature_a": "DIntPkt",
+      "feature_b": "DstJitter",
+      "correlation": 0.971512
+    },
+    {
+      "feature_a": "SIntPktAct",
+      "feature_b": "Loss",
+      "correlation": 0.954233
+    },
+    {
+      "feature_a": "SrcJitter",
+      "feature_b": "Loss",
+      "correlation": 0.953454
+    },
+    {
+      "feature_a": "DstBytes",
+      "feature_b": "TotPkts",
+      "correlation": 0.952941
+    }
+  ],
+  "outliers": {
+    "Dport": {
+      "q1": 1111.0,
+      "q3": 1111.0,
+      "iqr": 0.0,
+      "lower_fence": 1111.0,
+      "upper_fence": 1111.0,
+      "n_outliers": 0,
+      "outlier_pct": 0.0
+    },
+    "SrcBytes": {
+      "q1": 496.0,
+      "q3": 496.0,
+      "iqr": 0.0,
+      "lower_fence": 496.0,
+      "upper_fence": 496.0,
+      "n_outliers": 90,
+      "outlier_pct": 0.5515
+    },
+    "DstBytes": {
+      "q1": 186.0,
+      "q3": 186.0,
+      "iqr": 0.0,
+      "lower_fence": 186.0,
+      "upper_fence": 186.0,
+      "n_outliers": 90,
+      "outlier_pct": 0.5515
+    },
+    "SrcLoad": {
+      "q1": 199053.5,
+      "q3": 261557.0,
+      "iqr": 62503.5,
+      "lower_fence": 105298.25,
+      "upper_fence": 355312.25,
+      "n_outliers": 2304,
+      "outlier_pct": 14.1194
+    },
+    "DstLoad": {
+      "q1": 66355.0,
+      "q3": 87193.0,
+      "iqr": 20838.0,
+      "lower_fence": 35098.0,
+      "upper_fence": 118450.0,
+      "n_outliers": 2304,
+      "outlier_pct": 14.1194
+    },
+    "SrcGap": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 0,
+      "outlier_pct": 0.0
+    },
+    "DstGap": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 0,
+      "outlier_pct": 0.0
+    },
+    "SIntPkt": {
+      "q1": 3.792667,
+      "q3": 4.984167,
+      "iqr": 1.1915,
+      "lower_fence": 2.005418,
+      "upper_fence": 6.771416,
+      "n_outliers": 2716,
+      "outlier_pct": 16.6442
+    },
+    "DIntPkt": {
+      "q1": 2.226,
+      "q3": 3.136375,
+      "iqr": 0.910375,
+      "lower_fence": 0.860437,
+      "upper_fence": 4.501938,
+      "n_outliers": 1930,
+      "outlier_pct": 11.8274
+    },
+    "SIntPktAct": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 7,
+      "outlier_pct": 0.0429
+    },
+    "DIntPktAct": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 0,
+      "outlier_pct": 0.0
+    },
+    "SrcJitter": {
+      "q1": 2.814472,
+      "q3": 3.680555,
+      "iqr": 0.866083,
+      "lower_fence": 1.515348,
+      "upper_fence": 4.979679,
+      "n_outliers": 2568,
+      "outlier_pct": 15.7372
+    },
+    "DstJitter": {
+      "q1": 2.1715,
+      "q3": 3.086,
+      "iqr": 0.9145,
+      "lower_fence": 0.79975,
+      "upper_fence": 4.45775,
+      "n_outliers": 1920,
+      "outlier_pct": 11.7661
+    },
+    "sMaxPktSz": {
+      "q1": 310.0,
+      "q3": 310.0,
+      "iqr": 0.0,
+      "lower_fence": 310.0,
+      "upper_fence": 310.0,
+      "n_outliers": 7,
+      "outlier_pct": 0.0429
+    },
+    "dMaxPktSz": {
+      "q1": 66.0,
+      "q3": 66.0,
+      "iqr": 0.0,
+      "lower_fence": 66.0,
+      "upper_fence": 66.0,
+      "n_outliers": 1,
+      "outlier_pct": 0.0061
+    },
+    "sMinPktSz": {
+      "q1": 60.0,
+      "q3": 60.0,
+      "iqr": 0.0,
+      "lower_fence": 60.0,
+      "upper_fence": 60.0,
+      "n_outliers": 4,
+      "outlier_pct": 0.0245
+    },
+    "dMinPktSz": {
+      "q1": 60.0,
+      "q3": 60.0,
+      "iqr": 0.0,
+      "lower_fence": 60.0,
+      "upper_fence": 60.0,
+      "n_outliers": 0,
+      "outlier_pct": 0.0
+    },
+    "Dur": {
+      "q1": 0.011376,
+      "q3": 0.01495,
+      "iqr": 0.003574,
+      "lower_fence": 0.006016,
+      "upper_fence": 0.020311,
+      "n_outliers": 2715,
+      "outlier_pct": 16.6381
+    },
+    "Trans": {
+      "q1": 1.0,
+      "q3": 1.0,
+      "iqr": 0.0,
+      "lower_fence": 1.0,
+      "upper_fence": 1.0,
+      "n_outliers": 0,
+      "outlier_pct": 0.0
+    },
+    "TotPkts": {
+      "q1": 7.0,
+      "q3": 7.0,
+      "iqr": 0.0,
+      "lower_fence": 7.0,
+      "upper_fence": 7.0,
+      "n_outliers": 92,
+      "outlier_pct": 0.5638
+    },
+    "TotBytes": {
+      "q1": 682.0,
+      "q3": 682.0,
+      "iqr": 0.0,
+      "lower_fence": 682.0,
+      "upper_fence": 682.0,
+      "n_outliers": 92,
+      "outlier_pct": 0.5638
+    },
+    "Load": {
+      "q1": 265418.0,
+      "q3": 348774.0,
+      "iqr": 83356.0,
+      "lower_fence": 140384.0,
+      "upper_fence": 473808.0,
+      "n_outliers": 2304,
+      "outlier_pct": 14.1194
+    },
+    "Loss": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 18,
+      "outlier_pct": 0.1103
+    },
+    "pLoss": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 18,
+      "outlier_pct": 0.1103
+    },
+    "pSrcLoss": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 15,
+      "outlier_pct": 0.0919
+    },
+    "pDstLoss": {
+      "q1": 0.0,
+      "q3": 0.0,
+      "iqr": 0.0,
+      "lower_fence": 0.0,
+      "upper_fence": 0.0,
+      "n_outliers": 10,
+      "outlier_pct": 0.0613
+    },
+    "Rate": {
+      "q1": 401.338,
+      "q3": 527.38,
+      "iqr": 126.042,
+      "lower_fence": 212.275,
+      "upper_fence": 716.443,
+      "n_outliers": 2304,
+      "outlier_pct": 14.1194
+    },
+    "Packet_num": {
+      "q1": 4077.25,
+      "q3": 12234.75,
+      "iqr": 8157.5,
+      "lower_fence": -8159.0,
+      "upper_fence": 24471.0,
+      "n_outliers": 0,
+      "outlier_pct": 0.0
+    },
+    "Temp": {
+      "q1": 26.6,
+      "q3": 27.6,
+      "iqr": 1.0,
+      "lower_fence": 25.1,
+      "upper_fence": 29.1,
+      "n_outliers": 894,
+      "outlier_pct": 5.4786
+    },
+    "SpO2": {
+      "q1": 98.0,
+      "q3": 98.0,
+      "iqr": 0.0,
+      "lower_fence": 98.0,
+      "upper_fence": 98.0,
+      "n_outliers": 6585,
+      "outlier_pct": 40.3542
+    },
+    "Pulse_Rate": {
+      "q1": 73.0,
+      "q3": 79.0,
+      "iqr": 6.0,
+      "lower_fence": 64.0,
+      "upper_fence": 88.0,
+      "n_outliers": 886,
+      "outlier_pct": 5.4296
+    },
+    "SYS": {
+      "q1": 142.0,
+      "q3": 148.0,
+      "iqr": 6.0,
+      "lower_fence": 133.0,
+      "upper_fence": 157.0,
+      "n_outliers": 507,
+      "outlier_pct": 3.107
+    },
+    "DIA": {
+      "q1": 76.0,
+      "q3": 84.0,
+      "iqr": 8.0,
+      "lower_fence": 64.0,
+      "upper_fence": 96.0,
+      "n_outliers": 36,
+      "outlier_pct": 0.2206
+    },
+    "Heart_rate": {
+      "q1": 73.0,
+      "q3": 79.0,
+      "iqr": 6.0,
+      "lower_fence": 64.0,
+      "upper_fence": 88.0,
+      "n_outliers": 979,
+      "outlier_pct": 5.9995
+    },
+    "Resp_Rate": {
+      "q1": 18.0,
+      "q3": 24.0,
+      "iqr": 6.0,
+      "lower_fence": 9.0,
+      "upper_fence": 33.0,
+      "n_outliers": 1289,
+      "outlier_pct": 7.8993
+    },
+    "ST": {
+      "q1": 0.2,
+      "q3": 0.3,
+      "iqr": 0.1,
+      "lower_fence": 0.05,
+      "upper_fence": 0.45,
+      "n_outliers": 698,
+      "outlier_pct": 4.2775
+    }
+  },
+  "iomt_characteristics": {
+    "medical_footprint": {
+      "biometric_features_present": [
+        "Temp",
+        "SpO2",
+        "Pulse_Rate",
+        "SYS",
+        "DIA",
+        "Heart_rate",
+        "Resp_Rate",
+        "ST"
+      ],
+      "biometric_count": 8,
+      "biometric_expected": 8,
+      "network_features_present": [
+        "Dir",
+        "Flgs",
+        "SrcAddr",
+        "DstAddr",
+        "Sport",
+        "Dport",
+        "SrcBytes",
+        "DstBytes",
+        "SrcLoad",
+        "DstLoad",
+        "SrcGap",
+        "DstGap",
+        "SIntPkt",
+        "DIntPkt",
+        "SIntPktAct",
+        "DIntPktAct",
+        "SrcJitter",
+        "DstJitter",
+        "sMaxPktSz",
+        "dMaxPktSz",
+        "sMinPktSz",
+        "dMinPktSz",
+        "Dur",
+        "Trans",
+        "TotPkts",
+        "TotBytes",
+        "Load",
+        "Loss",
+        "pLoss",
+        "pSrcLoss",
+        "pDstLoss",
+        "Rate",
+        "SrcMac",
+        "DstMac",
+        "Packet_num"
+      ],
+      "network_count": 35,
+      "network_expected": 35,
+      "finding": "8/8 biometric and 35/35 network features confirmed. HIPAA sanitization required for biometric columns."
+    },
+    "extreme_imbalance": {
+      "imbalance_ratio": 6.9756,
+      "recommended_mitigation": "Class-weighted loss + macro-F1",
+      "finding": "Majority/minority class ratio = 6.9756. Recommended: Class-weighted loss + macro-F1."
+    },
+    "temporal_dynamics": {
+      "iat_columns_analysed": [
+        "SIntPkt",
+        "DIntPkt",
+        "SrcJitter",
+        "DstJitter"
+      ],
+      "iat_stats": {
+        "SIntPkt": {
+          "mean": 10.946755,
+          "std": 101.230484,
+          "coefficient_of_variation": 9.2475
+        },
+        "DIntPkt": {
+          "mean": 8.515423,
+          "std": 52.50456,
+          "coefficient_of_variation": 6.1658
+        },
+        "SrcJitter": {
+          "mean": 32.025841,
+          "std": 1266.374694,
+          "coefficient_of_variation": 39.5423
+        },
+        "DstJitter": {
+          "mean": 8.546796,
+          "std": 49.667244,
+          "coefficient_of_variation": 5.8112
+        }
+      },
+      "average_cv": 15.1917,
+      "finding": "Average coefficient of variation across IAT columns = 15.1917. High CV confirms bursty, non-stationary IoMT traffic patterns."
+    },
+    "feature_redundancy": {
+      "n_total_numeric_features": 36,
+      "n_high_correlation_pairs": 7,
+      "n_redundant_features": 10,
+      "redundant_feature_pct": 27.78,
+      "correlation_threshold": 0.95,
+      "finding": "7 feature pairs exceed r=0.95. 10 features (27.8%) are candidates for removal in Phase 2 Feature Selection."
+    },
+    "attack_vector_profiling": {
+      "top_outlier_features": [
+        {
+          "feature": "SpO2",
+          "n_outliers": 6585,
+          "outlier_pct": 40.3542,
+          "upper_fence": 98.0
+        },
+        {
+          "feature": "SIntPkt",
+          "n_outliers": 2716,
+          "outlier_pct": 16.6442,
+          "upper_fence": 6.771416
+        },
+        {
+          "feature": "Dur",
+          "n_outliers": 2715,
+          "outlier_pct": 16.6381,
+          "upper_fence": 0.020311
+        }
+      ],
+      "finding": "Top features by outlier density are likely attack signatures. These will serve as primary SHAP attribution targets in Phase 5 XAI."
+    }
+  },
+  "summary": {
+    "n_rows": 16318,
+    "n_columns": 45,
+    "n_numeric_features": 37,
+    "n_missing_columns": 0,
+    "missing_columns": [],
+    "n_zero_variance_columns": 6,
+    "zero_variance_columns": [
+      "Dport",
+      "SrcGap",
+      "DstGap",
+      "DIntPktAct",
+      "dMinPktSz",
+      "Trans"
+    ],
+    "n_high_correlation_pairs": 7,
+    "imbalance_ratio": 6.9756,
+    "label_column": "Label"
+  }
+}

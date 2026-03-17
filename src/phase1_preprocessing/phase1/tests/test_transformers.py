@@ -1,0 +1,207 @@
+"""Unit tests for Phase 1 DataFrame-level transformers.
+
+Tests HIPAASanitizer, MissingValueHandler, and RedundancyRemover.
+All inputs are synthetic — no file I/O, no real dataset.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from src.phase1_preprocessing.phase1.hipaa import HIPAASanitizer
+from src.phase1_preprocessing.phase1.missing import MissingValueHandler
+from src.phase1_preprocessing.phase1.redundancy import RedundancyRemover
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def raw_df() -> pd.DataFrame:
+    """Minimal DataFrame mimicking WUSTL-EHMS structure."""
+    return pd.DataFrame({
+        "SrcAddr": ["192.168.1.1"] * 10,
+        "DstAddr": ["10.0.0.1"] * 10,
+        "Sport": ["443"] * 10,
+        "Dport": [1111] * 10,
+        "SrcMac": ["aa:bb"] * 10,
+        "DstMac": ["cc:dd"] * 10,
+        "Dir": ["->"] * 10,
+        "Flgs": ["e"] * 10,
+        "Load": np.random.rand(10) * 1000,
+        "SrcLoad": np.random.rand(10) * 500,
+        "Temp": [36.5, 36.6, np.nan, 36.8, 36.7, 36.9, np.nan, 37.0, 36.5, 36.6],
+        "SpO2": [98, 97, 99, np.nan, 98, 97, 96, 98, 99, 97],
+        "Label": [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+    })
+
+
+# ---------------------------------------------------------------------------
+# HIPAASanitizer
+# ---------------------------------------------------------------------------
+
+
+class TestHIPAASanitizer:
+    def test_drops_phi_columns(self, raw_df: pd.DataFrame) -> None:
+        hipaa = HIPAASanitizer(["SrcAddr", "DstAddr", "Sport", "Dport"])
+        result = hipaa.transform(raw_df)
+        assert "SrcAddr" not in result.columns
+        assert "DstAddr" not in result.columns
+        assert "Sport" not in result.columns
+        assert "Dport" not in result.columns
+
+    def test_preserves_non_phi_columns(self, raw_df: pd.DataFrame) -> None:
+        hipaa = HIPAASanitizer(["SrcAddr"])
+        result = hipaa.transform(raw_df)
+        assert "Load" in result.columns
+        assert "Label" in result.columns
+
+    def test_report_counts_dropped(self, raw_df: pd.DataFrame) -> None:
+        hipaa = HIPAASanitizer(["SrcAddr", "DstAddr", "NonExistent"])
+        hipaa.transform(raw_df)
+        report = hipaa.get_report()
+        assert report["n_dropped"] == 2
+        assert "SrcAddr" in report["columns_dropped"]
+        assert "NonExistent" not in report["columns_dropped"]
+
+    def test_ignores_missing_columns(self, raw_df: pd.DataFrame) -> None:
+        hipaa = HIPAASanitizer(["FakeColumn"])
+        result = hipaa.transform(raw_df)
+        assert len(result.columns) == len(raw_df.columns)
+
+    def test_implements_base_transformer(self) -> None:
+        from src.phase1_preprocessing.phase1.base import BaseTransformer
+        assert issubclass(HIPAASanitizer, BaseTransformer)
+
+    def test_fit_returns_self(self, raw_df: pd.DataFrame) -> None:
+        hipaa = HIPAASanitizer(["SrcAddr"])
+        assert hipaa.fit(raw_df) is hipaa
+
+
+# ---------------------------------------------------------------------------
+# MissingValueHandler
+# ---------------------------------------------------------------------------
+
+
+class TestMissingValueHandler:
+    def test_ffill_biometrics(self) -> None:
+        df = pd.DataFrame({
+            "Temp": [36.5, np.nan, np.nan, 37.0],
+            "Load": [100, 200, 300, 400],
+            "Label": [0, 0, 0, 1],
+        })
+        handler = MissingValueHandler(biometric_columns=["Temp"])
+        result = handler.transform(df)
+        assert result["Temp"].isna().sum() == 0
+        assert result["Temp"].iloc[1] == 36.5  # forward-filled
+
+    def test_dropna_network(self) -> None:
+        df = pd.DataFrame({
+            "Load": [100, np.nan, 300, 400],
+            "Rate": [10, 20, np.nan, 40],
+            "Label": [0, 0, 0, 1],
+        })
+        handler = MissingValueHandler(biometric_columns=[])
+        result = handler.transform(df)
+        assert len(result) == 2  # rows 0 and 3
+
+    def test_report_stats(self) -> None:
+        df = pd.DataFrame({
+            "Temp": [36.5, np.nan, 37.0],
+            "Load": [100, np.nan, 300],
+            "Label": [0, 0, 1],
+        })
+        handler = MissingValueHandler(biometric_columns=["Temp"])
+        handler.transform(df)
+        report = handler.get_report()
+        assert report["biometric_cells_filled"] == 1
+        assert report["rows_dropped"] == 1
+
+    def test_no_missing_passthrough(self) -> None:
+        df = pd.DataFrame({
+            "Temp": [36.5, 36.6],
+            "Load": [100, 200],
+            "Label": [0, 1],
+        })
+        handler = MissingValueHandler(biometric_columns=["Temp"])
+        result = handler.transform(df)
+        assert len(result) == 2
+
+    def test_excludes_label_from_network(self) -> None:
+        df = pd.DataFrame({
+            "Load": [100, 200],
+            "Label": [0, 1],
+        })
+        handler = MissingValueHandler(
+            biometric_columns=[], label_column="Label",
+        )
+        result = handler.transform(df)
+        assert "Label" in result.columns
+
+
+# ---------------------------------------------------------------------------
+# RedundancyRemover
+# ---------------------------------------------------------------------------
+
+
+class TestRedundancyRemover:
+    def test_drops_feature_b(self) -> None:
+        df = pd.DataFrame({
+            "A": [1, 2, 3], "B": [2, 4, 6], "C": [10, 20, 30],
+            "Label": [0, 0, 1],
+        })
+        corr = pd.DataFrame({
+            "feature_a": ["A"], "feature_b": ["B"], "correlation": [0.99],
+        })
+        remover = RedundancyRemover(corr, threshold=0.95)
+        result = remover.transform(df)
+        assert "B" not in result.columns
+        assert "A" in result.columns
+        assert "C" in result.columns
+
+    def test_never_drops_label(self) -> None:
+        df = pd.DataFrame({"A": [1, 2], "Label": [0, 1]})
+        corr = pd.DataFrame({
+            "feature_a": ["A"], "feature_b": ["Label"], "correlation": [0.99],
+        })
+        remover = RedundancyRemover(corr, threshold=0.95, label_column="Label")
+        result = remover.transform(df)
+        assert "Label" in result.columns
+
+    def test_respects_threshold(self) -> None:
+        df = pd.DataFrame({"A": [1, 2], "B": [2, 4], "Label": [0, 1]})
+        corr = pd.DataFrame({
+            "feature_a": ["A"], "feature_b": ["B"], "correlation": [0.90],
+        })
+        remover = RedundancyRemover(corr, threshold=0.95)
+        result = remover.transform(df)
+        assert "B" in result.columns  # below threshold
+
+    def test_report_lists_dropped(self) -> None:
+        df = pd.DataFrame({
+            "A": [1, 2], "B": [2, 4], "C": [3, 6], "Label": [0, 1],
+        })
+        corr = pd.DataFrame({
+            "feature_a": ["A", "A"], "feature_b": ["B", "C"],
+            "correlation": [0.99, 0.96],
+        })
+        remover = RedundancyRemover(corr, threshold=0.95)
+        remover.transform(df)
+        report = remover.get_report()
+        assert report["n_dropped"] == 2
+        assert "B" in report["columns_dropped"]
+        assert "C" in report["columns_dropped"]
+
+    def test_no_duplicates_in_drop_list(self) -> None:
+        df = pd.DataFrame({"A": [1, 2], "B": [2, 4], "Label": [0, 1]})
+        corr = pd.DataFrame({
+            "feature_a": ["A", "A"], "feature_b": ["B", "B"],
+            "correlation": [0.99, 0.98],
+        })
+        remover = RedundancyRemover(corr, threshold=0.95)
+        remover.transform(df)
+        assert remover.get_report()["n_dropped"] == 1
