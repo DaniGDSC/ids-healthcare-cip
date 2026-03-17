@@ -15,8 +15,8 @@ line-length = 100
 select = ["E", "F", "W", "I"]
 
 [tool.bandit]
-exclude_dirs = ["tests", "src/phase0_dataset_analysis/phase0/tests", "src/phase1_preprocessing/phase1/tests"]
+exclude_dirs = ["tests", "src/phase0_dataset_analysis/phase0/tests", "src/phase1_preprocessing/phase1/tests", "src/phase2_detection_engine/phase2/tests"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "src/phase0_dataset_analysis/phase0/tests", "src/phase1_preprocessing/phase1/tests"]
+testpaths = ["tests", "src/phase0_dataset_analysis/phase0/tests", "src/phase1_preprocessing/phase1/tests", "src/phase2_detection_engine/phase2/tests"]
 addopts = "-v --tb=short"

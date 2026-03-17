@@ -63,17 +63,13 @@
   "hyperparameters": {
     "timesteps": 20,
     "stride": 1,
-    "cnn_filters": [
-      64,
-      128
-    ],
+    "cnn_filters_1": 64,
+    "cnn_filters_2": 128,
     "cnn_kernel_size": 3,
     "cnn_activation": "relu",
     "cnn_pool_size": 2,
-    "bilstm_units": [
-      128,
-      64
-    ],
+    "bilstm_units_1": 128,
+    "bilstm_units_2": 64,
     "dropout_rate": 0.3,
     "attention_units": 128,
     "random_state": 42
@@ -117,8 +113,8 @@
     "train_context": "(19961, 128)",
     "test_context": "(4877, 128)"
   },
-  "elapsed_seconds": 5.947,
-  "timestamp": "2026-03-17T15:54:23.110301+00:00",
+  "elapsed_seconds": 3.037,
+  "timestamp": "2026-03-17T16:44:25.667965+00:00",
   "environment": {
     "python": "3.12.3",
     "tensorflow": "2.20.0",

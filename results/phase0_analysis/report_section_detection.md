@@ -1,20 +1,14 @@
 ## 5.1 Detection Engine Architecture
 
-This section describes the CNN→BiLSTM→Attention feature extraction
-model that transforms preprocessed IoMT network traffic into
-fixed-length representation vectors for downstream classification
-(Phase 3).
+This section describes the CNN→BiLSTM→Attention feature extraction model that transforms preprocessed IoMT network traffic into fixed-length representation vectors for downstream classification (Phase 3).
 
 ### 5.1.1 Architecture Overview
 
 The detection engine implements a three-stage deep feature extractor:
 
-1. **CNN (Convolutional Neural Network):** Extracts local spatial
-   patterns from sliding windows of consecutive network events.
-2. **BiLSTM (Bidirectional Long Short-Term Memory):** Captures
-   temporal dependencies in both forward and backward directions.
-3. **Bahdanau Attention:** Computes adaptive weights over timesteps
-   to produce a fixed-length context vector (weighted sum).
+1. **CNN (Convolutional Neural Network):** Extracts local spatial patterns from sliding windows of consecutive network events.
+2. **BiLSTM (Bidirectional Long Short-Term Memory):** Captures temporal dependencies in both forward and backward directions.
+3. **Bahdanau Attention:** Computes adaptive weights over timesteps to produce a fixed-length context vector (weighted sum).
 
 ```
 Input: (batch, 20, 29)
@@ -53,10 +47,7 @@ Input: (batch, 20, 29)
 
 ### 5.1.3 Sliding Window Reshape
 
-Network traffic samples are grouped into temporal windows of
-**20** consecutive events with stride **1**,
-creating a 3-D tensor suitable for 1-D convolution. The label for
-each window is the label of the last sample in the window.
+Network traffic samples are grouped into temporal windows of **20** consecutive events with stride **1**, creating a 3-D tensor suitable for 1-D convolution. The label for each window is the label of the last sample in the window.
 
 | Parameter | Value |
 |-----------|-------|
@@ -71,18 +62,12 @@ each window is the label of the last sample in the window.
 
 ### 5.1.4 Attention Mechanism
 
-The Bahdanau (additive) attention mechanism computes a context
-vector by learning to weight each timestep according to its
-relevance for intrusion detection:
+The Bahdanau (additive) attention mechanism computes a context vector by learning to weight each timestep according to its relevance for intrusion detection:
 
-1. **Score:** `Dense(128, tanh)` projects each
-   timestep to a score vector
-2. **Weight:** `Dense(1)` + `softmax(axis=timesteps)` normalises
-   scores to a probability distribution over timesteps
-3. **Multiply:** Element-wise multiplication weights the BiLSTM
-   output sequence by learned attention weights
-4. **Pool:** `GlobalAveragePooling1D` produces the final
-   128-dimensional context vector
+1. **Score:** `Dense(128, tanh)` projects each timestep to a score vector
+2. **Weight:** `Dense(1)` + `softmax(axis=timesteps)` normalises scores to a probability distribution over timesteps
+3. **Multiply:** Element-wise multiplication weights the BiLSTM output sequence by learned attention weights
+4. **Pool:** `GlobalAveragePooling1D` produces the final 128-dimensional context vector
 
 Output dimension: **128** (one vector per window).
 
@@ -104,7 +89,7 @@ Output dimension: **128** (one vector per window).
 
 | Artifact | Description |
 |----------|-------------|
-| `detection_model.h5` | Model weights (474,496 parameters, no classification head) |
+| `detection_model.weights.h5` | Model weights (474,496 parameters, no classification head) |
 | `attention_output.parquet` | Weighted sum vectors (128-dim) + labels + split indicator |
 | `detection_report.json` | Model summary, layer shapes, hyperparameters, environment |
 
@@ -112,7 +97,7 @@ Output dimension: **128** (one vector per window).
 
 | Metric | Value |
 |--------|-------|
-| Total execution time | **5.95 s** |
+| Total execution time | **3.04 s** |
 | Python | 3.12.3 |
 | TensorFlow | 2.20.0 |
 | NumPy | 2.4.1 |
