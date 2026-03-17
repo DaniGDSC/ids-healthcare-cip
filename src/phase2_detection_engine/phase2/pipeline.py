@@ -67,9 +67,7 @@ class DetectionPipeline:
         logger.info("Phase 2 Detection Engine — starting")
 
         # ── Step 1: Load & Verify ──
-        X_train, y_train, X_test, y_test, feature_names = (
-            self._reader.load_and_verify()
-        )
+        X_train, y_train, X_test, y_test, feature_names = self._reader.load_and_verify()
         n_features = len(feature_names)
 
         # ── Step 2: Reshape ──
@@ -105,10 +103,14 @@ class DetectionPipeline:
         # ── Step 4: Forward Pass ──
         batch_size = cfg.predict_batch_size
         train_context = model.predict(
-            X_train_w, batch_size=batch_size, verbose=0,
+            X_train_w,
+            batch_size=batch_size,
+            verbose=0,
         )
         test_context = model.predict(
-            X_test_w, batch_size=batch_size, verbose=0,
+            X_test_w,
+            batch_size=batch_size,
+            verbose=0,
         )
         logger.info("Train context: %s", train_context.shape)
         logger.info("Test context:  %s", test_context.shape)
@@ -120,8 +122,10 @@ class DetectionPipeline:
 
         exporter.export_model_weights(model, cfg.model_file)
         exporter.export_attention_vectors(
-            train_context, test_context,
-            y_train_w, y_test_w,
+            train_context,
+            test_context,
+            y_train_w,
+            y_test_w,
             cfg.attention_parquet,
         )
 
@@ -141,10 +145,7 @@ class DetectionPipeline:
 
         # ── Step 6: Thesis Report ──
         md = render_detection_report(report)
-        md_path = (
-            self._root / "results" / "phase0_analysis"
-            / "report_section_detection.md"
-        )
+        md_path = self._root / "results" / "phase0_analysis" / "report_section_detection.md"
         md_path.parent.mkdir(parents=True, exist_ok=True)
         md_path.write_text(md, encoding="utf-8")
         logger.info("Thesis report → %s", md_path)

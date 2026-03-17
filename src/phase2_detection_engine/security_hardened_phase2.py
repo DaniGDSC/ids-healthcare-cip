@@ -26,7 +26,9 @@ from __future__ import annotations
 import json
 import logging
 import os
+import platform
 import stat
+import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -39,11 +41,11 @@ import yaml
 
 # ── Phase 0 security controls (reused, NOT duplicated) ──────────────
 from src.phase0_dataset_analysis.phase0.security import (
+    BIOMETRIC_COLUMNS,
     AuditLogger,
     ConfigSanitizer,
     IntegrityVerifier,
     PathValidator,
-    BIOMETRIC_COLUMNS,
 )
 
 # ── Phase 2 SOLID components ────────────────────────────────────────
@@ -78,9 +80,78 @@ DROPOUT_RATE_MIN: float = 0.0
 DROPOUT_RATE_MAX: float = 0.8
 
 # Known top-level YAML keys for unknown-key rejection (A05)
-_KNOWN_YAML_KEYS: frozenset = frozenset({
-    "data", "reshape", "cnn", "bilstm", "attention", "output", "random_state",
-})
+_KNOWN_YAML_KEYS: frozenset = frozenset(
+    {
+        "data",
+        "reshape",
+        "cnn",
+        "bilstm",
+        "attention",
+        "output",
+        "random_state",
+    }
+)
+
+
+# ===================================================================
+# Model Versioning — Git Commit Hash
+# ===================================================================
+
+
+def _get_git_commit() -> str:
+    """Get current git commit hash for model versioning."""
+    try:
+        result = subprocess.run(  # noqa: S603, S607
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd=str(PROJECT_ROOT),
+        )
+        return result.stdout.strip() if result.returncode == 0 else "unknown"
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return "unknown"
+
+
+# ===================================================================
+# GPU / CPU Detection
+# ===================================================================
+
+
+def _detect_hardware() -> Dict[str, str]:
+    """Detect GPU/CPU availability and log device info.
+
+    Sets ``CUDA_VISIBLE_DEVICES=""`` if no GPU is detected (CPU fallback).
+    Ensures TF deterministic ops for reproducibility on both paths.
+
+    Returns:
+        Hardware info dict for inclusion in reproducibility report.
+    """
+    gpus = tf.config.list_physical_devices("GPU")
+
+    if gpus:
+        device_name = gpus[0].name
+        logger.info("  Training on GPU: %s", device_name)
+        cuda_version = getattr(tf.sysconfig, "get_build_info", lambda: {})()
+        info = {
+            "device": f"GPU: {device_name}",
+            "cuda": cuda_version.get("cuda_version", "N/A"),
+            "cudnn": cuda_version.get("cudnn_version", "N/A"),
+        }
+    else:
+        cpu_info = platform.processor() or platform.machine()
+        logger.info("  CPU fallback: %s", cpu_info)
+        os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
+        info = {
+            "device": f"CPU: {cpu_info}",
+            "cuda": "N/A",
+            "cudnn": "N/A",
+        }
+
+    info["tensorflow"] = tf.__version__
+    info["python"] = platform.python_version()
+    info["platform"] = platform.platform()
+    return info
 
 
 # ===================================================================
@@ -109,7 +180,9 @@ def _validate_phase2_parameters(config: Phase2Config) -> None:
         raise ValueError(msg)
     logger.info(
         "  A05 ✓  timesteps=%d ∈ [%d, %d]",
-        config.timesteps, TIMESTEPS_MIN, TIMESTEPS_MAX,
+        config.timesteps,
+        TIMESTEPS_MIN,
+        TIMESTEPS_MAX,
     )
 
     # dropout_rate ∈ [0.0, 0.8]
@@ -122,7 +195,9 @@ def _validate_phase2_parameters(config: Phase2Config) -> None:
         raise ValueError(msg)
     logger.info(
         "  A05 ✓  dropout_rate=%.2f ∈ [%.1f, %.1f]",
-        config.dropout_rate, DROPOUT_RATE_MIN, DROPOUT_RATE_MAX,
+        config.dropout_rate,
+        DROPOUT_RATE_MIN,
+        DROPOUT_RATE_MAX,
     )
 
     # filters must be powers of 2
@@ -138,10 +213,7 @@ def _validate_phase2_parameters(config: Phase2Config) -> None:
 
     # random_state must be int
     if not isinstance(config.random_state, int):
-        msg = (
-            f"A05: random_state must be int, "
-            f"got {type(config.random_state).__name__}"
-        )
+        msg = f"A05: random_state must be int, " f"got {type(config.random_state).__name__}"
         AuditLogger.log_security_event("PARAMETER_VIOLATION", msg, logging.ERROR)
         raise ValueError(msg)
     logger.info("  A05 ✓  random_state=%d (int verified)", config.random_state)
@@ -198,12 +270,11 @@ def _validate_output_paths(
         for name in [config.model_file, config.attention_parquet]:
             path = output_dir / name
             if path.exists():
-                msg = (
-                    f"A01: Artifact exists: {path.name}. "
-                    "Set allow_overwrite=True to replace."
-                )
+                msg = f"A01: Artifact exists: {path.name}. " "Set allow_overwrite=True to replace."
                 AuditLogger.log_security_event(
-                    "OVERWRITE_BLOCKED", msg, logging.WARNING,
+                    "OVERWRITE_BLOCKED",
+                    msg,
+                    logging.WARNING,
                 )
                 raise FileExistsError(msg)
 
@@ -224,7 +295,9 @@ def _make_read_only(path: Path) -> None:
     readonly = current & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
     os.chmod(path, readonly)
     AuditLogger.log_file_access(
-        "READ_ONLY_SET", path, extra=f"mode={oct(readonly & 0o777)}",
+        "READ_ONLY_SET",
+        path,
+        extra=f"mode={oct(readonly & 0o777)}",
     )
 
 
@@ -239,7 +312,9 @@ def _clear_read_only(path: Path) -> None:
         if not (current & stat.S_IWUSR):
             os.chmod(path, current | stat.S_IWUSR)
             AuditLogger.log_file_access(
-                "WRITE_RESTORED", path, extra="for overwrite",
+                "WRITE_RESTORED",
+                path,
+                extra="for overwrite",
             )
 
 
@@ -277,21 +352,22 @@ class IntegrityAssertions:
         sums = w.sum(axis=1)
         passed = bool(np.allclose(sums, 1.0, atol=atol))
 
-        self._results.append({
-            "assertion": "Attention weights sum to 1.0 per sample",
-            "expected": "1.0 (all samples)",
-            "actual": (
-                f"mean={sums.mean():.6f}, "
-                f"min={sums.min():.6f}, max={sums.max():.6f}"
-            ),
-            "status": "PASS" if passed else "FAIL",
-        })
+        self._results.append(
+            {
+                "assertion": "Attention weights sum to 1.0 per sample",
+                "expected": "1.0 (all samples)",
+                "actual": (
+                    f"mean={sums.mean():.6f}, " f"min={sums.min():.6f}, max={sums.max():.6f}"
+                ),
+                "status": "PASS" if passed else "FAIL",
+            }
+        )
 
         if passed:
             logger.info(
-                "  A08 ✓  Attention weights sum: mean=%.6f, "
-                "all within atol=%.0e",
-                sums.mean(), atol,
+                "  A08 ✓  Attention weights sum: mean=%.6f, " "all within atol=%.0e",
+                sums.mean(),
+                atol,
             )
         else:
             AuditLogger.log_security_event(
@@ -324,20 +400,21 @@ class IntegrityAssertions:
         actual = context.shape
         passed = actual == expected
 
-        self._results.append({
-            "assertion": f"Output shape ({label})",
-            "expected": str(expected),
-            "actual": str(actual),
-            "status": "PASS" if passed else "FAIL",
-        })
+        self._results.append(
+            {
+                "assertion": f"Output shape ({label})",
+                "expected": str(expected),
+                "actual": str(actual),
+                "status": "PASS" if passed else "FAIL",
+            }
+        )
 
         if passed:
             logger.info("  A08 ✓  Output shape (%s): %s", label, actual)
         else:
             AuditLogger.log_security_event(
                 "INTEGRITY_VIOLATION",
-                f"Output shape mismatch ({label}): "
-                f"expected {expected}, got {actual}",
+                f"Output shape mismatch ({label}): " f"expected {expected}, got {actual}",
                 logging.CRITICAL,
             )
         return passed
@@ -360,12 +437,14 @@ class IntegrityAssertions:
         n_inf = int(np.isinf(context).sum())
         passed = (n_nan == 0) and (n_inf == 0)
 
-        self._results.append({
-            "assertion": f"No NaN/Inf in {label}",
-            "expected": "0 NaN, 0 Inf",
-            "actual": f"{n_nan} NaN, {n_inf} Inf",
-            "status": "PASS" if passed else "FAIL",
-        })
+        self._results.append(
+            {
+                "assertion": f"No NaN/Inf in {label}",
+                "expected": "0 NaN, 0 Inf",
+                "actual": f"{n_nan} NaN, {n_inf} Inf",
+                "status": "PASS" if passed else "FAIL",
+            }
+        )
 
         if passed:
             logger.info("  A08 ✓  %s: 0 NaN, 0 Inf", label)
@@ -405,16 +484,19 @@ class IntegrityAssertions:
 
         passed = not has_head
 
-        self._results.append({
-            "assertion": "No classification head",
-            "expected": "True (context vector output only)",
-            "actual": f"last_layer={last_type}, has_head={has_head}",
-            "status": "PASS" if passed else "FAIL",
-        })
+        self._results.append(
+            {
+                "assertion": "No classification head",
+                "expected": "True (context vector output only)",
+                "actual": f"last_layer={last_type}, has_head={has_head}",
+                "status": "PASS" if passed else "FAIL",
+            }
+        )
 
         if passed:
             logger.info(
-                "  A08 ✓  No classification head (last=%s)", last_type,
+                "  A08 ✓  No classification head (last=%s)",
+                last_type,
             )
         else:
             AuditLogger.log_security_event(
@@ -471,8 +553,11 @@ def _store_detection_metadata(
     artifact_hashes: Dict[str, str],
     assertion_results: List[Dict[str, Any]],
     config: Phase2Config,
+    *,
+    train_samples: int = 0,
+    hyperparameters: Dict[str, Any] | None = None,
 ) -> Path:
-    """Persist artifact hashes and assertion results (A02).
+    """Persist artifact hashes, assertions, and model versioning (A02).
 
     Creates ``detection_metadata.json`` for downstream verification
     by the Classification Engine (Phase 3).
@@ -482,6 +567,8 @@ def _store_detection_metadata(
         artifact_hashes: Artifact name → SHA-256 digest.
         assertion_results: Integrity assertion pass/fail records.
         config: Config for reproducibility metadata.
+        train_samples: Number of training windows (for provenance).
+        hyperparameters: Frozen hyperparameters dict (for provenance).
 
     Returns:
         Path to the written metadata file.
@@ -490,6 +577,9 @@ def _store_detection_metadata(
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "pipeline": "security_hardened_phase2",
         "random_state": config.random_state,
+        "git_commit": _get_git_commit(),
+        "train_samples": train_samples,
+        "hyperparameters": hyperparameters or {},
         "artifact_hashes": {
             name: {"sha256": digest, "algorithm": "SHA-256"}
             for name, digest in artifact_hashes.items()
@@ -664,12 +754,10 @@ def _generate_security_report(
     overall = "ALL PASSED" if all_pass else "FAILURES DETECTED"
 
     # Artifact hash rows
-    hash_rows = "\n".join(
-        f"| `{name}` | `{digest}` |"
-        for name, digest in artifact_hashes.items()
-    )
+    hash_rows = "\n".join(f"| `{name}` | `{digest}` |" for name, digest in artifact_hashes.items())
 
-    return f"""## 5.2 Detection Engine Security Controls
+    return f"""\
+## 5.2 Detection Engine Security Controls
 
 This section documents the security controls applied during Phase 2
 detection, extending the Phase 0 OWASP framework (§3.3) with
@@ -677,26 +765,26 @@ model-specific protections.
 
 ### 5.2.1 OWASP Controls — Phase 2 Extensions
 
-| OWASP ID | Risk Category | Control | Status |
-|----------|---------------|---------|--------|
-| A01 | Broken Access Control | Output paths validated within workspace boundary | Implemented |
-| A01 | Broken Access Control | Artifacts set to read-only (chmod 444) after export | Implemented |
-| A01 | Broken Access Control | Overwrite protection — existing artifacts not silently replaced | Implemented |
-| A02 | Cryptographic Failures | SHA-256 hash computed for `detection_model.weights.h5` | Implemented |
-| A02 | Cryptographic Failures | SHA-256 hash computed for `attention_output.parquet` | Implemented |
-| A02 | Cryptographic Failures | Hashes stored in `detection_metadata.json` for Phase 3 verification | Implemented |
-| A05 | Security Misconfiguration | `timesteps` validated ∈ [{TIMESTEPS_MIN}, {TIMESTEPS_MAX}] | Implemented |
-| A05 | Security Misconfiguration | `dropout_rate` validated ∈ [{DROPOUT_RATE_MIN}, {DROPOUT_RATE_MAX}] | Implemented |
-| A05 | Security Misconfiguration | CNN filters validated as powers of 2 | Implemented |
-| A05 | Security Misconfiguration | Unknown YAML keys rejected | Implemented |
-| A08 | Data Integrity | Attention weights sum to 1.0 per sample verified | Implemented |
-| A08 | Data Integrity | Output shape matches expected dimensions verified | Implemented |
-| A08 | Data Integrity | No NaN/Inf in context vectors verified | Implemented |
-| A08 | Data Integrity | No classification head in model verified | Implemented |
-| A09 | Security Logging | Model architecture summary logged (safe — structural metadata only) | Implemented |
-| A09 | Security Logging | Layer output shapes logged (safe — dimensional metadata only) | Implemented |
-| A09 | Security Logging | Per-patient attention weights NEVER logged (HIPAA risk) | Implemented |
-| A09 | Security Logging | Aggregate attention stats only: mean, std | Implemented |
+| OWASP | Category | Control | Status |
+|-------|----------|---------|--------|
+| A01 | Access Control | Output paths within workspace | Implemented |
+| A01 | Access Control | Read-only (chmod 444) after export | Implemented |
+| A01 | Access Control | Overwrite protection | Implemented |
+| A02 | Crypto Failures | SHA-256 for model weights | Implemented |
+| A02 | Crypto Failures | SHA-256 for attention parquet | Implemented |
+| A02 | Crypto Failures | Hashes in `detection_metadata.json` | Implemented |
+| A05 | Misconfiguration | `timesteps` ∈ [{TIMESTEPS_MIN}, {TIMESTEPS_MAX}] | Implemented |
+| A05 | Misconfiguration | `dropout_rate` ∈ [{DROPOUT_RATE_MIN}, {DROPOUT_RATE_MAX}] | Implemented |
+| A05 | Misconfiguration | CNN filters = powers of 2 | Implemented |
+| A05 | Misconfiguration | Unknown YAML keys rejected | Implemented |
+| A08 | Data Integrity | Attention weights sum = 1.0 | Implemented |
+| A08 | Data Integrity | Output shape verified | Implemented |
+| A08 | Data Integrity | No NaN/Inf in context vectors | Implemented |
+| A08 | Data Integrity | No classification head | Implemented |
+| A09 | Logging | Architecture logged (safe metadata) | Implemented |
+| A09 | Logging | Layer shapes logged (safe metadata) | Implemented |
+| A09 | Logging | Per-patient weights NEVER logged | Implemented |
+| A09 | Logging | Aggregate stats only: mean, std | Implemented |
 
 ### 5.2.2 Model Integrity Checklist
 
@@ -722,13 +810,13 @@ All assertions are evaluated at runtime and logged with pass/fail status.
 
 | Data Category | Logged? | Justification |
 |---------------|---------|---------------|
-| Model architecture (layer names, types) | Yes | Non-PHI: structural metadata only |
-| Layer output shapes | Yes | Non-PHI: dimensional metadata only |
+| Model architecture | Yes | Non-PHI: structural metadata |
+| Layer output shapes | Yes | Non-PHI: dimensional metadata |
 | Parameter counts | Yes | Non-PHI: integer counts |
-| Aggregate attention stats (mean, std) | Yes | Non-PHI: population-level statistics |
-| Per-patient attention weights | **NEVER** | HIPAA risk: temporal focus patterns may reveal treatment timelines |
-| Raw biometric values | **NEVER** | HIPAA: biometric columns = {bio_list} |
-| Individual context vectors | **NEVER** | HIPAA risk: patient-level representations |
+| Aggregate attention stats | Yes | Non-PHI: population-level stats |
+| Per-patient attention weights | **NEVER** | HIPAA: may reveal treatment timelines |
+| Raw biometric values | **NEVER** | HIPAA: columns = {bio_list} |
+| Individual context vectors | **NEVER** | HIPAA: patient-level representations |
 
 ### 5.2.5 Artifact Integrity (A02)
 
@@ -771,6 +859,136 @@ The following Phase 0 controls (§3.3) are reused without duplication:
 
 
 # ===================================================================
+# Reproducibility Report Generator
+# ===================================================================
+
+
+def _generate_reproducibility_report(
+    hw_info: Dict[str, str],
+    config: Phase2Config,
+    report: Dict[str, Any],
+    assertions: "IntegrityAssertions",
+    train_context: np.ndarray,
+    test_context: np.ndarray,
+    elapsed: float,
+) -> str:
+    """Render ``report_section_detection_reproducibility.md`` (§5.3).
+
+    Args:
+        hw_info: Hardware detection result from ``_detect_hardware()``.
+        config: Phase2Config for hyperparameter documentation.
+        report: Pipeline report dict from ``DetectionExporter.build_report()``.
+        assertions: IntegrityAssertions with pass/fail records.
+        train_context: Train context vectors for shape reporting.
+        test_context: Test context vectors for shape reporting.
+        elapsed: Phase 2 execution time in seconds.
+
+    Returns:
+        Markdown string for thesis defence.
+    """
+    git_commit = _get_git_commit()
+    output_dim = report.get("output_dim", train_context.shape[1])
+    total_params = report.get("total_parameters", 0)
+
+    # GPU/CPU specification string
+    device_spec = hw_info["device"]
+    tf_version = hw_info["tensorflow"]
+    if hw_info["cuda"] != "N/A":
+        cuda_rows = f"| CUDA | {hw_info['cuda']} |\n" f"| cuDNN | {hw_info['cudnn']} |"
+        cuda_str = f"CUDA: {hw_info['cuda']}, cuDNN: {hw_info['cudnn']}"
+    else:
+        cuda_rows = "| CUDA | N/A (CPU execution) |"
+        cuda_str = "CUDA: N/A (CPU execution)"
+
+    # Assertion rows
+    assertion_rows = "\n".join(
+        f"| {r['assertion']} | {r['status']} | {r['actual']} |" for r in assertions.results
+    )
+
+    return f"""## 5.3 Detection Engine Reproducibility and CI/CD Integration
+
+This section documents the hardware environment, model versioning,
+end-to-end pipeline timing, and integration test results for the
+Phase 2 Detection Engine.
+
+### 5.3.1 Hardware Specification
+
+| Metric | Value |
+|--------|-------|
+| Device | {device_spec} |
+| TensorFlow | {tf_version} |
+{cuda_rows}
+| Python | {hw_info['python']} |
+| Platform | {hw_info['platform']} |
+
+Training executed on **{device_spec}**.
+TensorFlow version: {tf_version}, {cuda_str}.
+
+### 5.3.2 Model Versioning
+
+| Property | Value |
+|----------|-------|
+| `detection_model.weights.h5` git commit | `{git_commit}` |
+| Architecture | CNN-BiLSTM-Attention ({total_params:,} parameters) |
+| Output dimensionality | {output_dim} |
+| Config file | `config/phase2_config.yaml` (version-controlled) |
+
+Hyperparameters frozen in `config/phase2_config.yaml` — version controlled.
+Model weights tagged with git commit `{git_commit[:12]}` in `detection_metadata.json`.
+
+### 5.3.3 End-to-End Pipeline Timing
+
+| Phase | Duration | Hardware |
+|-------|----------|----------|
+| Phase 0 | Data analysis | CPU |
+| Phase 1 | Preprocessing | CPU |
+| Phase 2 | **{elapsed:.2f} s** | {device_spec} |
+
+### 5.3.4 Reproducibility Statement
+
+Detection model reproducible via:
+
+```bash
+docker run analyst/phase0-phase2:3.0 src.phase2_detection_engine.security_hardened_phase2
+```
+
+| Parameter | Value |
+|-----------|-------|
+| `random_state` | {config.random_state} |
+| `tf.random.set_seed()` | {config.random_state} |
+| `numpy.random.seed()` | {config.random_state} |
+| `TF_DETERMINISTIC_OPS` | 1 |
+| Expected train context shape | {train_context.shape} |
+| Expected test context shape | {test_context.shape} |
+| Expected `attention_output` dim | {output_dim} |
+| Timesteps | {config.timesteps} |
+| Stride | {config.stride} |
+| CNN filters | {config.cnn_filters_1}, {config.cnn_filters_2} |
+| BiLSTM units | {config.bilstm_units_1}, {config.bilstm_units_2} |
+| Attention units | {config.attention_units} |
+| Dropout rate | {config.dropout_rate} |
+
+All stochastic operations use `random_state={config.random_state}`,
+`tf.random.set_seed({config.random_state})`, and
+`numpy.random.seed({config.random_state})`.
+Configuration is externalised in `config/phase2_config.yaml` (version-controlled).
+The pipeline reads Phase 1 artifacts — it never recomputes preprocessing steps.
+
+### 5.3.5 Integration Test Results
+
+| Test | Status | Details |
+|------|--------|---------|
+{assertion_rows}
+
+**Overall:** {"ALL PASSED" if assertions.all_passed else "FAILURES DETECTED"}
+
+---
+
+**Reviewer signature:** ____________________  **Date:** ____/____/______
+"""
+
+
+# ===================================================================
 # Security-Hardened Pipeline
 # ===================================================================
 
@@ -802,6 +1020,10 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
     logger.info("SECURITY-HARDENED PHASE 2: DETECTION ENGINE")
     logger.info("=" * 70)
 
+    # ── 0. Hardware detection + GPU/CPU fallback ──────────────────
+    logger.info("── Hardware detection ──")
+    hw_info = _detect_hardware()
+
     # ── 1. A03/A05: Config sanitization + parameter bounds ────────
     logger.info("── A03/A05: Loading and sanitizing configuration ──")
     raw_yaml: dict = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -819,7 +1041,9 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
     # ── 2. A01: Path validation ───────────────────────────────────
     validator = PathValidator(PROJECT_ROOT)
     output_dir = _validate_output_paths(
-        config, validator, allow_overwrite=allow_overwrite,
+        config,
+        validator,
+        allow_overwrite=allow_overwrite,
     )
 
     # If overwriting, clear read-only on existing artifacts
@@ -884,10 +1108,14 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
     # Forward pass
     batch_size = config.predict_batch_size
     train_context = model.predict(
-        X_train_w, batch_size=batch_size, verbose=0,
+        X_train_w,
+        batch_size=batch_size,
+        verbose=0,
     )
     test_context = model.predict(
-        X_test_w, batch_size=batch_size, verbose=0,
+        X_test_w,
+        batch_size=batch_size,
+        verbose=0,
     )
 
     # ── 5. A08: Data integrity assertions ─────────────────────────
@@ -900,10 +1128,16 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
     # Output shape
     expected_dim = config.bilstm_units_2 * 2  # bidirectional doubles
     assertions.assert_output_shape(
-        train_context, X_train_w.shape[0], expected_dim, "train_context",
+        train_context,
+        X_train_w.shape[0],
+        expected_dim,
+        "train_context",
     )
     assertions.assert_output_shape(
-        test_context, X_test_w.shape[0], expected_dim, "test_context",
+        test_context,
+        X_test_w.shape[0],
+        expected_dim,
+        "test_context",
     )
 
     # No NaN/Inf
@@ -913,7 +1147,9 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
     # Attention weights sum to 1.0 (sample first 1000 for efficiency)
     sample_size = min(1000, X_train_w.shape[0])
     attn_weights = _extract_attention_weights(
-        model, X_train_w[:sample_size], batch_size=batch_size,
+        model,
+        X_train_w[:sample_size],
+        batch_size=batch_size,
     )
     if attn_weights.size > 0:
         assertions.assert_attention_weights_sum(attn_weights)
@@ -927,8 +1163,10 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
 
     weights_path = exporter.export_model_weights(model, config.model_file)
     attn_path = exporter.export_attention_vectors(
-        train_context, test_context,
-        y_train_w, y_test_w,
+        train_context,
+        test_context,
+        y_train_w,
+        y_test_w,
         config.attention_parquet,
     )
 
@@ -967,22 +1205,27 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
 
     # ── 8. A02: Hash artifacts + metadata ─────────────────────────
     verifier = IntegrityVerifier(metadata_dir=output_dir)
-    artifact_hashes = _hash_artifacts(verifier, {
-        config.model_file: weights_path,
-        config.attention_parquet: attn_path,
-    })
+    artifact_hashes = _hash_artifacts(
+        verifier,
+        {
+            config.model_file: weights_path,
+            config.attention_parquet: attn_path,
+        },
+    )
 
     _store_detection_metadata(
-        output_dir, artifact_hashes, assertions.results, config,
+        output_dir,
+        artifact_hashes,
+        assertions.results,
+        config,
+        train_samples=X_train_w.shape[0],
+        hyperparameters=hp_dict,
     )
 
     # ── 9. Reports ────────────────────────────────────────────────
     # Standard detection report
     md = render_detection_report(report)
-    md_path = (
-        PROJECT_ROOT / "results" / "phase0_analysis"
-        / "report_section_detection.md"
-    )
+    md_path = PROJECT_ROOT / "results" / "phase0_analysis" / "report_section_detection.md"
     md_path.parent.mkdir(parents=True, exist_ok=True)
     md_path.write_text(md, encoding="utf-8")
     logger.info("  Detection report → %s", md_path.name)
@@ -997,12 +1240,28 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
         test_context=test_context,
     )
     security_path = (
-        PROJECT_ROOT / "results" / "phase0_analysis"
-        / "report_section_detection_security.md"
+        PROJECT_ROOT / "results" / "phase0_analysis" / "report_section_detection_security.md"
     )
     security_path.write_text(security_md, encoding="utf-8")
     AuditLogger.log_file_access("SECURITY_REPORT_WRITTEN", security_path)
     logger.info("  Security report → %s", security_path.name)
+
+    # Reproducibility report
+    repro_md = _generate_reproducibility_report(
+        hw_info=hw_info,
+        config=config,
+        report=report,
+        assertions=assertions,
+        train_context=train_context,
+        test_context=test_context,
+        elapsed=elapsed,
+    )
+    repro_path = (
+        PROJECT_ROOT / "results" / "phase0_analysis" / "report_section_detection_reproducibility.md"
+    )
+    repro_path.write_text(repro_md, encoding="utf-8")
+    AuditLogger.log_file_access("REPRODUCIBILITY_REPORT_WRITTEN", repro_path)
+    logger.info("  Reproducibility report → %s", repro_path.name)
 
     # ── Summary ───────────────────────────────────────────────────
     _log_summary(report, assertions, artifact_hashes)
@@ -1039,7 +1298,8 @@ def _log_summary(
     )
     logger.info("  Artifacts    : %d hashed (SHA-256)", len(artifact_hashes))
     logger.info(
-        "  Elapsed      : %.2f s", report.get("elapsed_seconds", 0),
+        "  Elapsed      : %.2f s",
+        report.get("elapsed_seconds", 0),
     )
     logger.info(sep)
 

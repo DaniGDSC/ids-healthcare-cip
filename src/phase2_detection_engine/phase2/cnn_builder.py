@@ -55,16 +55,20 @@ class CNNBuilder(BaseLayerBuilder):
             Tensor of shape (batch, timesteps // pool^2, filters_2).
         """
         x = tf.keras.layers.Conv1D(
-            self._filters_1, self._kernel_size,
+            self._filters_1,
+            self._kernel_size,
             activation=self._activation,
-            padding=CNN_PADDING, name="conv1",
+            padding=CNN_PADDING,
+            name="conv1",
         )(input_tensor)
         x = tf.keras.layers.MaxPooling1D(self._pool_size, name="pool1")(x)
 
         x = tf.keras.layers.Conv1D(
-            self._filters_2, self._kernel_size,
+            self._filters_2,
+            self._kernel_size,
             activation=self._activation,
-            padding=CNN_PADDING, name="conv2",
+            padding=CNN_PADDING,
+            name="conv2",
         )(x)
         x = tf.keras.layers.MaxPooling1D(self._pool_size, name="pool2")(x)
         return x

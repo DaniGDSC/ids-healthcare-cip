@@ -39,7 +39,9 @@ class DetectionExporter:
         self._label_col = label_column
 
     def export_model_weights(
-        self, model: tf.keras.Model, filename: str,
+        self,
+        model: tf.keras.Model,
+        filename: str,
     ) -> Path:
         """Save model weights (Keras 3 .weights.h5 format).
 
@@ -94,12 +96,15 @@ class DetectionExporter:
         combined.to_parquet(path, index=False)
         logger.info(
             "Exported attention output: %s  shape=%s",
-            path.name, combined.shape,
+            path.name,
+            combined.shape,
         )
         return path
 
     def export_report(
-        self, report: Dict[str, Any], filename: str,
+        self,
+        report: Dict[str, Any],
+        filename: str,
     ) -> Path:
         """Write the detection report as JSON.
 
@@ -113,7 +118,8 @@ class DetectionExporter:
         self._output_dir.mkdir(parents=True, exist_ok=True)
         path = self._output_dir / filename
         path.write_text(
-            json.dumps(report, indent=2, default=str), encoding="utf-8",
+            json.dumps(report, indent=2, default=str),
+            encoding="utf-8",
         )
         logger.info("Exported report: %s", path.name)
         return path
@@ -163,10 +169,7 @@ class DetectionExporter:
             "architecture": "CNN→BiLSTM→Attention",
             "total_parameters": int(model.count_params()),
             "trainable_parameters": int(
-                sum(
-                    tf.keras.backend.count_params(w)
-                    for w in model.trainable_weights
-                )
+                sum(tf.keras.backend.count_params(w) for w in model.trainable_weights)
             ),
             "layers": layers_info,
             "hyperparameters": config_dict,

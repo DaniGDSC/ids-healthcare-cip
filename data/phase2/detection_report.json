@@ -113,8 +113,8 @@
     "train_context": "(19961, 128)",
     "test_context": "(4877, 128)"
   },
-  "elapsed_seconds": 3.037,
-  "timestamp": "2026-03-17T16:44:25.667965+00:00",
+  "elapsed_seconds": 2.994,
+  "timestamp": "2026-03-17T17:11:17.047415+00:00",
   "environment": {
     "python": "3.12.3",
     "tensorflow": "2.20.0",

@@ -27,7 +27,9 @@ class TestDetectionModelAssembler:
 
     def test_output_shape(self) -> None:
         assembler = DetectionModelAssembler(
-            timesteps=20, n_features=5, builders=self._default_builders(),
+            timesteps=20,
+            n_features=5,
+            builders=self._default_builders(),
         )
         model = assembler.assemble()
         # BiLSTM units_2=16, bidirectional=32 → attention output = 32
@@ -35,7 +37,9 @@ class TestDetectionModelAssembler:
 
     def test_input_shape(self) -> None:
         assembler = DetectionModelAssembler(
-            timesteps=20, n_features=5, builders=self._default_builders(),
+            timesteps=20,
+            n_features=5,
+            builders=self._default_builders(),
         )
         model = assembler.assemble()
         assert model.input_shape == (None, 20, 5)
@@ -43,7 +47,9 @@ class TestDetectionModelAssembler:
     def test_no_classification_head(self) -> None:
         """Model output must NOT be a Dense/softmax classification layer."""
         assembler = DetectionModelAssembler(
-            timesteps=20, n_features=5, builders=self._default_builders(),
+            timesteps=20,
+            n_features=5,
+            builders=self._default_builders(),
         )
         model = assembler.assemble()
         last_layer = model.layers[-1]
@@ -55,14 +61,18 @@ class TestDetectionModelAssembler:
 
     def test_param_count_positive(self) -> None:
         assembler = DetectionModelAssembler(
-            timesteps=20, n_features=5, builders=self._default_builders(),
+            timesteps=20,
+            n_features=5,
+            builders=self._default_builders(),
         )
         model = assembler.assemble()
         assert model.count_params() > 0
 
     def test_forward_pass(self) -> None:
         assembler = DetectionModelAssembler(
-            timesteps=20, n_features=5, builders=self._default_builders(),
+            timesteps=20,
+            n_features=5,
+            builders=self._default_builders(),
         )
         model = assembler.assemble()
         rng = np.random.RandomState(42)
@@ -72,7 +82,9 @@ class TestDetectionModelAssembler:
 
     def test_no_builders_raises(self) -> None:
         assembler = DetectionModelAssembler(
-            timesteps=20, n_features=5, builders=[],
+            timesteps=20,
+            n_features=5,
+            builders=[],
         )
         with pytest.raises(ValueError, match="No builders"):
             assembler.assemble()
@@ -80,7 +92,9 @@ class TestDetectionModelAssembler:
     def test_get_config(self) -> None:
         builders = self._default_builders()
         assembler = DetectionModelAssembler(
-            timesteps=20, n_features=5, builders=builders,
+            timesteps=20,
+            n_features=5,
+            builders=builders,
             model_name="test_model",
         )
         cfg = assembler.get_config()
@@ -102,7 +116,8 @@ class TestDetectionModelAssembler:
                 return {"type": "passthrough"}
 
         assembler = DetectionModelAssembler(
-            timesteps=10, n_features=3,
+            timesteps=10,
+            n_features=3,
             builders=[PassthroughBuilder()],
         )
         model = assembler.assemble()

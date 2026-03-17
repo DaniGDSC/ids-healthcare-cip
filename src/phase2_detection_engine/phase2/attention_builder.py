@@ -37,10 +37,14 @@ class BahdanauAttention(tf.keras.layers.Layer):
         super().__init__(**kwargs)
         self.units = units
         self.score_dense = tf.keras.layers.Dense(
-            units, activation="tanh", name="score",
+            units,
+            activation="tanh",
+            name="score",
         )
         self.weight_dense = tf.keras.layers.Dense(
-            1, use_bias=False, name="attn_weights",
+            1,
+            use_bias=False,
+            name="attn_weights",
         )
         self.pool = tf.keras.layers.GlobalAveragePooling1D(name="context_pool")
 
@@ -77,7 +81,8 @@ class AttentionBuilder(BaseLayerBuilder):
             Tensor of shape (batch, features) — context vector.
         """
         return BahdanauAttention(
-            units=self._units, name="attention",
+            units=self._units,
+            name="attention",
         )(input_tensor)
 
     def get_config(self) -> Dict[str, Any]:

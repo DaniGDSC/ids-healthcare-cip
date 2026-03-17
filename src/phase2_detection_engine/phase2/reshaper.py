@@ -53,8 +53,7 @@ class DataReshaper:
         n_samples, n_features = X.shape
         if n_samples < self._timesteps:
             raise ValueError(
-                f"Cannot create windows: n_samples={n_samples} "
-                f"< timesteps={self._timesteps}"
+                f"Cannot create windows: n_samples={n_samples} " f"< timesteps={self._timesteps}"
             )
 
         n_windows = (n_samples - self._timesteps) // self._stride + 1
@@ -68,8 +67,11 @@ class DataReshaper:
 
         logger.info(
             "Reshape: (%d, %d) → %s  [timesteps=%d, stride=%d]",
-            n_samples, n_features, X_windows.shape,
-            self._timesteps, self._stride,
+            n_samples,
+            n_features,
+            X_windows.shape,
+            self._timesteps,
+            self._stride,
         )
         return X_windows, y_windows
 

@@ -28,17 +28,22 @@ class TestDetectionExporter:
         return tf.keras.Model(inp, x)
 
     def test_export_model_weights(
-        self, exporter: DetectionExporter, simple_model: tf.keras.Model,
+        self,
+        exporter: DetectionExporter,
+        simple_model: tf.keras.Model,
         tmp_path: Path,
     ) -> None:
         path = exporter.export_model_weights(
-            simple_model, "test.weights.h5",
+            simple_model,
+            "test.weights.h5",
         )
         assert path.exists()
         assert path.stat().st_size > 0
 
     def test_export_attention_vectors(
-        self, exporter: DetectionExporter, tmp_path: Path,
+        self,
+        exporter: DetectionExporter,
+        tmp_path: Path,
     ) -> None:
         rng = np.random.RandomState(42)
         train_ctx = rng.randn(20, 8).astype(np.float32)
@@ -47,7 +52,11 @@ class TestDetectionExporter:
         y_test = np.ones(10, dtype=np.int32)
 
         path = exporter.export_attention_vectors(
-            train_ctx, test_ctx, y_train, y_test, "attn.parquet",
+            train_ctx,
+            test_ctx,
+            y_train,
+            y_test,
+            "attn.parquet",
         )
         assert path.exists()
 
@@ -63,7 +72,9 @@ class TestDetectionExporter:
         assert set(df["split"].unique()) == {"train", "test"}
 
     def test_export_report_json(
-        self, exporter: DetectionExporter, tmp_path: Path,
+        self,
+        exporter: DetectionExporter,
+        tmp_path: Path,
     ) -> None:
         report = {"phase": "test", "params": 1000}
         path = exporter.export_report(report, "report.json")
@@ -99,7 +110,8 @@ class TestDetectionExporter:
         assert report["elapsed_seconds"] == 1.23
 
     def test_build_report_environment(
-        self, simple_model: tf.keras.Model,
+        self,
+        simple_model: tf.keras.Model,
     ) -> None:
         rng = np.random.RandomState(42)
         ctx = rng.randn(5, 8).astype(np.float32)

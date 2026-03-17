@@ -81,8 +81,7 @@ class Phase1ArtifactReader:
             expected = hashes[name]["sha256"]
             if actual != expected:
                 raise ValueError(
-                    f"SHA-256 mismatch: {name} "
-                    f"({actual[:16]}… ≠ {expected[:16]}…)"
+                    f"SHA-256 mismatch: {name} " f"({actual[:16]}… ≠ {expected[:16]}…)"
                 )
             logger.info("SHA-256 verified: %s", name)
 
@@ -99,7 +98,9 @@ class Phase1ArtifactReader:
 
         logger.info(
             "Loaded — train: %s (%d features), test: %s",
-            X_train.shape, len(feature_names), X_test.shape,
+            X_train.shape,
+            len(feature_names),
+            X_test.shape,
         )
         return X_train, y_train, X_test, y_test, feature_names
 

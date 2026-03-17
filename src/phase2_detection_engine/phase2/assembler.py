@@ -53,7 +53,8 @@ class DetectionModelAssembler:
             raise ValueError("No builders provided to assembler.")
 
         inp = tf.keras.Input(
-            shape=(self._timesteps, self._n_features), name="input",
+            shape=(self._timesteps, self._n_features),
+            name="input",
         )
 
         x = inp
@@ -63,7 +64,8 @@ class DetectionModelAssembler:
         model = tf.keras.Model(inp, x, name=self._model_name)
         logger.info(
             "Model assembled: %s (params=%d)",
-            self._model_name, model.count_params(),
+            self._model_name,
+            model.count_params(),
         )
         return model
 
@@ -74,7 +76,6 @@ class DetectionModelAssembler:
             "n_features": self._n_features,
             "model_name": self._model_name,
             "builders": [
-                {"type": type(b).__name__, "config": b.get_config()}
-                for b in self._builders
+                {"type": type(b).__name__, "config": b.get_config()} for b in self._builders
             ],
         }

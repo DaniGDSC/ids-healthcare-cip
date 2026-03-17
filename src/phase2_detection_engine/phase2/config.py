@@ -78,8 +78,11 @@ class Phase2Config(BaseModel):
         return v
 
     @field_validator(
-        "cnn_filters_1", "cnn_filters_2", "bilstm_units_1",
-        "bilstm_units_2", "attention_units",
+        "cnn_filters_1",
+        "cnn_filters_2",
+        "bilstm_units_1",
+        "bilstm_units_2",
+        "attention_units",
     )
     @classmethod
     def _units_positive(cls, v: int) -> int:
@@ -99,8 +102,7 @@ class Phase2Config(BaseModel):
     def _model_file_extension(cls, v: str) -> str:
         if not v.endswith(".weights.h5"):
             raise ValueError(
-                f"model_file must end with '.weights.h5' "
-                f"(Keras 3 requirement), got '{v}'"
+                f"model_file must end with '.weights.h5' " f"(Keras 3 requirement), got '{v}'"
             )
         return v
 

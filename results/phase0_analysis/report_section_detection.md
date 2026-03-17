@@ -97,7 +97,7 @@ Output dimension: **128** (one vector per window).
 
 | Metric | Value |
 |--------|-------|
-| Total execution time | **3.04 s** |
+| Total execution time | **2.99 s** |
 | Python | 3.12.3 |
 | TensorFlow | 2.20.0 |
 | NumPy | 2.4.1 |
