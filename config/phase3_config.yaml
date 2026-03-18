@@ -1,97 +1,52 @@
-# Phase 3: Autoencoder Configuration
+# Phase 3: Classification Engine Configuration
+# Detection backbone + classification head with progressive unfreezing
+#
+# Input:  Phase 1 parquets (29 features) + Phase 2 detection weights (474K params)
+# Output: Binary classification (Normal vs Attack) with full evaluation metrics
 
 data:
-  input_dir: "data/features"
-  output_dir: "data/latent"
-  model_dir: "models/phase3"
-  
-ml_filter:
-  n_estimators: 100
-  max_depth: 12
-  min_samples_split: 8
-  random_state: 42
-  n_jobs: -1
-  recall_target: 0.995
-  
-architecture:
-  # Input dimension (from Phase 2)
-  input_dim: 35
-  
-  # Latent space dimension
-  latent_dim: 8
-  
-  # Encoder layers (per spec: 28 → 16)
-  encoder_layers:
-    - 28
-    - 16
-    
-  # Decoder layers (mirror per spec: 16 → 28)
-  decoder_layers:
-    - 16
-    - 28
-    
-  # Activation functions
-  activation: "relu"
-  output_activation: "sigmoid"
-  
-  # Regularization
+  phase2_dir: "data/phase2"
+  phase1_train: "data/processed/train_phase1.parquet"
+  phase1_test: "data/processed/test_phase1.parquet"
+  phase2_metadata: "data/phase2/detection_metadata.json"
+  phase2_config: "config/phase2_config.yaml"
+  label_column: "Label"
+
+classification_head:
+  dense_units: 64
+  dense_activation: "relu"
   dropout_rate: 0.3
-  use_batch_normalization: true
-  l2_regularization: 0.001
 
 training:
-  # Optimization
-  optimizer: "adam"
-  learning_rate: 0.0005
+  phases:
+    - name: "Phase A — Head only"
+      epochs: 5
+      learning_rate: 0.001
+      frozen: ["cnn", "bilstm1", "bilstm2", "attention"]
+    - name: "Phase B — Attention + Head"
+      epochs: 5
+      learning_rate: 0.0001
+      frozen: ["cnn", "bilstm1", "bilstm2"]
+    - name: "Phase C — BiLSTM-2 + Attention + Head"
+      epochs: 5
+      learning_rate: 0.00001
+      frozen: ["cnn", "bilstm1"]
   batch_size: 256
-  epochs: 100
-  
-  # Early stopping (enabled by default for stability)
-  early_stopping:
-    enabled: true
-    patience: 15
-    monitor: "val_loss"
-    restore_best_weights: true
-    
-  # Learning rate reduction (enabled by default for fine-tuning)
-  reduce_lr:
-    enabled: true
-    monitor: "val_loss"
-    patience: 5
-    factor: 0.5
-    min_lr: 0.000001
-    
-  # Validation
-  validation_split: 0.0  # Use separate validation set
-  shuffle: true
-  
-  # Performance optimizations
-  mixed_precision: false  # Set to true for GPU speedup (requires GPU with FP16 support)
-  use_xla: false          # Set to true for XLA JIT compilation speedup (requires TensorFlow 2.4+)
+  validation_split: 0.2
 
-anomaly_detection:
-  # Threshold optimization
-  threshold_method: "percentile"  # Options: percentile, std, mad
-  percentile: 95  # For percentile method
-  n_std: 3  # For std method
-  
+callbacks:
+  early_stopping_patience: 3
+  reduce_lr_patience: 2
+  reduce_lr_factor: 0.5
+
 evaluation:
-  metrics:
-    - "mse"
-    - "mae"
-    - "reconstruction_error"
-  plot_reconstructions: true
-  n_samples_plot: 10
+  threshold: 0.5
 
 output:
-  save_model: true
-  save_encoder_only: true
-  save_decoder_only: true
-  save_latent_representations: true
-  model_format: "keras"
+  output_dir: "data/phase3"
+  model_file: "classification_model.weights.h5"
+  metrics_file: "metrics_report.json"
+  confusion_matrix_file: "confusion_matrix.csv"
+  history_file: "training_history.json"
 
-logging:
-  level: "INFO"
-  file: "logs/phase3.log"
-  tensorboard: false
-  tensorboard_dir: "results/phase3/tensorboard"
+random_state: 42

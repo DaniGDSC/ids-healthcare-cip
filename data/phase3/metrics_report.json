@@ -1,0 +1,64 @@
+{
+  "generated_at": "2026-03-18T17:51:31.109158+00:00",
+  "pipeline": "phase3_classification",
+  "git_commit": "d3de1e30139de5e9b6c6fed7ee2c22e986ded377",
+  "hardware": {
+    "device": "CPU: x86_64",
+    "cuda": "N/A (CPU execution)",
+    "tensorflow": "2.20.0",
+    "python": "3.12.3",
+    "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39"
+  },
+  "duration_seconds": 42.25,
+  "metrics": {
+    "accuracy": 0.8345294238261226,
+    "f1_score": 0.8133447148323302,
+    "precision": 0.7971023123630164,
+    "recall": 0.8345294238261226,
+    "auc_roc": 0.6144166302707094,
+    "confusion_matrix": [
+      [
+        3998,
+        267
+      ],
+      [
+        540,
+        72
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.881004847950639,
+        "recall": 0.9373974208675264,
+        "f1-score": 0.9083267068044985,
+        "support": 4265.0
+      },
+      "1": {
+        "precision": 0.21238938053097345,
+        "recall": 0.11764705882352941,
+        "f1-score": 0.15141955835962145,
+        "support": 612.0
+      },
+      "accuracy": 0.8345294238261226,
+      "macro avg": {
+        "precision": 0.5466971142408062,
+        "recall": 0.5275222398455279,
+        "f1-score": 0.5298731325820599,
+        "support": 4877.0
+      },
+      "weighted avg": {
+        "precision": 0.7971023123630164,
+        "recall": 0.8345294238261226,
+        "f1-score": 0.8133447148323302,
+        "support": 4877.0
+      }
+    },
+    "threshold": 0.5,
+    "test_samples": 4877
+  },
+  "model_summary": {
+    "name": "classification_engine",
+    "total_params": 482817,
+    "layers": 13
+  }
+}
