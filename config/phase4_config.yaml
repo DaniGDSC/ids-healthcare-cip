@@ -1,61 +1,66 @@
-# Phase 4: Clustering Configuration
+# Phase 4 — Risk-Adaptive Engine Configuration
+# Consumes Phase 3 classification model + Phase 2 attention output
 
 data:
-  input_dir: "data/latent"
-  output_dir: "results/phase4"
-  
-clustering:
-  # DBSCAN parameters (density-based)
-  dbscan:
-    enabled: true
-    eps: 0.5  # Maximum distance between samples
-    min_samples: 50  # Minimum samples in neighborhood (per spec)
-    metric: "euclidean"  # Distance metric
-    algorithm: "auto"  # Options: auto, ball_tree, kd_tree, brute
-    leaf_size: 30
-    
-  # HDBSCAN parameters (hierarchical density-based, more robust)
-  hdbscan:
-    enabled: false
-    min_cluster_size: 50  # Smaller = more clusters
-    min_samples: 10  # Robustness parameter
-    metric: "euclidean"
-    cluster_selection_epsilon: 0.0  # 0 = use default hierarchy extraction
-    algorithm: "best"  # Options: best, generic, prims_kdtree, prims_balltree
-    # Advantages: auto-detects cluster count, handles variable density, robust to outliers
+  # Phase 3 artifacts (SHA-256 verified before loading)
+  phase3_dir: "data/phase3"
+  phase3_metadata: "data/phase3/classification_metadata.json"
 
-analysis:
-  # Cluster evaluation metrics
-  compute_silhouette: true
-  compute_davies_bouldin: true
-  compute_calinski_harabasz: true
-  
-  # Cluster profiling
-  profile_clusters: true
-  profile_top_features: 10
-  
-visualization:
-  # Dimensionality reduction for plotting
-  plot_method: "tsne"  # Options: tsne, umap, pca
-  tsne_perplexity: 30
-  umap_n_neighbors: 15
-  
-  # Plot settings
-  plot_clusters: true
-  plot_size: [12, 8]
-  plot_format: "png"
-  dpi: 300
-  
-  # Interactive plots
-  interactive: false
-  plotly_enabled: false
+  # Phase 2 attention output (SHA-256 verified before loading)
+  phase2_dir: "data/phase2"
+  phase2_metadata: "data/phase2/detection_metadata.json"
+
+  # Phase 1 preprocessed data (for model inference)
+  phase1_train: "data/processed/train_phase1.parquet"
+  phase1_test: "data/processed/test_phase1.parquet"
+  label_column: "Label"
+
+baseline:
+  # Median + k*MAD on Normal-only attention scores
+  mad_multiplier: 3.0
+
+dynamic_threshold:
+  window_size: 100
+  # Time-of-day sensitivity multipliers
+  k_schedule:
+    - start_hour: 0
+      end_hour: 6
+      k: 2.5
+    - start_hour: 6
+      end_hour: 22
+      k: 3.0
+    - start_hour: 22
+      end_hour: 24
+      k: 3.5
+
+concept_drift:
+  drift_threshold: 0.20
+  recovery_threshold: 0.10
+  recovery_windows: 3
+
+risk_levels:
+  # distance = anomaly_score - current_threshold
+  # MAD-relative boundaries
+  low_upper: 0.5       # distance < 0.5*MAD
+  medium_upper: 1.0    # distance < 1.0*MAD
+  high_upper: 2.0      # distance < 2.0*MAD
+  # CRITICAL: distance >= 2.0*MAD AND cross-modal fusion
+
+biometric_columns:
+  - "Temp"
+  - "SpO2"
+  - "Pulse_Rate"
+  - "SYS"
+  - "DIA"
+  - "Heart_rate"
+  - "Resp_Rate"
+  - "ST"
 
 output:
-  save_cluster_labels: true
-  save_cluster_centers: true
-  save_cluster_statistics: true
-  save_plots: true
+  output_dir: "data/phase4"
+  baseline_file: "baseline_config.json"
+  threshold_file: "threshold_config.json"
+  risk_report_file: "risk_report.json"
+  drift_log_file: "drift_log.csv"
 
-logging:
-  level: "INFO"
-  file: "logs/phase4.log"
+random_state: 42

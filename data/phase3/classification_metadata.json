@@ -1,0 +1,119 @@
+{
+  "generated_at": "2026-03-18T18:31:45.468711+00:00",
+  "pipeline": "security_hardened_phase3",
+  "random_state": 42,
+  "git_commit": "3259f3eee118ce1913b4bfa0fa3d0602f357b588",
+  "hardware": {
+    "device": "CPU: x86_64",
+    "cuda": "N/A (CPU execution)",
+    "tensorflow": "2.20.0",
+    "python": "3.12.3",
+    "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39"
+  },
+  "train_samples": 19961,
+  "hyperparameters": {
+    "dense_units": 64,
+    "dense_activation": "relu",
+    "head_dropout_rate": 0.3,
+    "batch_size": 256,
+    "validation_split": 0.2,
+    "threshold": 0.5,
+    "training_phases": [
+      {
+        "name": "Phase A \u2014 Head only",
+        "epochs": 5,
+        "learning_rate": 0.001,
+        "frozen": [
+          "cnn",
+          "bilstm1",
+          "bilstm2",
+          "attention"
+        ]
+      },
+      {
+        "name": "Phase B \u2014 Attention + Head",
+        "epochs": 5,
+        "learning_rate": 0.0001,
+        "frozen": [
+          "cnn",
+          "bilstm1",
+          "bilstm2"
+        ]
+      },
+      {
+        "name": "Phase C \u2014 BiLSTM-2 + Attention + Head",
+        "epochs": 5,
+        "learning_rate": 1e-05,
+        "frozen": [
+          "cnn",
+          "bilstm1"
+        ]
+      }
+    ]
+  },
+  "evaluation_metrics": {
+    "accuracy": 0.8320688948123847,
+    "f1_score": 0.8128088249008858,
+    "precision": 0.7976774208362941,
+    "recall": 0.8320688948123847,
+    "auc_roc": 0.6118578029101441,
+    "threshold": 0.5,
+    "test_samples": 4877
+  },
+  "artifact_hashes": {
+    "classification_model.weights.h5": {
+      "sha256": "114fc8cc1c3d93e6fc5384828e7771d865f2070924fb398ca1985a7c6ba235e1",
+      "algorithm": "SHA-256"
+    },
+    "metrics_report.json": {
+      "sha256": "3a97f4fa97967a6638d0f1cb7296dda1837b50ae02bb6e5667a5f7ce39bbdd90",
+      "algorithm": "SHA-256"
+    },
+    "confusion_matrix.csv": {
+      "sha256": "3ed35ddeb75332994bb4b4abfa68b0ee2d78c44ebb08b629edc1a9a986b83218",
+      "algorithm": "SHA-256"
+    },
+    "training_history.json": {
+      "sha256": "9443e99db75ea1bd6cb68d7a339e8a0daf813eb27764801b253b125d434c96d5",
+      "algorithm": "SHA-256"
+    }
+  },
+  "integrity_assertions": [
+    {
+      "assertion": "Evaluation on test set only",
+      "expected": "4877 test samples",
+      "actual": "4877 eval samples",
+      "status": "PASS"
+    },
+    {
+      "assertion": "No train/test data overlap",
+      "expected": "overlap \u2264 0 (train=19961, test=4877)",
+      "actual": "overlap=0",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Confusion matrix sum = test samples",
+      "expected": "4877",
+      "actual": "4877",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Metrics consistency (F1, precision, recall \u2208 [0,1])",
+      "expected": "all \u2208 [0.0, 1.0]",
+      "actual": "F1=0.8128, prec=0.7977, rec=0.8321",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Prediction validity (accuracy, AUC \u2208 [0,1])",
+      "expected": "accuracy \u2208 [0,1], AUC \u2208 [0,1]",
+      "actual": "accuracy=0.8321, AUC=0.6119",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Classification head present",
+      "expected": "True (Dense output layer)",
+      "actual": "last_layer=Dense, has_head=True",
+      "status": "PASS"
+    }
+  ]
+}

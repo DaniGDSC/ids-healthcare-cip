@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-03-19T05:03:57.371467+00:00",
+  "pipeline": "security_hardened_phase4",
+  "random_state": 42,
+  "git_commit": "3259f3eee118ce1913b4bfa0fa3d0602f357b588",
+  "hardware": {
+    "device": "CPU: x86_64",
+    "cuda": "N/A (CPU execution)",
+    "tensorflow": "2.20.0",
+    "python": "3.12.3",
+    "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39"
+  },
+  "duration_seconds": 4.09,
+  "hyperparameters": {
+    "mad_multiplier": 3.0,
+    "window_size": 100,
+    "k_schedule": [
+      {
+        "start_hour": 0,
+        "end_hour": 6,
+        "k": 2.5
+      },
+      {
+        "start_hour": 6,
+        "end_hour": 22,
+        "k": 3.0
+      },
+      {
+        "start_hour": 22,
+        "end_hour": 24,
+        "k": 3.5
+      }
+    ],
+    "drift_threshold": 0.2,
+    "recovery_threshold": 0.1,
+    "recovery_windows": 3,
+    "low_upper": 0.5,
+    "medium_upper": 1.0,
+    "high_upper": 2.0
+  },
+  "baseline_summary": {
+    "median": 0.12897912055104988,
+    "mad": 0.02486522349732001,
+    "baseline_threshold": 0.2035747910430099,
+    "n_normal_samples": 9972
+  },
+  "risk_distribution": {
+    "NORMAL": 3261,
+    "LOW": 93,
+    "MEDIUM": 85,
+    "HIGH": 1376,
+    "CRITICAL": 62
+  },
+  "total_samples": 4877,
+  "drift_events_count": 1,
+  "artifact_hashes": {
+    "baseline_config.json": {
+      "sha256": "14f4d0acaca313b6b7e75cf60c1be89090e5f4aff1fd208d18764b2e7cf845df",
+      "algorithm": "SHA-256"
+    },
+    "threshold_config.json": {
+      "sha256": "1e88daf56513ac9be9094d4a8873ac5563fac61718310cdd2c5e0936ac018fe7",
+      "algorithm": "SHA-256"
+    },
+    "risk_report.json": {
+      "sha256": "16a3e744c14c180b5a923ae10ba943a3a9897d854d20d642a51b9f095f145f5f",
+      "algorithm": "SHA-256"
+    },
+    "drift_log.csv": {
+      "sha256": "fc8f2bb06e82799dee5a8e823c5dc0bd6c4d168bf05f8c43de14436fe664590d",
+      "algorithm": "SHA-256"
+    }
+  },
+  "integrity_assertions": [
+    {
+      "assertion": "Baseline from Normal-only training samples",
+      "expected": "n_normal > 0, n_attack = 0",
+      "actual": "n_normal=9972, n_attack=0",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Baseline config has all required keys",
+      "expected": "['baseline_threshold', 'computed_at', 'mad', 'mad_multiplier', 'median', 'n_attention_dims', 'n_normal_samples']",
+      "actual": "['baseline_threshold', 'computed_at', 'mad', 'mad_multiplier', 'median', 'n_attention_dims', 'n_normal_samples']",
+      "status": "PASS"
+    },
+    {
+      "assertion": "baseline_threshold \u2208 [0, 1]",
+      "expected": "[0.0, 1.0]",
+      "actual": "0.203575",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Dynamic thresholds >= 0",
+      "expected": "all values >= 0.0",
+      "actual": "min=0.095990, max=1.298908",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Risk level consistency with distance",
+      "expected": "0 violations",
+      "actual": "0 violations out of 4877 samples",
+      "status": "PASS"
+    },
+    {
+      "assertion": "Risk distribution sums to total samples",
+      "expected": "4877",
+      "actual": "4877",
+      "status": "PASS"
+    },
+    {
+      "assertion": "drift_log.csv append-only",
+      "expected": "1 events",
+      "actual": "1 events",
+      "status": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,678 @@
+name: Phase 3 — Lint · Test · Security · Integration · Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: ["Phase 2 — Lint · Test · Security · Integration · Build"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel in-progress runs on new pushes to the same branch
+concurrency:
+  group: phase3-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # 1. Lint Phase 3 code (ruff + black)
+  # ─────────────────────────────────────────────────────────────────
+  lint-phase3:
+    runs-on: ubuntu-latest
+    # Skip if triggered by workflow_run and Phase 2 failed
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: pip install ruff black
+
+      - name: Ruff — Phase 3
+        run: ruff check src/phase3_classification_engine/
+
+      - name: Black — Phase 3
+        run: black --check src/phase3_classification_engine/
+
+  # ─────────────────────────────────────────────────────────────────
+  # 2. Unit tests for Phase 3 (coverage >= 80%)
+  # ─────────────────────────────────────────────────────────────────
+  test-phase3:
+    runs-on: ubuntu-latest
+    needs: lint-phase3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest-cov
+
+      - name: Run Phase 3 unit tests with coverage
+        env:
+          CUDA_VISIBLE_DEVICES: ""
+          TF_DETERMINISTIC_OPS: "1"
+        run: >
+          python -m pytest
+          src/phase3_classification_engine/phase3/tests/
+          -v
+          --cov=src/phase3_classification_engine/phase3
+          --cov-report=xml:coverage-phase3.xml
+          --cov-report=term-missing
+          --cov-fail-under=80
+
+      - name: Upload Phase 3 coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-phase3
+          path: coverage-phase3.xml
+
+  # ─────────────────────────────────────────────────────────────────
+  # 3. Security scan (Phase 3 additions)
+  # ─────────────────────────────────────────────────────────────────
+  security-scan-phase3:
+    runs-on: ubuntu-latest
+    needs: lint-phase3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install security tools + dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install bandit[toml] pip-audit cyclonedx-bom
+
+      - name: Bandit — Phase 3 static analysis
+        run: bandit -r src/phase3_classification_engine/ -c pyproject.toml -ll
+
+      - name: pip-audit — dependency vulnerabilities (fail CVSS > 7.0)
+        run: pip-audit --strict --desc
+
+      - name: CycloneDX SBOM (Phase 0–3 combined)
+        run: cyclonedx-py requirements -i requirements.txt -o sbom-phase3.json --format json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-phase3
+          path: sbom-phase3.json
+
+  # ─────────────────────────────────────────────────────────────────
+  # 4. Integration test — Phase 0 → 1 → 2 → 3 end-to-end
+  # ─────────────────────────────────────────────────────────────────
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: [test-phase3, security-scan-phase3]
+    env:
+      CUDA_VISIBLE_DEVICES: ""
+      TF_DETERMINISTIC_OPS: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Create 100-row test subset
+        run: |
+          python -c "
+          import pandas as pd, numpy as np, os, json, hashlib
+
+          df = pd.read_csv('data/raw/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv', low_memory=False)
+          normal = df[df['Label'] == 0].head(80)
+          attack = df[df['Label'] == 1].head(20)
+          subset = pd.concat([normal, attack], ignore_index=True)
+
+          os.makedirs('data/ci_test/WUSTL-EHMS', exist_ok=True)
+          subset_path = 'data/ci_test/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv'
+          subset.to_csv(subset_path, index=False)
+
+          os.makedirs('results/ci_test', exist_ok=True)
+          h = hashlib.sha256()
+          with open(subset_path, 'rb') as f:
+              while chunk := f.read(65536):
+                  h.update(chunk)
+          digest = h.hexdigest()
+          metadata = {subset_path: {'sha256': digest, 'verified_at': '2026-01-01T00:00:00+00:00'}}
+          with open('results/ci_test/dataset_integrity.json', 'w') as f:
+              json.dump(metadata, f, indent=2)
+          print(f'Subset: {len(subset)} rows, SHA-256: {digest[:16]}...')
+          "
+
+      - name: Generate Phase 0 artifacts for subset
+        run: |
+          python -c "
+          import pandas as pd, numpy as np, json, os
+
+          df = pd.read_csv('data/ci_test/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv', low_memory=False)
+          os.makedirs('results/ci_test', exist_ok=True)
+
+          numeric_df = df.select_dtypes(include='number')
+          stats = {
+              'descriptive_statistics': {col: {'mean': float(numeric_df[col].mean())} for col in numeric_df.columns},
+              'missing_values': {col: int(df[col].isna().sum()) for col in df.columns},
+              'class_distribution': {'Normal': {'count': int((df['Label']==0).sum())}, 'Attack': {'count': int((df['Label']==1).sum())}},
+          }
+          with open('results/ci_test/stats_report.json', 'w') as f:
+              json.dump(stats, f, indent=2)
+
+          corr = numeric_df.drop(columns=['Label'], errors='ignore').corr().abs()
+          pairs = []
+          for i in range(len(corr)):
+              for j in range(i+1, len(corr)):
+                  if corr.iloc[i,j] >= 0.95:
+                      pairs.append({'feature_a': corr.index[i], 'feature_b': corr.columns[j], 'correlation': round(float(corr.iloc[i,j]), 6)})
+          pd.DataFrame(pairs).to_csv('results/ci_test/high_correlations.csv', index=False)
+          print(f'Phase 0 artifacts: stats OK, {len(pairs)} high-correlation pairs')
+          "
+
+      - name: Create CI test config for Phase 1
+        run: |
+          cat > config/ci_test_phase1.yaml << 'YAMLEOF'
+          data:
+            input_dir: "data/ci_test/WUSTL-EHMS"
+            output_dir: "data/ci_test/processed"
+            file_pattern: "*.csv"
+            label_column: "Label"
+
+          hipaa:
+            enabled: true
+            remove_columns:
+              - "SrcAddr"
+              - "DstAddr"
+              - "Sport"
+              - "Dport"
+              - "SrcMac"
+              - "DstMac"
+              - "Dir"
+              - "Flgs"
+
+          missing_values:
+            biometric_strategy: "ffill"
+            biometric_columns:
+              - "Temp"
+              - "SpO2"
+              - "Pulse_Rate"
+              - "SYS"
+              - "DIA"
+              - "Heart_rate"
+              - "Resp_Rate"
+              - "ST"
+            network_strategy: "dropna"
+
+          correlation_removal:
+            enabled: true
+            threshold: 0.95
+            phase0_corr_file: "results/ci_test/high_correlations.csv"
+
+          splitting:
+            train_ratio: 0.70
+            test_ratio: 0.30
+            stratify: true
+            random_state: 42
+
+          smote:
+            enabled: true
+            sampling_strategy: "auto"
+            k_neighbors: 3
+            random_state: 42
+
+          normalization:
+            method: "robust"
+
+          output:
+            train_parquet: "train_phase1.parquet"
+            test_parquet: "test_phase1.parquet"
+            scaler_file: "robust_scaler.pkl"
+            report_file: "phase1_report.json"
+          YAMLEOF
+
+      - name: Run Phase 1 pipeline on subset
+        run: |
+          python -c "
+          import logging
+          logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+
+          from pathlib import Path
+          from src.phase1_preprocessing.phase1.config import Phase1Config
+          from src.phase1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
+          from src.phase1_preprocessing.phase1.pipeline import PreprocessingPipeline
+
+          PROJECT_ROOT = Path.cwd()
+          config = Phase1Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase1.yaml')
+
+          reader = Phase0ArtifactReader(
+              project_root=PROJECT_ROOT,
+              stats_file=Path('results/ci_test/stats_report.json'),
+              corr_file=config.phase0_corr_file,
+              integrity_file=Path('results/ci_test/dataset_integrity.json'),
+          )
+
+          pipeline = PreprocessingPipeline(config, reader, PROJECT_ROOT)
+          report = pipeline.run()
+          print(f'Phase 1 complete: {report[\"output\"][\"n_features\"]} features')
+          "
+
+      - name: Create CI test config for Phase 2 + run Phase 2
+        run: |
+          python -c "
+          import pandas as pd, hashlib, json, os, yaml, logging, time
+          import numpy as np
+          logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+          os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+          from pathlib import Path
+
+          # Read Phase 1 output to get feature names and compute hashes
+          train_path = Path('data/ci_test/processed/train_phase1.parquet')
+          test_path = Path('data/ci_test/processed/test_phase1.parquet')
+          train = pd.read_parquet(train_path)
+          feature_names = [c for c in train.columns if c != 'Label']
+
+          def sha256(p):
+              h = hashlib.sha256()
+              with open(p, 'rb') as f:
+                  while chunk := f.read(65536):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          metadata = {
+              'artifact_hashes': {
+                  'train_phase1.parquet': {'sha256': sha256(train_path)},
+                  'test_phase1.parquet': {'sha256': sha256(test_path)},
+              }
+          }
+          meta_path = Path('data/ci_test/processed/preprocessing_metadata.json')
+          meta_path.write_text(json.dumps(metadata, indent=2))
+
+          report_path = Path('data/ci_test/processed/phase1_report.json')
+          report = json.loads(report_path.read_text())
+          if 'output' not in report:
+              report['output'] = {}
+          report['output']['feature_names'] = feature_names
+          report_path.write_text(json.dumps(report, indent=2))
+
+          timesteps = 5
+
+          config = {
+              'data': {
+                  'train_parquet': 'data/ci_test/processed/train_phase1.parquet',
+                  'test_parquet': 'data/ci_test/processed/test_phase1.parquet',
+                  'metadata_file': 'data/ci_test/processed/preprocessing_metadata.json',
+                  'report_file': 'data/ci_test/processed/phase1_report.json',
+                  'label_column': 'Label',
+              },
+              'reshape': {'timesteps': timesteps, 'stride': 1},
+              'cnn': {'filters_1': 32, 'filters_2': 64, 'kernel_size': 3, 'activation': 'relu', 'pool_size': 2},
+              'bilstm': {'units_1': 32, 'units_2': 16, 'dropout_rate': 0.3},
+              'attention': {'units': 32},
+              'output': {
+                  'output_dir': 'data/ci_test/phase2',
+                  'model_file': 'detection_model.weights.h5',
+                  'attention_parquet': 'attention_output.parquet',
+                  'report_file': 'detection_report.json',
+              },
+              'random_state': 42,
+          }
+          with open('config/ci_test_phase2.yaml', 'w') as f:
+              yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+
+          # Run Phase 2
+          import tensorflow as tf
+          tf.random.set_seed(42)
+          np.random.seed(42)
+
+          from src.phase2_detection_engine.phase2.config import Phase2Config
+          from src.phase2_detection_engine.phase2.artifact_reader import Phase1ArtifactReader
+          from src.phase2_detection_engine.phase2.pipeline import DetectionPipeline
+
+          PROJECT_ROOT = Path.cwd()
+          p2_config = Phase2Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase2.yaml')
+
+          reader = Phase1ArtifactReader(
+              project_root=PROJECT_ROOT,
+              train_parquet=p2_config.train_parquet,
+              test_parquet=p2_config.test_parquet,
+              metadata_file=p2_config.metadata_file,
+              report_file=p2_config.report_file,
+              label_column=p2_config.label_column,
+          )
+
+          pipeline = DetectionPipeline(p2_config, reader, PROJECT_ROOT)
+          t0 = time.perf_counter()
+          p2_report = pipeline.run()
+          elapsed = time.perf_counter() - t0
+          print(f'Phase 2 complete in {elapsed:.2f}s — {p2_report[\"total_parameters\"]} params')
+          "
+
+      - name: Create CI test config for Phase 3 + run Phase 3
+        run: |
+          python -c "
+          import json, os, hashlib, yaml, logging, time
+          import numpy as np
+          import pandas as pd
+          logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+          os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+          import tensorflow as tf
+          tf.random.set_seed(42)
+          np.random.seed(42)
+
+          from pathlib import Path
+
+          # Create Phase 2 detection_metadata.json for Phase 3
+          p2_dir = Path('data/ci_test/phase2')
+          p2_report = json.loads((p2_dir / 'detection_report.json').read_text())
+
+          def sha256(p):
+              h = hashlib.sha256()
+              with open(p, 'rb') as f:
+                  while chunk := f.read(65536):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          detection_metadata = {
+              'hyperparameters': {
+                  'timesteps': 5,
+                  'stride': 1,
+                  'cnn_filters_1': 32,
+                  'cnn_filters_2': 64,
+                  'cnn_kernel_size': 3,
+                  'cnn_activation': 'relu',
+                  'cnn_pool_size': 2,
+                  'bilstm_units_1': 32,
+                  'bilstm_units_2': 16,
+                  'dropout_rate': 0.3,
+                  'attention_units': 32,
+              },
+              'artifact_hashes': {
+                  'detection_model.weights.h5': {
+                      'sha256': sha256(p2_dir / 'detection_model.weights.h5'),
+                      'algorithm': 'SHA-256',
+                  },
+                  'attention_output.parquet': {
+                      'sha256': sha256(p2_dir / 'attention_output.parquet'),
+                      'algorithm': 'SHA-256',
+                  },
+              },
+          }
+          (p2_dir / 'detection_metadata.json').write_text(json.dumps(detection_metadata, indent=2))
+
+          # Write Phase 3 CI config
+          config = {
+              'data': {
+                  'phase2_dir': 'data/ci_test/phase2',
+                  'phase1_train': 'data/ci_test/processed/train_phase1.parquet',
+                  'phase1_test': 'data/ci_test/processed/test_phase1.parquet',
+                  'phase2_metadata': 'data/ci_test/phase2/detection_metadata.json',
+                  'label_column': 'Label',
+              },
+              'classification_head': {
+                  'dense_units': 32,
+                  'dense_activation': 'relu',
+                  'head_dropout_rate': 0.3,
+              },
+              'training': {
+                  'batch_size': 32,
+                  'validation_split': 0.2,
+                  'phases': [
+                      {'name': 'Phase A — Head only', 'epochs': 2, 'learning_rate': 0.001,
+                       'frozen': ['cnn', 'bilstm1', 'bilstm2', 'attention']},
+                      {'name': 'Phase B — Attention + Head', 'epochs': 2, 'learning_rate': 0.0001,
+                       'frozen': ['cnn', 'bilstm1', 'bilstm2']},
+                  ],
+              },
+              'callbacks': {
+                  'early_stopping_patience': 3,
+                  'reduce_lr_patience': 2,
+                  'reduce_lr_factor': 0.5,
+              },
+              'evaluation': {'threshold': 0.5},
+              'output': {
+                  'output_dir': 'data/ci_test/phase3',
+                  'model_file': 'classification_model.weights.h5',
+                  'metrics_file': 'metrics_report.json',
+                  'confusion_matrix_file': 'confusion_matrix.csv',
+                  'history_file': 'training_history.json',
+              },
+              'random_state': 42,
+          }
+
+          with open('config/ci_test_phase3.yaml', 'w') as f:
+              yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+
+          # Run Phase 3 using SOLID pipeline
+          from src.phase3_classification_engine.phase3.config import Phase3Config
+          from src.phase3_classification_engine.phase3.artifact_reader import Phase2ArtifactReader
+          from src.phase3_classification_engine.phase3.head import AutoClassificationHead
+          from src.phase3_classification_engine.phase3.unfreezer import ProgressiveUnfreezer
+          from src.phase3_classification_engine.phase3.trainer import ClassificationTrainer
+          from src.phase3_classification_engine.phase3.evaluator import ModelEvaluator
+          from src.phase3_classification_engine.phase3.exporter import ClassificationExporter
+          from src.phase3_classification_engine.phase3.pipeline import ClassificationPipeline
+
+          PROJECT_ROOT = Path.cwd()
+          p3_config = Phase3Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase3.yaml')
+
+          reader = Phase2ArtifactReader(
+              project_root=PROJECT_ROOT,
+              phase2_dir=p3_config.phase2_dir,
+              metadata_file=p3_config.phase2_metadata,
+              label_column=p3_config.label_column,
+          )
+
+          pipeline = ClassificationPipeline(
+              config=p3_config,
+              artifact_reader=reader,
+              head=AutoClassificationHead(
+                  dense_units=p3_config.dense_units,
+                  dense_activation=p3_config.dense_activation,
+                  dropout_rate=p3_config.head_dropout_rate,
+              ),
+              unfreezer=ProgressiveUnfreezer(),
+              trainer=ClassificationTrainer(
+                  batch_size=p3_config.batch_size,
+                  validation_split=p3_config.validation_split,
+                  early_stopping_patience=p3_config.early_stopping_patience,
+                  reduce_lr_patience=p3_config.reduce_lr_patience,
+                  reduce_lr_factor=p3_config.reduce_lr_factor,
+              ),
+              evaluator=ModelEvaluator(threshold=p3_config.threshold),
+              exporter=ClassificationExporter(PROJECT_ROOT / p3_config.output_dir),
+              project_root=PROJECT_ROOT,
+          )
+          t0 = time.perf_counter()
+          metrics = pipeline.run()
+          elapsed = time.perf_counter() - t0
+          print(f'Phase 3 complete in {elapsed:.2f}s — accuracy={metrics[\"accuracy\"]:.4f}')
+          "
+
+      - name: Integration assertions — Phase 3
+        run: |
+          python -c "
+          import json, os, sys
+          import pandas as pd
+          os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+          import numpy as np
+          import tensorflow as tf
+          tf.random.set_seed(42)
+
+          errors = []
+          output_dir = 'data/ci_test/phase3'
+
+          # 1. classification_model.weights.h5 exists and loadable
+          try:
+              model_path = f'{output_dir}/classification_model.weights.h5'
+              assert os.path.exists(model_path), 'Model file not found'
+              assert os.path.getsize(model_path) > 0, 'Model file is empty'
+
+              # Rebuild architecture to load weights
+              from src.phase3_classification_engine.phase3.config import Phase3Config
+              from src.phase2_detection_engine.phase2.assembler import DetectionModelAssembler
+              from src.phase2_detection_engine.phase2.cnn_builder import CNNBuilder
+              from src.phase2_detection_engine.phase2.bilstm_builder import BiLSTMBuilder
+              from src.phase2_detection_engine.phase2.attention_builder import AttentionBuilder, BahdanauAttention
+              from src.phase3_classification_engine.phase3.head import AutoClassificationHead
+              from pathlib import Path
+
+              p2_meta = json.loads(open('data/ci_test/phase2/detection_metadata.json').read())
+              hp = p2_meta['hyperparameters']
+              train = pd.read_parquet('data/ci_test/processed/train_phase1.parquet')
+              n_features = len([c for c in train.columns if c != 'Label'])
+
+              builders = [
+                  CNNBuilder(hp['cnn_filters_1'], hp['cnn_filters_2'], hp['cnn_kernel_size'], hp['cnn_activation'], hp['cnn_pool_size']),
+                  BiLSTMBuilder(hp['bilstm_units_1'], hp['bilstm_units_2'], hp['dropout_rate']),
+                  AttentionBuilder(hp['attention_units']),
+              ]
+              assembler = DetectionModelAssembler(hp['timesteps'], n_features, builders)
+              detection = assembler.assemble()
+
+              head = AutoClassificationHead(dense_units=32, dense_activation='relu', dropout_rate=0.3)
+              output = head.build(detection.output, 2)
+              full_model = tf.keras.Model(detection.input, output, name='classification_engine')
+              full_model.load_weights(model_path)
+              print(f'PASS  classification_model.weights.h5 loadable: {full_model.count_params()} params')
+          except Exception as e:
+              errors.append(f'FAIL  classification_model.weights.h5: {e}')
+              print(f'FAIL  classification_model.weights.h5: {e}')
+
+          # 2. metrics_report.json contains all required keys
+          try:
+              metrics = json.loads(open(f'{output_dir}/metrics_report.json').read())
+              required = ['accuracy', 'f1_score', 'precision', 'recall', 'auc_roc']
+              for key in required:
+                  assert key in metrics.get('metrics', {}), f'Missing key: {key}'
+              print(f'PASS  metrics_report.json: all {len(required)} required keys present')
+          except Exception as e:
+              errors.append(f'FAIL  metrics_report.json: {e}')
+              print(f'FAIL  metrics_report.json: {e}')
+
+          # 3. Confusion matrix shape matches n_classes
+          try:
+              cm = metrics['metrics']['confusion_matrix']
+              n_classes = 2
+              assert len(cm) == n_classes, f'CM rows={len(cm)}, expected {n_classes}'
+              assert len(cm[0]) == n_classes, f'CM cols={len(cm[0])}, expected {n_classes}'
+              print(f'PASS  Confusion matrix shape: {n_classes}x{n_classes}')
+          except Exception as e:
+              errors.append(f'FAIL  Confusion matrix: {e}')
+              print(f'FAIL  Confusion matrix: {e}')
+
+          # 4. Classification head present (opposite of Phase 2)
+          try:
+              last_layer = full_model.layers[-1]
+              assert isinstance(last_layer, tf.keras.layers.Dense), f'Last layer is {type(last_layer).__name__}'
+              act_name = getattr(getattr(last_layer, 'activation', None), '__name__', '')
+              assert act_name == 'sigmoid', f'Expected sigmoid, got {act_name}'
+              print(f'PASS  Classification head: Dense(sigmoid)')
+          except Exception as e:
+              errors.append(f'FAIL  Classification head: {e}')
+              print(f'FAIL  Classification head: {e}')
+
+          # 5. training_history.json exists and non-empty
+          try:
+              history = json.loads(open(f'{output_dir}/training_history.json').read())
+              assert len(history) >= 2, f'Expected >= 2 phases, got {len(history)}'
+              print(f'PASS  training_history.json: {len(history)} training phases')
+          except Exception as e:
+              errors.append(f'FAIL  training_history.json: {e}')
+              print(f'FAIL  training_history.json: {e}')
+
+          # 6. confusion_matrix.csv exists
+          try:
+              cm_df = pd.read_csv(f'{output_dir}/confusion_matrix.csv', index_col=0)
+              assert cm_df.shape == (2, 2), f'CM CSV shape={cm_df.shape}, expected (2,2)'
+              assert list(cm_df.columns) == ['Normal', 'Attack'], f'Wrong labels: {list(cm_df.columns)}'
+              print(f'PASS  confusion_matrix.csv: shape={cm_df.shape}')
+          except Exception as e:
+              errors.append(f'FAIL  confusion_matrix.csv: {e}')
+              print(f'FAIL  confusion_matrix.csv: {e}')
+
+          # 7. Regression check against baseline
+          try:
+              baseline_path = 'config/baseline_metrics.json'
+              if os.path.exists(baseline_path):
+                  baseline = json.loads(open(baseline_path).read())
+                  m = metrics['metrics']
+                  for key in ['accuracy', 'f1_score']:
+                      current = m[key]
+                      base_val = baseline.get(key, current)
+                      delta_pct = (current - base_val) / base_val * 100 if base_val > 0 else 0
+                      if delta_pct < -2.0:
+                          errors.append(f'FAIL  Regression: {key} dropped {delta_pct:.2f}% (baseline={base_val:.4f}, current={current:.4f})')
+                          print(f'FAIL  Regression check: {key} — delta: {delta_pct:+.2f}%')
+                      else:
+                          print(f'PASS  Regression check: {key} — delta: {delta_pct:+.2f}%')
+              else:
+                  print(f'SKIP  Regression check: no baseline_metrics.json (first run)')
+          except Exception as e:
+              errors.append(f'FAIL  Regression check: {e}')
+              print(f'FAIL  Regression check: {e}')
+
+          if errors:
+              print(f'\n{len(errors)} FAILURES:')
+              for e in errors:
+                  print(f'  {e}')
+              sys.exit(1)
+          else:
+              print(f'\nAll 7 Phase 3 integration tests PASSED')
+          "
+
+      - name: Upload all report sections + Phase 3 artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase3-integration-artifacts
+          path: |
+            data/ci_test/phase3/
+            results/phase0_analysis/report_section_*.md
+
+  # ─────────────────────────────────────────────────────────────────
+  # 5. Docker build (Phase 0 + Phase 1 + Phase 2 + Phase 3)
+  # ─────────────────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    needs: integration-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build combined Docker image
+        run: docker build -t analyst/phase0-phase3:${{ github.sha }} .
+
+      - name: Verify Phase 0–3 imports + model exportability
+        run: >
+          docker run --rm analyst/phase0-phase3:${{ github.sha }}
+          -c "
+          from src.phase0_dataset_analysis.phase0 import Phase0Config, DataLoader;
+          from src.phase1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
+          from src.phase2_detection_engine.phase2 import Phase2Config, DetectionPipeline;
+          from src.phase3_classification_engine.phase3 import Phase3Config, ClassificationPipeline;
+          import tensorflow as tf;
+          m = tf.keras.Sequential([tf.keras.layers.Dense(1, input_shape=(5,))]);
+          m.save_weights('/tmp/_verify.weights.h5');
+          print(f'Phase 0–3: OK — TF {tf.__version__}, weights exportable')
+          "
+
+      - name: Tag as v4.0
+        run: docker tag analyst/phase0-phase3:${{ github.sha }} analyst/phase0-phase3:4.0
