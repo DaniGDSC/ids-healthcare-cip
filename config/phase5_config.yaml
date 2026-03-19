@@ -1,120 +1,55 @@
-# Phase 5: Classification Configuration
+# ─────────────────────────────────────────────────────────────
+# Phase 5 — Explanation Engine Configuration
+# ─────────────────────────────────────────────────────────────
 
 data:
-  input_dir: "data/latent"
-  output_dir: "results/phase5"
-  model_dir: "models/phase5"
-  labels_source: "data/processed"  # Original labels
+  phase4_dir: "data/phase4"
+  phase4_metadata: "data/phase4/risk_metadata.json"
+  phase3_dir: "data/phase3"
+  phase3_metadata: "data/phase3/classification_metadata.json"
+  phase2_dir: "data/phase2"
+  phase2_metadata: "data/phase2/detection_metadata.json"
+  phase1_train: "data/processed/train_phase1.parquet"
+  phase1_test: "data/processed/test_phase1.parquet"
+  label_column: "Label"
 
-classification:
-  # Multi-class classification
-  task: "multiclass"
-  
-  # Class balancing
-  balance_classes: true
-  balancing_method: "smote"  # Options: smote, adasyn, random_oversample, random_undersample
-  
-  # Models
-  models:
-    svm:
-      enabled: true
-      kernel: "rbf"
-      C: 1.0
-      gamma: "scale"
-      probability: true
-      cache_size: 1000
-      
-    decision_tree:
-      enabled: true
-      max_depth: 15
-      min_samples_split: 10
-      min_samples_leaf: 5
-      criterion: "gini"
-      
-    random_forest:
-      enabled: false
-      n_estimators: 100
-      max_depth: 15
-      min_samples_split: 10
-      
-    gradient_boosting:
-      enabled: false
-      n_estimators: 100
-      learning_rate: 0.1
-      max_depth: 5
-      
-  # Ensemble strategy
-  ensemble:
-    enabled: true
-    method: "voting"  # Options: voting, stacking
-    voting_type: "soft"  # Options: hard, soft
-    use_kernel_approximation: true
-    n_components: 500
-    svm_alpha: 0.0001
-    svm_max_iter: 1000
-    svm_tol: 0.001
-    n_jobs: -1
-    svm_weight: 0.6
-    dt_weight: 0.4
-    weight_opt:
-      enabled: true
-      min: 0.5
-      max: 0.9
-      step: 0.1
-
-hyperparameter_tuning:
-  enabled: false
-  method: "grid_search"  # Options: grid_search, random_search, bayesian
-  cv_folds: 5
-  n_iter: 50  # For random search
-  
-evaluation:
-  # Metrics
-  metrics:
-    - "accuracy"
-    - "precision"
-    - "recall"
-    - "f1_score"
-    - "roc_auc"
-    - "confusion_matrix"
-    
-  # Per-class metrics
-  per_class_metrics: true
-  
-  # Cross-validation
-  cross_validation: true
-  cv_folds: 5
-  
-visualization:
-  # Confusion matrix
-  plot_confusion_matrix: true
-  normalize_cm: true
-  
-  # ROC curves
-  plot_roc_curves: true
-  plot_per_class_roc: true
-  
-  # Feature importance
-  plot_feature_importance: true
-  
-  # Plot settings
-  plot_format: "png"
-  dpi: 300
-  
-reporting:
-  # Generate comprehensive report
-  generate_report: true
-  report_format: "markdown"  # Options: markdown, html, pdf
-  include_plots: true
-  
-  # Save predictions
-  save_predictions: true
-  save_probabilities: true
+shap:
+  background_samples: 100
+  max_explain_samples: 200
+  top_features: 10
+  max_waterfall_charts: 5
+  max_timeline_charts: 3
 
 output:
-  save_models: true
-  model_format: "joblib"
+  output_dir: "data/phase5"
+  shap_values_file: "shap_values.parquet"
+  explanation_report_file: "explanation_report.json"
+  metadata_file: "explanation_metadata.json"
+  charts_dir: "charts"
 
-logging:
-  level: "INFO"
-  file: "logs/phase5.log"
+explanation_templates:
+  CRITICAL: >-
+    CRITICAL ALERT: Sample {idx} at T={time}.
+    Top factors: {f1} anomaly ({p1:.1f}%),
+    {f2} anomaly ({p2:.1f}%),
+    {f3} anomaly ({p3:.1f}%).
+    Immediate action required.
+  HIGH: >-
+    HIGH ALERT: Suspicious activity detected at sample {idx}.
+    Primary indicator: {f1} anomaly contributing {p1:.1f}%.
+  MEDIUM: >-
+    MEDIUM: Anomaly detected at sample {idx}.
+    Monitor closely. Key feature: {f1}.
+  LOW: "LOW: Minor anomaly at sample {idx}. No immediate action needed."
+
+biometric_columns:
+  - Temp
+  - SpO2
+  - Pulse_Rate
+  - SYS
+  - DIA
+  - Heart_rate
+  - Resp_Rate
+  - ST
+
+random_state: 42

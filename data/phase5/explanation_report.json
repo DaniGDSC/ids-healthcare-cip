@@ -1,0 +1,5016 @@
+{
+  "generated_at": "2026-03-19T13:44:54.150481+00:00",
+  "pipeline": "phase5_explanation",
+  "git_commit": "718383d14552357f222465f612a01d3057eb9a10",
+  "total_explained": 198,
+  "risk_level_counts": {
+    "LOW": 93,
+    "MEDIUM": 85,
+    "HIGH": 1376,
+    "CRITICAL": 62
+  },
+  "feature_importance": [
+    {
+      "feature": "DIntPkt",
+      "mean_abs_shap": 0.016464136594149446,
+      "rank": 1
+    },
+    {
+      "feature": "TotBytes",
+      "mean_abs_shap": 0.005599117797392482,
+      "rank": 2
+    },
+    {
+      "feature": "DstBytes",
+      "mean_abs_shap": 0.0026241485745123667,
+      "rank": 3
+    },
+    {
+      "feature": "SrcBytes",
+      "mean_abs_shap": 0.0024365370116347733,
+      "rank": 4
+    },
+    {
+      "feature": "SIntPkt",
+      "mean_abs_shap": 0.0016389309426491523,
+      "rank": 5
+    },
+    {
+      "feature": "Dur",
+      "mean_abs_shap": 0.0016177702755412796,
+      "rank": 6
+    },
+    {
+      "feature": "Resp_Rate",
+      "mean_abs_shap": 0.0012091838076649063,
+      "rank": 7
+    },
+    {
+      "feature": "ST",
+      "mean_abs_shap": 0.0012034155246311614,
+      "rank": 8
+    },
+    {
+      "feature": "SpO2",
+      "mean_abs_shap": 0.0011554627183115594,
+      "rank": 9
+    },
+    {
+      "feature": "Heart_rate",
+      "mean_abs_shap": 0.0010986841468091453,
+      "rank": 10
+    }
+  ],
+  "explanations": [
+    {
+      "sample_index": 189,
+      "risk_level": "LOW",
+      "anomaly_score": 0.214665,
+      "threshold": 0.203575,
+      "timestamp": "T=189",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.00937,
+          "contribution_pct": 46.47
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001442,
+          "contribution_pct": 7.15
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.000836,
+          "contribution_pct": 4.15
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 189. No immediate action needed."
+    },
+    {
+      "sample_index": 215,
+      "risk_level": "LOW",
+      "anomaly_score": 0.215739,
+      "threshold": 0.203575,
+      "timestamp": "T=215",
+      "top_features": [
+        {
+          "feature": "SpO2",
+          "shap_value": 0.005177,
+          "contribution_pct": 28.37
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.003478,
+          "contribution_pct": 19.06
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001286,
+          "contribution_pct": 7.05
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 215. No immediate action needed."
+    },
+    {
+      "sample_index": 627,
+      "risk_level": "LOW",
+      "anomaly_score": 0.212779,
+      "threshold": 0.203575,
+      "timestamp": "T=627",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008392,
+          "contribution_pct": 41.03
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001466,
+          "contribution_pct": 7.17
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001413,
+          "contribution_pct": 6.91
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 627. No immediate action needed."
+    },
+    {
+      "sample_index": 1420,
+      "risk_level": "LOW",
+      "anomaly_score": 0.21563,
+      "threshold": 0.203575,
+      "timestamp": "T=1420",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008114,
+          "contribution_pct": 42.48
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001373,
+          "contribution_pct": 7.19
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001247,
+          "contribution_pct": 6.53
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 1420. No immediate action needed."
+    },
+    {
+      "sample_index": 2260,
+      "risk_level": "LOW",
+      "anomaly_score": 0.206231,
+      "threshold": 0.203575,
+      "timestamp": "T=2260",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.004221,
+          "contribution_pct": 26.42
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.002578,
+          "contribution_pct": 16.13
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.000999,
+          "contribution_pct": 6.25
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 2260. No immediate action needed."
+    },
+    {
+      "sample_index": 2518,
+      "risk_level": "LOW",
+      "anomaly_score": 0.213399,
+      "threshold": 0.203575,
+      "timestamp": "T=2518",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009287,
+          "contribution_pct": 49.32
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001063,
+          "contribution_pct": 5.64
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.000981,
+          "contribution_pct": 5.21
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 2518. No immediate action needed."
+    },
+    {
+      "sample_index": 3258,
+      "risk_level": "LOW",
+      "anomaly_score": 0.205005,
+      "threshold": 0.203575,
+      "timestamp": "T=3258",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.007589,
+          "contribution_pct": 42.88
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001775,
+          "contribution_pct": 10.03
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.000876,
+          "contribution_pct": 4.95
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 3258. No immediate action needed."
+    },
+    {
+      "sample_index": 3488,
+      "risk_level": "LOW",
+      "anomaly_score": 0.20859,
+      "threshold": 0.203575,
+      "timestamp": "T=3488",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009294,
+          "contribution_pct": 50.08
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001154,
+          "contribution_pct": 6.22
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.000793,
+          "contribution_pct": 4.27
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 3488. No immediate action needed."
+    },
+    {
+      "sample_index": 3851,
+      "risk_level": "LOW",
+      "anomaly_score": 0.204994,
+      "threshold": 0.203575,
+      "timestamp": "T=3851",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009656,
+          "contribution_pct": 46.23
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001668,
+          "contribution_pct": 7.99
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.000979,
+          "contribution_pct": 4.69
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 3851. No immediate action needed."
+    },
+    {
+      "sample_index": 4363,
+      "risk_level": "LOW",
+      "anomaly_score": 0.206048,
+      "threshold": 0.203575,
+      "timestamp": "T=4363",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.006138,
+          "contribution_pct": 33.96
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.002302,
+          "contribution_pct": 12.74
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001182,
+          "contribution_pct": 6.54
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 4363. No immediate action needed."
+    },
+    {
+      "sample_index": 4435,
+      "risk_level": "LOW",
+      "anomaly_score": 0.211621,
+      "threshold": 0.203575,
+      "timestamp": "T=4435",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009139,
+          "contribution_pct": 42.41
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001561,
+          "contribution_pct": 7.24
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001152,
+          "contribution_pct": 5.35
+        }
+      ],
+      "explanation": "LOW: Minor anomaly at sample 4435. No immediate action needed."
+    },
+    {
+      "sample_index": 809,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.224884,
+      "threshold": 0.203575,
+      "timestamp": "T=809",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008575,
+          "contribution_pct": 45.82
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001171,
+          "contribution_pct": 6.26
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.000992,
+          "contribution_pct": 5.3
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 809. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 1241,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.226501,
+      "threshold": 0.203575,
+      "timestamp": "T=1241",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.006316,
+          "contribution_pct": 34.76
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.002173,
+          "contribution_pct": 11.96
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.001264,
+          "contribution_pct": 6.95
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 1241. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 1481,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.226488,
+      "threshold": 0.203575,
+      "timestamp": "T=1481",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008096,
+          "contribution_pct": 46.12
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001218,
+          "contribution_pct": 6.94
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.000847,
+          "contribution_pct": 4.82
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 1481. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 1523,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.221455,
+      "threshold": 0.203575,
+      "timestamp": "T=1523",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.007234,
+          "contribution_pct": 44.88
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.000945,
+          "contribution_pct": 5.86
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.000755,
+          "contribution_pct": 4.68
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 1523. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 1672,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.225153,
+      "threshold": 0.203575,
+      "timestamp": "T=1672",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.005408,
+          "contribution_pct": 26.26
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.001897,
+          "contribution_pct": 9.21
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.00188,
+          "contribution_pct": 9.13
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 1672. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 2194,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.220194,
+      "threshold": 0.203575,
+      "timestamp": "T=2194",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010338,
+          "contribution_pct": 45.95
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001994,
+          "contribution_pct": 8.86
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001348,
+          "contribution_pct": 5.99
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 2194. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 2434,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.217098,
+      "threshold": 0.203575,
+      "timestamp": "T=2434",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.005272,
+          "contribution_pct": 28.52
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.002762,
+          "contribution_pct": 14.94
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.002013,
+          "contribution_pct": 10.89
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 2434. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 3504,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.22231,
+      "threshold": 0.203575,
+      "timestamp": "T=3504",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.00884,
+          "contribution_pct": 47.05
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001128,
+          "contribution_pct": 6.01
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.00111,
+          "contribution_pct": 5.91
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 3504. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 3926,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.218866,
+      "threshold": 0.203575,
+      "timestamp": "T=3926",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.005463,
+          "contribution_pct": 28.57
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.002222,
+          "contribution_pct": 11.62
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 0.001837,
+          "contribution_pct": 9.61
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 3926. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 4290,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.218772,
+      "threshold": 0.203575,
+      "timestamp": "T=4290",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.006676,
+          "contribution_pct": 39.44
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001072,
+          "contribution_pct": 6.33
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.000999,
+          "contribution_pct": 5.9
+        }
+      ],
+      "explanation": "MEDIUM: Anomaly detected at sample 4290. Monitor closely. Key feature: DIntPkt."
+    },
+    {
+      "sample_index": 23,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.296016,
+      "threshold": 0.203575,
+      "timestamp": "T=23",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01177,
+          "contribution_pct": 43.99
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001932,
+          "contribution_pct": 7.22
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001677,
+          "contribution_pct": 6.27
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 23. Primary indicator: DIntPkt anomaly contributing 44.0%."
+    },
+    {
+      "sample_index": 89,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.692487,
+      "threshold": 0.203575,
+      "timestamp": "T=89",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.024995,
+          "contribution_pct": 59.23
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.002614,
+          "contribution_pct": 6.19
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 0.001826,
+          "contribution_pct": 4.33
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 89. Primary indicator: DIntPkt anomaly contributing 59.2%."
+    },
+    {
+      "sample_index": 161,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.234827,
+      "threshold": 0.203575,
+      "timestamp": "T=161",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009029,
+          "contribution_pct": 47.02
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001021,
+          "contribution_pct": 5.32
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.000994,
+          "contribution_pct": 5.18
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 161. Primary indicator: DIntPkt anomaly contributing 47.0%."
+    },
+    {
+      "sample_index": 166,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.243256,
+      "threshold": 0.203575,
+      "timestamp": "T=166",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008837,
+          "contribution_pct": 42.78
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001796,
+          "contribution_pct": 8.7
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 0.001119,
+          "contribution_pct": 5.42
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 166. Primary indicator: DIntPkt anomaly contributing 42.8%."
+    },
+    {
+      "sample_index": 172,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.266894,
+      "threshold": 0.203575,
+      "timestamp": "T=172",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010687,
+          "contribution_pct": 50.58
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.000977,
+          "contribution_pct": 4.63
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.000947,
+          "contribution_pct": 4.48
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 172. Primary indicator: DIntPkt anomaly contributing 50.6%."
+    },
+    {
+      "sample_index": 194,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.333456,
+      "threshold": 0.203575,
+      "timestamp": "T=194",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012701,
+          "contribution_pct": 47.44
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001348,
+          "contribution_pct": 5.04
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.00133,
+          "contribution_pct": 4.97
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 194. Primary indicator: DIntPkt anomaly contributing 47.4%."
+    },
+    {
+      "sample_index": 274,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.242302,
+      "threshold": 0.203575,
+      "timestamp": "T=274",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.00835,
+          "contribution_pct": 44.31
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001082,
+          "contribution_pct": 5.74
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.000999,
+          "contribution_pct": 5.3
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 274. Primary indicator: DIntPkt anomaly contributing 44.3%."
+    },
+    {
+      "sample_index": 311,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.386385,
+      "threshold": 0.203575,
+      "timestamp": "T=311",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016606,
+          "contribution_pct": 51.3
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001765,
+          "contribution_pct": 5.45
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00136,
+          "contribution_pct": 4.2
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 311. Primary indicator: DIntPkt anomaly contributing 51.3%."
+    },
+    {
+      "sample_index": 325,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.314462,
+      "threshold": 0.203575,
+      "timestamp": "T=325",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012638,
+          "contribution_pct": 44.09
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001447,
+          "contribution_pct": 5.05
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001361,
+          "contribution_pct": 4.75
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 325. Primary indicator: DIntPkt anomaly contributing 44.1%."
+    },
+    {
+      "sample_index": 426,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.239902,
+      "threshold": 0.203575,
+      "timestamp": "T=426",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.018097,
+          "contribution_pct": 32.75
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.009702,
+          "contribution_pct": 17.56
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.006588,
+          "contribution_pct": 11.92
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 426. Primary indicator: DIntPkt anomaly contributing 32.8%."
+    },
+    {
+      "sample_index": 441,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.354985,
+      "threshold": 0.203575,
+      "timestamp": "T=441",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.025779,
+          "contribution_pct": 29.6
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019927,
+          "contribution_pct": 22.88
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.013774,
+          "contribution_pct": 15.82
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 441. Primary indicator: TotBytes anomaly contributing 29.6%."
+    },
+    {
+      "sample_index": 463,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.348752,
+      "threshold": 0.203575,
+      "timestamp": "T=463",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015627,
+          "contribution_pct": 55.31
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001325,
+          "contribution_pct": 4.69
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001217,
+          "contribution_pct": 4.31
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 463. Primary indicator: DIntPkt anomaly contributing 55.3%."
+    },
+    {
+      "sample_index": 464,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.332046,
+      "threshold": 0.203575,
+      "timestamp": "T=464",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015523,
+          "contribution_pct": 55.13
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001507,
+          "contribution_pct": 5.35
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001298,
+          "contribution_pct": 4.61
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 464. Primary indicator: DIntPkt anomaly contributing 55.1%."
+    },
+    {
+      "sample_index": 465,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.284823,
+      "threshold": 0.203575,
+      "timestamp": "T=465",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01328,
+          "contribution_pct": 52.56
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001224,
+          "contribution_pct": 4.84
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001015,
+          "contribution_pct": 4.02
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 465. Primary indicator: DIntPkt anomaly contributing 52.6%."
+    },
+    {
+      "sample_index": 510,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.312273,
+      "threshold": 0.203575,
+      "timestamp": "T=510",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.017394,
+          "contribution_pct": 34.62
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.00792,
+          "contribution_pct": 15.76
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.006546,
+          "contribution_pct": 13.03
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 510. Primary indicator: TotBytes anomaly contributing 34.6%."
+    },
+    {
+      "sample_index": 516,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.61935,
+      "threshold": 0.203575,
+      "timestamp": "T=516",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.022097,
+          "contribution_pct": 28.86
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.018895,
+          "contribution_pct": 24.68
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.012085,
+          "contribution_pct": 15.79
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 516. Primary indicator: TotBytes anomaly contributing 28.9%."
+    },
+    {
+      "sample_index": 661,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.26234,
+      "threshold": 0.203575,
+      "timestamp": "T=661",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009429,
+          "contribution_pct": 46.92
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001246,
+          "contribution_pct": 6.2
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00104,
+          "contribution_pct": 5.18
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 661. Primary indicator: DIntPkt anomaly contributing 46.9%."
+    },
+    {
+      "sample_index": 662,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.265958,
+      "threshold": 0.203575,
+      "timestamp": "T=662",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009562,
+          "contribution_pct": 41.83
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001822,
+          "contribution_pct": 7.97
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001477,
+          "contribution_pct": 6.46
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 662. Primary indicator: DIntPkt anomaly contributing 41.8%."
+    },
+    {
+      "sample_index": 722,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.365661,
+      "threshold": 0.203575,
+      "timestamp": "T=722",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.013729,
+          "contribution_pct": 26.68
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.011395,
+          "contribution_pct": 22.15
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.006858,
+          "contribution_pct": 13.33
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 722. Primary indicator: TotBytes anomaly contributing 26.7%."
+    },
+    {
+      "sample_index": 731,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.691902,
+      "threshold": 0.203575,
+      "timestamp": "T=731",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.016689,
+          "contribution_pct": 32.79
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015195,
+          "contribution_pct": 29.86
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002198,
+          "contribution_pct": 4.32
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 731. Primary indicator: TotBytes anomaly contributing 32.8%."
+    },
+    {
+      "sample_index": 736,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.327459,
+      "threshold": 0.203575,
+      "timestamp": "T=736",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01313,
+          "contribution_pct": 45.65
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.002634,
+          "contribution_pct": 9.16
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00143,
+          "contribution_pct": 4.97
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 736. Primary indicator: DIntPkt anomaly contributing 45.6%."
+    },
+    {
+      "sample_index": 745,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.563447,
+      "threshold": 0.203575,
+      "timestamp": "T=745",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.02956,
+          "contribution_pct": 57.67
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00238,
+          "contribution_pct": 4.64
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002343,
+          "contribution_pct": 4.57
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 745. Primary indicator: DIntPkt anomaly contributing 57.7%."
+    },
+    {
+      "sample_index": 757,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.263621,
+      "threshold": 0.203575,
+      "timestamp": "T=757",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010435,
+          "contribution_pct": 47.72
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001255,
+          "contribution_pct": 5.74
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.0012,
+          "contribution_pct": 5.49
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 757. Primary indicator: DIntPkt anomaly contributing 47.7%."
+    },
+    {
+      "sample_index": 759,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.236959,
+      "threshold": 0.203575,
+      "timestamp": "T=759",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008823,
+          "contribution_pct": 43.81
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001087,
+          "contribution_pct": 5.4
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001062,
+          "contribution_pct": 5.28
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 759. Primary indicator: DIntPkt anomaly contributing 43.8%."
+    },
+    {
+      "sample_index": 767,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.289714,
+      "threshold": 0.203575,
+      "timestamp": "T=767",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010134,
+          "contribution_pct": 40.36
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00159,
+          "contribution_pct": 6.33
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001393,
+          "contribution_pct": 5.55
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 767. Primary indicator: DIntPkt anomaly contributing 40.4%."
+    },
+    {
+      "sample_index": 779,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.314575,
+      "threshold": 0.203575,
+      "timestamp": "T=779",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013472,
+          "contribution_pct": 51.73
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00127,
+          "contribution_pct": 4.88
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001172,
+          "contribution_pct": 4.5
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 779. Primary indicator: DIntPkt anomaly contributing 51.7%."
+    },
+    {
+      "sample_index": 805,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.233299,
+      "threshold": 0.203575,
+      "timestamp": "T=805",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009338,
+          "contribution_pct": 47.31
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.000997,
+          "contribution_pct": 5.05
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.00097,
+          "contribution_pct": 4.92
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 805. Primary indicator: DIntPkt anomaly contributing 47.3%."
+    },
+    {
+      "sample_index": 807,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.294885,
+      "threshold": 0.203575,
+      "timestamp": "T=807",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008855,
+          "contribution_pct": 44.54
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001249,
+          "contribution_pct": 6.28
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001195,
+          "contribution_pct": 6.01
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 807. Primary indicator: DIntPkt anomaly contributing 44.5%."
+    },
+    {
+      "sample_index": 833,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.470993,
+      "threshold": 0.203575,
+      "timestamp": "T=833",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.022433,
+          "contribution_pct": 41.88
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.006436,
+          "contribution_pct": 12.02
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.005622,
+          "contribution_pct": 10.5
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 833. Primary indicator: DIntPkt anomaly contributing 41.9%."
+    },
+    {
+      "sample_index": 836,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.593753,
+      "threshold": 0.203575,
+      "timestamp": "T=836",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.021423,
+          "contribution_pct": 30.59
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019496,
+          "contribution_pct": 27.84
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.009001,
+          "contribution_pct": 12.85
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 836. Primary indicator: TotBytes anomaly contributing 30.6%."
+    },
+    {
+      "sample_index": 858,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.380763,
+      "threshold": 0.203575,
+      "timestamp": "T=858",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014668,
+          "contribution_pct": 48.47
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.00167,
+          "contribution_pct": 5.52
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.00161,
+          "contribution_pct": 5.32
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 858. Primary indicator: DIntPkt anomaly contributing 48.5%."
+    },
+    {
+      "sample_index": 914,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.318479,
+      "threshold": 0.203575,
+      "timestamp": "T=914",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.016148,
+          "contribution_pct": 38.68
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.007527,
+          "contribution_pct": 18.03
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.005253,
+          "contribution_pct": 12.58
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 914. Primary indicator: TotBytes anomaly contributing 38.7%."
+    },
+    {
+      "sample_index": 916,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.331309,
+      "threshold": 0.203575,
+      "timestamp": "T=916",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.015657,
+          "contribution_pct": 39.87
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.005136,
+          "contribution_pct": 13.08
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.004263,
+          "contribution_pct": 10.85
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 916. Primary indicator: TotBytes anomaly contributing 39.9%."
+    },
+    {
+      "sample_index": 1046,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.388031,
+      "threshold": 0.203575,
+      "timestamp": "T=1046",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016647,
+          "contribution_pct": 52.13
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001395,
+          "contribution_pct": 4.37
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001365,
+          "contribution_pct": 4.27
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1046. Primary indicator: DIntPkt anomaly contributing 52.1%."
+    },
+    {
+      "sample_index": 1101,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.353263,
+      "threshold": 0.203575,
+      "timestamp": "T=1101",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010341,
+          "contribution_pct": 34.79
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.00348,
+          "contribution_pct": 11.71
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.00216,
+          "contribution_pct": 7.27
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1101. Primary indicator: DIntPkt anomaly contributing 34.8%."
+    },
+    {
+      "sample_index": 1110,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.403032,
+      "threshold": 0.203575,
+      "timestamp": "T=1110",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012449,
+          "contribution_pct": 25.61
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.006207,
+          "contribution_pct": 12.77
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.005179,
+          "contribution_pct": 10.66
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1110. Primary indicator: DIntPkt anomaly contributing 25.6%."
+    },
+    {
+      "sample_index": 1119,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.338467,
+      "threshold": 0.203575,
+      "timestamp": "T=1119",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.014355,
+          "contribution_pct": 30.73
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.006935,
+          "contribution_pct": 14.84
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.004576,
+          "contribution_pct": 9.8
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1119. Primary indicator: TotBytes anomaly contributing 30.7%."
+    },
+    {
+      "sample_index": 1222,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.422544,
+      "threshold": 0.203575,
+      "timestamp": "T=1222",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.018602,
+          "contribution_pct": 57.05
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.002169,
+          "contribution_pct": 6.65
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001307,
+          "contribution_pct": 4.01
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1222. Primary indicator: DIntPkt anomaly contributing 57.0%."
+    },
+    {
+      "sample_index": 1233,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.402634,
+      "threshold": 0.203575,
+      "timestamp": "T=1233",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.017222,
+          "contribution_pct": 56.36
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001688,
+          "contribution_pct": 5.52
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001656,
+          "contribution_pct": 5.42
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1233. Primary indicator: DIntPkt anomaly contributing 56.4%."
+    },
+    {
+      "sample_index": 1234,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.313908,
+      "threshold": 0.203575,
+      "timestamp": "T=1234",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014092,
+          "contribution_pct": 55.66
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.0012,
+          "contribution_pct": 4.74
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001163,
+          "contribution_pct": 4.59
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1234. Primary indicator: DIntPkt anomaly contributing 55.7%."
+    },
+    {
+      "sample_index": 1235,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.44284,
+      "threshold": 0.203575,
+      "timestamp": "T=1235",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016933,
+          "contribution_pct": 56.59
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001624,
+          "contribution_pct": 5.43
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001282,
+          "contribution_pct": 4.29
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1235. Primary indicator: DIntPkt anomaly contributing 56.6%."
+    },
+    {
+      "sample_index": 1257,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.329267,
+      "threshold": 0.203575,
+      "timestamp": "T=1257",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010678,
+          "contribution_pct": 38.69
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.002359,
+          "contribution_pct": 8.55
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001801,
+          "contribution_pct": 6.53
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1257. Primary indicator: DIntPkt anomaly contributing 38.7%."
+    },
+    {
+      "sample_index": 1369,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.969602,
+      "threshold": 0.203575,
+      "timestamp": "T=1369",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.033844,
+          "contribution_pct": 56.03
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.012992,
+          "contribution_pct": 21.51
+        },
+        {
+          "feature": "pDstLoss",
+          "shap_value": 0.003458,
+          "contribution_pct": 5.72
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1369. Primary indicator: DIntPkt anomaly contributing 56.0%."
+    },
+    {
+      "sample_index": 1373,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.858681,
+      "threshold": 0.203575,
+      "timestamp": "T=1373",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.030621,
+          "contribution_pct": 40.95
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.018086,
+          "contribution_pct": 24.18
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.004866,
+          "contribution_pct": 6.51
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1373. Primary indicator: DIntPkt anomaly contributing 41.0%."
+    },
+    {
+      "sample_index": 1378,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.734625,
+      "threshold": 0.203575,
+      "timestamp": "T=1378",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.022547,
+          "contribution_pct": 38.46
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.013572,
+          "contribution_pct": 23.15
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.007098,
+          "contribution_pct": 12.11
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1378. Primary indicator: DIntPkt anomaly contributing 38.5%."
+    },
+    {
+      "sample_index": 1384,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.686039,
+      "threshold": 0.203575,
+      "timestamp": "T=1384",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.018505,
+          "contribution_pct": 34.82
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.013935,
+          "contribution_pct": 26.22
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.004197,
+          "contribution_pct": 7.9
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1384. Primary indicator: DIntPkt anomaly contributing 34.8%."
+    },
+    {
+      "sample_index": 1391,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.505546,
+      "threshold": 0.203575,
+      "timestamp": "T=1391",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.023103,
+          "contribution_pct": 54.96
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.002222,
+          "contribution_pct": 5.29
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001883,
+          "contribution_pct": 4.48
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1391. Primary indicator: DIntPkt anomaly contributing 55.0%."
+    },
+    {
+      "sample_index": 1393,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.40044,
+      "threshold": 0.203575,
+      "timestamp": "T=1393",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.018053,
+          "contribution_pct": 57.13
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001399,
+          "contribution_pct": 4.43
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001295,
+          "contribution_pct": 4.1
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1393. Primary indicator: DIntPkt anomaly contributing 57.1%."
+    },
+    {
+      "sample_index": 1412,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.246456,
+      "threshold": 0.203575,
+      "timestamp": "T=1412",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008464,
+          "contribution_pct": 37.97
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.001994,
+          "contribution_pct": 8.95
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001611,
+          "contribution_pct": 7.23
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1412. Primary indicator: DIntPkt anomaly contributing 38.0%."
+    },
+    {
+      "sample_index": 1453,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.709006,
+      "threshold": 0.203575,
+      "timestamp": "T=1453",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.033167,
+          "contribution_pct": 58.68
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00285,
+          "contribution_pct": 5.04
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002235,
+          "contribution_pct": 3.95
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1453. Primary indicator: DIntPkt anomaly contributing 58.7%."
+    },
+    {
+      "sample_index": 1456,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.582585,
+      "threshold": 0.203575,
+      "timestamp": "T=1456",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.026452,
+          "contribution_pct": 51.29
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.003522,
+          "contribution_pct": 6.83
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.003134,
+          "contribution_pct": 6.08
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1456. Primary indicator: DIntPkt anomaly contributing 51.3%."
+    },
+    {
+      "sample_index": 1462,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.376067,
+      "threshold": 0.203575,
+      "timestamp": "T=1462",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019755,
+          "contribution_pct": 52.48
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.002643,
+          "contribution_pct": 7.02
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.002613,
+          "contribution_pct": 6.94
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1462. Primary indicator: DIntPkt anomaly contributing 52.5%."
+    },
+    {
+      "sample_index": 1465,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.34731,
+      "threshold": 0.203575,
+      "timestamp": "T=1465",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.017381,
+          "contribution_pct": 51.9
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002235,
+          "contribution_pct": 6.67
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001654,
+          "contribution_pct": 4.94
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1465. Primary indicator: DIntPkt anomaly contributing 51.9%."
+    },
+    {
+      "sample_index": 1484,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.315063,
+      "threshold": 0.203575,
+      "timestamp": "T=1484",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.011809,
+          "contribution_pct": 43.69
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001506,
+          "contribution_pct": 5.57
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001496,
+          "contribution_pct": 5.54
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1484. Primary indicator: DIntPkt anomaly contributing 43.7%."
+    },
+    {
+      "sample_index": 1489,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.398948,
+      "threshold": 0.203575,
+      "timestamp": "T=1489",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016677,
+          "contribution_pct": 52.44
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001937,
+          "contribution_pct": 6.09
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001798,
+          "contribution_pct": 5.65
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1489. Primary indicator: DIntPkt anomaly contributing 52.4%."
+    },
+    {
+      "sample_index": 1494,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.329645,
+      "threshold": 0.203575,
+      "timestamp": "T=1494",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014484,
+          "contribution_pct": 52.89
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001297,
+          "contribution_pct": 4.74
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001173,
+          "contribution_pct": 4.28
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1494. Primary indicator: DIntPkt anomaly contributing 52.9%."
+    },
+    {
+      "sample_index": 1558,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.234517,
+      "threshold": 0.203575,
+      "timestamp": "T=1558",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008497,
+          "contribution_pct": 46.65
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001567,
+          "contribution_pct": 8.6
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001088,
+          "contribution_pct": 5.97
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1558. Primary indicator: DIntPkt anomaly contributing 46.6%."
+    },
+    {
+      "sample_index": 1658,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.365165,
+      "threshold": 0.203575,
+      "timestamp": "T=1658",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012262,
+          "contribution_pct": 43.8
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.002414,
+          "contribution_pct": 8.62
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.00207,
+          "contribution_pct": 7.4
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1658. Primary indicator: DIntPkt anomaly contributing 43.8%."
+    },
+    {
+      "sample_index": 1666,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.383032,
+      "threshold": 0.203575,
+      "timestamp": "T=1666",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014189,
+          "contribution_pct": 38.41
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.005078,
+          "contribution_pct": 13.75
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.002422,
+          "contribution_pct": 6.56
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1666. Primary indicator: DIntPkt anomaly contributing 38.4%."
+    },
+    {
+      "sample_index": 1671,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.365201,
+      "threshold": 0.203575,
+      "timestamp": "T=1671",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.00988,
+          "contribution_pct": 35.26
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.003145,
+          "contribution_pct": 11.22
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.002475,
+          "contribution_pct": 8.83
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1671. Primary indicator: DIntPkt anomaly contributing 35.3%."
+    },
+    {
+      "sample_index": 1690,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.289845,
+      "threshold": 0.203575,
+      "timestamp": "T=1690",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012107,
+          "contribution_pct": 42.43
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.003315,
+          "contribution_pct": 11.62
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.001277,
+          "contribution_pct": 4.47
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1690. Primary indicator: DIntPkt anomaly contributing 42.4%."
+    },
+    {
+      "sample_index": 1741,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.36609,
+      "threshold": 0.203575,
+      "timestamp": "T=1741",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.017178,
+          "contribution_pct": 34.24
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008083,
+          "contribution_pct": 16.11
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.007872,
+          "contribution_pct": 15.69
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1741. Primary indicator: TotBytes anomaly contributing 34.2%."
+    },
+    {
+      "sample_index": 1746,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.557027,
+      "threshold": 0.203575,
+      "timestamp": "T=1746",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.017291,
+          "contribution_pct": 33.61
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01395,
+          "contribution_pct": 27.11
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002082,
+          "contribution_pct": 4.05
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1746. Primary indicator: TotBytes anomaly contributing 33.6%."
+    },
+    {
+      "sample_index": 1749,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.331871,
+      "threshold": 0.203575,
+      "timestamp": "T=1749",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.011816,
+          "contribution_pct": 27.1
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008961,
+          "contribution_pct": 20.55
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.005044,
+          "contribution_pct": 11.57
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1749. Primary indicator: TotBytes anomaly contributing 27.1%."
+    },
+    {
+      "sample_index": 1752,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.364773,
+      "threshold": 0.203575,
+      "timestamp": "T=1752",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010896,
+          "contribution_pct": 27.9
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.008448,
+          "contribution_pct": 21.63
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.005477,
+          "contribution_pct": 14.02
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1752. Primary indicator: DIntPkt anomaly contributing 27.9%."
+    },
+    {
+      "sample_index": 1756,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.37001,
+      "threshold": 0.203575,
+      "timestamp": "T=1756",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.01448,
+          "contribution_pct": 33.39
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008308,
+          "contribution_pct": 19.16
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.006104,
+          "contribution_pct": 14.07
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1756. Primary indicator: TotBytes anomaly contributing 33.4%."
+    },
+    {
+      "sample_index": 1766,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.44465,
+      "threshold": 0.203575,
+      "timestamp": "T=1766",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.015276,
+          "contribution_pct": 28.78
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010438,
+          "contribution_pct": 19.67
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.00488,
+          "contribution_pct": 9.2
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1766. Primary indicator: TotBytes anomaly contributing 28.8%."
+    },
+    {
+      "sample_index": 1775,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.251368,
+      "threshold": 0.203575,
+      "timestamp": "T=1775",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008851,
+          "contribution_pct": 38.51
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.0024,
+          "contribution_pct": 10.44
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.00214,
+          "contribution_pct": 9.31
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1775. Primary indicator: DIntPkt anomaly contributing 38.5%."
+    },
+    {
+      "sample_index": 1803,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.243227,
+      "threshold": 0.203575,
+      "timestamp": "T=1803",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009345,
+          "contribution_pct": 42.45
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002933,
+          "contribution_pct": 13.33
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001278,
+          "contribution_pct": 5.81
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1803. Primary indicator: DIntPkt anomaly contributing 42.5%."
+    },
+    {
+      "sample_index": 1805,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.282674,
+      "threshold": 0.203575,
+      "timestamp": "T=1805",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008137,
+          "contribution_pct": 39.17
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.00262,
+          "contribution_pct": 12.61
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001256,
+          "contribution_pct": 6.04
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1805. Primary indicator: DIntPkt anomaly contributing 39.2%."
+    },
+    {
+      "sample_index": 1818,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.232308,
+      "threshold": 0.203575,
+      "timestamp": "T=1818",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.006483,
+          "contribution_pct": 27.62
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.003759,
+          "contribution_pct": 16.02
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.00161,
+          "contribution_pct": 6.86
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1818. Primary indicator: DIntPkt anomaly contributing 27.6%."
+    },
+    {
+      "sample_index": 1917,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.249206,
+      "threshold": 0.203575,
+      "timestamp": "T=1917",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.00978,
+          "contribution_pct": 48.57
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001508,
+          "contribution_pct": 7.49
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001024,
+          "contribution_pct": 5.09
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1917. Primary indicator: DIntPkt anomaly contributing 48.6%."
+    },
+    {
+      "sample_index": 1924,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.24827,
+      "threshold": 0.203575,
+      "timestamp": "T=1924",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009818,
+          "contribution_pct": 45.54
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001749,
+          "contribution_pct": 8.11
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001259,
+          "contribution_pct": 5.84
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1924. Primary indicator: DIntPkt anomaly contributing 45.5%."
+    },
+    {
+      "sample_index": 1940,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.371678,
+      "threshold": 0.203575,
+      "timestamp": "T=1940",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.009074,
+          "contribution_pct": 23.1
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.004925,
+          "contribution_pct": 12.54
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.004613,
+          "contribution_pct": 11.74
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1940. Primary indicator: TotBytes anomaly contributing 23.1%."
+    },
+    {
+      "sample_index": 1955,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.473154,
+      "threshold": 0.203575,
+      "timestamp": "T=1955",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.030474,
+          "contribution_pct": 45.33
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.009644,
+          "contribution_pct": 14.35
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.006496,
+          "contribution_pct": 9.66
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1955. Primary indicator: DIntPkt anomaly contributing 45.3%."
+    },
+    {
+      "sample_index": 1957,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.709655,
+      "threshold": 0.203575,
+      "timestamp": "T=1957",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.027312,
+          "contribution_pct": 48.13
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.003974,
+          "contribution_pct": 7.0
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00358,
+          "contribution_pct": 6.31
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1957. Primary indicator: DIntPkt anomaly contributing 48.1%."
+    },
+    {
+      "sample_index": 1961,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.7638,
+      "threshold": 0.203575,
+      "timestamp": "T=1961",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.024583,
+          "contribution_pct": 46.34
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.009036,
+          "contribution_pct": 17.03
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.002338,
+          "contribution_pct": 4.41
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 1961. Primary indicator: DIntPkt anomaly contributing 46.3%."
+    },
+    {
+      "sample_index": 2049,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.304384,
+      "threshold": 0.203575,
+      "timestamp": "T=2049",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.0131,
+          "contribution_pct": 49.74
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001219,
+          "contribution_pct": 4.63
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001212,
+          "contribution_pct": 4.6
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2049. Primary indicator: DIntPkt anomaly contributing 49.7%."
+    },
+    {
+      "sample_index": 2063,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.308674,
+      "threshold": 0.203575,
+      "timestamp": "T=2063",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013085,
+          "contribution_pct": 53.82
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001086,
+          "contribution_pct": 4.47
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.000951,
+          "contribution_pct": 3.91
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2063. Primary indicator: DIntPkt anomaly contributing 53.8%."
+    },
+    {
+      "sample_index": 2212,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.261484,
+      "threshold": 0.203575,
+      "timestamp": "T=2212",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.0104,
+          "contribution_pct": 20.24
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.009909,
+          "contribution_pct": 19.28
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.00848,
+          "contribution_pct": 16.5
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2212. Primary indicator: DIntPkt anomaly contributing 20.2%."
+    },
+    {
+      "sample_index": 2328,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.467769,
+      "threshold": 0.203575,
+      "timestamp": "T=2328",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016519,
+          "contribution_pct": 55.89
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001865,
+          "contribution_pct": 6.31
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001351,
+          "contribution_pct": 4.57
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2328. Primary indicator: DIntPkt anomaly contributing 55.9%."
+    },
+    {
+      "sample_index": 2329,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.38935,
+      "threshold": 0.203575,
+      "timestamp": "T=2329",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015717,
+          "contribution_pct": 52.62
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00166,
+          "contribution_pct": 5.56
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.00146,
+          "contribution_pct": 4.89
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2329. Primary indicator: DIntPkt anomaly contributing 52.6%."
+    },
+    {
+      "sample_index": 2330,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.468379,
+      "threshold": 0.203575,
+      "timestamp": "T=2330",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019504,
+          "contribution_pct": 54.08
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.002912,
+          "contribution_pct": 8.07
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001545,
+          "contribution_pct": 4.28
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2330. Primary indicator: DIntPkt anomaly contributing 54.1%."
+    },
+    {
+      "sample_index": 2334,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.411402,
+      "threshold": 0.203575,
+      "timestamp": "T=2334",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.018367,
+          "contribution_pct": 51.42
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.002604,
+          "contribution_pct": 7.29
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002032,
+          "contribution_pct": 5.69
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2334. Primary indicator: DIntPkt anomaly contributing 51.4%."
+    },
+    {
+      "sample_index": 2338,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.780557,
+      "threshold": 0.203575,
+      "timestamp": "T=2338",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.032107,
+          "contribution_pct": 51.12
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.006547,
+          "contribution_pct": 10.42
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.005062,
+          "contribution_pct": 8.06
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2338. Primary indicator: DIntPkt anomaly contributing 51.1%."
+    },
+    {
+      "sample_index": 2438,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.309445,
+      "threshold": 0.203575,
+      "timestamp": "T=2438",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.011096,
+          "contribution_pct": 38.94
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.003286,
+          "contribution_pct": 11.53
+        },
+        {
+          "feature": "DIA",
+          "shap_value": 0.00224,
+          "contribution_pct": 7.86
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2438. Primary indicator: DIntPkt anomaly contributing 38.9%."
+    },
+    {
+      "sample_index": 2475,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.35384,
+      "threshold": 0.203575,
+      "timestamp": "T=2475",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015707,
+          "contribution_pct": 47.11
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.002037,
+          "contribution_pct": 6.11
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001727,
+          "contribution_pct": 5.18
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2475. Primary indicator: DIntPkt anomaly contributing 47.1%."
+    },
+    {
+      "sample_index": 2483,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.568527,
+      "threshold": 0.203575,
+      "timestamp": "T=2483",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.023033,
+          "contribution_pct": 53.81
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.002222,
+          "contribution_pct": 5.19
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002213,
+          "contribution_pct": 5.17
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2483. Primary indicator: DIntPkt anomaly contributing 53.8%."
+    },
+    {
+      "sample_index": 2571,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.325932,
+      "threshold": 0.203575,
+      "timestamp": "T=2571",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012734,
+          "contribution_pct": 47.63
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001464,
+          "contribution_pct": 5.47
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.001413,
+          "contribution_pct": 5.29
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2571. Primary indicator: DIntPkt anomaly contributing 47.6%."
+    },
+    {
+      "sample_index": 2575,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.289182,
+      "threshold": 0.203575,
+      "timestamp": "T=2575",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009523,
+          "contribution_pct": 45.51
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001293,
+          "contribution_pct": 6.18
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.00098,
+          "contribution_pct": 4.69
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2575. Primary indicator: DIntPkt anomaly contributing 45.5%."
+    },
+    {
+      "sample_index": 2576,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.308166,
+      "threshold": 0.203575,
+      "timestamp": "T=2576",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.011736,
+          "contribution_pct": 46.91
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.001423,
+          "contribution_pct": 5.69
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.00133,
+          "contribution_pct": 5.32
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2576. Primary indicator: DIntPkt anomaly contributing 46.9%."
+    },
+    {
+      "sample_index": 2579,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.463544,
+      "threshold": 0.203575,
+      "timestamp": "T=2579",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019224,
+          "contribution_pct": 54.39
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001668,
+          "contribution_pct": 4.72
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00162,
+          "contribution_pct": 4.58
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2579. Primary indicator: DIntPkt anomaly contributing 54.4%."
+    },
+    {
+      "sample_index": 2583,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.377994,
+      "threshold": 0.203575,
+      "timestamp": "T=2583",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015475,
+          "contribution_pct": 56.51
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001145,
+          "contribution_pct": 4.18
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001065,
+          "contribution_pct": 3.89
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2583. Primary indicator: DIntPkt anomaly contributing 56.5%."
+    },
+    {
+      "sample_index": 2611,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.375334,
+      "threshold": 0.203575,
+      "timestamp": "T=2611",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.017456,
+          "contribution_pct": 28.3
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.014356,
+          "contribution_pct": 23.28
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.014217,
+          "contribution_pct": 23.05
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2611. Primary indicator: DIntPkt anomaly contributing 28.3%."
+    },
+    {
+      "sample_index": 2703,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.456054,
+      "threshold": 0.203575,
+      "timestamp": "T=2703",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019176,
+          "contribution_pct": 53.7
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001888,
+          "contribution_pct": 5.29
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001679,
+          "contribution_pct": 4.7
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2703. Primary indicator: DIntPkt anomaly contributing 53.7%."
+    },
+    {
+      "sample_index": 2805,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.517478,
+      "threshold": 0.203575,
+      "timestamp": "T=2805",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013183,
+          "contribution_pct": 29.27
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00742,
+          "contribution_pct": 16.47
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.004354,
+          "contribution_pct": 9.67
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2805. Primary indicator: DIntPkt anomaly contributing 29.3%."
+    },
+    {
+      "sample_index": 2829,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.270816,
+      "threshold": 0.203575,
+      "timestamp": "T=2829",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009972,
+          "contribution_pct": 40.48
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001999,
+          "contribution_pct": 8.11
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 0.001532,
+          "contribution_pct": 6.22
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2829. Primary indicator: DIntPkt anomaly contributing 40.5%."
+    },
+    {
+      "sample_index": 2847,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.56071,
+      "threshold": 0.203575,
+      "timestamp": "T=2847",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.026257,
+          "contribution_pct": 51.86
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.004308,
+          "contribution_pct": 8.51
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.003313,
+          "contribution_pct": 6.54
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2847. Primary indicator: DIntPkt anomaly contributing 51.9%."
+    },
+    {
+      "sample_index": 2848,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.439096,
+      "threshold": 0.203575,
+      "timestamp": "T=2848",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019695,
+          "contribution_pct": 49.8
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.002985,
+          "contribution_pct": 7.55
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.002122,
+          "contribution_pct": 5.36
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2848. Primary indicator: DIntPkt anomaly contributing 49.8%."
+    },
+    {
+      "sample_index": 2850,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.252605,
+      "threshold": 0.203575,
+      "timestamp": "T=2850",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.011319,
+          "contribution_pct": 44.87
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.0019,
+          "contribution_pct": 7.53
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001385,
+          "contribution_pct": 5.49
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2850. Primary indicator: DIntPkt anomaly contributing 44.9%."
+    },
+    {
+      "sample_index": 2909,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.253964,
+      "threshold": 0.203575,
+      "timestamp": "T=2909",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010027,
+          "contribution_pct": 43.53
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001491,
+          "contribution_pct": 6.47
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001252,
+          "contribution_pct": 5.43
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2909. Primary indicator: DIntPkt anomaly contributing 43.5%."
+    },
+    {
+      "sample_index": 2912,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.337369,
+      "threshold": 0.203575,
+      "timestamp": "T=2912",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013001,
+          "contribution_pct": 49.51
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001387,
+          "contribution_pct": 5.28
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001367,
+          "contribution_pct": 5.2
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2912. Primary indicator: DIntPkt anomaly contributing 49.5%."
+    },
+    {
+      "sample_index": 2984,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.344863,
+      "threshold": 0.203575,
+      "timestamp": "T=2984",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.073291,
+          "contribution_pct": 43.75
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.023021,
+          "contribution_pct": 13.74
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.022468,
+          "contribution_pct": 13.41
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2984. Primary indicator: DIntPkt anomaly contributing 43.8%."
+    },
+    {
+      "sample_index": 2987,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.625491,
+      "threshold": 0.203575,
+      "timestamp": "T=2987",
+      "top_features": [
+        {
+          "feature": "sMinPktSz",
+          "shap_value": 0.019988,
+          "contribution_pct": 33.39
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009435,
+          "contribution_pct": 15.76
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.006218,
+          "contribution_pct": 10.39
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2987. Primary indicator: sMinPktSz anomaly contributing 33.4%."
+    },
+    {
+      "sample_index": 2988,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.370752,
+      "threshold": 0.203575,
+      "timestamp": "T=2988",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.0952,
+          "contribution_pct": 49.59
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.026961,
+          "contribution_pct": 14.04
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.025214,
+          "contribution_pct": 13.13
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2988. Primary indicator: DIntPkt anomaly contributing 49.6%."
+    },
+    {
+      "sample_index": 2992,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.876492,
+      "threshold": 0.203575,
+      "timestamp": "T=2992",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.054888,
+          "contribution_pct": 66.5
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.007493,
+          "contribution_pct": 9.08
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.005214,
+          "contribution_pct": 6.32
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2992. Primary indicator: DIntPkt anomaly contributing 66.5%."
+    },
+    {
+      "sample_index": 2996,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.854605,
+      "threshold": 0.203575,
+      "timestamp": "T=2996",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.038796,
+          "contribution_pct": 48.98
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.016246,
+          "contribution_pct": 20.51
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.008111,
+          "contribution_pct": 10.24
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 2996. Primary indicator: DIntPkt anomaly contributing 49.0%."
+    },
+    {
+      "sample_index": 3002,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.56999,
+      "threshold": 0.203575,
+      "timestamp": "T=3002",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.084479,
+          "contribution_pct": 46.23
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.042089,
+          "contribution_pct": 23.03
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.014761,
+          "contribution_pct": 8.08
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3002. Primary indicator: DIntPkt anomaly contributing 46.2%."
+    },
+    {
+      "sample_index": 3004,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.763783,
+      "threshold": 0.203575,
+      "timestamp": "T=3004",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.033825,
+          "contribution_pct": 49.69
+        },
+        {
+          "feature": "sMinPktSz",
+          "shap_value": 0.005976,
+          "contribution_pct": 8.78
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.005291,
+          "contribution_pct": 7.77
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3004. Primary indicator: DIntPkt anomaly contributing 49.7%."
+    },
+    {
+      "sample_index": 3018,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.313888,
+      "threshold": 0.203575,
+      "timestamp": "T=3018",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014059,
+          "contribution_pct": 51.95
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001324,
+          "contribution_pct": 4.89
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001109,
+          "contribution_pct": 4.1
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3018. Primary indicator: DIntPkt anomaly contributing 52.0%."
+    },
+    {
+      "sample_index": 3019,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.34966,
+      "threshold": 0.203575,
+      "timestamp": "T=3019",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01523,
+          "contribution_pct": 50.3
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001552,
+          "contribution_pct": 5.13
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001278,
+          "contribution_pct": 4.22
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3019. Primary indicator: DIntPkt anomaly contributing 50.3%."
+    },
+    {
+      "sample_index": 3052,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.537226,
+      "threshold": 0.203575,
+      "timestamp": "T=3052",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.025975,
+          "contribution_pct": 58.12
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.00263,
+          "contribution_pct": 5.88
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001648,
+          "contribution_pct": 3.69
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3052. Primary indicator: DIntPkt anomaly contributing 58.1%."
+    },
+    {
+      "sample_index": 3099,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.319376,
+      "threshold": 0.203575,
+      "timestamp": "T=3099",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012888,
+          "contribution_pct": 44.56
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001866,
+          "contribution_pct": 6.45
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001607,
+          "contribution_pct": 5.56
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3099. Primary indicator: DIntPkt anomaly contributing 44.6%."
+    },
+    {
+      "sample_index": 3158,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.38953,
+      "threshold": 0.203575,
+      "timestamp": "T=3158",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014697,
+          "contribution_pct": 53.2
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001342,
+          "contribution_pct": 4.86
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001326,
+          "contribution_pct": 4.8
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3158. Primary indicator: DIntPkt anomaly contributing 53.2%."
+    },
+    {
+      "sample_index": 3163,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.31044,
+      "threshold": 0.203575,
+      "timestamp": "T=3163",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.011717,
+          "contribution_pct": 49.66
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001277,
+          "contribution_pct": 5.41
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001209,
+          "contribution_pct": 5.12
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3163. Primary indicator: DIntPkt anomaly contributing 49.7%."
+    },
+    {
+      "sample_index": 3164,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.318126,
+      "threshold": 0.203575,
+      "timestamp": "T=3164",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013415,
+          "contribution_pct": 46.83
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001706,
+          "contribution_pct": 5.96
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.00153,
+          "contribution_pct": 5.34
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3164. Primary indicator: DIntPkt anomaly contributing 46.8%."
+    },
+    {
+      "sample_index": 3217,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.424774,
+      "threshold": 0.203575,
+      "timestamp": "T=3217",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019455,
+          "contribution_pct": 58.27
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001507,
+          "contribution_pct": 4.51
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001393,
+          "contribution_pct": 4.17
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3217. Primary indicator: DIntPkt anomaly contributing 58.3%."
+    },
+    {
+      "sample_index": 3220,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.38244,
+      "threshold": 0.203575,
+      "timestamp": "T=3220",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016141,
+          "contribution_pct": 53.01
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002011,
+          "contribution_pct": 6.6
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001132,
+          "contribution_pct": 3.72
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3220. Primary indicator: DIntPkt anomaly contributing 53.0%."
+    },
+    {
+      "sample_index": 3227,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.656812,
+      "threshold": 0.203575,
+      "timestamp": "T=3227",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.02857,
+          "contribution_pct": 61.06
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002022,
+          "contribution_pct": 4.32
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001993,
+          "contribution_pct": 4.26
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3227. Primary indicator: DIntPkt anomaly contributing 61.1%."
+    },
+    {
+      "sample_index": 3233,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.505071,
+      "threshold": 0.203575,
+      "timestamp": "T=3233",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.021676,
+          "contribution_pct": 56.95
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001735,
+          "contribution_pct": 4.56
+        },
+        {
+          "feature": "SYS",
+          "shap_value": 0.001521,
+          "contribution_pct": 4.0
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3233. Primary indicator: DIntPkt anomaly contributing 57.0%."
+    },
+    {
+      "sample_index": 3245,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.436098,
+      "threshold": 0.203575,
+      "timestamp": "T=3245",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.02015,
+          "contribution_pct": 52.09
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002331,
+          "contribution_pct": 6.03
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00202,
+          "contribution_pct": 5.22
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3245. Primary indicator: DIntPkt anomaly contributing 52.1%."
+    },
+    {
+      "sample_index": 3264,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.346515,
+      "threshold": 0.203575,
+      "timestamp": "T=3264",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013857,
+          "contribution_pct": 55.63
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001311,
+          "contribution_pct": 5.26
+        },
+        {
+          "feature": "Packet_num",
+          "shap_value": 0.000959,
+          "contribution_pct": 3.85
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3264. Primary indicator: DIntPkt anomaly contributing 55.6%."
+    },
+    {
+      "sample_index": 3269,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.42948,
+      "threshold": 0.203575,
+      "timestamp": "T=3269",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019163,
+          "contribution_pct": 63.02
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001358,
+          "contribution_pct": 4.47
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001081,
+          "contribution_pct": 3.56
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3269. Primary indicator: DIntPkt anomaly contributing 63.0%."
+    },
+    {
+      "sample_index": 3273,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.436987,
+      "threshold": 0.203575,
+      "timestamp": "T=3273",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.020081,
+          "contribution_pct": 65.41
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001124,
+          "contribution_pct": 3.66
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001025,
+          "contribution_pct": 3.34
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3273. Primary indicator: DIntPkt anomaly contributing 65.4%."
+    },
+    {
+      "sample_index": 3292,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.640903,
+      "threshold": 0.203575,
+      "timestamp": "T=3292",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.030213,
+          "contribution_pct": 56.57
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.004008,
+          "contribution_pct": 7.5
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002319,
+          "contribution_pct": 4.34
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3292. Primary indicator: DIntPkt anomaly contributing 56.6%."
+    },
+    {
+      "sample_index": 3298,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.391135,
+      "threshold": 0.203575,
+      "timestamp": "T=3298",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.017152,
+          "contribution_pct": 47.46
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.002303,
+          "contribution_pct": 6.37
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002056,
+          "contribution_pct": 5.69
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3298. Primary indicator: DIntPkt anomaly contributing 47.5%."
+    },
+    {
+      "sample_index": 3466,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.383286,
+      "threshold": 0.203575,
+      "timestamp": "T=3466",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010929,
+          "contribution_pct": 39.42
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 0.002964,
+          "contribution_pct": 10.69
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001941,
+          "contribution_pct": 7.0
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3466. Primary indicator: DIntPkt anomaly contributing 39.4%."
+    },
+    {
+      "sample_index": 3470,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.552161,
+      "threshold": 0.203575,
+      "timestamp": "T=3470",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.020066,
+          "contribution_pct": 47.11
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.003537,
+          "contribution_pct": 8.3
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 0.002847,
+          "contribution_pct": 6.68
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3470. Primary indicator: DIntPkt anomaly contributing 47.1%."
+    },
+    {
+      "sample_index": 3473,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.417389,
+      "threshold": 0.203575,
+      "timestamp": "T=3473",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014742,
+          "contribution_pct": 50.93
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001588,
+          "contribution_pct": 5.49
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001534,
+          "contribution_pct": 5.3
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3473. Primary indicator: DIntPkt anomaly contributing 50.9%."
+    },
+    {
+      "sample_index": 3501,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.344706,
+      "threshold": 0.203575,
+      "timestamp": "T=3501",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014807,
+          "contribution_pct": 51.96
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001396,
+          "contribution_pct": 4.9
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001198,
+          "contribution_pct": 4.2
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3501. Primary indicator: DIntPkt anomaly contributing 52.0%."
+    },
+    {
+      "sample_index": 3527,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.423154,
+      "threshold": 0.203575,
+      "timestamp": "T=3527",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013268,
+          "contribution_pct": 28.84
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.01267,
+          "contribution_pct": 27.54
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.006733,
+          "contribution_pct": 14.63
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3527. Primary indicator: DIntPkt anomaly contributing 28.8%."
+    },
+    {
+      "sample_index": 3585,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.267971,
+      "threshold": 0.203575,
+      "timestamp": "T=3585",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010345,
+          "contribution_pct": 43.66
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.002112,
+          "contribution_pct": 8.92
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001199,
+          "contribution_pct": 5.06
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3585. Primary indicator: DIntPkt anomaly contributing 43.7%."
+    },
+    {
+      "sample_index": 3587,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.251089,
+      "threshold": 0.203575,
+      "timestamp": "T=3587",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.007808,
+          "contribution_pct": 36.17
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.002188,
+          "contribution_pct": 10.14
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001879,
+          "contribution_pct": 8.7
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3587. Primary indicator: DIntPkt anomaly contributing 36.2%."
+    },
+    {
+      "sample_index": 3625,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.327012,
+      "threshold": 0.203575,
+      "timestamp": "T=3625",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01262,
+          "contribution_pct": 50.77
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001643,
+          "contribution_pct": 6.61
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001324,
+          "contribution_pct": 5.33
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3625. Primary indicator: DIntPkt anomaly contributing 50.8%."
+    },
+    {
+      "sample_index": 3626,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.290185,
+      "threshold": 0.203575,
+      "timestamp": "T=3626",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01011,
+          "contribution_pct": 47.19
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001345,
+          "contribution_pct": 6.28
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.001175,
+          "contribution_pct": 5.48
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3626. Primary indicator: DIntPkt anomaly contributing 47.2%."
+    },
+    {
+      "sample_index": 3635,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.242954,
+      "threshold": 0.203575,
+      "timestamp": "T=3635",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.007718,
+          "contribution_pct": 40.66
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001175,
+          "contribution_pct": 6.19
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001049,
+          "contribution_pct": 5.53
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3635. Primary indicator: DIntPkt anomaly contributing 40.7%."
+    },
+    {
+      "sample_index": 3701,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.331053,
+      "threshold": 0.203575,
+      "timestamp": "T=3701",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.013814,
+          "contribution_pct": 45.19
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.002945,
+          "contribution_pct": 9.64
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001487,
+          "contribution_pct": 4.86
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3701. Primary indicator: DIntPkt anomaly contributing 45.2%."
+    },
+    {
+      "sample_index": 3707,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.782851,
+      "threshold": 0.203575,
+      "timestamp": "T=3707",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.030887,
+          "contribution_pct": 56.35
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00348,
+          "contribution_pct": 6.35
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.002758,
+          "contribution_pct": 5.03
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3707. Primary indicator: DIntPkt anomaly contributing 56.4%."
+    },
+    {
+      "sample_index": 3712,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.809856,
+      "threshold": 0.203575,
+      "timestamp": "T=3712",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.032268,
+          "contribution_pct": 60.7
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.00291,
+          "contribution_pct": 5.47
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002254,
+          "contribution_pct": 4.24
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3712. Primary indicator: DIntPkt anomaly contributing 60.7%."
+    },
+    {
+      "sample_index": 3724,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.270277,
+      "threshold": 0.203575,
+      "timestamp": "T=3724",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.012309,
+          "contribution_pct": 49.48
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001309,
+          "contribution_pct": 5.26
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001299,
+          "contribution_pct": 5.22
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3724. Primary indicator: DIntPkt anomaly contributing 49.5%."
+    },
+    {
+      "sample_index": 3782,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.392413,
+      "threshold": 0.203575,
+      "timestamp": "T=3782",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015018,
+          "contribution_pct": 49.66
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001633,
+          "contribution_pct": 5.4
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001502,
+          "contribution_pct": 4.97
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3782. Primary indicator: DIntPkt anomaly contributing 49.7%."
+    },
+    {
+      "sample_index": 3786,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.349084,
+      "threshold": 0.203575,
+      "timestamp": "T=3786",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.014646,
+          "contribution_pct": 47.22
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001816,
+          "contribution_pct": 5.86
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001638,
+          "contribution_pct": 5.28
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3786. Primary indicator: DIntPkt anomaly contributing 47.2%."
+    },
+    {
+      "sample_index": 3871,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.306464,
+      "threshold": 0.203575,
+      "timestamp": "T=3871",
+      "top_features": [
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.044738,
+          "contribution_pct": 40.28
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.03462,
+          "contribution_pct": 31.17
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.011464,
+          "contribution_pct": 10.32
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3871. Primary indicator: SrcBytes anomaly contributing 40.3%."
+    },
+    {
+      "sample_index": 3887,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.598016,
+      "threshold": 0.203575,
+      "timestamp": "T=3887",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.044687,
+          "contribution_pct": 40.89
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.022854,
+          "contribution_pct": 20.91
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.015169,
+          "contribution_pct": 13.88
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3887. Primary indicator: DIntPkt anomaly contributing 40.9%."
+    },
+    {
+      "sample_index": 3890,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.555009,
+      "threshold": 0.203575,
+      "timestamp": "T=3890",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.048964,
+          "contribution_pct": 43.91
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.025824,
+          "contribution_pct": 23.16
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.009178,
+          "contribution_pct": 8.23
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3890. Primary indicator: DIntPkt anomaly contributing 43.9%."
+    },
+    {
+      "sample_index": 3897,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.275595,
+      "threshold": 0.203575,
+      "timestamp": "T=3897",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019286,
+          "contribution_pct": 23.65
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.017539,
+          "contribution_pct": 21.51
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.013157,
+          "contribution_pct": 16.13
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3897. Primary indicator: DIntPkt anomaly contributing 23.6%."
+    },
+    {
+      "sample_index": 3930,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.234944,
+      "threshold": 0.203575,
+      "timestamp": "T=3930",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.005611,
+          "contribution_pct": 27.9
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.002203,
+          "contribution_pct": 10.95
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 0.002068,
+          "contribution_pct": 10.28
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3930. Primary indicator: DIntPkt anomaly contributing 27.9%."
+    },
+    {
+      "sample_index": 3933,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.634865,
+      "threshold": 0.203575,
+      "timestamp": "T=3933",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.025688,
+          "contribution_pct": 32.39
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.013086,
+          "contribution_pct": 16.5
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.009693,
+          "contribution_pct": 12.22
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 3933. Primary indicator: DIntPkt anomaly contributing 32.4%."
+    },
+    {
+      "sample_index": 4066,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.284328,
+      "threshold": 0.203575,
+      "timestamp": "T=4066",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01251,
+          "contribution_pct": 47.03
+        },
+        {
+          "feature": "Temp",
+          "shap_value": 0.001529,
+          "contribution_pct": 5.75
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001408,
+          "contribution_pct": 5.29
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4066. Primary indicator: DIntPkt anomaly contributing 47.0%."
+    },
+    {
+      "sample_index": 4091,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.252633,
+      "threshold": 0.203575,
+      "timestamp": "T=4091",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016104,
+          "contribution_pct": 30.41
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.013036,
+          "contribution_pct": 24.62
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.006757,
+          "contribution_pct": 12.76
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4091. Primary indicator: DIntPkt anomaly contributing 30.4%."
+    },
+    {
+      "sample_index": 4134,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.232402,
+      "threshold": 0.203575,
+      "timestamp": "T=4134",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010551,
+          "contribution_pct": 48.91
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001489,
+          "contribution_pct": 6.9
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001064,
+          "contribution_pct": 4.93
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4134. Primary indicator: DIntPkt anomaly contributing 48.9%."
+    },
+    {
+      "sample_index": 4168,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.853337,
+      "threshold": 0.203575,
+      "timestamp": "T=4168",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.038438,
+          "contribution_pct": 38.65
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.027402,
+          "contribution_pct": 27.55
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.012568,
+          "contribution_pct": 12.64
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4168. Primary indicator: TotBytes anomaly contributing 38.6%."
+    },
+    {
+      "sample_index": 4169,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.905841,
+      "threshold": 0.203575,
+      "timestamp": "T=4169",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.031943,
+          "contribution_pct": 41.06
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.01303,
+          "contribution_pct": 16.75
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.013019,
+          "contribution_pct": 16.74
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4169. Primary indicator: DIntPkt anomaly contributing 41.1%."
+    },
+    {
+      "sample_index": 4215,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.232849,
+      "threshold": 0.203575,
+      "timestamp": "T=4215",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010272,
+          "contribution_pct": 47.33
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.001992,
+          "contribution_pct": 9.18
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.00098,
+          "contribution_pct": 4.52
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4215. Primary indicator: DIntPkt anomaly contributing 47.3%."
+    },
+    {
+      "sample_index": 4257,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.385984,
+      "threshold": 0.203575,
+      "timestamp": "T=4257",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.017702,
+          "contribution_pct": 55.9
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001258,
+          "contribution_pct": 3.97
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.001243,
+          "contribution_pct": 3.93
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4257. Primary indicator: DIntPkt anomaly contributing 55.9%."
+    },
+    {
+      "sample_index": 4264,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.782245,
+      "threshold": 0.203575,
+      "timestamp": "T=4264",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.032596,
+          "contribution_pct": 61.08
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002994,
+          "contribution_pct": 5.61
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.002632,
+          "contribution_pct": 4.93
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4264. Primary indicator: DIntPkt anomaly contributing 61.1%."
+    },
+    {
+      "sample_index": 4367,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.586775,
+      "threshold": 0.203575,
+      "timestamp": "T=4367",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.024458,
+          "contribution_pct": 54.24
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002302,
+          "contribution_pct": 5.11
+        },
+        {
+          "feature": "Heart_rate",
+          "shap_value": 0.00212,
+          "contribution_pct": 4.7
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4367. Primary indicator: DIntPkt anomaly contributing 54.2%."
+    },
+    {
+      "sample_index": 4373,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.667708,
+      "threshold": 0.203575,
+      "timestamp": "T=4373",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.028295,
+          "contribution_pct": 57.8
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.003012,
+          "contribution_pct": 6.15
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.002256,
+          "contribution_pct": 4.61
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4373. Primary indicator: DIntPkt anomaly contributing 57.8%."
+    },
+    {
+      "sample_index": 4460,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.235979,
+      "threshold": 0.203575,
+      "timestamp": "T=4460",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.007739,
+          "contribution_pct": 38.93
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001581,
+          "contribution_pct": 7.95
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.001006,
+          "contribution_pct": 5.06
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4460. Primary indicator: DIntPkt anomaly contributing 38.9%."
+    },
+    {
+      "sample_index": 4507,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.525844,
+      "threshold": 0.203575,
+      "timestamp": "T=4507",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.01402,
+          "contribution_pct": 25.66
+        },
+        {
+          "feature": "SIntPktAct",
+          "shap_value": 0.009722,
+          "contribution_pct": 17.79
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.006779,
+          "contribution_pct": 12.41
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4507. Primary indicator: DIntPkt anomaly contributing 25.7%."
+    },
+    {
+      "sample_index": 4516,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.296717,
+      "threshold": 0.203575,
+      "timestamp": "T=4516",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019515,
+          "contribution_pct": 27.17
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.016168,
+          "contribution_pct": 22.51
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.014682,
+          "contribution_pct": 20.44
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4516. Primary indicator: DIntPkt anomaly contributing 27.2%."
+    },
+    {
+      "sample_index": 4644,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.251097,
+      "threshold": 0.203575,
+      "timestamp": "T=4644",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008676,
+          "contribution_pct": 46.36
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.000989,
+          "contribution_pct": 5.29
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00098,
+          "contribution_pct": 5.24
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4644. Primary indicator: DIntPkt anomaly contributing 46.4%."
+    },
+    {
+      "sample_index": 4749,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.292851,
+      "threshold": 0.203575,
+      "timestamp": "T=4749",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.045935,
+          "contribution_pct": 47.58
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.021728,
+          "contribution_pct": 22.5
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.013602,
+          "contribution_pct": 14.09
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4749. Primary indicator: TotBytes anomaly contributing 47.6%."
+    },
+    {
+      "sample_index": 4761,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.451447,
+      "threshold": 0.203575,
+      "timestamp": "T=4761",
+      "top_features": [
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.046753,
+          "contribution_pct": 35.27
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.040397,
+          "contribution_pct": 30.47
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.019599,
+          "contribution_pct": 14.78
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4761. Primary indicator: SrcBytes anomaly contributing 35.3%."
+    },
+    {
+      "sample_index": 4763,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.253052,
+      "threshold": 0.203575,
+      "timestamp": "T=4763",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.072101,
+          "contribution_pct": 42.62
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.042802,
+          "contribution_pct": 25.3
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.025783,
+          "contribution_pct": 15.24
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4763. Primary indicator: TotBytes anomaly contributing 42.6%."
+    },
+    {
+      "sample_index": 4764,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.718192,
+      "threshold": 0.203575,
+      "timestamp": "T=4764",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.060139,
+          "contribution_pct": 35.59
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.033489,
+          "contribution_pct": 19.82
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.025785,
+          "contribution_pct": 15.26
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4764. Primary indicator: TotBytes anomaly contributing 35.6%."
+    },
+    {
+      "sample_index": 4784,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.364053,
+      "threshold": 0.203575,
+      "timestamp": "T=4784",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.012511,
+          "contribution_pct": 29.17
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.009973,
+          "contribution_pct": 23.25
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.004201,
+          "contribution_pct": 9.79
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4784. Primary indicator: TotBytes anomaly contributing 29.2%."
+    },
+    {
+      "sample_index": 4792,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.374392,
+      "threshold": 0.203575,
+      "timestamp": "T=4792",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.010882,
+          "contribution_pct": 26.24
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008586,
+          "contribution_pct": 20.7
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.005294,
+          "contribution_pct": 12.76
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4792. Primary indicator: TotBytes anomaly contributing 26.2%."
+    },
+    {
+      "sample_index": 4865,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.246251,
+      "threshold": 0.203575,
+      "timestamp": "T=4865",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008554,
+          "contribution_pct": 45.19
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001346,
+          "contribution_pct": 7.11
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001155,
+          "contribution_pct": 6.1
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4865. Primary indicator: DIntPkt anomaly contributing 45.2%."
+    },
+    {
+      "sample_index": 4867,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.247804,
+      "threshold": 0.203575,
+      "timestamp": "T=4867",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.010246,
+          "contribution_pct": 42.37
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.00226,
+          "contribution_pct": 9.35
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.001679,
+          "contribution_pct": 6.94
+        }
+      ],
+      "explanation": "HIGH ALERT: Suspicious activity detected at sample 4867. Primary indicator: DIntPkt anomaly contributing 42.4%."
+    },
+    {
+      "sample_index": 93,
+      "risk_level": "CRITICAL",
+      "anomaly_score": 0.617951,
+      "threshold": 0.203575,
+      "timestamp": "T=93",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.026728,
+          "contribution_pct": 56.07
+        },
+        {
+          "feature": "SpO2",
+          "shap_value": 0.003252,
+          "contribution_pct": 6.82
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002101,
+          "contribution_pct": 4.41
+        }
+      ],
+      "explanation": "CRITICAL ALERT: Sample 93 at T=93. Top factors: DIntPkt anomaly (56.1%), SpO2 anomaly (6.8%), Dur anomaly (4.4%). Immediate action required."
+    },
+    {
+      "sample_index": 317,
+      "risk_level": "CRITICAL",
+      "anomaly_score": 0.359677,
+      "threshold": 0.203575,
+      "timestamp": "T=317",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015657,
+          "contribution_pct": 49.09
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001592,
+          "contribution_pct": 4.99
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.001558,
+          "contribution_pct": 4.89
+        }
+      ],
+      "explanation": "CRITICAL ALERT: Sample 317 at T=317. Top factors: DIntPkt anomaly (49.1%), SIntPkt anomaly (5.0%), TotBytes anomaly (4.9%). Immediate action required."
+    },
+    {
+      "sample_index": 735,
+      "risk_level": "CRITICAL",
+      "anomaly_score": 0.491432,
+      "threshold": 0.203575,
+      "timestamp": "T=735",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.016853,
+          "contribution_pct": 41.16
+        },
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.003776,
+          "contribution_pct": 9.22
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.002331,
+          "contribution_pct": 5.69
+        }
+      ],
+      "explanation": "CRITICAL ALERT: Sample 735 at T=735. Top factors: DIntPkt anomaly (41.2%), TotBytes anomaly (9.2%), SIntPkt anomaly (5.7%). Immediate action required."
+    },
+    {
+      "sample_index": 904,
+      "risk_level": "CRITICAL",
+      "anomaly_score": 0.418333,
+      "threshold": 0.203575,
+      "timestamp": "T=904",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.013092,
+          "contribution_pct": 23.47
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.008674,
+          "contribution_pct": 15.55
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.008576,
+          "contribution_pct": 15.37
+        }
+      ],
+      "explanation": "CRITICAL ALERT: Sample 904 at T=904. Top factors: TotBytes anomaly (23.5%), DstBytes anomaly (15.6%), DIntPkt anomaly (15.4%). Immediate action required."
+    },
+    {
+      "sample_index": 3781,
+      "risk_level": "CRITICAL",
+      "anomaly_score": 0.403095,
+      "threshold": 0.203575,
+      "timestamp": "T=3781",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.015323,
+          "contribution_pct": 47.15
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 0.002642,
+          "contribution_pct": 8.13
+        },
+        {
+          "feature": "ST",
+          "shap_value": 0.001607,
+          "contribution_pct": 4.95
+        }
+      ],
+      "explanation": "CRITICAL ALERT: Sample 3781 at T=3781. Top factors: DIntPkt anomaly (47.1%), Resp_Rate anomaly (8.1%), ST anomaly (5.0%). Immediate action required."
+    },
+    {
+      "sample_index": 3866,
+      "risk_level": "CRITICAL",
+      "anomaly_score": 0.579806,
+      "threshold": 0.203575,
+      "timestamp": "T=3866",
+      "top_features": [
+        {
+          "feature": "TotBytes",
+          "shap_value": 0.038688,
+          "contribution_pct": 30.88
+        },
+        {
+          "feature": "DstBytes",
+          "shap_value": 0.037578,
+          "contribution_pct": 30.0
+        },
+        {
+          "feature": "SrcBytes",
+          "shap_value": 0.021434,
+          "contribution_pct": 17.11
+        }
+      ],
+      "explanation": "CRITICAL ALERT: Sample 3866 at T=3866. Top factors: TotBytes anomaly (30.9%), DstBytes anomaly (30.0%), SrcBytes anomaly (17.1%). Immediate action required."
+    },
+    {
+      "sample_index": 4368,
+      "risk_level": "CRITICAL",
+      "anomaly_score": 0.60888,
+      "threshold": 0.203575,
+      "timestamp": "T=4368",
+      "top_features": [
+        {
+          "feature": "DIntPkt",
+          "shap_value": 0.026053,
+          "contribution_pct": 56.24
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 0.002968,
+          "contribution_pct": 6.41
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 0.001969,
+          "contribution_pct": 4.25
+        }
+      ],
+      "explanation": "CRITICAL ALERT: Sample 4368 at T=4368. Top factors: DIntPkt anomaly (56.2%), Dur anomaly (6.4%), SIntPkt anomaly (4.2%). Immediate action required."
+    }
+  ]
+}

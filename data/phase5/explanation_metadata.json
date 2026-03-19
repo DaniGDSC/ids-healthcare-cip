@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-03-19T12:59:31.238382+00:00",
+  "pipeline": "phase5_explanation",
+  "git_commit": "718383d14552357f222465f612a01d3057eb9a10",
+  "hardware": {
+    "device": "CPU: x86_64",
+    "cuda": "N/A (CPU execution)",
+    "tensorflow": "2.20.0",
+    "python": "3.12.3",
+    "platform": "Linux-6.17.0-19-generic-x86_64-with-glibc2.39"
+  },
+  "duration_seconds": 25.93,
+  "samples_explained": 198,
+  "shap_method": "GradientExplainer (integrated gradients fallback)",
+  "background_samples": 100,
+  "risk_level_counts": {
+    "LOW": 93,
+    "MEDIUM": 85,
+    "HIGH": 1376,
+    "CRITICAL": 62
+  },
+  "charts_generated": [
+    "feature_importance.png",
+    "waterfall_23.png",
+    "waterfall_89.png",
+    "waterfall_161.png",
+    "waterfall_166.png",
+    "waterfall_172.png",
+    "timeline_23.png",
+    "timeline_89.png",
+    "timeline_161.png"
+  ],
+  "artifact_hashes": {
+    "shap_values.parquet": {
+      "sha256": "2399f61f46fab98b5d7b77741418562f7a53e753e6a784e1f190ff2d05954eec",
+      "algorithm": "SHA-256"
+    },
+    "explanation_report.json": {
+      "sha256": "d16d1eab14603dd840182e1541fe53514559eb24f40c4ee4deda1bbe56af98da",
+      "algorithm": "SHA-256"
+    }
+  }
+}
