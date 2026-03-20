@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-03-19T13:44:54.150481+00:00",
+  "generated_at": "2026-03-19T14:01:07.795449+00:00",
   "pipeline": "phase5_explanation",
-  "git_commit": "718383d14552357f222465f612a01d3057eb9a10",
+  "git_commit": "901983542dbc6112cf17ac67822f6bb55789a420",
   "total_explained": 198,
   "risk_level_counts": {
     "LOW": 93,
