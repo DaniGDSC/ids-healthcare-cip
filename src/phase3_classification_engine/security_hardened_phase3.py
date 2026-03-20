@@ -108,6 +108,7 @@ _KNOWN_YAML_KEYS: frozenset = frozenset(
         "evaluation",
         "output",
         "random_state",
+        "cross_dataset",
     }
 )
 
@@ -930,6 +931,117 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
         metrics=metrics,
         hw_info=hw_info,
     )
+
+    # ── Cross-dataset validation (optional) ──
+    if config.cross_dataset and config.cross_dataset.enabled:
+        logger.info("── Cross-Dataset Validation ──")
+        from src.phase3_classification_engine.phase3.cross_dataset import (
+            CICIoMTLoader,
+        )
+        from src.phase3_classification_engine.phase3.cross_dataset_report import (
+            build_comparison_report,
+            render_cross_dataset_report,
+        )
+
+        cross_loader = CICIoMTLoader(
+            csv_path=PROJECT_ROOT / config.cross_dataset.csv_path,
+            column_mapping=config.cross_dataset.column_mapping,
+            label_column=config.cross_dataset.label_column,
+            label_mapping=config.cross_dataset.label_mapping,
+            scaler_path=PROJECT_ROOT / config.cross_dataset.scaler_path,
+            wustl_train_path=train_path,
+        )
+
+        if cross_loader.is_available():
+            X_cross, y_cross, cross_report = cross_loader.load_and_prepare()
+
+            if y_cross is not None:
+                # Reshape
+                X_cross_w, y_cross_w = reshaper.reshape(X_cross, y_cross)
+
+                # Evaluate (reuse existing evaluator)
+                cross_metrics = evaluator.evaluate(full_model, X_cross_w, y_cross_w)
+
+                # A09: Log aggregate cross-dataset metrics (NEVER per-patient)
+                _log_evaluation_metrics(cross_metrics)
+
+                # Build comparison
+                comparison = build_comparison_report(metrics, cross_metrics)
+
+                delta_acc = comparison["accuracy"]["delta_pct"]
+                delta_f1 = comparison["f1_score"]["delta_pct"]
+                logger.info(
+                    "  Generalization gap: accuracy=%.1f%%, F1=%.1f%%",
+                    delta_acc,
+                    delta_f1,
+                )
+
+                # Export via existing exporter
+                cross_cfg = config.cross_dataset
+                for fname in [
+                    cross_cfg.metrics_file,
+                    cross_cfg.confusion_matrix_file,
+                    cross_cfg.comparison_report_file,
+                ]:
+                    _clear_read_only(output_dir / fname)
+
+                exporter.export_metrics(
+                    {
+                        "pipeline": "cross_dataset_ciciomt2024",
+                        "metrics": cross_metrics,
+                        "load_report": cross_report,
+                    },
+                    cross_cfg.metrics_file,
+                )
+                cm_cross = cross_metrics["confusion_matrix"]
+                n_cross = len(cm_cross)
+                labels_cross = (
+                    ["Normal", "Attack"] if n_cross == 2 else [str(i) for i in range(n_cross)]
+                )
+                exporter.export_confusion_matrix(
+                    cm_cross, labels_cross, cross_cfg.confusion_matrix_file
+                )
+                exporter.export_metrics(comparison, cross_cfg.comparison_report_file)
+
+                # A01: Set read-only on cross-dataset artifacts
+                for fname in [
+                    cross_cfg.metrics_file,
+                    cross_cfg.confusion_matrix_file,
+                    cross_cfg.comparison_report_file,
+                ]:
+                    _make_read_only(output_dir / fname)
+
+                # A02: Hash cross-dataset artifacts
+                _hash_artifacts(
+                    verifier,
+                    {
+                        cross_cfg.metrics_file: (output_dir / cross_cfg.metrics_file),
+                        cross_cfg.confusion_matrix_file: (
+                            output_dir / cross_cfg.confusion_matrix_file
+                        ),
+                        cross_cfg.comparison_report_file: (
+                            output_dir / cross_cfg.comparison_report_file
+                        ),
+                    },
+                )
+
+                # Generate cross-dataset report
+                cross_report_md = render_cross_dataset_report(
+                    wustl_metrics=metrics,
+                    ciciomt_metrics=cross_metrics,
+                    load_report=cross_report,
+                    comparison=comparison,
+                )
+                cross_rpt_path = (
+                    PROJECT_ROOT / "results" / "phase0_analysis" / "report_section_crossdataset.md"
+                )
+                with open(cross_rpt_path, "w") as f:
+                    f.write(cross_report_md)
+                logger.info("  Cross-dataset report: %s", cross_rpt_path.name)
+            else:
+                logger.warning("  No labels in CICIoMT2024 — cannot evaluate")
+        else:
+            logger.info("  Cross-dataset: CICIoMT2024 CSV not found — SKIPPED")
 
     logger.info("═══════════════════════════════════════════════════")
     logger.info("  Phase 3 Security Hardened — %.2fs", duration_s)

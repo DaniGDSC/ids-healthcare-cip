@@ -50,3 +50,22 @@ output:
   history_file: "training_history.json"
 
 random_state: 42
+
+# ── Cross-Dataset Validation (optional) ──────────────────────────────
+# Set enabled: true and provide CICIoMT2024 CSV path to run
+# cross-dataset generalization evaluation after primary training.
+cross_dataset:
+  enabled: true
+  csv_path: "data/external/CICIoMT2024.csv"
+  label_column: "Label"
+  scaler_path: "models/scalers/robust_scaler.pkl"
+  # CICIoMT2024 column name → WUSTL column name mapping.
+  # Only list columns with DIFFERENT names. Identical names auto-map.
+  column_mapping: {}
+  # Optional label value mapping (e.g., {"Benign": 0, "Malicious": 1})
+  # label_mapping:
+  #   "Benign": 0
+  #   "Malicious": 1
+  metrics_file: "metrics_ciciomt.json"
+  confusion_matrix_file: "confusion_matrix_ciciomt.csv"
+  comparison_report_file: "comparison_report.json"

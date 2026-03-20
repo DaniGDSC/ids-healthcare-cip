@@ -6,7 +6,7 @@ Loads from ``config/phase3_config.yaml`` via ``Phase3Config.from_yaml()``.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 from pydantic import BaseModel, field_validator
@@ -19,6 +19,20 @@ class TrainingPhaseConfig(BaseModel):
     epochs: int
     learning_rate: float
     frozen: List[str]
+
+
+class CrossDatasetConfig(BaseModel):
+    """Configuration for cross-dataset validation with CICIoMT2024."""
+
+    enabled: bool = False
+    csv_path: Path = Path("data/external/CICIoMT2024.csv")
+    label_column: str = "Label"
+    label_mapping: Optional[Dict[str, int]] = None
+    scaler_path: Path = Path("models/scalers/robust_scaler.pkl")
+    column_mapping: Dict[str, str] = {}
+    metrics_file: str = "metrics_ciciomt.json"
+    confusion_matrix_file: str = "confusion_matrix_ciciomt.csv"
+    comparison_report_file: str = "comparison_report.json"
 
 
 class Phase3Config(BaseModel):
@@ -58,6 +72,9 @@ class Phase3Config(BaseModel):
 
     # Reproducibility
     random_state: int = 42
+
+    # Cross-dataset validation (optional)
+    cross_dataset: Optional[CrossDatasetConfig] = None
 
     model_config: Dict[str, Any] = {"arbitrary_types_allowed": True}
 
@@ -123,6 +140,25 @@ class Phase3Config(BaseModel):
 
         phases = [TrainingPhaseConfig(**p) for p in training.get("phases", [])]
 
+        cross_raw = raw.get("cross_dataset", None)
+        cross_cfg: Optional[CrossDatasetConfig] = None
+        if cross_raw is not None:
+            cross_cfg = CrossDatasetConfig(
+                enabled=cross_raw.get("enabled", False),
+                csv_path=Path(cross_raw.get("csv_path", "data/external/CICIoMT2024.csv")),
+                label_column=cross_raw.get("label_column", "Label"),
+                label_mapping=cross_raw.get("label_mapping", None),
+                scaler_path=Path(cross_raw.get("scaler_path", "models/scalers/robust_scaler.pkl")),
+                column_mapping=cross_raw.get("column_mapping", {}),
+                metrics_file=cross_raw.get("metrics_file", "metrics_ciciomt.json"),
+                confusion_matrix_file=cross_raw.get(
+                    "confusion_matrix_file", "confusion_matrix_ciciomt.csv"
+                ),
+                comparison_report_file=cross_raw.get(
+                    "comparison_report_file", "comparison_report.json"
+                ),
+            )
+
         return cls(
             phase2_dir=Path(data.get("phase2_dir", "data/phase2")),
             phase1_train=Path(data.get("phase1_train", "")),
@@ -145,4 +181,5 @@ class Phase3Config(BaseModel):
             confusion_matrix_file=output.get("confusion_matrix_file", "confusion_matrix.csv"),
             history_file=output.get("history_file", "training_history.json"),
             random_state=raw.get("random_state", 42),
+            cross_dataset=cross_cfg,
         )

@@ -48,8 +48,8 @@ All assertions are evaluated at runtime and logged with pass/fail status.
 | Evaluation on test set only | 4877 test samples | 4877 eval samples | PASS |
 | No train/test data overlap | overlap ≤ 0 (train=19961, test=4877) | overlap=0 | PASS |
 | Confusion matrix sum = test samples | 4877 | 4877 | PASS |
-| Metrics consistency (F1, precision, recall ∈ [0,1]) | all ∈ [0.0, 1.0] | F1=0.8128, prec=0.7977, rec=0.8321 | PASS |
-| Prediction validity (accuracy, AUC ∈ [0,1]) | accuracy ∈ [0,1], AUC ∈ [0,1] | accuracy=0.8321, AUC=0.6119 | PASS |
+| Metrics consistency (F1, precision, recall ∈ [0,1]) | all ∈ [0.0, 1.0] | F1=0.8133, prec=0.7968, rec=0.8347 | PASS |
+| Prediction validity (accuracy, AUC ∈ [0,1]) | accuracy ∈ [0,1], AUC ∈ [0,1] | accuracy=0.8347, AUC=0.6124 | PASS |
 | Classification head present | True (Dense output layer) | last_layer=Dense, has_head=True | PASS |
 
 **Overall:** ALL PASSED
@@ -86,10 +86,10 @@ SHA-256 hashes computed after export for downstream verification.
 
 | Artifact | SHA-256 |
 |----------|---------|
-| `classification_model.weights.h5` | `114fc8cc1c3d93e6fc5384828e7771d865f2070924fb398ca1985a7c6ba235e1` |
-| `metrics_report.json` | `3a97f4fa97967a6638d0f1cb7296dda1837b50ae02bb6e5667a5f7ce39bbdd90` |
-| `confusion_matrix.csv` | `3ed35ddeb75332994bb4b4abfa68b0ee2d78c44ebb08b629edc1a9a986b83218` |
-| `training_history.json` | `9443e99db75ea1bd6cb68d7a339e8a0daf813eb27764801b253b125d434c96d5` |
+| `classification_model.weights.h5` | `0add48352ce5c231f0951c85ba0b56029df304723816ba10c9e5fbeb81cd99cf` |
+| `metrics_report.json` | `c7708b6ce40e1e23739731607906ccd355ed6a33db5925dd4a0724fbe98929b7` |
+| `confusion_matrix.csv` | `a622d800a4f22bec2bc852384205947f835a88c96e1ce0cc6a0a39c1204b9bba` |
+| `training_history.json` | `f9c383bb09af12986e18e5975d5037c3cbf4997fa06e0e6c397a36b3322b225b` |
 
 Hashes stored in `classification_metadata.json` and must be
 verified before loading artifacts in subsequent pipeline phases.
