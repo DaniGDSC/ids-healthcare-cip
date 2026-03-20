@@ -1,0 +1,588 @@
+name: Phase 7 — Lint · Test · Security · Integration · Chaos · Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: ["Phase 5 — Lint · Test · Security · Integration · Build"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel in-progress runs on new pushes to the same branch
+concurrency:
+  group: phase7-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # 1. Lint Phase 7 code (ruff + black)
+  # ─────────────────────────────────────────────────────────────────
+  lint-phase7:
+    runs-on: ubuntu-latest
+    # Skip if triggered by workflow_run and Phase 5 failed
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: pip install ruff black
+
+      - name: Ruff — Phase 7
+        run: ruff check src/phase7_monitoring_engine/
+
+      - name: Black — Phase 7
+        run: black --check src/phase7_monitoring_engine/
+
+  # ─────────────────────────────────────────────────────────────────
+  # 2. Unit tests for Phase 7 (coverage >= 80%)
+  # ─────────────────────────────────────────────────────────────────
+  test-phase7:
+    runs-on: ubuntu-latest
+    needs: lint-phase7
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest-cov pydantic
+
+      - name: Run Phase 7 unit tests with coverage
+        env:
+          CUDA_VISIBLE_DEVICES: ""
+          TF_DETERMINISTIC_OPS: "1"
+        run: >
+          python -m pytest
+          src/phase7_monitoring_engine/phase7/tests/
+          -v
+          --cov=src/phase7_monitoring_engine/phase7
+          --cov-report=xml:coverage-phase7.xml
+          --cov-report=term-missing
+          --cov-fail-under=80
+
+      - name: Upload Phase 7 coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-phase7
+          path: coverage-phase7.xml
+
+  # ─────────────────────────────────────────────────────────────────
+  # 3. Security scan (Phase 7 additions)
+  # ─────────────────────────────────────────────────────────────────
+  security-scan-phase7:
+    runs-on: ubuntu-latest
+    needs: lint-phase7
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install security tools + dependencies
+        run: |
+          pip install -r requirements.txt pydantic
+          pip install bandit[toml] pip-audit cyclonedx-bom
+
+      - name: Bandit — Phase 7 static analysis
+        run: bandit -r src/phase7_monitoring_engine/ -c pyproject.toml -ll
+
+      - name: pip-audit — dependency vulnerabilities (fail CVSS > 7.0)
+        run: pip-audit --strict --desc
+
+      - name: CycloneDX SBOM (Phase 0-7 combined)
+        run: cyclonedx-py requirements -i requirements.txt -o sbom-phase7.json --format json
+
+      - name: Verify Phase 7 dependencies in SBOM
+        run: |
+          python -c "
+          import json
+          sbom = json.load(open('sbom-phase7.json'))
+          names = [c.get('name','') for c in sbom.get('components',[])]
+          required = ['pyyaml', 'pydantic', 'cryptography']
+          for dep in required:
+              found = any(dep.lower() in n.lower() for n in names)
+              status = 'OK' if found else 'MISSING'
+              print(f'  {dep}: {status}')
+              assert found, f'{dep} missing from SBOM'
+          print(f'SBOM OK: {len(names)} components')
+          "
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-phase7
+          path: sbom-phase7.json
+
+  # ─────────────────────────────────────────────────────────────────
+  # 4. Integration test — Phase 7 monitoring sidecar
+  # ─────────────────────────────────────────────────────────────────
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: [test-phase7, security-scan-phase7]
+    env:
+      CUDA_VISIBLE_DEVICES: ""
+      TF_DETERMINISTIC_OPS: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest pydantic
+
+      # ── Create minimal artifact directories (simulate pipeline output) ──
+      - name: Create Phase 2-6 artifact directories
+        run: |
+          python -c "
+          import json, hashlib, os
+          from pathlib import Path
+
+          def sha256(p):
+              h = hashlib.sha256()
+              with open(p, 'rb') as f:
+                  while chunk := f.read(65536):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          # Phase 2: detection artifacts
+          p2 = Path('data/phase2')
+          p2.mkdir(parents=True, exist_ok=True)
+          model_file = p2 / 'detection_model.weights.h5'
+          model_file.write_bytes(b'mock_detection_model_weights')
+          attn_file = p2 / 'attention_output.parquet'
+          attn_file.write_bytes(b'mock_attention_output')
+          meta = {
+              'hyperparameters': {'timesteps': 5, 'stride': 1},
+              'artifact_hashes': {
+                  'detection_model.weights.h5': {'sha256': sha256(model_file)},
+                  'attention_output.parquet': {'sha256': sha256(attn_file)},
+              },
+          }
+          (p2 / 'detection_metadata.json').write_text(json.dumps(meta, indent=2))
+
+          # Phase 3: classification artifacts
+          p3 = Path('data/phase3')
+          p3.mkdir(parents=True, exist_ok=True)
+          for f in ['classification_model.weights.h5', 'metrics_report.json',
+                     'confusion_matrix.csv', 'training_history.json']:
+              (p3 / f).write_bytes(f'mock_{f}'.encode())
+          meta3 = {
+              'hyperparameters': {'dense_units': 32},
+              'artifact_hashes': {f: {'sha256': sha256(p3 / f)} for f in os.listdir(p3) if f != 'classification_metadata.json'},
+          }
+          (p3 / 'classification_metadata.json').write_text(json.dumps(meta3, indent=2))
+
+          # Phase 4: risk artifacts
+          p4 = Path('data/phase4')
+          p4.mkdir(parents=True, exist_ok=True)
+          for f in ['baseline_config.json', 'risk_report.json',
+                     'threshold_config.json', 'drift_log.csv']:
+              (p4 / f).write_text(json.dumps({'mock': True}) if f.endswith('.json') else 'mock,data')
+          meta4 = {
+              'artifact_hashes': {f: {'sha256': sha256(p4 / f)} for f in os.listdir(p4) if f != 'risk_metadata.json'},
+          }
+          (p4 / 'risk_metadata.json').write_text(json.dumps(meta4, indent=2))
+
+          # Phase 5: explanation artifacts
+          p5 = Path('data/phase5')
+          p5.mkdir(parents=True, exist_ok=True)
+          for f in ['shap_values.parquet', 'explanation_report.json']:
+              (p5 / f).write_bytes(f'mock_{f}'.encode())
+          meta5 = {
+              'artifact_hashes': {f: {'sha256': sha256(p5 / f)} for f in os.listdir(p5) if f != 'explanation_metadata.json'},
+          }
+          (p5 / 'explanation_metadata.json').write_text(json.dumps(meta5, indent=2))
+
+          # Phase 6: notification artifacts
+          p6 = Path('data/phase6')
+          p6.mkdir(parents=True, exist_ok=True)
+          for f in ['notification_log.json', 'delivery_report.json']:
+              (p6 / f).write_text(json.dumps({'mock': True}))
+
+          print('Phase 2-6 mock artifacts created')
+          "
+
+      # ── Run Phase 7 monitoring pipeline ──
+      - name: Run Phase 7 security-hardened monitoring pipeline
+        run: |
+          python -c "
+          import logging
+          logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+
+          from src.phase7_monitoring_engine.security_hardened_phase7 import run_monitoring_pipeline
+          from pathlib import Path
+
+          summary = run_monitoring_pipeline(
+              config_path=Path('config/phase7_ci_config.yaml'),
+              n_cycles=3,
+          )
+          print(f'Phase 7 complete — {summary[\"n_engines\"]} engines, {summary[\"total_state_changes\"]} state changes')
+          print(f'Security events: {summary[\"security_events\"]} | Alerts: {summary[\"total_alerts\"]}')
+          "
+
+      # ── Integration assertions ──
+      - name: Integration assertions — Phase 7
+        run: |
+          python -c "
+          import json, os, sys, stat
+
+          errors = []
+
+          # 1. monitoring_log.json exists and contains state changes
+          try:
+              log = json.loads(open('data/phase7/monitoring_log.json').read())
+              assert isinstance(log, list), 'monitoring_log.json is not a list'
+              assert len(log) > 0, 'monitoring_log.json is empty'
+              # Verify state changes only (not every heartbeat)
+              for entry in log:
+                  assert 'old_state' in entry, 'Missing old_state'
+                  assert 'new_state' in entry, 'Missing new_state'
+                  assert entry['old_state'] != entry['new_state'], 'No state change'
+              print(f'PASS  monitoring_log.json: {len(log)} state changes (no heartbeat ticks)')
+          except Exception as e:
+              errors.append(f'FAIL  monitoring_log.json: {e}')
+              print(f'FAIL  monitoring_log.json: {e}')
+
+          # 2. security_audit_log.json exists and contains events
+          try:
+              sec = json.loads(open('data/phase7/security_audit_log.json').read())
+              assert isinstance(sec, list), 'security_audit_log.json is not a list'
+              assert len(sec) > 0, 'security_audit_log.json is empty'
+              print(f'PASS  security_audit_log.json: {len(sec)} security events')
+          except Exception as e:
+              errors.append(f'FAIL  security_audit_log.json: {e}')
+              print(f'FAIL  security_audit_log.json: {e}')
+
+          # 3. health_report.json contains all 5 engines
+          try:
+              health = json.loads(open('data/phase7/health_report.json').read())
+              engines = health.get('engine_health', {})
+              assert len(engines) == 5, f'Expected 5 engines, got {len(engines)}'
+              for eid in ['phase2_detection', 'phase3_classification',
+                          'phase4_risk_adaptive', 'phase5_explanation', 'phase6_notification']:
+                  assert eid in engines, f'Missing engine: {eid}'
+              print(f'PASS  health_report.json: {len(engines)} engines monitored')
+          except Exception as e:
+              errors.append(f'FAIL  health_report.json: {e}')
+              print(f'FAIL  health_report.json: {e}')
+
+          # 4. monitoring_log.json is read-only (chmod 444)
+          try:
+              mode = os.stat('data/phase7/monitoring_log.json').st_mode
+              assert not (mode & stat.S_IWUSR), 'monitoring_log.json is writable (should be 444)'
+              print(f'PASS  monitoring_log.json read-only (A01)')
+          except Exception as e:
+              errors.append(f'FAIL  Read-only check: {e}')
+              print(f'FAIL  Read-only check: {e}')
+
+          # 5. Security report generated
+          try:
+              assert os.path.exists('results/phase0_analysis/report_section_monitoring_security.md')
+              content = open('results/phase0_analysis/report_section_monitoring_security.md').read()
+              assert '10.2' in content, 'Missing section 10.2'
+              assert 'HMAC-SHA256' in content, 'Missing HMAC section'
+              assert 'ALL PASSED' in content, 'Assertions not all passed'
+              print(f'PASS  report_section_monitoring_security.md generated')
+          except Exception as e:
+              errors.append(f'FAIL  Security report: {e}')
+              print(f'FAIL  Security report: {e}')
+
+          # 6. Monitoring report generated
+          try:
+              assert os.path.exists('results/phase0_analysis/report_section_monitoring.md')
+              content = open('results/phase0_analysis/report_section_monitoring.md').read()
+              assert '10.1' in content, 'Missing section 10.1'
+              print(f'PASS  report_section_monitoring.md generated')
+          except Exception as e:
+              errors.append(f'FAIL  Monitoring report: {e}')
+              print(f'FAIL  Monitoring report: {e}')
+
+          if errors:
+              print(f'\n{len(errors)} FAILURES:')
+              for e in errors:
+                  print(f'  {e}')
+              sys.exit(1)
+          else:
+              print(f'\nAll 6 Phase 7 integration tests PASSED')
+          "
+
+  # ─────────────────────────────────────────────────────────────────
+  # 5. Chaos testing — resilience verification
+  # ─────────────────────────────────────────────────────────────────
+  chaos-test:
+    runs-on: ubuntu-latest
+    needs: integration-test
+    env:
+      CUDA_VISIBLE_DEVICES: ""
+      TF_DETERMINISTIC_OPS: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pydantic
+
+      - name: Chaos test — engine DOWN detection
+        run: |
+          python -c "
+          import json, time, logging
+          from pathlib import Path
+          logging.basicConfig(level=logging.INFO)
+
+          from src.phase7_monitoring_engine.phase7.config import Phase7Config, EngineEntry
+          from src.phase7_monitoring_engine.phase7.pipeline import MonitoringPipeline
+
+          # Create artifact dirs for all engines except phase2 (simulates DOWN)
+          for d in ['data/phase3', 'data/phase4', 'data/phase5', 'data/phase6']:
+              Path(d).mkdir(parents=True, exist_ok=True)
+          # Phase 2 dir intentionally missing — simulate engine DOWN
+
+          config = Phase7Config(
+              n_cycles=10,
+              heartbeat_miss_probability=0.0,
+              heartbeat_spike_probability=0.0,
+              missed_heartbeat_threshold=5,
+              engines=[
+                  EngineEntry(id='phase2_detection', heartbeat_topic='det.hb',
+                              artifact_dir='data/nonexistent_phase2'),
+                  EngineEntry(id='phase3_classification', heartbeat_topic='cls.hb',
+                              artifact_dir='data/phase3'),
+              ],
+          )
+
+          pipeline = MonitoringPipeline(config=config, project_root=Path.cwd())
+          t0 = time.time()
+          summary = pipeline.run(n_cycles=10)
+          detection_time = time.time() - t0
+
+          # Assert phase2 was detected as not UP
+          states = summary['engine_states']
+          assert states.get('phase2_detection') != 'UP', \
+              f'phase2_detection should not be UP, got {states.get(\"phase2_detection\")}'
+          assert detection_time < 25.0, \
+              f'Detection took {detection_time:.1f}s > 25s threshold'
+          print(f'PASS  Engine DOWN detected in {detection_time:.2f}s (<25s)')
+          print(f'       phase2_detection state: {states.get(\"phase2_detection\")}')
+          "
+
+      - name: Chaos test — no false positive on normal latency
+        run: |
+          python -c "
+          import json, logging
+          from pathlib import Path
+          logging.basicConfig(level=logging.INFO)
+
+          from src.phase7_monitoring_engine.phase7.config import Phase7Config, EngineEntry
+          from src.phase7_monitoring_engine.phase7.pipeline import MonitoringPipeline
+
+          Path('data/phase3').mkdir(parents=True, exist_ok=True)
+
+          config = Phase7Config(
+              n_cycles=5,
+              heartbeat_miss_probability=0.0,
+              heartbeat_spike_probability=0.0,
+              normal_latency_mean_ms=25.0,
+              normal_latency_std_ms=5.0,
+              latency_p95_threshold_ms=100.0,
+              engines=[
+                  EngineEntry(id='phase3_classification', heartbeat_topic='cls.hb',
+                              artifact_dir='data/phase3'),
+              ],
+          )
+
+          pipeline = MonitoringPipeline(config=config, project_root=Path.cwd())
+          summary = pipeline.run(n_cycles=5)
+
+          # No alerts should fire with normal latency
+          assert summary['total_alerts'] == 0, \
+              f'False positive: {summary[\"total_alerts\"]} alerts with normal latency'
+          print(f'PASS  No false positive — 0 alerts with normal latency (25ms mean)')
+          "
+
+      - name: Chaos test — hash tamper detection
+        run: |
+          python -c "
+          import json, hashlib, time, logging
+          from pathlib import Path
+          logging.basicConfig(level=logging.INFO)
+
+          from src.phase7_monitoring_engine.phase7.config import Phase7Config, EngineEntry
+          from src.phase7_monitoring_engine.phase7.pipeline import MonitoringPipeline
+
+          # Create artifact + metadata with correct hash
+          p2 = Path('data/phase2')
+          p2.mkdir(parents=True, exist_ok=True)
+          artifact = p2 / 'detection_model.weights.h5'
+          artifact.write_bytes(b'original_model_data')
+
+          h = hashlib.sha256()
+          h.update(b'original_model_data')
+          correct_hash = h.hexdigest()
+
+          meta = {'artifact_hashes': {'detection_model.weights.h5': {'sha256': correct_hash}}}
+          (p2 / 'detection_metadata.json').write_text(json.dumps(meta, indent=2))
+
+          # Now tamper with the artifact
+          artifact.write_bytes(b'TAMPERED_model_data')
+
+          config = Phase7Config(
+              n_cycles=3,
+              heartbeat_miss_probability=0.0,
+              engines=[
+                  EngineEntry(id='phase2_detection', heartbeat_topic='det.hb',
+                              artifact_dir='data/phase2',
+                              metadata_path='data/phase2/detection_metadata.json'),
+              ],
+          )
+
+          pipeline = MonitoringPipeline(config=config, project_root=Path.cwd())
+          t0 = time.time()
+          summary = pipeline.run(n_cycles=3)
+          detection_time = time.time() - t0
+
+          # Check security events for HASH_MISMATCH
+          mismatch_events = [e for e in pipeline.security_events if e.event_type == 'HASH_MISMATCH']
+          assert len(mismatch_events) > 0, 'Hash tamper not detected'
+          assert detection_time < 60.0, f'Detection took {detection_time:.1f}s > 60s'
+          print(f'PASS  Hash tamper detected in {detection_time:.2f}s (<60s)')
+          print(f'       {len(mismatch_events)} HASH_MISMATCH events')
+          "
+
+      - name: Chaos test — heartbeat flood (no memory overflow)
+        run: |
+          python -c "
+          import logging, tracemalloc
+          from pathlib import Path
+          logging.basicConfig(level=logging.INFO)
+
+          from src.phase7_monitoring_engine.phase7.config import Phase7Config, EngineEntry
+          from src.phase7_monitoring_engine.phase7.pipeline import MonitoringPipeline
+
+          Path('data/phase3').mkdir(parents=True, exist_ok=True)
+
+          config = Phase7Config(
+              n_cycles=100,
+              circular_buffer_size=1000,
+              heartbeat_miss_probability=0.0,
+              heartbeat_spike_probability=0.0,
+              engines=[
+                  EngineEntry(id='phase3_classification', heartbeat_topic='cls.hb',
+                              artifact_dir='data/phase3'),
+              ],
+          )
+
+          tracemalloc.start()
+          pipeline = MonitoringPipeline(config=config, project_root=Path.cwd())
+          summary = pipeline.run(n_cycles=100)
+          current, peak = tracemalloc.get_traced_memory()
+          tracemalloc.stop()
+
+          # Circular buffer should bound memory — peak < 50MB
+          peak_mb = peak / 1024 / 1024
+          assert peak_mb < 50.0, f'Memory overflow: {peak_mb:.1f}MB > 50MB'
+
+          # State change history bounded by circular buffer
+          for eid, machine in pipeline._machines.items():
+              assert len(machine.history) <= config.circular_buffer_size, \
+                  f'{eid} buffer overflow: {len(machine.history)} > {config.circular_buffer_size}'
+
+          print(f'PASS  No memory overflow — peak: {peak_mb:.1f}MB (<50MB)')
+          print(f'       100 cycles, buffer bounded at {config.circular_buffer_size}')
+          "
+
+      - name: Chaos test — HMAC key rotation continuity
+        run: |
+          python -c "
+          import logging
+          logging.basicConfig(level=logging.INFO)
+
+          from src.phase7_monitoring_engine.security_hardened_phase7 import HMACKeyManager
+
+          # Test key rotation
+          mgr = HMACKeyManager(rotation_interval_hours=0)  # Immediate rotation
+
+          # Sign with initial key
+          sig1 = mgr.sign('eng1', '2026-01-01T00:00:00', 25.0)
+          assert mgr.verify('eng1', '2026-01-01T00:00:00', 25.0, sig1), 'Initial key verify failed'
+
+          # Force rotation
+          rotated = mgr.rotate_if_needed()
+          assert rotated, 'Key should have rotated'
+
+          # Old signature still valid (grace window)
+          assert mgr.verify('eng1', '2026-01-01T00:00:00', 25.0, sig1), \
+              'Old key rejected after rotation (grace window should accept)'
+
+          # New key works
+          sig2 = mgr.sign('eng1', '2026-01-01T00:00:01', 30.0)
+          assert mgr.verify('eng1', '2026-01-01T00:00:01', 30.0, sig2), 'New key verify failed'
+
+          # Rotate again — old-old key should now be rejected
+          mgr.rotate_if_needed()
+          assert not mgr.verify('eng1', '2026-01-01T00:00:00', 25.0, sig1), \
+              'Old-old key should be rejected after second rotation'
+
+          print(f'PASS  HMAC key rotation — grace window works, old-old key rejected')
+          "
+
+  # ─────────────────────────────────────────────────────────────────
+  # 6. Docker build (monitoring sidecar)
+  # ─────────────────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    needs: chaos-test
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build pipeline image (Phase 0-6)
+      - name: Build pipeline Docker image
+        run: docker build -t analyst/phase0-phase6:${{ github.sha }} .
+
+      # Build monitoring sidecar image (Phase 7)
+      - name: Build monitoring Docker image
+        run: docker build -f Dockerfile.monitoring -t analyst/phase7-monitoring:${{ github.sha }} .
+
+      - name: Verify Phase 7 imports in monitoring container
+        run: >
+          docker run --rm analyst/phase7-monitoring:${{ github.sha }}
+          -c "
+          from src.phase7_monitoring_engine.phase7.config import Phase7Config;
+          from src.phase7_monitoring_engine.phase7.pipeline import MonitoringPipeline;
+          from src.phase7_monitoring_engine.phase7.heartbeat_receiver import HeartbeatReceiver;
+          from src.phase7_monitoring_engine.phase7.state_machine import EngineState;
+          print(f'Phase 7 monitoring: OK — 5 states: {[s.value for s in EngineState]}')
+          "
+
+      - name: Tag as v7.0
+        run: |
+          docker tag analyst/phase0-phase6:${{ github.sha }} analyst/phase0-phase6:7.0
+          docker tag analyst/phase7-monitoring:${{ github.sha }} analyst/phase7-monitoring:1.0
+
+      - name: Upload Phase 7 monitoring artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase7-monitoring-artifacts
+          path: |
+            data/phase7/
+            results/phase0_analysis/report_section_monitoring*.md

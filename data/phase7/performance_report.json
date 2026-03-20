@@ -1,0 +1,266 @@
+{
+  "generated_at": "2026-03-20T10:39:12.184833+00:00",
+  "pipeline": "phase7_monitoring",
+  "metrics": {
+    "phase2_detection": [
+      {
+        "engine_id": "phase2_detection",
+        "timestamp": "2026-03-20T10:39:11.859060+00:00",
+        "latency_p50_ms": 23.662006389442766,
+        "latency_p95_ms": 54.83462277802272,
+        "latency_p99_ms": 72.19518449165616,
+        "throughput_sps": 141.2371602790176,
+        "memory_mb": 280.71869627243575,
+        "cpu_pct": 25.47169218865543
+      },
+      {
+        "engine_id": "phase2_detection",
+        "timestamp": "2026-03-20T10:39:11.874872+00:00",
+        "latency_p50_ms": 15.262257097609606,
+        "latency_p95_ms": 31.58040541020278,
+        "latency_p99_ms": 75.91154219778356,
+        "throughput_sps": 75.59960390098392,
+        "memory_mb": 364.525392311714,
+        "cpu_pct": 28.47514999492222
+      },
+      {
+        "engine_id": "phase2_detection",
+        "timestamp": "2026-03-20T10:39:11.943139+00:00",
+        "latency_p50_ms": 20.920951780857862,
+        "latency_p95_ms": 52.774472309660474,
+        "latency_p99_ms": 80.38720542772896,
+        "throughput_sps": 95.4690834538349,
+        "memory_mb": 725.4981539250776,
+        "cpu_pct": 52.24561744922092
+      },
+      {
+        "engine_id": "phase2_detection",
+        "timestamp": "2026-03-20T10:39:12.030344+00:00",
+        "latency_p50_ms": 7.447988642594163,
+        "latency_p95_ms": 13.419239217249535,
+        "latency_p99_ms": 24.424120099787007,
+        "throughput_sps": 88.13612265021465,
+        "memory_mb": 729.2152530242151,
+        "cpu_pct": 39.33777735506096
+      },
+      {
+        "engine_id": "phase2_detection",
+        "timestamp": "2026-03-20T10:39:12.094392+00:00",
+        "latency_p50_ms": 23.04712021921274,
+        "latency_p95_ms": 43.20665918262902,
+        "latency_p99_ms": 110.81433369997626,
+        "throughput_sps": 44.13091087665439,
+        "memory_mb": 616.2925897109694,
+        "cpu_pct": 35.40632470328177
+      }
+    ],
+    "phase3_classification": [
+      {
+        "engine_id": "phase3_classification",
+        "timestamp": "2026-03-20T10:39:11.859086+00:00",
+        "latency_p50_ms": 34.47197430206821,
+        "latency_p95_ms": 87.80732637804573,
+        "latency_p99_ms": 115.50270340935467,
+        "throughput_sps": 102.21723058214336,
+        "memory_mb": 722.7345055952679,
+        "cpu_pct": 71.21049300015008
+      },
+      {
+        "engine_id": "phase3_classification",
+        "timestamp": "2026-03-20T10:39:11.874881+00:00",
+        "latency_p50_ms": 5.890003035055441,
+        "latency_p95_ms": 15.690967303898365,
+        "latency_p99_ms": 18.097742185244034,
+        "throughput_sps": 125.58943701442931,
+        "memory_mb": 538.1616091296765,
+        "cpu_pct": 38.85130279571095
+      },
+      {
+        "engine_id": "phase3_classification",
+        "timestamp": "2026-03-20T10:39:11.943193+00:00",
+        "latency_p50_ms": 25.511070914128023,
+        "latency_p95_ms": 55.62907284257011,
+        "latency_p99_ms": 124.60984170035773,
+        "throughput_sps": 116.67557232759525,
+        "memory_mb": 429.51105733920093,
+        "cpu_pct": 30.58923450729406
+      },
+      {
+        "engine_id": "phase3_classification",
+        "timestamp": "2026-03-20T10:39:12.030397+00:00",
+        "latency_p50_ms": 11.06204096751291,
+        "latency_p95_ms": 18.600891509172932,
+        "latency_p99_ms": 33.86913028761763,
+        "throughput_sps": 113.7355119847462,
+        "memory_mb": 406.95684512379,
+        "cpu_pct": 57.00076596380332
+      },
+      {
+        "engine_id": "phase3_classification",
+        "timestamp": "2026-03-20T10:39:12.094402+00:00",
+        "latency_p50_ms": 19.198419609361338,
+        "latency_p95_ms": 57.57459561934085,
+        "latency_p99_ms": 88.12206998181821,
+        "throughput_sps": 167.228311113267,
+        "memory_mb": 445.677805187968,
+        "cpu_pct": 45.25768062022164
+      }
+    ],
+    "phase4_risk_adaptive": [
+      {
+        "engine_id": "phase4_risk_adaptive",
+        "timestamp": "2026-03-20T10:39:11.859103+00:00",
+        "latency_p50_ms": 18.172903267746122,
+        "latency_p95_ms": 29.89578094252132,
+        "latency_p99_ms": 83.93584101834576,
+        "throughput_sps": 111.32493599061075,
+        "memory_mb": 295.64238866769307,
+        "cpu_pct": 23.49326461961208
+      },
+      {
+        "engine_id": "phase4_risk_adaptive",
+        "timestamp": "2026-03-20T10:39:11.874885+00:00",
+        "latency_p50_ms": 25.473251084367817,
+        "latency_p95_ms": 74.23834048127128,
+        "latency_p99_ms": 119.49295918929396,
+        "throughput_sps": 82.68888903552954,
+        "memory_mb": 713.1339810576001,
+        "cpu_pct": 13.630608619577707
+      },
+      {
+        "engine_id": "phase4_risk_adaptive",
+        "timestamp": "2026-03-20T10:39:11.943231+00:00",
+        "latency_p50_ms": 19.98151638549135,
+        "latency_p95_ms": 57.32580676682317,
+        "latency_p99_ms": 93.43949363139802,
+        "throughput_sps": 87.16584895791145,
+        "memory_mb": 716.2677125525876,
+        "cpu_pct": 33.30773800858374
+      },
+      {
+        "engine_id": "phase4_risk_adaptive",
+        "timestamp": "2026-03-20T10:39:12.030429+00:00",
+        "latency_p50_ms": 20.70316728723612,
+        "latency_p95_ms": 33.259423534677396,
+        "latency_p99_ms": 84.42249346767102,
+        "throughput_sps": 120.99473865147957,
+        "memory_mb": 554.9774041972656,
+        "cpu_pct": 72.29192852650786
+      },
+      {
+        "engine_id": "phase4_risk_adaptive",
+        "timestamp": "2026-03-20T10:39:12.094407+00:00",
+        "latency_p50_ms": 16.07321998660087,
+        "latency_p95_ms": 35.818554945766046,
+        "latency_p99_ms": 48.77206837042778,
+        "throughput_sps": 91.52285423952694,
+        "memory_mb": 542.3737375979641,
+        "cpu_pct": 8.424581984137543
+      }
+    ],
+    "phase5_explanation": [
+      {
+        "engine_id": "phase5_explanation",
+        "timestamp": "2026-03-20T10:39:11.859115+00:00",
+        "latency_p50_ms": 18.740468993838505,
+        "latency_p95_ms": 55.46567219416406,
+        "latency_p99_ms": 64.58595188253406,
+        "throughput_sps": 63.1117450245971,
+        "memory_mb": 244.8461295716657,
+        "cpu_pct": 30.939341182061682
+      },
+      {
+        "engine_id": "phase5_explanation",
+        "timestamp": "2026-03-20T10:39:11.874889+00:00",
+        "latency_p50_ms": 30.819744869719543,
+        "latency_p95_ms": 67.442162849192,
+        "latency_p99_ms": 97.45821005559588,
+        "throughput_sps": 100.8160620311205,
+        "memory_mb": 704.5295216687966,
+        "cpu_pct": 38.40994474542697
+      },
+      {
+        "engine_id": "phase5_explanation",
+        "timestamp": "2026-03-20T10:39:11.943261+00:00",
+        "latency_p50_ms": 17.085988193112478,
+        "latency_p95_ms": 45.17135808047589,
+        "latency_p99_ms": 65.75452983337216,
+        "throughput_sps": 106.59836290450039,
+        "memory_mb": 330.5573604539548,
+        "cpu_pct": 53.27797465537217
+      },
+      {
+        "engine_id": "phase5_explanation",
+        "timestamp": "2026-03-20T10:39:12.030457+00:00",
+        "latency_p50_ms": 21.9496243277772,
+        "latency_p95_ms": 40.76060496066992,
+        "latency_p99_ms": 91.58358811252897,
+        "throughput_sps": 91.12107301683756,
+        "memory_mb": 529.80687303302,
+        "cpu_pct": 47.79066482708818
+      },
+      {
+        "engine_id": "phase5_explanation",
+        "timestamp": "2026-03-20T10:39:12.094412+00:00",
+        "latency_p50_ms": 36.01974150887679,
+        "latency_p95_ms": 68.35843066740198,
+        "latency_p99_ms": 160.6544047894342,
+        "throughput_sps": 69.78663621680565,
+        "memory_mb": 555.8803557086403,
+        "cpu_pct": 87.47413152215329
+      }
+    ],
+    "phase6_notification": [
+      {
+        "engine_id": "phase6_notification",
+        "timestamp": "2026-03-20T10:39:11.859126+00:00",
+        "latency_p50_ms": 8.29890198154422,
+        "latency_p95_ms": 19.635436265796553,
+        "latency_p99_ms": 35.36518647312125,
+        "throughput_sps": 59.5561262368988,
+        "memory_mb": 615.4421255030827,
+        "cpu_pct": 43.063462643850784
+      },
+      {
+        "engine_id": "phase6_notification",
+        "timestamp": "2026-03-20T10:39:11.874894+00:00",
+        "latency_p50_ms": 30.57006339671969,
+        "latency_p95_ms": 87.02484880120963,
+        "latency_p99_ms": 106.94940539885876,
+        "throughput_sps": 119.9197074753551,
+        "memory_mb": 1022.2725701224185,
+        "cpu_pct": 33.46270214340066
+      },
+      {
+        "engine_id": "phase6_notification",
+        "timestamp": "2026-03-20T10:39:11.943302+00:00",
+        "latency_p50_ms": 20.025446582063918,
+        "latency_p95_ms": 30.623215569456033,
+        "latency_p99_ms": 96.57765322885128,
+        "throughput_sps": 140.97068471298246,
+        "memory_mb": 316.5104042423954,
+        "cpu_pct": 38.16790984717202
+      },
+      {
+        "engine_id": "phase6_notification",
+        "timestamp": "2026-03-20T10:39:12.030486+00:00",
+        "latency_p50_ms": 29.565851522657304,
+        "latency_p95_ms": 65.3111593584808,
+        "latency_p99_ms": 131.9094823075764,
+        "throughput_sps": 84.61424169319511,
+        "memory_mb": 546.4602191785954,
+        "cpu_pct": 30.879847321587782
+      },
+      {
+        "engine_id": "phase6_notification",
+        "timestamp": "2026-03-20T10:39:12.094416+00:00",
+        "latency_p50_ms": 13.042166535149686,
+        "latency_p95_ms": 30.43588434595003,
+        "latency_p99_ms": 56.02941725448508,
+        "throughput_sps": 114.17465281967817,
+        "memory_mb": 616.0010060091945,
+        "cpu_pct": 59.3555003203214
+      }
+    ]
+  }
+}

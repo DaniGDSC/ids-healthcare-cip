@@ -1,0 +1,429 @@
+[
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "detection_model.weights.h5: 5aa425ca8129f3bc... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "attention_output.parquet: 33aeabba393332ac... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "classification_model.weights.h5: 114fc8cc1c3d93e6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "metrics_report.json: 3a97f4fa97967a66... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "confusion_matrix.csv: 3ed35ddeb7533299... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "training_history.json: 9443e99db75ea1bd... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "baseline_config.json: 14f4d0acaca313b6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "threshold_config.json: 1e88daf56513ac9b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "risk_report.json: 16a3e744c14c180b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "drift_log.csv: fc8f2bb06e82799d... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "shap_values.parquet: 2399f61f46fab98b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:11.859149+00:00",
+    "detail": "explanation_report.json: f70bb0af5da48645... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "BASELINE_INITIALIZED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.874676+00:00",
+    "detail": "Hash: 14f4d0acaca313b6...",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "detection_model.weights.h5: 5aa425ca8129f3bc... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "attention_output.parquet: 33aeabba393332ac... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "classification_model.weights.h5: 114fc8cc1c3d93e6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "metrics_report.json: 3a97f4fa97967a66... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "confusion_matrix.csv: 3ed35ddeb7533299... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "training_history.json: 9443e99db75ea1bd... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "baseline_config.json: 14f4d0acaca313b6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "threshold_config.json: 1e88daf56513ac9b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "risk_report.json: 16a3e744c14c180b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "drift_log.csv: fc8f2bb06e82799d... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "shap_values.parquet: 2399f61f46fab98b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:11.885195+00:00",
+    "detail": "explanation_report.json: f70bb0af5da48645... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "detection_model.weights.h5: 5aa425ca8129f3bc... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "attention_output.parquet: 33aeabba393332ac... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "classification_model.weights.h5: 114fc8cc1c3d93e6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "metrics_report.json: 3a97f4fa97967a66... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "confusion_matrix.csv: 3ed35ddeb7533299... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "training_history.json: 9443e99db75ea1bd... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "baseline_config.json: 14f4d0acaca313b6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "threshold_config.json: 1e88daf56513ac9b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "risk_report.json: 16a3e744c14c180b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "drift_log.csv: fc8f2bb06e82799d... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "shap_values.parquet: 2399f61f46fab98b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:11.953657+00:00",
+    "detail": "explanation_report.json: f70bb0af5da48645... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "detection_model.weights.h5: 5aa425ca8129f3bc... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "attention_output.parquet: 33aeabba393332ac... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "classification_model.weights.h5: 114fc8cc1c3d93e6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "metrics_report.json: 3a97f4fa97967a66... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "confusion_matrix.csv: 3ed35ddeb7533299... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "training_history.json: 9443e99db75ea1bd... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "baseline_config.json: 14f4d0acaca313b6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "threshold_config.json: 1e88daf56513ac9b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "risk_report.json: 16a3e744c14c180b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "drift_log.csv: fc8f2bb06e82799d... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "shap_values.parquet: 2399f61f46fab98b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:12.040798+00:00",
+    "detail": "explanation_report.json: f70bb0af5da48645... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "detection_model.weights.h5: 5aa425ca8129f3bc... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase2_detection",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "attention_output.parquet: 33aeabba393332ac... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "classification_model.weights.h5: 114fc8cc1c3d93e6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "metrics_report.json: 3a97f4fa97967a66... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "confusion_matrix.csv: 3ed35ddeb7533299... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase3_classification",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "training_history.json: 9443e99db75ea1bd... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "baseline_config.json: 14f4d0acaca313b6... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "threshold_config.json: 1e88daf56513ac9b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "risk_report.json: 16a3e744c14c180b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase4_risk_adaptive",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "drift_log.csv: fc8f2bb06e82799d... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "shap_values.parquet: 2399f61f46fab98b... OK",
+    "severity": "INFO"
+  },
+  {
+    "event_type": "HASH_VERIFIED",
+    "engine_id": "phase5_explanation",
+    "timestamp": "2026-03-20T10:39:12.104709+00:00",
+    "detail": "explanation_report.json: f70bb0af5da48645... OK",
+    "severity": "INFO"
+  }
+]
