@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-03-20T16:57:10.595525+00:00",
+  "naive_baseline": 0.874592,
+  "model_accuracy": 0.834119,
+  "beats_baseline": false,
+  "margin_pct": -4.05,
+  "training_behavior": "UNDERFIT",
+  "best_epoch": 15,
+  "total_epochs": 15,
+  "early_stopping_triggered": false,
+  "class_distribution": {
+    "normal": 4282,
+    "attack": 614,
+    "imbalance_ratio": 6.97
+  },
+  "per_class_metrics": {
+    "normal_f1": 0.908037,
+    "attack_f1": 0.15465,
+    "attack_recall": 0.120915,
+    "attack_precision": 0.214493
+  },
+  "auc_roc": 0.611425,
+  "root_causes": [
+    "Class imbalance \u2014 Normal:Attack ratio = 6.97:1, model biased toward Normal class",
+    "Underfitting \u2014 train_loss=0.3551 still above 0.3, model has not converged",
+    "Attack class collapse \u2014 recall=0.1209, model misses 88% of attacks",
+    "Below naive baseline \u2014 accuracy 0.8341 < naive 0.8746",
+    "Insufficient training \u2014 loss still decreasing at final epoch, EarlyStopping not triggered"
+  ],
+  "recommended_actions": [
+    "Apply class weighting: class_weight={0: 1.0, 1: 7.0} in model.fit()",
+    "Consider SMOTE or random oversampling of attack class",
+    "Increase epochs per phase (current: 5, try: 15-20)",
+    "Consider higher initial learning rate (Phase A: 0.003)",
+    "Lower classification threshold from 0.5 to 0.3 to increase attack recall at cost of precision",
+    "Use focal loss instead of binary_crossentropy to down-weight easy Normal examples",
+    "Verify Phase 1 data quality \u2014 check for label noise, feature scaling, or data leakage"
+  ]
+}
