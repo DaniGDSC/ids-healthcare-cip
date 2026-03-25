@@ -51,13 +51,6 @@ from src.phase2_detection_engine.phase2.bilstm_builder import BiLSTMBuilder
 from src.phase2_detection_engine.phase2.cnn_builder import CNNBuilder
 from src.phase2_detection_engine.phase2.reshaper import DataReshaper
 
-# ── Phase 3 SOLID components (cross-dataset — reused, NOT duplicated) ──
-from src.phase3_classification_engine.phase3.cross_dataset import CICIoMTLoader
-from src.phase3_classification_engine.phase3.cross_dataset_report import (
-    build_comparison_report,
-    render_cross_dataset_report,
-)
-
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -559,89 +552,6 @@ def _evaluate(
 
 
 # ===================================================================
-# Cross-Dataset Validation
-# ===================================================================
-
-
-def _run_cross_dataset_validation(
-    model: tf.keras.Model,
-    wustl_metrics: Dict[str, Any],
-    config: Dict[str, Any],
-    reshaper: DataReshaper,
-) -> Tuple[
-    "Dict[str, Any] | None",
-    "Dict[str, Any] | None",
-    "Dict[str, Any] | None",
-]:
-    """Run CICIoMT2024 cross-dataset validation (steps 6-8).
-
-    Args:
-        model: Trained classification model.
-        wustl_metrics: WUSTL test set metrics for comparison.
-        config: Parsed phase3_config.yaml.
-        reshaper: DataReshaper (same timesteps/stride as training).
-
-    Returns:
-        Tuple of (ciciomt_metrics, load_report, comparison) or
-        (None, None, None) if skipped.
-    """
-    cross_cfg = config.get("cross_dataset")
-    if not cross_cfg or not cross_cfg.get("enabled", False):
-        logger.info("  Cross-dataset validation: DISABLED in config")
-        return None, None, None
-
-    csv_path = PROJECT_ROOT / cross_cfg["csv_path"]
-    loader = CICIoMTLoader(
-        csv_path=csv_path,
-        column_mapping=cross_cfg.get("column_mapping", {}),
-        label_column=cross_cfg.get("label_column", "Label"),
-        label_mapping=cross_cfg.get("label_mapping"),
-        scaler_path=PROJECT_ROOT / cross_cfg["scaler_path"],
-        wustl_train_path=PROJECT_ROOT / config["data"]["phase1_train"],
-    )
-
-    if not loader.is_available():
-        logger.info(
-            "  Cross-dataset: CICIoMT2024 CSV not found at %s — SKIPPED",
-            csv_path,
-        )
-        return None, None, None
-
-    logger.info("── Cross-Dataset Validation: CICIoMT2024 ──")
-
-    # Step 6: Load and prepare CICIoMT2024
-    X_scaled, y, load_report = loader.load_and_prepare()
-
-    if y is None:
-        logger.warning("  No labels in CICIoMT2024 — cannot evaluate")
-        return None, None, None
-
-    # Reshape to sliding windows (same as training)
-    X_windowed, y_windowed = reshaper.reshape(X_scaled, y)
-    logger.info("  CICIoMT2024 windowed: %s", X_windowed.shape)
-
-    # Step 7: Evaluate on CICIoMT2024
-    ciciomt_metrics = _evaluate(
-        model=model,
-        X_test=X_windowed,
-        y_test=y_windowed,
-        threshold=config["evaluation"]["threshold"],
-    )
-
-    # Step 8: Build comparison
-    comparison = build_comparison_report(wustl_metrics, ciciomt_metrics)
-
-    delta_acc = comparison["accuracy"]["delta_pct"]
-    delta_f1 = comparison["f1_score"]["delta_pct"]
-    logger.info(
-        "  Generalization gap: accuracy delta=%.1f%%, F1 delta=%.1f%%",
-        delta_acc,
-        delta_f1,
-    )
-
-    return ciciomt_metrics, load_report, comparison
-
-
 # ===================================================================
 # Export Artifacts
 # ===================================================================
@@ -714,53 +624,6 @@ def _export_artifacts(
     logger.info("  Saved training history: %s", history_path.name)
 
     return output_dir
-
-
-def _export_cross_dataset_artifacts(
-    ciciomt_metrics: Dict[str, Any],
-    load_report: Dict[str, Any],
-    comparison: Dict[str, Any],
-    config: Dict[str, Any],
-) -> None:
-    """Export CICIoMT2024 cross-dataset validation artifacts.
-
-    Args:
-        ciciomt_metrics: CICIoMT2024 evaluation metrics.
-        load_report: CICIoMTLoader load report.
-        comparison: Per-metric delta comparison.
-        config: Parsed phase3_config.yaml.
-    """
-    logger.info("── Exporting cross-dataset artifacts ──")
-
-    cross_cfg = config["cross_dataset"]
-    output_dir = PROJECT_ROOT / config["output"]["output_dir"]
-
-    # 1. CICIoMT2024 metrics
-    ciciomt_report = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "pipeline": "cross_dataset_ciciomt2024",
-        "metrics": ciciomt_metrics,
-        "load_report": load_report,
-    }
-    metrics_path = output_dir / cross_cfg["metrics_file"]
-    with open(metrics_path, "w") as f:
-        json.dump(ciciomt_report, f, indent=2)
-    logger.info("  Saved: %s", metrics_path.name)
-
-    # 2. CICIoMT2024 confusion matrix
-    cm = np.array(ciciomt_metrics["confusion_matrix"])
-    labels = ["Normal", "Attack"] if cm.shape[0] == 2 else [str(i) for i in range(cm.shape[0])]
-    cm_df = pd.DataFrame(cm, index=labels, columns=labels)
-    cm_df.index.name = "Actual"
-    cm_path = output_dir / cross_cfg["confusion_matrix_file"]
-    cm_df.to_csv(cm_path)
-    logger.info("  Saved: %s", cm_path.name)
-
-    # 3. Comparison report
-    comp_path = output_dir / cross_cfg["comparison_report_file"]
-    with open(comp_path, "w") as f:
-        json.dump(comparison, f, indent=2)
-    logger.info("  Saved: %s", comp_path.name)
 
 
 # ===================================================================
@@ -924,36 +787,6 @@ set `cross_dataset.enabled: true` in `config/phase3_config.yaml`.
     logger.info("  Report saved: %s", report_path.name)
 
 
-def _generate_cross_dataset_report(
-    wustl_metrics: Dict[str, Any],
-    ciciomt_metrics: Dict[str, Any],
-    load_report: Dict[str, Any],
-    comparison: Dict[str, Any],
-) -> None:
-    """Render and save Section 6.2 Cross-Dataset Validation report.
-
-    Args:
-        wustl_metrics: WUSTL test set metrics.
-        ciciomt_metrics: CICIoMT2024 evaluation metrics.
-        load_report: CICIoMTLoader load report dict.
-        comparison: Per-metric delta comparison dict.
-    """
-    logger.info("── Generating cross-dataset report ──")
-
-    report_md = render_cross_dataset_report(
-        wustl_metrics=wustl_metrics,
-        ciciomt_metrics=ciciomt_metrics,
-        load_report=load_report,
-        comparison=comparison,
-    )
-
-    report_path = PROJECT_ROOT / "results" / "phase0_analysis" / "report_section_crossdataset.md"
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(report_path, "w") as f:
-        f.write(report_md)
-    logger.info("  Cross-dataset report saved: %s", report_path.name)
-
-
 # ===================================================================
 # Pipeline Orchestrator
 # ===================================================================
@@ -1028,14 +861,6 @@ def run_pipeline() -> None:
         threshold=config["evaluation"]["threshold"],
     )
 
-    # ── Cross-dataset validation (CICIoMT2024) ──
-    ciciomt_metrics, load_report, comparison = _run_cross_dataset_validation(
-        model=full_model,
-        wustl_metrics=metrics,
-        config=config,
-        reshaper=reshaper,
-    )
-
     duration_s = time.time() - t0
 
     # ── Export WUSTL artifacts ──
@@ -1048,15 +873,6 @@ def run_pipeline() -> None:
         duration_s=duration_s,
     )
 
-    # ── Export cross-dataset artifacts ──
-    if ciciomt_metrics is not None:
-        _export_cross_dataset_artifacts(
-            ciciomt_metrics=ciciomt_metrics,
-            load_report=load_report,
-            comparison=comparison,
-            config=config,
-        )
-
     # ── Generate classification report ──
     _generate_report(
         model=full_model,
@@ -1067,15 +883,6 @@ def run_pipeline() -> None:
         duration_s=duration_s,
         detection_params=detection_params,
     )
-
-    # ── Generate cross-dataset report ──
-    if ciciomt_metrics is not None:
-        _generate_cross_dataset_report(
-            wustl_metrics=metrics,
-            ciciomt_metrics=ciciomt_metrics,
-            load_report=load_report,
-            comparison=comparison,
-        )
 
     logger.info("═══════════════════════════════════════════════════")
     logger.info("  Phase 3 complete — %.2fs", duration_s)

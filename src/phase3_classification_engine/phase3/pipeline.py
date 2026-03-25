@@ -34,7 +34,6 @@ from src.phase2_detection_engine.phase2.reshaper import DataReshaper
 from .artifact_reader import Phase2ArtifactReader
 from .base import BaseClassificationHead
 from .config import Phase3Config
-from .cross_dataset import CICIoMTLoader
 from .evaluator import ModelEvaluator
 from .exporter import ClassificationExporter
 from .report import render_classification_report
@@ -99,8 +98,6 @@ class ClassificationPipeline:
         evaluator: Model evaluator.
         exporter: Classification exporter.
         project_root: Absolute project root for path resolution.
-        cross_dataset_loader: Optional CICIoMT2024 loader for
-            cross-dataset validation.
     """
 
     def __init__(
@@ -113,7 +110,6 @@ class ClassificationPipeline:
         evaluator: ModelEvaluator,
         exporter: ClassificationExporter,
         project_root: Path,
-        cross_dataset_loader: Optional[CICIoMTLoader] = None,
     ) -> None:
         self._config = config
         self._reader = artifact_reader
@@ -123,7 +119,6 @@ class ClassificationPipeline:
         self._evaluator = evaluator
         self._exporter = exporter
         self._root = project_root
-        self._cross_loader = cross_dataset_loader
 
     def run(self) -> Dict[str, Any]:
         """Execute all pipeline steps and return the metrics dict.
@@ -233,108 +228,11 @@ class ClassificationPipeline:
             f.write(report_md)
         logger.info("  Report saved: %s", report_path.name)
 
-        # 14. Cross-dataset validation (optional)
-        if self._cross_loader is not None:
-            self._run_cross_dataset_validation(
-                model=full_model,
-                wustl_metrics=metrics,
-                reshaper=reshaper,
-                output_dir=output_dir,
-            )
-
         logger.info("═══════════════════════════════════════════════════")
         logger.info("  Phase 3 complete — %.2fs", duration_s)
         logger.info("═══════════════════════════════════════════════════")
 
         return metrics
-
-    def _run_cross_dataset_validation(
-        self,
-        model: tf.keras.Model,
-        wustl_metrics: Dict[str, Any],
-        reshaper: DataReshaper,
-        output_dir: Path,
-    ) -> Optional[Dict[str, Any]]:
-        """Run CICIoMT2024 cross-dataset validation (optional).
-
-        Args:
-            model: Trained classification model.
-            wustl_metrics: WUSTL test set metrics for comparison.
-            reshaper: DataReshaper (same timesteps/stride as training).
-            output_dir: Output directory for artifacts.
-
-        Returns:
-            CICIoMT2024 metrics dict, or None if skipped.
-        """
-        if not self._cross_loader.is_available():
-            logger.info("  Cross-dataset: CICIoMT2024 CSV not found — SKIPPED")
-            return None
-
-        logger.info("── Cross-Dataset Validation: CICIoMT2024 ──")
-
-        from .cross_dataset_report import (
-            build_comparison_report,
-            render_cross_dataset_report,
-        )
-
-        # 1. Load and prepare data
-        X_scaled, y, load_report = self._cross_loader.load_and_prepare()
-
-        if y is None:
-            logger.warning("  No labels in CICIoMT2024 — cannot evaluate")
-            return None
-
-        # 2. Reshape
-        X_windowed, y_windowed = reshaper.reshape(X_scaled, y)
-        logger.info("  CICIoMT2024 windowed: %s", X_windowed.shape)
-
-        # 3. Evaluate using existing ModelEvaluator
-        ciciomt_metrics = self._evaluator.evaluate(model, X_windowed, y_windowed)
-
-        # 4. Build comparison
-        comparison = build_comparison_report(wustl_metrics, ciciomt_metrics)
-
-        # 5. Log generalization gap
-        delta_acc = comparison["accuracy"]["delta_pct"]
-        delta_f1 = comparison["f1_score"]["delta_pct"]
-        logger.info(
-            "  Generalization gap: accuracy delta=%.1f%%, " "F1 delta=%.1f%%",
-            delta_acc,
-            delta_f1,
-        )
-
-        # 6. Export artifacts
-        cross_cfg = self._config.cross_dataset
-        self._exporter.export_metrics(
-            {
-                "pipeline": "cross_dataset_ciciomt2024",
-                "metrics": ciciomt_metrics,
-                "load_report": load_report,
-            },
-            cross_cfg.metrics_file,
-        )
-
-        cm = ciciomt_metrics["confusion_matrix"]
-        n = len(cm)
-        labels = ["Normal", "Attack"] if n == 2 else [str(i) for i in range(n)]
-        self._exporter.export_confusion_matrix(cm, labels, cross_cfg.confusion_matrix_file)
-        self._exporter.export_metrics(comparison, cross_cfg.comparison_report_file)
-
-        # 7. Generate report
-        report_md = render_cross_dataset_report(
-            wustl_metrics=wustl_metrics,
-            ciciomt_metrics=ciciomt_metrics,
-            load_report=load_report,
-            comparison=comparison,
-        )
-        report_dir = self._root / "results" / "phase0_analysis"
-        report_path = report_dir / "report_section_crossdataset.md"
-        report_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(report_path, "w") as f:
-            f.write(report_md)
-        logger.info("  Cross-dataset report saved: %s", report_path.name)
-
-        return ciciomt_metrics
 
     @staticmethod
     def _rebuild_detection_model(metadata: Dict[str, Any], weights_path: Path) -> tf.keras.Model:
@@ -401,17 +299,6 @@ def main() -> None:
         dropout_rate=config.head_dropout_rate,
     )
 
-    cross_loader: Optional[CICIoMTLoader] = None
-    if config.cross_dataset and config.cross_dataset.enabled:
-        cross_loader = CICIoMTLoader(
-            csv_path=PROJECT_ROOT / config.cross_dataset.csv_path,
-            column_mapping=config.cross_dataset.column_mapping,
-            label_column=config.cross_dataset.label_column,
-            label_mapping=config.cross_dataset.label_mapping,
-            scaler_path=PROJECT_ROOT / config.cross_dataset.scaler_path,
-            wustl_train_path=PROJECT_ROOT / config.phase1_train,
-        )
-
     pipeline = ClassificationPipeline(
         config=config,
         artifact_reader=reader,
@@ -427,7 +314,6 @@ def main() -> None:
         evaluator=ModelEvaluator(threshold=config.threshold),
         exporter=ClassificationExporter(PROJECT_ROOT / config.output_dir),
         project_root=PROJECT_ROOT,
-        cross_dataset_loader=cross_loader,
     )
     pipeline.run()
 
