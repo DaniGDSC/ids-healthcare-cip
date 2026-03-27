@@ -73,6 +73,11 @@ orchestration:
       timeout_seconds: 3600
       retries: 2
       retry_delay_seconds: 60
+    - name: phase2_5
+      command: "python -m src.phase2_5_fine_tuning.security_hardened_phase2_5"
+      timeout_seconds: 7200
+      retries: 1
+      retry_delay_seconds: 120
     - name: phase3
       command: "python src/phase3_autoencoder/run_phase3.py"
       timeout_seconds: 5400

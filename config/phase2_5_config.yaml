@@ -1,0 +1,131 @@
+# Phase 2.5: Hyperparameter Fine-Tuning & Ablation Study
+# Systematic search + component ablation for Phase 2 detection architecture
+#
+# Input:  Phase 1 parquets (29 features, RobustScaler-normalised)
+#         Phase 2 detection model architecture (CNN-BiLSTM-Attention)
+# Output: Best hyperparameters, ablation comparison, tuning metadata
+
+data:
+  phase1_train: "data/processed/train_phase1.parquet"
+  phase1_test: "data/processed/test_phase1.parquet"
+  phase2_config: "config/phase2_config.yaml"
+  label_column: "Label"
+
+# ── Hyperparameter Search ─────────────────────────────────────────
+search:
+  strategy: "bayesian"      # "grid", "random", or "bayesian" (Optuna TPE)
+  max_trials: 30            # Max configurations to evaluate
+  metric: "f1_score"        # Optimisation target: f1_score | auc_roc | accuracy
+  direction: "maximize"     # maximize | minimize
+
+  # Hyperband pruning (bayesian only) — early-kills bad trials
+  pruning:
+    enabled: true
+    min_resource: 1         # Minimum epochs before pruning decision
+    reduction_factor: 3     # Successive halving factor
+
+  space:
+    # Categorical parameters (discrete choices)
+    cnn_filters_1: [32, 64, 128]
+    cnn_filters_2: [64, 128, 256]
+    cnn_kernel_size: [3, 5]
+    bilstm_units_1: [64, 128, 256]
+    bilstm_units_2: [32, 64, 128]
+    attention_units: [64, 128, 256]
+    timesteps: [10, 20, 30]
+    batch_size: [128, 256, 512]
+
+    # Continuous parameters (log-scale sampling)
+    dropout_rate:
+      low: 0.05
+      high: 0.5
+      log: false
+    learning_rate:
+      low: 0.00005
+      high: 0.005
+      log: true             # Log-uniform: better coverage of orders of magnitude
+
+    # Phase 3 unfreezing schedule (joint optimisation)
+    phase_a_lr:
+      low: 0.0005
+      high: 0.005
+      log: true
+    phase_b_lr:
+      low: 0.00005
+      high: 0.001
+      log: true
+    phase_c_lr:
+      low: 0.000005
+      high: 0.0001
+      log: true
+    unfreezing_epochs: [3, 5, 8]
+
+# ── Quick-Train Settings (reduced epochs for search) ─────────────
+quick_train:
+  epochs: 3                 # Reduced from 5 per phase for faster search
+  validation_split: 0.2
+  early_stopping_patience: 2
+  classification_head:
+    dense_units: 64
+    dense_activation: "relu"
+    dropout_rate: 0.3
+
+# ── Multi-Seed Validation ────────────────────────────────────────
+# Retrain top-K configs with multiple seeds for confidence intervals
+multi_seed:
+  enabled: true
+  top_k: 3                  # Number of top configs to validate
+  seeds: [42, 123, 456, 789, 1024]
+  full_epochs: 10           # Full training epochs (more than quick_train)
+
+# ── Ablation Study ────────────────────────────────────────────────
+ablation:
+  baseline: "full"          # Full CNN-BiLSTM-Attention as reference
+  variants:
+    - name: "no_attention"
+      description: "Replace Bahdanau attention with GlobalAveragePooling1D"
+      remove: "attention"
+
+    - name: "no_bilstm2"
+      description: "Remove second BiLSTM layer (single BiLSTM-128)"
+      remove: "bilstm2"
+
+    - name: "no_cnn2"
+      description: "Remove second CNN layer (single Conv1D-64)"
+      remove: "cnn2"
+
+    - name: "unidirectional_lstm"
+      description: "Replace BiLSTM with unidirectional LSTM"
+      replace: "bilstm_to_lstm"
+
+    - name: "timesteps_10"
+      description: "Reduce window size from 20 to 10 timesteps"
+      override:
+        timesteps: 10
+
+    - name: "timesteps_30"
+      description: "Increase window size from 20 to 30 timesteps"
+      override:
+        timesteps: 30
+
+    - name: "low_dropout"
+      description: "Reduce dropout from 0.3 to 0.1"
+      override:
+        dropout_rate: 0.1
+
+    - name: "high_dropout"
+      description: "Increase dropout from 0.3 to 0.5"
+      override:
+        dropout_rate: 0.5
+
+# ── Output ────────────────────────────────────────────────────────
+output:
+  output_dir: "data/phase2_5"
+  tuning_results_file: "tuning_results.json"
+  ablation_results_file: "ablation_results.json"
+  best_config_file: "best_config.json"
+  importance_file: "param_importance.json"
+  multi_seed_file: "multi_seed_validation.json"
+  report_file: "tuning_report.json"
+
+random_state: 42
