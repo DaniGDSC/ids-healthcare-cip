@@ -15,7 +15,7 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import streamlit as st
 
@@ -39,7 +39,7 @@ GROUND_TRUTH_PATH = PROJECT_ROOT / "project_ground_truth.json"
 # ── Role Definitions ────────────────────────────────────────────────────
 ROLES: Dict[str, list] = {
     "IT Security Analyst": [
-        "operational", "alerts", "stakeholder", "shap", "evaluation",
+        "operational", "stakeholder", "alerts", "shap", "evaluation",
         "model", "risk", "devices", "crossval", "compliance",
     ],
     "Clinical IT Administrator": [
@@ -84,32 +84,6 @@ def load_ground_truth() -> Dict[str, Any]:
     except (FileNotFoundError, json.JSONDecodeError) as exc:
         logger.error("Failed to load ground truth: %s", exc)
         return {}
-
-
-def render_or_unavailable(
-    status: Optional[str],
-    render_fn: Any,
-    *args: Any,
-    **kwargs: Any,
-) -> Any:
-    """Conditionally render a panel or show unavailable message.
-
-    Args:
-        status: Artifact status string.
-        render_fn: Function to call if available.
-        *args: Positional args for render_fn.
-        **kwargs: Keyword args for render_fn.
-
-    Returns:
-        Result of render_fn or None.
-    """
-    if status in ("VERIFIED", "PRESENT_UNVERIFIED"):
-        if status == "PRESENT_UNVERIFIED":
-            st.warning("Artifact present but hash unverified")
-        return render_fn(*args, **kwargs)
-    else:
-        st.info("NOT AVAILABLE — artifact not found in project directory")
-        return None
 
 
 # ── Session State Initialization ─────────────────────────────────────────
@@ -179,14 +153,16 @@ with st.sidebar:
 
     # System info from ground truth
     arch = gt.get("model_architecture", {})
-    params = arch.get("total_params", 482817)
+    params = arch.get("total_params", 0)
     perf = gt.get("performance", {})
-    threshold = perf.get("optimal_threshold", 0.608)
+    threshold = perf.get("optimal_threshold", 0)
 
-    st.markdown(f"**Model:** CNN-BiLSTM-Attention v2")
-    st.markdown(f"**Dataset:** WUSTL-EHMS-2020")
-    st.markdown(f"**Params:** {params:,}")
-    st.markdown(f"**Threshold:** {threshold:.3f} (Youden's J)")
+    st.markdown("**Model:** CNN-BiLSTM-Attention")
+    st.markdown("**Dataset:** WUSTL-EHMS-2020")
+    if params:
+        st.markdown(f"**Params:** {params:,}")
+    if threshold:
+        st.markdown(f"**Threshold:** {threshold:.3f}")
 
     # Artifact status
     inv = gt.get("artifact_inventory", {})

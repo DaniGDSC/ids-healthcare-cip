@@ -1,7 +1,8 @@
 """Panel 3 — SHAP Explanation Panel (Analyst View — On-Demand).
 
 Three-tab structure: Waterfall chart, Global feature importance,
-and Temporal anomaly timeline.
+and Temporal anomaly timeline. Supports both Phase 5 SHAP data
+and Phase 4 conditional explainer (gradient + attention) data.
 """
 
 from __future__ import annotations
@@ -12,46 +13,34 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.streaming.feature_aligner import BIOMETRIC_FEATURES
-
-SHAP_TIMEOUT_SECONDS: float = 30.0
+_BIOMETRIC = {"Temp", "SpO2", "Pulse_Rate", "SYS", "DIA", "Heart_rate", "Resp_Rate", "ST"}
 
 
 def _feature_color(feature_name: str) -> str:
-    """Return color based on feature category.
+    """Orange for biometric, blue for network."""
+    return "#e67e22" if feature_name in _BIOMETRIC else "#3498db"
 
-    Args:
-        feature_name: Name of the feature.
 
-    Returns:
-        Color hex — orange for biometric, blue for network.
+def render_waterfall(alert: Dict[str, Any]) -> None:
+    """Render feature importance waterfall for a single alert.
+
+    Supports both Phase 5 SHAP format (shap_value key) and
+    Phase 4 conditional explainer format (importance key).
     """
-    if feature_name in BIOMETRIC_FEATURES:
-        return "#e67e22"  # orange — biometric
-    return "#3498db"      # blue — network
+    explanation = alert.get("explanation") or {}
+    top_features = explanation.get("top_features", [])
 
-
-def render_waterfall(
-    alert: Dict[str, Any],
-    feature_names: Optional[List[str]] = None,
-) -> None:
-    """Render SHAP waterfall chart for a single alert.
-
-    Args:
-        alert: Alert with top_features containing SHAP values.
-        feature_names: Feature names list.
-    """
-    top_features = alert.get("top_features", [])
+    # Fallback to legacy SHAP format (top_features directly on alert)
     if not top_features:
-        st.info("No SHAP attribution data for this alert")
+        top_features = alert.get("top_features", [])
+
+    if not top_features:
+        st.info("No feature attribution data for this alert")
         return
 
     names = [f.get("feature", f"f{i}") for i, f in enumerate(top_features)]
-    values = [f.get("shap_value", 0) for f in top_features]
-    colors = [
-        "#e74c3c" if v > 0 else "#3498db"
-        for v in values
-    ]
+    values = [float(f.get("importance", f.get("shap_value", 0)) or 0) for f in top_features]
+    colors = ["#e74c3c" if v > 0 else "#3498db" for v in values]
 
     fig = go.Figure(go.Bar(
         x=values,
@@ -63,9 +52,9 @@ def render_waterfall(
     ))
 
     fig.update_layout(
-        title=f"SHAP Attribution — Alert #{alert.get('sample_index', '?')} "
+        title=f"Feature Attribution — Alert #{alert.get('sample_index', '?')} "
               f"({alert.get('risk_level', '')})",
-        xaxis_title="SHAP Value (impact on prediction)",
+        xaxis_title="Feature Importance",
         height=max(300, len(names) * 30 + 100),
         margin=dict(l=120, r=60, t=50, b=40),
         paper_bgcolor="rgba(0,0,0,0)",
@@ -76,22 +65,17 @@ def render_waterfall(
 
     st.plotly_chart(fig, use_container_width=True)
 
-    st.caption(
-        "Red bars increase attack probability. "
-        "Blue bars decrease attack probability. "
-        "SHAP computed on WUSTL-trained model. "
-        "Biometric features imputed from Normal medians."
-    )
+    exp_level = explanation.get("level", "")
+    if exp_level == "attention_and_shap":
+        st.caption("Source: Gradient-based attribution (conditional explainer)")
+    elif exp_level == "attention_only":
+        st.caption("Source: Attention weights (lightweight explainer)")
+    elif explanation:
+        st.caption("Source: SHAP GradientExplainer")
 
 
-def render_global_importance(
-    gt: Dict[str, Any],
-) -> None:
-    """Render global feature importance bar chart.
-
-    Args:
-        gt: Ground truth data with explanation section.
-    """
+def render_global_importance(gt: Dict[str, Any]) -> None:
+    """Render global feature importance bar chart from Phase 5."""
     explanation = gt.get("explanation", {})
     top_10 = explanation.get("top_10_features", [])
 
@@ -99,8 +83,8 @@ def render_global_importance(
         st.info("SHAP feature importance data not available")
         return
 
-    names = [f["feature_name"] for f in reversed(top_10)]
-    values = [f["mean_abs_shap"] for f in reversed(top_10)]
+    names = [f.get("feature_name", f"f{i}") for i, f in enumerate(reversed(top_10))]
+    values = [float(f.get("mean_abs_shap", 0)) for f in reversed(top_10)]
     colors = [_feature_color(n) for n in names]
 
     fig = go.Figure(go.Bar(
@@ -124,7 +108,6 @@ def render_global_importance(
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # Legend
     st.markdown(
         '<span style="color:#3498db;">&#9632;</span> Network features &nbsp; '
         '<span style="color:#e67e22;">&#9632;</span> Biometric features',
@@ -134,67 +117,61 @@ def render_global_importance(
     samples = explanation.get("shap_samples_computed",
                               explanation.get("total_explained", "N/A"))
     time_s = explanation.get("computation_time_s", "N/A")
-    st.caption(
-        f"Samples explained: {samples} | "
-        f"Computation time: {time_s}s | "
-        f"Source: SHAP GradientExplainer on classification_model_v2.weights.h5"
-    )
+    st.caption(f"Samples explained: {samples} | Computation time: {time_s}s")
 
 
 def render_temporal_timeline(
     alert: Dict[str, Any],
     baseline_threshold: float = 0.204,
 ) -> None:
-    """Render temporal anomaly timeline for a single alert.
+    """Render temporal attention weight timeline for a single alert.
 
-    Args:
-        alert: Alert with anomaly score data.
-        baseline_threshold: MAD baseline threshold for reference line.
+    Uses real attention weights from conditional explainer when available,
+    falls back to anomaly score visualization.
     """
-    score = alert.get("anomaly_score", 0)
+    explanation = alert.get("explanation") or {}
+    raw_weights = explanation.get("timestep_importance", [])
 
-    # Generate a simulated timeline for the 20 timesteps
-    # In production, this would come from per-timestep SHAP
-    timesteps = list(range(20))
-    # Use score with slight variation for visualization
-    rng = np.random.RandomState(alert.get("sample_index", 0))
-    noise = rng.normal(0, score * 0.1, 20)
-    scores = [max(0, score * 0.3 + (score * 0.7 * t / 19) + n)
-              for t, n in zip(timesteps, noise)]
+    # Sanitise: convert to floats, replace None with 0
+    timestep_weights = [float(w) if w is not None else 0.0 for w in raw_weights]
+
+    if timestep_weights:
+        n_steps = len(timestep_weights)
+        timesteps = list(range(n_steps))
+        scores = timestep_weights
+        y_title = "Attention Weight"
+        title_suffix = "(attention weights)"
+    else:
+        score = float(alert.get("anomaly_score", 0) or 0)
+        n_steps = 20
+        timesteps = list(range(n_steps))
+        scores = [score] * n_steps
+        y_title = "Anomaly Score"
+        title_suffix = "(no per-timestep data)"
 
     fig = go.Figure()
 
-    # Normal operating range (shaded)
     fig.add_trace(go.Scatter(
-        x=timesteps, y=[baseline_threshold] * 20,
-        fill="tozeroy",
-        fillcolor="rgba(46, 204, 113, 0.1)",
-        line=dict(width=0),
-        name="Normal range",
-        showlegend=True,
-    ))
-
-    # Anomaly score line
-    fig.add_trace(go.Scatter(
-        x=timesteps, y=scores,
+        x=timesteps,
+        y=scores,
         mode="lines+markers",
         line=dict(color="#3498db", width=2),
         marker=dict(size=5),
-        name="Anomaly score",
+        name=y_title,
     ))
 
-    # MAD threshold line
-    fig.add_hline(
-        y=baseline_threshold,
-        line_dash="dash",
-        line_color="#e74c3c",
-        annotation_text=f"MAD Threshold ({baseline_threshold:.3f})",
-    )
+    if not timestep_weights:
+        fig.add_hline(
+            y=baseline_threshold,
+            line_dash="dash",
+            line_color="#e74c3c",
+            annotation_text=f"MAD Threshold ({baseline_threshold:.3f})",
+        )
 
     fig.update_layout(
-        title=f"Temporal Anomaly Timeline — Alert #{alert.get('sample_index', '?')}",
-        xaxis_title="Timestep (0-19)",
-        yaxis_title="Anomaly Score",
+        title=f"Temporal Timeline — Alert #{alert.get('sample_index', '?')} {title_suffix}",
+        xaxis_title="Timestep",
+        yaxis_title=y_title,
         height=350,
         margin=dict(t=50, b=40),
         paper_bgcolor="rgba(0,0,0,0)",
@@ -204,26 +181,43 @@ def render_temporal_timeline(
 
     st.plotly_chart(fig, use_container_width=True)
 
+    if timestep_weights:
+        peak = int(np.argmax(timestep_weights))
+        st.caption(f"Peak attention at timestep {peak} (weight={timestep_weights[peak]:.4f})")
+
+
+def _load_alerts() -> List[Dict[str, Any]]:
+    """Load alerts from Phase 4 risk report or Phase 5 explanation report."""
+    from dashboard.utils.loader import load_risk_report, load_explanation_report
+
+    risk_report = load_risk_report()
+    if risk_report:
+        assessments = risk_report.get("sample_assessments", risk_report.get("risk_results", []))
+        alerts = [a for a in assessments if a.get("risk_level", "NORMAL") != "NORMAL"]
+        if alerts:
+            return alerts
+
+    report = load_explanation_report()
+    if report and "explanations" in report:
+        return report["explanations"]
+
+    return []
+
 
 def render(
     gt: Dict[str, Any],
     selected_alert_idx: Optional[int] = None,
 ) -> None:
-    """Render the full SHAP Explanation panel.
-
-    Args:
-        gt: Ground truth data.
-        selected_alert_idx: Index of alert to explain (from alert feed).
-    """
+    """Render the full SHAP Explanation panel."""
     st.header("SHAP Explanations")
 
-    explanation = gt.get("explanation", {})
-    if explanation.get("status") not in ("VERIFIED", "PRESENT_UNVERIFIED"):
-        st.info("SHAP explanation data not available — artifact not found")
-        return
+    alerts = _load_alerts()
+
+    # Shared alert selector (persists across tabs)
+    default_idx = selected_alert_idx if selected_alert_idx is not None else 0
 
     tab1, tab2, tab3 = st.tabs([
-        "Waterfall (Per-Alert)",
+        "Feature Attribution",
         "Global Importance",
         "Temporal Timeline",
     ])
@@ -231,35 +225,26 @@ def render(
     with tab2:
         render_global_importance(gt)
 
-    # Load alerts for waterfall/timeline
-    from dashboard.utils.loader import load_explanation_report
-    report = load_explanation_report()
-    alerts = report.get("explanations", []) if report else []
+    if not alerts:
+        with tab1:
+            st.info("No alerts available for feature attribution analysis")
+        with tab3:
+            st.info("No temporal data available")
+        return
+
+    options = [
+        f"#{a.get('sample_index', i)} — {a.get('risk_level', '?')}"
+        for i, a in enumerate(alerts)
+    ]
+    safe_default = min(default_idx, len(options) - 1)
+    selected = st.selectbox("Select alert", options, index=safe_default)
+    idx = options.index(selected)
 
     with tab1:
-        if not alerts:
-            st.info("No alerts available for SHAP waterfall analysis")
-        else:
-            # Alert selector
-            options = [
-                f"#{a.get('sample_index', i)} — {a.get('risk_level', '?')}"
-                for i, a in enumerate(alerts)
-            ]
-            default = min(selected_alert_idx or 0, len(options) - 1)
-            selected = st.selectbox(
-                "Select alert to explain", options, index=default,
-            )
-            idx = options.index(selected)
-            render_waterfall(alerts[idx])
+        render_waterfall(alerts[idx])
 
     with tab3:
-        if not alerts:
-            st.info("No temporal data available")
-        else:
-            baseline_thresh = gt.get("risk_adaptive", {}).get(
-                "baseline_threshold", 0.204,
-            )
-            # Use same selector
-            if alerts:
-                idx = min(selected_alert_idx or 0, len(alerts) - 1)
-                render_temporal_timeline(alerts[idx], baseline_thresh)
+        baseline_thresh = gt.get("risk_adaptive", {}).get(
+            "baseline_threshold", 0.204,
+        )
+        render_temporal_timeline(alerts[idx], baseline_thresh)

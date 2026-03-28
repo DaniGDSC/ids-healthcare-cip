@@ -24,24 +24,33 @@ MODELS_DIR: Path = PROJECT_ROOT / "models"
 
 # Artifact paths
 PATHS = {
-    "risk_report": DATA_DIR / "phase4" / "risk_report.json",
-    "baseline_config": DATA_DIR / "phase4" / "baseline_config.json",
-    "explanation_report": DATA_DIR / "phase5" / "explanation_report.json",
-    "shap_values": DATA_DIR / "phase5" / "shap_values.parquet",
-    "monitoring_log": DATA_DIR / "phase7" / "monitoring_log.json",
-    "metrics_v1": DATA_DIR / "phase3" / "metrics_report.json",
-    "metrics_v2": DATA_DIR / "phase3" / "metrics_wustl_v2.json",
-    "threshold_analysis": DATA_DIR / "phase3" / "threshold_analysis.json",
-    "ablation_results": DATA_DIR / "phase3" / "ablation_results_v2.json",
-    "best_hyperparams": DATA_DIR / "phase3" / "best_hyperparams_v2.json",
-    "diagnosis": DATA_DIR / "phase3" / "diagnosis_after.json",
+    # Phase 1
     "preprocessing": DATA_DIR / "processed" / "preprocessing_report.json",
-    "detection_metadata": DATA_DIR / "phase2" / "detection_metadata.json",
     "train_parquet": DATA_DIR / "processed" / "train_phase1.parquet",
     "test_parquet": DATA_DIR / "processed" / "test_phase1.parquet",
     "scaler": MODELS_DIR / "scalers" / "robust_scaler.pkl",
+    # Phase 2
+    "detection_metadata": DATA_DIR / "phase2" / "detection_metadata.json",
     "detection_weights": DATA_DIR / "phase2" / "detection_model.weights.h5",
-    "classification_weights": DATA_DIR / "phase3" / "classification_model_v2.weights.h5",
+    # Phase 2.5
+    "finetuned_results": DATA_DIR / "phase2_5" / "finetuned_results.json",
+    "best_config": DATA_DIR / "phase2_5" / "best_config.json",
+    "ablation_results": DATA_DIR / "phase2_5" / "ablation_results.json",
+    "tuning_results": DATA_DIR / "phase2_5" / "tuning_results.json",
+    "finetuned_weights": DATA_DIR / "phase2_5" / "finetuned_model.weights.h5",
+    # Phase 3
+    "metrics_v1": DATA_DIR / "phase3" / "metrics_report.json",
+    "metrics_v2": DATA_DIR / "phase3" / "metrics_wustl_v2.json",
+    "threshold_analysis": DATA_DIR / "phase3" / "threshold_analysis.json",
+    "diagnosis": DATA_DIR / "phase3" / "diagnosis_after.json",
+    # Phase 4
+    "risk_report": DATA_DIR / "phase4" / "risk_report.json",
+    "baseline_config": DATA_DIR / "phase4" / "baseline_config.json",
+    # Phase 5
+    "explanation_report": DATA_DIR / "phase5" / "explanation_report.json",
+    "shap_values": DATA_DIR / "phase5" / "shap_values.parquet",
+    # Phase 6/7 (optional)
+    "monitoring_log": DATA_DIR / "phase7" / "monitoring_log.json",
     "notification_log": DATA_DIR / "phase6" / "notification_log.json",
     "delivery_report": DATA_DIR / "phase6" / "delivery_report.json",
 }
@@ -77,7 +86,7 @@ def load_explanation_report() -> Optional[Dict[str, Any]]:
 
 @st.cache_data(ttl=60)
 def load_shap_values() -> Optional[np.ndarray]:
-    """Load SHAP values parquet as numpy array (N, 20, 29)."""
+    """Load SHAP values parquet as numpy array (N, timesteps, features)."""
     path = PATHS["shap_values"]
     try:
         df = pd.read_parquet(path)
@@ -113,8 +122,20 @@ def load_threshold_analysis() -> Optional[Dict[str, Any]]:
 
 
 @st.cache_data(ttl=300)
+def load_finetuned_results() -> Optional[Dict[str, Any]]:
+    """Load Phase 2.5 finetuned training results."""
+    return _load_json(PATHS["finetuned_results"])
+
+
+@st.cache_data(ttl=300)
+def load_best_config() -> Optional[Dict[str, Any]]:
+    """Load Phase 2.5 best hyperparameter config."""
+    return _load_json(PATHS["best_config"])
+
+
+@st.cache_data(ttl=300)
 def load_ablation_results() -> Optional[Dict[str, Any]]:
-    """Load ablation study results."""
+    """Load Phase 2.5 ablation study results."""
     return _load_json(PATHS["ablation_results"])
 
 
@@ -138,22 +159,23 @@ def load_detection_metadata() -> Optional[Dict[str, Any]]:
 
 @st.cache_data(ttl=300)
 def load_best_hyperparams() -> Optional[Dict[str, Any]]:
-    """Load best hyperparameters from Bayesian tuning."""
-    return _load_json(PATHS["best_hyperparams"])
+    """Load best hyperparameters from Phase 2.5 Bayesian tuning."""
+    return _load_json(PATHS["best_config"])
 
 
 @st.cache_data(ttl=300)
 def load_feature_names() -> List[str]:
-    """Load the 29 feature names from preprocessing report."""
+    """Load feature names from preprocessing report (24 after variance filtering)."""
     report = load_preprocessing_report()
     if report and "output" in report:
         return report["output"]["feature_names"]
     return [
-        "SrcBytes", "DstBytes", "SrcLoad", "DstLoad", "SrcGap", "DstGap",
-        "SIntPkt", "DIntPkt", "SIntPktAct", "DIntPktAct", "sMaxPktSz",
-        "dMaxPktSz", "sMinPktSz", "dMinPktSz", "Dur", "Trans", "TotBytes",
-        "Load", "pSrcLoss", "pDstLoss", "Packet_num", "Temp", "SpO2",
-        "Pulse_Rate", "SYS", "DIA", "Heart_rate", "Resp_Rate", "ST",
+        "SrcBytes", "DstBytes", "SrcLoad", "DstLoad",
+        "SIntPkt", "DIntPkt", "SIntPktAct",
+        "sMaxPktSz", "dMaxPktSz", "sMinPktSz",
+        "Dur", "TotBytes", "Load", "pSrcLoss", "pDstLoss", "Packet_num",
+        "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA", "Heart_rate",
+        "Resp_Rate", "ST",
     ]
 
 

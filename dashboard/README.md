@@ -18,7 +18,7 @@ python extract_project_reality.py
 streamlit run dashboard/app.py
 ```
 
-The dashboard opens at http://localhost:8501.
+The dashboard opens at <http://localhost:8501>.
 
 ## Roles
 
@@ -88,7 +88,7 @@ demonstration. Controls are in the sidebar:
 
 The dashboard reads pre-computed artifacts from the RA-X-IoMT pipeline:
 
-```
+```text
 project_ground_truth.json              -- Consolidated system state
 
 data/processed/train_phase1.parquet    -- Phase 1 processed data (24 features)
@@ -122,7 +122,7 @@ from current artifacts.
 
 ## Architecture
 
-```
+```text
 dashboard/
   app.py                    -- Main Streamlit app (role-based routing)
   assets/
@@ -149,8 +149,6 @@ dashboard/
   utils/
     loader.py               -- Cached data loaders
     metrics.py              -- Metric formatting + risk colors
-    predictor.py            -- Model inference wrapper
-    hipaa.py                -- HIPAA-compliant data handling
 ```
 
 ## Tech Stack

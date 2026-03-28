@@ -6,8 +6,7 @@ and compliance rate calculation for dashboard panels.
 
 from __future__ import annotations
 
-import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 
@@ -76,6 +75,44 @@ def risk_color(level: str) -> str:
     return colors.get(level, "#95a5a6")
 
 
+def severity_color(severity: int) -> str:
+    """Return color hex for a clinical severity level (1–5).
+
+    Args:
+        severity: Clinical severity integer.
+
+    Returns:
+        Color hex string.
+    """
+    colors = {
+        1: "#2ecc71",  # ROUTINE — green
+        2: "#3498db",  # ADVISORY — blue
+        3: "#f39c12",  # URGENT — amber
+        4: "#e67e22",  # EMERGENT — orange
+        5: "#e74c3c",  # CRITICAL — red
+    }
+    return colors.get(severity, "#95a5a6")
+
+
+def severity_label(severity: int) -> str:
+    """Return display label for a clinical severity level.
+
+    Args:
+        severity: Clinical severity integer.
+
+    Returns:
+        Human-readable severity label.
+    """
+    labels = {
+        1: "ROUTINE",
+        2: "ADVISORY",
+        3: "URGENT",
+        4: "EMERGENT",
+        5: "CRITICAL",
+    }
+    return labels.get(severity, "UNKNOWN")
+
+
 def compute_engine_health(
     monitoring_log: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
@@ -138,22 +175,3 @@ def compute_engine_health(
     return results
 
 
-def timed_inference(
-    predict_fn: Callable[..., Any],
-    *args: Any,
-    **kwargs: Any,
-) -> Tuple[Any, float]:
-    """Time a prediction function call.
-
-    Args:
-        predict_fn: Function to time.
-        *args: Positional arguments for predict_fn.
-        **kwargs: Keyword arguments for predict_fn.
-
-    Returns:
-        Tuple of (result, elapsed_ms).
-    """
-    start = time.perf_counter()
-    result = predict_fn(*args, **kwargs)
-    elapsed = (time.perf_counter() - start) * 1000
-    return result, elapsed

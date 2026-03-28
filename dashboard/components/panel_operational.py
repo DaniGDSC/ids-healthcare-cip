@@ -173,6 +173,35 @@ def render_system_state_banner(state: str) -> None:
     )
 
 
+def _render_safety_summary() -> None:
+    """Render patient safety and alert fatigue summary from Phase 4 risk report."""
+    from dashboard.utils.loader import load_risk_report
+    report = load_risk_report()
+    if not report:
+        return
+
+    assessments = report.get("sample_assessments", report.get("risk_results", []))
+    if not assessments:
+        return
+
+    n_safety = sum(1 for a in assessments if a.get("patient_safety_flag", False))
+    n_novel = sum(1 for a in assessments if a.get("attention_flag", False))
+    n_emitted = sum(1 for a in assessments if a.get("alert_emit", True))
+    n_suppressed = sum(1 for a in assessments if not a.get("alert_emit", True))
+    n_total = len(assessments)
+
+    st.markdown("##### Safety & Alert Status")
+
+    c1, c2, c3 = st.columns(3)
+    if n_safety > 0:
+        c1.metric("Patient Safety Flags", n_safety, delta="ACTIVE", delta_color="inverse")
+    else:
+        c1.metric("Patient Safety Flags", 0)
+    c2.metric("Novel Threats", n_novel)
+    c3.metric("Alert Suppression", f"{n_suppressed}/{n_total}",
+              help=f"{n_emitted} emitted, {n_suppressed} suppressed by fatigue mitigation")
+
+
 def render(
     gt: Dict[str, Any],
     buffer_status: Optional[Dict[str, Any]] = None,
@@ -185,13 +214,21 @@ def render(
     """
     st.header("Operational Status")
 
+    # Determine if streaming is active (buffer has received flows)
+    is_streaming = (
+        buffer_status is not None
+        and buffer_status.get("flow_count", 0) > 0
+    )
+
     # System state banner
-    if buffer_status:
+    if is_streaming and buffer_status is not None:
         state = buffer_status.get("state", SystemState.INITIALIZING.value)
-        flow_count = buffer_status.get("flow_count", 0)
         render_system_state_banner(state)
     else:
         render_system_state_banner(SystemState.OPERATIONAL.value)
+
+    # Patient safety summary (always visible at top)
+    _render_safety_summary()
 
     col_left, col_right = st.columns([1, 1])
 
@@ -199,15 +236,34 @@ def render(
         # Engine health matrix
         monitoring = gt.get("monitoring", {})
         if monitoring.get("status") in ("VERIFIED", "PRESENT_UNVERIFIED"):
-            # Load monitoring log directly for detailed engine data
             from dashboard.utils.loader import load_monitoring_log
             log = load_monitoring_log()
             render_engine_health_matrix(log)
         else:
-            st.info("Monitoring data not available — artifact not found")
+            # Fallback: show pipeline phases as static health
+            st.markdown("##### Pipeline Status")
+            phases = [
+                ("Phase 1 — Preprocessing", gt.get("preprocessing", {}).get("status", "UNKNOWN")),
+                ("Phase 2 — Detection", gt.get("detection", {}).get("status", "UNKNOWN")),
+                ("Phase 2.5 — Fine-tuning", "VERIFIED" if gt.get("performance", {}).get("status") else "UNKNOWN"),
+                ("Phase 4 — Risk Engine", gt.get("risk_adaptive", {}).get("status", "UNKNOWN")),
+                ("Phase 5 — Explainability", gt.get("explanation", {}).get("status", "UNKNOWN")),
+            ]
+            for name, status in phases:
+                color = state_color("UP" if status in ("VERIFIED", "PRESENT_UNVERIFIED") else "UNKNOWN")
+                label = "UP" if status in ("VERIFIED", "PRESENT_UNVERIFIED") else "N/A"
+                st.markdown(
+                    f'<div style="display:flex; align-items:center; gap:12px; '
+                    f'padding:6px 10px; border-left:3px solid {color}; '
+                    f'margin-bottom:4px; background:{color}11; border-radius:4px;">'
+                    f'<span style="color:{color}; font-weight:700; width:50px;">{label}</span>'
+                    f'<span style="flex:1; font-size:0.9em;">{name}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
-        # Startup indicator (only in streaming mode)
-        if buffer_status:
+        # Startup indicator (only during active streaming calibration)
+        if is_streaming and buffer_status is not None:
             state = buffer_status.get("state", "")
             if state in (SystemState.INITIALIZING.value,
                          SystemState.CALIBRATING.value):
@@ -220,12 +276,16 @@ def render(
         # Threat posture gauge
         risk = gt.get("risk_adaptive", {})
         if risk.get("status") in ("VERIFIED", "PRESENT_UNVERIFIED"):
-            if buffer_status:
+            if is_streaming and buffer_status is not None:
                 counts = buffer_status.get("risk_counts", {})
             else:
                 dist = risk.get("risk_distribution", {})
-                counts = {k: v.get("count", v) if isinstance(v, dict) else v
-                          for k, v in dist.items()}
+                counts = {}
+                for k, v in dist.items():
+                    if isinstance(v, dict):
+                        counts[k] = v.get("count", 0)
+                    elif isinstance(v, (int, float)):
+                        counts[k] = int(v)
             render_threat_posture_gauge(counts)
         else:
-            st.info("Risk data not available — artifact not found")
+            st.info("Risk data not available — run Phase 4 pipeline")

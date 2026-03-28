@@ -36,15 +36,6 @@ def _get_assessments(report: Dict[str, Any]) -> List[Dict[str, Any]]:
     return report.get("sample_assessments", report.get("risk_results", []))
 
 
-def _severity_color(severity: int) -> str:
-    """Map clinical severity to display color."""
-    return {1: "green", 2: "blue", 3: "orange", 4: "red", 5: "red"}.get(severity, "gray")
-
-
-def _severity_icon(severity: int) -> str:
-    return {1: "ok", 2: "info", 3: "warn", 4: "alert", 5: "crit"}.get(severity, "?")
-
-
 # ═══════════════════════════════════════════════════════════════════
 # SOC Analyst View
 # ═══════════════════════════════════════════════════════════════════
