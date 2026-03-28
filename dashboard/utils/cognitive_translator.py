@@ -17,8 +17,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List
 
-from .base import BaseDetector
-from .risk_level import RiskLevel
+from src.phase4_risk_engine.phase4.base import BaseDetector
+from src.phase4_risk_engine.phase4.risk_level import RiskLevel
 
 logger = logging.getLogger(__name__)
 

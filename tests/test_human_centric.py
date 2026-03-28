@@ -102,13 +102,13 @@ class TestTrustCalibration:
 
     def test_explanation_absent_for_routine(self) -> None:
         """ROUTINE alerts should NOT have explanations (noise reduction)."""
-        from src.phase4_risk_engine.phase4.conditional_explainer import _EXPLANATION_POLICY, ExplainabilityLevel
+        from src.phase5_explanation_engine.phase5.conditional_explainer import _EXPLANATION_POLICY, ExplainabilityLevel
         assert _EXPLANATION_POLICY[1] == ExplainabilityLevel.NONE
         assert _EXPLANATION_POLICY[2] == ExplainabilityLevel.NONE
 
     def test_novel_threats_clearly_flagged(self) -> None:
         """Novel/zero-day threats must be visually distinct from known threats."""
-        from src.phase4_risk_engine.phase4.cognitive_translator import CognitiveTranslator
+        from dashboard.utils.cognitive_translator import CognitiveTranslator
 
         translator = CognitiveTranslator()
         novel = _make_alert(attention=True, attack="unknown")
@@ -218,7 +218,7 @@ class TestEffectiveness:
 
     def test_ciso_gets_reporting_timeline(self) -> None:
         """CISO view must include reporting deadlines for high-severity incidents."""
-        from src.phase4_risk_engine.phase4.cognitive_translator import CognitiveTranslator
+        from dashboard.utils.cognitive_translator import CognitiveTranslator
 
         translator = CognitiveTranslator()
         alert = _make_alert(severity=5, risk="CRITICAL", safety=True)
@@ -232,7 +232,7 @@ class TestEffectiveness:
 
     def test_safety_guidance_says_do_not_power_off(self) -> None:
         """Patient safety guidance must explicitly say not to power off device."""
-        from src.phase4_risk_engine.phase4.cognitive_translator import CognitiveTranslator
+        from dashboard.utils.cognitive_translator import CognitiveTranslator
 
         translator = CognitiveTranslator()
         alert = _make_alert(severity=5, safety=True, device_action="isolate_network")

@@ -25,14 +25,14 @@ import tensorflow as tf
 from src.phase2_detection_engine.phase2.reshaper import DataReshaper
 
 from .artifact_reader import Phase3ArtifactReader
-from .attention_anomaly import AttentionAnomalyDetector
+from src.phase2_detection_engine.phase2.attention_anomaly import AttentionAnomalyDetector
 from .baseline import BaselineComputer
 from .alert_fatigue import AlertFatigueManager
 from .cia_risk_modifier import CIARiskModifier
 from .cia_threat_mapper import CIAThreatMapper
 from .clinical_impact import ClinicalImpactAssessor, ClinicalSeverity
-from .cognitive_translator import CognitiveTranslator
-from .conditional_explainer import ConditionalExplainer
+from dashboard.utils.cognitive_translator import CognitiveTranslator
+from src.phase5_explanation_engine.phase5.conditional_explainer import ConditionalExplainer
 from .device_registry import DeviceRegistry
 from .config import Phase4Config
 from .cross_modal import CrossModalFusionDetector

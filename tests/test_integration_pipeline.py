@@ -317,7 +317,7 @@ class TestPhase4CognitiveTranslator:
     """Test cognitive translation for stakeholders."""
 
     def test_routine_gets_no_views(self) -> None:
-        from src.phase4_risk_engine.phase4.cognitive_translator import CognitiveTranslator
+        from dashboard.utils.cognitive_translator import CognitiveTranslator
 
         translator = CognitiveTranslator()
         results = [{"clinical_severity": 1, "risk_level": "NORMAL"}]
@@ -325,7 +325,7 @@ class TestPhase4CognitiveTranslator:
         assert results[0]["stakeholder_views"] is None
 
     def test_high_severity_gets_all_views(self) -> None:
-        from src.phase4_risk_engine.phase4.cognitive_translator import CognitiveTranslator
+        from dashboard.utils.cognitive_translator import CognitiveTranslator
 
         translator = CognitiveTranslator()
         results = [{
@@ -346,7 +346,7 @@ class TestPhase4CognitiveTranslator:
         assert "biomed_engineer" in views
 
     def test_clinician_view_has_plain_language(self) -> None:
-        from src.phase4_risk_engine.phase4.cognitive_translator import CognitiveTranslator
+        from dashboard.utils.cognitive_translator import CognitiveTranslator
 
         translator = CognitiveTranslator()
         results = [{
