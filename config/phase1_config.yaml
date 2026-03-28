@@ -54,6 +54,11 @@ correlation_removal:
   threshold: 0.95
   phase0_corr_file: "results/phase0_analysis/high_correlations.csv"
 
+# ── Step 4b: Variance Filtering ────────────────────────────────────────
+variance_filtering:
+  enabled: true
+  max_unique: 1               # drop features with ≤ 1 unique value (constant)
+
 # ── Step 5: Stratified Train/Test Split ─────────────────────────────────
 splitting:
   train_ratio: 0.70

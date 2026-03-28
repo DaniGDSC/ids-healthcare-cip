@@ -35,11 +35,18 @@ class TestDataReshaper:
         assert X_w.shape == (9, 10, 5)
         assert y_w.shape == (9,)
 
-    def test_label_is_last_sample(self, data) -> None:
+    def test_label_any_attack_default(self, data) -> None:
         X, y = data
         reshaper = DataReshaper(timesteps=10, stride=1)
         X_w, y_w = reshaper.reshape(X, y)
-        # Label of window i = label of sample i + timesteps - 1
+        # Default: label=1 if any sample in window is attack
+        for i in range(len(y_w)):
+            assert y_w[i] == y[i:i + 10].max()
+
+    def test_label_last_strategy(self, data) -> None:
+        X, y = data
+        reshaper = DataReshaper(timesteps=10, stride=1, label_strategy="last")
+        X_w, y_w = reshaper.reshape(X, y)
         for i in range(len(y_w)):
             assert y_w[i] == y[i + 10 - 1]
 
@@ -85,4 +92,4 @@ class TestDataReshaper:
     def test_get_config(self) -> None:
         reshaper = DataReshaper(timesteps=20, stride=2)
         cfg = reshaper.get_config()
-        assert cfg == {"timesteps": 20, "stride": 2}
+        assert cfg == {"timesteps": 20, "stride": 2, "label_strategy": "any_attack"}

@@ -19,6 +19,7 @@ import tensorflow as tf
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
+    fbeta_score,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -50,21 +51,29 @@ def _compute_class_weights(y: np.ndarray) -> Dict[int, float]:
 def _find_optimal_threshold(
     y_true: np.ndarray,
     y_prob: np.ndarray,
-    metric: str = "attack_f1",
+    metric: str = "attack_f2",
     n_thresholds: int = 50,
 ) -> Tuple[float, float]:
-    """Search for the threshold that maximises attack_f1."""
+    """Search for the threshold that maximises the given metric.
+
+    Supports attack_f1, attack_f2 (recall-weighted), and macro_f1.
+    Default is attack_f2 (F-beta with beta=2) which weighs recall 4x
+    more than precision — appropriate for healthcare IDS where missed
+    attacks are more costly than false alarms.
+    """
     thresholds = np.linspace(0.1, 0.9, n_thresholds)
     best_t, best_s = 0.5, 0.0
 
     for t in thresholds:
         y_pred = (y_prob > t).astype(int)
-        if metric == "attack_f1":
+        if metric == "attack_f2":
+            score = float(fbeta_score(y_true, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
+        elif metric == "attack_f1":
             score = float(f1_score(y_true, y_pred, pos_label=1, average="binary", zero_division=0))
         elif metric == "macro_f1":
             score = float(f1_score(y_true, y_pred, average="macro", zero_division=0))
         else:
-            score = float(f1_score(y_true, y_pred, pos_label=1, average="binary", zero_division=0))
+            score = float(fbeta_score(y_true, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
 
         if score > best_s:
             best_s = score
@@ -113,12 +122,17 @@ class QuickEvaluator:
         X_test: np.ndarray,
         y_test: np.ndarray,
     ) -> Dict[str, Any]:
-        """Two-stage evaluation: SMOTE head -> imbalanced fine-tune -> threshold.
+        """Two-stage evaluation on imbalanced data with class weighting.
+
+        Both stages train on original imbalanced data (no SMOTE) to avoid
+        synthetic distribution mismatch. Class weight compensates for
+        imbalance. X_train_smote/y_train_smote are accepted for API
+        compatibility but unused.
 
         Args:
             hp: Dict with head_lr, finetune_lr, cw_attack, head_epochs, ft_epochs.
-            X_train_smote: SMOTE-balanced training features.
-            y_train_smote: SMOTE-balanced labels.
+            X_train_smote: Unused (kept for API compatibility).
+            y_train_smote: Unused (kept for API compatibility).
             X_train_orig: Original imbalanced training features.
             y_train_orig: Original imbalanced labels.
             X_test: Imbalanced test features.
@@ -133,13 +147,13 @@ class QuickEvaluator:
 
         ts = self._arch["timesteps"]
         reshaper = DataReshaper(timesteps=ts, stride=1)
-        Xs_w, ys_w = reshaper.reshape(X_train_smote, y_train_smote)
         Xo_w, yo_w = reshaper.reshape(X_train_orig, y_train_orig)
         Xt_w, yt_w = reshaper.reshape(X_test, y_test)
 
         model = self._build_and_load_model()
+        cw = {0: 1.0, 1: hp["cw_attack"]}
 
-        # Stage 1: Head on SMOTE (frozen backbone)
+        # Stage 1: Head on imbalanced data with class weight (frozen backbone)
         for layer in model.layers:
             layer.trainable = layer.name in ("dense_head", "drop_head", "output")
 
@@ -148,21 +162,20 @@ class QuickEvaluator:
             loss="binary_crossentropy", metrics=["accuracy"],
         )
         model.fit(
-            Xs_w, ys_w, epochs=hp["head_epochs"], batch_size=256,
-            validation_split=0.2, verbose=0,
+            Xo_w, yo_w, epochs=hp["head_epochs"], batch_size=256,
+            validation_split=0.2, verbose=0, class_weight=cw,
             callbacks=[tf.keras.callbacks.EarlyStopping(
                 monitor="val_loss", patience=self._qt.early_stopping_patience,
                 restore_best_weights=True)],
         )
 
-        # Stage 2: Fine-tune on imbalanced (unfreeze attention+bilstm2+head)
+        # Stage 2: Fine-tune full model on imbalanced (unfreeze all except bilstm1)
         for layer in model.layers:
-            if layer.name in ("conv1", "pool1", "conv2", "pool2", "bilstm1", "drop1"):
+            if layer.name in ("bilstm1", "drop1"):
                 layer.trainable = False
             else:
                 layer.trainable = True
 
-        cw = {0: 1.0, 1: hp["cw_attack"]}
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=hp["finetune_lr"]),
             loss="binary_crossentropy", metrics=["accuracy"],
@@ -359,6 +372,7 @@ class QuickEvaluator:
             "attack_recall": float(recall_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
             "attack_precision": float(precision_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
             "attack_f1": float(f1_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
+            "attack_f2": float(fbeta_score(y, y_pred, beta=2, pos_label=1, average="binary", zero_division=0)),
             "macro_f1": float(f1_score(y, y_pred, average="macro", zero_division=0)),
             "threshold": threshold,
         }

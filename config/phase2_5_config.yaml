@@ -1,9 +1,9 @@
 # Phase 2.5: Hyperparameter Fine-Tuning & Ablation Study
 # Bayesian TPE search (Optuna) + component ablation
 #
-# Two-stage strategy:
-#   Stage 1: Train head on SMOTE balanced data (frozen backbone)
-#   Stage 2: Fine-tune attention+BiLSTM2+head on imbalanced data with class_weight
+# Two-stage strategy (no SMOTE — avoids synthetic distribution mismatch):
+#   Stage 1: Train head on imbalanced data with class_weight (frozen backbone)
+#   Stage 2: Fine-tune full model on imbalanced data with class_weight
 
 data:
   phase1_train: "data/processed/train_phase1.parquet"
@@ -14,7 +14,7 @@ data:
 # ── Bayesian TPE Search (Optuna) ──────────────────────────────────
 search:
   max_trials: 30
-  metric: "attack_f1"       # IoMT target: attack_f1 | macro_f1 | auc_roc
+  metric: "attack_f2"       # IoMT target: attack_f2 (recall-weighted) | attack_f1 | macro_f1
   direction: "maximize"
 
   # 5 core parameters (identified by importance analysis)
@@ -24,7 +24,7 @@ search:
     finetune_lr_low: 0.000001
     finetune_lr_high: 0.0001
     cw_attack_low: 1.0
-    cw_attack_high: 5.0
+    cw_attack_high: 10.0
     head_epochs: [3, 5, 7, 9]
     ft_epochs: [1, 2, 3, 4, 5]
 

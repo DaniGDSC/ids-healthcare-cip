@@ -71,8 +71,8 @@ by the Classification Engine (Phase 3).
 
 | Artifact | SHA-256 |
 |----------|---------|
-| `detection_model.weights.h5` | `5aa425ca8129f3bca59e9c479d23d455664073267aec7e184455ade8373c1b91` |
-| `attention_output.parquet` | `33aeabba393332acb287b8ff8e37db10e81f3fd23451ee1cc44ecb647515b0dd` |
+| `detection_model.weights.h5` | `0e37714a9c35dd7d29680753ff36017b90a7dcdce828a42249e4e8f09ae2a916` |
+| `attention_output.parquet` | `40431ca89cc667b48592d1ec7c9c87ec25a2da3799b79c3b740065ede9949cb3` |
 
 Hashes are stored in `detection_metadata.json` and must be
 verified before loading artifacts in subsequent pipeline phases.

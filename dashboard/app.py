@@ -39,25 +39,26 @@ GROUND_TRUTH_PATH = PROJECT_ROOT / "project_ground_truth.json"
 # ── Role Definitions ────────────────────────────────────────────────────
 ROLES: Dict[str, list] = {
     "IT Security Analyst": [
-        "operational", "alerts", "shap", "evaluation",
+        "operational", "alerts", "stakeholder", "shap", "evaluation",
         "model", "risk", "devices", "crossval", "compliance",
     ],
     "Clinical IT Administrator": [
-        "operational", "risk", "evaluation", "model", "compliance",
+        "operational", "stakeholder", "risk", "evaluation", "model", "compliance",
     ],
     "Attending Physician": [
-        "operational", "risk", "devices",
+        "operational", "stakeholder", "risk", "devices",
     ],
     "Hospital Manager": [
-        "operational", "risk", "compliance",
+        "operational", "stakeholder", "risk", "compliance",
     ],
     "Regulatory Auditor": [
-        "operational", "compliance",
+        "operational", "stakeholder", "compliance",
     ],
 }
 
 PAGE_LABELS: Dict[str, str] = {
     "operational": "Operational Status",
+    "stakeholder": "Stakeholder Intelligence",
     "alerts": "Alert Feed",
     "shap": "SHAP Explanations",
     "evaluation": "Evaluation Results",
@@ -296,6 +297,10 @@ sim_status = st.session_state.simulator.get_status()
 if page == "Operational Status":
     from dashboard.components.panel_operational import render
     render(gt, buffer_status)
+
+elif page == "Stakeholder Intelligence":
+    from dashboard.components.panel_stakeholder import render
+    render(gt, role=role)
 
 elif page == "Alert Feed":
     from dashboard.components.panel_alerts import render

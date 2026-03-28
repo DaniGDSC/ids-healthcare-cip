@@ -32,6 +32,15 @@ class Phase4Config(BaseModel):
     phase1_test: Path
     label_column: str = "Label"
 
+    # ── Phase 2.5 finetuned model (preferred over Phase 3 baseline) ──
+    finetuned_weights: Path = Path("data/phase2_5/finetuned_model.weights.h5")
+    finetuned_results: Path = Path("data/phase2_5/finetuned_results.json")
+
+    # ── CIA Priority Shifting (disabled by default) ──────────────
+    cia_enabled: bool = False
+    cia_escalation_threshold: float = 0.7
+    cia_default_device: str = "generic_iomt_sensor"
+
     # ── Baseline ───────────────────────────────────────────────────
     mad_multiplier: float = 3.0
 
@@ -146,6 +155,11 @@ class Phase4Config(BaseModel):
             phase1_train=Path(data.get("phase1_train", "")),
             phase1_test=Path(data.get("phase1_test", "")),
             label_column=data.get("label_column", "Label"),
+            finetuned_weights=Path(data.get("finetuned_weights", "data/phase2_5/finetuned_model.weights.h5")),
+            finetuned_results=Path(data.get("finetuned_results", "data/phase2_5/finetuned_results.json")),
+            cia_enabled=raw.get("cia", {}).get("enabled", False),
+            cia_escalation_threshold=raw.get("cia", {}).get("escalation_threshold", 0.7),
+            cia_default_device=raw.get("cia", {}).get("default_device_id", "generic_iomt_sensor"),
             mad_multiplier=baseline.get("mad_multiplier", 3.0),
             window_size=dyn.get("window_size", 100),
             k_schedule=k_entries,

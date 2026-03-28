@@ -27,7 +27,6 @@ from src.phase2_detection_engine.phase2.cnn_builder import CNNBuilder
 logger = logging.getLogger(__name__)
 
 _HASH_CHUNK: int = 65_536
-_N_FEATURES: int = 29
 
 
 class Phase3ArtifactReader:
@@ -156,7 +155,8 @@ class Phase3ArtifactReader:
         train_df = pd.read_parquet(train_path)
         test_df = pd.read_parquet(test_path)
 
-        feature_names = [c for c in train_df.columns if c != self._label_col]
+        _exclude = {self._label_col, "Attack Category"}
+        feature_names = [c for c in train_df.columns if c not in _exclude]
         X_train = train_df[feature_names].values.astype(np.float32)
         y_train = train_df[self._label_col].values.astype(np.int32)
         X_test = test_df[feature_names].values.astype(np.float32)
@@ -170,19 +170,30 @@ class Phase3ArtifactReader:
         )
         return X_train, y_train, X_test, y_test, feature_names
 
+    def load_attack_categories(self, path: Path) -> np.ndarray | None:
+        """Load Attack Category column from Phase 1 parquet if present."""
+        df = pd.read_parquet(path)
+        if "Attack Category" in df.columns:
+            return df["Attack Category"].values
+        return None
+
     def rebuild_model(
         self,
         p2_metadata: Dict[str, Any],
         p3_metadata: Dict[str, Any],
+        n_features: int = 24,
+        weights_path: Path | None = None,
     ) -> tf.keras.Model:
-        """Rebuild full classification model and load Phase 3 weights.
+        """Rebuild full classification model and load trained weights.
 
         Uses Phase 2 builders for CNN-BiLSTM-Attention backbone,
-        then attaches Phase 3 classification head.
+        then attaches classification head and loads weights.
 
         Args:
             p2_metadata: Phase 2 detection metadata with hyperparameters.
             p3_metadata: Phase 3 classification metadata with head config.
+            n_features: Number of input features (from data, not hardcoded).
+            weights_path: Path to model weights. Defaults to Phase 3 dir.
 
         Returns:
             Fully loaded classification model with sigmoid output.
@@ -208,12 +219,12 @@ class Phase3ArtifactReader:
 
         assembler = DetectionModelAssembler(
             timesteps=hp["timesteps"],
-            n_features=_N_FEATURES,
+            n_features=n_features,
             builders=builders,
         )
         detection_model = assembler.assemble()
 
-        # Attach classification head (same as Phase 3)
+        # Attach classification head
         p3_hp = p3_metadata["hyperparameters"]
         x = tf.keras.layers.Dense(
             p3_hp["dense_units"],
@@ -224,13 +235,15 @@ class Phase3ArtifactReader:
         output = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
         full_model = tf.keras.Model(detection_model.input, output, name="classification_engine")
 
-        # Load Phase 3 weights
-        weights_path = self._phase3_dir / "classification_model.weights.h5"
+        # Load weights
+        if weights_path is None:
+            weights_path = self._phase3_dir / "classification_model.weights.h5"
         full_model.load_weights(str(weights_path))
         logger.info(
-            "  Model loaded: %d params, %d layers",
+            "  Model loaded: %d params, %d layers (%s)",
             full_model.count_params(),
             len(full_model.layers),
+            weights_path.name,
         )
         return full_model
 

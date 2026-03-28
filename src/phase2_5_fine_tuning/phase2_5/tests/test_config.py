@@ -30,7 +30,7 @@ def _make_config(**overrides: Any) -> Phase2_5Config:
 class TestPhase2_5Config:
     def test_valid_defaults(self) -> None:
         cfg = _make_config()
-        assert cfg.search_metric == "attack_f1"
+        assert cfg.search_metric == "attack_f2"
         assert cfg.max_trials == 30
         assert cfg.search_direction == "maximize"
         assert cfg.random_state == 42

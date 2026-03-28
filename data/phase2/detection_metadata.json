@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-03-17T17:11:17.058754+00:00",
+  "generated_at": "2026-03-28T10:50:54.561428+00:00",
   "pipeline": "security_hardened_phase2",
   "random_state": 42,
-  "git_commit": "d19d8923fd0c4459760ebe4dcb1e708e75b85d72",
+  "git_commit": "7d444ad562ccb791a463411a24afe3b4ab209ae9",
   "train_samples": 19961,
   "hyperparameters": {
     "timesteps": 20,
@@ -20,11 +20,11 @@
   },
   "artifact_hashes": {
     "detection_model.weights.h5": {
-      "sha256": "5aa425ca8129f3bca59e9c479d23d455664073267aec7e184455ade8373c1b91",
+      "sha256": "0e37714a9c35dd7d29680753ff36017b90a7dcdce828a42249e4e8f09ae2a916",
       "algorithm": "SHA-256"
     },
     "attention_output.parquet": {
-      "sha256": "33aeabba393332acb287b8ff8e37db10e81f3fd23451ee1cc44ecb647515b0dd",
+      "sha256": "40431ca89cc667b48592d1ec7c9c87ec25a2da3799b79c3b740065ede9949cb3",
       "algorithm": "SHA-256"
     }
   },

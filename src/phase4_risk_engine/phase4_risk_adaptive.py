@@ -69,7 +69,7 @@ RISK_HIGH: str = "HIGH"
 RISK_CRITICAL: str = "CRITICAL"
 
 # Named constants for clarity
-N_FEATURES: int = 29
+N_FEATURES: int = 24  # derived from Phase 1 (post-variance filtering)
 HASH_CHUNK_SIZE: int = 65_536
 
 
@@ -317,13 +317,17 @@ def _rebuild_classification_model(
     output = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
     full_model = tf.keras.Model(detection_model.input, output, name="classification_engine")
 
-    # Load Phase 3 weights
-    weights_path = PROJECT_ROOT / config["data"]["phase3_dir"] / "classification_model.weights.h5"
+    # Load Phase 2.5 finetuned weights (preferred over Phase 3 baseline)
+    ft_weights = config.get("data", {}).get(
+        "finetuned_weights", "data/phase2_5/finetuned_model.weights.h5"
+    )
+    weights_path = PROJECT_ROOT / ft_weights
     full_model.load_weights(str(weights_path))
     logger.info(
-        "  Model loaded: %d params, %d layers",
+        "  Model loaded: %d params, %d layers (%s)",
         full_model.count_params(),
         len(full_model.layers),
+        weights_path.name,
     )
     return full_model
 

@@ -25,7 +25,15 @@ import tensorflow as tf
 from src.phase2_detection_engine.phase2.reshaper import DataReshaper
 
 from .artifact_reader import Phase3ArtifactReader
+from .attention_anomaly import AttentionAnomalyDetector
 from .baseline import BaselineComputer
+from .alert_fatigue import AlertFatigueManager
+from .cia_risk_modifier import CIARiskModifier
+from .cia_threat_mapper import CIAThreatMapper
+from .clinical_impact import ClinicalImpactAssessor, ClinicalSeverity
+from .cognitive_translator import CognitiveTranslator
+from .conditional_explainer import ConditionalExplainer
+from .device_registry import DeviceRegistry
 from .config import Phase4Config
 from .cross_modal import CrossModalFusionDetector
 from .drift_detector import ConceptDriftDetector
@@ -33,6 +41,7 @@ from .dynamic_threshold import DynamicThresholdUpdater
 from .exporter import RiskAdaptiveExporter
 from .fallback_manager import ThresholdFallbackManager
 from .report import render_risk_adaptive_report
+from .risk_level import RiskLevel
 from .risk_scorer import RiskScorer
 
 logger = logging.getLogger(__name__)
@@ -145,8 +154,13 @@ class RiskAdaptivePipeline:
         p3_metrics_path = self._root / cfg.phase3_dir / "metrics_report.json"
         p3_metrics = json.loads(p3_metrics_path.read_text())["metrics"]
 
-        # 5. Rebuild model and predict anomaly scores
-        model = self._reader.rebuild_model(p2_metadata, p3_metadata)
+        # 5. Rebuild model with Phase 2.5 finetuned weights
+        ft_weights = self._root / cfg.finetuned_weights
+        model = self._reader.rebuild_model(
+            p2_metadata, p3_metadata,
+            n_features=len(feature_names),
+            weights_path=ft_weights,
+        )
         hp = p2_metadata["hyperparameters"]
         reshaper = DataReshaper(timesteps=hp["timesteps"], stride=hp["stride"])
         X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
@@ -177,7 +191,17 @@ class RiskAdaptivePipeline:
         )
         adjusted_thresholds, drift_events = fallback.process(dynamic_thresholds, cfg.window_size)
 
-        # 9. Risk scoring (5-level + cross-modal)
+        # 8b. Attention-based anomaly detection (novelty/zero-day)
+        logger.info("── Attention anomaly detection ──")
+        attn_detector = AttentionAnomalyDetector(
+            baseline_median=baseline["median"],
+            baseline_mad=baseline["mad"],
+            mad_multiplier=cfg.mad_multiplier,
+        )
+        attn_magnitudes = attn_detector.compute_scores(model, X_test_w)
+        attn_anomalous = attn_detector.classify(attn_magnitudes)
+
+        # 9. Risk scoring (5-level + cross-modal + attention anomaly)
         raw_test_features = X_test[: len(anomaly_scores)]
         risk_results = self._scorer.score(
             anomaly_scores=anomaly_scores,
@@ -185,6 +209,127 @@ class RiskAdaptivePipeline:
             mad=baseline["mad"],
             raw_features=raw_test_features,
             feature_names=feature_names,
+            attention_anomalous=attn_anomalous,
+        )
+
+        # 9b. CIA adaptive priority shifting (optional)
+        if cfg.cia_enabled:
+            logger.info("── CIA adaptive priority shifting ──")
+            import yaml as _yaml
+            with open(self._root / "config" / "phase4_config.yaml") as _f:
+                _raw = _yaml.safe_load(_f)
+            cia_raw = _raw.get("cia", {})
+
+            threat_mapper = CIAThreatMapper.from_config(cia_raw.get("threat_mappings", []))
+            device_reg = DeviceRegistry.from_config(cia_raw.get("device_registry", []))
+            cia_modifier = CIARiskModifier(
+                threat_mapper=threat_mapper,
+                device_registry=device_reg,
+                escalation_threshold=cfg.cia_escalation_threshold,
+            )
+
+            test_path = self._root / cfg.phase1_test
+            attack_cats = self._reader.load_attack_categories(test_path)
+
+            n_escalated = 0
+            for i, result in enumerate(risk_results):
+                cat = str(attack_cats[i]) if attack_cats is not None and i < len(attack_cats) else "unknown"
+                attn_flag = result.get("attention_flag", False)
+                assessment = cia_modifier.modify(
+                    base_risk=RiskLevel(result["risk_level"]),
+                    attack_category=cat,
+                    device_id=cfg.cia_default_device,
+                    attention_flag=attn_flag,
+                )
+                if assessment.adjusted_risk_level != assessment.base_risk_level:
+                    n_escalated += 1
+                result["base_risk_level"] = assessment.base_risk_level.value
+                result["risk_level"] = assessment.adjusted_risk_level.value
+                result["scenario"] = assessment.scenario.value
+                result["cia_scores"] = assessment.cia_scores
+                result["cia_max_dimension"] = assessment.cia_max_dimension
+                result["cia_modifier"] = assessment.cia_modifier
+                result["attack_category"] = assessment.attack_category
+
+            logger.info("  CIA escalations: %d / %d samples", n_escalated, len(risk_results))
+            logger.info("  Device: %s, Threshold: %.2f", cfg.cia_default_device, cfg.cia_escalation_threshold)
+
+        # 9c. Clinical impact assessment
+        logger.info("── Clinical impact assessment ──")
+        clinical_assessor = ClinicalImpactAssessor(
+            biometric_columns=cfg.biometric_columns,
+        )
+        device_type = cfg.cia_default_device if cfg.cia_enabled else "generic_iomt_sensor"
+        n_safety_flags = 0
+        severity_counts: Dict[str, int] = {}
+
+        for i, result in enumerate(risk_results):
+            feat_vals = raw_test_features[i] if i < len(raw_test_features) else None
+            assessment = clinical_assessor.assess(
+                risk_level=RiskLevel(result["risk_level"]),
+                device_type=device_type,
+                feature_values=feat_vals,
+                feature_names=feature_names,
+                attention_flag=result.get("attention_flag", False),
+            )
+            result["clinical_severity"] = assessment.clinical_severity.value
+            result["clinical_severity_name"] = assessment.clinical_severity.name
+            result["response_time_minutes"] = assessment.protocol.response_time_minutes
+            result["device_action"] = assessment.protocol.device_action
+            result["patient_safety_flag"] = assessment.patient_safety_flag
+            result["clinical_rationale"] = assessment.rationale
+
+            sev_name = assessment.clinical_severity.name
+            severity_counts[sev_name] = severity_counts.get(sev_name, 0) + 1
+            if assessment.patient_safety_flag:
+                n_safety_flags += 1
+
+        for sev_name, count in sorted(severity_counts.items()):
+            logger.info("  %s: %d", sev_name, count)
+        if n_safety_flags > 0:
+            logger.info("  ⚠ Patient safety flags: %d", n_safety_flags)
+
+        # 9d. Alert fatigue mitigation
+        logger.info("── Alert fatigue mitigation ──")
+        fatigue_mgr = AlertFatigueManager(
+            aggregation_window=10,
+            alerts_per_window=5,
+            rate_window_size=100,
+        )
+        fatigue_mgr.process(risk_results, device_id=device_type)
+        fatigue_summary = fatigue_mgr.get_summary()
+        logger.info(
+            "  Emitted: %d, Suppressed: %d (%.1f%% reduction)",
+            fatigue_summary["alerts_emitted"],
+            fatigue_summary["alerts_suppressed"],
+            fatigue_summary["suppression_rate"] * 100,
+        )
+
+        # 9e. Conditional explainability (only for URGENT+ severity)
+        logger.info("── Conditional explainability ──")
+        explainer = ConditionalExplainer(
+            model=model,
+            feature_names=feature_names,
+            top_k=5,
+        )
+        explainer.explain(risk_results, X_test_w)
+        explain_summary = explainer.get_summary()
+        logger.info(
+            "  Generated: %d explanations, Skipped: %d (%.1f%% savings)",
+            explain_summary["explanations_generated"],
+            explain_summary["explanations_skipped"],
+            explain_summary["savings_pct"],
+        )
+
+        # 9f. Cognitive translation — stakeholder-specific views
+        logger.info("── Cognitive translation ──")
+        translator = CognitiveTranslator()
+        translator.translate(risk_results)
+        translate_summary = translator.get_summary()
+        logger.info(
+            "  Translated: %d alerts, Actionable: %d",
+            translate_summary["total_translated"],
+            translate_summary["actionable_alerts"],
         )
 
         # 10. Export 4 artifacts

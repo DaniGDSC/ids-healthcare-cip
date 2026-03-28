@@ -11,7 +11,7 @@ The detection engine implements a three-stage deep feature extractor:
 3. **Bahdanau Attention:** Computes adaptive weights over timesteps to produce a fixed-length context vector (weighted sum).
 
 ```
-Input: (batch, 20, 29)
+Input: (batch, 20, 24)
   │
   ├─── [CNN Block]
   │      Conv1D(64, k=3, relu) → MaxPool(2)
@@ -32,7 +32,7 @@ Input: (batch, 20, 29)
 
 | Layer | Type | Output Shape | Parameters |
 |-------|------|-------------|------------|
-| conv1 | Conv1D | (None, 20, 64) | 5,632 |
+| conv1 | Conv1D | (None, 20, 64) | 4,672 |
 | pool1 | MaxPooling1D | (None, 10, 64) | 0 |
 | conv2 | Conv1D | (None, 10, 128) | 24,704 |
 | pool2 | MaxPooling1D | (None, 5, 128) | 0 |
@@ -42,8 +42,8 @@ Input: (batch, 20, 29)
 | drop2 | Dropout | (None, 5, 128) | 0 |
 | attention | BahdanauAttention | (None, 128) | 16,640 |
 
-**Total parameters:** 474,496
-**Trainable parameters:** 474,496
+**Total parameters:** 473,536
+**Trainable parameters:** 473,536
 
 ### 5.1.3 Sliding Window Reshape
 
@@ -53,9 +53,9 @@ Network traffic samples are grouped into temporal windows of **20** consecutive 
 |-----------|-------|
 | Window length (timesteps) | 20 |
 | Stride | 1 |
-| Input features | 29 |
-| Train windows | (19961, 20, 29) |
-| Test windows | (4877, 20, 29) |
+| Input features | 24 |
+| Train windows | (19961, 20, 24) |
+| Test windows | (4877, 20, 24) |
 | Train context | (19961, 128) |
 | Test context | (4877, 128) |
 | Window label strategy | Last sample in window |
@@ -89,7 +89,7 @@ Output dimension: **128** (one vector per window).
 
 | Artifact | Description |
 |----------|-------------|
-| `detection_model.weights.h5` | Model weights (474,496 parameters, no classification head) |
+| `detection_model.weights.h5` | Model weights (473,536 parameters, no classification head) |
 | `attention_output.parquet` | Weighted sum vectors (128-dim) + labels + split indicator |
 | `detection_report.json` | Model summary, layer shapes, hyperparameters, environment |
 
@@ -97,9 +97,9 @@ Output dimension: **128** (one vector per window).
 
 | Metric | Value |
 |--------|-------|
-| Total execution time | **2.99 s** |
-| Python | 3.12.3 |
-| TensorFlow | 2.20.0 |
-| NumPy | 2.4.1 |
-| pandas | 3.0.0 |
-| Platform | Linux-6.17.0-14-generic-x86_64-with-glibc2.39 |
+| Total execution time | **2.88 s** |
+| Python | 3.10.20 |
+| TensorFlow | 2.21.0 |
+| NumPy | 2.2.6 |
+| pandas | 2.3.3 |
+| Platform | Linux-6.17.0-19-generic-x86_64-with-glibc2.39 |

@@ -54,8 +54,17 @@ class RiskScorer:
         mad: float,
         raw_features: np.ndarray,
         feature_names: List[str],
+        attention_anomalous: np.ndarray | None = None,
     ) -> List[Dict[str, Any]]:
         """Score all samples into risk levels.
+
+        Uses dual-path detection:
+          1. Classification path: sigmoid output vs dynamic threshold
+          2. Attention anomaly path: L2 distance from Normal baseline
+
+        If the attention path flags a sample as anomalous but the
+        classifier says NORMAL, the sample is escalated to at least
+        MEDIUM (potential novel/zero-day attack).
 
         Args:
             anomaly_scores: Model sigmoid outputs, shape (N,).
@@ -63,15 +72,18 @@ class RiskScorer:
             mad: Median Absolute Deviation from baseline.
             raw_features: Raw feature values, shape (N, F).
             feature_names: List of all feature names.
+            attention_anomalous: Boolean array from AttentionAnomalyDetector,
+                shape (N,). True = attention vectors diverge from Normal.
 
         Returns:
             List of per-sample risk dicts with sample_index, anomaly_score,
-            threshold, distance, risk_level.
+            threshold, distance, risk_level, attention_flag.
         """
         logger.info("── Risk scoring ──")
 
         risk_results: List[Dict[str, Any]] = []
         level_counts: Dict[str, int] = {lvl.value: 0 for lvl in RiskLevel}
+        n_escalated = 0
 
         for i in range(len(anomaly_scores)):
             score = float(anomaly_scores[i])
@@ -85,6 +97,15 @@ class RiskScorer:
                 feature_names=feature_names,
             )
 
+            # Attention anomaly escalation: if attention vectors diverge
+            # from Normal but classifier says NORMAL/LOW, escalate to MEDIUM
+            attn_flag = False
+            if attention_anomalous is not None and i < len(attention_anomalous):
+                attn_flag = bool(attention_anomalous[i])
+                if attn_flag and level in (RiskLevel.NORMAL, RiskLevel.LOW):
+                    level = RiskLevel.MEDIUM
+                    n_escalated += 1
+
             level_counts[level.value] += 1
             risk_results.append(
                 {
@@ -93,6 +114,7 @@ class RiskScorer:
                     "threshold": round(threshold, 6),
                     "distance": round(distance, 6),
                     "risk_level": level.value,
+                    "attention_flag": attn_flag,
                 }
             )
 
@@ -100,6 +122,12 @@ class RiskScorer:
         for lvl, count in level_counts.items():
             pct = count / n_total * 100 if n_total > 0 else 0
             logger.info("  %s: %d (%.1f%%)", lvl, count, pct)
+
+        if n_escalated > 0:
+            logger.info(
+                "  Attention escalations: %d samples (potential novel/zero-day)",
+                n_escalated,
+            )
 
         return risk_results
 

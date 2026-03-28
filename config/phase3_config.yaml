@@ -1,7 +1,7 @@
 # Phase 3: Classification Engine Configuration
-# Detection backbone + classification head with progressive unfreezing
+# Loads Phase 2.5 fine-tuned model for evaluation + deployment
 #
-# Input:  Phase 1 parquets (29 features) + Phase 2 detection weights (474K params)
+# Input:  Phase 1 parquets + Phase 2 detection weights + Phase 2.5 finetuned model
 # Output: Binary classification (Normal vs Attack) with full evaluation metrics
 
 data:
@@ -12,35 +12,18 @@ data:
   phase2_config: "config/phase2_config.yaml"
   label_column: "Label"
 
+# Phase 2.5 finetuned model (loaded instead of retraining)
+finetuned_model:
+  weights: "data/phase2_5/finetuned_model.weights.h5"
+  results: "data/phase2_5/finetuned_results.json"
+
 classification_head:
-  dense_units: 64
+  dense_units: 32
   dense_activation: "relu"
   dropout_rate: 0.3
 
-training:
-  phases:
-    - name: "Phase A — Head only"
-      epochs: 5
-      learning_rate: 0.001
-      frozen: ["cnn", "bilstm1", "bilstm2", "attention"]
-    - name: "Phase B — Attention + Head"
-      epochs: 5
-      learning_rate: 0.0001
-      frozen: ["cnn", "bilstm1", "bilstm2"]
-    - name: "Phase C — BiLSTM-2 + Attention + Head"
-      epochs: 5
-      learning_rate: 0.00001
-      frozen: ["cnn", "bilstm1"]
-  batch_size: 256
-  validation_split: 0.2
-
-callbacks:
-  early_stopping_patience: 3
-  reduce_lr_patience: 2
-  reduce_lr_factor: 0.5
-
 evaluation:
-  threshold: 0.5
+  threshold: "auto"           # "auto" reads from Phase 2.5 optimal_threshold
 
 output:
   output_dir: "data/phase3"

@@ -2,14 +2,14 @@
   "phase": "Phase 2 \u2014 Detection Engine",
   "model_name": "detection_engine",
   "architecture": "CNN\u2192BiLSTM\u2192Attention",
-  "total_parameters": 474496,
-  "trainable_parameters": 474496,
+  "total_parameters": 473536,
+  "trainable_parameters": 473536,
   "layers": [
     {
       "name": "conv1",
       "type": "Conv1D",
       "output_shape": "(None, 20, 64)",
-      "params": 5632
+      "params": 4672
     },
     {
       "name": "pool1",
@@ -79,18 +79,13 @@
     "DstBytes",
     "SrcLoad",
     "DstLoad",
-    "SrcGap",
-    "DstGap",
     "SIntPkt",
     "DIntPkt",
     "SIntPktAct",
-    "DIntPktAct",
     "sMaxPktSz",
     "dMaxPktSz",
     "sMinPktSz",
-    "dMinPktSz",
     "Dur",
-    "Trans",
     "TotBytes",
     "Load",
     "pSrcLoss",
@@ -105,21 +100,21 @@
     "Resp_Rate",
     "ST"
   ],
-  "n_features": 29,
+  "n_features": 24,
   "output_dim": 128,
   "shapes": {
-    "train_windows": "(19961, 20, 29)",
-    "test_windows": "(4877, 20, 29)",
+    "train_windows": "(19961, 20, 24)",
+    "test_windows": "(4877, 20, 24)",
     "train_context": "(19961, 128)",
     "test_context": "(4877, 128)"
   },
-  "elapsed_seconds": 2.994,
-  "timestamp": "2026-03-17T17:11:17.047415+00:00",
+  "elapsed_seconds": 2.885,
+  "timestamp": "2026-03-28T10:50:54.553600+00:00",
   "environment": {
-    "python": "3.12.3",
-    "tensorflow": "2.20.0",
-    "numpy": "2.4.1",
-    "pandas": "3.0.0",
-    "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39"
+    "python": "3.10.20",
+    "tensorflow": "2.21.0",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "platform": "Linux-6.17.0-19-generic-x86_64-with-glibc2.39"
   }
 }

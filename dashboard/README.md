@@ -1,8 +1,9 @@
 # RA-X-IoMT Security Monitoring Dashboard
 
 Real-time IoMT intrusion detection monitoring dashboard for the
-RA-X-IoMT research framework. Built with Streamlit for thesis defense
-live demonstration.
+RA-X-IoMT research framework. Role-based views with MedSec-25
+streaming simulation, SHAP explainability, and stakeholder-specific
+cognitive translation.
 
 ## Quick Start
 
@@ -10,49 +11,160 @@ live demonstration.
 # From project root
 cd /home/un1/project/ids-healthcare-cip
 
-# Install dependencies
-pip install -r dashboard/requirements.txt
+# Generate ground truth (required before first run)
+python extract_project_reality.py
 
-# Run dashboard
+# Launch dashboard
 streamlit run dashboard/app.py
 ```
 
 The dashboard opens at http://localhost:8501.
 
+## Roles
+
+Access is role-based. Each role sees only the pages relevant to their
+decision context:
+
+| Role | Pages |
+| ---- | ----- |
+| IT Security Analyst | All pages (full access) |
+| Clinical IT Administrator | Operational, Stakeholder, Risk, Evaluation, Model, Compliance |
+| Attending Physician | Operational, Stakeholder, Risk, Devices |
+| Hospital Manager | Operational, Stakeholder, Risk, Compliance |
+| Regulatory Auditor | Operational, Stakeholder, Compliance |
+
+Select your role from the sidebar dropdown.
+
 ## Pages
 
 | Page | Description |
-|------|-------------|
-| Live Monitoring | Engine health cards, risk donut chart, alert feed |
-| Model Performance | AUC/F1 metrics, ROC curve, confusion matrix, threshold slider |
-| SHAP Explanations | Global feature importance, per-alert waterfall, temporal timeline |
-| Upload & Predict | CSV upload with HIPAA check, inference, risk scoring, CSV export |
-| Dataset Overview | Class distribution, ablation study, preprocessing pipeline |
+| ---- | ----------- |
+| Operational Status | Engine health, system status, live monitoring indicators |
+| Stakeholder Intelligence | **Role-specific views** — SOC threat matrix, clinician safety status, CISO compliance dashboard, biomed device diagnostics |
+| Alert Feed | Real-time alert table with risk-level color coding and SHAP drill-down |
+| SHAP Explanations | Global feature importance, per-alert waterfall, temporal attention timeline |
+| Evaluation Results | AUC/F1 metrics, ROC curve, confusion matrix, threshold analysis |
+| Model & Training | Architecture summary, training history, progressive unfreezing details |
+| Risk Analytics | Risk distribution, session statistics, threshold drift status |
+| Device Inventory | Device profiles, FDA class, CIA priorities |
+| Cross-Dataset & Simulation | CICIoMT2024 generalization results, MedSec-25 simulation controls |
+| Compliance & Audit | HIPAA compliance status, artifact integrity, audit trail |
+
+## Stakeholder Intelligence Views
+
+The Stakeholder Intelligence page adapts its content to the active role:
+
+**IT Security Analyst** — Threat intelligence overview: active threat
+count, novel/zero-day indicators, CIA impact breakdown, top anomaly
+features, SOC playbook actions.
+
+**Attending Physician** — Patient safety in plain language: green/red
+status banners, device status ("operating normally" vs "network access
+restricted"), safety guidance ("DO NOT power off — maintain patient
+care"), expected resolution time.
+
+**Hospital Manager / CISO** — Compliance and risk posture: incident
+severity distribution, regulatory impact assessment (HIPAA, FDA 21 CFR
+Part 11, Joint Commission), required reporting actions with timelines,
+alert fatigue suppression metrics.
+
+**Biomedical Engineer** — Device diagnostics: affected device list with
+expandable details, anomaly indicator features, temporal attention
+weight patterns, remediation checklists with interactive checkboxes.
+
+## Simulation
+
+The dashboard includes a MedSec-25 streaming simulator for live
+demonstration. Controls are in the sidebar:
+
+- **Modes:** Accelerated, Realtime, Stress
+- **Scenarios:**
+  - A: Benign Only (baseline)
+  - B: Gradual Attack (ramp-up)
+  - C: Abrupt Attack (sudden onset)
+  - D: Mixed Cycle (alternating)
 
 ## Required Artifacts
 
 The dashboard reads pre-computed artifacts from the RA-X-IoMT pipeline:
 
 ```
-data/phase3/metrics_wustl_v2.json      — Final test metrics
-data/phase3/metrics_report.json        — V1 baseline metrics
-data/phase3/threshold_analysis.json    — Threshold sensitivity
-data/phase3/ablation_results_v2.json   — Ablation study
-data/phase3/diagnosis_after.json       — Training diagnosis
-data/phase3/classification_model_v2.weights.h5
-data/phase4/risk_report.json           — Risk assessments
-data/phase4/baseline_config.json       — MAD baseline
-data/phase5/explanation_report.json    — SHAP explanations
-data/phase5/shap_values.parquet        — SHAP value matrix
-data/phase7/monitoring_log.json        — Engine health log
+project_ground_truth.json              -- Consolidated system state
+
+data/processed/train_phase1.parquet    -- Phase 1 processed data (24 features)
+data/processed/test_phase1.parquet
 data/processed/preprocessing_report.json
-models/scalers/robust_scaler.pkl
+
+data/phase2/detection_metadata.json    -- Phase 2 architecture metadata
+data/phase2/attention_output.parquet   -- 128-D attention context vectors
+
+data/phase2_5/finetuned_results.json   -- Phase 2.5 tuning results + metrics
+data/phase2_5/finetuned_model.weights.h5
+data/phase2_5/best_config.json
+data/phase2_5/ablation_results.json
+
+data/phase3/metrics_report.json        -- Phase 3 evaluation metrics
+
+data/phase4/risk_report.json           -- Risk assessments with:
+                                       --   clinical_severity, stakeholder_views,
+                                       --   alert_emit, explanation, cia_scores
+data/phase4/baseline_config.json       -- MAD baseline threshold
+data/phase4/drift_log.csv              -- Concept drift events
+
+data/phase5/explanation_report.json    -- SHAP feature importance
+data/phase5/shap_values.parquet        -- SHAP value matrix
+
+models/scalers/robust_scaler.pkl       -- RobustScaler (fitted on train)
+```
+
+Run `python extract_project_reality.py` to regenerate `project_ground_truth.json`
+from current artifacts.
+
+## Architecture
+
+```
+dashboard/
+  app.py                    -- Main Streamlit app (role-based routing)
+  assets/
+    style.css               -- Custom CSS (HIPAA banner, risk colors)
+  components/
+    panel_operational.py    -- Engine health
+    panel_stakeholder.py    -- Cognitive translation (role-specific views)
+    panel_alerts.py         -- Live alert feed
+    panel_shap.py           -- SHAP explanations
+    panel_evaluation.py     -- Model evaluation metrics
+    panel_model.py          -- Architecture + training details
+    panel_risk.py           -- Risk distribution analytics
+    panel_devices.py        -- Device inventory
+    panel_crossval.py       -- Cross-dataset + simulation
+    panel_compliance.py     -- Compliance & audit trail
+  simulation/
+    medsec25_simulator.py   -- MedSec-25 stream generator
+    scenarios.py            -- Attack scenario definitions
+    statistics.py           -- k-schedule + drift display helpers
+  streaming/
+    window_buffer.py        -- Sliding window buffer for live data
+    feature_aligner.py      -- Feature alignment for inference
+    file_watcher.py         -- File system monitoring (watchdog)
+  utils/
+    loader.py               -- Cached data loaders
+    metrics.py              -- Metric formatting + risk colors
+    predictor.py            -- Model inference wrapper
+    hipaa.py                -- HIPAA-compliant data handling
 ```
 
 ## Tech Stack
 
 - Streamlit >= 1.32
-- TensorFlow 2.20.0
-- Plotly (interactive charts)
-- SHAP (explainability)
-- Watchdog (file monitoring)
+- TensorFlow >= 2.20.0
+- Plotly >= 5.18 (interactive charts)
+- Pandas >= 2.0, NumPy >= 1.24
+- PyArrow >= 14.0 (Parquet I/O)
+- Watchdog >= 3.0 (file monitoring)
+- Joblib >= 1.3 (scaler serialization)
+
+## HIPAA Compliance
+
+The dashboard displays a research disclaimer banner. No Protected Health
+Information (PHI) is stored or transmitted. Device IDs are SHA-256 hashed
+to 8-character prefixes. Per-patient attention weights are not logged.

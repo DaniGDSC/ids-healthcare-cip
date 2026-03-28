@@ -22,6 +22,7 @@ from .hipaa import HIPAASanitizer
 from .missing import MissingValueHandler
 from .redundancy import RedundancyRemover
 from .report import render_preprocessing_report
+from .variance import VarianceFilter
 from .scaler import RobustScalerTransformer
 from .smote import SMOTEBalancer
 from .splitter import DataSplitter
@@ -89,6 +90,15 @@ class PreprocessingPipeline:
         )
         df = remover.transform(df)
         self._report["redundancy"] = remover.get_report()
+
+        # ── Step 4b: Variance filtering ──
+        if cfg.variance_enabled:
+            var_filter = VarianceFilter(
+                max_unique=cfg.variance_max_unique,
+                label_column=cfg.label_column,
+            )
+            df = var_filter.transform(df)
+            self._report["variance"] = var_filter.get_report()
 
         # ── Step 5: Stratified split ──
         splitter = DataSplitter(
@@ -179,6 +189,7 @@ class PreprocessingPipeline:
         hip = self._report.get("hipaa", {})
         mv = self._report.get("missing_values", {})
         red = self._report.get("redundancy", {})
+        var = self._report.get("variance", {})
         spl = self._report.get("split", {})
         smt = self._report.get("smote", {})
         out = self._report.get("output", {})
@@ -195,6 +206,8 @@ class PreprocessingPipeline:
                      mv.get("biometric_cells_filled", 0), mv.get("rows_dropped", 0))
         logger.info("  Redundancy  : %d features (|r| ≥ %.2f)",
                      red.get("n_dropped", 0), red.get("threshold", 0))
+        logger.info("  Variance    : %d features (unique ≤ %d)",
+                     var.get("n_dropped", 0), var.get("max_unique", 0))
         logger.info("  Split       : train=%d, test=%d",
                      spl.get("train_samples", 0), spl.get("test_samples", 0))
         logger.info("  SMOTE       : %d → %d (+%d)",

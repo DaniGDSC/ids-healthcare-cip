@@ -22,13 +22,16 @@ class DataReshaper:
         stride: Step between consecutive windows.
     """
 
-    def __init__(self, timesteps: int, stride: int = 1) -> None:
+    def __init__(self, timesteps: int, stride: int = 1, label_strategy: str = "any_attack") -> None:
         if timesteps < 2:
             raise ValueError(f"timesteps must be >= 2, got {timesteps}")
         if stride < 1:
             raise ValueError(f"stride must be >= 1, got {stride}")
+        if label_strategy not in ("any_attack", "last"):
+            raise ValueError(f"label_strategy must be 'any_attack' or 'last', got '{label_strategy}'")
         self._timesteps = timesteps
         self._stride = stride
+        self._label_strategy = label_strategy
 
     def reshape(
         self,
@@ -37,8 +40,9 @@ class DataReshaper:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Create sliding windows: (N, F) → (N_win, timesteps, F).
 
-        The label for each window is the label of the **last** sample
-        in the window (standard IDS temporal windowing convention).
+        Label strategy:
+          - ``any_attack``: 1 if any sample in the window is attack (default).
+          - ``last``: label of the last sample (legacy).
 
         Args:
             X: 2-D array of shape (n_samples, n_features).
@@ -63,7 +67,10 @@ class DataReshaper:
         indices = starts[:, None] + offsets[None, :]
 
         X_windows = X[indices].astype(np.float32)
-        y_windows = y[indices[:, -1]]
+        if self._label_strategy == "any_attack":
+            y_windows = y[indices].max(axis=1).astype(y.dtype)
+        else:
+            y_windows = y[indices[:, -1]]
 
         logger.info(
             "Reshape: (%d, %d) → %s  [timesteps=%d, stride=%d]",
@@ -77,4 +84,4 @@ class DataReshaper:
 
     def get_config(self) -> Dict[str, Any]:
         """Return reshape configuration for the report."""
-        return {"timesteps": self._timesteps, "stride": self._stride}
+        return {"timesteps": self._timesteps, "stride": self._stride, "label_strategy": self._label_strategy}

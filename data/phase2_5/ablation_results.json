@@ -7,19 +7,20 @@
       "override": null
     },
     "metrics": {
-      "accuracy": 0.9155218371949969,
-      "f1_score": 0.9059823133610344,
-      "auc_roc": 0.7669308246940825,
-      "attack_recall": 0.46078431372549017,
-      "attack_precision": 0.7747252747252747,
-      "attack_f1": 0.5778688524590164,
-      "macro_f1": 0.7654666659196426,
-      "threshold": 0.8020408163265307
+      "accuracy": 0.9399220832478983,
+      "f1_score": 0.910813408647789,
+      "auc_roc": 0.8067030150873494,
+      "attack_recall": 1.0,
+      "attack_precision": 0.9399220832478983,
+      "attack_f1": 0.9690307578480076,
+      "attack_f2": 0.9873777624606901,
+      "macro_f1": 0.4845153789240038,
+      "threshold": 0.1
     },
-    "detection_params": 474496,
-    "total_params": 478657,
-    "optimal_threshold": 0.8020408163265307,
-    "duration_seconds": 6.65,
+    "detection_params": 473536,
+    "total_params": 477697,
+    "optimal_threshold": 0.1,
+    "duration_seconds": 7.44,
     "status": "completed"
   },
   "variants": [
@@ -31,19 +32,20 @@
         "override": null
       },
       "metrics": {
-        "accuracy": 0.906704941562436,
-        "f1_score": 0.8991015250908738,
-        "auc_roc": 0.748747021278226,
-        "attack_recall": 0.4722222222222222,
-        "attack_precision": 0.6864608076009501,
-        "attack_f1": 0.5595353339787028,
-        "macro_f1": 0.7536812090143485,
-        "threshold": 0.9
+        "accuracy": 0.9399220832478983,
+        "f1_score": 0.910813408647789,
+        "auc_roc": 0.8787267927023212,
+        "attack_recall": 1.0,
+        "attack_precision": 0.9399220832478983,
+        "attack_f1": 0.9690307578480076,
+        "attack_f2": 0.9873777624606901,
+        "macro_f1": 0.4845153789240038,
+        "threshold": 0.1
       },
-      "detection_params": 457856,
-      "total_params": 462017,
-      "optimal_threshold": 0.9,
-      "duration_seconds": 6.3,
+      "detection_params": 456896,
+      "total_params": 461057,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 6.88,
       "description": "Replace Bahdanau attention with GlobalAveragePooling1D",
       "status": "completed"
     },
@@ -55,19 +57,20 @@
         "override": null
       },
       "metrics": {
-        "accuracy": 0.9138814845191716,
-        "f1_score": 0.9050486260681491,
-        "auc_roc": 0.7619137377498869,
-        "attack_recall": 0.46895424836601307,
-        "attack_precision": 0.7513089005235603,
-        "attack_f1": 0.5774647887323944,
-        "macro_f1": 0.7647597916264712,
-        "threshold": 0.8673469387755103
+        "accuracy": 0.9399220832478983,
+        "f1_score": 0.910813408647789,
+        "auc_roc": 0.8758234607389407,
+        "attack_recall": 1.0,
+        "attack_precision": 0.9399220832478983,
+        "attack_f1": 0.9690307578480076,
+        "attack_f2": 0.9873777624606901,
+        "macro_f1": 0.4845153789240038,
+        "threshold": 0.1
       },
-      "detection_params": 326528,
-      "total_params": 334785,
-      "optimal_threshold": 0.8673469387755103,
-      "duration_seconds": 6.11,
+      "detection_params": 325568,
+      "total_params": 333825,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 5.87,
       "description": "Remove second BiLSTM layer (single BiLSTM-256)",
       "status": "completed"
     },
@@ -79,19 +82,20 @@
         "override": null
       },
       "metrics": {
-        "accuracy": 0.9280295263481648,
-        "f1_score": 0.9174251431809434,
-        "auc_roc": 0.7642208583316092,
-        "attack_recall": 0.46568627450980393,
-        "attack_precision": 0.9223300970873787,
-        "attack_f1": 0.6188925081433225,
-        "macro_f1": 0.7895775797820654,
-        "threshold": 0.8346938775510204
+        "accuracy": 0.9399220832478983,
+        "f1_score": 0.910813408647789,
+        "auc_roc": 0.9060904824020632,
+        "attack_recall": 1.0,
+        "attack_precision": 0.9399220832478983,
+        "attack_f1": 0.9690307578480076,
+        "attack_f2": 0.9873777624606901,
+        "macro_f1": 0.4845153789240038,
+        "threshold": 0.1
       },
-      "detection_params": 384256,
-      "total_params": 388417,
-      "optimal_threshold": 0.8346938775510204,
-      "duration_seconds": 6.95,
+      "detection_params": 383296,
+      "total_params": 387457,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 8.61,
       "description": "Remove second CNN layer (single Conv1D-32)",
       "status": "completed"
     },
@@ -103,19 +107,20 @@
         "override": null
       },
       "metrics": {
-        "accuracy": 0.9153167931105187,
-        "f1_score": 0.906294289091681,
-        "auc_roc": 0.7643241079159293,
-        "attack_recall": 0.46895424836601307,
-        "attack_precision": 0.7653333333333333,
-        "attack_f1": 0.5815602836879432,
-        "macro_f1": 0.767225904362507,
-        "threshold": 0.9
+        "accuracy": 0.9399220832478983,
+        "f1_score": 0.910813408647789,
+        "auc_roc": 0.8627605143874821,
+        "attack_recall": 1.0,
+        "attack_precision": 0.9399220832478983,
+        "attack_f1": 0.9690307578480076,
+        "attack_f2": 0.9873777624606901,
+        "macro_f1": 0.4845153789240038,
+        "threshold": 0.1
       },
-      "detection_params": 219776,
-      "total_params": 221889,
-      "optimal_threshold": 0.9,
-      "duration_seconds": 6.05,
+      "detection_params": 218816,
+      "total_params": 220929,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 5.13,
       "description": "Replace BiLSTM with unidirectional LSTM",
       "status": "completed"
     },
@@ -129,19 +134,20 @@
         }
       },
       "metrics": {
-        "accuracy": 0.9087374667485165,
-        "f1_score": 0.8998027749014641,
-        "auc_roc": 0.749951716856962,
-        "attack_recall": 0.4551386623164764,
-        "attack_precision": 0.7135549872122762,
-        "attack_f1": 0.5557768924302788,
-        "macro_f1": 0.7524608521444438,
-        "threshold": 0.8020408163265307
+        "accuracy": 0.7571107018620831,
+        "f1_score": 0.6524536152066396,
+        "auc_roc": 0.8222802204057469,
+        "attack_recall": 1.0,
+        "attack_precision": 0.7571107018620831,
+        "attack_f1": 0.8617677885175264,
+        "attack_f2": 0.9397064052420379,
+        "macro_f1": 0.4308838942587632,
+        "threshold": 0.1
       },
-      "detection_params": 474496,
-      "total_params": 478657,
-      "optimal_threshold": 0.8020408163265307,
-      "duration_seconds": 7.98,
+      "detection_params": 473536,
+      "total_params": 477697,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 7.28,
       "description": "Reduce window size from 20 to 10 timesteps",
       "status": "completed"
     },
@@ -155,19 +161,20 @@
         }
       },
       "metrics": {
-        "accuracy": 0.9137045407848777,
-        "f1_score": 0.9036092241826817,
-        "auc_roc": 0.7392518397855797,
-        "attack_recall": 0.44754098360655736,
-        "attack_precision": 0.7668539325842697,
-        "attack_f1": 0.5652173913043478,
-        "macro_f1": 0.7586579657251666,
-        "threshold": 0.6387755102040816
+        "accuracy": 0.9882884733922334,
+        "f1_score": 0.9824672020288608,
+        "auc_roc": 0.6746671772987562,
+        "attack_recall": 1.0,
+        "attack_precision": 0.9882884733922334,
+        "attack_f1": 0.9941097447556061,
+        "attack_f2": 0.9976355415439498,
+        "macro_f1": 0.49705487237780305,
+        "threshold": 0.1
       },
-      "detection_params": 474496,
-      "total_params": 478657,
-      "optimal_threshold": 0.6387755102040816,
-      "duration_seconds": 7.26,
+      "detection_params": 473536,
+      "total_params": 477697,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 7.36,
       "description": "Increase window size from 20 to 30 timesteps",
       "status": "completed"
     },
@@ -181,19 +188,20 @@
         }
       },
       "metrics": {
-        "accuracy": 0.913061308181259,
-        "f1_score": 0.9044364814697441,
-        "auc_roc": 0.7555095817146711,
-        "attack_recall": 0.47058823529411764,
-        "attack_precision": 0.7422680412371134,
-        "attack_f1": 0.576,
-        "macro_f1": 0.7637824994288325,
-        "threshold": 0.9
+        "accuracy": 0.9399220832478983,
+        "f1_score": 0.910813408647789,
+        "auc_roc": 0.8700860389900469,
+        "attack_recall": 1.0,
+        "attack_precision": 0.9399220832478983,
+        "attack_f1": 0.9690307578480076,
+        "attack_f2": 0.9873777624606901,
+        "macro_f1": 0.4845153789240038,
+        "threshold": 0.1
       },
-      "detection_params": 474496,
-      "total_params": 478657,
-      "optimal_threshold": 0.9,
-      "duration_seconds": 7.73,
+      "detection_params": 473536,
+      "total_params": 477697,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 6.86,
       "description": "Reduce dropout from 0.3 to 0.1",
       "status": "completed"
     },
@@ -207,19 +215,20 @@
         }
       },
       "metrics": {
-        "accuracy": 0.910600779167521,
-        "f1_score": 0.902223747515914,
-        "auc_roc": 0.7545606050157461,
-        "attack_recall": 0.46895424836601307,
-        "attack_precision": 0.7211055276381909,
-        "attack_f1": 0.5683168316831683,
-        "macro_f1": 0.7592270343228285,
-        "threshold": 0.8673469387755103
+        "accuracy": 0.9399220832478983,
+        "f1_score": 0.910813408647789,
+        "auc_roc": 0.8498758852575213,
+        "attack_recall": 1.0,
+        "attack_precision": 0.9399220832478983,
+        "attack_f1": 0.9690307578480076,
+        "attack_f2": 0.9873777624606901,
+        "macro_f1": 0.4845153789240038,
+        "threshold": 0.1
       },
-      "detection_params": 474496,
-      "total_params": 478657,
-      "optimal_threshold": 0.8673469387755103,
-      "duration_seconds": 7.73,
+      "detection_params": 473536,
+      "total_params": 477697,
+      "optimal_threshold": 0.1,
+      "duration_seconds": 7.52,
       "description": "Increase dropout from 0.3 to 0.5",
       "status": "completed"
     }
@@ -227,84 +236,84 @@
   "comparison": [
     {
       "variant": "baseline (full)",
-      "attack_f1": 0.5778688524590164,
-      "auc_roc": 0.7669308246940825,
-      "accuracy": 0.9155218371949969,
-      "total_params": 478657,
+      "attack_f1": 0.9690307578480076,
+      "auc_roc": 0.8067030150873494,
+      "accuracy": 0.9399220832478983,
+      "total_params": 477697,
       "delta_f1": 0.0,
       "delta_auc": 0.0
     },
     {
       "variant": "no_attention",
-      "attack_f1": 0.5595353339787028,
-      "auc_roc": 0.748747021278226,
-      "accuracy": 0.906704941562436,
-      "total_params": 462017,
-      "delta_f1": -0.0183,
-      "delta_auc": -0.0182
+      "attack_f1": 0.9690307578480076,
+      "auc_roc": 0.8787267927023212,
+      "accuracy": 0.9399220832478983,
+      "total_params": 461057,
+      "delta_f1": 0.0,
+      "delta_auc": 0.072
     },
     {
       "variant": "no_bilstm2",
-      "attack_f1": 0.5774647887323944,
-      "auc_roc": 0.7619137377498869,
-      "accuracy": 0.9138814845191716,
-      "total_params": 334785,
-      "delta_f1": -0.0004,
-      "delta_auc": -0.005
+      "attack_f1": 0.9690307578480076,
+      "auc_roc": 0.8758234607389407,
+      "accuracy": 0.9399220832478983,
+      "total_params": 333825,
+      "delta_f1": 0.0,
+      "delta_auc": 0.0691
     },
     {
       "variant": "no_cnn2",
-      "attack_f1": 0.6188925081433225,
-      "auc_roc": 0.7642208583316092,
-      "accuracy": 0.9280295263481648,
-      "total_params": 388417,
-      "delta_f1": 0.041,
-      "delta_auc": -0.0027
+      "attack_f1": 0.9690307578480076,
+      "auc_roc": 0.9060904824020632,
+      "accuracy": 0.9399220832478983,
+      "total_params": 387457,
+      "delta_f1": 0.0,
+      "delta_auc": 0.0994
     },
     {
       "variant": "unidirectional_lstm",
-      "attack_f1": 0.5815602836879432,
-      "auc_roc": 0.7643241079159293,
-      "accuracy": 0.9153167931105187,
-      "total_params": 221889,
-      "delta_f1": 0.0037,
-      "delta_auc": -0.0026
+      "attack_f1": 0.9690307578480076,
+      "auc_roc": 0.8627605143874821,
+      "accuracy": 0.9399220832478983,
+      "total_params": 220929,
+      "delta_f1": 0.0,
+      "delta_auc": 0.0561
     },
     {
       "variant": "timesteps_10",
-      "attack_f1": 0.5557768924302788,
-      "auc_roc": 0.749951716856962,
-      "accuracy": 0.9087374667485165,
-      "total_params": 478657,
-      "delta_f1": -0.0221,
-      "delta_auc": -0.017
+      "attack_f1": 0.8617677885175264,
+      "auc_roc": 0.8222802204057469,
+      "accuracy": 0.7571107018620831,
+      "total_params": 477697,
+      "delta_f1": -0.1073,
+      "delta_auc": 0.0156
     },
     {
       "variant": "timesteps_30",
-      "attack_f1": 0.5652173913043478,
-      "auc_roc": 0.7392518397855797,
-      "accuracy": 0.9137045407848777,
-      "total_params": 478657,
-      "delta_f1": -0.0127,
-      "delta_auc": -0.0277
+      "attack_f1": 0.9941097447556061,
+      "auc_roc": 0.6746671772987562,
+      "accuracy": 0.9882884733922334,
+      "total_params": 477697,
+      "delta_f1": 0.0251,
+      "delta_auc": -0.132
     },
     {
       "variant": "low_dropout",
-      "attack_f1": 0.576,
-      "auc_roc": 0.7555095817146711,
-      "accuracy": 0.913061308181259,
-      "total_params": 478657,
-      "delta_f1": -0.0019,
-      "delta_auc": -0.0114
+      "attack_f1": 0.9690307578480076,
+      "auc_roc": 0.8700860389900469,
+      "accuracy": 0.9399220832478983,
+      "total_params": 477697,
+      "delta_f1": 0.0,
+      "delta_auc": 0.0634
     },
     {
       "variant": "high_dropout",
-      "attack_f1": 0.5683168316831683,
-      "auc_roc": 0.7545606050157461,
-      "accuracy": 0.910600779167521,
-      "total_params": 478657,
-      "delta_f1": -0.0096,
-      "delta_auc": -0.0124
+      "attack_f1": 0.9690307578480076,
+      "auc_roc": 0.8498758852575213,
+      "accuracy": 0.9399220832478983,
+      "total_params": 477697,
+      "delta_f1": 0.0,
+      "delta_auc": 0.0432
     }
   ]
 }

@@ -33,6 +33,7 @@ from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
     f1_score,
+    fbeta_score,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -198,6 +199,7 @@ def _evaluate(
     atk_recall = float(recall_score(y, y_pred, pos_label=1, average="binary", zero_division=0))
     atk_prec = float(precision_score(y, y_pred, pos_label=1, average="binary", zero_division=0))
     atk_f1 = float(f1_score(y, y_pred, pos_label=1, average="binary", zero_division=0))
+    atk_f2 = float(fbeta_score(y, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
 
     # Macro (equal class weight)
     macro_f1_val = float(f1_score(y, y_pred, average="macro", zero_division=0))
@@ -211,6 +213,7 @@ def _evaluate(
         "attack_recall": atk_recall,
         "attack_precision": atk_prec,
         "attack_f1": atk_f1,
+        "attack_f2": atk_f2,
         "macro_f1": macro_f1_val,
         "confusion_matrix": confusion_matrix(y, y_pred).tolist(),
         "classification_report": sklearn_cls_report(y, y_pred, output_dict=True, zero_division=0),
@@ -350,18 +353,14 @@ def main() -> None:
     detection_model.load_weights(str(p2_weights))
     logger.info("  Detection model: %d params (Phase 2 weights loaded)", detection_params)
 
-    # 5b. Reshape all datasets
+    # 5b. Reshape datasets (SMOTE no longer used — both stages train on imbalanced)
     reshaper = DataReshaper(timesteps=timesteps, stride=stride)
-    Xs_w, ys_w = reshaper.reshape(X_train_smote, y_train_smote)
     Xo_w, yo_w = reshaper.reshape(X_train_orig, y_train_orig)
     X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
 
-    n0s = int(np.sum(ys_w == 0))
-    n1s = int(np.sum(ys_w == 1))
-    logger.info("  SMOTE train (windowed): Normal=%d, Attack=%d", n0s, n1s)
     n0o = int(np.sum(yo_w == 0))
     n1o = int(np.sum(yo_w == 1))
-    logger.info("  Original train (windowed): Normal=%d, Attack=%d (%.1f:1)",
+    logger.info("  Train (windowed): Normal=%d, Attack=%d (%.1f:1)",
                 n0o, n1o, n0o / max(n1o, 1))
 
     # 5c. Add classification head (match tuner architecture: dense_units=32)
@@ -380,8 +379,9 @@ def main() -> None:
     logger.info("  Full model: %d params (detection=%d, head=%d)", total_params, detection_params, head_params)
 
     # 5d. Two-stage training (matches tuner's evaluate_two_stage)
-    #     Stage 1: Train head on SMOTE-balanced data (frozen backbone)
-    #     Stage 2: Fine-tune attention+BiLSTM2+head on imbalanced data with class_weight
+    #     Both stages on imbalanced data with class weight (no SMOTE)
+    #     Stage 1: Train head (frozen backbone)
+    #     Stage 2: Fine-tune full model (unfreeze CNN+bilstm2+attention)
     head_lr = float(best_hp["head_lr"])
     finetune_lr = float(best_hp["finetune_lr"])
     cw_attack = float(best_hp["cw_attack"])
@@ -392,15 +392,16 @@ def main() -> None:
     output_dir = PROJECT_ROOT / config.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info("  Training schedule (2-stage, matching tuner):")
-    logger.info("    Stage 1: head_lr=%.6g, head_epochs=%d (SMOTE, frozen backbone)", head_lr, head_epochs)
-    logger.info("    Stage 2: finetune_lr=%.6g, ft_epochs=%d, cw_attack=%.4f (imbalanced)",
+    logger.info("  Training schedule (2-stage, imbalanced + class weight):")
+    logger.info("    Stage 1: head_lr=%.6g, head_epochs=%d, cw_attack=%.4f (frozen backbone)",
+                head_lr, head_epochs, cw_attack)
+    logger.info("    Stage 2: finetune_lr=%.6g, ft_epochs=%d, cw_attack=%.4f (unfreeze CNN+bilstm2+attn)",
                 finetune_lr, ft_epochs, cw_attack)
 
     histories = []
 
-    # Stage 1: Train head only on SMOTE-balanced data (frozen backbone)
-    logger.info("═══ Stage 1: Head on SMOTE (frozen backbone) ═══")
+    # Stage 1: Train head on imbalanced data with class weight (frozen backbone)
+    logger.info("═══ Stage 1: Head on imbalanced (frozen backbone) ═══")
     unfreezer = ProgressiveUnfreezer()
     unfreezer.apply_phase(full_model, frozen_groups=["cnn", "bilstm1", "bilstm2", "attention"])
 
@@ -409,8 +410,9 @@ def main() -> None:
         loss=loss, metrics=["accuracy"],
     )
     h1 = full_model.fit(
-        Xs_w, ys_w, epochs=head_epochs, batch_size=256,
+        Xo_w, yo_w, epochs=head_epochs, batch_size=256,
         validation_split=0.2, verbose=1,
+        class_weight=class_weights,
         callbacks=[
             tf.keras.callbacks.EarlyStopping(
                 monitor="val_loss", patience=3, restore_best_weights=True),
@@ -420,7 +422,7 @@ def main() -> None:
         ],
     )
     histories.append({
-        "phase": "Stage 1 — Head on SMOTE",
+        "phase": "Stage 1 — Head on imbalanced",
         "epochs_run": len(h1.history["loss"]),
         "final_train_loss": float(h1.history["loss"][-1]),
         "final_train_acc": float(h1.history["accuracy"][-1]),
@@ -430,9 +432,9 @@ def main() -> None:
     logger.info("  Stage 1 → val_loss=%.4f, val_acc=%.4f",
                 histories[-1]["final_val_loss"], histories[-1]["final_val_acc"])
 
-    # Stage 2: Fine-tune attention+BiLSTM2+head on imbalanced data with class_weight
-    logger.info("═══ Stage 2: Fine-tune on imbalanced (unfreeze attention+bilstm2) ═══")
-    unfreezer.apply_phase(full_model, frozen_groups=["cnn", "bilstm1"])
+    # Stage 2: Fine-tune full model on imbalanced data with class_weight
+    logger.info("═══ Stage 2: Fine-tune on imbalanced (unfreeze CNN+bilstm2+attention) ═══")
+    unfreezer.apply_phase(full_model, frozen_groups=["bilstm1"])
 
     full_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=finetune_lr),
@@ -483,8 +485,8 @@ def main() -> None:
 
     # 6b. Search threshold on imbalanced threshold_val
     y_thval_prob = full_model.predict(X_thval, verbose=0).ravel()
-    opt_threshold, opt_val_score = _find_optimal_threshold(y_thval, y_thval_prob, metric="attack_f1")
-    logger.info("  Optimal threshold: %.4f (thval attack_f1=%.4f)", opt_threshold, opt_val_score)
+    opt_threshold, opt_val_score = _find_optimal_threshold(y_thval, y_thval_prob, metric=config.search_metric)
+    logger.info("  Optimal threshold: %.4f (thval %s=%.4f)", opt_threshold, config.search_metric, opt_val_score)
 
     # 6c. Evaluate with optimised threshold
     train_metrics = _evaluate(full_model, Xo_w, yo_w, threshold=opt_threshold, label="train")
@@ -496,7 +498,7 @@ def main() -> None:
         "final_val_loss": last_history.get("final_val_loss", None),
         "final_val_acc": last_history.get("final_val_acc", None),
         "optimal_threshold": opt_threshold,
-        "val_attack_f1": opt_val_score,
+        f"val_{config.search_metric}": opt_val_score,
     }
     logger.info("  [val]  val_loss=%.4f  val_acc=%.4f  threshold=%.4f",
                 val_metrics["final_val_loss"] or 0, val_metrics["final_val_acc"] or 0, opt_threshold)
@@ -506,7 +508,7 @@ def main() -> None:
     logger.info("  IoMT Attack Detection Summary:")
     logger.info("  %-20s  %-10s  %-10s", "Metric", "Train", "Test")
     logger.info("  " + "─" * 42)
-    for m in ["attack_recall", "attack_precision", "attack_f1", "macro_f1", "auc_roc"]:
+    for m in ["attack_recall", "attack_precision", "attack_f1", "attack_f2", "macro_f1", "auc_roc"]:
         logger.info("  %-20s  %.4f      %.4f", m, train_metrics.get(m, 0), test_metrics.get(m, 0))
 
     # ══════════════════════════════════════════════════════════════
@@ -562,10 +564,10 @@ def main() -> None:
         "loss": "binary_crossentropy",
         "class_weights": {str(k): v for k, v in class_weights.items()},
         "training_phases": [
-            {"name": "Stage 1 — Head on SMOTE", "epochs": head_epochs,
+            {"name": "Stage 1 — Head on imbalanced", "epochs": head_epochs,
              "lr": head_lr, "frozen": ["cnn", "bilstm1", "bilstm2", "attention"]},
             {"name": "Stage 2 — Fine-tune on imbalanced", "epochs": ft_epochs,
-             "lr": finetune_lr, "frozen": ["cnn", "bilstm1"]},
+             "lr": finetune_lr, "frozen": ["bilstm1"]},
         ],
         "training_history": histories,
         "train_metrics": train_metrics,
@@ -625,7 +627,7 @@ def main() -> None:
     logger.info("═" * 60)
     logger.info("  Search:       %d trials (TPE)", tuning_results["total_trials"])
     logger.info("  Best quick:   %s=%.4f", config.search_metric, tuning_results["best_score"])
-    logger.info("  Threshold:    %.4f (optimised on val attack_f1)", opt_threshold)
+    logger.info("  Threshold:    %.4f (optimised on val %s)", opt_threshold, config.search_metric)
     logger.info("  Loss:         BCE + class_weight (Normal=%.2f, Attack=%.2f)",
                 class_weights.get(0, 1), class_weights.get(1, 1))
     logger.info("  ── Train ──")
@@ -634,8 +636,8 @@ def main() -> None:
     logger.info("    Macro F1=%.4f  AUC=%.4f  Accuracy=%.4f",
                 train_metrics.get("macro_f1", 0), train_metrics.get("auc_roc", 0), train_metrics.get("accuracy", 0))
     logger.info("  ── Val ──")
-    logger.info("    loss=%.4f  acc=%.4f  attack_f1=%.4f",
-                val_metrics["final_val_loss"] or 0, val_metrics["final_val_acc"] or 0, opt_val_score)
+    logger.info("    loss=%.4f  acc=%.4f  %s=%.4f",
+                val_metrics["final_val_loss"] or 0, val_metrics["final_val_acc"] or 0, config.search_metric, opt_val_score)
     logger.info("  ── Test ──")
     logger.info("    Attack F1=%.4f  Recall=%.4f  Precision=%.4f",
                 test_metrics.get("attack_f1", 0), test_metrics.get("attack_recall", 0), test_metrics.get("attack_precision", 0))

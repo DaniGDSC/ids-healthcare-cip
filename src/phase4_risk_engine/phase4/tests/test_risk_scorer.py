@@ -94,5 +94,6 @@ class TestRiskScorer:
             "threshold",
             "distance",
             "risk_level",
+            "attention_flag",
         }
         assert set(results[0].keys()) == expected_keys

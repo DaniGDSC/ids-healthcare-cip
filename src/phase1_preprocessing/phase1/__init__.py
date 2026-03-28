@@ -7,6 +7,7 @@ Phase0ArtifactReader     — reads Phase 0 outputs (DI)
 HIPAASanitizer           — drops HIPAA identifier columns
 MissingValueHandler      — ffill biometrics, dropna network
 RedundancyRemover        — drops correlated features from Phase 0
+VarianceFilter           — drops zero/near-zero variance features
 DataSplitter             — stratified 70/30 train/test
 SMOTEBalancer            — oversamples minority class (train only)
 RobustScalerTransformer  — fit on train, transform both
@@ -24,6 +25,7 @@ from .missing import MissingValueHandler
 from .pipeline import PreprocessingPipeline
 from .redundancy import RedundancyRemover
 from .report import render_preprocessing_report
+from .variance import VarianceFilter
 from .scaler import RobustScalerTransformer
 from .smote import SMOTEBalancer
 from .splitter import DataSplitter
@@ -35,6 +37,7 @@ __all__ = [
     "HIPAASanitizer",
     "MissingValueHandler",
     "RedundancyRemover",
+    "VarianceFilter",
     "DataSplitter",
     "SMOTEBalancer",
     "RobustScalerTransformer",

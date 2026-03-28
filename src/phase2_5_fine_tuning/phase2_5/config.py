@@ -24,7 +24,7 @@ class SearchSpaceConfig(BaseModel):
     finetune_lr_low: float = 1e-6
     finetune_lr_high: float = 1e-4
     cw_attack_low: float = 1.0
-    cw_attack_high: float = 5.0
+    cw_attack_high: float = 10.0
     head_epochs: List[int] = [3, 5, 7, 9]
     ft_epochs: List[int] = [1, 2, 3, 4, 5]
 
@@ -70,7 +70,7 @@ class Phase2_5Config(BaseModel):
 
     # Search settings
     max_trials: int = 30
-    search_metric: str = "attack_f1"
+    search_metric: str = "attack_f2"
     search_direction: str = "maximize"
     search_space: SearchSpaceConfig = SearchSpaceConfig()
 
@@ -112,7 +112,7 @@ class Phase2_5Config(BaseModel):
     def _valid_metric(cls, v: str) -> str:
         allowed = {
             "f1_score", "auc_roc", "accuracy", "precision", "recall",
-            "attack_f1", "attack_recall", "attack_precision", "macro_f1",
+            "attack_f1", "attack_f2", "attack_recall", "attack_precision", "macro_f1",
         }
         if v not in allowed:
             raise ValueError(f"search_metric must be one of {allowed}, got '{v}'")
@@ -169,7 +169,7 @@ class Phase2_5Config(BaseModel):
             phase2_config=Path(data.get("phase2_config", "")),
             label_column=data.get("label_column", "Label"),
             max_trials=search.get("max_trials", 30),
-            search_metric=search.get("metric", "attack_f1"),
+            search_metric=search.get("metric", "attack_f2"),
             search_direction=search.get("direction", "maximize"),
             search_space=space,
             quick_train=qt,

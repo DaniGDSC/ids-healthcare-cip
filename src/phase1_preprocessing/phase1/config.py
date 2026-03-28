@@ -40,6 +40,10 @@ class Phase1Config(BaseModel):
     correlation_threshold: float = 0.95
     phase0_corr_file: Path
 
+    # Variance filtering
+    variance_enabled: bool = True
+    variance_max_unique: int = 1
+
     # Split
     train_ratio: float = 0.70
     test_ratio: float = 0.30
@@ -105,6 +109,7 @@ class Phase1Config(BaseModel):
         hipaa = raw.get("hipaa", {})
         mv = raw.get("missing_values", {})
         corr = raw.get("correlation_removal", {})
+        var = raw.get("variance_filtering", {})
         split = raw.get("splitting", {})
         smote = raw.get("smote", {})
         norm = raw.get("normalization", {})
@@ -126,6 +131,8 @@ class Phase1Config(BaseModel):
                 "phase0_corr_file",
                 "results/phase0_analysis/high_correlations.csv",
             )),
+            variance_enabled=var.get("enabled", True),
+            variance_max_unique=var.get("max_unique", 1),
             train_ratio=split.get("train_ratio", 0.70),
             test_ratio=split.get("test_ratio", 0.30),
             random_state=split.get("random_state", 42),

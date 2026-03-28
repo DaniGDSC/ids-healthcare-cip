@@ -223,7 +223,7 @@ def _load_phase1_data(
 # ===================================================================
 
 
-def _rebuild_detection_model(metadata: Dict[str, Any], config: Dict[str, Any]) -> tf.keras.Model:
+def _rebuild_detection_model(metadata: Dict[str, Any], config: Dict[str, Any], n_features: int = 24) -> tf.keras.Model:
     """Rebuild Phase 2 detection model architecture and load weights.
 
     Architecture is rebuilt from Phase 2 SOLID builders, then weights
@@ -258,7 +258,7 @@ def _rebuild_detection_model(metadata: Dict[str, Any], config: Dict[str, Any]) -
 
     assembler = DetectionModelAssembler(
         timesteps=hp["timesteps"],
-        n_features=29,
+        n_features=n_features,
         builders=builders,
     )
     detection_model = assembler.assemble()
@@ -793,11 +793,15 @@ set `cross_dataset.enabled: true` in `config/phase3_config.yaml`.
 
 
 def run_pipeline() -> None:
-    """Run the full Phase 3 classification pipeline."""
+    """Run the Phase 3 classification pipeline.
+
+    Loads the Phase 2.5 fine-tuned model (no retraining), evaluates on
+    the test set, and exports production artifacts.
+    """
     t0 = time.time()
 
     logger.info("═══════════════════════════════════════════════════")
-    logger.info("  Phase 3 Classification Engine")
+    logger.info("  Phase 3 Classification Engine (load + evaluate)")
     logger.info("═══════════════════════════════════════════════════")
 
     # ── Reproducibility seeds ──
@@ -816,6 +820,23 @@ def run_pipeline() -> None:
     # ── Verify Phase 2 artifacts (SHA-256) ──
     metadata = _verify_phase2_artifacts(config)
 
+    # ── Load Phase 2.5 finetuned results ──
+    ft_cfg = config["finetuned_model"]
+    ft_results_path = PROJECT_ROOT / ft_cfg["results"]
+    ft_weights_path = PROJECT_ROOT / ft_cfg["weights"]
+    with open(ft_results_path) as f:
+        ft_results = json.load(f)
+    logger.info("  Loaded Phase 2.5 results: %s", ft_results_path.name)
+
+    # ── Resolve threshold ──
+    threshold_cfg = config["evaluation"]["threshold"]
+    if threshold_cfg == "auto":
+        threshold = float(ft_results["optimal_threshold"])
+        logger.info("  Threshold (from Phase 2.5): %.4f", threshold)
+    else:
+        threshold = float(threshold_cfg)
+        logger.info("  Threshold (manual): %.4f", threshold)
+
     # ── Load Phase 1 data ──
     X_train, y_train, X_test, y_test = _load_phase1_data(config)
 
@@ -825,45 +846,41 @@ def run_pipeline() -> None:
     X_train_w, y_train_w = reshaper.reshape(X_train, y_train)
     X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
 
-    # ── Rebuild detection model + load weights ──
-    detection_model = _rebuild_detection_model(metadata, config)
+    # ── Rebuild detection model (architecture only, no weights yet) ──
+    detection_model = _rebuild_detection_model(metadata, config, n_features=X_train.shape[1])
     detection_params = detection_model.count_params()
 
     # ── Auto classification head ──
     output_units, activation, loss = _auto_classify_head(y_train_w)
 
-    # ── Build full model ──
+    # ── Build full model + load Phase 2.5 finetuned weights ──
     full_model = _build_full_model(
         detection_model=detection_model,
         output_units=output_units,
         activation=activation,
         head_config=config["classification_head"],
     )
+    full_model.load_weights(str(ft_weights_path))
+    logger.info("  Loaded finetuned weights: %s", ft_weights_path.name)
 
     # ── Create output directory ──
     output_dir = PROJECT_ROOT / config["output"]["output_dir"]
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── Progressive unfreezing training ──
-    histories = _progressive_unfreezing(
-        model=full_model,
-        config=config,
-        X_train=X_train_w,
-        y_train=y_train_w,
-        loss=loss,
-    )
+    # ── Training history from Phase 2.5 (no retraining here) ──
+    histories = ft_results.get("training_history", [])
 
-    # ── Evaluate on WUSTL test set (primary) ──
+    # ── Evaluate on WUSTL test set ──
     metrics = _evaluate(
         model=full_model,
         X_test=X_test_w,
         y_test=y_test_w,
-        threshold=config["evaluation"]["threshold"],
+        threshold=threshold,
     )
 
     duration_s = time.time() - t0
 
-    # ── Export WUSTL artifacts ──
+    # ── Export artifacts ──
     _export_artifacts(
         model=full_model,
         metrics=metrics,

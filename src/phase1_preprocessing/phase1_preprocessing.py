@@ -481,6 +481,8 @@ def export_artifacts(
     report: Dict[str, Any],
     output_dir: Path,
     label_col: str = LABEL_COLUMN,
+    attack_cat_train: np.ndarray | None = None,
+    attack_cat_test: np.ndarray | None = None,
 ) -> Dict[str, str]:
     """Save Parquet splits, scaler pickle, and JSON report.
 
@@ -494,6 +496,8 @@ def export_artifacts(
         report: Accumulated pipeline report dict.
         output_dir: Directory for output artifacts.
         label_col: Label column name for Parquet files.
+        attack_cat_train: Attack Category string array for training set.
+        attack_cat_test: Attack Category string array for test set.
 
     Returns:
         Dict mapping artifact name to its file path.
@@ -507,6 +511,8 @@ def export_artifacts(
     train_path = output_dir / "train_phase1.parquet"
     train_df = pd.DataFrame(X_train, columns=feature_names)
     train_df[label_col] = y_train
+    if attack_cat_train is not None:
+        train_df["Attack Category"] = attack_cat_train
     train_df.to_parquet(train_path, index=False)
     paths["train_parquet"] = str(train_path)
     logger.info("  train_phase1.parquet: %d rows × %d cols", *train_df.shape)
@@ -515,6 +521,8 @@ def export_artifacts(
     test_path = output_dir / "test_phase1.parquet"
     test_df = pd.DataFrame(X_test, columns=feature_names)
     test_df[label_col] = y_test
+    if attack_cat_test is not None:
+        test_df["Attack Category"] = attack_cat_test
     test_df.to_parquet(test_path, index=False)
     paths["test_parquet"] = str(test_path)
     logger.info("  test_phase1.parquet: %d rows × %d cols", *test_df.shape)
@@ -769,12 +777,57 @@ def run_pipeline(config_path: Path) -> Dict[str, Any]:
         "n_dropped": len(red_cols),
     }
 
+    # ── Step 4b: Variance filtering ──
+    var_cfg = config.get("variance_filtering", {})
+    if var_cfg.get("enabled", True):
+        max_unique = var_cfg.get("max_unique", 1)
+        label_col = config.get("data", {}).get("label_column", "Label")
+        exclude = {label_col, "Attack Category"}
+        numeric_cols = [
+            c for c in df.select_dtypes(include=["number"]).columns
+            if c not in exclude
+        ]
+        zero_var_cols = [c for c in numeric_cols if df[c].nunique() <= max_unique]
+        df = df.drop(columns=zero_var_cols, errors="ignore")
+        report["variance"] = {
+            "max_unique": max_unique,
+            "columns_dropped": zero_var_cols,
+            "n_dropped": len(zero_var_cols),
+        }
+        logger.info(
+            "Step 4b — Variance: dropped %d features (unique ≤ %d): %s",
+            len(zero_var_cols), max_unique, zero_var_cols,
+        )
+
+    # ── Extract Attack Category before split (non-numeric, dropped by splitter) ──
+    attack_cat_all = df["Attack Category"].values if "Attack Category" in df.columns else None
+
     # ── Step 5: Stratified Split ──
     split_cfg = config.get("splitting", {})
-    X_train, X_test, y_train, y_test, feat_names = stratified_split(
-        df,
-        test_ratio=split_cfg.get("test_ratio", TEST_RATIO),
+    # Reproduce split indices to align Attack Category
+    label_col = config.get("data", {}).get("label_column", "Label")
+    y_all = df[label_col].values
+    X_df_num = df.drop(columns=[label_col]).select_dtypes(include=[np.number])
+    feat_names = X_df_num.columns.tolist()
+    X_all = X_df_num.values
+
+    from sklearn.model_selection import StratifiedShuffleSplit
+    sss = StratifiedShuffleSplit(
+        n_splits=1,
+        test_size=split_cfg.get("test_ratio", TEST_RATIO),
         random_state=split_cfg.get("random_state", RANDOM_STATE),
+    )
+    train_idx, test_idx = next(sss.split(X_all, y_all))
+    X_train, X_test = X_all[train_idx], X_all[test_idx]
+    y_train, y_test = y_all[train_idx], y_all[test_idx]
+
+    attack_cat_train = attack_cat_all[train_idx] if attack_cat_all is not None else None
+    attack_cat_test = attack_cat_all[test_idx] if attack_cat_all is not None else None
+
+    logger.info(
+        "Step 5 — Split: train=%d (attack=%.1f%%) | test=%d (attack=%.1f%%)",
+        len(X_train), y_train.mean() * 100,
+        len(X_test), y_test.mean() * 100,
     )
     report["split"] = {
         "train_samples": int(len(X_train)),
@@ -805,6 +858,8 @@ def run_pipeline(config_path: Path) -> Dict[str, Any]:
     export_artifacts(
         X_train_s, X_test_s, y_train, y_test,
         feat_names, scaler, report, output_dir,
+        attack_cat_train=attack_cat_train,
+        attack_cat_test=attack_cat_test,
     )
 
     # ── Render thesis report section ──
@@ -828,6 +883,7 @@ def _log_summary(report: Dict[str, Any]) -> None:
     hip = report.get("hipaa", {})
     mv = report.get("missing_values", {})
     red = report.get("redundancy", {})
+    var = report.get("variance", {})
     spl = report.get("split", {})
     smt = report.get("smote", {})
     out = report.get("output", {})
@@ -843,6 +899,8 @@ def _log_summary(report: Dict[str, Any]) -> None:
                 mv.get("biometric_cells_filled", 0), mv.get("rows_dropped", 0))
     logger.info("  Redundancy    : %d features dropped (|r| ≥ %.2f)",
                 red.get("n_dropped", 0), red.get("threshold", 0))
+    logger.info("  Variance      : %d features dropped (unique ≤ %d)",
+                var.get("n_dropped", 0), var.get("max_unique", 0))
     logger.info("  Split         : train=%d, test=%d",
                 spl.get("train_samples", 0), spl.get("test_samples", 0))
     logger.info("  SMOTE         : %d → %d (+%d synthetic)",

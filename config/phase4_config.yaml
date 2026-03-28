@@ -1,5 +1,5 @@
 # Phase 4 — Risk-Adaptive Engine Configuration
-# Consumes Phase 3 classification model + Phase 2 attention output
+# Consumes Phase 2.5 finetuned model + Phase 2 attention output
 
 data:
   # Phase 3 artifacts (SHA-256 verified before loading)
@@ -14,6 +14,44 @@ data:
   phase1_train: "data/processed/train_phase1.parquet"
   phase1_test: "data/processed/test_phase1.parquet"
   label_column: "Label"
+
+  # Phase 2.5 finetuned model (preferred over Phase 3 baseline)
+  finetuned_weights: "data/phase2_5/finetuned_model.weights.h5"
+  finetuned_results: "data/phase2_5/finetuned_results.json"
+
+# ── CIA Adaptive Priority Shifting ─────────────────────────────────
+# Scenarios:
+#   Normal Monitoring:  I >= C > A  (data privacy + diagnostic accuracy)
+#   Clinical Emergency: A > I > C   (immediate access vital)
+#   High Threat:        I > A > C   (prevent tampering / malicious control)
+cia:
+  enabled: true
+  escalation_threshold: 0.7
+  default_device_id: "generic_iomt_sensor"
+
+  threat_mappings:
+    - attack_category: "Spoofing"
+      cia_weights: { confidentiality: 0.6, integrity: 0.9, availability: 0.3 }
+    - attack_category: "Data Alteration"
+      cia_weights: { confidentiality: 0.3, integrity: 1.0, availability: 0.2 }
+    - attack_category: "unknown"
+      cia_weights: { confidentiality: 0.5, integrity: 0.5, availability: 0.5 }
+
+  device_registry:
+    - device_type: "infusion_pump"
+      fda_class: "III"
+      cia_priority: { confidentiality: 0.4, integrity: 1.0, availability: 1.0 }
+      description: "IV medication delivery — availability-critical"
+    - device_type: "ecg_monitor"
+      fda_class: "III"
+      cia_priority: { confidentiality: 0.5, integrity: 1.0, availability: 1.0 }
+      description: "Cardiac monitoring — integrity and availability critical"
+    - device_type: "pulse_oximeter"
+      fda_class: "II"
+      cia_priority: { confidentiality: 0.3, integrity: 0.9, availability: 0.8 }
+    - device_type: "generic_iomt_sensor"
+      fda_class: "II"
+      cia_priority: { confidentiality: 0.4, integrity: 0.8, availability: 0.7 }
 
 baseline:
   # Median + k*MAD on Normal-only attention scores

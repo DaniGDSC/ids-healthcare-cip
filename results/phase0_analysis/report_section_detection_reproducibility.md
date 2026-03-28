@@ -8,26 +8,27 @@ Phase 2 Detection Engine.
 
 | Metric | Value |
 |--------|-------|
-| Device | CPU: x86_64 |
-| TensorFlow | 2.20.0 |
-| CUDA | N/A (CPU execution) |
-| Python | 3.12.3 |
-| Platform | Linux-6.17.0-14-generic-x86_64-with-glibc2.39 |
+| Device | GPU: /physical_device:GPU:0 |
+| TensorFlow | 2.21.0 |
+| CUDA | 12.5.1 |
+| cuDNN | 9 |
+| Python | 3.10.20 |
+| Platform | Linux-6.17.0-19-generic-x86_64-with-glibc2.39 |
 
-Training executed on **CPU: x86_64**.
-TensorFlow version: 2.20.0, CUDA: N/A (CPU execution).
+Training executed on **GPU: /physical_device:GPU:0**.
+TensorFlow version: 2.21.0, CUDA: 12.5.1, cuDNN: 9.
 
 ### 5.3.2 Model Versioning
 
 | Property | Value |
 |----------|-------|
-| `detection_model.weights.h5` git commit | `d19d8923fd0c4459760ebe4dcb1e708e75b85d72` |
-| Architecture | CNN-BiLSTM-Attention (474,496 parameters) |
+| `detection_model.weights.h5` git commit | `7d444ad562ccb791a463411a24afe3b4ab209ae9` |
+| Architecture | CNN-BiLSTM-Attention (473,536 parameters) |
 | Output dimensionality | 128 |
 | Config file | `config/phase2_config.yaml` (version-controlled) |
 
 Hyperparameters frozen in `config/phase2_config.yaml` — version controlled.
-Model weights tagged with git commit `d19d8923fd0c` in `detection_metadata.json`.
+Model weights tagged with git commit `7d444ad562cc` in `detection_metadata.json`.
 
 ### 5.3.3 End-to-End Pipeline Timing
 
@@ -35,7 +36,7 @@ Model weights tagged with git commit `d19d8923fd0c` in `detection_metadata.json`
 |-------|----------|----------|
 | Phase 0 | Data analysis | CPU |
 | Phase 1 | Preprocessing | CPU |
-| Phase 2 | **2.99 s** | CPU: x86_64 |
+| Phase 2 | **2.89 s** | GPU: /physical_device:GPU:0 |
 
 ### 5.3.4 Reproducibility Statement
 
