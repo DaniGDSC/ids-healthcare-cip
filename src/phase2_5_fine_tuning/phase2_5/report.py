@@ -25,7 +25,7 @@ def render_tuning_report(
     # Best config table
     best_config_rows = ""
     for k, v in sorted(best_config.items()):
-        best_config_rows += f"| `{k}` | {v:.6g if isinstance(v, float) else v} |\n"
+        best_config_rows += f"| `{k}` | {f'{v:.6g}' if isinstance(v, float) else v} |\n"
 
     best_metrics_rows = ""
     for k, v in sorted(best_metrics.items()):

@@ -49,7 +49,6 @@ from src.phase2_detection_engine.phase2.cnn_builder import CNNBuilder
 from src.phase2_detection_engine.phase2.reshaper import DataReshaper
 
 # ── Phase 3 SOLID components (reused) ────────────────────────────
-from src.phase3_classification_engine.phase3.config import TrainingPhaseConfig
 from src.phase3_classification_engine.phase3.head import AutoClassificationHead
 from src.phase3_classification_engine.phase3.unfreezer import ProgressiveUnfreezer
 
@@ -82,78 +81,6 @@ logger = logging.getLogger("run_finetuned_training")
 # ===================================================================
 # Class-weighted trainer (extends Phase 3 trainer with class_weight)
 # ===================================================================
-
-class _ClassWeightedTrainer:
-    """Trainer that passes class_weight to model.fit for imbalanced IoMT data."""
-
-    def __init__(
-        self,
-        class_weight: Optional[Dict[int, float]],
-        batch_size: int = 256,
-        validation_split: float = 0.2,
-        early_stopping_patience: int = 3,
-        reduce_lr_patience: int = 2,
-        reduce_lr_factor: float = 0.5,
-    ) -> None:
-        self._class_weight = class_weight
-        self._batch_size = batch_size
-        self._val_split = validation_split
-        self._es_patience = early_stopping_patience
-        self._lr_patience = reduce_lr_patience
-        self._lr_factor = reduce_lr_factor
-
-    def train_all_phases(
-        self,
-        model: tf.keras.Model,
-        phases: list,
-        unfreezer: ProgressiveUnfreezer,
-        X_train: np.ndarray,
-        y_train: np.ndarray,
-        loss: str,
-        output_dir: Path,
-    ) -> list:
-        logger.info("═══ Progressive Unfreezing (class-weighted) ═══")
-        all_histories = []
-        for i, phase_cfg in enumerate(phases):
-            unfreezer.apply_phase(model, phase_cfg.frozen)
-            history = self._train_phase(model, phase_cfg, X_train, y_train, loss, output_dir, i)
-            all_histories.append(history)
-        return all_histories
-
-    def _train_phase(self, model, phase_cfg, X_train, y_train, loss, output_dir, idx):
-        logger.info("── %s ──", phase_cfg.name)
-        checkpoint = output_dir / f"checkpoint_phase_{idx}.weights.h5"
-        callbacks = [
-            tf.keras.callbacks.EarlyStopping(
-                monitor="val_loss", patience=self._es_patience, restore_best_weights=True,
-            ),
-            tf.keras.callbacks.ModelCheckpoint(
-                filepath=str(checkpoint), save_best_only=True, save_weights_only=True,
-            ),
-            tf.keras.callbacks.ReduceLROnPlateau(
-                monitor="val_loss", factor=self._lr_factor, patience=self._lr_patience,
-            ),
-        ]
-        model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=phase_cfg.learning_rate),
-            loss=loss, metrics=["accuracy"],
-        )
-        history = model.fit(
-            X_train, y_train, epochs=phase_cfg.epochs,
-            batch_size=self._batch_size, validation_split=self._val_split,
-            class_weight=self._class_weight, callbacks=callbacks, verbose=1,
-        )
-        ph = {
-            "phase": phase_cfg.name,
-            "epochs_run": len(history.history["loss"]),
-            "final_train_loss": float(history.history["loss"][-1]),
-            "final_train_acc": float(history.history["accuracy"][-1]),
-            "final_val_loss": float(history.history["val_loss"][-1]),
-            "final_val_acc": float(history.history["val_accuracy"][-1]),
-        }
-        logger.info("  %s → val_loss=%.4f, val_acc=%.4f", phase_cfg.name, ph["final_val_loss"], ph["final_val_acc"])
-        return ph
-
 
 # ===================================================================
 # Helpers
@@ -212,6 +139,13 @@ def _load_baseline_metrics() -> Dict[str, Any]:
             raw = json.load(f)
         return raw.get("metrics", raw)
     return {}
+
+
+def _load_p2_architecture() -> Dict[str, Any]:
+    """Load Phase 2 architecture hyperparameters from metadata."""
+    path = PROJECT_ROOT / "data" / "phase2" / "detection_metadata.json"
+    with open(path) as f:
+        return json.load(f)["hyperparameters"]
 
 
 def _build_detection_model(hp: Dict[str, Any], n_features: int) -> tf.keras.Model:
@@ -322,19 +256,31 @@ def main() -> None:
     # STEP 1: Hyperparameter Search (Bayesian TPE + Hyperband)
     # ══════════════════════════════════════════════════════════════
     logger.info("")
-    logger.info("STEP 1: Hyperparameter search (%s, %d trials)",
-                config.search_strategy, config.max_trials)
+    logger.info("STEP 1: Hyperparameter search (TPE, %d trials)",
+                config.max_trials)
 
     search_space = SearchSpace(config.search_space, config.random_state)
     p2_weights_path = str(PROJECT_ROOT / "data" / "phase2" / "detection_model.weights.h5")
+    p2_hp = _load_p2_architecture()
+    model_architecture = {
+        "cnn_filters_1": p2_hp["cnn_filters_1"],
+        "cnn_filters_2": p2_hp["cnn_filters_2"],
+        "bilstm_units_1": p2_hp["bilstm_units_1"],
+        "bilstm_units_2": p2_hp["bilstm_units_2"],
+        "attention_units": p2_hp["attention_units"],
+        "head_dense_units": 32,
+        "dropout_rate": p2_hp["dropout_rate"],
+        "timesteps": p2_hp["timesteps"],
+    }
     evaluator = QuickEvaluator(
         config.quick_train, n_features=n_features,
         random_state=config.random_state,
         pretrained_weights_path=p2_weights_path,
+        model_architecture=model_architecture,
     )
     tuner = HyperparameterTuner(config, evaluator, search_space)
 
-    tuning_results = tuner.run(X_train_smote, y_train_smote, X_test, y_test)
+    tuning_results = tuner.run(X_train_smote, y_train_smote, X_train_orig, y_train_orig, X_test, y_test)
 
     best_hp = tuning_results["best_config"]
     logger.info("  Best config found (quick %s=%.4f):", config.search_metric, tuning_results["best_score"])
@@ -384,19 +330,10 @@ def main() -> None:
     np.random.seed(config.random_state)
     tf.random.set_seed(config.random_state)
 
-    timesteps = int(best_hp.get("timesteps", 20))
+    timesteps = p2_hp["timesteps"]
     stride = int(best_hp.get("stride", 1))
 
-    # 5a-b. Build Phase 2 BASELINE detection model and load pre-trained weights
-    #     We use the exact Phase 2 architecture (not the tuned one) so that
-    #     pre-trained weights load perfectly.  The HP search already found
-    #     the best LR schedule, dropout, and threshold — the architecture
-    #     exploration is done via ablation study.
-    import json as _json
-    with open(PROJECT_ROOT / "data" / "phase2" / "detection_metadata.json") as _f:
-        p2_meta = _json.load(_f)
-    p2_hp = p2_meta["hyperparameters"]
-
+    # 5a. Build detection model and load Phase 2 pretrained weights
     detection_model = _build_detection_model({
         "cnn_filters_1": p2_hp["cnn_filters_1"],
         "cnn_filters_2": p2_hp["cnn_filters_2"],
@@ -405,27 +342,35 @@ def main() -> None:
         "bilstm_units_2": p2_hp["bilstm_units_2"],
         "attention_units": p2_hp["attention_units"],
         "dropout_rate": float(best_hp.get("dropout_rate", p2_hp["dropout_rate"])),
-        "timesteps": p2_hp["timesteps"],
+        "timesteps": timesteps,
     }, n_features)
     detection_params = detection_model.count_params()
 
     p2_weights = PROJECT_ROOT / "data" / "phase2" / "detection_model.weights.h5"
     detection_model.load_weights(str(p2_weights))
-    logger.info("  Detection model: %d params (Phase 2 weights loaded fully)", detection_params)
+    logger.info("  Detection model: %d params (Phase 2 weights loaded)", detection_params)
 
-    timesteps = p2_hp["timesteps"]  # Override to match Phase 2
+    # 5b. Reshape all datasets
     reshaper = DataReshaper(timesteps=timesteps, stride=stride)
-    X_train_w, y_train_w = reshaper.reshape(X_train_orig, y_train_orig)
+    Xs_w, ys_w = reshaper.reshape(X_train_smote, y_train_smote)
+    Xo_w, yo_w = reshaper.reshape(X_train_orig, y_train_orig)
     X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
 
-    n0w = int(np.sum(y_train_w == 0))
-    n1w = int(np.sum(y_train_w == 1))
-    logger.info("  Training on ORIGINAL imbalanced data (re-windowed): Normal=%d, Attack=%d (%.1f:1)",
-                n0w, n1w, n0w / max(n1w, 1))
+    n0s = int(np.sum(ys_w == 0))
+    n1s = int(np.sum(ys_w == 1))
+    logger.info("  SMOTE train (windowed): Normal=%d, Attack=%d", n0s, n1s)
+    n0o = int(np.sum(yo_w == 0))
+    n1o = int(np.sum(yo_w == 1))
+    logger.info("  Original train (windowed): Normal=%d, Attack=%d (%.1f:1)",
+                n0o, n1o, n0o / max(n1o, 1))
 
-    # 5c. Add classification head
-    n_classes = len(np.unique(y_train_w))
-    head = AutoClassificationHead(dense_units=64, dense_activation="relu", dropout_rate=0.3)
+    # 5c. Add classification head (match tuner architecture: dense_units=32)
+    n_classes = len(np.unique(yo_w))
+    head = AutoClassificationHead(
+        dense_units=model_architecture["head_dense_units"],
+        dense_activation="relu",
+        dropout_rate=float(best_hp.get("dropout_rate", p2_hp["dropout_rate"])),
+    )
     output_tensor = head.build(detection_model.output, n_classes)
     full_model = tf.keras.Model(detection_model.input, output_tensor, name="finetuned_model")
     loss = head.get_loss(n_classes)
@@ -434,65 +379,89 @@ def main() -> None:
     head_params = total_params - detection_params
     logger.info("  Full model: %d params (detection=%d, head=%d)", total_params, detection_params, head_params)
 
-    # 5d. Progressive unfreezing training with tuned LR schedule
-    phase_a_lr = float(best_hp.get("phase_a_lr", 0.001))
-    phase_b_lr = float(best_hp.get("phase_b_lr", 0.0001))
-    phase_c_lr = float(best_hp.get("phase_c_lr", 0.00001))
-    unfreeze_epochs = int(best_hp.get("unfreezing_epochs", 5))
+    # 5d. Two-stage training (matches tuner's evaluate_two_stage)
+    #     Stage 1: Train head on SMOTE-balanced data (frozen backbone)
+    #     Stage 2: Fine-tune attention+BiLSTM2+head on imbalanced data with class_weight
+    head_lr = float(best_hp["head_lr"])
+    finetune_lr = float(best_hp["finetune_lr"])
+    cw_attack = float(best_hp["cw_attack"])
+    head_epochs = int(best_hp["head_epochs"])
+    ft_epochs = int(best_hp["ft_epochs"])
+    class_weights = {0: 1.0, 1: cw_attack}
 
-    training_phases = [
-        TrainingPhaseConfig(
-            name="Phase A — Head only",
-            epochs=unfreeze_epochs,
-            learning_rate=phase_a_lr,
-            frozen=["cnn", "bilstm1", "bilstm2", "attention"],
-        ),
-        TrainingPhaseConfig(
-            name="Phase B — Attention + Head",
-            epochs=unfreeze_epochs,
-            learning_rate=phase_b_lr,
-            frozen=["cnn", "bilstm1", "bilstm2"],
-        ),
-        TrainingPhaseConfig(
-            name="Phase C — BiLSTM-2 + Attention + Head",
-            epochs=unfreeze_epochs,
-            learning_rate=phase_c_lr,
-            frozen=["cnn", "bilstm1"],
-        ),
-    ]
-
-    logger.info("  Training schedule:")
-    for p in training_phases:
-        logger.info("    %s: epochs=%d, lr=%.6g, frozen=%s", p.name, p.epochs, p.learning_rate, p.frozen)
-
-    batch_size = int(best_hp.get("batch_size", 256))
     output_dir = PROJECT_ROOT / config.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 5e. BCE + tuned class_weight (sweep found CW=2.5 for attacks optimal)
-    #     CW=2.5 balances attack recall vs precision on the 7:1 imbalanced data
-    class_weights = {0: 1.0, 1: 2.5}
-    logger.info("  Loss: BCE + class_weight=%s", class_weights)
+    logger.info("  Training schedule (2-stage, matching tuner):")
+    logger.info("    Stage 1: head_lr=%.6g, head_epochs=%d (SMOTE, frozen backbone)", head_lr, head_epochs)
+    logger.info("    Stage 2: finetune_lr=%.6g, ft_epochs=%d, cw_attack=%.4f (imbalanced)",
+                finetune_lr, ft_epochs, cw_attack)
 
+    histories = []
+
+    # Stage 1: Train head only on SMOTE-balanced data (frozen backbone)
+    logger.info("═══ Stage 1: Head on SMOTE (frozen backbone) ═══")
     unfreezer = ProgressiveUnfreezer()
-    trainer = _ClassWeightedTrainer(
-        class_weight=class_weights,
-        batch_size=batch_size,
-        validation_split=0.2,
-        early_stopping_patience=3,
-        reduce_lr_patience=2,
-        reduce_lr_factor=0.5,
-    )
+    unfreezer.apply_phase(full_model, frozen_groups=["cnn", "bilstm1", "bilstm2", "attention"])
 
-    histories = trainer.train_all_phases(
-        model=full_model,
-        phases=training_phases,
-        unfreezer=unfreezer,
-        X_train=X_train_w,
-        y_train=y_train_w,
-        loss=loss,
-        output_dir=output_dir,
+    full_model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=head_lr),
+        loss=loss, metrics=["accuracy"],
     )
+    h1 = full_model.fit(
+        Xs_w, ys_w, epochs=head_epochs, batch_size=256,
+        validation_split=0.2, verbose=1,
+        callbacks=[
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss", patience=3, restore_best_weights=True),
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=str(output_dir / "checkpoint_stage1.weights.h5"),
+                save_best_only=True, save_weights_only=True),
+        ],
+    )
+    histories.append({
+        "phase": "Stage 1 — Head on SMOTE",
+        "epochs_run": len(h1.history["loss"]),
+        "final_train_loss": float(h1.history["loss"][-1]),
+        "final_train_acc": float(h1.history["accuracy"][-1]),
+        "final_val_loss": float(h1.history["val_loss"][-1]),
+        "final_val_acc": float(h1.history["val_accuracy"][-1]),
+    })
+    logger.info("  Stage 1 → val_loss=%.4f, val_acc=%.4f",
+                histories[-1]["final_val_loss"], histories[-1]["final_val_acc"])
+
+    # Stage 2: Fine-tune attention+BiLSTM2+head on imbalanced data with class_weight
+    logger.info("═══ Stage 2: Fine-tune on imbalanced (unfreeze attention+bilstm2) ═══")
+    unfreezer.apply_phase(full_model, frozen_groups=["cnn", "bilstm1"])
+
+    full_model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=finetune_lr),
+        loss=loss, metrics=["accuracy"],
+    )
+    h2 = full_model.fit(
+        Xo_w, yo_w, epochs=ft_epochs, batch_size=256,
+        validation_split=0.2, verbose=1,
+        class_weight=class_weights,
+        callbacks=[
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss", patience=2, restore_best_weights=True),
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=str(output_dir / "checkpoint_stage2.weights.h5"),
+                save_best_only=True, save_weights_only=True),
+            tf.keras.callbacks.ReduceLROnPlateau(
+                monitor="val_loss", factor=0.5, patience=2),
+        ],
+    )
+    histories.append({
+        "phase": "Stage 2 — Fine-tune on imbalanced",
+        "epochs_run": len(h2.history["loss"]),
+        "final_train_loss": float(h2.history["loss"][-1]),
+        "final_train_acc": float(h2.history["accuracy"][-1]),
+        "final_val_loss": float(h2.history["val_loss"][-1]),
+        "final_val_acc": float(h2.history["val_accuracy"][-1]),
+    })
+    logger.info("  Stage 2 → val_loss=%.4f, val_acc=%.4f",
+                histories[-1]["final_val_loss"], histories[-1]["final_val_acc"])
 
     # ══════════════════════════════════════════════════════════════
     # STEP 6: Optimal Threshold + Evaluate — Train / Val / Test
@@ -518,7 +487,7 @@ def main() -> None:
     logger.info("  Optimal threshold: %.4f (thval attack_f1=%.4f)", opt_threshold, opt_val_score)
 
     # 6c. Evaluate with optimised threshold
-    train_metrics = _evaluate(full_model, X_train_w, y_train_w, threshold=opt_threshold, label="train")
+    train_metrics = _evaluate(full_model, Xo_w, yo_w, threshold=opt_threshold, label="train")
     test_metrics = _evaluate(full_model, X_ftest, y_ftest, threshold=opt_threshold, label="test")
 
     # Validation metrics from training history
@@ -593,8 +562,10 @@ def main() -> None:
         "loss": "binary_crossentropy",
         "class_weights": {str(k): v for k, v in class_weights.items()},
         "training_phases": [
-            {"name": p.name, "epochs": p.epochs, "lr": p.learning_rate, "frozen": p.frozen}
-            for p in training_phases
+            {"name": "Stage 1 — Head on SMOTE", "epochs": head_epochs,
+             "lr": head_lr, "frozen": ["cnn", "bilstm1", "bilstm2", "attention"]},
+            {"name": "Stage 2 — Fine-tune on imbalanced", "epochs": ft_epochs,
+             "lr": finetune_lr, "frozen": ["cnn", "bilstm1"]},
         ],
         "training_history": histories,
         "train_metrics": train_metrics,
@@ -652,7 +623,7 @@ def main() -> None:
     logger.info("═" * 60)
     logger.info("  COMPLETE — %.1fs", duration_s)
     logger.info("═" * 60)
-    logger.info("  Search:       %d trials (%s)", tuning_results["total_trials"], config.search_strategy)
+    logger.info("  Search:       %d trials (TPE)", tuning_results["total_trials"])
     logger.info("  Best quick:   %s=%.4f", config.search_metric, tuning_results["best_score"])
     logger.info("  Threshold:    %.4f (optimised on val attack_f1)", opt_threshold)
     logger.info("  Loss:         BCE + class_weight (Normal=%.2f, Attack=%.2f)",

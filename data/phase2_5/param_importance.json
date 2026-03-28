@@ -1,0 +1,24 @@
+{
+  "method": "optuna_fanova",
+  "importances": {
+    "finetune_lr": 0.9478022121188829,
+    "head_lr": 0.018894228491845542,
+    "head_epochs": 0.014784761918576085,
+    "cw_attack": 0.012567624381461298,
+    "ft_epochs": 0.005951173089234012
+  },
+  "grouped_importances": {
+    "finetune_lr": 0.2895484918188083,
+    "cw_attack": 0.28125136608983115,
+    "head_lr": 0.28125136608983115,
+    "head_epochs": 0.08033483723076248,
+    "ft_epochs": 0.06761393877076693
+  },
+  "optuna_importances": {
+    "finetune_lr": 0.9478022121188829,
+    "head_lr": 0.018894228491845542,
+    "head_epochs": 0.014784761918576085,
+    "cw_attack": 0.012567624381461298,
+    "ft_epochs": 0.005951173089234012
+  }
+}

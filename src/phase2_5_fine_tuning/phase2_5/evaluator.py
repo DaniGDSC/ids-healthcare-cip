@@ -97,9 +97,9 @@ class QuickEvaluator:
         self._random_state = random_state
         self._weights_path = pretrained_weights_path
         self._arch = model_architecture or {
-            "cnn_filters_1": 32, "cnn_filters_2": 64,
-            "bilstm_units_1": 256, "bilstm_units_2": 128,
-            "attention_units": 256, "head_dense_units": 32,
+            "cnn_filters_1": 64, "cnn_filters_2": 128,
+            "bilstm_units_1": 128, "bilstm_units_2": 64,
+            "attention_units": 128, "head_dense_units": 32,
             "dropout_rate": 0.3, "timesteps": 20,
         }
 
@@ -174,9 +174,10 @@ class QuickEvaluator:
                 monitor="val_loss", patience=2, restore_best_weights=True)],
         )
 
-        # Threshold + metrics on imbalanced test
-        opt_threshold = self._find_threshold(model, Xt_w, yt_w)
-        metrics = self._compute_metrics(model, Xt_w, yt_w, threshold=opt_threshold)
+        # Threshold + metrics on imbalanced test (single predict)
+        y_prob = self._predict_prob(model, Xt_w)
+        opt_threshold = self._find_threshold_from_prob(yt_w, y_prob)
+        metrics = self._compute_metrics_from_prob(yt_w, y_prob, threshold=opt_threshold)
 
         duration = time.perf_counter() - t0
         tf.keras.backend.clear_session()
@@ -237,8 +238,9 @@ class QuickEvaluator:
                 restore_best_weights=True)],
         )
 
-        opt_threshold = self._find_threshold(model, Xt_w, yt_w)
-        metrics = self._compute_metrics(model, Xt_w, yt_w, threshold=opt_threshold)
+        y_prob = self._predict_prob(model, Xt_w)
+        opt_threshold = self._find_threshold_from_prob(yt_w, y_prob)
+        metrics = self._compute_metrics_from_prob(yt_w, y_prob, threshold=opt_threshold)
         duration = time.perf_counter() - t0
         tf.keras.backend.clear_session()
 
@@ -269,15 +271,15 @@ class QuickEvaluator:
         )
         det = assembler.assemble()
 
+        if self._weights_path:
+            det.load_weights(self._weights_path)
+
         x = tf.keras.layers.Dense(
             a["head_dense_units"], activation="relu", name="dense_head",
         )(det.output)
         x = tf.keras.layers.Dropout(a["dropout_rate"], name="drop_head")(x)
         x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
         model = tf.keras.Model(det.input, x, name="phase3_finetune")
-
-        if self._weights_path:
-            model.load_weights(self._weights_path)
 
         return model
 
@@ -326,22 +328,26 @@ class QuickEvaluator:
 
         return tf.keras.Model(inp, x, name="detection_variant")
 
-    def _find_threshold(self, model: tf.keras.Model, X: np.ndarray, y: np.ndarray) -> float:
-        """Find optimal threshold on the given data."""
+    @staticmethod
+    def _predict_prob(model: tf.keras.Model, X: np.ndarray) -> np.ndarray:
+        """Run model prediction and return 1-D probabilities."""
         y_prob = model.predict(X, verbose=0)
         if y_prob.shape[-1] == 1:
             y_prob = y_prob.ravel()
+        return y_prob
+
+    @staticmethod
+    def _find_threshold_from_prob(y: np.ndarray, y_prob: np.ndarray) -> float:
+        """Find optimal threshold from pre-computed probabilities."""
         threshold, _ = _find_optimal_threshold(y, y_prob)
         return threshold
 
     @staticmethod
-    def _compute_metrics(
-        model: tf.keras.Model, X: np.ndarray, y: np.ndarray, threshold: float = 0.5,
+    def _compute_metrics_from_prob(
+        y: np.ndarray, y_prob: np.ndarray, threshold: float = 0.5,
     ) -> Dict[str, float]:
-        """Compute classification metrics including attack-specific."""
-        y_prob = model.predict(X, verbose=0)
-        if y_prob.shape[-1] == 1:
-            y_prob = y_prob.ravel()
+        """Compute classification metrics from pre-computed probabilities."""
+        if y_prob.ndim == 1:
             y_pred = (y_prob > threshold).astype(int)
         else:
             y_pred = np.argmax(y_prob, axis=1)
