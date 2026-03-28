@@ -1,10 +1,11 @@
-"""Quick evaluator — fast train + eval cycle for tuning iterations.
+"""Quick evaluator — two-stage train + eval for tuning iterations.
 
-Builds a detection model with given hyperparameters, adds a classification
-head, trains with reduced epochs, and returns metrics.  Never evaluates on
-training data (data leakage prevention).
+Two-stage strategy:
+  Stage 1: Train head on SMOTE balanced data (frozen backbone)
+  Stage 2: Fine-tune attention+BiLSTM2+head on imbalanced data with class_weight
+  + Optimal threshold search on imbalanced test set
 
-Supports Optuna Hyperband pruning via epoch-level metric reporting.
+Attack-aware metrics: attack_recall, attack_precision, attack_f1, macro_f1.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-# ── Phase 2 SOLID components (reused, NOT reimplemented) ────────
+# ── Phase 2 SOLID components (reused) ────────────────────────────
 from src.phase2_detection_engine.phase2.assembler import DetectionModelAssembler
 from src.phase2_detection_engine.phase2.attention_builder import (
     AttentionBuilder,
@@ -38,37 +39,49 @@ from .config import QuickTrainConfig
 logger = logging.getLogger(__name__)
 
 
-# ── Optuna pruning callback for Keras ─────────────────────────────
+def _compute_class_weights(y: np.ndarray) -> Dict[int, float]:
+    """Compute class weights inversely proportional to frequency."""
+    classes, counts = np.unique(y, return_counts=True)
+    total = len(y)
+    n_classes = len(classes)
+    return {int(cls): total / (n_classes * count) for cls, count in zip(classes, counts)}
 
-class _OptunaPruningCallback(tf.keras.callbacks.Callback):
-    """Reports epoch-level metrics to Optuna for Hyperband pruning."""
 
-    def __init__(self, trial: Any, metric_key: str = "val_loss") -> None:
-        super().__init__()
-        self._trial = trial
-        self._metric_key = metric_key
+def _find_optimal_threshold(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    metric: str = "attack_f1",
+    n_thresholds: int = 50,
+) -> Tuple[float, float]:
+    """Search for the threshold that maximises attack_f1."""
+    thresholds = np.linspace(0.1, 0.9, n_thresholds)
+    best_t, best_s = 0.5, 0.0
 
-    def on_epoch_end(self, epoch: int, logs: Optional[Dict] = None) -> None:
-        import optuna
+    for t in thresholds:
+        y_pred = (y_prob > t).astype(int)
+        if metric == "attack_f1":
+            score = float(f1_score(y_true, y_pred, pos_label=1, average="binary", zero_division=0))
+        elif metric == "macro_f1":
+            score = float(f1_score(y_true, y_pred, average="macro", zero_division=0))
+        else:
+            score = float(f1_score(y_true, y_pred, pos_label=1, average="binary", zero_division=0))
 
-        logs = logs or {}
-        value = logs.get(self._metric_key)
-        if value is not None:
-            self._trial.report(float(value), epoch)
-            if self._trial.should_prune():
-                raise optuna.TrialPruned()
+        if score > best_s:
+            best_s = score
+            best_t = float(t)
+
+    return best_t, best_s
 
 
 class QuickEvaluator:
-    """Build, train, and evaluate a model variant in a single call.
-
-    Designed for fast iteration during hyperparameter search and
-    ablation studies.  Uses reduced epochs and early stopping.
+    """Two-stage train + eval for Bayesian HPO trials.
 
     Args:
-        quick_train: Quick training configuration.
+        quick_train: Training configuration.
         n_features: Number of input features (default 29).
         random_state: Seed for reproducibility.
+        pretrained_weights_path: Path to Phase 3 model weights.
+        model_architecture: Dict with Phase 3 architecture params.
     """
 
     def __init__(
@@ -76,192 +89,103 @@ class QuickEvaluator:
         quick_train: QuickTrainConfig,
         n_features: int = 29,
         random_state: int = 42,
+        pretrained_weights_path: Optional[str] = None,
+        model_architecture: Optional[Dict[str, Any]] = None,
     ) -> None:
         self._qt = quick_train
         self._n_features = n_features
         self._random_state = random_state
-
-    def evaluate_config(
-        self,
-        hp: Dict[str, Any],
-        X_train: np.ndarray,
-        y_train: np.ndarray,
-        X_test: np.ndarray,
-        y_test: np.ndarray,
-        seed_override: Optional[int] = None,
-        epochs_override: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        """Build, train, and evaluate a full model with the given hyperparameters.
-
-        Args:
-            hp: Hyperparameter dict (cnn_filters_1, bilstm_units_1, etc.).
-            X_train: Raw training features (N, F).
-            y_train: Training labels.
-            X_test: Raw test features (N, F).
-            y_test: Test labels.
-            seed_override: Override random seed for multi-seed validation.
-            epochs_override: Override epoch count for full training.
-
-        Returns:
-            Dict with metrics, hyperparameters, duration, and parameter count.
-        """
-        t0 = time.perf_counter()
-        seed = seed_override if seed_override is not None else self._random_state
-        epochs = epochs_override if epochs_override is not None else self._qt.epochs
-
-        tf.random.set_seed(seed)
-        np.random.seed(seed)  # noqa: NPY002
-
-        timesteps = hp.get("timesteps", 20)
-        stride = hp.get("stride", 1)
-
-        # Reshape
-        reshaper = DataReshaper(timesteps=timesteps, stride=stride)
-        X_train_w, y_train_w = reshaper.reshape(X_train, y_train)
-        X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
-
-        # Build detection model
-        detection_model = self._build_detection_model(hp, timesteps)
-        detection_params = detection_model.count_params()
-
-        # Add classification head
-        full_model, loss = self._add_classification_head(
-            detection_model, int(len(np.unique(y_train_w)))
-        )
-
-        # Train with reduced epochs
-        full_model.compile(
-            optimizer=tf.keras.optimizers.Adam(
-                learning_rate=hp.get("learning_rate", 0.001)
-            ),
-            loss=loss,
-            metrics=["accuracy"],
-        )
-
-        callbacks = [
-            tf.keras.callbacks.EarlyStopping(
-                monitor="val_loss",
-                patience=self._qt.early_stopping_patience,
-                restore_best_weights=True,
-            ),
-        ]
-
-        history = full_model.fit(
-            X_train_w,
-            y_train_w,
-            epochs=epochs,
-            batch_size=hp.get("batch_size", 256),
-            validation_split=self._qt.validation_split,
-            callbacks=callbacks,
-            verbose=0,
-        )
-
-        # Evaluate on test set ONLY
-        metrics = self._compute_metrics(full_model, X_test_w, y_test_w)
-
-        duration = time.perf_counter() - t0
-
-        # Clean up to free GPU memory
-        tf.keras.backend.clear_session()
-
-        return {
-            "hyperparameters": hp,
-            "metrics": metrics,
-            "detection_params": detection_params,
-            "total_params": full_model.count_params(),
-            "epochs_run": len(history.history["loss"]),
-            "final_val_loss": float(history.history["val_loss"][-1]),
-            "duration_seconds": round(duration, 2),
+        self._weights_path = pretrained_weights_path
+        self._arch = model_architecture or {
+            "cnn_filters_1": 32, "cnn_filters_2": 64,
+            "bilstm_units_1": 256, "bilstm_units_2": 128,
+            "attention_units": 256, "head_dense_units": 32,
+            "dropout_rate": 0.3, "timesteps": 20,
         }
 
-    def evaluate_config_with_pruning(
+    def evaluate_two_stage(
         self,
         hp: Dict[str, Any],
-        X_train: np.ndarray,
-        y_train: np.ndarray,
+        X_train_smote: np.ndarray,
+        y_train_smote: np.ndarray,
+        X_train_orig: np.ndarray,
+        y_train_orig: np.ndarray,
         X_test: np.ndarray,
         y_test: np.ndarray,
-        trial: Any,
-        metric: str = "f1_score",
-        epochs: int = 3,
     ) -> Dict[str, Any]:
-        """Train with Optuna Hyperband pruning — reports per-epoch metrics.
-
-        If the trial is pruned, optuna.TrialPruned is raised (caught by Optuna).
+        """Two-stage evaluation: SMOTE head -> imbalanced fine-tune -> threshold.
 
         Args:
-            hp: Hyperparameter dict.
-            X_train: Raw training features.
-            y_train: Training labels.
-            X_test: Raw test features.
-            y_test: Test labels.
-            trial: Optuna trial for pruning reports.
-            metric: Metric name used for pruning decisions.
-            epochs: Max epochs to train.
+            hp: Dict with head_lr, finetune_lr, cw_attack, head_epochs, ft_epochs.
+            X_train_smote: SMOTE-balanced training features.
+            y_train_smote: SMOTE-balanced labels.
+            X_train_orig: Original imbalanced training features.
+            y_train_orig: Original imbalanced labels.
+            X_test: Imbalanced test features.
+            y_test: Imbalanced test labels.
 
         Returns:
-            Dict with metrics, hyperparameters, duration, and parameter count.
+            Dict with metrics, hyperparameters, threshold, duration.
         """
         t0 = time.perf_counter()
-
         tf.random.set_seed(self._random_state)
         np.random.seed(self._random_state)  # noqa: NPY002
 
-        timesteps = hp.get("timesteps", 20)
-        stride = hp.get("stride", 1)
+        ts = self._arch["timesteps"]
+        reshaper = DataReshaper(timesteps=ts, stride=1)
+        Xs_w, ys_w = reshaper.reshape(X_train_smote, y_train_smote)
+        Xo_w, yo_w = reshaper.reshape(X_train_orig, y_train_orig)
+        Xt_w, yt_w = reshaper.reshape(X_test, y_test)
 
-        reshaper = DataReshaper(timesteps=timesteps, stride=stride)
-        X_train_w, y_train_w = reshaper.reshape(X_train, y_train)
-        X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
+        model = self._build_and_load_model()
 
-        detection_model = self._build_detection_model(hp, timesteps)
-        detection_params = detection_model.count_params()
+        # Stage 1: Head on SMOTE (frozen backbone)
+        for layer in model.layers:
+            layer.trainable = layer.name in ("dense_head", "drop_head", "output")
 
-        full_model, loss = self._add_classification_head(
-            detection_model, int(len(np.unique(y_train_w)))
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=hp["head_lr"]),
+            loss="binary_crossentropy", metrics=["accuracy"],
+        )
+        model.fit(
+            Xs_w, ys_w, epochs=hp["head_epochs"], batch_size=256,
+            validation_split=0.2, verbose=0,
+            callbacks=[tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss", patience=self._qt.early_stopping_patience,
+                restore_best_weights=True)],
         )
 
-        full_model.compile(
-            optimizer=tf.keras.optimizers.Adam(
-                learning_rate=hp.get("learning_rate", 0.001)
-            ),
-            loss=loss,
-            metrics=["accuracy"],
+        # Stage 2: Fine-tune on imbalanced (unfreeze attention+bilstm2+head)
+        for layer in model.layers:
+            if layer.name in ("conv1", "pool1", "conv2", "pool2", "bilstm1", "drop1"):
+                layer.trainable = False
+            else:
+                layer.trainable = True
+
+        cw = {0: 1.0, 1: hp["cw_attack"]}
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=hp["finetune_lr"]),
+            loss="binary_crossentropy", metrics=["accuracy"],
+        )
+        model.fit(
+            Xo_w, yo_w, epochs=hp["ft_epochs"], batch_size=256,
+            validation_split=0.2, verbose=0, class_weight=cw,
+            callbacks=[tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss", patience=2, restore_best_weights=True)],
         )
 
-        # Use val_accuracy for pruning (higher = better, aligns with maximize)
-        pruning_metric = "val_accuracy"
-        callbacks = [
-            tf.keras.callbacks.EarlyStopping(
-                monitor="val_loss",
-                patience=self._qt.early_stopping_patience,
-                restore_best_weights=True,
-            ),
-            _OptunaPruningCallback(trial, metric_key=pruning_metric),
-        ]
+        # Threshold + metrics on imbalanced test
+        opt_threshold = self._find_threshold(model, Xt_w, yt_w)
+        metrics = self._compute_metrics(model, Xt_w, yt_w, threshold=opt_threshold)
 
-        history = full_model.fit(
-            X_train_w,
-            y_train_w,
-            epochs=epochs,
-            batch_size=hp.get("batch_size", 256),
-            validation_split=self._qt.validation_split,
-            callbacks=callbacks,
-            verbose=0,
-        )
-
-        metrics = self._compute_metrics(full_model, X_test_w, y_test_w)
         duration = time.perf_counter() - t0
-
         tf.keras.backend.clear_session()
 
         return {
             "hyperparameters": hp,
             "metrics": metrics,
-            "detection_params": detection_params,
-            "total_params": full_model.count_params(),
-            "epochs_run": len(history.history["loss"]),
-            "final_val_loss": float(history.history["val_loss"][-1]),
+            "optimal_threshold": opt_threshold,
+            "total_params": model.count_params(),
             "duration_seconds": round(duration, 2),
         }
 
@@ -269,17 +193,16 @@ class QuickEvaluator:
         self,
         variant_name: str,
         base_hp: Dict[str, Any],
-        X_train: np.ndarray,
-        y_train: np.ndarray,
+        X_train_smote: np.ndarray,
+        y_train_smote: np.ndarray,
         X_test: np.ndarray,
         y_test: np.ndarray,
         remove: Optional[str] = None,
         replace: Optional[str] = None,
         override: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Evaluate an ablation variant with modified architecture."""
+        """Evaluate an ablation variant (trained on SMOTE only)."""
         t0 = time.perf_counter()
-
         tf.random.set_seed(self._random_state)
         np.random.seed(self._random_state)  # noqa: NPY002
 
@@ -287,211 +210,149 @@ class QuickEvaluator:
         if override:
             hp.update(override)
 
-        timesteps = hp.get("timesteps", 20)
-        stride = hp.get("stride", 1)
+        ts = hp.get("timesteps", self._arch["timesteps"])
+        reshaper = DataReshaper(timesteps=ts, stride=1)
+        Xs_w, ys_w = reshaper.reshape(X_train_smote, y_train_smote)
+        Xt_w, yt_w = reshaper.reshape(X_test, y_test)
 
-        reshaper = DataReshaper(timesteps=timesteps, stride=stride)
-        X_train_w, y_train_w = reshaper.reshape(X_train, y_train)
-        X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
+        detection_model = self._build_variant_model(hp, ts, remove=remove, replace=replace)
+        det_params = detection_model.count_params()
 
-        detection_model = self._build_variant_model(
-            hp, timesteps, remove=remove, replace=replace
+        x = tf.keras.layers.Dense(
+            self._arch["head_dense_units"], activation="relu", name="dense_head",
+        )(detection_model.output)
+        x = tf.keras.layers.Dropout(self._arch["dropout_rate"], name="drop_head")(x)
+        x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
+        model = tf.keras.Model(detection_model.input, x, name="ablation")
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            loss="binary_crossentropy", metrics=["accuracy"],
         )
-        detection_params = detection_model.count_params()
-
-        full_model, loss = self._add_classification_head(
-            detection_model, int(len(np.unique(y_train_w)))
-        )
-
-        full_model.compile(
-            optimizer=tf.keras.optimizers.Adam(
-                learning_rate=hp.get("learning_rate", 0.001)
-            ),
-            loss=loss,
-            metrics=["accuracy"],
-        )
-
-        callbacks = [
-            tf.keras.callbacks.EarlyStopping(
-                monitor="val_loss",
-                patience=self._qt.early_stopping_patience,
-                restore_best_weights=True,
-            ),
-        ]
-
-        history = full_model.fit(
-            X_train_w,
-            y_train_w,
-            epochs=self._qt.epochs,
-            batch_size=hp.get("batch_size", 256),
-            validation_split=self._qt.validation_split,
-            callbacks=callbacks,
-            verbose=0,
+        model.fit(
+            Xs_w, ys_w, epochs=self._qt.epochs, batch_size=256,
+            validation_split=0.2, verbose=0,
+            callbacks=[tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss", patience=self._qt.early_stopping_patience,
+                restore_best_weights=True)],
         )
 
-        metrics = self._compute_metrics(full_model, X_test_w, y_test_w)
+        opt_threshold = self._find_threshold(model, Xt_w, yt_w)
+        metrics = self._compute_metrics(model, Xt_w, yt_w, threshold=opt_threshold)
         duration = time.perf_counter() - t0
-
         tf.keras.backend.clear_session()
 
         return {
             "variant": variant_name,
-            "hyperparameters": hp,
-            "modifications": {
-                "remove": remove,
-                "replace": replace,
-                "override": override,
-            },
+            "modifications": {"remove": remove, "replace": replace, "override": override},
             "metrics": metrics,
-            "detection_params": detection_params,
-            "total_params": full_model.count_params(),
-            "epochs_run": len(history.history["loss"]),
-            "final_val_loss": float(history.history["val_loss"][-1]),
+            "detection_params": det_params,
+            "total_params": model.count_params(),
+            "optimal_threshold": opt_threshold,
             "duration_seconds": round(duration, 2),
         }
 
     # ── Private helpers ───────────────────────────────────────────
 
-    def _build_detection_model(
-        self, hp: Dict[str, Any], timesteps: int
-    ) -> tf.keras.Model:
-        """Build standard CNN-BiLSTM-Attention detection model."""
+    def _build_and_load_model(self) -> tf.keras.Model:
+        """Build Phase 3 architecture and load pre-trained weights."""
+        a = self._arch
         builders = [
-            CNNBuilder(
-                filters_1=hp.get("cnn_filters_1", 64),
-                filters_2=hp.get("cnn_filters_2", 128),
-                kernel_size=hp.get("cnn_kernel_size", 3),
-                activation="relu",
-                pool_size=2,
-            ),
-            BiLSTMBuilder(
-                units_1=hp.get("bilstm_units_1", 128),
-                units_2=hp.get("bilstm_units_2", 64),
-                dropout_rate=hp.get("dropout_rate", 0.3),
-            ),
-            AttentionBuilder(units=hp.get("attention_units", 128)),
+            CNNBuilder(filters_1=a["cnn_filters_1"], filters_2=a["cnn_filters_2"],
+                       kernel_size=3, activation="relu", pool_size=2),
+            BiLSTMBuilder(units_1=a["bilstm_units_1"], units_2=a["bilstm_units_2"],
+                          dropout_rate=a["dropout_rate"]),
+            AttentionBuilder(units=a["attention_units"]),
         ]
         assembler = DetectionModelAssembler(
-            timesteps=timesteps,
-            n_features=self._n_features,
-            builders=builders,
+            timesteps=a["timesteps"], n_features=self._n_features, builders=builders,
         )
-        return assembler.assemble()
+        det = assembler.assemble()
+
+        x = tf.keras.layers.Dense(
+            a["head_dense_units"], activation="relu", name="dense_head",
+        )(det.output)
+        x = tf.keras.layers.Dropout(a["dropout_rate"], name="drop_head")(x)
+        x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
+        model = tf.keras.Model(det.input, x, name="phase3_finetune")
+
+        if self._weights_path:
+            model.load_weights(self._weights_path)
+
+        return model
 
     def _build_variant_model(
-        self,
-        hp: Dict[str, Any],
-        timesteps: int,
-        remove: Optional[str] = None,
-        replace: Optional[str] = None,
+        self, hp: Dict[str, Any], timesteps: int,
+        remove: Optional[str] = None, replace: Optional[str] = None,
     ) -> tf.keras.Model:
-        """Build an ablation variant model with modified architecture."""
+        """Build an ablation variant model."""
         inp = tf.keras.Input(shape=(timesteps, self._n_features), name="input")
         x = inp
 
         x = tf.keras.layers.Conv1D(
-            hp.get("cnn_filters_1", 64), hp.get("cnn_kernel_size", 3),
-            activation="relu", padding="same", name="conv1",
+            self._arch["cnn_filters_1"], 3, activation="relu", padding="same", name="conv1",
         )(x)
         x = tf.keras.layers.MaxPooling1D(pool_size=2, name="pool1")(x)
 
         if remove != "cnn2":
             x = tf.keras.layers.Conv1D(
-                hp.get("cnn_filters_2", 128), hp.get("cnn_kernel_size", 3),
-                activation="relu", padding="same", name="conv2",
+                self._arch["cnn_filters_2"], 3, activation="relu", padding="same", name="conv2",
             )(x)
             x = tf.keras.layers.MaxPooling1D(pool_size=2, name="pool2")(x)
 
-        dropout_rate = hp.get("dropout_rate", 0.3)
+        dr = hp.get("dropout_rate", self._arch["dropout_rate"])
 
         if replace == "bilstm_to_lstm":
-            x = tf.keras.layers.LSTM(
-                hp.get("bilstm_units_1", 128),
-                return_sequences=True, name="lstm1",
-            )(x)
+            x = tf.keras.layers.LSTM(self._arch["bilstm_units_1"], return_sequences=True, name="lstm1")(x)
         else:
             x = tf.keras.layers.Bidirectional(
-                tf.keras.layers.LSTM(
-                    hp.get("bilstm_units_1", 128),
-                    return_sequences=True,
-                ),
-                name="bilstm1",
+                tf.keras.layers.LSTM(self._arch["bilstm_units_1"], return_sequences=True), name="bilstm1",
             )(x)
-        x = tf.keras.layers.Dropout(dropout_rate, name="drop1")(x)
+        x = tf.keras.layers.Dropout(dr, name="drop1")(x)
 
         if remove != "bilstm2":
             if replace == "bilstm_to_lstm":
-                x = tf.keras.layers.LSTM(
-                    hp.get("bilstm_units_2", 64),
-                    return_sequences=True, name="lstm2",
-                )(x)
+                x = tf.keras.layers.LSTM(self._arch["bilstm_units_2"], return_sequences=True, name="lstm2")(x)
             else:
                 x = tf.keras.layers.Bidirectional(
-                    tf.keras.layers.LSTM(
-                        hp.get("bilstm_units_2", 64),
-                        return_sequences=True,
-                    ),
-                    name="bilstm2",
+                    tf.keras.layers.LSTM(self._arch["bilstm_units_2"], return_sequences=True), name="bilstm2",
                 )(x)
-            x = tf.keras.layers.Dropout(dropout_rate, name="drop2")(x)
+            x = tf.keras.layers.Dropout(dr, name="drop2")(x)
 
         if remove == "attention":
             x = tf.keras.layers.GlobalAveragePooling1D(name="gap")(x)
         else:
-            x = AttentionBuilder(
-                units=hp.get("attention_units", 128)
-            ).build(x)
+            x = AttentionBuilder(units=self._arch["attention_units"]).build(x)
 
         return tf.keras.Model(inp, x, name="detection_variant")
 
-    def _add_classification_head(
-        self,
-        detection_model: tf.keras.Model,
-        n_classes: int,
-    ) -> Tuple[tf.keras.Model, str]:
-        """Attach a classification head to the detection backbone."""
-        x = tf.keras.layers.Dense(
-            self._qt.dense_units,
-            activation=self._qt.dense_activation,
-            name="dense_head",
-        )(detection_model.output)
-        x = tf.keras.layers.Dropout(
-            self._qt.head_dropout_rate, name="drop_head"
-        )(x)
-
-        if n_classes == 2:
-            output = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
-            loss = "binary_crossentropy"
-        else:
-            output = tf.keras.layers.Dense(
-                n_classes, activation="softmax", name="output"
-            )(x)
-            loss = "categorical_crossentropy"
-
-        full_model = tf.keras.Model(
-            detection_model.input, output, name="tuning_model"
-        )
-        return full_model, loss
+    def _find_threshold(self, model: tf.keras.Model, X: np.ndarray, y: np.ndarray) -> float:
+        """Find optimal threshold on the given data."""
+        y_prob = model.predict(X, verbose=0)
+        if y_prob.shape[-1] == 1:
+            y_prob = y_prob.ravel()
+        threshold, _ = _find_optimal_threshold(y, y_prob)
+        return threshold
 
     @staticmethod
     def _compute_metrics(
-        model: tf.keras.Model,
-        X_test: np.ndarray,
-        y_test: np.ndarray,
+        model: tf.keras.Model, X: np.ndarray, y: np.ndarray, threshold: float = 0.5,
     ) -> Dict[str, float]:
-        """Compute classification metrics on test set only."""
-        y_pred_prob = model.predict(X_test, verbose=0)
-
-        if y_pred_prob.shape[-1] == 1:
-            y_pred_prob = y_pred_prob.ravel()
-            y_pred = (y_pred_prob > 0.5).astype(int)
+        """Compute classification metrics including attack-specific."""
+        y_prob = model.predict(X, verbose=0)
+        if y_prob.shape[-1] == 1:
+            y_prob = y_prob.ravel()
+            y_pred = (y_prob > threshold).astype(int)
         else:
-            y_pred = np.argmax(y_pred_prob, axis=1)
+            y_pred = np.argmax(y_prob, axis=1)
 
         return {
-            "accuracy": float(accuracy_score(y_test, y_pred)),
-            "f1_score": float(f1_score(y_test, y_pred, average="weighted")),
-            "precision": float(precision_score(y_test, y_pred, average="weighted")),
-            "recall": float(recall_score(y_test, y_pred, average="weighted")),
-            "auc_roc": float(roc_auc_score(y_test, y_pred_prob)),
+            "accuracy": float(accuracy_score(y, y_pred)),
+            "f1_score": float(f1_score(y, y_pred, average="weighted", zero_division=0)),
+            "auc_roc": float(roc_auc_score(y, y_prob)),
+            "attack_recall": float(recall_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
+            "attack_precision": float(precision_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
+            "attack_f1": float(f1_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
+            "macro_f1": float(f1_score(y, y_pred, average="macro", zero_division=0)),
+            "threshold": threshold,
         }

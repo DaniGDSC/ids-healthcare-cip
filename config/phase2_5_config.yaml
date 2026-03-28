@@ -1,9 +1,9 @@
 # Phase 2.5: Hyperparameter Fine-Tuning & Ablation Study
-# Systematic search + component ablation for Phase 2 detection architecture
+# Bayesian TPE search (Optuna) + component ablation
 #
-# Input:  Phase 1 parquets (29 features, RobustScaler-normalised)
-#         Phase 2 detection model architecture (CNN-BiLSTM-Attention)
-# Output: Best hyperparameters, ablation comparison, tuning metadata
+# Two-stage strategy:
+#   Stage 1: Train head on SMOTE balanced data (frozen backbone)
+#   Stage 2: Fine-tune attention+BiLSTM2+head on imbalanced data with class_weight
 
 data:
   phase1_train: "data/processed/train_phase1.parquet"
@@ -11,87 +11,54 @@ data:
   phase2_config: "config/phase2_config.yaml"
   label_column: "Label"
 
-# ── Hyperparameter Search ─────────────────────────────────────────
+# ── Bayesian TPE Search (Optuna) ──────────────────────────────────
 search:
-  strategy: "bayesian"      # "grid", "random", or "bayesian" (Optuna TPE)
-  max_trials: 30            # Max configurations to evaluate
-  metric: "f1_score"        # Optimisation target: f1_score | auc_roc | accuracy
-  direction: "maximize"     # maximize | minimize
+  max_trials: 30
+  metric: "attack_f1"       # IoMT target: attack_f1 | macro_f1 | auc_roc
+  direction: "maximize"
 
-  # Hyperband pruning (bayesian only) — early-kills bad trials
-  pruning:
-    enabled: true
-    min_resource: 1         # Minimum epochs before pruning decision
-    reduction_factor: 3     # Successive halving factor
-
+  # 5 core parameters (identified by importance analysis)
   space:
-    # Categorical parameters (discrete choices)
-    cnn_filters_1: [32, 64, 128]
-    cnn_filters_2: [64, 128, 256]
-    cnn_kernel_size: [3, 5]
-    bilstm_units_1: [64, 128, 256]
-    bilstm_units_2: [32, 64, 128]
-    attention_units: [64, 128, 256]
-    timesteps: [10, 20, 30]
-    batch_size: [128, 256, 512]
+    head_lr_low: 0.0005
+    head_lr_high: 0.005
+    finetune_lr_low: 0.000001
+    finetune_lr_high: 0.0001
+    cw_attack_low: 1.0
+    cw_attack_high: 5.0
+    head_epochs: [3, 5, 7, 9]
+    ft_epochs: [1, 2, 3, 4, 5]
 
-    # Continuous parameters (log-scale sampling)
-    dropout_rate:
-      low: 0.05
-      high: 0.5
-      log: false
-    learning_rate:
-      low: 0.00005
-      high: 0.005
-      log: true             # Log-uniform: better coverage of orders of magnitude
-
-    # Phase 3 unfreezing schedule (joint optimisation)
-    phase_a_lr:
-      low: 0.0005
-      high: 0.005
-      log: true
-    phase_b_lr:
-      low: 0.00005
-      high: 0.001
-      log: true
-    phase_c_lr:
-      low: 0.000005
-      high: 0.0001
-      log: true
-    unfreezing_epochs: [3, 5, 8]
-
-# ── Quick-Train Settings (reduced epochs for search) ─────────────
+# ── Training Settings ─────────────────────────────────────────────
 quick_train:
-  epochs: 3                 # Reduced from 5 per phase for faster search
+  epochs: 5
   validation_split: 0.2
-  early_stopping_patience: 2
+  early_stopping_patience: 3
   classification_head:
     dense_units: 64
     dense_activation: "relu"
     dropout_rate: 0.3
 
-# ── Multi-Seed Validation ────────────────────────────────────────
-# Retrain top-K configs with multiple seeds for confidence intervals
+# ── Multi-Seed Validation (disabled by default) ──────────────────
 multi_seed:
-  enabled: true
-  top_k: 3                  # Number of top configs to validate
+  enabled: false
+  top_k: 3
   seeds: [42, 123, 456, 789, 1024]
-  full_epochs: 10           # Full training epochs (more than quick_train)
+  full_epochs: 10
 
 # ── Ablation Study ────────────────────────────────────────────────
 ablation:
-  baseline: "full"          # Full CNN-BiLSTM-Attention as reference
+  baseline: "full"
   variants:
     - name: "no_attention"
       description: "Replace Bahdanau attention with GlobalAveragePooling1D"
       remove: "attention"
 
     - name: "no_bilstm2"
-      description: "Remove second BiLSTM layer (single BiLSTM-128)"
+      description: "Remove second BiLSTM layer (single BiLSTM-256)"
       remove: "bilstm2"
 
     - name: "no_cnn2"
-      description: "Remove second CNN layer (single Conv1D-64)"
+      description: "Remove second CNN layer (single Conv1D-32)"
       remove: "cnn2"
 
     - name: "unidirectional_lstm"

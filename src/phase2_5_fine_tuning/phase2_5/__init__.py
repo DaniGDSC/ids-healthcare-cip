@@ -3,21 +3,20 @@
 Public API
 ----------
 Phase2_5Config             — pydantic-validated configuration
-SearchSpaceConfig          — hyperparameter search space definition
-ContinuousRange            — log-scale continuous parameter range
+SearchSpaceConfig          — 5 core parameter ranges
 MultiSeedConfig            — multi-seed validation configuration
-HyperparameterTuner       — systematic hyperparameter search (grid/random/bayesian)
+HyperparameterTuner       — Bayesian TPE search (Optuna)
 AblationRunner             — component ablation study
-QuickEvaluator             — fast train+eval for tuning iterations
+QuickEvaluator             — two-stage train+eval
 MultiSeedValidator         — retrain top-K with multiple seeds
 TuningExporter             — export results, best config, metadata
 TuningPipeline             — orchestrates all steps
 render_tuning_report       — generates tuning report Markdown
-compute_importance         — parameter importance analysis
+compute_importance         — parameter importance analysis (fANOVA)
 """
 
 from .ablation import AblationRunner
-from .config import ContinuousRange, MultiSeedConfig, Phase2_5Config, SearchSpaceConfig
+from .config import MultiSeedConfig, Phase2_5Config, SearchSpaceConfig
 from .evaluator import QuickEvaluator
 from .exporter import TuningExporter
 from .importance import compute_importance
@@ -30,7 +29,6 @@ from .tuner import HyperparameterTuner
 __all__ = [
     "Phase2_5Config",
     "SearchSpaceConfig",
-    "ContinuousRange",
     "MultiSeedConfig",
     "SearchSpace",
     "HyperparameterTuner",

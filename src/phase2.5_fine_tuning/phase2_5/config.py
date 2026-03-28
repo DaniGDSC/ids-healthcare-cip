@@ -1,32 +1,49 @@
 """Pydantic-validated configuration for the Phase 2.5 tuning pipeline.
 
 Loads from ``config/phase2_5_config.yaml`` via ``Phase2_5Config.from_yaml()``.
-
-Simplified to 5 core tunable parameters (head_lr, finetune_lr, cw_attack,
-head_epochs, ft_epochs) identified by Optuna importance analysis as the
-only parameters with >5% contribution.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import yaml
 from pydantic import BaseModel, field_validator
 
 
-class SearchSpaceConfig(BaseModel):
-    """Hyperparameter search space — 5 core parameters."""
+# ── Continuous parameter range (log-scale support) ────────────────
 
-    head_lr_low: float = 5e-4
-    head_lr_high: float = 5e-3
-    finetune_lr_low: float = 1e-6
-    finetune_lr_high: float = 1e-4
-    cw_attack_low: float = 1.0
-    cw_attack_high: float = 5.0
-    head_epochs: List[int] = [3, 5, 7, 9]
-    ft_epochs: List[int] = [1, 2, 3, 4, 5]
+class ContinuousRange(BaseModel):
+    """A continuous parameter range with optional log-scale sampling."""
+
+    low: float
+    high: float
+    log: bool = False
+
+
+class SearchSpaceConfig(BaseModel):
+    """Hyperparameter search space definition.
+
+    Categorical parameters use ``List[int]`` or ``List[float]``.
+    Continuous parameters use ``ContinuousRange`` for log-uniform sampling.
+    """
+
+    cnn_kernel_size: List[int] = [3, 5, 7]
+    dropout_rate: Union[List[float], ContinuousRange] = ContinuousRange(low=0.001, high=0.1, log=False)
+    timesteps: List[int] = [10, 20, 30]
+    batch_size: List[int] = [256, 512]
+    learning_rate: Union[List[float], ContinuousRange] = ContinuousRange(low=0.0001, high=0.001, log=True)
+
+    # Focal loss tuning
+    focal_alpha: Union[List[float], ContinuousRange] = ContinuousRange(low=0.15, high=0.75, log=False)
+    focal_gamma: Union[List[float], ContinuousRange] = ContinuousRange(low=0.5, high=3.0, log=False)
+
+    # Phase 3 unfreezing schedule (joint optimisation)
+    phase_a_lr: Union[List[float], ContinuousRange] = ContinuousRange(low=0.0005, high=0.005, log=True)
+    phase_b_lr: Union[List[float], ContinuousRange] = ContinuousRange(low=0.00005, high=0.001, log=True)
+    phase_c_lr: Union[List[float], ContinuousRange] = ContinuousRange(low=0.000005, high=0.0001, log=True)
+    unfreezing_epochs: List[int] = [3, 5, 8]
 
 
 class AblationVariantConfig(BaseModel):
@@ -40,11 +57,11 @@ class AblationVariantConfig(BaseModel):
 
 
 class QuickTrainConfig(BaseModel):
-    """Training settings for search evaluation."""
+    """Reduced training settings for fast evaluation during search."""
 
-    epochs: int = 5
+    epochs: int = 3
     validation_split: float = 0.2
-    early_stopping_patience: int = 3
+    early_stopping_patience: int = 2
     dense_units: int = 64
     dense_activation: str = "relu"
     head_dropout_rate: float = 0.3
@@ -53,7 +70,7 @@ class QuickTrainConfig(BaseModel):
 class MultiSeedConfig(BaseModel):
     """Configuration for multi-seed validation of top-K configs."""
 
-    enabled: bool = False
+    enabled: bool = True
     top_k: int = 3
     seeds: List[int] = [42, 123, 456, 789, 1024]
     full_epochs: int = 10
@@ -69,10 +86,16 @@ class Phase2_5Config(BaseModel):
     label_column: str = "Label"
 
     # Search settings
+    search_strategy: str = "bayesian"
     max_trials: int = 30
     search_metric: str = "attack_f1"
     search_direction: str = "maximize"
     search_space: SearchSpaceConfig = SearchSpaceConfig()
+
+    # Hyperband pruning
+    pruning_enabled: bool = True
+    min_resource: int = 1
+    reduction_factor: int = 3
 
     # Quick-train settings
     quick_train: QuickTrainConfig = QuickTrainConfig()
@@ -99,6 +122,13 @@ class Phase2_5Config(BaseModel):
     model_config: Dict[str, Any] = {"arbitrary_types_allowed": True}
 
     # ── Validators ────────────────────────────────────────────────
+
+    @field_validator("search_strategy")
+    @classmethod
+    def _valid_strategy(cls, v: str) -> str:
+        if v not in ("grid", "random", "bayesian"):
+            raise ValueError(f"search_strategy must be 'grid', 'random', or 'bayesian', got '{v}'")
+        return v
 
     @field_validator("search_direction")
     @classmethod
@@ -138,9 +168,10 @@ class Phase2_5Config(BaseModel):
         quick = raw.get("quick_train", {})
         ablation = raw.get("ablation", {})
         output = raw.get("output", {})
+        pruning = search.get("pruning", {})
         multi_seed_raw = raw.get("multi_seed", {})
 
-        space = SearchSpaceConfig(**space_raw) if space_raw else SearchSpaceConfig()
+        space = _parse_search_space(space_raw)
 
         variants = [
             AblationVariantConfig(**v) for v in ablation.get("variants", [])
@@ -148,16 +179,16 @@ class Phase2_5Config(BaseModel):
 
         head_cfg = quick.get("classification_head", {})
         qt = QuickTrainConfig(
-            epochs=quick.get("epochs", 5),
+            epochs=quick.get("epochs", 3),
             validation_split=quick.get("validation_split", 0.2),
-            early_stopping_patience=quick.get("early_stopping_patience", 3),
+            early_stopping_patience=quick.get("early_stopping_patience", 2),
             dense_units=head_cfg.get("dense_units", 64),
             dense_activation=head_cfg.get("dense_activation", "relu"),
             head_dropout_rate=head_cfg.get("dropout_rate", 0.3),
         )
 
         ms = MultiSeedConfig(
-            enabled=multi_seed_raw.get("enabled", False),
+            enabled=multi_seed_raw.get("enabled", True),
             top_k=multi_seed_raw.get("top_k", 3),
             seeds=multi_seed_raw.get("seeds", [42, 123, 456, 789, 1024]),
             full_epochs=multi_seed_raw.get("full_epochs", 10),
@@ -168,10 +199,14 @@ class Phase2_5Config(BaseModel):
             phase1_test=Path(data.get("phase1_test", "")),
             phase2_config=Path(data.get("phase2_config", "")),
             label_column=data.get("label_column", "Label"),
+            search_strategy=search.get("strategy", "bayesian"),
             max_trials=search.get("max_trials", 30),
-            search_metric=search.get("metric", "attack_f1"),
+            search_metric=search.get("metric", "f1_score"),
             search_direction=search.get("direction", "maximize"),
             search_space=space,
+            pruning_enabled=pruning.get("enabled", True),
+            min_resource=pruning.get("min_resource", 1),
+            reduction_factor=pruning.get("reduction_factor", 3),
             quick_train=qt,
             multi_seed=ms,
             ablation_baseline=ablation.get("baseline", "full"),
@@ -185,3 +220,14 @@ class Phase2_5Config(BaseModel):
             report_file=output.get("report_file", "tuning_report.json"),
             random_state=raw.get("random_state", 42),
         )
+
+
+def _parse_search_space(raw: Dict[str, Any]) -> SearchSpaceConfig:
+    """Parse search space, handling both list and continuous range formats."""
+    parsed: Dict[str, Any] = {}
+    for key, value in raw.items():
+        if isinstance(value, dict) and "low" in value and "high" in value:
+            parsed[key] = ContinuousRange(**value)
+        else:
+            parsed[key] = value
+    return SearchSpaceConfig(**parsed) if parsed else SearchSpaceConfig()
