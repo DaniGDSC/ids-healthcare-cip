@@ -2,12 +2,14 @@
 
 Monitors INPUT_DIR for new CSV files, validates schema, applies
 preprocessing, and feeds the sliding window buffer.
+
+Supports both WUSTL-native (24 features) and MedSec-25 (CIC-style)
+input formats.
 """
 
 from __future__ import annotations
 
 import logging
-import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
@@ -18,8 +20,10 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from dashboard.streaming.feature_aligner import (
-    WUSTL_FEATURES,
+    MODEL_FEATURES,
+    N_FEATURES,
     align_medsec25_row,
+    align_wustl_native,
     validate_schema,
 )
 from dashboard.streaming.window_buffer import WindowBuffer
@@ -41,13 +45,6 @@ class FlowFileHandler(FileSystemEventHandler):
         scaler: Any,
         on_prediction_ready: Optional[Callable[[np.ndarray], None]] = None,
     ) -> None:
-        """Initialize the file handler.
-
-        Args:
-            buffer: Sliding window buffer to append flows to.
-            scaler: Fitted RobustScaler (DO NOT refit).
-            on_prediction_ready: Callback when a full window is available.
-        """
         super().__init__()
         self._buffer = buffer
         self._scaler = scaler
@@ -66,7 +63,6 @@ class FlowFileHandler(FileSystemEventHandler):
         if str(path) in self._processed_files:
             return
 
-        # Brief delay to ensure file write is complete
         time.sleep(0.1)
 
         try:
@@ -76,25 +72,21 @@ class FlowFileHandler(FileSystemEventHandler):
             logger.error("Failed to process %s: %s", path.name, exc)
 
     def _process_file(self, path: Path) -> None:
-        """Process a single CSV file.
-
-        Args:
-            path: Path to the CSV file.
-        """
+        """Process a single CSV file."""
         df = pd.read_csv(path)
 
         if df.empty:
             logger.warning("Empty file: %s", path.name)
             return
 
-        # Check if it has WUSTL schema directly
+        # Try WUSTL-native schema first (24 features)
         valid, msg = validate_schema(df)
         if valid:
-            features_df = self._extract_wustl_features(df)
+            features_df = align_wustl_native(df)
         else:
-            # Try MedSec-25 alignment
+            # Fall back to MedSec-25 alignment
             logger.info("Aligning %s: %s", path.name, msg)
-            features_df = self._align_and_extract(df)
+            features_df = self._align_medsec25(df)
 
         if features_df is None:
             return
@@ -102,33 +94,19 @@ class FlowFileHandler(FileSystemEventHandler):
         # Apply scaler (transform only, never fit)
         scaled = self._scaler.transform(features_df.values)
 
-        # Append each row to buffer
         for i in range(len(scaled)):
             self._buffer.append(scaled[i].astype(np.float32))
 
         logger.info("Ingested %d flows from %s (total: %d)",
                      len(scaled), path.name, self._buffer.flow_count)
 
-        # Trigger prediction callback if window is ready
         if self._on_prediction_ready and not self._buffer.suppress_alerts:
             window = self._buffer.get_window()
             if window is not None:
                 self._on_prediction_ready(window)
 
-    def _extract_wustl_features(self, df: pd.DataFrame) -> Optional[pd.DataFrame]:
-        """Extract 29 WUSTL features from a validated DataFrame."""
-        col_map = {c.lower(): c for c in df.columns}
-        ordered = []
-        for feat in WUSTL_FEATURES:
-            key = feat.lower()
-            if key in col_map:
-                ordered.append(col_map[key])
-            else:
-                return None
-        return df[ordered].astype(np.float32)
-
-    def _align_and_extract(self, df: pd.DataFrame) -> Optional[pd.DataFrame]:
-        """Align MedSec-25 columns to WUSTL schema."""
+    def _align_medsec25(self, df: pd.DataFrame) -> Optional[pd.DataFrame]:
+        """Align MedSec-25 columns to 24-feature model schema."""
         cols = list(df.columns)
         rows = []
         for _, row in df.iterrows():
@@ -138,14 +116,11 @@ class FlowFileHandler(FileSystemEventHandler):
         if not rows:
             return None
 
-        return pd.DataFrame(rows, columns=WUSTL_FEATURES)
+        return pd.DataFrame(rows, columns=MODEL_FEATURES)
 
 
 class StreamWatcher:
-    """Manages the watchdog observer for the streaming input directory.
-
-    Provides start/stop control and status reporting.
-    """
+    """Manages the watchdog observer for the streaming input directory."""
 
     def __init__(
         self,
@@ -164,7 +139,6 @@ class StreamWatcher:
 
     @property
     def running(self) -> bool:
-        """Whether the watcher is currently active."""
         return self._running
 
     def start(self) -> None:
@@ -190,7 +164,6 @@ class StreamWatcher:
             logger.info("StreamWatcher stopped")
 
     def get_status(self) -> Dict[str, Any]:
-        """Get watcher status."""
         return {
             "running": self._running,
             "input_dir": str(self._input_dir),

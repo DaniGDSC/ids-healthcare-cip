@@ -77,7 +77,7 @@ class WindowBuffer:
         """Append a single preprocessed flow vector to the buffer.
 
         Args:
-            flow_vector: Scaled feature vector of shape (29,).
+            flow_vector: Scaled feature vector of shape (n_features,).
         """
         with self._lock:
             self._buffer.append(flow_vector)
@@ -100,7 +100,7 @@ class WindowBuffer:
         """Get the latest sliding window for prediction.
 
         Returns:
-            Array of shape (1, window_size, 29) or None if insufficient data.
+            Array of shape (1, window_size, n_features) or None if insufficient data.
         """
         with self._lock:
             if len(self._buffer) < self._window_size:
@@ -115,7 +115,7 @@ class WindowBuffer:
             n_latest: Number of windows to extract.
 
         Returns:
-            Array of shape (N, window_size, 29) or None.
+            Array of shape (N, window_size, n_features) or None.
         """
         with self._lock:
             buf_len = len(self._buffer)

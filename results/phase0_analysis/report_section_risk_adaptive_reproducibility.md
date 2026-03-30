@@ -10,8 +10,8 @@ All benchmarks run on 1000 samples, 50 iterations.
 
 | Component | p50 | p95 | p99 | SLA | Result |
 |-----------|-----|-----|-----|-----|--------|
-| RiskScorer | 4.42ms | 4.59ms | 4.65ms | <100ms | PASS |
-| ThresholdUpdater | 14.07ms | 14.43ms | 15.29ms | <50ms | PASS |
+| RiskScorer | 4.33ms | 4.52ms | 4.71ms | <100ms | PASS |
+| ThresholdUpdater | 13.58ms | 13.68ms | 13.73ms | <50ms | PASS |
 | DriftDetector | 0.0002ms | 0.0002ms | 0.0002ms | <1ms | PASS |
 
 **Benchmark parameters:**
@@ -131,6 +131,6 @@ docker run --rm analyst/phase0-phase4:5.0
 
 ---
 
-**Generated:** 2026-03-28 14:20:12 UTC
+**Generated:** 2026-03-30 08:31:47 UTC
 **Test framework:** pytest + pytest-benchmark
 **Pipeline version:** 5.0
