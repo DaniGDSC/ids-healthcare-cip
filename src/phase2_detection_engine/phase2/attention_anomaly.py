@@ -17,7 +17,7 @@ from typing import Any, Dict
 import numpy as np
 import tensorflow as tf
 
-from src.phase4_risk_engine.phase4.base import BaseDetector
+from src.common.base import BaseDetector
 
 logger = logging.getLogger(__name__)
 

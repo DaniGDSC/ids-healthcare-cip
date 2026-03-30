@@ -14,7 +14,7 @@ import pandas as pd
 from .config import Phase5Config
 
 _TIMESTEPS: int = 20
-_N_FEATURES: int = 29
+from dashboard.streaming.feature_aligner import N_FEATURES as _N_FEATURES  # canonical: 24
 
 
 def render_explanation_report(

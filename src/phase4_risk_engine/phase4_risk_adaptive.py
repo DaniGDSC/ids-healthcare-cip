@@ -69,7 +69,7 @@ RISK_HIGH: str = "HIGH"
 RISK_CRITICAL: str = "CRITICAL"
 
 # Named constants for clarity
-N_FEATURES: int = 24  # derived from Phase 1 (post-variance filtering)
+from dashboard.streaming.feature_aligner import N_FEATURES  # canonical: 24
 HASH_CHUNK_SIZE: int = 65_536
 
 

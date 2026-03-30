@@ -1,35 +1,35 @@
 {
-  "extraction_timestamp": "2026-03-24T12:12:54.502325+00:00",
+  "extraction_timestamp": "2026-03-30T08:58:29.337669+00:00",
   "extraction_version": "1.0.0",
   "artifact_inventory": {
     "total_artifacts_checked": 29,
     "verified": 8,
-    "present_unverified": 20,
-    "missing": 1,
+    "present_unverified": 15,
+    "missing": 6,
     "per_artifact": {
       "detection_model": {
         "status": "VERIFIED",
         "path": "/home/un1/project/ids-healthcare-cip/data/phase2/detection_model.weights.h5",
-        "sha256": "5aa425ca8129f3bca59e9c479d23d455664073267aec7e184455ade8373c1b91"
+        "sha256": "0e37714a9c35dd7d29680753ff36017b90a7dcdce828a42249e4e8f09ae2a916"
       },
       "classification_model": {
-        "status": "PRESENT_UNVERIFIED",
+        "status": "NOT_AVAILABLE",
         "path": "/home/un1/project/ids-healthcare-cip/data/phase3/classification_model_v2.weights.h5"
       },
       "scaler": {
         "status": "VERIFIED",
         "path": "/home/un1/project/ids-healthcare-cip/models/scalers/robust_scaler.pkl",
-        "sha256": "4e5c96032175543c2381b261a96a4f60a96567b15c8573db3f9125ce37ebcf02"
+        "sha256": "5ecb86d13b40c6b9b22a22921ca21d04019b3417301322065a91d3084770d9d1"
       },
       "train_data": {
         "status": "VERIFIED",
         "path": "/home/un1/project/ids-healthcare-cip/data/processed/train_phase1.parquet",
-        "sha256": "a6775690db39f32509efb5add883454cd7c401c31406484cd2341f6052263803"
+        "sha256": "0b8207fe6b9073083f7ab02a66cd48b132b9e2732709608759c6e657f4a083c6"
       },
       "test_data": {
         "status": "VERIFIED",
         "path": "/home/un1/project/ids-healthcare-cip/data/processed/test_phase1.parquet",
-        "sha256": "81981d49023c3588758deb1486ee0e13665af91c8bfe2143504d92ba3318a9d0"
+        "sha256": "4a6be1c8ef299297f77a552b12b44ecc38ff2eda9b7960c1d91cc9c803dcae6b"
       },
       "metrics_wustl": {
         "status": "PRESENT_UNVERIFIED",
@@ -43,7 +43,7 @@
         "status": "HASH_MISMATCH",
         "path": "/home/un1/project/ids-healthcare-cip/data/phase3/confusion_matrix.csv",
         "expected": "a622d800a4f22bec2bc852384205947f835a88c96e1ce0cc6a0a39c1204b9bba",
-        "actual": "859379900c3cedd3829b42cc19ad0278399808742545e352c370ee0bae46c702"
+        "actual": "bef837cc5b4919ec2cdda4954be3822306f24b1b01ca23f0fec3ff7cbc4b6732"
       },
       "diagnosis_after": {
         "status": "PRESENT_UNVERIFIED",
@@ -56,11 +56,11 @@
         "actual": "468446d520f07314f84653a88e50ecf81d567daa6c174e848521782e63bbcead"
       },
       "best_hyperparams": {
-        "status": "PRESENT_UNVERIFIED",
+        "status": "NOT_AVAILABLE",
         "path": "/home/un1/project/ids-healthcare-cip/data/phase3/best_hyperparams_v2.json"
       },
       "ablation_results": {
-        "status": "PRESENT_UNVERIFIED",
+        "status": "NOT_AVAILABLE",
         "path": "/home/un1/project/ids-healthcare-cip/data/phase3/ablation_results_v2.json"
       },
       "risk_report": {
@@ -104,11 +104,11 @@
         "path": "/home/un1/project/ids-healthcare-cip/data/phase7/security_audit_log.json"
       },
       "alignment_report_v2": {
-        "status": "PRESENT_UNVERIFIED",
+        "status": "NOT_AVAILABLE",
         "path": "/home/un1/project/ids-healthcare-cip/data/external/alignment_report_v2.json"
       },
       "metrics_ciciomt": {
-        "status": "PRESENT_UNVERIFIED",
+        "status": "NOT_AVAILABLE",
         "path": "/home/un1/project/ids-healthcare-cip/data/phase3/metrics_ciciomt.json"
       },
       "alignment_report_medsec25": {
@@ -138,68 +138,7 @@
     }
   },
   "model_architecture": {
-    "status": "VERIFIED",
-    "total_params": 482817,
-    "trainable_params": 482817,
-    "input_shape": "(None, 20, 29)",
-    "output_shape": "(None, 1)",
-    "has_attention": true,
-    "has_bilstm": false,
-    "n_layers": 13,
-    "layers": [
-      {
-        "name": "input",
-        "type": "InputLayer"
-      },
-      {
-        "name": "conv1",
-        "type": "Conv1D"
-      },
-      {
-        "name": "pool1",
-        "type": "MaxPooling1D"
-      },
-      {
-        "name": "conv2",
-        "type": "Conv1D"
-      },
-      {
-        "name": "pool2",
-        "type": "MaxPooling1D"
-      },
-      {
-        "name": "bilstm1",
-        "type": "Bidirectional"
-      },
-      {
-        "name": "drop1",
-        "type": "Dropout"
-      },
-      {
-        "name": "bilstm2",
-        "type": "Bidirectional"
-      },
-      {
-        "name": "drop2",
-        "type": "Dropout"
-      },
-      {
-        "name": "attention",
-        "type": "BahdanauAttention"
-      },
-      {
-        "name": "dense_head",
-        "type": "Dense"
-      },
-      {
-        "name": "drop_head",
-        "type": "Dropout"
-      },
-      {
-        "name": "output",
-        "type": "Dense"
-      }
-    ]
+    "status": "NOT_AVAILABLE"
   },
   "dataset": {
     "train_total_samples": 19980,
@@ -211,18 +150,13 @@
       "DstBytes",
       "SrcLoad",
       "DstLoad",
-      "SrcGap",
-      "DstGap",
       "SIntPkt",
       "DIntPkt",
       "SIntPktAct",
-      "DIntPktAct",
       "sMaxPktSz",
       "dMaxPktSz",
       "sMinPktSz",
-      "dMinPktSz",
       "Dur",
-      "Trans",
       "TotBytes",
       "Load",
       "pSrcLoss",
@@ -237,7 +171,7 @@
       "Resp_Rate",
       "ST"
     ],
-    "feature_count": 29,
+    "feature_count": 24,
     "test_total_samples": 4896,
     "test_normal_count": 4282,
     "test_attack_count": 614,
@@ -352,59 +286,10 @@
     "auc_delta_pct": 18.47
   },
   "hyperparameters": {
-    "status": "VERIFIED",
-    "optimal": {
-      "timesteps": 20,
-      "cnn_filters": 64,
-      "bilstm_units": 128,
-      "dropout_rate": 0.3,
-      "learning_rate": 0.001,
-      "dense_units": 64
-    },
-    "val_auc": 0.864469,
-    "beats_v2_baseline": true,
-    "v2_baseline_auc": 0.7243,
-    "gpu_used": true,
-    "gpu_name": "/physical_device:GPU:0",
-    "mixed_precision": true,
-    "tuning_trials": 20,
-    "executions_per_trial": 2,
-    "tuning_time_s": 3276.0,
-    "tuning_conclusion": "Bayesian search confirmed defaults optimal"
+    "status": "NOT_AVAILABLE"
   },
   "ablation": {
-    "status": "VERIFIED",
-    "model_a_cnn": {
-      "auc": 0.8360267265535695,
-      "f1": 0.5354638014776391,
-      "accuracy": 0.6014583857178778,
-      "attack_recall": 0.9774096385542169,
-      "params": 38657,
-      "train_time_s": 26.3,
-      "epochs_run": 20
-    },
-    "model_b_bilstm": {
-      "auc": 0.8615052148139156,
-      "f1": 0.6496671261667161,
-      "accuracy": 0.6771435755594669,
-      "attack_recall": 0.9563253012048193,
-      "params": 466177,
-      "train_time_s": 49.7,
-      "epochs_run": 19
-    },
-    "model_c_full": {
-      "auc": 0.8610133228126612,
-      "f1": 0.6407093699947537,
-      "accuracy": 0.6721146592909228,
-      "attack_recall": 0.9668674698795181,
-      "params": 482817,
-      "train_time_s": 77.7,
-      "epochs_run": 20
-    },
-    "bilstm_auc_gain": 0.025478,
-    "bilstm_recall_delta": -0.021084,
-    "attention_auc_gain": -0.000492,
-    "attention_recall_delta": 0.010542
+    "status": "NOT_AVAILABLE"
   },
   "risk_adaptive": {
     "status": "VERIFIED",
@@ -466,52 +351,52 @@
     "top_10_features": [
       {
         "rank": 1,
-        "feature_name": "DIntPkt",
+        "feature_name": "feature_7",
         "mean_abs_shap": 0.01646414
       },
       {
         "rank": 2,
-        "feature_name": "TotBytes",
+        "feature_name": "feature_16",
         "mean_abs_shap": 0.00559912
       },
       {
         "rank": 3,
-        "feature_name": "DstBytes",
+        "feature_name": "feature_1",
         "mean_abs_shap": 0.00262415
       },
       {
         "rank": 4,
-        "feature_name": "SrcBytes",
+        "feature_name": "feature_0",
         "mean_abs_shap": 0.00243654
       },
       {
         "rank": 5,
-        "feature_name": "SIntPkt",
+        "feature_name": "feature_6",
         "mean_abs_shap": 0.00163893
       },
       {
         "rank": 6,
-        "feature_name": "Dur",
+        "feature_name": "feature_14",
         "mean_abs_shap": 0.00161777
       },
       {
         "rank": 7,
-        "feature_name": "Resp_Rate",
+        "feature_name": "feature_27",
         "mean_abs_shap": 0.00120918
       },
       {
         "rank": 8,
-        "feature_name": "ST",
+        "feature_name": "feature_28",
         "mean_abs_shap": 0.00120342
       },
       {
         "rank": 9,
-        "feature_name": "SpO2",
+        "feature_name": "feature_22",
         "mean_abs_shap": 0.00115546
       },
       {
         "rank": 10,
-        "feature_name": "Heart_rate",
+        "feature_name": "feature_26",
         "mean_abs_shap": 0.00109868
       }
     ],
@@ -577,15 +462,7 @@
   "cross_dataset": {
     "ciciomt2024": {
       "status": "DISCONTINUED",
-      "reason": "Feature mismatch \u2014 24/29 features imputed",
-      "auc": 0.48881096558090836,
-      "accuracy": 0.05791002905520489,
-      "f1": 0.07311483957594625,
-      "attack_recall": 0.038465483639347625,
-      "test_samples": 9981,
-      "threshold": 0.5,
-      "mapped_features": 5,
-      "imputed_features": 24
+      "reason": "Feature mismatch \u2014 metrics not generated"
     },
     "medsec25": {
       "status": "PENDING",

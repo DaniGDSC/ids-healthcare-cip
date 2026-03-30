@@ -787,7 +787,7 @@ def run_hardened_pipeline(*, allow_overwrite: bool = True) -> Dict[str, Any]:
         ),
         AttentionBuilder(units=hp["attention_units"]),
     ]
-    assembler = DetectionModelAssembler(timesteps=hp["timesteps"], n_features=29, builders=builders)
+    assembler = DetectionModelAssembler(timesteps=hp["timesteps"], n_features=X_train.shape[1], builders=builders)
     detection_model = assembler.assemble()
     detection_model.load_weights(str(weights_path))
     detection_params = detection_model.count_params()

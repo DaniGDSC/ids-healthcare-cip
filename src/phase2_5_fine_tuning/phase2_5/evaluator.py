@@ -87,7 +87,7 @@ class QuickEvaluator:
 
     Args:
         quick_train: Training configuration.
-        n_features: Number of input features (default 29).
+        n_features: Number of input features (default 24).
         random_state: Seed for reproducibility.
         pretrained_weights_path: Path to Phase 3 model weights.
         model_architecture: Dict with Phase 3 architecture params.
@@ -96,7 +96,7 @@ class QuickEvaluator:
     def __init__(
         self,
         quick_train: QuickTrainConfig,
-        n_features: int = 29,
+        n_features: int = 24,
         random_state: int = 42,
         pretrained_weights_path: Optional[str] = None,
         model_architecture: Optional[Dict[str, Any]] = None,

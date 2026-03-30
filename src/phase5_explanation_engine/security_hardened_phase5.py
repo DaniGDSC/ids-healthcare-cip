@@ -6,7 +6,7 @@ Phase 0 security classes — never duplicating them.
 
     A01  Read-only explanation artifacts (chmod 444), workspace path validation
     A02  SHA-256 for shap_values.parquet + explanation_report.json → metadata
-    A03  Template sanitization, top_n_features ∈ [1, 29], config dict sanitized
+    A03  Template sanitization, top_n_features ∈ [1, 24], config dict sanitized
     A05  Tighter parameter bounds, unknown YAML key rejection
     A08  Normal-only SHAP background, shape assertion, waterfall for HIGH+ only
     A09  HIPAA-compliant logging — NEVER log individual SHAP values or biometrics
@@ -100,7 +100,7 @@ BACKGROUND_SAMPLES_MAX: int = 1000
 MAX_EXPLAIN_SAMPLES_MIN: int = 1
 MAX_EXPLAIN_SAMPLES_MAX: int = 1000
 TOP_FEATURES_MIN: int = 1
-TOP_FEATURES_MAX: int = 29
+TOP_FEATURES_MAX: int = 24
 MAX_WATERFALL_MIN: int = 0
 MAX_WATERFALL_MAX: int = 50
 MAX_TIMELINE_MIN: int = 0

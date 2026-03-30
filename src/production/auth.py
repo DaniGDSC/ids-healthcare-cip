@@ -144,16 +144,67 @@ class AuthProvider:
     def _auth_ldap(self, username: str, password: str) -> Optional[AuthSession]:
         """Authenticate against LDAP/Active Directory.
 
-        In production, replace this with ldap3 library calls:
-            from ldap3 import Server, Connection, ALL
-            server = Server(self._ldap_config["host"], get_info=ALL)
-            conn = Connection(server, user=f"cn={username},...", password=password)
-            if conn.bind():
-                role = self._resolve_ldap_role(conn, username)
-                ...
+        Requires ldap3 library: pip install ldap3
+
+        Config keys:
+            host: LDAP server hostname
+            port: LDAP port (389 or 636 for LDAPS)
+            base_dn: Base DN for user search (e.g., "dc=hospital,dc=internal")
+            user_dn_template: DN template (e.g., "cn={username},ou=users,dc=hospital,dc=internal")
+            use_ssl: Whether to use LDAPS
+            role_mapping: Dict mapping LDAP group → dashboard role
         """
-        logger.info("LDAP auth placeholder for %s — use local mode for testing", username)
-        return None
+        try:
+            from ldap3 import Server, Connection, ALL, SUBTREE
+        except ImportError:
+            logger.error("ldap3 not installed — run: pip install ldap3")
+            return None
+
+        host = self._ldap_config.get("host", "localhost")
+        port = self._ldap_config.get("port", 389)
+        use_ssl = self._ldap_config.get("use_ssl", False)
+        base_dn = self._ldap_config.get("base_dn", "")
+        user_dn_template = self._ldap_config.get(
+            "user_dn_template", f"cn={{}},{base_dn}"
+        )
+        role_mapping = self._ldap_config.get("role_mapping", {})
+
+        user_dn = user_dn_template.format(username)
+
+        try:
+            server = Server(host, port=port, use_ssl=use_ssl, get_info=ALL)
+            conn = Connection(server, user=user_dn, password=password)
+
+            if not conn.bind():
+                logger.warning("LDAP bind failed for %s: %s", username, conn.result)
+                return None
+
+            # Search for user's groups to determine role
+            role = ROLES[0]  # default
+            if base_dn and role_mapping:
+                conn.search(
+                    base_dn,
+                    f"(&(objectClass=group)(member={user_dn}))",
+                    search_scope=SUBTREE,
+                    attributes=["cn"],
+                )
+                for entry in conn.entries:
+                    group_name = str(entry.cn)
+                    if group_name in role_mapping:
+                        mapped_role = role_mapping[group_name]
+                        if mapped_role in ROLES:
+                            role = mapped_role
+                            break
+
+            conn.unbind()
+            session = AuthSession(username, role)
+            self._sessions[session.token] = session
+            logger.info("LDAP auth success: %s as %s", username, role)
+            return session
+
+        except Exception as exc:
+            logger.error("LDAP auth error for %s: %s", username, exc)
+            return None
 
     @staticmethod
     def hash_password(password: str) -> str:

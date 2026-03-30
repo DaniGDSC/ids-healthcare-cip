@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 CONFIG_PATH: Path = PROJECT_ROOT / "config" / "phase5_config.yaml"
 
-N_FEATURES: int = 29
+from dashboard.streaming.feature_aligner import N_FEATURES  # canonical: 24
 TIMESTEPS: int = 20
 STRIDE: int = 1
 HASH_CHUNK: int = 65_536

@@ -18,6 +18,8 @@ class ScenarioID(str, Enum):
     B = "B"  # Gradual attack — reconnaissance simulation
     C = "C"  # Abrupt attack — DoS/DDoS simulation
     D = "D"  # Mixed cycle — attack-recovery resilience
+    E = "E"  # Novelty attacks — zero-day / drift
+    RANDOM = "RANDOM"  # Random scenario cycling
 
 
 class SimMode(str, Enum):
@@ -88,6 +90,20 @@ SCENARIOS: dict[ScenarioID, ScenarioConfig] = {
             ScenarioPhase("Benign", 60, "Recovery Phase 1"),
             ScenarioPhase("attack", 80, "Attack Phase 2"),
             ScenarioPhase("Benign", 80, "Recovery Phase 2"),
+        ],
+    ),
+    ScenarioID.E: ScenarioConfig(
+        id=ScenarioID.E,
+        name="Novelty Attacks",
+        description="Zero-day detection — port scan, biometric, combined, drift",
+        phases=[
+            ScenarioPhase("benign", 50, "Normal baseline"),
+            ScenarioPhase("e1_portscan", 100, "Novel port scan attack"),
+            ScenarioPhase("benign", 30, "Recovery"),
+            ScenarioPhase("e2_biometric", 100, "Biometric tampering"),
+            ScenarioPhase("benign", 30, "Recovery"),
+            ScenarioPhase("e3_combined", 100, "Combined network + biometric"),
+            ScenarioPhase("e4_drift", 200, "Concept drift"),
         ],
     ),
 }

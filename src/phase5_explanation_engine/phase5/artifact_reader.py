@@ -26,7 +26,7 @@ from src.phase2_detection_engine.phase2.cnn_builder import CNNBuilder
 logger = logging.getLogger(__name__)
 
 _HASH_CHUNK: int = 65_536
-_N_FEATURES: int = 29
+from dashboard.streaming.feature_aligner import N_FEATURES as _N_FEATURES  # canonical: 24
 
 
 class Phase4ArtifactReader:

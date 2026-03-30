@@ -157,7 +157,7 @@ class ClassificationPipeline:
         X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
 
         # 6. Rebuild detection model (Phase 2 builders)
-        detection_model = self._rebuild_detection_model(metadata, weights_path)
+        detection_model = self._rebuild_detection_model(metadata, weights_path, n_features=X_train.shape[1])
         detection_params = detection_model.count_params()
 
         # 7. Auto classification head
@@ -235,7 +235,9 @@ class ClassificationPipeline:
         return metrics
 
     @staticmethod
-    def _rebuild_detection_model(metadata: Dict[str, Any], weights_path: Path) -> tf.keras.Model:
+    def _rebuild_detection_model(
+        metadata: Dict[str, Any], weights_path: Path, n_features: int = 24,
+    ) -> tf.keras.Model:
         """Rebuild Phase 2 detection model architecture and load weights."""
         logger.info("── Rebuilding detection model ──")
 
@@ -258,7 +260,7 @@ class ClassificationPipeline:
 
         assembler = DetectionModelAssembler(
             timesteps=hp["timesteps"],
-            n_features=29,
+            n_features=n_features,
             builders=builders,
         )
         detection_model = assembler.assemble()

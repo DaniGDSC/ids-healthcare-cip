@@ -335,9 +335,8 @@ def _build_full_model(
     return full_model
 
 
-# ===================================================================
-# Progressive Unfreezing
-# ===================================================================
+# NOTE: Training functions removed — Phase 3 loads the Phase 2.5
+# finetuned model (no retraining). See run_finetuned_training.py.
 
 
 def _set_trainable(model: tf.keras.Model, frozen_groups: List[str]) -> None:

@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import tensorflow as tf
 
-from src.phase4_risk_engine.phase4.base import BaseDetector
+from src.common.base import BaseDetector
 from src.phase4_risk_engine.phase4.clinical_impact import ClinicalSeverity
 
 logger = logging.getLogger(__name__)

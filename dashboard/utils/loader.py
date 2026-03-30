@@ -49,10 +49,8 @@ PATHS = {
     # Phase 5
     "explanation_report": DATA_DIR / "phase5" / "explanation_report.json",
     "shap_values": DATA_DIR / "phase5" / "shap_values.parquet",
-    # Phase 6/7 (optional)
+    # Phase 7 (optional)
     "monitoring_log": DATA_DIR / "phase7" / "monitoring_log.json",
-    "notification_log": DATA_DIR / "phase6" / "notification_log.json",
-    "delivery_report": DATA_DIR / "phase6" / "delivery_report.json",
 }
 
 
@@ -177,17 +175,6 @@ def load_feature_names() -> List[str]:
         "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA", "Heart_rate",
         "Resp_Rate", "ST",
     ]
-
-
-@st.cache_data(ttl=60)
-def load_delivery_report() -> Optional[List[Dict[str, Any]]]:
-    """Load Phase 6 delivery report."""
-    data = _load_json(PATHS["delivery_report"])
-    if isinstance(data, list):
-        return data
-    if isinstance(data, dict) and "deliveries" in data:
-        return data["deliveries"]
-    return data
 
 
 def get_artifact_status() -> Dict[str, bool]:

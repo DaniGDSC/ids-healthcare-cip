@@ -67,7 +67,7 @@ def render_detection_report(report: Dict[str, Any]) -> str:
     )
     w("")
     w("```")
-    w(f"Input: (batch, {hp.get('timesteps', 20)}, {report.get('n_features', 29)})")
+    w(f"Input: (batch, {hp.get('timesteps', 20)}, {report.get('n_features', 24)})")
     w("  │")
     w("  ├─── [CNN Block]")
     w(
@@ -129,7 +129,7 @@ def render_detection_report(report: Dict[str, Any]) -> str:
     w("|-----------|-------|")
     w(f"| Window length (timesteps) | {hp.get('timesteps', 20)} |")
     w(f"| Stride | {hp.get('stride', 1)} |")
-    w(f"| Input features | {report.get('n_features', 29)} |")
+    w(f"| Input features | {report.get('n_features', 24)} |")
     w(f"| Train windows | {shapes.get('train_windows', '—')} |")
     w(f"| Test windows | {shapes.get('test_windows', '—')} |")
     w(f"| Train context | {shapes.get('train_context', '—')} |")

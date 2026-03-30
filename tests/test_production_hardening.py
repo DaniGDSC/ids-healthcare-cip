@@ -36,6 +36,26 @@ class TestTLSConfig:
         assert kafka_cfg["security.protocol"] == "SSL"
         assert "ssl.ca.location" in kafka_cfg
 
+    def test_load_from_test_certs_directory(self) -> None:
+        from src.production.tls_config import load_from_directory
+        cert_dir = Path(__file__).resolve().parents[1] / "config" / "certs" / "test"
+        cfg = load_from_directory(cert_dir)
+        assert cfg.ca_cert is not None
+        assert cfg.ca_cert.exists()
+        assert cfg.server_cert is not None
+        assert cfg.server_cert.exists()
+        assert cfg.client_cert is not None
+        assert cfg.client_cert.exists()
+        status = cfg.get_status()
+        assert status["mtls_enabled"] is True
+
+    def test_test_certs_create_ssl_context(self) -> None:
+        from src.production.tls_config import load_from_directory
+        cert_dir = Path(__file__).resolve().parents[1] / "config" / "certs" / "test"
+        cfg = load_from_directory(cert_dir)
+        ctx = cfg.create_client_context()
+        assert ctx is not None
+
     def test_status_reports_mtls(self) -> None:
         from src.production.tls_config import TLSConfig
         cfg = TLSConfig(ca_cert=Path("ca.pem"), client_cert=Path("client.pem"))

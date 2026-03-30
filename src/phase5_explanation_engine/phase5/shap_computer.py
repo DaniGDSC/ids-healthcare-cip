@@ -14,7 +14,7 @@ from src.phase2_detection_engine.phase2.reshaper import DataReshaper
 
 logger = logging.getLogger(__name__)
 
-_N_FEATURES: int = 29
+from dashboard.streaming.feature_aligner import N_FEATURES as _N_FEATURES  # canonical: 24
 
 
 class SHAPComputer:

@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # Lazy imports — FastAPI may not be installed in all environments
 try:
+    from contextlib import asynccontextmanager
     from fastapi import FastAPI, HTTPException
     from pydantic import BaseModel, Field
 except ImportError:
@@ -42,18 +43,9 @@ _bridge = None
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _get_app() -> Any:
-    """Create FastAPI app with lazy initialization."""
-    if FastAPI is None:
-        raise ImportError("FastAPI not installed. Run: pip install fastapi uvicorn")
+# ── Request/Response models (module-level for FastAPI schema) ──────
 
-    app = FastAPI(
-        title="RA-X-IoMT Inference API",
-        description="Real-time IoMT intrusion detection inference endpoint",
-        version="1.0.0",
-    )
-
-    # ── Request/Response models ────────────────────────────────────
+if FastAPI is not None:
 
     class FlowRequest(BaseModel):
         """Single flow for ingestion."""
@@ -78,15 +70,15 @@ def _get_app() -> Any:
     class PredictionResponse(BaseModel):
         """Inference result."""
         risk_level: str
-        clinical_severity: int
-        clinical_severity_name: str
-        anomaly_score: float
-        attention_flag: bool
-        patient_safety_flag: bool
-        device_action: str
-        response_time_minutes: int
-        alert_emit: bool
-        latency_ms: float
+        clinical_severity: int = 0
+        clinical_severity_name: str = ""
+        anomaly_score: float = 0.0
+        attention_flag: bool = False
+        patient_safety_flag: bool = False
+        device_action: str = "none"
+        response_time_minutes: int = 0
+        alert_emit: bool = False
+        latency_ms: float = 0.0
 
     class HealthResponse(BaseModel):
         """Service health check."""
@@ -96,13 +88,17 @@ def _get_app() -> Any:
         buffer_state: str
         uptime_seconds: float
 
-    # ── Startup ────────────────────────────────────────────────────
 
-    _start_time = time.time()
+def _get_app() -> Any:
+    """Create FastAPI app with lazy initialization."""
+    if FastAPI is None:
+        raise ImportError("FastAPI not installed. Run: pip install fastapi uvicorn")
 
-    @app.on_event("startup")
-    async def startup() -> None:
-        """Load model and initialize all services."""
+    # ── Lifespan (replaces deprecated on_event) ────────────────────
+
+    @asynccontextmanager
+    async def lifespan(app: Any):
+        """Load model on startup, cleanup on shutdown."""
         global _service, _buffer, _fuser, _bridge
 
         from src.production.inference_service import InferenceService
@@ -117,8 +113,20 @@ def _get_app() -> Any:
 
         _service = InferenceService(PROJECT_ROOT)
         _service.load()
-
         logger.info("API startup complete")
+
+        yield  # app runs here
+
+        logger.info("API shutdown")
+
+    _start_time = time.time()
+
+    app = FastAPI(
+        title="RA-X-IoMT Inference API",
+        description="Real-time IoMT intrusion detection inference endpoint",
+        version="1.0.0",
+        lifespan=lifespan,
+    )
 
     # ── Endpoints ──────────────────────────────────────────────────
 

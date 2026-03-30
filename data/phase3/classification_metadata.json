@@ -12,12 +12,12 @@
   },
   "train_samples": 19961,
   "hyperparameters": {
-    "dense_units": 64,
+    "dense_units": 32,
     "dense_activation": "relu",
     "head_dropout_rate": 0.3,
     "batch_size": 256,
     "validation_split": 0.2,
-    "threshold": 0.5,
+    "threshold": 0.1,
     "training_phases": [
       {
         "name": "Phase A \u2014 Head only",

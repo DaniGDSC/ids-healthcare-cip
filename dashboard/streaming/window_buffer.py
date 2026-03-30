@@ -179,6 +179,29 @@ class WindowBuffer:
                 if self._started_at else None,
             }
 
+    def get_flow_vectors(self, n: int = 50) -> List[np.ndarray]:
+        """Get the last N raw flow vectors for visualization."""
+        with self._lock:
+            buf = list(self._buffer)
+            return buf[-n:]
+
+    def get_prediction_timeseries(self, n: int = 200) -> List[Dict[str, Any]]:
+        """Get prediction timeseries for charts (score, risk, phase)."""
+        with self._lock:
+            return [
+                {
+                    "index": p.get("sample_index", i),
+                    "score": p.get("anomaly_score", 0),
+                    "risk": p.get("risk_level", "NORMAL"),
+                    "severity": p.get("clinical_severity", 1),
+                    "attention": p.get("attention_flag", False),
+                    "ground_truth": p.get("ground_truth", -1),
+                    "latency": p.get("latency_ms", 0),
+                    "phase": p.get("phase", ""),
+                }
+                for i, p in enumerate(list(self._predictions)[-n:])
+            ]
+
     def reset(self) -> None:
         """Reset the buffer to initial state."""
         with self._lock:

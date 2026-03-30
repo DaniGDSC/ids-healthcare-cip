@@ -58,6 +58,29 @@ def _get_action(alert: Dict[str, Any]) -> str:
     return "LOGGED"
 
 
+def _generate_suggestion(alert: Dict[str, Any]) -> str:
+    """Generate a human-readable suggestion from the alert."""
+    risk = alert.get("risk_level", "NORMAL")
+    category = alert.get("attack_category", "unknown")
+    attention = alert.get("attention_flag", False)
+    safety = alert.get("patient_safety_flag", False)
+
+    if risk == "CRITICAL":
+        base = f"IMMEDIATE: Isolate device. {category} attack detected."
+        if safety:
+            base += " Patient safety AT RISK — verify vitals manually."
+        return base
+    if risk == "HIGH":
+        if attention:
+            return f"URGENT: Novel threat pattern detected. Restrict network and investigate."
+        return f"URGENT: Restrict network access. Anomalous {category} traffic pattern."
+    if risk == "MEDIUM":
+        if attention:
+            return "ADVISORY: Unusual attention pattern — possible zero-day. Monitor closely."
+        return f"ADVISORY: Elevated anomaly score in {category} traffic. Monitor."
+    return ""
+
+
 def render_alert_table(
     alerts: List[Dict[str, Any]],
     show_suppressed: bool = False,
@@ -179,6 +202,19 @@ def _render_dialog(alert: Dict[str, Any], idx: int) -> None:
         f'{f" / {severity_label(sev)}" if sev else ""}',
         unsafe_allow_html=True,
     )
+
+    # Suggestion
+    suggestion = _generate_suggestion(alert)
+    if suggestion:
+        st.warning(f"**Suggestion:** {suggestion}")
+
+    # Ground truth (demo validation)
+    gt = alert.get("ground_truth", -1)
+    if gt >= 0:
+        gt_label = "ATTACK" if gt == 1 else "BENIGN"
+        detected = level in ("HIGH", "CRITICAL", "MEDIUM")
+        correct = (gt == 1 and detected) or (gt == 0 and not detected)
+        st.caption(f"Ground truth: {gt_label} | Detection: {'CORRECT' if correct else 'MISSED'}")
 
     if alert.get("attention_flag"):
         st.warning("Potential novel / zero-day threat (attention anomaly)")

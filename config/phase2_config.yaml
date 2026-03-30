@@ -1,7 +1,7 @@
 # Phase 2: Detection Engine Configuration
 # CNN → BiLSTM → Attention feature extraction
 #
-# Input:  Phase 1 parquet (29 features, RobustScaler-normalised)
+# Input:  Phase 1 parquet (24 features, RobustScaler-normalised)
 # Output: 128-dim attention context vectors (no classification head)
 
 data:

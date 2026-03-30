@@ -35,20 +35,16 @@ decision context:
 
 Select your role from the sidebar dropdown.
 
-## Pages
+## Pages (6 panels)
 
 | Page | Description |
 | ---- | ----------- |
-| Operational Status | Engine health, system status, live monitoring indicators |
-| Stakeholder Intelligence | **Role-specific views** — SOC threat matrix, clinician safety status, CISO compliance dashboard, biomed device diagnostics |
-| Alert Feed | Real-time alert table with risk-level color coding and SHAP drill-down |
-| SHAP Explanations | Global feature importance, per-alert waterfall, temporal attention timeline |
-| Evaluation Results | AUC/F1 metrics, ROC curve, confusion matrix, threshold analysis |
-| Model & Training | Architecture summary, training history, progressive unfreezing details |
-| Risk Analytics | Risk distribution, session statistics, threshold drift status |
-| Device Inventory | Device profiles, FDA class, CIA priorities |
-| Cross-Dataset & Simulation | CICIoMT2024 generalization results, MedSec-25 simulation controls |
-| Compliance & Audit | HIPAA compliance status, artifact integrity, audit trail |
+| Live Monitor | System state, threat gauge, anomaly timeline, network traffic heatmap, risk distribution |
+| Alert Feed | Real-time alerts with suggestions, explanations, ground truth validation |
+| Explanations | SHAP/gradient feature attribution, temporal attention timeline |
+| Performance | Latency histogram, throughput, rolling accuracy, model confidence |
+| Stakeholder Intelligence | Role-specific views — SOC, clinician, CISO, biomed |
+| System & Compliance | Model architecture, evaluation metrics, HIPAA/FDA audit |
 
 ## Stakeholder Intelligence Views
 

@@ -7,11 +7,11 @@ process consuming from the WindowBuffer.
 Components loaded at startup (once):
   - CNN-BiLSTM-Attention model (Phase 2 backbone + Phase 2.5 head)
   - RiskScorer, CIARiskModifier, ClinicalImpactAssessor, AlertFatigueManager
-  - AttentionAnomalyDetector, ConditionalExplainer
+  - AttentionAnomalyDetector (from Phase 2)
 
-Per-window processing (~100ms):
-  window (1, 20, 24) → model.predict() → risk score → CIA → clinical
-  → fatigue check → conditional explanation → alert (if emitted)
+Per-window processing (~190ms):
+  window (1, 20, 24) → model.predict() → risk score → attention anomaly
+  → CIA → clinical → fatigue check → alert (if emitted)
 """
 
 from __future__ import annotations
@@ -164,14 +164,39 @@ class InferenceService:
         """
         t0 = time.perf_counter()
 
-        # 1. Model inference
-        score = float(self._model.predict(window, verbose=0).ravel()[0])
+        # 1. Model inference + gradient explanation in single pass
+        window_tensor = tf.constant(window, dtype=tf.float32)
+        with tf.GradientTape() as tape:
+            tape.watch(window_tensor)
+            pred = self._model(window_tensor, training=False)
+        score = float(pred.numpy().ravel()[0])
+        grads = tape.gradient(pred, window_tensor)
+
+        # Build explanation from gradients
+        explanation = {"level": "none", "top_features": [], "timestep_importance": []}
+        if grads is not None:
+            feat_imp = np.mean(np.abs(grads.numpy().squeeze()), axis=0)
+            top_idx = np.argsort(feat_imp)[::-1][:5]
+            explanation = {
+                "level": "attention_and_gradient",
+                "top_features": [
+                    {"feature": MODEL_FEATURES[j], "importance": round(float(feat_imp[j]), 6)}
+                    for j in top_idx
+                ],
+                "timestep_importance": np.mean(np.abs(grads.numpy().squeeze()), axis=1).tolist(),
+            }
 
         # 2. Attention anomaly detection
         attn_magnitudes = self._attn_detector.compute_scores(self._model, window)
         attn_flag = bool(self._attn_detector.classify(attn_magnitudes)[0])
 
         # 3. Risk scoring
+        # NOTE: Two thresholds exist in the system:
+        #   - Classification threshold (0.1): sigmoid cutoff for attack/normal (Phase 2.5)
+        #   - Baseline threshold (0.204): attention magnitude MAD boundary (Phase 4)
+        # Here we use the BASELINE threshold for risk distance calculation.
+        # The sigmoid 'score' from model.predict() serves as the anomaly score
+        # in Phase 4's risk framework — higher score = more anomalous.
         threshold = self._baseline.get("baseline_threshold", 0.255)
         mad = self._baseline["mad"]
         distance = score - threshold
@@ -224,6 +249,7 @@ class InferenceService:
             "cia_scores": cia_assessment.cia_scores,
             "cia_max_dimension": cia_assessment.cia_max_dimension,
             "attack_category": attack_category,
+            "explanation": explanation,
             "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
         }
 
