@@ -103,10 +103,14 @@ class TestSidebarControls:
     def test_role_selector_has_5_roles(self, app: AppTest) -> None:
         assert len(app.sidebar.selectbox[0].options) == 5
 
-    def test_scenario_selector_exists(self, app: AppTest) -> None:
-        # Should have at least role + scenario + speed selectboxes
-        assert len(app.sidebar.selectbox) >= 3
-
     def test_start_button_exists(self, app: AppTest) -> None:
         labels = [b.label for b in app.sidebar.button]
         assert any("START" in str(l) for l in labels)
+
+    def test_stop_button_exists(self, app: AppTest) -> None:
+        labels = [b.label for b in app.sidebar.button]
+        assert any("STOP" in str(l) for l in labels)
+
+    def test_reset_button_exists(self, app: AppTest) -> None:
+        labels = [b.label for b in app.sidebar.button]
+        assert any("RESET" in str(l) for l in labels)

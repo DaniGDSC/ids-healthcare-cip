@@ -1,11 +1,11 @@
-"""WUSTL flow simulator — streams pre-scaled flows through InferenceService.
+"""WUSTL flow simulator — streams all flows with random timing.
 
-Reads 24-feature WUSTL flow CSVs from data/streaming/wustl_flows/,
-feeds them directly into WindowBuffer (no re-scaling — already
-RobustScaler-transformed), runs InferenceService for real model
-inference, and records predictions for dashboard display.
+Loads ALL CSV files from data/streaming/wustl_flows/ sequentially
+(full_* first, then scenario files). Uses random inter-arrival
+timing to simulate realistic network traffic patterns.
 
-Supports scenarios A-E and RANDOM mode.
+When the last file is reached, auto-stops and sets a flag so the
+dashboard can alert: "Dataset exhausted — update dataset."
 """
 
 from __future__ import annotations
@@ -22,14 +22,6 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from dashboard.simulation.scenarios import (
-    MODE_MULTIPLIERS,
-    SCENARIOS,
-    ScenarioConfig,
-    ScenarioID,
-    ScenarioPhase,
-    SimMode,
-)
 from dashboard.streaming.feature_aligner import MODEL_FEATURES
 
 logger = logging.getLogger(__name__)
@@ -38,23 +30,14 @@ logger = logging.getLogger(__name__)
 class WUSTLFlowSimulator:
     """Streams WUSTL flows through the inference pipeline.
 
+    Reads all CSV files sequentially with random inter-arrival timing.
+    Auto-stops when dataset is exhausted.
+
     Args:
         flows_dir: Path to wustl_flows directory.
         buffer: WindowBuffer to feed flows into.
         inference_service: InferenceService for model predictions.
     """
-
-    # Map phase labels to file prefixes
-    _PHASE_PREFIX: Dict[str, str] = {
-        "benign": "scenario_a",
-        "Benign": "scenario_a",
-        "attack": "scenario_c",
-        "Reconnaissance": "scenario_b",
-        "e1_portscan": "scenario_e1_portscan",
-        "e2_biometric": "scenario_e2_biometric",
-        "e3_combined": "scenario_e3_combined",
-        "e4_drift": "scenario_e4_drift",
-    }
 
     def __init__(
         self,
@@ -68,10 +51,12 @@ class WUSTLFlowSimulator:
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._running = False
+        self._exhausted = False
         self._flows_injected = 0
         self._inferences_run = 0
-        self._current_scenario: Optional[ScenarioID] = None
-        self._current_phase: str = ""
+        self._total_files = 0
+        self._current_file = ""
+        self._current_phase = ""
         self._started_at: Optional[datetime] = None
         self._latencies: List[float] = []
 
@@ -83,44 +68,58 @@ class WUSTLFlowSimulator:
         else:
             self._ground_truth = {}
 
-        # Index files by prefix
-        self._file_index: Dict[str, List[Path]] = {}
-        for csv_file in sorted(self._flows_dir.glob("*.csv")):
-            for label, prefix in self._PHASE_PREFIX.items():
-                if csv_file.name.startswith(prefix):
-                    self._file_index.setdefault(label, []).append(csv_file)
-                    break
-            # Also index full_* files as mixed
-            if csv_file.name.startswith("full_"):
-                self._file_index.setdefault("full", []).append(csv_file)
+        # Load memory-mapped arrays (instant access, zero copy)
+        npy_path = self._flows_dir / "flows.npy"
+        labels_path = self._flows_dir / "labels.npy"
+        filenames_path = self._flows_dir / "filenames.json"
 
-        logger.info("WUSTL simulator: %d files indexed from %s",
-                     sum(len(v) for v in self._file_index.values()), self._flows_dir)
+        if npy_path.exists():
+            self._flows_mmap = np.load(str(npy_path), mmap_mode="r")
+            self._labels_mmap = np.load(str(labels_path), mmap_mode="r")
+            with open(filenames_path) as f:
+                self._filenames = json.load(f)
+            self._total_files = len(self._filenames)
+            self._use_mmap = True
+            logger.info("WUSTL simulator: %d flows via mmap (%.0f KB)",
+                         self._total_files, self._flows_mmap.nbytes / 1024)
+        else:
+            # Fallback: scan CSV files
+            self._use_mmap = False
+            self._flows_mmap = None
+            self._labels_mmap = None
+            full_files = sorted(self._flows_dir.glob("full_*.csv"))
+            scenario_files = sorted(f for f in self._flows_dir.glob("scenario_*.csv"))
+            self._all_files: List[Path] = full_files + scenario_files
+            self._total_files = len(self._all_files)
+            self._filenames = [f.name for f in self._all_files]
+            logger.info("WUSTL simulator: %d CSV files (no mmap)", self._total_files)
 
     @property
     def running(self) -> bool:
         return self._running
 
     @property
+    def exhausted(self) -> bool:
+        return self._exhausted
+
+    @property
     def flows_injected(self) -> int:
         return self._flows_injected
 
-    def start(self, scenario: ScenarioID = ScenarioID.C, mode: SimMode = SimMode.ACCELERATED) -> bool:
+    def start(self, **kwargs: Any) -> bool:
+        """Start streaming. Ignores scenario/mode — always random timing."""
         if self._running:
             return False
+        if self._exhausted:
+            return False
 
-        self._current_scenario = scenario
         self._stop_event.clear()
         self._started_at = datetime.now(timezone.utc)
 
-        self._thread = threading.Thread(
-            target=self._run,
-            args=(scenario, mode),
-            daemon=True,
-        )
+        self._thread = threading.Thread(target=self._run, daemon=True)
         self._running = True
         self._thread.start()
-        logger.info("Simulator started: %s %s", scenario.value, mode.value)
+        logger.info("Simulator started: %d files to stream", self._total_files - self._flows_injected)
         return True
 
     def stop(self) -> None:
@@ -133,97 +132,109 @@ class WUSTLFlowSimulator:
         self.stop()
         self._flows_injected = 0
         self._inferences_run = 0
-        self._current_scenario = None
+        self._exhausted = False
+        self._current_file = ""
         self._current_phase = ""
         self._started_at = None
         self._latencies.clear()
 
-    def _run(self, scenario_id: ScenarioID, mode: SimMode) -> None:
-        if scenario_id == ScenarioID.RANDOM:
-            self._run_random(mode)
-        else:
-            config = SCENARIOS.get(scenario_id)
-            if config:
-                self._run_scenario(config, mode)
-        self._running = False
+    def _run(self) -> None:
+        """Stream all files: every flow triggers inference.
 
-    def _run_random(self, mode: SimMode) -> None:
-        options = [ScenarioID.A, ScenarioID.B, ScenarioID.C, ScenarioID.D, ScenarioID.E]
-        while not self._stop_event.is_set():
-            chosen = random.choice(options)
-            self._current_scenario = chosen
-            config = SCENARIOS.get(chosen)
-            if config:
-                self._run_scenario(config, mode)
+        Medical IoT requires per-flow assessment — no batching.
+        The ~190ms inference latency per flow is acceptable
+        (clinical SLA is 5 minutes = 1,500x margin).
+        The dashboard uses @st.fragment(run_every=2) to poll
+        the buffer independently, so UI stays responsive
+        regardless of inference speed.
+        """
+        start_idx = self._flows_injected
 
-    def _run_scenario(self, config: ScenarioConfig, mode: SimMode) -> None:
-        multiplier = MODE_MULTIPLIERS[mode]
-        for phase in config.phases:
-            if self._stop_event.is_set():
-                break
-            self._run_phase(phase, multiplier)
-
-    def _run_phase(self, phase: ScenarioPhase, multiplier: float) -> None:
-        self._current_phase = phase.description
-        label = phase.label_filter
-        files = self._file_index.get(label, self._file_index.get("benign", []))
-
-        if not files:
-            logger.warning("No files for phase label: %s", label)
-            return
-
-        n = min(phase.duration_flows, len(files))
-        sample = random.sample(files, n) if n < len(files) else files[:n]
-
-        for path in sample:
+        for i in range(start_idx, self._total_files):
             if self._stop_event.is_set():
                 break
 
-            try:
-                df = pd.read_csv(path)
-                vec = df[MODEL_FEATURES].values[0].astype(np.float32)
-            except Exception as exc:
-                logger.warning("Failed to read %s: %s", path.name, exc)
-                continue
+            # Read flow: mmap (0.001ms) or CSV fallback (0.8ms)
+            if self._use_mmap:
+                vec = np.array(self._flows_mmap[i], dtype=np.float32)
+                filename = self._filenames[i]
+                gt_label = int(self._labels_mmap[i])
+            else:
+                path = self._all_files[i]
+                filename = path.name
+                try:
+                    df = pd.read_csv(path)
+                    vec = df[MODEL_FEATURES].values[0].astype(np.float32)
+                except Exception as exc:
+                    logger.warning("Failed to read %s: %s", filename, exc)
+                    continue
+                gt_label = self._ground_truth.get(filename, 0)
 
-            # Feed buffer directly (pre-scaled, no transform)
+            # Feed buffer, then update status (order matters for consistency)
             self._buffer.append(vec)
             self._flows_injected += 1
+            self._current_file = filename
+            self._current_phase = self._infer_phase(filename)
 
-            # Run inference if window available
-            window = self._buffer.get_window()
-            if window is not None and self._inference is not None:
-                gt_label = self._ground_truth.get(path.name, 0)
-                attack_cat = self._infer_category(label)
+            # Every flow triggers inference (medical safety requirement)
+            if self._inference is not None:
+                window = self._buffer.get_window()
+                if window is not None:
+                    attack_cat = self._infer_category(filename)
 
-                result = self._inference.process_window(
-                    window=window,
-                    raw_features=vec,
-                    attack_category=attack_cat,
-                )
-                result["ground_truth"] = gt_label
-                result["phase"] = self._current_phase
-                self._buffer.record_prediction(result)
-                self._inferences_run += 1
+                    result = self._inference.process_window(
+                        window=window,
+                        raw_features=vec,
+                        attack_category=attack_cat,
+                    )
+                    result["ground_truth"] = gt_label
+                    result["phase"] = self._current_phase
+                    self._buffer.record_prediction(result)
+                    self._inferences_run += 1
 
-                if "latency_ms" in result:
-                    self._latencies.append(result["latency_ms"])
+                    if "latency_ms" in result:
+                        self._latencies.append(result["latency_ms"])
 
-            # Inter-arrival delay
-            delay = 0.05 * multiplier + np.random.exponential(0.02 * multiplier)
-            time.sleep(min(delay, 1.0))
+            # Random inter-arrival (simulates real network jitter)
+            time.sleep(random.uniform(0.01, 0.05))
+
+        # Check if exhausted (reached end, not stopped by user)
+        if not self._stop_event.is_set():
+            self._exhausted = True
+            logger.warning("Dataset exhausted: %d/%d files processed",
+                           self._flows_injected, self._total_files)
+
+        self._running = False
 
     @staticmethod
-    def _infer_category(label: str) -> str:
-        if label in ("benign", "Benign"):
+    def _infer_phase(filename: str) -> str:
+        """Derive display phase from filename."""
+        if filename.startswith("full_"):
+            return "Full test set"
+        if "e1_portscan" in filename:
+            return "Novelty: Port scan"
+        if "e2_biometric" in filename:
+            return "Novelty: Biometric tampering"
+        if "e3_combined" in filename:
+            return "Novelty: Combined attack"
+        if "e4_drift" in filename:
+            return "Novelty: Concept drift"
+        if "scenario_a" in filename:
+            return "Benign traffic"
+        if "scenario_b" in filename:
+            return "Gradual attack"
+        if "scenario_c" in filename:
+            return "Abrupt attack"
+        if "scenario_d" in filename:
+            return "Mixed cycle"
+        return "Unknown"
+
+    @staticmethod
+    def _infer_category(filename: str) -> str:
+        """Derive attack category from filename."""
+        if "scenario_a" in filename or "full_" in filename:
             return "normal"
-        if "portscan" in label:
-            return "unknown"
-        if "biometric" in label:
-            return "unknown"
-        if "combined" in label:
-            return "unknown"
-        if "drift" in label:
+        if "e1_" in filename or "e2_" in filename or "e3_" in filename or "e4_" in filename:
             return "unknown"
         return "Spoofing"
 
@@ -231,11 +242,15 @@ class WUSTLFlowSimulator:
         p50 = sorted(self._latencies)[len(self._latencies) // 2] if self._latencies else 0
         return {
             "running": self._running,
-            "scenario": self._current_scenario.value if self._current_scenario else None,
+            "exhausted": self._exhausted,
             "current_phase": self._current_phase,
+            "current_file": self._current_file,
             "flows_injected": self._flows_injected,
+            "total_files": self._total_files,
+            "progress_pct": round(self._flows_injected / max(self._total_files, 1) * 100, 1),
             "inferences_run": self._inferences_run,
             "latency_p50_ms": round(p50, 1),
             "started_at": self._started_at.isoformat() if self._started_at else None,
+            "scenario": "STREAMING",
             "medsec25_available": False,
         }

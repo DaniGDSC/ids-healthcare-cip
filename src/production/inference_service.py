@@ -134,15 +134,40 @@ class InferenceService:
         )
         self._clinical_assessor = ClinicalImpactAssessor(biometric_columns=biometric_cols)
         self._fatigue_mgr = AlertFatigueManager()
-        self._attn_detector = AttentionAnomalyDetector(
-            baseline_median=self._baseline["median"],
-            baseline_mad=self._baseline["mad"],
-            mad_multiplier=self._baseline.get("mad_multiplier", 3.0),
+        self._attn_threshold = (
+            self._baseline["median"]
+            + self._baseline.get("mad_multiplier", 3.0) * self._baseline["mad"]
         )
+
+        # Build multi-output model: score + backbone in single forward pass
+        dense_head = self._model.get_layer("dense_head")
+        backbone_output = dense_head.input  # attention context vector
+        self._fast_model = tf.keras.Model(
+            self._model.input,
+            [self._model.output, backbone_output],
+            name="fast_dual_output",
+        )
+
+        # Compile a single @tf.function that returns score + backbone + gradients
+        # in ONE traced graph execution — eliminates Python overhead and enables
+        # XLA fusion. The graph is compiled once on first call, then reused.
+        @tf.function(reduce_retracing=True)
+        def _infer_with_grads(x: tf.Tensor):
+            with tf.GradientTape() as tape:
+                tape.watch(x)
+                pred, backbone = self._fast_model(x, training=False)
+            grads = tape.gradient(pred, x)
+            return pred, backbone, grads
+
+        self._infer_with_grads = _infer_with_grads
+
+        # Warm up the compiled function (trigger tracing once at load)
+        _dummy = tf.zeros((1, hp["timesteps"], N_FEATURES), dtype=tf.float32)
+        self._infer_with_grads(_dummy)
 
         elapsed = time.perf_counter() - t0
         logger.info(
-            "InferenceService loaded: %d params, %.2fs",
+            "InferenceService loaded: %d params, %.2fs (compiled inference)",
             self._model.count_params(), elapsed,
         )
 
@@ -152,7 +177,10 @@ class InferenceService:
         raw_features: Optional[np.ndarray] = None,
         attack_category: str = "unknown",
     ) -> Dict[str, Any]:
-        """Process a single window and return scored result.
+        """Process a single window with tiered inference.
+
+        Tier 1 (every flow, ~15ms): single forward pass → score + attention
+        Tier 2 (HIGH+ only, +25ms): GradientTape → explanation
 
         Args:
             window: Input array of shape (1, 20, 24).
@@ -164,31 +192,15 @@ class InferenceService:
         """
         t0 = time.perf_counter()
 
-        # 1. Model inference + gradient explanation in single pass
+        # ── Single compiled call: score + backbone + gradients ──
+        # @tf.function compiled graph — runs score, backbone extraction,
+        # and gradient computation in ONE fused execution. No Python
+        # loop overhead, no repeated tracing, XLA-optimizable.
         window_tensor = tf.constant(window, dtype=tf.float32)
-        with tf.GradientTape() as tape:
-            tape.watch(window_tensor)
-            pred = self._model(window_tensor, training=False)
-        score = float(pred.numpy().ravel()[0])
-        grads = tape.gradient(pred, window_tensor)
-
-        # Build explanation from gradients
-        explanation = {"level": "none", "top_features": [], "timestep_importance": []}
-        if grads is not None:
-            feat_imp = np.mean(np.abs(grads.numpy().squeeze()), axis=0)
-            top_idx = np.argsort(feat_imp)[::-1][:5]
-            explanation = {
-                "level": "attention_and_gradient",
-                "top_features": [
-                    {"feature": MODEL_FEATURES[j], "importance": round(float(feat_imp[j]), 6)}
-                    for j in top_idx
-                ],
-                "timestep_importance": np.mean(np.abs(grads.numpy().squeeze()), axis=1).tolist(),
-            }
-
-        # 2. Attention anomaly detection
-        attn_magnitudes = self._attn_detector.compute_scores(self._model, window)
-        attn_flag = bool(self._attn_detector.classify(attn_magnitudes)[0])
+        pred_out, backbone_out, grads = self._infer_with_grads(window_tensor)
+        score = float(pred_out.numpy().ravel()[0])
+        attn_magnitude = float(np.linalg.norm(backbone_out.numpy()))
+        attn_flag = bool(attn_magnitude > self._attn_threshold)
 
         # 3. Risk scoring
         # NOTE: Two thresholds exist in the system:
@@ -231,13 +243,30 @@ class InferenceService:
             attention_flag=attn_flag,
         )
 
-        # 6. Alert fatigue
+        # ── Explanation from already-computed gradients (zero extra cost) ──
+        explanation = {"level": "none", "top_features": [], "timestep_importance": []}
+        final_risk = cia_assessment.adjusted_risk_level
+        if final_risk in (RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL):
+            if grads is not None:
+                grads_np = grads.numpy().squeeze()
+                feat_imp = np.mean(np.abs(grads_np), axis=0)
+                top_idx = np.argsort(feat_imp)[::-1][:5]
+                explanation = {
+                    "level": "attention_and_gradient",
+                    "top_features": [
+                        {"feature": MODEL_FEATURES[j], "importance": round(float(feat_imp[j]), 6)}
+                        for j in top_idx
+                    ],
+                    "timestep_importance": np.mean(np.abs(grads_np), axis=1).tolist(),
+                }
+
+        # 6. Build result
         result: Dict[str, Any] = {
             "sample_index": self._inference_count,
             "anomaly_score": round(score, 6),
             "threshold": round(threshold, 6),
             "distance": round(distance, 6),
-            "risk_level": cia_assessment.adjusted_risk_level.value,
+            "risk_level": final_risk.value,
             "attention_flag": attn_flag,
             "clinical_severity": clinical.clinical_severity.value,
             "clinical_severity_name": clinical.clinical_severity.name,

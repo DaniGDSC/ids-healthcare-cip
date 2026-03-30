@@ -166,29 +166,14 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # ── Demo Controls ──
+    # ── Streaming Control ──
     st.markdown("##### Streaming Control")
-    from dashboard.simulation.scenarios import ScenarioID, SimMode
-
-    scenario_options = [
-        "RANDOM: All Scenarios",
-        "A: Benign Only",
-        "B: Gradual Attack",
-        "C: Abrupt Attack",
-        "D: Mixed Cycle",
-        "E: Novelty Attacks",
-    ]
-    scenario_choice = st.selectbox("Scenario", scenario_options, index=0)
-    mode = st.selectbox("Speed", ["ACCELERATED", "REALTIME", "STRESS"], index=0)
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("START", type="primary", disabled=sim.running, use_container_width=True):
-            if scenario_choice.startswith("RANDOM"):
-                sid = ScenarioID.RANDOM
-            else:
-                sid = ScenarioID(scenario_choice[0])
-            sim.start(sid, SimMode[mode])
+        if st.button("START", type="primary", disabled=sim.running or sim.exhausted,
+                      use_container_width=True):
+            sim.start()
             st.rerun()
     with col2:
         if st.button("STOP", disabled=not sim.running, use_container_width=True):
@@ -200,13 +185,17 @@ with st.sidebar:
             buffer.reset()
             st.rerun()
 
-    if sim.running:
-        sim_status = sim.get_status()
-        st.info(
-            f"Scenario {sim_status.get('scenario', '?')} | "
-            f"{sim_status.get('current_phase', '')} | "
-            f"{sim_status.get('flows_injected', 0):,} flows"
-        )
+    sim_status = sim.get_status()
+    progress = sim_status.get("progress_pct", 0)
+
+    if sim.exhausted:
+        st.error("Dataset exhausted — update dataset to continue streaming.")
+    elif sim.running:
+        st.progress(progress / 100, text=f"{sim_status.get('current_phase', '')} — "
+                     f"{sim_status['flows_injected']:,}/{sim_status['total_files']:,} "
+                     f"({progress:.1f}%)")
+    elif sim_status["flows_injected"] > 0:
+        st.caption(f"Paused at {sim_status['flows_injected']:,}/{sim_status['total_files']:,}")
 
     st.markdown("---")
     st.warning(
