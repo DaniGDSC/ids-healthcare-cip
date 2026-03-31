@@ -273,34 +273,39 @@ def _render_dialog(alert: Dict[str, Any], idx: int) -> None:
             ack_at = alert.get("acknowledged_at", "")
             st.success(f"Acknowledged by **{ack_by}** at {ack_at[:19]}")
         else:
-            col_ack, col_safe = st.columns(2)
+            col_ack, col_attack, col_safe = st.columns(3)
+            user = "anonymous"
+            if "auth_session" in st.session_state:
+                user = st.session_state.auth_session.username
+
+            def _ensure_db_id():
+                db_id = alert.get("db_id")
+                if not db_id:
+                    db_id = db.insert_alert(alert)
+                return db_id
+
             with col_ack:
                 if st.button("Acknowledge", type="primary", width="stretch"):
-                    user = "anonymous"
-                    if "auth_session" in st.session_state:
-                        user = st.session_state.auth_session.username
-                    alert_db_id = alert.get("db_id")
-                    if not alert_db_id:
-                        alert_db_id = db.insert_alert(alert)
-                    db.acknowledge_alert(alert_db_id, user)
-                    st.success("Alert acknowledged")
-            with col_safe:
-                if st.button("Mark Safe (Override)", type="secondary", width="stretch"):
-                    user = "anonymous"
-                    if "auth_session" in st.session_state:
-                        user = st.session_state.auth_session.username
-                    alert_db_id = alert.get("db_id")
-                    if not alert_db_id:
-                        alert_db_id = db.insert_alert(alert)
+                    db.acknowledge_alert(_ensure_db_id(), user)
+                    st.success("Acknowledged")
+            with col_attack:
+                if st.button("Confirm Attack", type="secondary", width="stretch"):
+                    aid = _ensure_db_id()
                     db.insert_feedback(
-                        alert_id=alert_db_id,
-                        analyst=user,
-                        ground_truth=0,
-                        confidence=1.0,
-                        notes="Clinical override: device verified safe",
+                        alert_id=aid, analyst=user, ground_truth=1,
+                        confidence=1.0, notes="Analyst confirmed: true positive",
                     )
-                    db.acknowledge_alert(alert_db_id, user)
-                    st.success("Device marked safe. Override recorded for audit.")
+                    db.acknowledge_alert(aid, user)
+                    st.success("Confirmed as attack. Feedback recorded.")
+            with col_safe:
+                if st.button("Mark Safe", type="secondary", width="stretch"):
+                    aid = _ensure_db_id()
+                    db.insert_feedback(
+                        alert_id=aid, analyst=user, ground_truth=0,
+                        confidence=1.0, notes="Clinical override: device verified safe",
+                    )
+                    db.acknowledge_alert(aid, user)
+                    st.success("Marked safe. Override recorded.")
 
     # Close button
     if st.button("Close", width="stretch"):

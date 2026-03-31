@@ -441,6 +441,62 @@ class InferenceService:
                         except Exception as exc:
                             logger.warning("DB insert_calibration failed: %s", exc)
 
+    def recalibrate_from_feedback(self) -> bool:
+        """Re-fit calibrator using analyst feedback labels from database.
+
+        Queries the feedback table for analyst-labeled scores (TP/FP
+        markings). If 50+ feedback entries exist, re-fits the calibrator
+        using real analyst-provided ground truth instead of simulation labels.
+
+        Returns:
+            True if recalibration occurred, False otherwise.
+        """
+        if self._db is None:
+            return False
+
+        # Get recent predictions that have feedback
+        from src.production.database import Database
+        feedback = self._db.query_access_log(limit=0)  # placeholder
+
+        # Query predictions + feedback join
+        try:
+            with self._db._lock:
+                rows = self._db._conn.execute(
+                    """SELECT p.anomaly_score, f.ground_truth
+                       FROM predictions p
+                       JOIN feedback f ON p.id = f.alert_id
+                       WHERE f.ground_truth IN (0, 1)
+                       ORDER BY f.time DESC
+                       LIMIT 500""",
+                ).fetchall()
+        except Exception as exc:
+            logger.warning("Feedback query failed: %s", exc)
+            return False
+
+        if len(rows) < 50:
+            logger.info("Insufficient feedback for recalibration: %d/50", len(rows))
+            return False
+
+        scores = [float(r["anomaly_score"]) for r in rows]
+        labels = [int(r["ground_truth"]) for r in rows]
+
+        with self._lock:
+            self._calibrator.fit_from_buffer(scores, labels)
+
+        if self._calibrator.fitted:
+            cal_cfg = self._calibrator.get_config()
+            logger.info(
+                "Recalibrated from %d analyst feedback entries: mode=%s, youden_j=%.3f",
+                len(rows), cal_cfg.get("mode", "unknown"), cal_cfg.get("youden_j", 0),
+            )
+            if self._db is not None:
+                try:
+                    self._db.insert_calibration(cal_cfg)
+                except Exception:
+                    pass
+            return True
+        return False
+
     def run_streaming(
         self,
         buffer: WindowBuffer,
