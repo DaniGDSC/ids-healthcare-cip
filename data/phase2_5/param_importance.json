@@ -1,24 +1,24 @@
 {
   "method": "optuna_fanova",
   "importances": {
-    "head_lr": 0.4960653181541815,
-    "cw_attack": 0.2137784002688522,
-    "finetune_lr": 0.15611252928499472,
-    "ft_epochs": 0.0873671844399198,
-    "head_epochs": 0.046676567852051855
+    "cw_attack": 0.41874411590144567,
+    "finetune_lr": 0.28483163187219485,
+    "head_lr": 0.2549522290483857,
+    "ft_epochs": 0.04147202317797371,
+    "head_epochs": 0.0
   },
   "grouped_importances": {
-    "finetune_lr": 0.34506568344642596,
-    "cw_attack": 0.3125414532586904,
-    "head_lr": 0.3125414532586904,
-    "ft_epochs": 0.019949210642024574,
-    "head_epochs": 0.009902199394168705
+    "finetune_lr": 0.5,
+    "cw_attack": 0.2222222222222222,
+    "head_lr": 0.2222222222222222,
+    "ft_epochs": 0.05555555555555555,
+    "head_epochs": 0.0
   },
   "optuna_importances": {
-    "head_lr": 0.4960653181541815,
-    "cw_attack": 0.2137784002688522,
-    "finetune_lr": 0.15611252928499472,
-    "ft_epochs": 0.0873671844399198,
-    "head_epochs": 0.046676567852051855
+    "cw_attack": 0.41874411590144567,
+    "finetune_lr": 0.28483163187219485,
+    "head_lr": 0.2549522290483857,
+    "ft_epochs": 0.04147202317797371,
+    "head_epochs": 0.0
   }
 }

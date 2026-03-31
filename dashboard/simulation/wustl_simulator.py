@@ -44,12 +44,15 @@ class WUSTLFlowSimulator:
         flows_dir: str | Path,
         buffer: Any,
         inference_service: Any = None,
+        database: Any = None,
     ) -> None:
         self._flows_dir = Path(flows_dir)
         self._buffer = buffer
         self._inference = inference_service
+        self._db = database
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        self._lock = threading.Lock()
         self._running = False
         self._exhausted = False
         self._flows_injected = 0
@@ -96,15 +99,18 @@ class WUSTLFlowSimulator:
 
     @property
     def running(self) -> bool:
-        return self._running
+        with self._lock:
+            return self._running
 
     @property
     def exhausted(self) -> bool:
-        return self._exhausted
+        with self._lock:
+            return self._exhausted
 
     @property
     def flows_injected(self) -> int:
-        return self._flows_injected
+        with self._lock:
+            return self._flows_injected
 
     def start(self, **kwargs: Any) -> bool:
         """Start streaming. Ignores scenario/mode — always random timing."""
@@ -172,9 +178,11 @@ class WUSTLFlowSimulator:
 
             # Feed buffer, then update status (order matters for consistency)
             self._buffer.append(vec)
-            self._flows_injected += 1
-            self._current_file = filename
-            self._current_phase = self._infer_phase(filename)
+            phase = self._infer_phase(filename)
+            with self._lock:
+                self._flows_injected += 1
+                self._current_file = filename
+                self._current_phase = phase
 
             # Every flow triggers inference (medical safety requirement)
             if self._inference is not None:
@@ -187,24 +195,50 @@ class WUSTLFlowSimulator:
                         raw_features=vec,
                         attack_category=attack_cat,
                     )
-                    result["ground_truth"] = gt_label
-                    result["phase"] = self._current_phase
+                    # Window-level GT: 1 if ANY flow in the current
+                    # 20-flow window is attack (matches training strategy)
+                    if self._use_mmap:
+                        win_start = max(0, i - 19)
+                        gt_window = int(self._labels_mmap[win_start:i + 1].max())
+                    else:
+                        gt_window = gt_label
+                    result["ground_truth"] = gt_window
+                    result["ground_truth_flow"] = gt_label
+                    result["phase"] = phase
                     self._buffer.record_prediction(result)
-                    self._inferences_run += 1
 
-                    if "latency_ms" in result:
-                        self._latencies.append(result["latency_ms"])
+                    # Persist HIGH/CRITICAL alerts to database
+                    if self._db and result.get("risk_level") in ("MEDIUM", "HIGH", "CRITICAL"):
+                        try:
+                            self._db.insert_alert(result)
+                        except Exception as exc:
+                            logger.warning("DB insert_alert failed: %s", exc)
+
+                    with self._lock:
+                        self._inferences_run += 1
+                        if "latency_ms" in result:
+                            self._latencies.append(result["latency_ms"])
+
+                    # Feed calibrator for auto-fitting
+                    if hasattr(self._inference, "calibrate_from_scores"):
+                        self._inference.calibrate_from_scores(
+                            result["anomaly_score"], gt_label,
+                        )
 
             # Random inter-arrival (simulates real network jitter)
-            time.sleep(random.uniform(0.01, 0.05))
+            from config.production_loader import cfg
+            time.sleep(random.uniform(
+                cfg("simulation.inter_arrival_min", 0.01),
+                cfg("simulation.inter_arrival_max", 0.05),
+            ))
 
         # Check if exhausted (reached end, not stopped by user)
-        if not self._stop_event.is_set():
-            self._exhausted = True
-            logger.warning("Dataset exhausted: %d/%d files processed",
-                           self._flows_injected, self._total_files)
-
-        self._running = False
+        with self._lock:
+            if not self._stop_event.is_set():
+                self._exhausted = True
+                logger.warning("Dataset exhausted: %d/%d files processed",
+                               self._flows_injected, self._total_files)
+            self._running = False
 
     @staticmethod
     def _infer_phase(filename: str) -> str:
@@ -239,18 +273,19 @@ class WUSTLFlowSimulator:
         return "Spoofing"
 
     def get_status(self) -> Dict[str, Any]:
-        p50 = sorted(self._latencies)[len(self._latencies) // 2] if self._latencies else 0
-        return {
-            "running": self._running,
-            "exhausted": self._exhausted,
-            "current_phase": self._current_phase,
-            "current_file": self._current_file,
-            "flows_injected": self._flows_injected,
-            "total_files": self._total_files,
-            "progress_pct": round(self._flows_injected / max(self._total_files, 1) * 100, 1),
-            "inferences_run": self._inferences_run,
-            "latency_p50_ms": round(p50, 1),
-            "started_at": self._started_at.isoformat() if self._started_at else None,
-            "scenario": "STREAMING",
-            "medsec25_available": False,
-        }
+        with self._lock:
+            p50 = sorted(self._latencies)[len(self._latencies) // 2] if self._latencies else 0
+            return {
+                "running": self._running,
+                "exhausted": self._exhausted,
+                "current_phase": self._current_phase,
+                "current_file": self._current_file,
+                "flows_injected": self._flows_injected,
+                "total_files": self._total_files,
+                "progress_pct": round(self._flows_injected / max(self._total_files, 1) * 100, 1),
+                "inferences_run": self._inferences_run,
+                "latency_p50_ms": round(p50, 1),
+                "started_at": self._started_at.isoformat() if self._started_at else None,
+                "scenario": "STREAMING",
+                "medsec25_available": False,
+            }

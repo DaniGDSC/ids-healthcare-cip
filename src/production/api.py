@@ -222,6 +222,66 @@ def _get_app() -> Any:
             raise HTTPException(503, "Service not initialized")
         return _service._baseline
 
+    # ── Health check (detailed) ─────────────────────────────────
+
+    @app.get("/health/detailed")
+    async def health_detailed() -> Dict[str, Any]:
+        """Detailed health check with component status."""
+        components: Dict[str, Any] = {}
+
+        # Model
+        model_ok = _service is not None and _service._model is not None
+        components["model"] = {
+            "status": "healthy" if model_ok else "unavailable",
+            "params": _service._model.count_params() if model_ok else 0,
+        }
+
+        # Circuit breaker
+        if _service:
+            components["circuit_breaker"] = {
+                "status": "closed" if not _service._circuit_open else "OPEN",
+                "consecutive_failures": _service._consecutive_failures,
+                "last_error": _service._last_error,
+            }
+
+        # Buffer
+        if _buffer:
+            components["buffer"] = {
+                "status": "healthy",
+                "state": _buffer.state.value,
+                "flow_count": _buffer.flow_count,
+            }
+
+        # Database
+        try:
+            from src.production.database import Database
+            db = Database()
+            pred_count = db.get_prediction_count()
+            components["database"] = {
+                "status": "healthy",
+                "prediction_count": pred_count,
+            }
+            db.close()
+        except Exception as exc:
+            components["database"] = {"status": "unavailable", "error": str(exc)}
+
+        # TLS
+        from config.production_loader import cfg
+        tls_enabled = cfg("tls.enabled", False)
+        components["tls"] = {"enabled": tls_enabled}
+
+        all_healthy = all(
+            c.get("status") in ("healthy", "closed", None)
+            for c in components.values()
+            if isinstance(c, dict) and "status" in c
+        )
+
+        return {
+            "status": "healthy" if all_healthy else "degraded",
+            "uptime_seconds": round(time.time() - _start_time, 1),
+            "components": components,
+        }
+
     return app
 
 

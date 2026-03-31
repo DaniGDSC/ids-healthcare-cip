@@ -116,6 +116,7 @@ class BiometricStatus(NamedTuple):
     any_abnormal: bool
     abnormal_features: List[str]
     max_deviation: float
+    clinical_notes: List[str] = []
 
 
 class ClinicalAssessment(NamedTuple):
@@ -130,16 +131,26 @@ class ClinicalAssessment(NamedTuple):
     rationale: str
 
 
-# Biometric clinical thresholds (post-RobustScaler, approximate z-scores)
-_BIOMETRIC_CLINICAL_THRESHOLDS: Dict[str, Dict[str, float]] = {
-    "SpO2": {"warn": 1.5, "critical": 2.5, "label": "Oxygen saturation"},
-    "Heart_rate": {"warn": 1.5, "critical": 2.5, "label": "Heart rate"},
-    "Pulse_Rate": {"warn": 1.5, "critical": 2.5, "label": "Pulse rate"},
-    "Resp_Rate": {"warn": 1.5, "critical": 2.5, "label": "Respiratory rate"},
-    "SYS": {"warn": 1.5, "critical": 2.5, "label": "Systolic BP"},
-    "DIA": {"warn": 1.5, "critical": 2.5, "label": "Diastolic BP"},
-    "Temp": {"warn": 1.5, "critical": 2.5, "label": "Temperature"},
-    "ST": {"warn": 1.5, "critical": 2.5, "label": "ST segment"},
+# Biometric clinical thresholds (post-RobustScaler, approximate z-scores).
+# The warn/critical values are z-score thresholds against scaled features.
+# clinical_note provides absolute clinical context for hospital staff.
+_BIOMETRIC_CLINICAL_THRESHOLDS: Dict[str, Dict[str, Any]] = {
+    "SpO2": {"warn": 1.5, "critical": 2.5, "label": "Blood oxygen",
+             "clinical_note": "SpO2 < 92% requires clinical assessment"},
+    "Heart_rate": {"warn": 1.5, "critical": 2.5, "label": "Heart rate",
+                   "clinical_note": "HR > 120 or < 50 bpm requires assessment"},
+    "Pulse_Rate": {"warn": 1.5, "critical": 2.5, "label": "Pulse rate",
+                   "clinical_note": "PR > 120 or < 50 bpm requires assessment"},
+    "Resp_Rate": {"warn": 1.5, "critical": 2.5, "label": "Respiratory rate",
+                  "clinical_note": "RR > 25 or < 10/min requires assessment"},
+    "SYS": {"warn": 1.5, "critical": 2.5, "label": "Systolic BP",
+            "clinical_note": "SBP > 180 or < 90 mmHg requires assessment"},
+    "DIA": {"warn": 1.5, "critical": 2.5, "label": "Diastolic BP",
+            "clinical_note": "DBP > 110 or < 60 mmHg requires assessment"},
+    "Temp": {"warn": 1.5, "critical": 2.5, "label": "Temperature",
+             "clinical_note": "Temp > 38.5C or < 35C requires assessment"},
+    "ST": {"warn": 1.5, "critical": 2.5, "label": "ST segment",
+           "clinical_note": "ST elevation > 1mm requires cardiology consult"},
 }
 
 # Device types where biometric abnormality + network anomaly = patient safety flag
@@ -217,7 +228,7 @@ class ClinicalImpactAssessor(BaseDetector):
             # Biometric abnormality on safety-critical device during anomaly
             # → escalate by one severity level
             if severity < ClinicalSeverity.CRITICAL:
-                severity = ClinicalSeverity(severity + 1)
+                severity = ClinicalSeverity(min(severity + 1, ClinicalSeverity.CRITICAL))
                 rationale += f" | Escalated: abnormal vitals ({', '.join(bio_status.abnormal_features)}) on safety-critical device"
 
         if is_safety_device and risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
@@ -250,6 +261,7 @@ class ClinicalImpactAssessor(BaseDetector):
             return BiometricStatus(any_abnormal=False, abnormal_features=[], max_deviation=0.0)
 
         abnormal: List[str] = []
+        notes: List[str] = []
         max_dev = 0.0
 
         for col in self._bio_cols:
@@ -257,12 +269,17 @@ class ClinicalImpactAssessor(BaseDetector):
                 continue
             idx = feature_names.index(col)
             val = abs(float(feature_values[idx]))
+            if not np.isfinite(val):
+                continue
             thresholds = self._bio_thresholds.get(col, {"warn": 1.5})
             warn = thresholds.get("warn", 1.5)
 
             if val > warn:
                 label = thresholds.get("label", col)
                 abnormal.append(label)
+                note = thresholds.get("clinical_note", "")
+                if note:
+                    notes.append(note)
             if val > max_dev:
                 max_dev = val
 
@@ -270,6 +287,7 @@ class ClinicalImpactAssessor(BaseDetector):
             any_abnormal=len(abnormal) > 0,
             abnormal_features=abnormal,
             max_deviation=round(max_dev, 4),
+            clinical_notes=notes,
         )
 
     def get_config(self) -> Dict[str, Any]:

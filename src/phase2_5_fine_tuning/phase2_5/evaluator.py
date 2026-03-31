@@ -153,16 +153,23 @@ class QuickEvaluator:
         model = self._build_and_load_model()
         cw = {0: 1.0, 1: hp["cw_attack"]}
 
+        # Focal loss + label smoothing for better score separation
+        from src.phase2_5_fine_tuning.run_finetuned_training import (
+            focal_loss, LABEL_SMOOTH_EPS,
+        )
+        fl = focal_loss(gamma=2.0, alpha=0.25)
+        yo_w_smooth = yo_w * (1 - 2 * LABEL_SMOOTH_EPS) + LABEL_SMOOTH_EPS
+
         # Stage 1: Head on imbalanced data with class weight (frozen backbone)
         for layer in model.layers:
             layer.trainable = layer.name in ("dense_head", "drop_head", "output")
 
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=hp["head_lr"]),
-            loss="binary_crossentropy", metrics=["accuracy"],
+            loss=fl, metrics=["accuracy"],
         )
         model.fit(
-            Xo_w, yo_w, epochs=hp["head_epochs"], batch_size=256,
+            Xo_w, yo_w_smooth, epochs=hp["head_epochs"], batch_size=256,
             validation_split=0.2, verbose=0, class_weight=cw,
             callbacks=[tf.keras.callbacks.EarlyStopping(
                 monitor="val_loss", patience=self._qt.early_stopping_patience,
@@ -178,10 +185,10 @@ class QuickEvaluator:
 
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=hp["finetune_lr"]),
-            loss="binary_crossentropy", metrics=["accuracy"],
+            loss=fl, metrics=["accuracy"],
         )
         model.fit(
-            Xo_w, yo_w, epochs=hp["ft_epochs"], batch_size=256,
+            Xo_w, yo_w_smooth, epochs=hp["ft_epochs"], batch_size=256,
             validation_split=0.2, verbose=0, class_weight=cw,
             callbacks=[tf.keras.callbacks.EarlyStopping(
                 monitor="val_loss", patience=2, restore_best_weights=True)],
@@ -239,9 +246,11 @@ class QuickEvaluator:
         x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
         model = tf.keras.Model(detection_model.input, x, name="ablation")
 
+        from src.phase2_5_fine_tuning.run_finetuned_training import focal_loss
+        fl_abl = focal_loss(gamma=2.0, alpha=0.25)
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-            loss="binary_crossentropy", metrics=["accuracy"],
+            loss=fl_abl, metrics=["accuracy"],
         )
         model.fit(
             Xs_w, ys_w, epochs=self._qt.epochs, batch_size=256,

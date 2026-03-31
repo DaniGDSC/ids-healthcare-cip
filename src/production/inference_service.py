@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -45,10 +46,14 @@ class InferenceService:
     def __init__(
         self,
         project_root: str | Path,
-        device_id: str = "generic_iomt_sensor",
+        device_id: str | None = None,
+        database: Any = None,
     ) -> None:
+        from config.production_loader import cfg
+
         self._root = Path(project_root)
-        self._device_id = device_id
+        self._device_id = device_id or cfg("inference.default_device_id", "generic_iomt_sensor")
+        self._db = database
         self._model: Optional[tf.keras.Model] = None
         self._scorer = None
         self._cia_modifier = None
@@ -56,8 +61,18 @@ class InferenceService:
         self._fatigue_mgr = None
         self._attn_detector = None
         self._explainer = None
+        self._calibrator = None
         self._baseline: Dict[str, Any] = {}
         self._inference_count = 0
+        self._calibration_scores: list = []
+        self._calibration_labels: list = []
+        self._lock = threading.Lock()
+
+        # Circuit breaker
+        self._consecutive_failures = 0
+        self._max_failures = int(cfg("inference.max_consecutive_failures", 3))
+        self._circuit_open = False
+        self._last_error: Optional[str] = None
 
     def load(self) -> None:
         """Load model and all scoring components. Call once at startup."""
@@ -139,6 +154,9 @@ class InferenceService:
             + self._baseline.get("mad_multiplier", 3.0) * self._baseline["mad"]
         )
 
+        from src.production.score_calibrator import ScoreCalibrator
+        self._calibrator = ScoreCalibrator()
+
         # Build multi-output model: score + backbone in single forward pass
         dense_head = self._model.get_layer("dense_head")
         backbone_output = dense_head.input  # attention context vector
@@ -192,35 +210,125 @@ class InferenceService:
         """
         t0 = time.perf_counter()
 
+        # ── Circuit breaker check ──
+        if self._circuit_open:
+            # Auto-reset attempt every N flows
+            self._consecutive_failures += 1
+            reset_after = int(
+                __import__("config.production_loader", fromlist=["cfg"]).cfg(
+                    "inference.circuit_breaker_reset_after", 10
+                )
+            )
+            if self._consecutive_failures % reset_after == 0:
+                logger.info("Circuit breaker: attempting recovery")
+                self._circuit_open = False
+            else:
+                return self._fallback_result(t0)
+
+        # ── Input validation ──
+        if window.ndim != 3 or window.shape[1:] != (20, N_FEATURES):
+            raise ValueError(
+                f"Expected window shape (batch, 20, {N_FEATURES}), got {window.shape}"
+            )
+        if not np.all(np.isfinite(window)):
+            logger.warning("Window contains NaN/Inf — replacing with 0")
+            window = np.nan_to_num(window, nan=0.0, posinf=0.0, neginf=0.0)
+
+        try:
+            return self._process_window_inner(window, raw_features, attack_category, t0)
+        except Exception as exc:
+            with self._lock:
+                self._consecutive_failures += 1
+                self._last_error = str(exc)
+            logger.error(
+                "Inference failed (%d/%d): %s",
+                self._consecutive_failures, self._max_failures, exc,
+            )
+            if self._consecutive_failures >= self._max_failures:
+                self._circuit_open = True
+                logger.critical("Circuit breaker OPEN — inference disabled after %d failures", self._max_failures)
+            return self._fallback_result(t0)
+
+    def _fallback_result(self, t0: float) -> Dict[str, Any]:
+        """Return visible degradation signal when inference fails.
+
+        Returns ADVISORY (not NORMAL) so clinical staff knows the system
+        is degraded. Hiding failures as NORMAL violates IEC 62443 and
+        FDA pre-market cybersecurity guidance.
+        """
+        return {
+            "sample_index": self._inference_count,
+            "anomaly_score": 0.0,
+            "threshold": 0.0,
+            "distance": 0.0,
+            "risk_level": "LOW",
+            "attention_flag": False,
+            "clinical_severity": 2,
+            "clinical_severity_name": "ADVISORY",
+            "response_time_minutes": 480,
+            "device_action": "none",
+            "patient_safety_flag": False,
+            "clinical_rationale": "SYSTEM DEGRADED: Inference engine unavailable. "
+                                  "Manual monitoring recommended until system recovers.",
+            "scenario": "normal_monitoring",
+            "cia_scores": {"C": 0, "I": 0, "A": 0},
+            "cia_max_dimension": "I",
+            "attack_category": "unknown",
+            "explanation": {"level": "none", "top_features": [], "timestep_importance": []},
+            "percentile": None,
+            "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
+            "inference_failed": True,
+        }
+
+    def _process_window_inner(
+        self,
+        window: np.ndarray,
+        raw_features: Optional[np.ndarray],
+        attack_category: str,
+        t0: float,
+    ) -> Dict[str, Any]:
+        """Inner processing — separated for circuit breaker wrapping."""
         # ── Single compiled call: score + backbone + gradients ──
-        # @tf.function compiled graph — runs score, backbone extraction,
-        # and gradient computation in ONE fused execution. No Python
-        # loop overhead, no repeated tracing, XLA-optimizable.
         window_tensor = tf.constant(window, dtype=tf.float32)
         pred_out, backbone_out, grads = self._infer_with_grads(window_tensor)
         score = float(pred_out.numpy().ravel()[0])
+        if not 0.0 <= score <= 1.0:
+            logger.warning("Score %.6f outside [0,1] — clipping", score)
+            score = float(np.clip(score, 0.0, 1.0))
         attn_magnitude = float(np.linalg.norm(backbone_out.numpy()))
         attn_flag = bool(attn_magnitude > self._attn_threshold)
 
-        # 3. Risk scoring
-        # NOTE: Two thresholds exist in the system:
-        #   - Classification threshold (0.1): sigmoid cutoff for attack/normal (Phase 2.5)
-        #   - Baseline threshold (0.204): attention magnitude MAD boundary (Phase 4)
-        # Here we use the BASELINE threshold for risk distance calculation.
-        # The sigmoid 'score' from model.predict() serves as the anomaly score
-        # in Phase 4's risk framework — higher score = more anomalous.
+        # 3. Calibrated risk scoring
+        # Raw sigmoid scores fall in a narrow range (0.88-0.98) where benign
+        # and attack overlap. The calibrator maps raw scores to percentile
+        # ranks within the observed benign distribution, producing a
+        # meaningful risk spread: NORMAL(75%) / LOW(10%) / MEDIUM(8%) /
+        # HIGH(4%) / CRITICAL(3%).
+        # Look up device-specific detection sensitivity
+        device_profile = self._cia_modifier._registry.lookup(self._device_id)
+        device_pct = device_profile.detection_percentile
+
+        calibrated = (
+            self._calibrator.calibrate(score, device_percentile=device_pct)
+            if self._calibrator.fitted else None
+        )
+
         threshold = self._baseline.get("baseline_threshold", 0.255)
         mad = self._baseline["mad"]
         distance = score - threshold
 
         from src.phase4_risk_engine.phase4.risk_level import RiskLevel
 
-        risk_result = self._scorer.classify_single(
-            distance=distance,
-            mad=mad,
-            feature_values=raw_features,
-            feature_names=MODEL_FEATURES,
-        )
+        # Use calibrated risk level if calibrator is fitted
+        if calibrated is not None:
+            risk_result = RiskLevel(calibrated["risk_level"])
+        else:
+            risk_result = self._scorer.classify_single(
+                distance=distance,
+                mad=mad,
+                feature_values=raw_features,
+                feature_names=MODEL_FEATURES,
+            )
 
         # Attention escalation
         if attn_flag and risk_result in (RiskLevel.NORMAL, RiskLevel.LOW):
@@ -279,13 +387,59 @@ class InferenceService:
             "cia_max_dimension": cia_assessment.cia_max_dimension,
             "attack_category": attack_category,
             "explanation": explanation,
+            "percentile": calibrated["percentile"] if calibrated else None,
             "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
         }
 
         self._fatigue_mgr.process([result], device_id=self._device_id)
-        self._inference_count += 1
+        with self._lock:
+            self._inference_count += 1
+            self._consecutive_failures = 0
+            self._circuit_open = False
+
+        # Persist to database
+        if self._db is not None:
+            try:
+                result["device_id"] = self._device_id
+                self._db.insert_prediction(result)
+            except Exception as exc:
+                logger.warning("DB insert_prediction failed: %s", exc)
 
         return result
+
+    def calibrate_from_scores(self, score: float, gt_label: int) -> None:
+        """Collect scores during calibration phase for auto-fitting.
+
+        Call this for each flow during the first N flows. Once enough
+        benign samples are collected, the calibrator auto-fits.
+
+        Args:
+            score: Raw sigmoid score.
+            gt_label: Ground truth label (0=benign, 1=attack).
+        """
+        from config.production_loader import cfg
+        cal_threshold = cfg("streaming.calibration_threshold", 200)
+
+        with self._lock:
+            self._calibration_scores.append(score)
+            self._calibration_labels.append(gt_label)
+
+            if not self._calibrator.fitted and len(self._calibration_scores) >= cal_threshold:
+                self._calibrator.fit_from_buffer(
+                    self._calibration_scores, self._calibration_labels,
+                )
+                if self._calibrator.fitted:
+                    cal_cfg = self._calibrator.get_config()
+                    logger.info(
+                        "Calibrator auto-fitted: mode=%s, youden_j=%.3f",
+                        cal_cfg.get("mode", "unknown"),
+                        cal_cfg.get("youden_j", 0),
+                    )
+                    if self._db is not None:
+                        try:
+                            self._db.insert_calibration(cal_cfg)
+                        except Exception as exc:
+                            logger.warning("DB insert_calibration failed: %s", exc)
 
     def run_streaming(
         self,
@@ -342,4 +496,7 @@ class InferenceService:
             "device_id": self._device_id,
             "baseline_threshold": self._baseline.get("baseline_threshold", 0),
             "fatigue_summary": self._fatigue_mgr.get_summary() if self._fatigue_mgr else {},
+            "circuit_open": self._circuit_open,
+            "consecutive_failures": self._consecutive_failures,
+            "last_error": self._last_error,
         }

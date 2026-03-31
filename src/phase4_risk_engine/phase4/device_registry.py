@@ -31,6 +31,7 @@ class DeviceProfile(NamedTuple):
     fda_class: str
     cia_priority: CIAPriority
     description: str
+    detection_percentile: float = 93.0  # Lower = more sensitive detection
 
 
 _DEFAULT_DEVICES: Dict[str, DeviceProfile] = {
@@ -39,36 +40,42 @@ _DEFAULT_DEVICES: Dict[str, DeviceProfile] = {
         fda_class="III",
         cia_priority=CIAPriority(0.4, 1.0, 1.0),
         description="IV medication delivery — availability-critical",
+        detection_percentile=80.0,
     ),
     "ecg_monitor": DeviceProfile(
         device_type="ecg_monitor",
         fda_class="III",
         cia_priority=CIAPriority(0.5, 1.0, 1.0),
         description="Cardiac monitoring — integrity and availability critical",
+        detection_percentile=80.0,
     ),
     "pulse_oximeter": DeviceProfile(
         device_type="pulse_oximeter",
         fda_class="II",
         cia_priority=CIAPriority(0.3, 0.9, 0.8),
         description="SpO2 monitoring — integrity-critical",
+        detection_percentile=85.0,
     ),
     "blood_pressure_monitor": DeviceProfile(
         device_type="blood_pressure_monitor",
         fda_class="II",
         cia_priority=CIAPriority(0.3, 0.9, 0.7),
         description="BP monitoring — integrity-critical",
+        detection_percentile=90.0,
     ),
     "temperature_sensor": DeviceProfile(
         device_type="temperature_sensor",
         fda_class="I",
         cia_priority=CIAPriority(0.2, 0.7, 0.4),
         description="Temperature monitoring — low criticality",
+        detection_percentile=95.0,
     ),
     "generic_iomt_sensor": DeviceProfile(
         device_type="generic_iomt_sensor",
         fda_class="II",
         cia_priority=CIAPriority(0.4, 0.8, 0.7),
         description="Default IoMT sensor profile",
+        detection_percentile=93.0,
     ),
 }
 
@@ -106,6 +113,7 @@ class DeviceRegistry(BaseDetector):
                     availability=p["availability"],
                 ),
                 description=e.get("description", ""),
+                detection_percentile=float(e.get("detection_percentile", 93.0)),
             )
         # Ensure generic fallback exists
         if "generic_iomt_sensor" not in devices:

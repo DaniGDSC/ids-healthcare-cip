@@ -34,16 +34,16 @@ ROLES: Dict[str, list] = {
         "stakeholder", "system",
     ],
     "Clinical IT Administrator": [
-        "live_monitor", "alerts", "stakeholder", "system",
+        "live_monitor", "alerts", "explanations", "stakeholder", "system",
     ],
     "Attending Physician": [
-        "live_monitor", "alerts", "stakeholder",
+        "live_monitor", "alerts", "explanations", "stakeholder",
     ],
     "Hospital Manager": [
-        "live_monitor", "stakeholder", "performance", "system",
+        "live_monitor", "explanations", "stakeholder", "performance", "system",
     ],
     "Regulatory Auditor": [
-        "live_monitor", "stakeholder", "system",
+        "live_monitor", "explanations", "stakeholder", "system",
     ],
 }
 
@@ -70,8 +70,18 @@ def load_ground_truth() -> Dict[str, Any]:
 
 # ── Session State ────────────────────────────────────────────────────────
 def init_session_state() -> None:
-    """Initialize streaming engine, inference service, and simulator."""
+    """Initialize streaming engine, inference service, database, and simulator."""
     from dashboard.streaming.window_buffer import WindowBuffer
+
+    # Database (persistent storage)
+    if "database" not in st.session_state:
+        try:
+            from src.production.database import Database
+            db_path = _cfg("database.path", "data/production/iomt_ids.db")
+            st.session_state.database = Database(str(PROJECT_ROOT / db_path))
+        except Exception as exc:
+            logger.error("Failed to init database: %s", exc)
+            st.session_state.database = None
 
     if "buffer" not in st.session_state:
         st.session_state.buffer = WindowBuffer(
@@ -81,7 +91,10 @@ def init_session_state() -> None:
     if "inference_service" not in st.session_state:
         try:
             from src.production.inference_service import InferenceService
-            service = InferenceService(PROJECT_ROOT)
+            service = InferenceService(
+                PROJECT_ROOT,
+                database=st.session_state.database,
+            )
             with st.spinner("Loading model..."):
                 service.load()
             st.session_state.inference_service = service
@@ -95,6 +108,7 @@ def init_session_state() -> None:
             flows_dir=str(PROJECT_ROOT / "data" / "streaming" / "wustl_flows"),
             buffer=st.session_state.buffer,
             inference_service=st.session_state.inference_service,
+            database=st.session_state.database,
         )
 
     if "selected_alert" not in st.session_state:
@@ -126,6 +140,30 @@ st.markdown(
 # Initialize
 init_session_state()
 
+# ── Authentication Gate ────────────────────────────────────────────────
+from config.production_loader import cfg as _cfg
+
+_auth_mode = _cfg("auth.mode", "open")
+
+if _auth_mode != "open":
+    if "auth_session" not in st.session_state:
+        st.markdown("### Login")
+        with st.form("login_form"):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Login")
+        if submitted and username and password:
+            from src.production.auth import AuthProvider
+            if "auth_provider" not in st.session_state:
+                st.session_state.auth_provider = AuthProvider.from_config()
+            session = st.session_state.auth_provider.authenticate(username, password)
+            if session:
+                st.session_state.auth_session = session
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
+        st.stop()
+
 # Load ground truth
 gt = load_ground_truth()
 if not gt:
@@ -156,13 +194,33 @@ with st.sidebar:
     st.markdown(f"**Inference:** {model_status}")
     st.markdown("---")
 
-    # RBAC: Role selector
-    role = st.selectbox("View as", list(ROLES.keys()), index=0)
+    # RBAC: Role from auth or selector
+    if "auth_session" in st.session_state:
+        auth = st.session_state.auth_session
+        role = auth.role
+        st.markdown(f"**User:** {auth.username}")
+        st.markdown(f"**Role:** {role}")
+        if st.button("Logout"):
+            del st.session_state.auth_session
+            st.rerun()
+    else:
+        role = st.selectbox("View as", list(ROLES.keys()), index=0)
     allowed_panels = ROLES[role]
 
     # Navigation
     pages_for_role = [PAGE_LABELS[p] for p in allowed_panels if p in PAGE_LABELS]
     page = st.radio("Navigation", pages_for_role, index=0)
+
+    # Access logging (HIPAA audit)
+    db = st.session_state.get("database")
+    if db and _cfg("database.log_access", True):
+        _user = "anonymous"
+        if "auth_session" in st.session_state:
+            _user = st.session_state.auth_session.username
+        try:
+            db.insert_access(_user, role, f"view_{page}", None)
+        except Exception:
+            pass
 
     st.markdown("---")
 
@@ -172,15 +230,15 @@ with st.sidebar:
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("START", type="primary", disabled=sim.running or sim.exhausted,
-                      use_container_width=True):
+                      width="stretch"):
             sim.start()
             st.rerun()
     with col2:
-        if st.button("STOP", disabled=not sim.running, use_container_width=True):
+        if st.button("STOP", disabled=not sim.running, width="stretch"):
             sim.stop()
             st.rerun()
     with col3:
-        if st.button("RESET", use_container_width=True):
+        if st.button("RESET", width="stretch"):
             sim.reset()
             buffer.reset()
             st.rerun()
@@ -196,6 +254,40 @@ with st.sidebar:
                      f"({progress:.1f}%)")
     elif sim_status["flows_injected"] > 0:
         st.caption(f"Paused at {sim_status['flows_injected']:,}/{sim_status['total_files']:,}")
+
+    # Data export
+    _db = st.session_state.get("database")
+    if _db and _db.get_prediction_count() > 0:
+        st.markdown("---")
+        st.markdown("##### Data Export")
+        import csv as _csv
+        import io as _io
+
+        col_exp1, col_exp2 = st.columns(2)
+        with col_exp1:
+            alerts_data = _db.query_alerts(limit=5000)
+            if alerts_data:
+                buf = _io.StringIO()
+                fields = ["time", "risk_level", "clinical_severity", "device_id_hash",
+                           "acknowledged", "acknowledged_by"]
+                w = _csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+                w.writeheader()
+                for a in alerts_data:
+                    w.writerow(a)
+                st.download_button("Alerts CSV", buf.getvalue(),
+                                   "alerts.csv", "text/csv", width="stretch")
+        with col_exp2:
+            preds_data = _db.query_predictions(limit=5000)
+            if preds_data:
+                buf = _io.StringIO()
+                fields = ["time", "sample_index", "anomaly_score", "risk_level",
+                           "clinical_severity", "latency_ms", "ground_truth"]
+                w = _csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+                w.writeheader()
+                for p in preds_data:
+                    w.writerow(p)
+                st.download_button("Predictions CSV", buf.getvalue(),
+                                   "predictions.csv", "text/csv", width="stretch")
 
     st.markdown("---")
     st.warning(
@@ -232,7 +324,8 @@ elif page == "Alert Feed":
 
 elif page == "Explanations":
     from dashboard.components.panel_shap import render
-    render(gt, st.session_state.selected_alert)
+    live_alerts = buffer.get_alerts() if buffer.flow_count > 0 else None
+    render(gt, st.session_state.selected_alert, role=role, live_alerts=live_alerts)
 
 elif page == "Performance":
     @st.fragment(run_every=3)
@@ -247,7 +340,8 @@ elif page == "Performance":
 
 elif page == "Stakeholder Intelligence":
     from dashboard.components.panel_stakeholder import render
-    render(gt, role=role)
+    live_stakeholder = buffer.get_alerts() if buffer.flow_count > 0 else None
+    render(gt, role=role, live_alerts=live_stakeholder)
 
 elif page == "System & Compliance":
     from dashboard.components.panel_system import render

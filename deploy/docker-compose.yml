@@ -1,0 +1,85 @@
+# IoMT IDS — Multi-service deployment
+# Services: API (inference) + Dashboard (Streamlit) + Backup (cron)
+#
+# Usage:
+#   docker compose up -d              # Start all services
+#   docker compose logs -f api        # Watch API logs
+#   docker compose exec api python -m pytest tests/ -v  # Run tests
+#   docker compose down               # Stop all
+
+version: "3.8"
+
+services:
+  # ── Inference API (FastAPI + Uvicorn) ──────────────────────────
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: >
+      uvicorn src.production.api:app
+      --host 0.0.0.0
+      --port 8000
+      --workers 2
+      --log-level info
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data                # Model weights + DB
+      - ../config:/app/config            # Production config
+      - ../logs:/app/logs                # Log files
+      - certs:/app/certs:ro              # TLS certificates (read-only)
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2           # Suppress TF warnings
+      - PYTHONPATH=/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── Dashboard (Streamlit) ──────────────────────────────────────
+  dashboard:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: >
+      streamlit run dashboard/app.py
+      --server.port 8501
+      --server.address 0.0.0.0
+      --server.headless true
+      --browser.gatherUsageStats false
+    ports:
+      - "8501:8501"
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config
+      - ../logs:/app/logs
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - PYTHONPATH=/app
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Database Backup (periodic) ─────────────────────────────────
+  backup:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: >
+      python -m src.production.backup
+      --interval 3600
+      --keep 48
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+
+volumes:
+  certs:
+    driver: local

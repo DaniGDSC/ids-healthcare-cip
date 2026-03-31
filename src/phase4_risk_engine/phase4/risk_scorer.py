@@ -149,6 +149,9 @@ class RiskScorer:
         Returns:
             RiskLevel enum value.
         """
+        if mad <= 0:
+            logger.warning("MAD <= 0 (%.6f), defaulting to NORMAL", mad)
+            return RiskLevel.NORMAL
         low_bound = self._low_upper * mad
         medium_bound = self._medium_upper * mad
         high_bound = self._high_upper * mad

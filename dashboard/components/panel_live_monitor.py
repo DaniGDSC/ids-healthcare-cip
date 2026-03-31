@@ -92,7 +92,7 @@ def render(
         ))
         fig.update_layout(height=220, margin=dict(t=40, b=0, l=20, r=20),
                           paper_bgcolor="rgba(0,0,0,0)", font_color="#e0e0e0")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with col_right:
         # ── Risk distribution ──
@@ -111,7 +111,7 @@ def render(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font_color="#e0e0e0",
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.info("No predictions yet")
 
@@ -149,7 +149,13 @@ def render(
             font_color="#e0e0e0", xaxis_title="Prediction #", yaxis_title="Score",
             showlegend=True, legend=dict(orientation="h", y=1.1),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
+
+    # ── Streaming complete summary ──
+    exhausted = sim_status.get("exhausted", False)
+    if exhausted and predictions:
+        detection_counts = buffer_status.get("detection_counts", {})
+        _render_summary(predictions, risk_counts, sim_status, detection_counts)
 
     # ── Network feature heatmap (last 50 flows) ──
     if flow_vectors and len(flow_vectors) >= 5:
@@ -165,4 +171,92 @@ def render(
             paper_bgcolor="rgba(0,0,0,0)", font_color="#e0e0e0",
             xaxis_title="Flow #",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
+
+
+def _render_summary(
+    predictions: List[Dict[str, Any]],
+    risk_counts: Dict[str, int],
+    sim_status: Dict[str, Any],
+    detection_counts: Optional[Dict[str, int]] = None,
+) -> None:
+    """Render streaming complete summary with accuracy and recall.
+
+    Uses cumulative detection counters from the buffer (tracked over ALL
+    flows) rather than recomputing from the truncated prediction deque
+    which only holds the last 500 predictions.
+    """
+    st.markdown("---")
+    st.markdown("### Streaming Complete — Final Results")
+
+    if not detection_counts or detection_counts.get("total_with_gt", 0) == 0:
+        st.warning("No ground truth available for accuracy computation.")
+        return
+
+    tp = detection_counts["tp"]
+    fn = detection_counts["fn"]
+    fp = detection_counts["fp"]
+    tn = detection_counts["tn"]
+    total = detection_counts["total_with_gt"]
+
+    accuracy = (tp + tn) / max(total, 1)
+    recall = tp / max(tp + fn, 1)
+    precision = tp / max(tp + fp, 1)
+    fpr = fp / max(fp + tn, 1)
+    f1 = 2 * precision * recall / max(precision + recall, 1e-9)
+
+    n_attacks = tp + fn
+    n_benign = fp + tn
+
+    # Metrics
+    st.markdown("##### Detection Performance")
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("Accuracy", f"{accuracy:.1%}")
+    m2.metric("Recall", f"{recall:.1%}",
+              help=f"Detected {tp}/{n_attacks} attacks")
+    m3.metric("Precision", f"{precision:.1%}",
+              help=f"{fp} false positives out of {tp + fp} alerts")
+    m4.metric("F1 Score", f"{f1:.1%}")
+    m5.metric("FPR", f"{fpr:.1%}",
+              help=f"{fp} false alarms out of {n_benign} benign flows")
+
+    # Confusion matrix + stats
+    col_cm, col_stats = st.columns([1, 1])
+
+    with col_cm:
+        st.markdown("##### Confusion Matrix")
+        fig = go.Figure(go.Heatmap(
+            z=[[tn, fp], [fn, tp]],
+            x=["Predicted Normal", "Predicted Alert"],
+            y=["Actual Benign", "Actual Attack"],
+            text=[[f"TN={tn}", f"FP={fp}"], [f"FN={fn}", f"TP={tp}"]],
+            texttemplate="%{text}",
+            colorscale="RdBu_r",
+            showscale=False,
+        ))
+        fig.update_layout(
+            height=250, margin=dict(t=10, b=30, l=100, r=20),
+            paper_bgcolor="rgba(0,0,0,0)", font_color="#e0e0e0",
+        )
+        st.plotly_chart(fig, width="stretch")
+
+    with col_stats:
+        st.markdown("##### Streaming Statistics")
+        st.markdown(f"- **Total flows:** {sim_status.get('flows_injected', 0):,}")
+        st.markdown(f"- **Total inferences:** {sim_status.get('inferences_run', 0):,}")
+        st.markdown(f"- **Actual attacks:** {n_attacks} ({n_attacks/max(total,1):.1%})")
+        st.markdown(f"- **Actual benign:** {n_benign} ({n_benign/max(total,1):.1%})")
+
+        total_risk = sum(risk_counts.values())
+        for level in ["NORMAL", "LOW", "MEDIUM", "HIGH", "CRITICAL"]:
+            count = risk_counts.get(level, 0)
+            pct = count / max(total_risk, 1) * 100
+            st.markdown(f"- **{level}:** {count} ({pct:.1f}%)")
+
+        st.markdown(f"- **Latency (P50):** {sim_status.get('latency_p50_ms', 0):.1f}ms")
+
+        st.markdown("---")
+        st.caption(
+            "Evaluation on pre-recorded dataset — not independent clinical validation. "
+            "For deployment validation, use shadow mode on live hospital network."
+        )

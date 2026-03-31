@@ -39,6 +39,30 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+# ── Focal loss + label smoothing ─────────────────────────────────
+LABEL_SMOOTH_EPS = 0.05
+
+
+def focal_loss(gamma: float = 2.0, alpha: float = 0.25):
+    """Focal loss for class imbalance and sigmoid saturation prevention.
+
+    Down-weights easy (confident) examples so the model focuses on
+    hard/misclassified ones, preventing the sigmoid output from
+    saturating to a narrow range.
+
+    Args:
+        gamma: Focusing parameter (higher = more focus on hard examples).
+        alpha: Balance factor for positive class weight.
+    """
+    def _focal(y_true, y_pred):
+        y_pred = tf.clip_by_value(y_pred, 1e-7, 1.0 - 1e-7)
+        pt = y_true * y_pred + (1.0 - y_true) * (1.0 - y_pred)
+        at = y_true * alpha + (1.0 - y_true) * (1.0 - alpha)
+        return -tf.reduce_mean(at * tf.pow(1.0 - pt, gamma) * tf.math.log(pt))
+    _focal.__name__ = f"focal_loss_g{gamma}_a{alpha}"
+    return _focal
+
+
 # ── Phase 2 SOLID components (reused) ────────────────────────────
 from src.phase2_detection_engine.phase2.assembler import DetectionModelAssembler
 from src.phase2_detection_engine.phase2.attention_builder import (
@@ -363,6 +387,11 @@ def main() -> None:
     logger.info("  Train (windowed): Normal=%d, Attack=%d (%.1f:1)",
                 n0o, n1o, n0o / max(n1o, 1))
 
+    # Label smoothing: {0, 1} -> {eps, 1-eps} to prevent sigmoid saturation
+    yo_w_smooth = yo_w * (1 - 2 * LABEL_SMOOTH_EPS) + LABEL_SMOOTH_EPS
+    logger.info("  Label smoothing: eps=%.2f -> targets [%.2f, %.2f]",
+                LABEL_SMOOTH_EPS, LABEL_SMOOTH_EPS, 1 - LABEL_SMOOTH_EPS)
+
     # 5c. Add classification head (match tuner architecture: dense_units=32)
     n_classes = len(np.unique(yo_w))
     head = AutoClassificationHead(
@@ -405,12 +434,13 @@ def main() -> None:
     unfreezer = ProgressiveUnfreezer()
     unfreezer.apply_phase(full_model, frozen_groups=["cnn", "bilstm1", "bilstm2", "attention"])
 
+    fl = focal_loss(gamma=2.0, alpha=0.25)
     full_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=head_lr),
-        loss=loss, metrics=["accuracy"],
+        loss=fl, metrics=["accuracy"],
     )
     h1 = full_model.fit(
-        Xo_w, yo_w, epochs=head_epochs, batch_size=256,
+        Xo_w, yo_w_smooth, epochs=head_epochs, batch_size=256,
         validation_split=0.2, verbose=1,
         class_weight=class_weights,
         callbacks=[
@@ -438,10 +468,10 @@ def main() -> None:
 
     full_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=finetune_lr),
-        loss=loss, metrics=["accuracy"],
+        loss=fl, metrics=["accuracy"],
     )
     h2 = full_model.fit(
-        Xo_w, yo_w, epochs=ft_epochs, batch_size=256,
+        Xo_w, yo_w_smooth, epochs=ft_epochs, batch_size=256,
         validation_split=0.2, verbose=1,
         class_weight=class_weights,
         callbacks=[
@@ -561,7 +591,7 @@ def main() -> None:
         "duration_seconds": round(duration_s, 2),
         "best_hyperparameters": best_hp,
         "optimal_threshold": opt_threshold,
-        "loss": "binary_crossentropy",
+        "loss": "focal_loss(gamma=2.0, alpha=0.25) + label_smoothing(eps=0.05)",
         "class_weights": {str(k): v for k, v in class_weights.items()},
         "training_phases": [
             {"name": "Stage 1 — Head on imbalanced", "epochs": head_epochs,

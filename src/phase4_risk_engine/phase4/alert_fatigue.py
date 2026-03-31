@@ -15,6 +15,7 @@ Escalations (severity increase) ALWAYS bypass suppression.
 from __future__ import annotations
 
 import logging
+import threading
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
@@ -73,13 +74,16 @@ class AlertFatigueManager(BaseDetector):
 
     def __init__(
         self,
-        aggregation_window: int = 10,
-        alerts_per_window: int = 5,
-        rate_window_size: int = 100,
+        aggregation_window: Optional[int] = None,
+        alerts_per_window: Optional[int] = None,
+        rate_window_size: Optional[int] = None,
     ) -> None:
-        self._agg_window = aggregation_window
-        self._max_alerts = alerts_per_window
-        self._rate_window = rate_window_size
+        from config.production_loader import cfg
+
+        self._agg_window = aggregation_window or int(cfg("alert_fatigue.aggregation_window", 10))
+        self._max_alerts = alerts_per_window or int(cfg("alert_fatigue.max_alerts_per_window", 5))
+        self._rate_window = rate_window_size or int(cfg("alert_fatigue.rate_window_size", 100))
+        self._lock = threading.Lock()
         self._devices: Dict[str, AlertRecord] = defaultdict(lambda: AlertRecord("unknown"))
         self._sample_counter = 0
         self._stats = {
@@ -112,6 +116,14 @@ class AlertFatigueManager(BaseDetector):
         Returns:
             Same list with alert fields added.
         """
+        with self._lock:
+            return self._process_locked(risk_results, device_id)
+
+    def _process_locked(
+        self,
+        risk_results: List[Dict[str, Any]],
+        device_id: str,
+    ) -> List[Dict[str, Any]]:
         record = self._devices[device_id]
         record.device_id = device_id
 
@@ -201,6 +213,10 @@ class AlertFatigueManager(BaseDetector):
 
     def get_summary(self) -> Dict[str, Any]:
         """Return fatigue mitigation summary statistics."""
+        with self._lock:
+            return self._get_summary_locked()
+
+    def _get_summary_locked(self) -> Dict[str, Any]:
         total = self._stats["total_samples"]
         emitted = self._stats["total_emitted"]
         suppressed = self._stats["total_suppressed"]

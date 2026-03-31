@@ -9,7 +9,7 @@
     "metrics": {
       "accuracy": 0.9399220832478983,
       "f1_score": 0.910813408647789,
-      "auc_roc": 0.8067030150873494,
+      "auc_roc": 0.8748347122205744,
       "attack_recall": 1.0,
       "attack_precision": 0.9399220832478983,
       "attack_f1": 0.9690307578480076,
@@ -20,7 +20,7 @@
     "detection_params": 473536,
     "total_params": 477697,
     "optimal_threshold": 0.1,
-    "duration_seconds": 7.44,
+    "duration_seconds": 5.88,
     "status": "completed"
   },
   "variants": [
@@ -34,7 +34,7 @@
       "metrics": {
         "accuracy": 0.9399220832478983,
         "f1_score": 0.910813408647789,
-        "auc_roc": 0.8787267927023212,
+        "auc_roc": 0.8870094228925064,
         "attack_recall": 1.0,
         "attack_precision": 0.9399220832478983,
         "attack_f1": 0.9690307578480076,
@@ -45,7 +45,7 @@
       "detection_params": 456896,
       "total_params": 461057,
       "optimal_threshold": 0.1,
-      "duration_seconds": 6.88,
+      "duration_seconds": 5.28,
       "description": "Replace Bahdanau attention with GlobalAveragePooling1D",
       "status": "completed"
     },
@@ -59,7 +59,7 @@
       "metrics": {
         "accuracy": 0.9399220832478983,
         "f1_score": 0.910813408647789,
-        "auc_roc": 0.8758234607389407,
+        "auc_roc": 0.872025936779658,
         "attack_recall": 1.0,
         "attack_precision": 0.9399220832478983,
         "attack_f1": 0.9690307578480076,
@@ -70,7 +70,7 @@
       "detection_params": 325568,
       "total_params": 333825,
       "optimal_threshold": 0.1,
-      "duration_seconds": 5.87,
+      "duration_seconds": 4.68,
       "description": "Remove second BiLSTM layer (single BiLSTM-256)",
       "status": "completed"
     },
@@ -84,7 +84,7 @@
       "metrics": {
         "accuracy": 0.9399220832478983,
         "f1_score": 0.910813408647789,
-        "auc_roc": 0.9060904824020632,
+        "auc_roc": 0.8699006486428532,
         "attack_recall": 1.0,
         "attack_precision": 0.9399220832478983,
         "attack_f1": 0.9690307578480076,
@@ -95,7 +95,7 @@
       "detection_params": 383296,
       "total_params": 387457,
       "optimal_threshold": 0.1,
-      "duration_seconds": 8.61,
+      "duration_seconds": 6.35,
       "description": "Remove second CNN layer (single Conv1D-32)",
       "status": "completed"
     },
@@ -109,7 +109,7 @@
       "metrics": {
         "accuracy": 0.9399220832478983,
         "f1_score": 0.910813408647789,
-        "auc_roc": 0.8627605143874821,
+        "auc_roc": 0.849296261220211,
         "attack_recall": 1.0,
         "attack_precision": 0.9399220832478983,
         "attack_f1": 0.9690307578480076,
@@ -120,7 +120,7 @@
       "detection_params": 218816,
       "total_params": 220929,
       "optimal_threshold": 0.1,
-      "duration_seconds": 5.13,
+      "duration_seconds": 5.25,
       "description": "Replace BiLSTM with unidirectional LSTM",
       "status": "completed"
     },
@@ -136,7 +136,7 @@
       "metrics": {
         "accuracy": 0.7571107018620831,
         "f1_score": 0.6524536152066396,
-        "auc_roc": 0.8222802204057469,
+        "auc_roc": 0.81681208588538,
         "attack_recall": 1.0,
         "attack_precision": 0.7571107018620831,
         "attack_f1": 0.8617677885175264,
@@ -147,7 +147,7 @@
       "detection_params": 473536,
       "total_params": 477697,
       "optimal_threshold": 0.1,
-      "duration_seconds": 7.28,
+      "duration_seconds": 6.61,
       "description": "Reduce window size from 20 to 10 timesteps",
       "status": "completed"
     },
@@ -163,7 +163,7 @@
       "metrics": {
         "accuracy": 0.9882884733922334,
         "f1_score": 0.9824672020288608,
-        "auc_roc": 0.6746671772987562,
+        "auc_roc": 0.9039245723456251,
         "attack_recall": 1.0,
         "attack_precision": 0.9882884733922334,
         "attack_f1": 0.9941097447556061,
@@ -174,7 +174,7 @@
       "detection_params": 473536,
       "total_params": 477697,
       "optimal_threshold": 0.1,
-      "duration_seconds": 7.36,
+      "duration_seconds": 6.91,
       "description": "Increase window size from 20 to 30 timesteps",
       "status": "completed"
     },
@@ -190,7 +190,7 @@
       "metrics": {
         "accuracy": 0.9399220832478983,
         "f1_score": 0.910813408647789,
-        "auc_roc": 0.8700860389900469,
+        "auc_roc": 0.8800129847696989,
         "attack_recall": 1.0,
         "attack_precision": 0.9399220832478983,
         "attack_f1": 0.9690307578480076,
@@ -201,7 +201,7 @@
       "detection_params": 473536,
       "total_params": 477697,
       "optimal_threshold": 0.1,
-      "duration_seconds": 6.86,
+      "duration_seconds": 6.45,
       "description": "Reduce dropout from 0.3 to 0.1",
       "status": "completed"
     },
@@ -217,7 +217,7 @@
       "metrics": {
         "accuracy": 0.9399220832478983,
         "f1_score": 0.910813408647789,
-        "auc_roc": 0.8498758852575213,
+        "auc_roc": 0.883994037727308,
         "attack_recall": 1.0,
         "attack_precision": 0.9399220832478983,
         "attack_f1": 0.9690307578480076,
@@ -228,7 +228,7 @@
       "detection_params": 473536,
       "total_params": 477697,
       "optimal_threshold": 0.1,
-      "duration_seconds": 7.52,
+      "duration_seconds": 6.71,
       "description": "Increase dropout from 0.3 to 0.5",
       "status": "completed"
     }
@@ -237,7 +237,7 @@
     {
       "variant": "baseline (full)",
       "attack_f1": 0.9690307578480076,
-      "auc_roc": 0.8067030150873494,
+      "auc_roc": 0.8748347122205744,
       "accuracy": 0.9399220832478983,
       "total_params": 477697,
       "delta_f1": 0.0,
@@ -246,74 +246,74 @@
     {
       "variant": "no_attention",
       "attack_f1": 0.9690307578480076,
-      "auc_roc": 0.8787267927023212,
+      "auc_roc": 0.8870094228925064,
       "accuracy": 0.9399220832478983,
       "total_params": 461057,
       "delta_f1": 0.0,
-      "delta_auc": 0.072
+      "delta_auc": 0.0122
     },
     {
       "variant": "no_bilstm2",
       "attack_f1": 0.9690307578480076,
-      "auc_roc": 0.8758234607389407,
+      "auc_roc": 0.872025936779658,
       "accuracy": 0.9399220832478983,
       "total_params": 333825,
       "delta_f1": 0.0,
-      "delta_auc": 0.0691
+      "delta_auc": -0.0028
     },
     {
       "variant": "no_cnn2",
       "attack_f1": 0.9690307578480076,
-      "auc_roc": 0.9060904824020632,
+      "auc_roc": 0.8699006486428532,
       "accuracy": 0.9399220832478983,
       "total_params": 387457,
       "delta_f1": 0.0,
-      "delta_auc": 0.0994
+      "delta_auc": -0.0049
     },
     {
       "variant": "unidirectional_lstm",
       "attack_f1": 0.9690307578480076,
-      "auc_roc": 0.8627605143874821,
+      "auc_roc": 0.849296261220211,
       "accuracy": 0.9399220832478983,
       "total_params": 220929,
       "delta_f1": 0.0,
-      "delta_auc": 0.0561
+      "delta_auc": -0.0255
     },
     {
       "variant": "timesteps_10",
       "attack_f1": 0.8617677885175264,
-      "auc_roc": 0.8222802204057469,
+      "auc_roc": 0.81681208588538,
       "accuracy": 0.7571107018620831,
       "total_params": 477697,
       "delta_f1": -0.1073,
-      "delta_auc": 0.0156
+      "delta_auc": -0.058
     },
     {
       "variant": "timesteps_30",
       "attack_f1": 0.9941097447556061,
-      "auc_roc": 0.6746671772987562,
+      "auc_roc": 0.9039245723456251,
       "accuracy": 0.9882884733922334,
       "total_params": 477697,
       "delta_f1": 0.0251,
-      "delta_auc": -0.132
+      "delta_auc": 0.0291
     },
     {
       "variant": "low_dropout",
       "attack_f1": 0.9690307578480076,
-      "auc_roc": 0.8700860389900469,
+      "auc_roc": 0.8800129847696989,
       "accuracy": 0.9399220832478983,
       "total_params": 477697,
       "delta_f1": 0.0,
-      "delta_auc": 0.0634
+      "delta_auc": 0.0052
     },
     {
       "variant": "high_dropout",
       "attack_f1": 0.9690307578480076,
-      "auc_roc": 0.8498758852575213,
+      "auc_roc": 0.883994037727308,
       "accuracy": 0.9399220832478983,
       "total_params": 477697,
       "delta_f1": 0.0,
-      "delta_auc": 0.0432
+      "delta_auc": 0.0092
     }
   ]
 }

@@ -18,7 +18,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 WINDOW_SIZE: int = 20
-CALIBRATION_THRESHOLD: int = 100
+CALIBRATION_THRESHOLD: int = 200
 
 
 class SystemState(str, Enum):
@@ -39,6 +39,8 @@ class WindowBuffer:
         calibration_threshold: Minimum flows before alert generation.
     """
 
+    _DETECTED_LEVELS = frozenset({"MEDIUM", "HIGH", "CRITICAL"})
+
     def __init__(
         self,
         window_size: int = WINDOW_SIZE,
@@ -46,17 +48,22 @@ class WindowBuffer:
     ) -> None:
         self._window_size = window_size
         self._calibration_threshold = calibration_threshold
+        self._alert_recovery_count = 0
         self._buffer: Deque[np.ndarray] = deque(maxlen=5000)
         self._lock = threading.Lock()
         self._flow_count: int = 0
         self._state = SystemState.INITIALIZING
-        self._alerts: Deque[Dict[str, Any]] = deque(maxlen=200)
+        self._alerts: Deque[Dict[str, Any]] = deque(maxlen=500)
         self._risk_counts: Dict[str, int] = {
             "NORMAL": 0, "LOW": 0, "MEDIUM": 0,
             "HIGH": 0, "CRITICAL": 0,
         }
         self._predictions: Deque[Dict[str, Any]] = deque(maxlen=500)
         self._started_at: Optional[datetime] = None
+        # Cumulative detection counters (not limited by deque size)
+        self._detection_counts: Dict[str, int] = {
+            "tp": 0, "fn": 0, "fp": 0, "tn": 0, "total_with_gt": 0,
+        }
 
     @property
     def state(self) -> SystemState:
@@ -138,13 +145,53 @@ class WindowBuffer:
             if risk in self._risk_counts:
                 self._risk_counts[risk] += 1
 
-            if risk in ("HIGH", "CRITICAL") and not self.suppress_alerts:
+            # Update cumulative detection counters
+            gt = prediction.get("ground_truth", -1)
+            if gt >= 0:
+                detected = risk in self._DETECTED_LEVELS
+                is_attack = gt == 1
+                if is_attack and detected:
+                    self._detection_counts["tp"] += 1
+                elif is_attack and not detected:
+                    self._detection_counts["fn"] += 1
+                elif not is_attack and detected:
+                    self._detection_counts["fp"] += 1
+                else:
+                    self._detection_counts["tn"] += 1
+                self._detection_counts["total_with_gt"] += 1
+
+            # Transition to DEGRADED if inference failed
+            if prediction.get("inference_failed", False):
+                if self._state in (SystemState.OPERATIONAL, SystemState.ALERT):
+                    self._state = SystemState.DEGRADED
+                    logger.warning("System DEGRADED — inference circuit breaker active")
+            else:
+                # Recovery: DEGRADED → OPERATIONAL when inference succeeds
+                if self._state == SystemState.DEGRADED:
+                    self._state = SystemState.OPERATIONAL
+                    logger.info("System recovered: DEGRADED → OPERATIONAL")
+
+            if risk in ("MEDIUM", "HIGH", "CRITICAL") and not self.suppress_alerts:
                 self._alerts.appendleft({
                     **prediction,
                     "alert_time": datetime.now(timezone.utc).isoformat(),
                 })
                 if risk == "CRITICAL":
                     self._state = SystemState.ALERT
+                    self._alert_recovery_count = 0
+                elif self._state == SystemState.ALERT:
+                    # Count consecutive non-CRITICAL for ALERT recovery
+                    self._alert_recovery_count += 1
+                    if self._alert_recovery_count >= 50:
+                        self._state = SystemState.OPERATIONAL
+                        logger.info("System recovered: ALERT → OPERATIONAL "
+                                    "after %d clean predictions",
+                                    self._alert_recovery_count)
+            elif self._state == SystemState.ALERT:
+                self._alert_recovery_count += 1
+                if self._alert_recovery_count >= 50:
+                    self._state = SystemState.OPERATIONAL
+                    logger.info("System recovered: ALERT → OPERATIONAL")
 
     def get_alerts(self, n: int = 50) -> List[Dict[str, Any]]:
         """Get the latest alerts."""
@@ -177,6 +224,7 @@ class WindowBuffer:
                 "risk_counts": dict(self._risk_counts),
                 "started_at": self._started_at.isoformat()
                 if self._started_at else None,
+                "detection_counts": dict(self._detection_counts),
             }
 
     def get_flow_vectors(self, n: int = 50) -> List[np.ndarray]:
@@ -215,4 +263,7 @@ class WindowBuffer:
             }
             self._predictions.clear()
             self._started_at = None
+            self._detection_counts = {
+                "tp": 0, "fn": 0, "fp": 0, "tn": 0, "total_with_gt": 0,
+            }
             logger.info("Buffer reset to INITIALIZING")

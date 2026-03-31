@@ -1,13 +1,16 @@
 """Panel — System & Compliance (merged static reference panels).
 
-Tabs: Model Architecture | Evaluation Metrics | Compliance & Audit
+Tabs: Model Architecture | Evaluation Metrics | Compliance & Audit | History
 """
 
 from __future__ import annotations
 
+import csv
+import io
 import json
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import streamlit as st
 
@@ -18,8 +21,8 @@ def render(gt: Dict[str, Any]) -> None:
     """Render system reference panel with tabs."""
     st.header("System & Compliance")
 
-    tab_model, tab_eval, tab_compliance = st.tabs([
-        "Model Architecture", "Evaluation Metrics", "Compliance & Audit",
+    tab_model, tab_eval, tab_compliance, tab_history = st.tabs([
+        "Model Architecture", "Evaluation Metrics", "Compliance & Audit", "History",
     ])
 
     with tab_model:
@@ -30,6 +33,9 @@ def render(gt: Dict[str, Any]) -> None:
 
     with tab_compliance:
         _render_compliance(gt)
+
+    with tab_history:
+        _render_history()
 
 
 def _render_model(gt: Dict[str, Any]) -> None:
@@ -120,3 +126,88 @@ def _render_compliance(gt: Dict[str, Any]) -> None:
     missing = inv.get("missing", 0)
     st.markdown(f"- **Verified:** {verified}/{total}")
     st.markdown(f"- **Missing:** {missing}")
+
+
+def _render_history() -> None:
+    """Historical alert query panel backed by SQLite database."""
+    db = st.session_state.get("database")
+    if db is None:
+        st.info("Database not initialized — history unavailable")
+        return
+
+    st.markdown("##### Alert History")
+
+    # Filters
+    col_date, col_risk = st.columns(2)
+    with col_date:
+        today = date.today()
+        week_ago = today - timedelta(days=7)
+        date_range = st.date_input("Date range", value=(week_ago, today))
+    with col_risk:
+        risk_filter = st.multiselect(
+            "Risk level",
+            ["HIGH", "CRITICAL"],
+            default=["HIGH", "CRITICAL"],
+        )
+
+    # Build query params
+    since_str = None
+    until_str = None
+    if isinstance(date_range, tuple) and len(date_range) == 2:
+        since_str = datetime.combine(date_range[0], datetime.min.time()).isoformat() + "Z"
+        until_str = datetime.combine(date_range[1], datetime.max.time()).isoformat() + "Z"
+
+    # Query
+    all_alerts: List[Dict] = []
+    for level in (risk_filter or ["HIGH", "CRITICAL"]):
+        alerts = db.query_alerts(since=since_str, until=until_str, risk_level=level, limit=500)
+        all_alerts.extend(alerts)
+    all_alerts.sort(key=lambda a: a.get("time", ""), reverse=True)
+
+    # Summary metrics
+    total = len(all_alerts)
+    ack_count = sum(1 for a in all_alerts if a.get("acknowledged"))
+    pending = total - ack_count
+
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Alerts", total)
+    m2.metric("Acknowledged", ack_count)
+    m3.metric("Pending", pending)
+
+    if not all_alerts:
+        st.info("No alerts found for the selected filters")
+        return
+
+    # Results table
+    for a in all_alerts[:100]:
+        time_str = a.get("time", "")[:19]
+        risk = a.get("risk_level", "?")
+        sev = a.get("clinical_severity", "?")
+        device = a.get("device_id_hash", "—")[:8]
+        ack = "Yes" if a.get("acknowledged") else "No"
+        ack_by = a.get("acknowledged_by", "—") if a.get("acknowledged") else "—"
+
+        c1, c2, c3, c4, c5, c6 = st.columns([3, 2, 1, 2, 1, 2])
+        c1.caption(time_str)
+        c2.caption(risk)
+        c3.caption(str(sev))
+        c4.caption(device)
+        c5.caption(ack)
+        c6.caption(ack_by)
+
+    # Export CSV
+    if all_alerts:
+        csv_buf = io.StringIO()
+        fields = ["time", "risk_level", "clinical_severity", "device_id_hash",
+                   "alert_emit", "alert_reason", "acknowledged", "acknowledged_by"]
+        writer = csv.DictWriter(csv_buf, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        for a in all_alerts:
+            writer.writerow(a)
+
+        st.download_button(
+            label="Export Alerts (CSV)",
+            data=csv_buf.getvalue(),
+            file_name="alert_history.csv",
+            mime="text/csv",
+        )

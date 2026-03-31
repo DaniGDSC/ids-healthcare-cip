@@ -206,6 +206,30 @@ class AuthProvider:
             logger.error("LDAP auth error for %s: %s", username, exc)
             return None
 
+    @classmethod
+    def from_config(cls) -> AuthProvider:
+        """Build AuthProvider from production.yaml config."""
+        from config.production_loader import cfg
+
+        mode = cfg("auth.mode", "open")
+        users: Dict[str, Dict[str, str]] = {}
+
+        if mode == "local":
+            for entry in cfg("auth.users", []):
+                username = entry["username"]
+                # Default password = username (for demo); override in hospital config
+                pwd = entry.get("password", username)
+                users[username] = {
+                    "password_hash": cls.hash_password(pwd),
+                    "role": entry["role"],
+                }
+
+        ldap_config = cfg("auth.ldap", {})
+        ttl = cfg("auth.session_ttl", 28800)
+        provider = cls(mode=mode, users=users, ldap_config=ldap_config)
+        logger.info("AuthProvider configured: mode=%s, users=%d", mode, len(users))
+        return provider
+
     @staticmethod
     def hash_password(password: str) -> str:
         """Hash a password for local user database storage."""

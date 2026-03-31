@@ -210,9 +210,153 @@ from src.phase4_risk_engine.phase4.fallback_manager import ThresholdFallbackMana
 | Parameter | Default | Tuning guidance |
 | --- | --- | --- |
 | Window size | 20 | Increase for longer attack patterns, decrease for faster detection |
-| Calibration threshold | 100 | Lower for faster startup, higher for more stable baseline |
+| Calibration threshold | 200 | Lower for faster startup, higher for more stable baseline |
 | Alert aggregation window | 10 | Lower = more alerts, higher = more suppression |
 | Rate limit (per 100 samples) | 5 | Adjust based on SOC capacity |
 | MAD multiplier | 3.0 | Lower = more sensitive, higher = fewer alerts |
 | CIA escalation threshold | 0.7 | Lower = more escalations, higher = fewer |
 | Stale biometric threshold | 60s | Based on monitor polling frequency |
+
+## 13. Docker Compose Deployment
+
+### Quick Start
+
+```bash
+cd deploy/
+docker compose up -d
+```
+
+Three services start:
+- **api** (port 8000): FastAPI inference with 2 Uvicorn workers, health check every 30s
+- **dashboard** (port 8501): Streamlit UI, depends on API health
+- **backup**: Hourly SQLite backup, retains last 48 copies (2 days)
+
+### Service Management
+
+```bash
+# View logs
+docker compose logs -f api
+docker compose logs -f dashboard
+
+# Restart API (e.g., after model update)
+docker compose restart api
+
+# Stop all
+docker compose down
+
+# Run tests inside container
+docker compose exec api python -m pytest tests/ -v
+```
+
+### Health Checks
+
+```bash
+# Basic health
+curl http://localhost:8000/health
+
+# Detailed component status
+curl http://localhost:8000/health/detailed
+```
+
+Detailed health returns:
+- `model`: loaded, parameter count
+- `circuit_breaker`: open/closed, failure count, last error
+- `buffer`: state (OPERATIONAL/DEGRADED/ALERT), flow count
+- `database`: connection status, prediction count
+- `tls`: enabled/disabled
+
+### TLS Configuration
+
+For production, enable TLS in `config/production.yaml`:
+
+```yaml
+tls:
+  enabled: true
+  cert_dir: "/etc/iomt-ids/certs"
+  min_version: "TLSv1.2"
+```
+
+Certificate directory structure:
+```
+/etc/iomt-ids/certs/
+  ca.pem           # CA certificate
+  server.pem       # Server certificate
+  server-key.pem   # Server private key
+  client.pem       # Client certificate (mTLS)
+  client-key.pem   # Client private key (mTLS)
+```
+
+## 14. Database Backup & Restore
+
+### Automated Backup (via Docker)
+
+The `backup` service runs automatically. Backups stored at `data/production/backups/`.
+
+### Manual Backup
+
+```bash
+# One-shot backup
+python -m src.production.backup
+
+# List available backups
+python -m src.production.backup --list
+
+# Restore from backup
+python -m src.production.backup --restore data/production/backups/iomt_ids_20260331_020000.db
+```
+
+### Backup Retention
+
+Default: 48 backups at 1-hour intervals = 2 days of history.
+Adjust via `--keep` flag or Docker Compose command.
+
+## 15. Configuration Reference
+
+All tunable parameters in `config/production.yaml`:
+
+| Section | Key | Default | Description |
+| --- | --- | --- | --- |
+| streaming | window_size | 20 | Model input timesteps |
+| streaming | calibration_threshold | 200 | Flows before alerts enabled |
+| inference | default_device_id | generic_iomt_sensor | Default device for CIA |
+| inference | max_consecutive_failures | 3 | Circuit breaker threshold |
+| calibration | target_fpr | 0.10 | Target false positive rate |
+| cia | escalation_threshold | 0.7 | CIA escalation trigger |
+| auth | mode | open | Authentication mode (open/local/ldap) |
+| database | path | data/production/iomt_ids.db | SQLite database path |
+| tls | enabled | false | Enable TLS/mTLS |
+
+## 16. SOC Analyst Runbook
+
+### Starting a Monitoring Session
+
+1. Open dashboard at `http://localhost:8501`
+2. Login (if auth mode != "open")
+3. Click START in sidebar to begin streaming
+4. Monitor Live Monitor panel for threat posture gauge
+5. Check Alert Feed for HIGH/CRITICAL alerts
+
+### Responding to an Alert
+
+1. Alert Feed shows new HIGH/CRITICAL alert
+2. Click "Detail" button on the alert row
+3. Review: risk level, CIA impact, clinical severity, explanation
+4. Click "Acknowledge Alert" to mark as reviewed
+5. If real threat: coordinate with Clinical IT for device isolation
+6. If false positive: note for future calibration improvement
+
+### Exporting Data for Compliance
+
+1. Sidebar: click "Alerts CSV" or "Predictions CSV"
+2. System & Compliance tab > History tab for date-range queries
+3. Export filtered results via "Export Alerts (CSV)" button
+
+### Troubleshooting
+
+| Symptom | Check | Action |
+| --- | --- | --- |
+| Dashboard shows DEGRADED | `/health/detailed` → circuit_breaker | Check GPU memory, restart API |
+| All predictions NORMAL | Calibrator mode in logs | Verify calibration at flow 200 |
+| No alerts appearing | Buffer state | Wait for OPERATIONAL state (flow > 200) |
+| High latency (>200ms) | Performance panel | Check GPU utilization, reduce batch size |
+| Database errors | `/health/detailed` → database | Check disk space, run backup |

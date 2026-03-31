@@ -97,7 +97,7 @@ def render(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font_color="#e0e0e0", xaxis_title="Latency (ms)", yaxis_title="Count",
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
     with col_right:
         # ── Model confidence distribution ──
@@ -114,7 +114,7 @@ def render(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font_color="#e0e0e0", xaxis_title="Anomaly Score", yaxis_title="Count",
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
     # ── Latency over time ──
     if latencies and len(latencies) > 5:
@@ -129,7 +129,7 @@ def render(
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
             font_color="#e0e0e0", xaxis_title="Inference #", yaxis_title="ms",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # ── System health ──
     st.markdown("##### System Health")
@@ -138,3 +138,21 @@ def render(
     h2.metric("State", buffer_status.get("state", "?"))
     h3.metric("Inferences", sim_status.get("inferences_run", 0))
     h4.metric("Scenario", sim_status.get("scenario", "—"))
+
+    # ── Cumulative metrics from database ──
+    db = st.session_state.get("database")
+    if db and db.get_prediction_count() > 0:
+        st.markdown("---")
+        st.markdown("##### Cumulative Metrics (Database)")
+        col_db1, col_db2 = st.columns(2)
+        with col_db1:
+            st.metric("Total Predictions (DB)", f"{db.get_prediction_count():,}")
+            st.metric("Total Alerts (DB)", f"{db.get_alert_count():,}")
+        with col_db2:
+            risk_dist = db.get_risk_distribution()
+            if risk_dist:
+                st.markdown("**Risk Distribution (all-time):**")
+                for level in ["NORMAL", "LOW", "MEDIUM", "HIGH", "CRITICAL"]:
+                    count = risk_dist.get(level, 0)
+                    if count:
+                        st.caption(f"{level}: {count:,}")

@@ -14,45 +14,45 @@
 
 | Parameter | Value |
 |-----------|-------|
-| `cw_attack` | 5.47623 |
-| `finetune_lr` | 1.3113e-05 |
-| `ft_epochs` | 4 |
+| `cw_attack` | 7.58795 |
+| `finetune_lr` | 7.96945e-05 |
+| `ft_epochs` | 5 |
 | `head_epochs` | 3 |
-| `head_lr` | 0.00299369 |
+| `head_lr` | 0.00118443 |
 
 ### 5.3.3 Best Trial Metrics
 
 | Metric | Value |
 |--------|-------|
-| accuracy | 0.9403 |
-| attack_f1 | 0.9692 |
-| attack_f2 | 0.9875 |
-| attack_precision | 0.9403 |
+| accuracy | 0.9399 |
+| attack_f1 | 0.9690 |
+| attack_f2 | 0.9874 |
+| attack_precision | 0.9399 |
 | attack_recall | 1.0000 |
-| auc_roc | 0.8423 |
-| f1_score | 0.9118 |
-| macro_f1 | 0.4914 |
-| threshold | 0.9000 |
+| auc_roc | 0.8906 |
+| f1_score | 0.9108 |
+| macro_f1 | 0.4845 |
+| threshold | 0.1000 |
 
 ### 5.3.4 Top-5 Trials
 
 | Trial | Attack F1 | Attack Recall | AUC-ROC | Accuracy | Duration |
 |-------|-----------|---------------|---------|----------|----------|
-| 10 | 0.9692 | 1.0000 | 0.8423 | 0.9403 | 6.5s |
-| 7 | 0.9691 | 1.0000 | 0.8420 | 0.9401 | 6.4s |
-| 0 | 0.9690 | 1.0000 | 0.8441 | 0.9399 | 7.9s |
-| 1 | 0.9690 | 1.0000 | 0.8422 | 0.9399 | 5.5s |
-| 2 | 0.9690 | 1.0000 | 0.8442 | 0.9399 | 6.7s |
+| 0 | 0.9690 | 1.0000 | 0.8906 | 0.9399 | 11.1s |
+| 1 | 0.9690 | 1.0000 | 0.8683 | 0.9399 | 7.1s |
+| 2 | 0.9690 | 1.0000 | 0.8819 | 0.9399 | 8.3s |
+| 3 | 0.9690 | 1.0000 | 0.8592 | 0.9399 | 6.7s |
+| 4 | 0.9690 | 1.0000 | 0.8605 | 0.9399 | 6.0s |
 
 ### 5.3.6 Parameter Importance (optuna_fanova)
 
 | Parameter | Importance | |
 |-----------|-----------|---|
-| `head_lr` | 0.4961 | ################### |
-| `cw_attack` | 0.2138 | ######## |
-| `finetune_lr` | 0.1561 | ###### |
-| `ft_epochs` | 0.0874 | ### |
-| `head_epochs` | 0.0467 | # |
+| `cw_attack` | 0.4187 | ################ |
+| `finetune_lr` | 0.2848 | ########### |
+| `head_lr` | 0.2550 | ########## |
+| `ft_epochs` | 0.0415 | # |
+| `head_epochs` | 0.0000 |  |
 
 ### 5.3.7 Ablation Study Results
 
@@ -74,7 +74,7 @@
 |----------|-------|
 | Device | see finetuned_results.json |
 | TensorFlow | — |
-| Duration | 278.92s |
+| Duration | 307.91s |
 | Git commit | `see finetune` |
 
 ---

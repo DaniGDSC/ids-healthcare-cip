@@ -262,29 +262,75 @@ def _render_dialog(alert: Dict[str, Any], idx: int) -> None:
     if rationale:
         st.caption(f"Rationale: {rationale}")
 
-    # Close button clears the selection
-    if st.button("Close", use_container_width=True):
+    # Alert acknowledgment
+    st.markdown("---")
+    db = st.session_state.get("database")
+    if db:
+        # Check if already acknowledged (from DB alert or from dict)
+        is_ack = alert.get("acknowledged", False)
+        if is_ack:
+            ack_by = alert.get("acknowledged_by", "Unknown")
+            ack_at = alert.get("acknowledged_at", "")
+            st.success(f"Acknowledged by **{ack_by}** at {ack_at[:19]}")
+        else:
+            col_ack, col_safe = st.columns(2)
+            with col_ack:
+                if st.button("Acknowledge", type="primary", width="stretch"):
+                    user = "anonymous"
+                    if "auth_session" in st.session_state:
+                        user = st.session_state.auth_session.username
+                    alert_db_id = alert.get("db_id")
+                    if not alert_db_id:
+                        alert_db_id = db.insert_alert(alert)
+                    db.acknowledge_alert(alert_db_id, user)
+                    st.success("Alert acknowledged")
+            with col_safe:
+                if st.button("Mark Safe (Override)", type="secondary", width="stretch"):
+                    user = "anonymous"
+                    if "auth_session" in st.session_state:
+                        user = st.session_state.auth_session.username
+                    alert_db_id = alert.get("db_id")
+                    if not alert_db_id:
+                        alert_db_id = db.insert_alert(alert)
+                    db.insert_feedback(
+                        alert_id=alert_db_id,
+                        analyst=user,
+                        ground_truth=0,
+                        confidence=1.0,
+                        notes="Clinical override: device verified safe",
+                    )
+                    db.acknowledge_alert(alert_db_id, user)
+                    st.success("Device marked safe. Override recorded for audit.")
+
+    # Close button
+    if st.button("Close", width="stretch"):
         del st.session_state["_alert_detail_idx"]
         st.rerun()
 
 
-def render_from_ground_truth(gt: Dict[str, Any], show_suppressed: bool = False) -> Optional[int]:  # noqa: ARG001
+def render_from_ground_truth(
+    gt: Dict[str, Any],
+    show_suppressed: bool = False,
+    risk_filter: Optional[List[str]] = None,
+) -> Optional[int]:  # noqa: ARG001
     """Render alert feed from static ground truth data.
 
     Args:
         gt: Ground truth data (unused; kept for panel API consistency).
         show_suppressed: Whether to show fatigue-suppressed alerts.
+        risk_filter: List of risk levels to include.
 
     Returns:
         Selected alert index for SHAP explanation.
     """
+    allowed = set(risk_filter) if risk_filter else {"MEDIUM", "HIGH", "CRITICAL"}
+
     # Try Phase 4 risk report first (has clinical severity + fatigue data)
     from dashboard.utils.loader import load_risk_report
     risk_report = load_risk_report()
     if risk_report:
         assessments = risk_report.get("sample_assessments", risk_report.get("risk_results", []))
-        # Filter to non-NORMAL only for alert feed
-        alerts = [a for a in assessments if a.get("risk_level", "NORMAL") != "NORMAL"]
+        alerts = [a for a in assessments if a.get("risk_level", "NORMAL") in allowed]
         if alerts:
             return render_alert_table(alerts, show_suppressed=show_suppressed)
 
@@ -292,7 +338,8 @@ def render_from_ground_truth(gt: Dict[str, Any], show_suppressed: bool = False) 
     from dashboard.utils.loader import load_explanation_report
     report = load_explanation_report()
     if report and "explanations" in report:
-        return render_alert_table(report["explanations"], show_suppressed=show_suppressed)
+        filtered = [e for e in report["explanations"] if e.get("risk_level", "NORMAL") in allowed]
+        return render_alert_table(filtered, show_suppressed=show_suppressed)
 
     st.info("No alert data available — run Phase 4 pipeline to generate risk assessments")
     return None
@@ -313,10 +360,24 @@ def render(
     """
     st.header("Alert Feed")
 
-    show_suppressed = st.checkbox("Show suppressed alerts", value=False,
-                                  help="Include alerts suppressed by fatigue mitigation")
+    col_filter1, col_filter2 = st.columns(2)
+    with col_filter1:
+        show_suppressed = st.checkbox("Show suppressed alerts", value=False,
+                                      help="Include alerts suppressed by fatigue mitigation")
+    with col_filter2:
+        risk_filter = st.multiselect(
+            "Risk levels",
+            ["MEDIUM", "HIGH", "CRITICAL"],
+            default=["HIGH", "CRITICAL"],
+            help="MEDIUM = detected anomaly. HIGH/CRITICAL = confirmed threat.",
+        )
+
+    def _apply_risk_filter(alerts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if risk_filter:
+            return [a for a in alerts if a.get("risk_level") in risk_filter]
+        return alerts
 
     if live_alerts:
-        return render_alert_table(live_alerts, show_suppressed=show_suppressed)
+        return render_alert_table(_apply_risk_filter(live_alerts), show_suppressed=show_suppressed)
 
-    return render_from_ground_truth(gt, show_suppressed=show_suppressed)
+    return render_from_ground_truth(gt, show_suppressed=show_suppressed, risk_filter=risk_filter)

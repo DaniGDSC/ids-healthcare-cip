@@ -19,10 +19,10 @@ ROLES = [
 
 ROLE_PAGE_COUNTS = {
     "IT Security Analyst": 6,
-    "Clinical IT Administrator": 4,
-    "Attending Physician": 3,
-    "Hospital Manager": 4,
-    "Regulatory Auditor": 3,
+    "Clinical IT Administrator": 5,
+    "Attending Physician": 4,
+    "Hospital Manager": 5,
+    "Regulatory Auditor": 4,
 }
 
 

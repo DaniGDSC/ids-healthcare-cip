@@ -160,8 +160,8 @@ class CIARiskModifier:
             "A": threat.availability * device.cia_priority.availability * scenario_weights.availability,
         }
 
-        cia_modifier = max(cia_scores.values())
-        cia_max_dim = max(cia_scores, key=cia_scores.get)  # type: ignore[arg-type]
+        cia_modifier = max(cia_scores.values()) if cia_scores else 0.0
+        cia_max_dim = max(cia_scores, key=cia_scores.get) if cia_scores else "I"  # type: ignore[arg-type]
 
         # CIA can only escalate, never reduce
         if cia_modifier >= self._threshold and base_risk != RiskLevel.CRITICAL:
