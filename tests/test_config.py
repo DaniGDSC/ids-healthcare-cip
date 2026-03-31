@@ -25,7 +25,7 @@ class TestConfigLoader:
         assert cfg("calibration.target_fpr") == 0.10
 
     def test_deep_nested(self):
-        assert cfg("calibration.benign_thresholds.normal") == 75.0
+        assert cfg("calibration.benign_thresholds.normal") == 30.0
 
     def test_missing_key_returns_default(self):
         assert cfg("nonexistent.key", 42) == 42

@@ -38,12 +38,14 @@ class CNNBuilder(BaseLayerBuilder):
         kernel_size: int = 3,
         activation: str = "relu",
         pool_size: int = 2,
+        has_second_pool: bool = True,
     ) -> None:
         self._filters_1 = filters_1
         self._filters_2 = filters_2
         self._kernel_size = kernel_size
         self._activation = activation
         self._pool_size = pool_size
+        self._has_second_pool = has_second_pool
 
     def build(self, input_tensor: tf.Tensor) -> tf.Tensor:
         """Apply CNN block to input tensor.
@@ -70,7 +72,8 @@ class CNNBuilder(BaseLayerBuilder):
             padding=CNN_PADDING,
             name="conv2",
         )(x)
-        x = tf.keras.layers.MaxPooling1D(self._pool_size, name="pool2")(x)
+        if self._has_second_pool:
+            x = tf.keras.layers.MaxPooling1D(self._pool_size, name="pool2")(x)
         return x
 
     def get_config(self) -> Dict[str, Any]:

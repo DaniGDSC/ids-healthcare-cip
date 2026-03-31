@@ -66,6 +66,7 @@ class InferenceService:
         self._inference_count = 0
         self._calibration_scores: list = []
         self._calibration_labels: list = []
+        self._calibration_features: list = []  # Raw features for ensemble fitting
         self._lock = threading.Lock()
 
         # Circuit breaker
@@ -73,6 +74,10 @@ class InferenceService:
         self._max_failures = int(cfg("inference.max_consecutive_failures", 3))
         self._circuit_open = False
         self._last_error: Optional[str] = None
+
+        # Security monitor
+        from src.production.security_monitor import SecurityMonitor
+        self._security = SecurityMonitor(self._root)
 
     def load(self) -> None:
         """Load model and all scoring components. Call once at startup."""
@@ -99,6 +104,7 @@ class InferenceService:
             CNNBuilder(
                 filters_1=hp["cnn_filters_1"], filters_2=hp["cnn_filters_2"],
                 kernel_size=hp["cnn_kernel_size"], activation="relu", pool_size=2,
+                has_second_pool=hp.get("cnn_has_second_pool", True),
             ),
             BiLSTMBuilder(
                 units_1=hp["bilstm_units_1"], units_2=hp["bilstm_units_2"],
@@ -111,9 +117,17 @@ class InferenceService:
         ).assemble()
 
         # Add classification head (matching Phase 2.5 architecture)
+        from config.production_loader import cfg as _cfg2
+        n_classes = int(_cfg2("model.n_classes", 3))
+        self._n_classes = n_classes
+        self._class_names = _cfg2("model.class_names", ["normal", "Spoofing", "Data Alteration"])
+
         x = tf.keras.layers.Dense(32, activation="relu", name="dense_head")(det.output)
         x = tf.keras.layers.Dropout(hp["dropout_rate"], name="drop_head")(x)
-        x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
+        if n_classes <= 2:
+            x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
+        else:
+            x = tf.keras.layers.Dense(n_classes, activation="softmax", name="output")(x)
         self._model = tf.keras.Model(det.input, x, name="inference_model")
 
         # Load finetuned weights
@@ -144,6 +158,7 @@ class InferenceService:
         from src.phase4_risk_engine.phase4.clinical_impact import ClinicalImpactAssessor
         from src.phase4_risk_engine.phase4.alert_fatigue import AlertFatigueManager
         from src.phase2_detection_engine.phase2.attention_anomaly import AttentionAnomalyDetector
+        from src.phase4_risk_engine.phase4.ensemble_detector import EnsembleDetector
 
         biometric_cols = ["Temp", "SpO2", "Pulse_Rate", "SYS", "DIA", "Heart_rate", "Resp_Rate", "ST"]
 
@@ -156,6 +171,7 @@ class InferenceService:
         )
         self._clinical_assessor = ClinicalImpactAssessor(biometric_columns=biometric_cols)
         self._fatigue_mgr = AlertFatigueManager()
+        self._ensemble = EnsembleDetector()
         self._attn_threshold = (
             self._baseline["median"]
             + self._baseline.get("mad_multiplier", 3.0) * self._baseline["mad"]
@@ -298,12 +314,28 @@ class InferenceService:
         # ── Single compiled call: score + backbone + gradients ──
         window_tensor = tf.constant(window, dtype=tf.float32)
         pred_out, backbone_out, grads = self._infer_with_grads(window_tensor)
-        score = float(pred_out.numpy().ravel()[0])
+
+        # Multi-class output: extract anomaly score + predicted class
+        pred_np = pred_out.numpy()
+        if self._n_classes > 2:
+            probs = pred_np.ravel()[:self._n_classes]
+            predicted_class = int(np.argmax(probs))
+            score = float(1.0 - probs[0])  # anomaly score = 1 - P(normal)
+            model_attack_category = self._class_names[predicted_class] if predicted_class > 0 else "normal"
+        else:
+            score = float(pred_np.ravel()[0])
+            model_attack_category = attack_category
+
         if not 0.0 <= score <= 1.0:
             logger.warning("Score %.6f outside [0,1] — clipping", score)
             score = float(np.clip(score, 0.0, 1.0))
+
         attn_magnitude = float(np.linalg.norm(backbone_out.numpy()))
         attn_flag = bool(attn_magnitude > self._attn_threshold)
+
+        # Use model-predicted attack category if multi-class
+        if self._n_classes > 2 and model_attack_category != "normal":
+            attack_category = model_attack_category
 
         # 3. Calibrated risk scoring
         # Raw sigmoid scores fall in a narrow range (0.88-0.98) where benign
@@ -340,6 +372,13 @@ class InferenceService:
         # Attention escalation
         if attn_flag and risk_result in (RiskLevel.NORMAL, RiskLevel.LOW):
             risk_result = RiskLevel.MEDIUM
+
+        # Ensemble escalation (IsolationForest + Autoencoder)
+        ensemble_result = {}
+        if self._ensemble.fitted and raw_features is not None:
+            ensemble_result = self._ensemble.score(raw_features)
+            if ensemble_result.get("ensemble_flag") and risk_result in (RiskLevel.NORMAL, RiskLevel.LOW):
+                risk_result = RiskLevel.MEDIUM  # Ensemble disagrees with model
 
         # 4. CIA modification
         cia_assessment = self._cia_modifier.modify(
@@ -397,6 +436,7 @@ class InferenceService:
             "percentile": calibrated["percentile"] if calibrated else None,
             "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
             "model_version": self._model_version,
+            "ensemble_scores": ensemble_result,
         }
 
         # Clinical explanation (all 7 methods)
@@ -406,6 +446,7 @@ class InferenceService:
         )
 
         self._fatigue_mgr.process([result], device_id=self._device_id)
+        self._security.record_flow()  # Heartbeat monitoring
         with self._lock:
             self._inference_count += 1
             self._consecutive_failures = 0
@@ -428,11 +469,11 @@ class InferenceService:
 
         return result
 
-    def calibrate_from_scores(self, score: float, gt_label: int) -> None:
+    def calibrate_from_scores(self, score: float, gt_label: int, raw_features: Optional[np.ndarray] = None) -> None:
         """Collect scores during calibration phase for auto-fitting.
 
         Call this for each flow during the first N flows. Once enough
-        benign samples are collected, the calibrator auto-fits.
+        benign samples are collected, the calibrator + ensemble auto-fits.
 
         Args:
             score: Raw sigmoid score.
@@ -444,6 +485,8 @@ class InferenceService:
         with self._lock:
             self._calibration_scores.append(score)
             self._calibration_labels.append(gt_label)
+            if raw_features is not None:
+                self._calibration_features.append(raw_features.copy())
 
             if not self._calibrator.fitted and len(self._calibration_scores) >= cal_threshold:
                 self._calibrator.fit_from_buffer(
@@ -461,6 +504,18 @@ class InferenceService:
                             self._db.insert_calibration(cal_cfg)
                         except Exception as exc:
                             logger.warning("DB insert_calibration failed: %s", exc)
+
+                # Fit ensemble on benign features
+                if not self._ensemble.fitted and self._calibration_features:
+                    labels_arr = np.array(self._calibration_labels)
+                    features_arr = np.array(self._calibration_features)
+                    benign_mask = labels_arr == 0
+                    benign_features = features_arr[benign_mask]
+                    if len(benign_features) >= 20:
+                        try:
+                            self._ensemble.fit(benign_features)
+                        except Exception as exc:
+                            logger.warning("Ensemble fit failed: %s", exc)
 
     def recalibrate_from_feedback(self) -> bool:
         """Re-fit calibrator using analyst feedback labels from database.
@@ -569,6 +624,7 @@ class InferenceService:
         return {
             "model_loaded": self._model is not None,
             "model_params": self._model.count_params() if self._model else 0,
+            "model_version": getattr(self, "_model_version", "unknown"),
             "inference_count": self._inference_count,
             "device_id": self._device_id,
             "baseline_threshold": self._baseline.get("baseline_threshold", 0),
@@ -576,4 +632,5 @@ class InferenceService:
             "circuit_open": self._circuit_open,
             "consecutive_failures": self._consecutive_failures,
             "last_error": self._last_error,
+            "security": self._security.get_security_status(),
         }

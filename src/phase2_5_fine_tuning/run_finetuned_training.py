@@ -63,6 +63,70 @@ def focal_loss(gamma: float = 2.0, alpha: float = 0.25):
     return _focal
 
 
+def multi_class_focal_loss(gamma: float = 2.0):
+    """Focal loss for multi-class classification.
+
+    Down-weights easy examples per-class. Improves minority class
+    detection (Data Alteration with only 922 samples).
+    """
+    def _loss(y_true, y_pred):
+        y_pred = tf.clip_by_value(y_pred, 1e-7, 1.0 - 1e-7)
+        pt = tf.reduce_sum(y_true * y_pred, axis=-1)
+        return -tf.reduce_mean(tf.pow(1.0 - pt, gamma) * tf.math.log(pt))
+    _loss.__name__ = f"multi_focal_g{gamma}"
+    return _loss
+
+
+def augment_windows(X: np.ndarray, y: np.ndarray, n_classes: int = 3) -> tuple:
+    """Data augmentation: minority oversampling + window jitter + noise.
+
+    Args:
+        X: Windows (N, timesteps, features).
+        y: Labels (N,) integer class IDs.
+        n_classes: Number of classes.
+
+    Returns:
+        Augmented (X, y) with more minority samples.
+    """
+    rng = np.random.RandomState(42)
+    X_aug, y_aug = [X], [y]
+
+    # 1. Oversample minority classes to match 50% of majority
+    counts = np.bincount(y.astype(int), minlength=n_classes)
+    target = max(counts) // 2
+    for cls in range(n_classes):
+        if counts[cls] < target:
+            deficit = target - counts[cls]
+            cls_mask = y == cls
+            cls_X = X[cls_mask]
+            if len(cls_X) == 0:
+                continue
+            indices = rng.choice(len(cls_X), size=deficit, replace=True)
+            oversampled = cls_X[indices].copy()
+            # Add small Gaussian noise to make them distinct
+            oversampled += rng.normal(0, 0.05, oversampled.shape).astype(np.float32)
+            X_aug.append(oversampled)
+            y_aug.append(np.full(deficit, cls, dtype=y.dtype))
+
+    # 2. Window jitter on 30% of samples (random temporal shift ±2)
+    X_all = np.concatenate(X_aug, axis=0)
+    y_all = np.concatenate(y_aug, axis=0)
+
+    jitter_mask = rng.rand(len(X_all)) < 0.3
+    for i in np.where(jitter_mask)[0]:
+        shift = rng.randint(-2, 3)
+        if shift > 0:
+            X_all[i, shift:] = X_all[i, :-shift]
+            X_all[i, :shift] = 0
+        elif shift < 0:
+            X_all[i, :shift] = X_all[i, -shift:]
+            X_all[i, shift:] = 0
+
+    # Shuffle
+    perm = rng.permutation(len(X_all))
+    return X_all[perm], y_all[perm]
+
+
 # ── Phase 2 SOLID components (reused) ────────────────────────────
 from src.phase2_detection_engine.phase2.assembler import DetectionModelAssembler
 from src.phase2_detection_engine.phase2.attention_builder import (
@@ -171,6 +235,7 @@ def _build_detection_model(hp: Dict[str, Any], n_features: int) -> tf.keras.Mode
             kernel_size=int(hp.get("cnn_kernel_size", 3)),
             activation="relu",
             pool_size=2,
+            has_second_pool=hp.get("cnn_has_second_pool", True),
         ),
         BiLSTMBuilder(
             units_1=int(hp.get("bilstm_units_1", 128)),
@@ -205,13 +270,21 @@ def _evaluate(
     f1_w = float(f1_score(y, y_pred, average="weighted", zero_division=0))
     prec_w = float(precision_score(y, y_pred, average="weighted", zero_division=0))
     rec_w = float(recall_score(y, y_pred, average="weighted", zero_division=0))
-    auc = float(roc_auc_score(y, y_prob))
+    try:
+        if y_prob.ndim > 1 and y_prob.shape[-1] > 1:
+            auc = float(roc_auc_score(y, y_prob, multi_class="ovr", average="macro"))
+        else:
+            auc = float(roc_auc_score(y, y_prob))
+    except ValueError:
+        auc = 0.0
 
-    # Attack-specific (class 1)
-    atk_recall = float(recall_score(y, y_pred, pos_label=1, average="binary", zero_division=0))
-    atk_prec = float(precision_score(y, y_pred, pos_label=1, average="binary", zero_division=0))
-    atk_f1 = float(f1_score(y, y_pred, pos_label=1, average="binary", zero_division=0))
-    atk_f2 = float(fbeta_score(y, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
+    # Attack-specific: binary view (attack = any class > 0)
+    y_bin = (y > 0).astype(int)
+    y_pred_bin = (y_pred > 0).astype(int)
+    atk_recall = float(recall_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0))
+    atk_prec = float(precision_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0))
+    atk_f1 = float(f1_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0))
+    atk_f2 = float(fbeta_score(y_bin, y_pred_bin, beta=2, pos_label=1, average="binary", zero_division=0))
 
     # Macro (equal class weight)
     macro_f1_val = float(f1_score(y, y_pred, average="macro", zero_division=0))
@@ -362,26 +435,45 @@ def main() -> None:
     detection_params = detection_model.count_params()
 
     p2_weights = PROJECT_ROOT / "data" / "phase2" / "detection_model.weights.h5"
-    detection_model.load_weights(str(p2_weights))
-    logger.info("  Detection model: %d params (Phase 2 weights loaded)", detection_params)
+    detection_model.load_weights(str(p2_weights), skip_mismatch=True)
+    logger.info("  Detection model: %d params (Phase 2 weights loaded, skip_mismatch=True)", detection_params)
 
-    # 5b. Reshape datasets (SMOTE no longer used — both stages train on imbalanced)
+    # 5b. Reshape datasets with stride=5 (reduced overlap)
+    # stride=20 gives only 571 windows (too few for 3-class).
+    # stride=5 gives ~2,280 windows — 4x less overlap than stride=1.
+    stride = 5
     reshaper = DataReshaper(timesteps=timesteps, stride=stride)
     Xo_w, yo_w = reshaper.reshape(X_train_orig, y_train_orig)
     X_test_w, y_test_w = reshaper.reshape(X_test, y_test)
 
-    n0o = int(np.sum(yo_w == 0))
-    n1o = int(np.sum(yo_w == 1))
-    logger.info("  Train (windowed): Normal=%d, Attack=%d (%.1f:1)",
-                n0o, n1o, n0o / max(n1o, 1))
-
-    # Label smoothing: {0, 1} -> {eps, 1-eps} to prevent sigmoid saturation
-    yo_w_smooth = yo_w * (1 - 2 * LABEL_SMOOTH_EPS) + LABEL_SMOOTH_EPS
-    logger.info("  Label smoothing: eps=%.2f -> targets [%.2f, %.2f]",
-                LABEL_SMOOTH_EPS, LABEL_SMOOTH_EPS, 1 - LABEL_SMOOTH_EPS)
-
-    # 5c. Add classification head (match tuner architecture: dense_units=32)
     n_classes = len(np.unique(yo_w))
+    logger.info("  Train (windowed, stride=%d): %d windows, %d classes",
+                stride, len(yo_w), n_classes)
+    for c in range(n_classes):
+        logger.info("    Class %d: %d windows", c, int(np.sum(yo_w == c)))
+
+    # 5c. Data augmentation (minority oversampling + jitter)
+    if n_classes > 2:
+        Xo_w, yo_w = augment_windows(Xo_w, yo_w, n_classes)
+        logger.info("  After augmentation: %d windows", len(yo_w))
+        for c in range(n_classes):
+            logger.info("    Class %d: %d windows", c, int(np.sum(yo_w == c)))
+
+    # 5d. Multi-class label preparation
+    if n_classes > 2:
+        from tensorflow.keras.utils import to_categorical
+        yo_w_orig = yo_w.copy()
+        y_test_w_orig = y_test_w.copy()
+        yo_w_smooth = to_categorical(yo_w, num_classes=n_classes)
+        y_test_w_cat = to_categorical(y_test_w, num_classes=n_classes)
+        logger.info("  Multi-class: %d classes, one-hot encoded", n_classes)
+    else:
+        yo_w_orig = yo_w.copy()
+        y_test_w_orig = y_test_w.copy()
+        yo_w_smooth = yo_w * (1 - 2 * LABEL_SMOOTH_EPS) + LABEL_SMOOTH_EPS
+        logger.info("  Binary: label smoothing eps=%.2f", LABEL_SMOOTH_EPS)
+
+    # 5d. Add classification head
     head = AutoClassificationHead(
         dense_units=model_architecture["head_dense_units"],
         dense_activation="relu",
@@ -389,22 +481,26 @@ def main() -> None:
     )
     output_tensor = head.build(detection_model.output, n_classes)
     full_model = tf.keras.Model(detection_model.input, output_tensor, name="finetuned_model")
-    loss = head.get_loss(n_classes)
 
     total_params = full_model.count_params()
     head_params = total_params - detection_params
     logger.info("  Full model: %d params (detection=%d, head=%d)", total_params, detection_params, head_params)
 
-    # 5d. Two-stage training (matches tuner's evaluate_two_stage)
-    #     Both stages on imbalanced data with class weight (no SMOTE)
-    #     Stage 1: Train head (frozen backbone)
-    #     Stage 2: Fine-tune full model (unfreeze CNN+bilstm2+attention)
+    # 5e. Two-stage training
     head_lr = float(best_hp["head_lr"])
     finetune_lr = float(best_hp["finetune_lr"])
     cw_attack = float(best_hp["cw_attack"])
     head_epochs = int(best_hp["head_epochs"])
     ft_epochs = int(best_hp["ft_epochs"])
-    class_weights = {0: 1.0, 1: cw_attack}
+
+    # Class weights for multi-class
+    if n_classes > 2:
+        # Weight inversely proportional to class frequency
+        counts = np.bincount(yo_w_orig.astype(int), minlength=n_classes)
+        total_samples = len(yo_w_orig)
+        class_weights = {i: total_samples / (n_classes * max(c, 1)) for i, c in enumerate(counts)}
+    else:
+        class_weights = {0: 1.0, 1: cw_attack}
 
     output_dir = PROJECT_ROOT / config.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -422,10 +518,13 @@ def main() -> None:
     unfreezer = ProgressiveUnfreezer()
     unfreezer.apply_phase(full_model, frozen_groups=["cnn", "bilstm1", "bilstm2", "attention"])
 
-    fl = focal_loss(gamma=2.0, alpha=0.25)
+    if n_classes > 2:
+        loss_fn = multi_class_focal_loss(gamma=2.0)
+    else:
+        loss_fn = focal_loss(gamma=2.0, alpha=0.25)
     full_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=head_lr),
-        loss=fl, metrics=["accuracy"],
+        loss=loss_fn, metrics=["accuracy"],
     )
     h1 = full_model.fit(
         Xo_w, yo_w_smooth, epochs=head_epochs, batch_size=256,
@@ -456,7 +555,7 @@ def main() -> None:
 
     full_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=finetune_lr),
-        loss=fl, metrics=["accuracy"],
+        loss=loss_fn, metrics=["accuracy"],
     )
     h2 = full_model.fit(
         Xo_w, yo_w_smooth, epochs=ft_epochs, batch_size=256,
@@ -490,28 +589,57 @@ def main() -> None:
     logger.info("STEP 6: Threshold optimization + final evaluation")
     logger.info("─" * 60)
 
-    # 6a. Split imbalanced test set into threshold_val (20%) + final_test (80%)
-    #     Threshold MUST be tuned on imbalanced data (not SMOTE-balanced train)
-    from sklearn.model_selection import train_test_split as sk_split
-    n_test_total = len(X_test_w)
-    idx_thval, idx_ftest = sk_split(
-        np.arange(n_test_total), test_size=0.8, random_state=config.random_state, stratify=y_test_w,
-    )
-    X_thval, y_thval = X_test_w[idx_thval], y_test_w[idx_thval]
-    X_ftest, y_ftest = X_test_w[idx_ftest], y_test_w[idx_ftest]
-    logger.info("  Threshold val: %d samples (imbalanced), Final test: %d samples", len(y_thval), len(y_ftest))
+    # 6a. Multi-class: use argmax, no threshold search needed
+    if n_classes > 2:
+        logger.info("  Multi-class (%d): using argmax (no threshold search)", n_classes)
+        opt_threshold = 0.5  # Not used for multi-class, kept for compatibility
 
-    # 6b. Search threshold on imbalanced threshold_val
-    y_thval_prob = full_model.predict(X_thval, verbose=0).ravel()
-    opt_threshold, opt_val_score = _find_optimal_threshold(y_thval, y_thval_prob, metric=config.search_metric)
-    logger.info("  Optimal threshold: %.4f (thval %s=%.4f)", opt_threshold, config.search_metric, opt_val_score)
+        # Evaluate on full test set
+        y_pred_probs = full_model.predict(X_test_w, verbose=0)
+        y_pred = np.argmax(y_pred_probs, axis=1)
+        y_true = y_test_w_orig if y_test_w.ndim == 1 else np.argmax(y_test_w, axis=1)
 
-    # 6c. Evaluate with optimised threshold
-    train_metrics = _evaluate(full_model, Xo_w, yo_w, threshold=opt_threshold, label="train")
-    test_metrics = _evaluate(full_model, X_ftest, y_ftest, threshold=opt_threshold, label="test")
+        # Per-class metrics
+        from sklearn.metrics import classification_report
+        report = classification_report(y_true, y_pred, output_dict=True, zero_division=0)
+        auc = roc_auc_score(y_true, y_pred_probs, multi_class="ovr", average="macro")
+        logger.info("  [test] Macro F1=%.4f  AUC=%.4f  (%d samples)", report["macro avg"]["f1-score"], auc, len(y_true))
+
+        # Binary-compatible metrics (attack = class > 0)
+        y_true_bin = (y_true > 0).astype(int)
+        y_pred_bin = (y_pred > 0).astype(int)
+        test_metrics = _evaluate(full_model, X_test_w, y_test_w_orig, threshold=opt_threshold, label="test")
+        test_metrics["n_classes"] = n_classes
+        test_metrics["auc_roc"] = auc
+        test_metrics["per_class_report"] = report
+
+        # Train metrics
+        y_train_pred = full_model.predict(Xo_w, verbose=0)
+        y_train_cls = np.argmax(y_train_pred, axis=1)
+        train_metrics = _evaluate(full_model, Xo_w, yo_w_orig, threshold=opt_threshold, label="train")
+        train_metrics["n_classes"] = n_classes
+
+    else:
+        # Binary: threshold search as before
+        from sklearn.model_selection import train_test_split as sk_split
+        n_test_total = len(X_test_w)
+        idx_thval, idx_ftest = sk_split(
+            np.arange(n_test_total), test_size=0.8, random_state=config.random_state, stratify=y_test_w,
+        )
+        X_thval, y_thval = X_test_w[idx_thval], y_test_w[idx_thval]
+        X_ftest, y_ftest = X_test_w[idx_ftest], y_test_w[idx_ftest]
+        logger.info("  Threshold val: %d samples, Final test: %d samples", len(y_thval), len(y_ftest))
+
+        y_thval_prob = full_model.predict(X_thval, verbose=0).ravel()
+        opt_threshold, opt_val_score = _find_optimal_threshold(y_thval, y_thval_prob, metric=config.search_metric)
+        logger.info("  Optimal threshold: %.4f (thval %s=%.4f)", opt_threshold, config.search_metric, opt_val_score)
+
+        train_metrics = _evaluate(full_model, Xo_w, yo_w_orig, threshold=opt_threshold, label="train")
+        test_metrics = _evaluate(full_model, X_ftest, y_ftest, threshold=opt_threshold, label="test")
 
     # Validation metrics from training history
     last_history = histories[-1] if histories else {}
+    opt_val_score = opt_val_score if "opt_val_score" in dir() else 0.0
     val_metrics = {
         "final_val_loss": last_history.get("final_val_loss", None),
         "final_val_acc": last_history.get("final_val_acc", None),

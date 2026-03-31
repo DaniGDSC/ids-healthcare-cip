@@ -61,19 +61,22 @@ def _find_optimal_threshold(
     more than precision — appropriate for healthcare IDS where missed
     attacks are more costly than false alarms.
     """
+    # Convert multi-class to binary for threshold search (attack = any class > 0)
+    y_true_bin = (np.asarray(y_true) > 0).astype(int)
+
     thresholds = np.linspace(0.1, 0.9, n_thresholds)
     best_t, best_s = 0.5, 0.0
 
     for t in thresholds:
         y_pred = (y_prob > t).astype(int)
         if metric == "attack_f2":
-            score = float(fbeta_score(y_true, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
+            score = float(fbeta_score(y_true_bin, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
         elif metric == "attack_f1":
-            score = float(f1_score(y_true, y_pred, pos_label=1, average="binary", zero_division=0))
+            score = float(f1_score(y_true_bin, y_pred, pos_label=1, average="binary", zero_division=0))
         elif metric == "macro_f1":
-            score = float(f1_score(y_true, y_pred, average="macro", zero_division=0))
+            score = float(f1_score(y_true_bin, y_pred, average="macro", zero_division=0))
         else:
-            score = float(fbeta_score(y_true, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
+            score = float(fbeta_score(y_true_bin, y_pred, beta=2, pos_label=1, average="binary", zero_division=0))
 
         if score > best_s:
             best_s = score
@@ -283,7 +286,8 @@ class QuickEvaluator:
         a = self._arch
         builders = [
             CNNBuilder(filters_1=a["cnn_filters_1"], filters_2=a["cnn_filters_2"],
-                       kernel_size=3, activation="relu", pool_size=2),
+                       kernel_size=3, activation="relu", pool_size=2,
+                       has_second_pool=a.get("cnn_has_second_pool", True)),
             BiLSTMBuilder(units_1=a["bilstm_units_1"], units_2=a["bilstm_units_2"],
                           dropout_rate=a["dropout_rate"]),
             AttentionBuilder(units=a["attention_units"]),
@@ -294,7 +298,7 @@ class QuickEvaluator:
         det = assembler.assemble()
 
         if self._weights_path:
-            det.load_weights(self._weights_path)
+            det.load_weights(self._weights_path, skip_mismatch=True)
 
         x = tf.keras.layers.Dense(
             a["head_dense_units"], activation="relu", name="dense_head",
@@ -352,10 +356,13 @@ class QuickEvaluator:
 
     @staticmethod
     def _predict_prob(model: tf.keras.Model, X: np.ndarray) -> np.ndarray:
-        """Run model prediction and return 1-D probabilities."""
+        """Run model prediction and return 1-D anomaly probabilities."""
         y_prob = model.predict(X, verbose=0)
         if y_prob.shape[-1] == 1:
             y_prob = y_prob.ravel()
+        elif y_prob.shape[-1] > 1:
+            # Multi-class: anomaly score = 1 - P(normal class 0)
+            y_prob = 1.0 - y_prob[:, 0]
         return y_prob
 
     @staticmethod
@@ -369,19 +376,34 @@ class QuickEvaluator:
         y: np.ndarray, y_prob: np.ndarray, threshold: float = 0.5,
     ) -> Dict[str, float]:
         """Compute classification metrics from pre-computed probabilities."""
+        # NaN guard
+        y_prob = np.nan_to_num(y_prob, nan=0.0, posinf=1.0, neginf=0.0)
+
         if y_prob.ndim == 1:
             y_pred = (y_prob > threshold).astype(int)
         else:
             y_pred = np.argmax(y_prob, axis=1)
 
+        # Convert multi-class to binary for attack-specific metrics
+        y_bin = (np.asarray(y) > 0).astype(int)
+        y_pred_bin = (np.asarray(y_pred) > 0).astype(int)
+
+        try:
+            if y_prob.ndim > 1:
+                auc = float(roc_auc_score(y, y_prob, multi_class="ovr", average="macro"))
+            else:
+                auc = float(roc_auc_score(y_bin, y_prob))
+        except ValueError:
+            auc = 0.0
+
         return {
             "accuracy": float(accuracy_score(y, y_pred)),
             "f1_score": float(f1_score(y, y_pred, average="weighted", zero_division=0)),
-            "auc_roc": float(roc_auc_score(y, y_prob)),
-            "attack_recall": float(recall_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
-            "attack_precision": float(precision_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
-            "attack_f1": float(f1_score(y, y_pred, pos_label=1, average="binary", zero_division=0)),
-            "attack_f2": float(fbeta_score(y, y_pred, beta=2, pos_label=1, average="binary", zero_division=0)),
+            "auc_roc": auc,
+            "attack_recall": float(recall_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0)),
+            "attack_precision": float(precision_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0)),
+            "attack_f1": float(f1_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0)),
+            "attack_f2": float(fbeta_score(y_bin, y_pred_bin, beta=2, pos_label=1, average="binary", zero_division=0)),
             "macro_f1": float(f1_score(y, y_pred, average="macro", zero_division=0)),
             "threshold": threshold,
         }

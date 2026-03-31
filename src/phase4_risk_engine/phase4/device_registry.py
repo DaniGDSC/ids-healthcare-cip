@@ -40,42 +40,42 @@ _DEFAULT_DEVICES: Dict[str, DeviceProfile] = {
         fda_class="III",
         cia_priority=CIAPriority(0.4, 1.0, 1.0),
         description="IV medication delivery — availability-critical",
-        detection_percentile=80.0,
+        detection_percentile=30.0,  # Aggressive: missing attack = patient harm
     ),
     "ecg_monitor": DeviceProfile(
         device_type="ecg_monitor",
         fda_class="III",
         cia_priority=CIAPriority(0.5, 1.0, 1.0),
         description="Cardiac monitoring — integrity and availability critical",
-        detection_percentile=80.0,
+        detection_percentile=30.0,  # Aggressive: life-sustaining device
     ),
     "pulse_oximeter": DeviceProfile(
         device_type="pulse_oximeter",
         fda_class="II",
         cia_priority=CIAPriority(0.3, 0.9, 0.8),
         description="SpO2 monitoring — integrity-critical",
-        detection_percentile=85.0,
+        detection_percentile=40.0,  # Sensitive: clinical monitoring device
     ),
     "blood_pressure_monitor": DeviceProfile(
         device_type="blood_pressure_monitor",
         fda_class="II",
         cia_priority=CIAPriority(0.3, 0.9, 0.7),
         description="BP monitoring — integrity-critical",
-        detection_percentile=90.0,
+        detection_percentile=50.0,  # Moderate: monitoring device
     ),
     "temperature_sensor": DeviceProfile(
         device_type="temperature_sensor",
         fda_class="I",
         cia_priority=CIAPriority(0.2, 0.7, 0.4),
         description="Temperature monitoring — low criticality",
-        detection_percentile=95.0,
+        detection_percentile=70.0,  # Conservative: low clinical impact
     ),
     "generic_iomt_sensor": DeviceProfile(
         device_type="generic_iomt_sensor",
         fda_class="II",
         cia_priority=CIAPriority(0.4, 0.8, 0.7),
         description="Default IoMT sensor profile",
-        detection_percentile=93.0,
+        detection_percentile=50.0,  # Default: moderate sensitivity
     ),
 }
 

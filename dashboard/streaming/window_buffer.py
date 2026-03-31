@@ -149,7 +149,7 @@ class WindowBuffer:
             gt = prediction.get("ground_truth", -1)
             if gt >= 0:
                 detected = risk in self._DETECTED_LEVELS
-                is_attack = gt == 1
+                is_attack = gt > 0  # Any non-normal class is attack (supports multi-class)
                 if is_attack and detected:
                     self._detection_counts["tp"] += 1
                 elif is_attack and not detected:

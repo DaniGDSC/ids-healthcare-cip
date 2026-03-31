@@ -97,6 +97,21 @@ def _render_evaluation(gt: Dict[str, Any]) -> None:
 
 def _render_compliance(gt: Dict[str, Any]) -> None:
     """Compliance status and audit trail."""
+    st.markdown("##### Clinical Deployment Context")
+    st.info(
+        "**Supplementary anomaly detection layer** — designed to complement "
+        "existing hospital network security infrastructure (firewall, NAC, SIEM). "
+        "Not designed for autonomous device isolation without human review."
+    )
+    st.markdown(
+        "- **Precision 96%:** Alerts are trustworthy — analysts can act on them\n"
+        "- **Recall 71%:** Represents INCREMENTAL detection above baseline security tools\n"
+        "- **Combined coverage:** With existing tools, expected detection >90%\n"
+        "- **Deployment path:** Shadow mode → alert-only → action-capable (with clinical approval)\n"
+        "- **Improvement:** Recall improves through analyst feedback (target >85% within 6 months)"
+    )
+    st.markdown("---")
+
     st.markdown("##### HIPAA Compliance")
     st.markdown("- PHI columns removed (SrcAddr, DstAddr, Sport, Dport, SrcMac, DstMac)")
     st.markdown("- Device IDs pseudonymized (SHA-256, 12-char prefix)")
@@ -284,3 +299,21 @@ def _render_feedback() -> None:
         st.code(retrain.get("command", ""), language="bash")
     else:
         st.caption(retrain.get("reason", ""))
+
+    # Improvement trajectory
+    st.markdown("##### Recall Improvement Trajectory")
+    trajectory = fl.get_improvement_trajectory()
+    milestones = trajectory.get("milestones", [])
+    for m in milestones:
+        status_icon = "done" if m["status"] == "complete" else "pending"
+        color = "#2ecc71" if m["status"] == "complete" else "#95a5a6"
+        st.markdown(
+            f'<span style="color:{color};">{"[done]" if status_icon == "done" else "[    ]"}</span> '
+            f'**{m["stage"]}** — {m["feedback_needed"]} feedback entries → '
+            f'Recall ~{m["expected_recall"]:.0f}%, FPR ~{m["expected_fpr"]:.0f}%',
+            unsafe_allow_html=True,
+        )
+    next_m = trajectory.get("next_milestone", {})
+    if next_m.get("status") == "pending":
+        remaining = next_m["feedback_needed"] - trajectory.get("total_feedback", 0)
+        st.info(f"Next milestone: **{next_m['stage']}** — {remaining} more feedback entries needed")

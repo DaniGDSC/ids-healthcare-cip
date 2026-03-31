@@ -17,7 +17,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.8943046121063944,
+        "auc_roc": 0.8876103142686464,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -26,8 +26,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 9.43,
+      "total_params": 83161,
+      "duration_seconds": 8.38,
       "trial_index": 0,
       "status": "completed"
     },
@@ -42,7 +42,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9083306133257789,
+        "auc_roc": 0.8926233395123693,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -51,8 +51,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.89,
+      "total_params": 83161,
+      "duration_seconds": 5.13,
       "trial_index": 1,
       "status": "completed"
     },
@@ -67,7 +67,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9023845741699872,
+        "auc_roc": 0.9055562056202542,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -76,8 +76,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 7.33,
+      "total_params": 83161,
+      "duration_seconds": 6.16,
       "trial_index": 2,
       "status": "completed"
     },
@@ -92,7 +92,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9103844756338645,
+        "auc_roc": 0.8917272766463231,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -101,8 +101,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 4.93,
+      "total_params": 83161,
+      "duration_seconds": 5.57,
       "trial_index": 3,
       "status": "completed"
     },
@@ -117,7 +117,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9096978020286124,
+        "auc_roc": 0.8750346416056461,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -126,8 +126,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.14,
+      "total_params": 83161,
+      "duration_seconds": 4.81,
       "trial_index": 4,
       "status": "completed"
     },
@@ -142,7 +142,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9104860910104263,
+        "auc_roc": 0.8882477198125349,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -151,8 +151,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.37,
+      "total_params": 83161,
+      "duration_seconds": 5.79,
       "trial_index": 5,
       "status": "completed"
     },
@@ -167,7 +167,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9067016880469525,
+        "auc_roc": 0.8975039568411782,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -176,8 +176,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.8,
+      "total_params": 83161,
+      "duration_seconds": 5.13,
       "trial_index": 6,
       "status": "completed"
     },
@@ -192,7 +192,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9101812448807405,
+        "auc_roc": 0.8860060230205017,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -201,8 +201,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 7.08,
+      "total_params": 83161,
+      "duration_seconds": 5.82,
       "trial_index": 7,
       "status": "completed"
     },
@@ -217,7 +217,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9112004779001952,
+        "auc_roc": 0.8783232847016511,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -226,8 +226,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.32,
+      "total_params": 83161,
+      "duration_seconds": 5.82,
       "trial_index": 8,
       "status": "completed"
     },
@@ -242,7 +242,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9082228394415466,
+        "auc_roc": 0.8989604439052329,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -251,8 +251,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.41,
+      "total_params": 83161,
+      "duration_seconds": 6.0,
       "trial_index": 9,
       "status": "completed"
     },
@@ -267,7 +267,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.8976640780406091,
+        "auc_roc": 0.8958503975316702,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -276,8 +276,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.88,
+      "total_params": 83161,
+      "duration_seconds": 5.68,
       "trial_index": 10,
       "status": "completed"
     },
@@ -292,7 +292,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9076316227051862,
+        "auc_roc": 0.898597091952678,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -301,8 +301,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.75,
+      "total_params": 83161,
+      "duration_seconds": 5.72,
       "trial_index": 11,
       "status": "completed"
     },
@@ -317,7 +317,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9075361658362945,
+        "auc_roc": 0.8786743196388651,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -326,8 +326,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.74,
+      "total_params": 83161,
+      "duration_seconds": 5.88,
       "trial_index": 12,
       "status": "completed"
     },
@@ -342,7 +342,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.899443886757361,
+        "auc_roc": 0.8860429740665241,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -351,8 +351,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.73,
+      "total_params": 83161,
+      "duration_seconds": 6.13,
       "trial_index": 13,
       "status": "completed"
     },
@@ -367,7 +367,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.8991482783891808,
+        "auc_roc": 0.9009096115829213,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -376,8 +376,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.51,
+      "total_params": 83161,
+      "duration_seconds": 5.21,
       "trial_index": 14,
       "status": "completed"
     },
@@ -392,7 +392,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9096516132210843,
+        "auc_roc": 0.9057409608503668,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -401,8 +401,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 7.2,
+      "total_params": 83161,
+      "duration_seconds": 6.62,
       "trial_index": 15,
       "status": "completed"
     },
@@ -417,7 +417,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9106646877328686,
+        "auc_roc": 0.8882584972009583,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -426,8 +426,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 4.8,
+      "total_params": 83161,
+      "duration_seconds": 4.77,
       "trial_index": 16,
       "status": "completed"
     },
@@ -442,7 +442,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9077116833049015,
+        "auc_roc": 0.892586388466347,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -451,8 +451,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.83,
+      "total_params": 83161,
+      "duration_seconds": 5.77,
       "trial_index": 17,
       "status": "completed"
     },
@@ -467,7 +467,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9030620100137334,
+        "auc_roc": 0.9023199098394478,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -476,8 +476,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 7.18,
+      "total_params": 83161,
+      "duration_seconds": 6.97,
       "trial_index": 18,
       "status": "completed"
     },
@@ -492,7 +492,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9103413660801714,
+        "auc_roc": 0.9128601957173738,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -501,8 +501,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.21,
+      "total_params": 83161,
+      "duration_seconds": 5.9,
       "trial_index": 19,
       "status": "completed"
     },
@@ -517,7 +517,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9077578721124298,
+        "auc_roc": 0.8876441860608337,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -526,8 +526,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 4.28,
+      "total_params": 83161,
+      "duration_seconds": 4.65,
       "trial_index": 20,
       "status": "completed"
     },
@@ -542,7 +542,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.899982756178523,
+        "auc_roc": 0.9090419209617124,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -551,8 +551,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 7.08,
+      "total_params": 83161,
+      "duration_seconds": 6.58,
       "trial_index": 21,
       "status": "completed"
     },
@@ -567,7 +567,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9053406578517893,
+        "auc_roc": 0.9075300073286241,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -576,8 +576,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.41,
+      "total_params": 83161,
+      "duration_seconds": 6.53,
       "trial_index": 22,
       "status": "completed"
     },
@@ -592,7 +592,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9034284412201234,
+        "auc_roc": 0.9082567112337339,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -601,8 +601,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 8.23,
+      "total_params": 83161,
+      "duration_seconds": 6.63,
       "trial_index": 23,
       "status": "completed"
     },
@@ -617,7 +617,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9044692290164247,
+        "auc_roc": 0.8888543328180716,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -626,8 +626,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.56,
+      "total_params": 83161,
+      "duration_seconds": 6.45,
       "trial_index": 24,
       "status": "completed"
     },
@@ -642,7 +642,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9065846764012144,
+        "auc_roc": 0.9050912382911372,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -651,8 +651,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 8.82,
+      "total_params": 83161,
+      "duration_seconds": 6.97,
       "trial_index": 25,
       "status": "completed"
     },
@@ -667,7 +667,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9064430307247948,
+        "auc_roc": 0.9010235439748241,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -676,8 +676,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.14,
+      "total_params": 83161,
+      "duration_seconds": 5.44,
       "trial_index": 26,
       "status": "completed"
     },
@@ -692,7 +692,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9099302856931708,
+        "auc_roc": 0.9031235950904376,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -701,8 +701,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 5.82,
+      "total_params": 83161,
+      "duration_seconds": 6.2,
       "trial_index": 27,
       "status": "completed"
     },
@@ -717,7 +717,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9052975482980965,
+        "auc_roc": 0.902778718660894,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -726,8 +726,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.14,
+      "total_params": 83161,
+      "duration_seconds": 7.29,
       "trial_index": 28,
       "status": "completed"
     },
@@ -742,7 +742,7 @@
       "metrics": {
         "accuracy": 0.9415397282832442,
         "f1_score": 0.9131897195011787,
-        "auc_roc": 0.9100395992043209,
+        "auc_roc": 0.9047817732806986,
         "attack_recall": 1.0,
         "attack_precision": 0.9415397282832442,
         "attack_f1": 0.9698897370653096,
@@ -751,8 +751,8 @@
         "threshold": 0.1
       },
       "optimal_threshold": 0.1,
-      "total_params": 477697,
-      "duration_seconds": 6.18,
+      "total_params": 83161,
+      "duration_seconds": 5.62,
       "trial_index": 29,
       "status": "completed"
     }
@@ -768,7 +768,7 @@
   "best_metrics": {
     "accuracy": 0.9415397282832442,
     "f1_score": 0.9131897195011787,
-    "auc_roc": 0.8943046121063944,
+    "auc_roc": 0.8876103142686464,
     "attack_recall": 1.0,
     "attack_precision": 0.9415397282832442,
     "attack_f1": 0.9698897370653096,

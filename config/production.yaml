@@ -9,6 +9,16 @@ streaming:
   buffer_max_predictions: 500
   buffer_max_alerts: 200
 
+model:
+  n_classes: 2
+  class_names: ["normal", "attack"]
+  stride: 5
+
+ensemble:
+  enabled: true
+  iforest_contamination: 0.10
+  autoencoder_dim: 8
+
 inference:
   default_device_id: "generic_iomt_sensor"
   warmup_on_load: true
@@ -22,10 +32,10 @@ calibration:
   target_fpr: 0.10
   platt_regularization: 10000.0
   benign_thresholds:
-    normal: 75.0
-    low: 85.0
-    medium: 93.0
-    high: 97.0
+    normal: 30.0
+    low: 45.0
+    medium: 50.0
+    high: 80.0
 
 baseline:
   mad_multiplier: 3.0

@@ -219,10 +219,10 @@ class WUSTLFlowSimulator:
                         if "latency_ms" in result:
                             self._latencies.append(result["latency_ms"])
 
-                    # Feed calibrator for auto-fitting
+                    # Feed calibrator + ensemble for auto-fitting
                     if hasattr(self._inference, "calibrate_from_scores"):
                         self._inference.calibrate_from_scores(
-                            result["anomaly_score"], gt_label,
+                            result["anomaly_score"], gt_label, raw_features=vec,
                         )
 
             # Random inter-arrival (simulates real network jitter)

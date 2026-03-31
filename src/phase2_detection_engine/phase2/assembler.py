@@ -57,7 +57,10 @@ class DetectionModelAssembler:
             name="input",
         )
 
-        x = inp
+        # Learnable per-feature weighting before CNN
+        from src.phase2_detection_engine.phase2.feature_weight import FeatureWeightLayer
+        x = FeatureWeightLayer(name="feature_weights")(inp)
+
         for builder in self._builders:
             x = builder.build(x)
 
