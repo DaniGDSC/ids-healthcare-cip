@@ -26,6 +26,8 @@ def _format_top_feature(alert: Dict[str, Any]) -> str:
     """Format the top contributing feature from explanation data."""
     # New conditional explainer format
     explanation = alert.get("explanation", {})
+    if not isinstance(explanation, dict):
+        explanation = {}
     top_feats = explanation.get("top_features", [])
     if top_feats:
         top = top_feats[0]
@@ -59,25 +61,31 @@ def _get_action(alert: Dict[str, Any]) -> str:
 
 
 def _generate_suggestion(alert: Dict[str, Any]) -> str:
-    """Generate a human-readable suggestion from the alert."""
+    """Generate clinician-readable suggestion from the alert.
+
+    Uses clinical language, not technical terms. Focuses on patient
+    impact and required actions, not network forensics.
+    """
     risk = alert.get("risk_level", "NORMAL")
-    category = alert.get("attack_category", "unknown")
-    attention = alert.get("attention_flag", False)
     safety = alert.get("patient_safety_flag", False)
+    action = alert.get("device_action", "none")
 
     if risk == "CRITICAL":
-        base = f"IMMEDIATE: Isolate device. {category} attack detected."
+        base = "IMMEDIATE: Device communication compromised."
         if safety:
-            base += " Patient safety AT RISK — verify vitals manually."
+            base += " Verify patient vitals manually. Do NOT rely on device readings."
+        if action == "isolate_network":
+            base += " Device has been isolated from network."
         return base
     if risk == "HIGH":
-        if attention:
-            return f"URGENT: Novel threat pattern detected. Restrict network and investigate."
-        return f"URGENT: Restrict network access. Anomalous {category} traffic pattern."
+        if action == "restrict_network":
+            return ("URGENT: Suspicious device activity detected. "
+                    "Network access restricted. Monitor device output.")
+        return ("URGENT: Abnormal device behavior. "
+                "IT security investigating. Continue manual monitoring.")
     if risk == "MEDIUM":
-        if attention:
-            return "ADVISORY: Unusual attention pattern — possible zero-day. Monitor closely."
-        return f"ADVISORY: Elevated anomaly score in {category} traffic. Monitor."
+        return ("ADVISORY: Unusual network activity detected. "
+                "No action required. IT security monitoring.")
     return ""
 
 
@@ -157,7 +165,12 @@ def render_alert_table(
                 )
         with col4:
             feat_text = _format_top_feature(alert)
-            if attn:
+            # Active learning: show uncertainty badge
+            from src.production.feedback_loop import FeedbackLoop
+            unc = FeedbackLoop.compute_uncertainty(alert)
+            if unc["label"] == "HIGH" and not attn:
+                st.markdown(f"**REVIEW** | {feat_text}")
+            elif attn:
                 st.markdown(f"**NOVEL** | {feat_text}")
             else:
                 st.text(feat_text)
@@ -243,24 +256,71 @@ def _render_dialog(alert: Dict[str, Any], idx: int) -> None:
                 label = {"C": "Confidentiality", "I": "Integrity", "A": "Availability"}.get(dim, dim)
                 st.progress(min(float(score), 1.0), text=f"{label}: {score:.3f}")
 
-    # Explanation
-    explanation = alert.get("explanation", {})
-    exp_level = explanation.get("level", "none")
-    if exp_level != "none":
-        st.markdown("**Explanation**")
-        top_feats = explanation.get("top_features", [])
-        if top_feats:
-            for feat in top_feats[:5]:
-                st.markdown(f"- **{feat.get('feature', '?')}**: {feat.get('importance', 0):.4f}")
+    # Clinical explanation (narrative + device-specific + temporal + chain)
+    clin_exp = alert.get("clinical_explanation", {})
+    if clin_exp:
+        narrative = clin_exp.get("narrative", "")
+        if narrative:
+            st.info(f"**What happened:** {narrative}")
 
-        timesteps = explanation.get("timestep_importance", [])
-        if timesteps:
-            st.markdown("Temporal attention weights:")
-            st.bar_chart(timesteps)
+        dev_exp = clin_exp.get("device_explanation", {})
+        if dev_exp.get("details"):
+            st.markdown("**Device-specific findings:**")
+            for detail in dev_exp["details"][:3]:
+                st.markdown(f"- {detail}")
+        if dev_exp.get("action"):
+            st.success(f"**Recommended action:** {dev_exp['action']}")
+
+        temporal = clin_exp.get("temporal_narrative", "")
+        if temporal:
+            st.caption(f"Timeline: {temporal}")
+
+        patterns = clin_exp.get("attack_patterns", [])
+        if patterns:
+            top_match = patterns[0]
+            st.warning(
+                f"**Pattern match:** {top_match['attack_type']} "
+                f"({top_match['similarity']:.0%} similarity)"
+            )
+
+        counterfactual = clin_exp.get("counterfactual", "")
+        if counterfactual:
+            st.caption(f"To clear: {counterfactual}")
+
+        chain = clin_exp.get("risk_chain", [])
+        if chain:
+            with st.expander("Decision chain (why this risk level)"):
+                for i, step in enumerate(chain, 1):
+                    st.markdown(f"{i}. {step}")
+    else:
+        # Fallback to raw explanation if clinical explanation not available
+        explanation = alert.get("explanation", {})
+        if not isinstance(explanation, dict):
+            explanation = {}
+        exp_level = explanation.get("level", "none")
+        if exp_level != "none":
+            st.markdown("**Explanation**")
+            top_feats = explanation.get("top_features", [])
+            if top_feats:
+                for feat in top_feats[:5]:
+                    st.markdown(f"- **{feat.get('feature', '?')}**: {feat.get('importance', 0):.4f}")
+            timesteps = explanation.get("timestep_importance", [])
+            if timesteps:
+                st.bar_chart(timesteps)
 
     rationale = alert.get("clinical_rationale", "")
     if rationale:
         st.caption(f"Rationale: {rationale}")
+
+    # Active learning: show model uncertainty + feedback value
+    from src.production.feedback_loop import FeedbackLoop
+    unc = FeedbackLoop.compute_uncertainty(alert)
+    if unc["label"] == "HIGH":
+        st.warning(f"**Model uncertainty: {unc['label']}** — {unc['message']}")
+    elif unc["label"] == "MEDIUM":
+        st.info(f"Model confidence: {unc['label']} — {unc['message']}")
+    else:
+        st.caption(f"Model confidence: {unc['label']} — {unc['message']}")
 
     # Alert acknowledgment
     st.markdown("---")

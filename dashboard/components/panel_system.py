@@ -21,8 +21,8 @@ def render(gt: Dict[str, Any]) -> None:
     """Render system reference panel with tabs."""
     st.header("System & Compliance")
 
-    tab_model, tab_eval, tab_compliance, tab_history = st.tabs([
-        "Model Architecture", "Evaluation Metrics", "Compliance & Audit", "History",
+    tab_model, tab_eval, tab_compliance, tab_history, tab_feedback = st.tabs([
+        "Model Architecture", "Evaluation Metrics", "Compliance & Audit", "History", "Feedback",
     ])
 
     with tab_model:
@@ -36,6 +36,9 @@ def render(gt: Dict[str, Any]) -> None:
 
     with tab_history:
         _render_history()
+
+    with tab_feedback:
+        _render_feedback()
 
 
 def _render_model(gt: Dict[str, Any]) -> None:
@@ -211,3 +214,73 @@ def _render_history() -> None:
             file_name="alert_history.csv",
             mime="text/csv",
         )
+
+
+def _render_feedback() -> None:
+    """Feedback panel — summary, quality, impact, disagreements, retraining."""
+    fl = st.session_state.get("feedback_loop")
+    if fl is None:
+        st.info("Feedback loop not initialized")
+        return
+
+    # Method 1: Summary
+    st.markdown("##### Feedback Summary")
+    summary = fl.get_summary()
+    if summary.get("total_feedback", 0) == 0:
+        st.info("No feedback collected yet. Review alerts and click "
+                "'Confirm Attack' or 'Mark Safe' to provide feedback.")
+        return
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Total Feedback", summary.get("total_feedback", 0))
+    m2.metric("Confirmed Attacks", summary.get("confirmed_attacks", 0))
+    m3.metric("Marked Safe (FP)", summary.get("marked_safe", 0))
+    m4.metric("Recalibrations", summary.get("recalibrations_performed", 0))
+
+    # Method 3: Impact visualization
+    st.markdown("##### Feedback Impact")
+    impact = fl.get_impact_summary()
+    if impact.get("fpr_reduction_estimate"):
+        st.success(impact["fpr_reduction_estimate"])
+    if impact.get("detection_confidence"):
+        st.info(impact["detection_confidence"])
+    if impact.get("retraining_message"):
+        st.caption(impact["retraining_message"])
+
+    # Method 5: Analyst quality
+    st.markdown("##### Analyst Quality")
+    analysts = fl.get_analyst_quality()
+    if analysts:
+        for a in analysts:
+            quality = a.get("quality", "UNKNOWN")
+            color = {"HIGH": "#2ecc71", "MEDIUM": "#f39c12", "REVIEW": "#e74c3c"}.get(quality, "#95a5a6")
+            st.markdown(
+                f'Analyst `{a["analyst_hash"][:8]}`: '
+                f'<span style="color:{color}; font-weight:bold;">{quality}</span> '
+                f'({a["total"]} reviews, {a.get("agreement_rate", 0):.0%} agreement) — '
+                f'{a.get("note", "")}',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.caption("No per-analyst data yet")
+
+    # Method 6: Disagreements
+    st.markdown("##### Disagreements")
+    disagreements = fl.get_disagreements()
+    if disagreements:
+        st.warning(f"{len(disagreements)} disagreement(s) — senior review needed")
+        for d in disagreements[:5]:
+            st.markdown(f"- {d.get('recommendation', '')}")
+    else:
+        st.success("No analyst disagreements")
+
+    # Method 7: Retraining readiness
+    st.markdown("##### Retraining Readiness")
+    retrain = fl.get_retraining_status()
+    progress = retrain.get("progress_pct", 0)
+    st.progress(min(progress / 100, 1.0), text=f"{progress:.0f}% ({retrain.get('total_feedback', 0)}/{retrain.get('threshold', 500)})")
+    if retrain.get("ready"):
+        st.success(retrain.get("reason", ""))
+        st.code(retrain.get("command", ""), language="bash")
+    else:
+        st.caption(retrain.get("reason", ""))

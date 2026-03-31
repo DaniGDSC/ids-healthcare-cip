@@ -217,8 +217,10 @@ class AuthProvider:
         if mode == "local":
             for entry in cfg("auth.users", []):
                 username = entry["username"]
-                # Default password = username (for demo); override in hospital config
-                pwd = entry.get("password", username)
+                pwd = entry.get("password")
+                if not pwd:
+                    pwd = secrets.token_urlsafe(16)
+                    logger.warning("User '%s' has no password — generated random", username)
                 users[username] = {
                     "password_hash": cls.hash_password(pwd),
                     "role": entry["role"],

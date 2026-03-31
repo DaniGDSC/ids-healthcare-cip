@@ -65,6 +65,22 @@ database:
   log_predictions: true
   log_alerts: true
   log_access: true
+  retention_days: 90
+
+audit:
+  hmac_key_env: "AUDIT_HMAC_KEY"
+
+alerting:
+  enabled: true
+  dry_run: true
+  safety_flag_escalation: true
+  safety_recipients:
+    - "charge-nurse@hospital.internal"
+    - "on-call-physician@hospital.internal"
+  recipients:
+    3: ["soc-analyst@hospital.internal"]
+    4: ["biomed-eng@hospital.internal", "charge-nurse@hospital.internal"]
+    5: ["it-security@hospital.internal", "on-call-physician@hospital.internal"]
 
 tls:
   enabled: false  # true for production

@@ -158,6 +158,8 @@ def render_waterfall(alert: Dict[str, Any]) -> None:
     Phase 4 conditional explainer format (importance key).
     """
     explanation = alert.get("explanation") or {}
+    if not isinstance(explanation, dict):
+        explanation = {}
     top_features = explanation.get("top_features", [])
 
     # Fallback to legacy SHAP format (top_features directly on alert)
@@ -260,6 +262,8 @@ def render_temporal_timeline(
     falls back to anomaly score visualization.
     """
     explanation = alert.get("explanation") or {}
+    if not isinstance(explanation, dict):
+        explanation = {}
     raw_weights = explanation.get("timestep_importance", [])
 
     # Sanitise: convert to floats, replace None with 0
@@ -516,16 +520,33 @@ def _render_physician(
             unsafe_allow_html=True,
         )
 
-        # Clinical rationale (plain language)
-        rationale = alert.get("clinical_rationale", "")
-        if rationale:
-            if sev >= 4:
-                st.error(f"**Reason:** {rationale}")
-            else:
-                st.warning(f"**Reason:** {rationale}")
+        # Clinical explanation (narrative + device-specific)
+        clin_exp = alert.get("clinical_explanation", {})
+        if clin_exp:
+            narrative = clin_exp.get("narrative", "")
+            if narrative:
+                st.info(f"**What happened:** {narrative}")
+
+            dev_exp = clin_exp.get("device_explanation", {})
+            if dev_exp.get("action"):
+                st.success(f"**What to do:** {dev_exp['action']}")
+
+            temporal = clin_exp.get("temporal_narrative", "")
+            if temporal:
+                st.caption(temporal)
+        else:
+            # Fallback to raw rationale
+            rationale = alert.get("clinical_rationale", "")
+            if rationale:
+                if sev >= 4:
+                    st.error(f"**Reason:** {rationale}")
+                else:
+                    st.warning(f"**Reason:** {rationale}")
 
         # Affected vital signs (biometric features only, friendly names)
         explanation = alert.get("explanation") or {}
+        if not isinstance(explanation, dict):
+            explanation = {}
         top_features = explanation.get("top_features", [])
         bio_features = [f for f in top_features if f.get("feature", "") in _BIOMETRIC]
 
@@ -536,7 +557,6 @@ def _render_physician(
             for f in bio_features:
                 name = _biometric_label(f.get("feature", ""))
                 imp = float(f.get("importance", f.get("shap_value", 0)) or 0)
-                # Normalized bar (relative to max)
                 pct = min(abs(imp) / abs(max_imp), 1.0)
                 st.markdown(f"**{name}**")
                 st.progress(pct)

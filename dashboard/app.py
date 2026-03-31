@@ -114,6 +114,21 @@ def init_session_state() -> None:
     if "selected_alert" not in st.session_state:
         st.session_state.selected_alert = 0
 
+    # Feedback loop (human-in-the-loop management)
+    if "feedback_loop" not in st.session_state:
+        try:
+            from src.production.feedback_loop import FeedbackLoop
+            calibrator_fn = None
+            if st.session_state.get("inference_service"):
+                calibrator_fn = st.session_state.inference_service.recalibrate_from_feedback
+            st.session_state.feedback_loop = FeedbackLoop(
+                database=st.session_state.get("database"),
+                calibrator_fn=calibrator_fn,
+            )
+        except Exception as exc:
+            logger.error("Failed to init feedback loop: %s", exc)
+            st.session_state.feedback_loop = None
+
 
 # ── Page Config ──────────────────────────────────────────────────────────
 st.set_page_config(

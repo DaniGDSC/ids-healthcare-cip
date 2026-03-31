@@ -457,11 +457,18 @@ class AlertRouter:
         escalation: EscalationHandler,
         recipient_map: Optional[Dict[int, List[str]]] = None,
     ) -> None:
+        from config.production_loader import cfg
+
         self._siem = siem
         self._email = email
         self._ws = websocket
         self._escalation = escalation
-        self._recipients = recipient_map or self.DEFAULT_RECIPIENTS
+        self._recipients = recipient_map or cfg("alerting.recipients", self.DEFAULT_RECIPIENTS)
+        self._safety_recipients = cfg("alerting.safety_recipients", [
+            "charge-nurse@hospital.internal",
+            "on-call-physician@hospital.internal",
+        ])
+        self._safety_escalation = cfg("alerting.safety_flag_escalation", True)
         self._routed_count = 0
 
     def route(self, alert: Dict[str, Any]) -> Dict[str, Any]:
@@ -514,6 +521,25 @@ class AlertRouter:
         if severity >= 5:
             self._escalation.escalate(alert)
             channels_used.append("escalation")
+
+        # Patient safety flag: ALWAYS escalate regardless of severity
+        if alert.get("patient_safety_flag") and self._safety_escalation:
+            if "escalation" not in channels_used:
+                self._escalation.escalate(alert)
+                channels_used.append("escalation")
+            ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+            risk = alert.get("risk_level", "UNKNOWN")
+            for rcpt in self._safety_recipients:
+                self._email.send(
+                    rcpt,
+                    f"PATIENT SAFETY: IoMT Alert [{risk}] — {ts}",
+                    f"Patient safety flag triggered. Risk: {risk}. "
+                    f"Verify patient vitals manually. "
+                    f"Response time: {alert.get('response_time_minutes', 5)} minutes.",
+                )
+            if "safety_notification" not in channels_used:
+                channels_used.append("safety_notification")
+            logger.warning("Patient safety flag → full escalation + safety notification")
 
         self._routed_count += 1
 

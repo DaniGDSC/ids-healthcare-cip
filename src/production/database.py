@@ -14,7 +14,7 @@ import json
 import logging
 import sqlite3
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -334,6 +334,105 @@ class Database:
         with self._lock:
             rows = self._conn.execute(sql, (limit,)).fetchall()
         return [dict(r) for r in rows]
+
+    # ── Feedback queries (Human-in-the-Loop) ─────────────────────────
+
+    def get_feedback_summary(self) -> Dict[str, Any]:
+        """Get feedback statistics for dashboard display."""
+        with self._lock:
+            total = self._conn.execute("SELECT COUNT(*) as cnt FROM feedback").fetchone()["cnt"]
+            tp = self._conn.execute(
+                "SELECT COUNT(*) as cnt FROM feedback WHERE ground_truth = 1"
+            ).fetchone()["cnt"]
+            fp = self._conn.execute(
+                "SELECT COUNT(*) as cnt FROM feedback WHERE ground_truth = 0"
+            ).fetchone()["cnt"]
+        return {
+            "total_feedback": total,
+            "confirmed_attacks": tp,
+            "marked_safe": fp,
+            "tp_rate": round(tp / max(total, 1), 3),
+            "fp_rate": round(fp / max(total, 1), 3),
+        }
+
+    def get_feedback_by_analyst(self) -> List[Dict[str, Any]]:
+        """Get per-analyst feedback statistics for quality tracking."""
+        sql = """SELECT analyst_hash,
+                        COUNT(*) as total,
+                        SUM(CASE WHEN ground_truth = 1 THEN 1 ELSE 0 END) as tp_count,
+                        SUM(CASE WHEN ground_truth = 0 THEN 1 ELSE 0 END) as fp_count,
+                        ROUND(AVG(confidence), 2) as avg_confidence
+                 FROM feedback
+                 GROUP BY analyst_hash
+                 ORDER BY total DESC"""
+        with self._lock:
+            rows = self._conn.execute(sql).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_feedback_disagreements(self) -> List[Dict[str, Any]]:
+        """Find alerts where analysts disagree (one says TP, another FP)."""
+        sql = """SELECT f1.alert_id,
+                        f1.analyst_hash as analyst_a,
+                        f1.ground_truth as verdict_a,
+                        f2.analyst_hash as analyst_b,
+                        f2.ground_truth as verdict_b
+                 FROM feedback f1
+                 JOIN feedback f2 ON f1.alert_id = f2.alert_id
+                 WHERE f1.analyst_hash < f2.analyst_hash
+                   AND f1.ground_truth != f2.ground_truth
+                 ORDER BY f1.alert_id DESC
+                 LIMIT 50"""
+        with self._lock:
+            rows = self._conn.execute(sql).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_feedback_for_recalibration(self, limit: int = 500) -> List[Dict[str, Any]]:
+        """Get feedback entries with prediction scores for recalibration."""
+        sql = """SELECT p.anomaly_score, f.ground_truth, f.confidence
+                 FROM feedback f
+                 JOIN predictions p ON p.sample_index = (
+                     SELECT a.sample_index FROM alerts a WHERE a.id = f.alert_id
+                 )
+                 WHERE f.ground_truth IN (0, 1)
+                 ORDER BY f.time DESC
+                 LIMIT ?"""
+        with self._lock:
+            rows = self._conn.execute(sql, (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_feedback_count_since(self, since_id: int = 0) -> int:
+        """Count feedback entries since a given ID (for auto-trigger)."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT COUNT(*) as cnt FROM feedback WHERE id > ?", (since_id,),
+            ).fetchone()
+        return row["cnt"] if row else 0
+
+    def purge_old_data(self, retention_days: int = 90) -> Dict[str, int]:
+        """Delete records older than retention_days.
+
+        Unacknowledged alerts are NOT purged (safety requirement).
+
+        Returns:
+            Dict with count of purged records per table.
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=retention_days)).isoformat()
+        with self._lock:
+            pred = self._conn.execute(
+                "DELETE FROM predictions WHERE time < ?", (cutoff,),
+            ).rowcount
+            alerts = self._conn.execute(
+                "DELETE FROM alerts WHERE time < ? AND acknowledged = 1", (cutoff,),
+            ).rowcount
+            access = self._conn.execute(
+                "DELETE FROM access_log WHERE time < ?", (cutoff,),
+            ).rowcount
+            self._conn.commit()
+        logger.info(
+            "Purged data older than %d days: %d predictions, %d alerts, %d access logs",
+            retention_days, pred, alerts, access,
+        )
+        return {"predictions": pred, "alerts": alerts, "access_log": access}
 
     def close(self) -> None:
         """Close database connection."""

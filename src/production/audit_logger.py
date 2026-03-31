@@ -14,8 +14,10 @@ breaks the chain, detectable by verify_chain().
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import logging
+import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,7 +50,10 @@ class AuditEntry:
 
     def _compute_hash(self) -> str:
         content = f"{self.sequence}|{self.timestamp}|{self.event_type}|{self.actor}|{json.dumps(self.details, sort_keys=True)}|{self.prev_hash}"
-        return hashlib.sha256(content.encode()).hexdigest()
+        # HMAC signing: tamper-proof (not just tamper-evident).
+        # Without the key, the chain can't be reconstructed.
+        key = os.environ.get("AUDIT_HMAC_KEY", "iomt-ids-default-key").encode()
+        return hmac.new(key, content.encode(), hashlib.sha256).hexdigest()
 
     def to_dict(self) -> Dict[str, Any]:
         return {

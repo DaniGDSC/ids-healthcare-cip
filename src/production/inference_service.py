@@ -120,6 +120,13 @@ class InferenceService:
         weights_path = self._root / "data" / "phase2_5" / "finetuned_model.weights.h5"
         self._model.load_weights(str(weights_path))
 
+        # Model version hash (for audit: trace which model produced each prediction)
+        import hashlib as _hl
+        self._model_version = _hl.sha256(
+            open(weights_path, "rb").read()
+        ).hexdigest()[:12]
+        logger.info("Model version: %s", self._model_version)
+
         # Load Phase 4 baseline
         baseline_path = self._root / "data" / "phase4" / "baseline_config.json"
         if baseline_path.exists():
@@ -389,7 +396,14 @@ class InferenceService:
             "explanation": explanation,
             "percentile": calibrated["percentile"] if calibrated else None,
             "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
+            "model_version": self._model_version,
         }
+
+        # Clinical explanation (all 7 methods)
+        from src.production.clinical_explainer import build_clinical_explanation
+        result["clinical_explanation"] = build_clinical_explanation(
+            result, feature_names=MODEL_FEATURES, raw_features=raw_features,
+        )
 
         self._fatigue_mgr.process([result], device_id=self._device_id)
         with self._lock:
@@ -404,6 +418,13 @@ class InferenceService:
                 self._db.insert_prediction(result)
             except Exception as exc:
                 logger.warning("DB insert_prediction failed: %s", exc)
+
+            # Auto-recalibration check every 100 predictions (Method 4)
+            if self._inference_count % 100 == 0:
+                try:
+                    self.recalibrate_from_feedback()
+                except Exception:
+                    pass
 
         return result
 

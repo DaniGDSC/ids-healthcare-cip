@@ -24,34 +24,34 @@
 
 | Metric | Value |
 |--------|-------|
-| accuracy | 0.9399 |
-| attack_f1 | 0.9690 |
-| attack_f2 | 0.9874 |
-| attack_precision | 0.9399 |
+| accuracy | 0.9415 |
+| attack_f1 | 0.9699 |
+| attack_f2 | 0.9877 |
+| attack_precision | 0.9415 |
 | attack_recall | 1.0000 |
-| auc_roc | 0.8906 |
-| f1_score | 0.9108 |
-| macro_f1 | 0.4845 |
+| auc_roc | 0.8943 |
+| f1_score | 0.9132 |
+| macro_f1 | 0.4849 |
 | threshold | 0.1000 |
 
 ### 5.3.4 Top-5 Trials
 
 | Trial | Attack F1 | Attack Recall | AUC-ROC | Accuracy | Duration |
 |-------|-----------|---------------|---------|----------|----------|
-| 0 | 0.9690 | 1.0000 | 0.8906 | 0.9399 | 11.1s |
-| 1 | 0.9690 | 1.0000 | 0.8683 | 0.9399 | 7.1s |
-| 2 | 0.9690 | 1.0000 | 0.8819 | 0.9399 | 8.3s |
-| 3 | 0.9690 | 1.0000 | 0.8592 | 0.9399 | 6.7s |
-| 4 | 0.9690 | 1.0000 | 0.8605 | 0.9399 | 6.0s |
+| 0 | 0.9699 | 1.0000 | 0.8943 | 0.9415 | 9.4s |
+| 1 | 0.9699 | 1.0000 | 0.9083 | 0.9415 | 5.9s |
+| 2 | 0.9699 | 1.0000 | 0.9024 | 0.9415 | 7.3s |
+| 3 | 0.9699 | 1.0000 | 0.9104 | 0.9415 | 4.9s |
+| 4 | 0.9699 | 1.0000 | 0.9097 | 0.9415 | 5.1s |
 
 ### 5.3.6 Parameter Importance (optuna_fanova)
 
 | Parameter | Importance | |
 |-----------|-----------|---|
-| `cw_attack` | 0.4187 | ################ |
-| `finetune_lr` | 0.2848 | ########### |
-| `head_lr` | 0.2550 | ########## |
-| `ft_epochs` | 0.0415 | # |
+| `head_lr` | 0.3440 | ############# |
+| `cw_attack` | 0.3328 | ############# |
+| `finetune_lr` | 0.2957 | ########### |
+| `ft_epochs` | 0.0275 | # |
 | `head_epochs` | 0.0000 |  |
 
 ### 5.3.7 Ablation Study Results
@@ -74,7 +74,7 @@
 |----------|-------|
 | Device | see finetuned_results.json |
 | TensorFlow | — |
-| Duration | 307.91s |
+| Duration | 253.27s |
 | Git commit | `see finetune` |
 
 ---

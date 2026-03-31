@@ -1,0 +1,10 @@
+{
+  "median": 0.18,
+  "mad": 0.025,
+  "baseline_threshold": 0.255,
+  "mad_multiplier": 3.0,
+  "n_normal_samples": 9990,
+  "n_attention_dims": 128,
+  "computed_at": "2026-03-31T13:42:00+00:00",
+  "note": "Placeholder \u2014 calibrator auto-fits at flow 200 during streaming"
+}

@@ -128,27 +128,15 @@ def _load_smote_data(config: Phase2_5Config):
 
 
 def _load_original_train(config: Phase2_5Config, feature_names):
-    """Load original imbalanced train (pre-SMOTE) for the final retrain."""
-    import joblib
-    from sklearn.model_selection import train_test_split as sk_split
+    """Load original imbalanced train from train_phase1.parquet.
 
+    Reads from the same parquet used by _load_smote_data() to ensure
+    consistency with the 70/15/15 split. No re-splitting from raw CSV.
+    """
     label_col = config.label_column
-    raw = pd.read_csv(PROJECT_ROOT / "data" / "raw" / "wustl-ehms-2020_with_attacks_categories.csv")
-
-    hipaa = ["SrcAddr", "DstAddr", "Sport", "Dport", "SrcMac", "DstMac", "Dir", "Flgs"]
-    corr = ["SrcJitter", "pLoss", "Rate", "DstJitter", "Loss", "TotPkts"]
-    df = raw.drop(columns=hipaa)
-    df = df.drop(columns=[c for c in corr if c in df.columns])
-    if "Attack Category" in df.columns:
-        df = df.drop(columns=["Attack Category"])
-    df = df.dropna()
-
-    y = df[label_col].values
-    X = df[feature_names].values.astype(np.float32)
-    X_train_raw, _, y_train, _ = sk_split(X, y, test_size=0.30, random_state=42, stratify=y)
-
-    scaler = joblib.load(PROJECT_ROOT / "models" / "scalers" / "robust_scaler.pkl")
-    X_train = scaler.transform(X_train_raw).astype(np.float32)
+    train_df = pd.read_parquet(PROJECT_ROOT / config.phase1_train)
+    y_train = np.asarray(train_df[label_col].values)
+    X_train = np.asarray(train_df[feature_names].values, dtype=np.float32)
 
     n0, n1 = int(np.sum(y_train == 0)), int(np.sum(y_train == 1))
     logger.info("  Original train: %d (Normal=%d, Attack=%d, ratio=%.1f:1)",
