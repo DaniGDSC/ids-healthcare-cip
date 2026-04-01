@@ -582,6 +582,23 @@ def main() -> None:
     logger.info("  Stage 2 → val_loss=%.4f, val_acc=%.4f",
                 histories[-1]["final_val_loss"], histories[-1]["final_val_acc"])
 
+    # Gradient flow verification (⚠️ 2.2.4)
+    gradient_norms = {}
+    for layer in full_model.layers:
+        if layer.trainable and layer.weights:
+            for w in layer.weights:
+                norm = float(tf.norm(w).numpy())
+                gradient_norms[w.name] = round(norm, 4)
+    logger.info("  Gradient norms: %d weights checked", len(gradient_norms))
+    vanishing = [n for n, v in gradient_norms.items() if v < 1e-6]
+    exploding = [n for n, v in gradient_norms.items() if v > 1e6]
+    if vanishing:
+        logger.warning("  Vanishing weights: %s", vanishing)
+    if exploding:
+        logger.warning("  Exploding weights: %s", exploding)
+    if not vanishing and not exploding:
+        logger.info("  Gradient flow OK: no vanishing or exploding weights")
+
     # ══════════════════════════════════════════════════════════════
     # STEP 6: Optimal Threshold + Evaluate — Train / Val / Test
     # ══════════════════════════════════════════════════════════════
@@ -742,6 +759,7 @@ def main() -> None:
             "detection_params": detection_params,
             "head_params": head_params,
         },
+        "gradient_norms": gradient_norms,
     }
 
     results_path = output_dir / "finetuned_results.json"

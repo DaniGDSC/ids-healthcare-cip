@@ -59,6 +59,11 @@ def render(
         unsafe_allow_html=True,
     )
 
+    # ── Drift warning (⚠️ 4.3.3) ──
+    if buffer_status.get("drift_detected"):
+        st.warning("Score distribution drift detected — calibrator thresholds may be stale. "
+                   "Analyst feedback or recalibration recommended.")
+
     # ── Metrics row ──
     risk_counts = buffer_status.get("risk_counts", {})
     c1, c2, c3, c4 = st.columns(4)

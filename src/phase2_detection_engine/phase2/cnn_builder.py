@@ -39,6 +39,7 @@ class CNNBuilder(BaseLayerBuilder):
         activation: str = "relu",
         pool_size: int = 2,
         has_second_pool: bool = True,
+        use_batch_norm: bool = False,
     ) -> None:
         self._filters_1 = filters_1
         self._filters_2 = filters_2
@@ -46,6 +47,9 @@ class CNNBuilder(BaseLayerBuilder):
         self._activation = activation
         self._pool_size = pool_size
         self._has_second_pool = has_second_pool
+        # BatchNorm disabled by default: interferes with GradientTape
+        # explanations in Tier 2 inference. Dropout used instead.
+        self._use_batch_norm = use_batch_norm
 
     def build(self, input_tensor: tf.Tensor) -> tf.Tensor:
         """Apply CNN block to input tensor.
@@ -63,6 +67,8 @@ class CNNBuilder(BaseLayerBuilder):
             padding=CNN_PADDING,
             name="conv1",
         )(input_tensor)
+        if self._use_batch_norm:
+            x = tf.keras.layers.BatchNormalization(name="bn1")(x)
         x = tf.keras.layers.MaxPooling1D(self._pool_size, name="pool1")(x)
 
         x = tf.keras.layers.Conv1D(
@@ -72,6 +78,8 @@ class CNNBuilder(BaseLayerBuilder):
             padding=CNN_PADDING,
             name="conv2",
         )(x)
+        if self._use_batch_norm:
+            x = tf.keras.layers.BatchNormalization(name="bn2")(x)
         if self._has_second_pool:
             x = tf.keras.layers.MaxPooling1D(self._pool_size, name="pool2")(x)
         return x
