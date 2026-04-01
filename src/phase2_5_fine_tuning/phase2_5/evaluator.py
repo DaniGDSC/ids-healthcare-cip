@@ -378,32 +378,24 @@ class QuickEvaluator:
         """Compute classification metrics from pre-computed probabilities."""
         # NaN guard
         y_prob = np.nan_to_num(y_prob, nan=0.0, posinf=1.0, neginf=0.0)
+        y_pred = (y_prob > threshold).astype(int)
 
-        if y_prob.ndim == 1:
-            y_pred = (y_prob > threshold).astype(int)
-        else:
-            y_pred = np.argmax(y_prob, axis=1)
-
-        # Convert multi-class to binary for attack-specific metrics
+        # Binary: attack = label > 0
         y_bin = (np.asarray(y) > 0).astype(int)
-        y_pred_bin = (np.asarray(y_pred) > 0).astype(int)
 
         try:
-            if y_prob.ndim > 1:
-                auc = float(roc_auc_score(y, y_prob, multi_class="ovr", average="macro"))
-            else:
-                auc = float(roc_auc_score(y_bin, y_prob))
+            auc = float(roc_auc_score(y_bin, y_prob))
         except ValueError:
             auc = 0.0
 
         return {
-            "accuracy": float(accuracy_score(y, y_pred)),
-            "f1_score": float(f1_score(y, y_pred, average="weighted", zero_division=0)),
+            "accuracy": float(accuracy_score(y_bin, y_pred)),
+            "f1_score": float(f1_score(y_bin, y_pred, average="weighted", zero_division=0)),
             "auc_roc": auc,
-            "attack_recall": float(recall_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0)),
-            "attack_precision": float(precision_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0)),
-            "attack_f1": float(f1_score(y_bin, y_pred_bin, pos_label=1, average="binary", zero_division=0)),
-            "attack_f2": float(fbeta_score(y_bin, y_pred_bin, beta=2, pos_label=1, average="binary", zero_division=0)),
-            "macro_f1": float(f1_score(y, y_pred, average="macro", zero_division=0)),
+            "attack_recall": float(recall_score(y_bin, y_pred, pos_label=1, average="binary", zero_division=0)),
+            "attack_precision": float(precision_score(y_bin, y_pred, pos_label=1, average="binary", zero_division=0)),
+            "attack_f1": float(f1_score(y_bin, y_pred, pos_label=1, average="binary", zero_division=0)),
+            "attack_f2": float(fbeta_score(y_bin, y_pred, beta=2, pos_label=1, average="binary", zero_division=0)),
+            "macro_f1": float(f1_score(y_bin, y_pred, average="macro", zero_division=0)),
             "threshold": threshold,
         }

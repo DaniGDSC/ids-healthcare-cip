@@ -2,6 +2,8 @@
 
 > Cross-reference prototype implementation against framework design | Version 2.0
 > Updated: N/A items removed. Partial and Missing revised based on Out-of-Scope document
+>
+> See [ENGINE_MAP.md](ENGINE_MAP.md) for engine-to-source folder mapping.
 
 ---
 

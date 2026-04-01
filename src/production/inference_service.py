@@ -128,18 +128,10 @@ class InferenceService:
             timesteps=hp["timesteps"], n_features=N_FEATURES, builders=builders,
         ).assemble()
 
-        # Add classification head (matching Phase 2.5 architecture)
-        from config.production_loader import cfg as _cfg2
-        n_classes = int(_cfg2("model.n_classes", 3))
-        self._n_classes = n_classes
-        self._class_names = _cfg2("model.class_names", ["normal", "Spoofing", "Data Alteration"])
-
+        # Add binary classification head (matching Phase 2.5 architecture)
         x = tf.keras.layers.Dense(32, activation="relu", name="dense_head")(det.output)
         x = tf.keras.layers.Dropout(hp["dropout_rate"], name="drop_head")(x)
-        if n_classes <= 2:
-            x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
-        else:
-            x = tf.keras.layers.Dense(n_classes, activation="softmax", name="output")(x)
+        x = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
         self._model = tf.keras.Model(det.input, x, name="inference_model")
 
         # Load finetuned weights
@@ -346,14 +338,7 @@ class InferenceService:
         pred_out, backbone_out = self._infer_score_only(window_tensor)
 
         pred_np = pred_out.numpy()
-        if self._n_classes > 2:
-            probs = pred_np.ravel()[:self._n_classes]
-            predicted_class = int(np.argmax(probs))
-            score = float(1.0 - probs[0])
-            model_attack_category = self._class_names[predicted_class] if predicted_class > 0 else "normal"
-        else:
-            score = float(pred_np.ravel()[0])
-            model_attack_category = attack_category
+        score = float(pred_np.ravel()[0])
 
         if not 0.0 <= score <= 1.0:
             score = float(np.clip(score, 0.0, 1.0))
@@ -382,9 +367,6 @@ class InferenceService:
                                running_median, self._baseline["median"], drift_mads)
             elif drift_mads <= 2.0:
                 self._drift_detected = False
-
-        if self._n_classes > 2 and model_attack_category != "normal":
-            attack_category = model_attack_category
 
         # Quick risk classification
         device_profile = self._cia_modifier._registry.lookup(self._device_id)

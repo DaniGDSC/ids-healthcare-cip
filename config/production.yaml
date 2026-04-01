@@ -10,8 +10,6 @@ streaming:
   buffer_max_alerts: 200
 
 model:
-  n_classes: 2
-  class_names: ["normal", "attack"]
   stride: 5
 
 ensemble:
