@@ -50,14 +50,14 @@ def train_arrays():
 class TestDataSplitter:
     def test_split_shapes(self, split_df: pd.DataFrame) -> None:
         splitter = DataSplitter(test_ratio=0.30, random_state=42)
-        X_train, X_test, y_train, y_test, feat_names = splitter.split(split_df)
+        X_train, X_test, y_train, y_test, feat_names, *_ = splitter.split(split_df)
         assert len(X_train) + len(X_test) == len(split_df)
         assert len(y_train) == len(X_train)
         assert len(y_test) == len(X_test)
 
     def test_stratified_class_balance(self, split_df: pd.DataFrame) -> None:
         splitter = DataSplitter(test_ratio=0.30, random_state=42)
-        _, _, y_train, y_test, _ = splitter.split(split_df)
+        _, _, y_train, y_test, *_ = splitter.split(split_df)
         train_rate = y_train.mean()
         test_rate = y_test.mean()
         # Class ratios should be approximately equal
@@ -65,7 +65,7 @@ class TestDataSplitter:
 
     def test_feature_names_exclude_label(self, split_df: pd.DataFrame) -> None:
         splitter = DataSplitter()
-        _, _, _, _, feat_names = splitter.split(split_df)
+        _, _, _, _, feat_names, *_ = splitter.split(split_df)
         assert "Label" not in feat_names
         assert "f1" in feat_names
 
@@ -86,8 +86,8 @@ class TestDataSplitter:
     def test_reproducibility(self, split_df: pd.DataFrame) -> None:
         s1 = DataSplitter(random_state=42)
         s2 = DataSplitter(random_state=42)
-        X1, _, _, _, _ = s1.split(split_df)
-        X2, _, _, _, _ = s2.split(split_df)
+        X1, _, _, _, *_ = s1.split(split_df)
+        X2, _, _, _, *_ = s2.split(split_df)
         np.testing.assert_array_equal(X1, X2)
 
 

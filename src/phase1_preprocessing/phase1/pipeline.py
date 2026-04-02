@@ -1,40 +1,53 @@
-"""Preprocessing pipeline orchestrator — chains all transformers.
+"""Preprocessing pipeline orchestrator.
 
-Each step logs input → output shape.  Fails fast if Phase 0
-artifacts are missing.
+Pipeline (matches canonical diagram):
+  Step 1:  Identifier sanitization (remove MAC/address columns)
+  Step 2:  Encode non-numeric features
+  Step 3:  Data cleaning (missing data, outliers)
+  Step 4a: Remove unary (zero-variance) features
+  Step 4b: Correlation-based redundancy check
+  ═══════ LEAKAGE BARRIER ═══════
+  Step 5a: Train–test split (stratified 70/30)
+  Step 5b: RFECV + SHAP validation (train only)
+  Step 6:  Scaling (fit on train, transform test)
+  ═══════ DUAL-TRACK BRANCH ═══════
+  Track A: Supervised — SMOTE inside CV pipeline (config exported, not applied)
+  Track B: Novelty — benign-only training subset exported
 """
 
 from __future__ import annotations
 
-import glob as globmod
+import json
 import logging
 import time
 from pathlib import Path
 from typing import Any, Dict, List
 
+import numpy as np
 import pandas as pd
-import yaml
+from sklearn.model_selection import StratifiedShuffleSplit
 
 from .artifact_reader import Phase0ArtifactReader
 from .config import Phase1Config
+from .encoder import CategoricalEncoder
 from .exporter import PreprocessingExporter
 from .hipaa import HIPAASanitizer
 from .missing import MissingValueHandler
 from .redundancy import RedundancyRemover
 from .report import render_preprocessing_report
-from .variance import VarianceFilter
 from .scaler import RobustScalerTransformer
-from .smote import SMOTEBalancer
-from .splitter import DataSplitter
+from .shap_selector import SHAPSelector
+from .variance import VarianceFilter
 
 logger = logging.getLogger(__name__)
 
 
 class PreprocessingPipeline:
-    """Seven-step preprocessing pipeline for WUSTL-EHMS-2020.
+    """Preprocessing pipeline for WUSTL-EHMS-2020.
 
-    Components are injected via ``Phase1Config`` and
-    ``Phase0ArtifactReader`` (Dependency Inversion).
+    Outputs scaled train/test sets ready for dual-track modelling:
+      - Track A (supervised): X_train, y_train + SMOTE config
+      - Track B (novelty): X_train_benign for autoencoder training
 
     Args:
         config: Validated Phase 1 configuration.
@@ -65,15 +78,45 @@ class PreprocessingPipeline:
             sha = self._reader.verify_integrity(csv_files[0])
             self._report["integrity"] = {"sha256": sha, "verified": True}
 
-        # ── Step 1: Ingest ──
+        # ── Ingest ──
         df = self._ingest(data_dir, cfg.file_pattern)
 
-        # ── Step 2: HIPAA ──
-        hipaa = HIPAASanitizer(cfg.hipaa_columns)
-        df = hipaa.transform(df)
-        self._report["hipaa"] = hipaa.get_report()
+        # ══════════════════════════════════════════════════════════════
+        # Step 1: Identifier sanitization
+        # ══════════════════════════════════════════════════════════════
+        sanitizer = HIPAASanitizer(cfg.id_removal_columns)
+        df = sanitizer.transform(df)
+        self._report["identifier_removal"] = sanitizer.get_report()
 
-        # ── Step 3: Missing values ──
+        # Separate labels before any feature transforms
+        y_binary = df[cfg.label_column].values
+        has_multi = cfg.multi_label_column in df.columns
+        y_multi = df[cfg.multi_label_column].values if has_multi else None
+        label_cols = [cfg.label_column]
+        if has_multi:
+            label_cols.append(cfg.multi_label_column)
+        df = df.drop(columns=label_cols)
+
+        self._report["label_separation"] = {
+            "y_binary_column": cfg.label_column,
+            "y_multi_column": cfg.multi_label_column if has_multi else None,
+            "n_samples": len(y_binary),
+        }
+
+        # ══════════════════════════════════════════════════════════════
+        # Step 2: Encode non-numeric features
+        # ══════════════════════════════════════════════════════════════
+        encoder = CategoricalEncoder(
+            label_encode=cfg.label_encode_columns,
+            parse_numeric=cfg.parse_numeric_columns,
+            sentinel=cfg.parse_numeric_sentinel,
+        )
+        df = encoder.transform(df)
+        self._report["encoding"] = encoder.get_report()
+
+        # ══════════════════════════════════════════════════════════════
+        # Step 3: Data cleaning
+        # ══════════════════════════════════════════════════════════════
         handler = MissingValueHandler(
             biometric_columns=cfg.biometric_columns,
             label_column=cfg.label_column,
@@ -81,49 +124,117 @@ class PreprocessingPipeline:
             network_strategy=cfg.network_strategy,
         )
         df = handler.transform(df)
-        self._report["missing_values"] = handler.get_report()
+        self._report["cleaning"] = handler.get_report()
 
-        # ── Step 4: Redundancy (Phase 0 artifact) ──
-        corr_df = self._reader.read_correlations()
-        remover = RedundancyRemover(
-            corr_df, cfg.correlation_threshold, cfg.label_column,
-        )
-        df = remover.transform(df)
-        self._report["redundancy"] = remover.get_report()
-
-        # ── Step 4b: Variance filtering ──
+        # ══════════════════════════════════════════════════════════════
+        # Step 4a: Remove unary (zero-variance) features
+        # ══════════════════════════════════════════════════════════════
         if cfg.variance_enabled:
-            var_filter = VarianceFilter(
-                max_unique=cfg.variance_max_unique,
-                label_column=cfg.label_column,
-            )
+            var_filter = VarianceFilter(max_unique=cfg.variance_max_unique)
             df = var_filter.transform(df)
             self._report["variance"] = var_filter.get_report()
 
-        # ── Step 5: Stratified split ──
-        splitter = DataSplitter(
-            test_ratio=cfg.test_ratio,
-            random_state=cfg.random_state,
-            label_column=cfg.label_column,
-        )
-        X_train, X_test, y_train, y_test, feat_names = splitter.split(df)
-        self._report["split"] = splitter.get_report()
+        # ══════════════════════════════════════════════════════════════
+        # Step 4b: Correlation-based redundancy check
+        # ══════════════════════════════════════════════════════════════
+        if cfg.correlation_enabled:
+            corr_df = self._reader.read_correlations()
+            remover = RedundancyRemover(corr_df, cfg.correlation_threshold)
+            df = remover.transform(df)
+            self._report["redundancy"] = remover.get_report()
 
-        # ── Step 6: SMOTE (train only) ──
-        balancer = SMOTEBalancer(
-            strategy=cfg.smote_strategy,
-            k_neighbors=cfg.smote_k_neighbors,
+        # ══════════════════ LEAKAGE BARRIER ═══════════════════════════
+
+        feat_names = df.columns.tolist()
+        X = df.values.astype(np.float32)
+
+        # ══════════════════════════════════════════════════════════════
+        # Step 5a: Train–test split
+        # ══════════════════════════════════════════════════════════════
+        stratify_on = y_multi if (cfg.stratify and y_multi is not None) else y_binary
+
+        sss = StratifiedShuffleSplit(
+            n_splits=1,
+            test_size=cfg.test_ratio,
             random_state=cfg.random_state,
         )
-        X_train, y_train = balancer.resample(X_train, y_train)
-        self._report["smote"] = balancer.get_report()
+        train_idx, test_idx = next(sss.split(X, stratify_on))
 
-        # ── Step 7: Robust scaling ──
+        X_train, X_test = X[train_idx], X[test_idx]
+        y_train, y_test = y_binary[train_idx], y_binary[test_idx]
+        y_multi_train = y_multi[train_idx] if y_multi is not None else np.array([], dtype=object)
+        y_multi_test = y_multi[test_idx] if y_multi is not None else np.array([], dtype=object)
+
+        self._report["split"] = {
+            "train_samples": int(len(X_train)),
+            "test_samples": int(len(X_test)),
+            "train_ratio": round(1 - cfg.test_ratio, 2),
+            "test_ratio": cfg.test_ratio,
+            "stratified": cfg.stratify,
+            "stratify_column": cfg.multi_label_column if y_multi is not None else cfg.label_column,
+            "train_attack_rate": round(float(y_train.mean()), 4),
+            "test_attack_rate": round(float(y_test.mean()), 4),
+        }
+        logger.info(
+            "Step 5a — Split: train=%d (attack=%.1f%%) | test=%d (attack=%.1f%%)",
+            len(X_train), y_train.mean() * 100,
+            len(X_test), y_test.mean() * 100,
+        )
+
+        # ══════════════════════════════════════════════════════════════
+        # Step 5b: RFECV + SHAP validation (train only)
+        # ══════════════════════════════════════════════════════════════
+        if cfg.shap_enabled:
+            shap_sel = SHAPSelector(
+                min_features=cfg.shap_min_features,
+                n_estimators=cfg.shap_n_estimators,
+                cv_folds=cfg.shap_cv_folds,
+                shap_threshold=cfg.shap_threshold,
+                random_state=cfg.random_state,
+            )
+            X_train, X_test, feat_names = shap_sel.select(
+                X_train, X_test, y_train, feat_names,
+            )
+            self._report["shap_selection"] = shap_sel.get_report()
+
+        # ══════════════════════════════════════════════════════════════
+        # Step 6: Scaling (fit on TRAIN, transform TEST)
+        # ══════════════════════════════════════════════════════════════
         scaler = RobustScalerTransformer(method=cfg.scaling_method)
         X_train_s, X_test_s = scaler.scale_both(X_train, X_test)
         self._report["scaling"] = scaler.get_report()
 
-        # ── Export ──
+        # ══════════════════ DUAL-TRACK BRANCH ═════════════════════════
+
+        # ══════════════════════════════════════════════════════════════
+        # Track B: Extract benign-only training subset for novelty detection
+        # ══════════════════════════════════════════════════════════════
+        benign_mask = y_train == 0
+        X_train_benign = X_train_s[benign_mask]
+
+        self._report["track_b"] = {
+            "enabled": cfg.track_b_enabled,
+            "benign_train_samples": int(benign_mask.sum()),
+            "attack_train_samples": int((~benign_mask).sum()),
+        }
+        logger.info(
+            "Track B — Benign-only train: %d samples (%.1f%% of train)",
+            benign_mask.sum(), benign_mask.mean() * 100,
+        )
+
+        # ══════════════════════════════════════════════════════════════
+        # Track A: SMOTE config (applied inside CV pipeline, not here)
+        # ══════════════════════════════════════════════════════════════
+        self._report["track_a"] = {
+            "smote_enabled": cfg.smote_enabled,
+            "smote_strategy": cfg.smote_strategy,
+            "smote_k_neighbors": cfg.smote_k_neighbors,
+            "note": "SMOTE applied inside CV pipeline, not during preprocessing",
+        }
+
+        # ══════════════════════════════════════════════════════════════
+        # Export
+        # ══════════════════════════════════════════════════════════════
         elapsed = time.perf_counter() - t0
         self._report["elapsed_seconds"] = round(elapsed, 2)
         self._report["random_state"] = cfg.random_state
@@ -131,12 +242,33 @@ class PreprocessingPipeline:
         output_dir = self._root / cfg.output_dir
         scaler_dir = self._root / "models" / "scalers"
         exporter = PreprocessingExporter(
-            output_dir, scaler_dir, cfg.label_column,
+            output_dir, scaler_dir, cfg.label_column, cfg.multi_label_column,
         )
 
-        exporter.export_parquet(X_train_s, y_train, feat_names, cfg.train_parquet)
-        exporter.export_parquet(X_test_s, y_test, feat_names, cfg.test_parquet)
+        # Train set (scaled, pre-SMOTE — SMOTE applied inside CV)
+        exporter.export_parquet(
+            X_train_s, y_train, feat_names, cfg.train_parquet,
+            y_multi=y_multi_train,
+        )
+        # Test set (scaled, untouched)
+        exporter.export_parquet(
+            X_test_s, y_test, feat_names, cfg.test_parquet,
+            y_multi=y_multi_test,
+        )
+        # Track B: benign-only train
+        if cfg.track_b_enabled:
+            exporter.export_parquet(
+                X_train_benign,
+                np.zeros(len(X_train_benign), dtype=int),
+                feat_names,
+                cfg.train_benign_parquet,
+            )
+
         exporter.export_scaler(scaler, cfg.scaler_file)
+
+        # Selected features list
+        sel_path = output_dir / "selected_features.json"
+        sel_path.write_text(json.dumps(feat_names, indent=2), encoding="utf-8")
 
         self._report["output"] = {
             "feature_names": feat_names,
@@ -144,7 +276,7 @@ class PreprocessingPipeline:
         }
         exporter.export_report(self._report, cfg.report_file)
 
-        # ── Thesis report ──
+        # Thesis report
         md = render_preprocessing_report(self._report)
         md_path = self._root / "results" / "phase0_analysis" / "report_section_preprocessing.md"
         md_path.parent.mkdir(parents=True, exist_ok=True)
@@ -155,7 +287,6 @@ class PreprocessingPipeline:
         return self._report
 
     def get_report(self) -> Dict[str, Any]:
-        """Return the accumulated pipeline report."""
         return dict(self._report)
 
     # ------------------------------------------------------------------
@@ -186,35 +317,39 @@ class PreprocessingPipeline:
     def _log_summary(self) -> None:
         sep = "=" * 72
         ing = self._report.get("ingestion", {})
-        hip = self._report.get("hipaa", {})
-        mv = self._report.get("missing_values", {})
-        red = self._report.get("redundancy", {})
+        idr = self._report.get("identifier_removal", {})
+        cl = self._report.get("cleaning", {})
         var = self._report.get("variance", {})
+        red = self._report.get("redundancy", {})
         spl = self._report.get("split", {})
-        smt = self._report.get("smote", {})
+        shp = self._report.get("shap_selection", {})
+        tb = self._report.get("track_b", {})
         out = self._report.get("output", {})
 
         logger.info("")
         logger.info(sep)
         logger.info("PHASE 1 — PREPROCESSING SUMMARY")
         logger.info(sep)
-        logger.info("  Ingestion   : %d files → %d × %d",
+        logger.info("  Ingestion    : %d files → %d × %d",
                      ing.get("files_loaded", 0), ing.get("raw_rows", 0),
                      ing.get("raw_columns", 0))
-        logger.info("  HIPAA       : %d columns dropped", hip.get("n_dropped", 0))
-        logger.info("  Missing     : %d bio cells filled, %d rows dropped",
-                     mv.get("biometric_cells_filled", 0), mv.get("rows_dropped", 0))
-        logger.info("  Redundancy  : %d features (|r| ≥ %.2f)",
+        logger.info("  Identifiers  : %d columns dropped", idr.get("n_dropped", 0))
+        logger.info("  Cleaning     : %d bio cells filled, %d rows dropped",
+                     cl.get("biometric_cells_filled", 0), cl.get("rows_dropped", 0))
+        logger.info("  Variance     : %d features dropped",
+                     var.get("n_dropped", 0))
+        logger.info("  Redundancy   : %d features dropped (|r| ≥ %.2f)",
                      red.get("n_dropped", 0), red.get("threshold", 0))
-        logger.info("  Variance    : %d features (unique ≤ %d)",
-                     var.get("n_dropped", 0), var.get("max_unique", 0))
-        logger.info("  Split       : train=%d, test=%d",
+        logger.info("  Split        : train=%d, test=%d",
                      spl.get("train_samples", 0), spl.get("test_samples", 0))
-        logger.info("  SMOTE       : %d → %d (+%d)",
-                     smt.get("samples_before", 0), smt.get("samples_after", 0),
-                     smt.get("synthetic_added", 0))
-        logger.info("  Features    : %d", out.get("n_features", 0))
-        logger.info("  Elapsed     : %.2f s", self._report.get("elapsed_seconds", 0))
+        logger.info("  RFECV+SHAP   : %d → %d features",
+                     shp.get("n_selected", 0) + shp.get("n_dropped", 0),
+                     shp.get("n_selected", 0))
+        logger.info("  Track A      : SMOTE inside CV pipeline")
+        logger.info("  Track B      : %d benign-only samples",
+                     tb.get("benign_train_samples", 0))
+        logger.info("  Features     : %d", out.get("n_features", 0))
+        logger.info("  Elapsed      : %.2f s", self._report.get("elapsed_seconds", 0))
         logger.info(sep)
 
 

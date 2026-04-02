@@ -1,7 +1,7 @@
 """Context-aware missing value handler — Single Responsibility.
 
 Biometric features: forward-fill (sensor dropout assumption).
-Network features:  row-wise dropna (corrupted packet assumption).
+Network features:  impute with 0 then drop remaining NaN rows.
 """
 
 from __future__ import annotations
@@ -63,22 +63,27 @@ class MissingValueHandler(BaseTransformer):
             if self._bio_strategy == "ffill":
                 df[bio_cols] = df[bio_cols].ffill().bfill()
 
-        # Network: drop rows with NaN
+        # Network: impute with 0, then drop any remaining NaN rows
         rows_before = len(df)
         net_missing = int(df[net_cols].isna().sum().sum()) if net_cols else 0
-        if net_cols and self._net_strategy == "dropna":
+        net_filled = 0
+        if net_cols and self._net_strategy == "fill_zero":
+            net_filled = net_missing
+            df[net_cols] = df[net_cols].fillna(0)
+        elif net_cols and self._net_strategy == "dropna":
             df = df.dropna(subset=net_cols)
         rows_dropped = rows_before - len(df)
 
         self._stats = {
             "biometric_cells_filled": bio_filled,
             "network_cells_missing": net_missing,
+            "network_cells_filled_zero": net_filled,
             "rows_dropped": rows_dropped,
             "rows_remaining": len(df),
         }
         logger.info(
-            "MissingValueHandler: %d bio cells filled, %d rows dropped",
-            bio_filled, rows_dropped,
+            "MissingValueHandler: %d bio cells filled, %d net cells zeroed, %d rows dropped",
+            bio_filled, net_filled, rows_dropped,
         )
         return df
 

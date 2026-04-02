@@ -2,6 +2,7 @@
 
 Does NOT recompute the correlation matrix.  For each high-correlation
 pair, drops ``feature_b`` (the secondary feature).
+Labels are already separated at this point.
 """
 
 from __future__ import annotations
@@ -23,25 +24,22 @@ class RedundancyRemover(BaseTransformer):
         corr_df: Phase 0 high-correlation pairs DataFrame
                  (columns: feature_a, feature_b, correlation).
         threshold: Minimum |r| to consider a pair redundant.
-        label_column: Label column name (never dropped).
     """
 
     def __init__(
         self,
         corr_df: pd.DataFrame,
         threshold: float = 0.95,
-        label_column: str = "Label",
     ) -> None:
         self._corr_df = corr_df
         self._threshold = threshold
-        self._label_col = label_column
         self._dropped: List[str] = []
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Drop one feature from each high-correlation pair.
 
         Args:
-            df: DataFrame after missing value handling.
+            df: Feature-only DataFrame (labels already separated).
 
         Returns:
             DataFrame with redundant features removed.
@@ -51,11 +49,7 @@ class RedundancyRemover(BaseTransformer):
 
         for _, row in high.iterrows():
             candidate = row["feature_b"]
-            if (
-                candidate in df.columns
-                and candidate != self._label_col
-                and candidate not in cols_to_drop
-            ):
+            if candidate in df.columns and candidate not in cols_to_drop:
                 cols_to_drop.append(candidate)
 
         df = df.drop(columns=cols_to_drop, errors="ignore")

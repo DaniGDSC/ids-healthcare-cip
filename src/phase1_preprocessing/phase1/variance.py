@@ -1,7 +1,7 @@
 """Variance filter — drops zero/near-zero variance features.
 
-Applied after redundancy elimination, before train/test split.
-Features with unique_count <= 1 (constant) are always dropped.
+Applied after encoding, before correlation removal.
+Labels are already separated at this point.
 """
 
 from __future__ import annotations
@@ -21,35 +21,23 @@ class VarianceFilter(BaseTransformer):
 
     Args:
         max_unique: Features with unique_count <= this are dropped.
-        label_column: Label column name (never dropped).
     """
 
-    def __init__(
-        self,
-        max_unique: int = 1,
-        label_column: str = "Label",
-    ) -> None:
+    def __init__(self, max_unique: int = 1) -> None:
         self._max_unique = max_unique
-        self._label_col = label_column
         self._dropped: List[str] = []
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Drop features with too few unique values.
 
         Args:
-            df: DataFrame after redundancy elimination.
+            df: Feature-only DataFrame (labels already separated).
 
         Returns:
             DataFrame with zero-variance features removed.
         """
-        exclude = {self._label_col, "Attack Category"}
-        numeric_cols = [
-            c for c in df.select_dtypes(include=["number"]).columns
-            if c not in exclude
-        ]
-
         cols_to_drop = [
-            c for c in numeric_cols
+            c for c in df.columns
             if df[c].nunique() <= self._max_unique
         ]
 

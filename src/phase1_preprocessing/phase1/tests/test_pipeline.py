@@ -30,7 +30,7 @@ class TestPhase1Config:
         defaults = dict(
             input_dir=Path("data/raw"),
             output_dir=Path("data/processed"),
-            hipaa_columns=["SrcAddr", "DstAddr"],
+            id_removal_columns=["SrcAddr", "DstAddr"],
             biometric_columns=["Temp", "SpO2"],
             phase0_corr_file=Path("results/high_correlations.csv"),
         )
@@ -60,13 +60,13 @@ data:
   input_dir: "data/raw/WUSTL-EHMS"
   output_dir: "data/processed"
   label_column: "Label"
-hipaa:
+identifier_removal:
   enabled: true
   remove_columns: ["SrcAddr"]
-missing_values:
+cleaning:
   biometric_columns: ["Temp"]
   biometric_strategy: "ffill"
-  network_strategy: "dropna"
+  network_strategy: "fill_zero"
 correlation_removal:
   threshold: 0.95
   phase0_corr_file: "results/high_correlations.csv"
@@ -74,10 +74,11 @@ splitting:
   train_ratio: 0.70
   test_ratio: 0.30
   random_state: 42
-smote:
-  enabled: true
-  sampling_strategy: "auto"
-  k_neighbors: 5
+track_a:
+  smote:
+    enabled: true
+    sampling_strategy: "auto"
+    k_neighbors: 5
 normalization:
   method: "robust"
 output:
@@ -86,7 +87,7 @@ output:
         p = tmp_path / "config.yaml"
         p.write_text(yaml_content)
         cfg = Phase1Config.from_yaml(p)
-        assert cfg.hipaa_columns == ["SrcAddr"]
+        assert cfg.id_removal_columns == ["SrcAddr"]
         assert cfg.scaling_method == "robust"
 
 

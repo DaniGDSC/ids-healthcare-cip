@@ -1,7 +1,7 @@
 # Phase 1: Data Preprocessing & Sanitization Configuration
 # Target dataset: WUSTL-EHMS-2020 (Enhanced Healthcare Monitoring System)
 #
-# Actual CSV columns (45):
+# Raw CSV: 44 features (35 network + 8 biometric + 1 label)
 #   Network:   Dir, Flgs, SrcAddr, DstAddr, Sport, Dport, SrcBytes, DstBytes,
 #              SrcLoad, DstLoad, SrcGap, DstGap, SIntPkt, DIntPkt, SIntPktAct,
 #              DIntPktAct, SrcJitter, DstJitter, sMaxPktSz, dMaxPktSz,
@@ -15,26 +15,32 @@ data:
   output_dir: "data/processed"
   file_pattern: "*.csv"
   label_column: "Label"
+  multi_label_column: "Attack Category"
 
-# ── Step 2: HIPAA Safe Harbor Sanitization ──────────────────────────────
-hipaa:
+# ── Step 1: Identifier Sanitization ──────────────────────────────────────
+# Remove MAC/address identifiers implicated in labeling
+# (Source MAC perfectly separates normal/attack — used for labeling)
+identifier_removal:
   enabled: true
-  # Columns to DROP (actual CSV names for network + temporal identifiers)
   remove_columns:
-    # Network Identifiers
     - "SrcAddr"
     - "DstAddr"
-    - "Sport"
-    - "Dport"
-    # MAC Identifiers
-    - "SrcMac"
+    - "SrcMac"          # used for labeling → leakage
     - "DstMac"
-    # Direction / Flag metadata (not features, but flow metadata)
+    - "Packet_num"      # sequential index → temporal leakage
+
+# ── Step 2: Encode Non-Numeric Features ──────────────────────────────────
+encoding:
+  label_encode:
     - "Dir"
     - "Flgs"
+  parse_numeric:
+    - "Sport"
+  parse_numeric_sentinel: -1
 
-# ── Step 3: Context-Aware Missing Value Handling ────────────────────────
-missing_values:
+# ── Step 3: Data Cleaning ────────────────────────────────────────────────
+# Handle missing data and outliers
+cleaning:
   biometric_strategy: "ffill"
   biometric_columns:
     - "Temp"
@@ -45,45 +51,65 @@ missing_values:
     - "Heart_rate"
     - "Resp_Rate"
     - "ST"
-  network_strategy: "dropna"
-  network_missing_threshold: 0.05
+  network_strategy: "fill_zero"
 
-# ── Step 4: Redundancy Elimination ──────────────────────────────────────
+# ── Step 4a: Remove Unary (Zero-Variance) Features ──────────────────────
+variance_filtering:
+  enabled: true
+  max_unique: 1
+
+# ── Step 4b: Correlation-Based Redundancy Check ─────────────────────────
 correlation_removal:
   enabled: true
   threshold: 0.95
   phase0_corr_file: "results/phase0_analysis/high_correlations.csv"
 
-# ── Step 4b: Variance Filtering ────────────────────────────────────────
-variance_filtering:
-  enabled: true
-  max_unique: 1               # drop features with ≤ 1 unique value (constant)
+# ══════════════════ LEAKAGE BARRIER ══════════════════════════════════════
 
-# ── Step 5: Stratified Train/Test Split ─────────────────────────────────
+# ── Step 5a: Train–Test Split ────────────────────────────────────────────
 splitting:
   train_ratio: 0.70
   test_ratio: 0.30
-  stratify: true
+  stratify: true          # stratified on Attack Category
   random_state: 42
 
-# ── Step 6: SMOTE (train set only) ──────────────────────────────────────
-smote:
+# ── Step 5b: RFECV + SHAP Validation (train only) ───────────────────────
+shap_selection:
   enabled: true
-  # "auto" balances minority to majority (1:1). Use a float (e.g. 0.5) for
-  # a partial resample (minority:majority = 1:2), which is less aggressive
-  # and preserves some natural imbalance signal for downstream models.
-  sampling_strategy: "auto"
-  k_neighbors: 5       # k for the k-NN interpolation; reduce to 3 on very small minority classes
-  random_state: 42
+  min_features: 5
+  n_estimators: 100
+  cv_folds: 5
+  shap_threshold: 0.01   # relative: keep if mean|SHAP| > 1% of max
 
-# ── Step 7: Data Scaling (RobustScaler) ─────────────────────────────────
+# ── Step 6: Scaling (fit on TRAIN, transform TEST) ──────────────────────
 normalization:
-  method: "robust"  # IQR-based; robust to outliers; preserves attack signature morphology for XAI
+  method: "robust"
 
-# ── Step 8: Artifact Export ─────────────────────────────────────────────
+# ══════════════════ DUAL-TRACK BRANCH ════════════════════════════════════
+#
+# Track A: Supervised classification
+#   SMOTE applied inside CV pipeline (not as a standalone step)
+#
+# Track B: Novelty detection
+#   Autoencoder trained on benign-only training data
+#   Anomalies flagged by reconstruction error threshold
+
+track_a:
+  smote:
+    enabled: true
+    sampling_strategy: "auto"
+    k_neighbors: 5
+    random_state: 42
+
+track_b:
+  enabled: true
+  # Autoencoder config is in Phase 2 detection engine
+
+# ── Export ───────────────────────────────────────────────────────────────
 output:
   train_parquet: "train_phase1.parquet"
   test_parquet: "test_phase1.parquet"
+  train_benign_parquet: "train_benign_phase1.parquet"   # Track B: benign-only
   scaler_file: "robust_scaler.pkl"
   report_file: "phase1_report.json"
 

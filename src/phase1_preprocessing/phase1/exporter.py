@@ -25,6 +25,7 @@ class PreprocessingExporter:
         output_dir: Directory for Parquet and JSON output.
         scaler_dir: Directory for the scaler pickle.
         label_column: Label column name in output Parquet.
+        multi_label_column: Multi-class label column name in output Parquet.
     """
 
     def __init__(
@@ -32,10 +33,12 @@ class PreprocessingExporter:
         output_dir: Path,
         scaler_dir: Path,
         label_column: str = "Label",
+        multi_label_column: str = "Attack Category",
     ) -> None:
         self._output_dir = output_dir
         self._scaler_dir = scaler_dir
         self._label_col = label_column
+        self._multi_label_col = multi_label_column
 
     def export_parquet(
         self,
@@ -43,14 +46,16 @@ class PreprocessingExporter:
         y: np.ndarray,
         feature_names: List[str],
         filename: str,
+        y_multi: np.ndarray | None = None,
     ) -> Path:
         """Export a scaled partition as a Parquet file.
 
         Args:
             X: Scaled feature matrix.
-            y: Label array.
+            y: Binary label array.
             feature_names: Ordered column names.
             filename: Output file name.
+            y_multi: Optional multi-class label array.
 
         Returns:
             Absolute path to the written file.
@@ -59,6 +64,8 @@ class PreprocessingExporter:
         path = self._output_dir / filename
         df = pd.DataFrame(X, columns=feature_names)
         df[self._label_col] = y
+        if y_multi is not None and len(y_multi) > 0:
+            df[self._multi_label_col] = y_multi
         df.to_parquet(path, index=False)
         logger.info("Exported %s: %d rows × %d cols", path.name, *df.shape)
         return path
