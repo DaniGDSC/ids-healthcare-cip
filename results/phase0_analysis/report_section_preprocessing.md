@@ -11,8 +11,8 @@ This section documents the seven-step preprocessing pipeline applied to the WUST
 | 3. Missing | 16,318 × 45 | 16,318 × 45 | ffill bio, dropna net |
 | 4. Redundancy | 16,318 × 45 | 16,318 × 39 | 6 correlated features dropped |
 | 5. Split | 16,318 × 39 | train 11,422 / test 4,896 | Stratified 70/30 |
-| 6. SMOTE | 11,422 × 9 | 0 × 9 | Train only |
-| 7. Scale | 0 × 9 | 0 × 9 | RobustScaler (train fit) |
+| 6. SMOTE | 11,422 × 25 | 0 × 25 | Train only |
+| 7. Scale | 0 × 25 | 0 × 25 | RobustScaler (train fit) |
 
 ### Feature Reduction Summary
 
@@ -74,7 +74,7 @@ SMOTE (Synthetic Minority Oversampling Technique) with *k* = 5 is applied **excl
 
 ### 4.1.6 Robust Scaling
 
-RobustScaler (median / IQR normalisation) is chosen over StandardScaler (mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 identified heavy-tailed distributions in network-traffic features. RobustScaler is insensitive to extreme values, preserving the morphology of attack signatures for downstream XAI (SHAP) interpretation.
+RobustScaler (median / IQR normalisation) is chosen over StandardScaler (mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 identified heavy-tailed distributions in network-traffic features. RobustScaler is insensitive to extreme values, preserving the morphology of attack signatures for downstream explainability analysis.
 
 Scaler fitted exclusively on training set (n=11,422). Test set transformed without refitting — preventing information leakage from test distribution.
 
@@ -82,9 +82,9 @@ Scaler fitted exclusively on training set (n=11,422). Test set transformed witho
 
 | Artifact | Format | Description |
 |----------|--------|-------------|
-| `train_phase1.parquet` | Apache Parquet | 0 rows × 9 features |
-| `test_phase1.parquet` | Apache Parquet | 4,896 rows × 9 features |
+| `train_phase1.parquet` | Apache Parquet | 0 rows × 25 features |
+| `test_phase1.parquet` | Apache Parquet | 4,896 rows × 25 features |
 | `robust_scaler.pkl` | joblib pickle | Fitted RobustScaler for inference |
 | `preprocessing_report.json` | JSON | Per-step audit trail |
 
-Total pipeline elapsed time: **276.97 s**
+Total pipeline elapsed time: **0.07 s**
