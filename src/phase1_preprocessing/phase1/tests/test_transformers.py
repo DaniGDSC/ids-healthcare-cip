@@ -14,7 +14,6 @@ import pytest
 from src.phase1_preprocessing.phase1.encoder import CategoricalEncoder
 from src.phase1_preprocessing.phase1.hipaa import HIPAASanitizer
 from src.phase1_preprocessing.phase1.missing import MissingValueHandler
-from src.phase1_preprocessing.phase1.shap_selector import SHAPSelector
 from src.phase1_preprocessing.phase1.redundancy import RedundancyRemover
 from src.phase1_preprocessing.phase1.variance import VarianceFilter
 
@@ -328,60 +327,3 @@ class TestVarianceFilter:
         assert report["n_dropped"] == 2
         assert "B" in report["columns_dropped"]
         assert "C" in report["columns_dropped"]
-
-
-# ---------------------------------------------------------------------------
-# SHAPSelector
-# ---------------------------------------------------------------------------
-
-
-class TestSHAPSelector:
-    @pytest.fixture()
-    def train_data(self):
-        rng = np.random.RandomState(42)
-        n = 200
-        # f_good: strongly predictive; f_noise: random; f_weak: mildly useful
-        f_good = np.concatenate([rng.randn(n // 2) - 2, rng.randn(n // 2) + 2])
-        f_weak = np.concatenate([rng.randn(n // 2) - 0.3, rng.randn(n // 2) + 0.3])
-        f_noise = rng.randn(n)
-        X_train = np.column_stack([f_good, f_weak, f_noise])
-        y_train = np.array([0] * (n // 2) + [1] * (n // 2))
-        X_test = rng.randn(50, 3)
-        feat_names = ["f_good", "f_weak", "f_noise"]
-        return X_train, X_test, y_train, feat_names
-
-    def test_selects_informative_feature(self, train_data) -> None:
-        X_train, X_test, y_train, feat_names = train_data
-        sel = SHAPSelector(min_features=1, n_estimators=50, cv_folds=2, random_state=42)
-        X_tr, X_te, selected = sel.select(X_train, X_test, y_train, feat_names)
-        assert "f_good" in selected
-        assert X_tr.shape[1] == len(selected)
-        assert X_te.shape[1] == len(selected)
-
-    def test_rfe_eliminates_noise_first(self, train_data) -> None:
-        X_train, X_test, y_train, feat_names = train_data
-        sel = SHAPSelector(min_features=1, n_estimators=50, cv_folds=2, random_state=42)
-        sel.select(X_train, X_test, y_train, feat_names)
-        report = sel.get_report()
-        # f_good should have much higher initial importance than f_noise
-        assert report["initial_importances"]["f_good"] > report["initial_importances"]["f_noise"]
-        # RFE should have eliminated features
-        assert len(report["rfe_elimination_order"]) >= 1
-
-    def test_report_structure(self, train_data) -> None:
-        X_train, X_test, y_train, feat_names = train_data
-        sel = SHAPSelector(min_features=2, n_estimators=50, cv_folds=2, random_state=42)
-        sel.select(X_train, X_test, y_train, feat_names)
-        report = sel.get_report()
-        assert "XGBoost-RFE" in report["method"]
-        assert "initial_importances" in report
-        assert "cv_scores" in report
-        assert "shap_crosscheck_importances" in report
-        assert report["n_selected"] + report["n_dropped"] == 3
-
-    def test_min_features_respected(self, train_data) -> None:
-        X_train, X_test, y_train, feat_names = train_data
-        sel = SHAPSelector(min_features=2, n_estimators=50, cv_folds=2, random_state=42)
-        X_tr, _, selected = sel.select(X_train, X_test, y_train, feat_names)
-        # RFE selected subset is at least min_features; SHAP crosscheck may reduce further
-        assert len(selected) >= 1

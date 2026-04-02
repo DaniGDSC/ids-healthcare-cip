@@ -73,14 +73,6 @@ splitting:
   stratify: true          # stratified on Attack Category
   random_state: 42
 
-# ── Step 5b: RFECV + SHAP Validation (train only) ───────────────────────
-shap_selection:
-  enabled: true
-  min_features: 5
-  n_estimators: 100
-  cv_folds: 5
-  shap_threshold: 0.01   # relative: keep if mean|SHAP| > 1% of max
-
 # ── Step 6: Scaling (fit on TRAIN, transform TEST) ──────────────────────
 normalization:
   method: "robust"

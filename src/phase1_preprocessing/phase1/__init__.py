@@ -9,7 +9,6 @@ CategoricalEncoder       — label-encodes categoricals, parses string numerics
 MissingValueHandler      — ffill biometrics, fill_zero network
 VarianceFilter           — drops zero/near-zero variance features
 RedundancyRemover        — drops correlated features from Phase 0
-SHAPSelector             — RFECV + SHAP feature selection (train only)
 RobustScalerTransformer  — fit on train, transform both
 PreprocessingExporter    — Parquet, pickle, JSON export
 PreprocessingPipeline    — orchestrates all steps
@@ -31,7 +30,6 @@ from .pipeline import PreprocessingPipeline
 from .redundancy import RedundancyRemover
 from .report import render_preprocessing_report
 from .scaler import RobustScalerTransformer
-from .shap_selector import SHAPSelector
 from .smote import SMOTEBalancer
 from .splitter import DataSplitter
 from .variance import VarianceFilter
@@ -45,7 +43,6 @@ __all__ = [
     "MissingValueHandler",
     "VarianceFilter",
     "RedundancyRemover",
-    "SHAPSelector",
     "RobustScalerTransformer",
     "SMOTEBalancer",
     "DataSplitter",

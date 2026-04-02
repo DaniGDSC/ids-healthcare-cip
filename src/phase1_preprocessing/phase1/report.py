@@ -129,8 +129,8 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
       "(mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 "
       "identified heavy-tailed distributions in network-traffic features. "
       "RobustScaler is insensitive to extreme values, preserving the "
-      "morphology of attack signatures for downstream XAI (SHAP) "
-      "interpretation.")
+      "morphology of attack signatures for downstream explainability "
+      "analysis.")
     w("")
     train_fitted = smt.get("samples_after", train_n)
     w(f"Scaler fitted exclusively on training set (n={train_fitted:,}). "

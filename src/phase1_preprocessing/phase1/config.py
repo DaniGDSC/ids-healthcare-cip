@@ -52,13 +52,6 @@ class Phase1Config(BaseModel):
     random_state: int = 42
     stratify: bool = True
 
-    # Step 5b: SHAP-RFE
-    shap_enabled: bool = True
-    shap_min_features: int = 5
-    shap_n_estimators: int = 100
-    shap_cv_folds: int = 5
-    shap_threshold: float = 0.01
-
     # Step 6: Scaling
     scaling_method: str = "robust"
 
@@ -118,7 +111,6 @@ class Phase1Config(BaseModel):
         corr = raw.get("correlation_removal", {})
         var = raw.get("variance_filtering", {})
         split = raw.get("splitting", {})
-        shap_cfg = raw.get("shap_selection", {})
         norm = raw.get("normalization", {})
         track_a = raw.get("track_a", {})
         smote = track_a.get("smote", {})
@@ -151,11 +143,6 @@ class Phase1Config(BaseModel):
             test_ratio=split.get("test_ratio", 0.30),
             random_state=split.get("random_state", 42),
             stratify=split.get("stratify", True),
-            shap_enabled=shap_cfg.get("enabled", True),
-            shap_min_features=shap_cfg.get("min_features", 5),
-            shap_n_estimators=shap_cfg.get("n_estimators", 100),
-            shap_cv_folds=shap_cfg.get("cv_folds", 5),
-            shap_threshold=shap_cfg.get("shap_threshold", 0.01),
             scaling_method=norm.get("method", "robust"),
             smote_enabled=smote.get("enabled", True),
             smote_strategy=smote.get("sampling_strategy", "auto"),
