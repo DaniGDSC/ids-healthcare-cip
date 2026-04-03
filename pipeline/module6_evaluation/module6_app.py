@@ -46,6 +46,7 @@ def init_session():
         st.session_state.alert_start_time = None
         st.session_state.study_started = False
         st.session_state.study_complete = False
+        st.session_state.app_mode = "browse"  # "browse" or "study"
 
 
 def registration_page():
@@ -200,10 +201,32 @@ def results_page():
     combined_path.write_text(json.dumps(existing, indent=2))
 
 
-def main():
-    st.set_page_config(page_title="IoMT XAI Evaluation", layout="wide")
-    init_session()
+def browse_mode():
+    """Free browsing mode — toggle XAI, navigate alerts freely."""
+    alerts = load_alerts()
+    n_alerts = len(alerts)
 
+    # Sidebar controls
+    st.sidebar.markdown("## Browse Controls")
+    show_xai = st.sidebar.toggle("Show XAI Explanation", value=True)
+    alert_idx = st.sidebar.slider("Alert #", 0, n_alerts - 1, 0)
+    alert = alerts[alert_idx]
+
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(f"**Ground Truth:** `{alert['ground_truth']}`")
+    st.sidebar.markdown(f"**Attack Type:** `{alert['attack_category']}`")
+    st.sidebar.markdown(f"**Correct Action:** `{alert.get('correct_action', 'N/A')}`")
+
+    # Display
+    st.title("IoMT Alert Browser")
+    st.caption(f"Alert {alert_idx + 1} of {n_alerts} — "
+               f"{'With XAI' if show_xai else 'Without XAI'}")
+
+    display_alert(alert, show_xai)
+
+
+def study_mode():
+    """Formal A/B evaluation study with response capture."""
     if not st.session_state.study_started:
         registration_page()
         return
@@ -222,7 +245,7 @@ def main():
         return
 
     alert = alerts[current]
-    show_xai = current < (n_alerts // 2)  # first half with XAI, second without
+    show_xai = current < (n_alerts // 2)  # A/B: first half with XAI
 
     # Progress bar
     st.progress(current / n_alerts,
@@ -239,6 +262,25 @@ def main():
         st.session_state.current_alert += 1
         st.session_state.alert_start_time = time.time()
         st.rerun()
+
+
+def main():
+    st.set_page_config(page_title="IoMT XAI Evaluation", layout="wide")
+    init_session()
+
+    # Mode selector in sidebar
+    st.sidebar.title("Mode")
+    mode = st.sidebar.radio(
+        "Select mode:",
+        ["Browse", "Study (A/B)"],
+        index=0 if st.session_state.app_mode == "browse" else 1,
+    )
+    st.session_state.app_mode = "browse" if mode == "Browse" else "study"
+
+    if st.session_state.app_mode == "browse":
+        browse_mode()
+    else:
+        study_mode()
 
 
 if __name__ == "__main__":
