@@ -1,0 +1,56 @@
+{
+  "model_type": "xgboost",
+  "stage": "final_training",
+  "best_params": {
+    "subsample": 0.9,
+    "n_estimators": 700,
+    "min_samples_split": 10,
+    "min_samples_leaf": 3,
+    "max_features": null,
+    "max_depth": 7,
+    "learning_rate": 0.2
+  },
+  "optimal_threshold": 0.05,
+  "test_metrics": {
+    "attack_f1": 0.8923315259488769,
+    "attack_f2": 0.919246728375359,
+    "weighted_f1": 0.972196997524612,
+    "macro_f1": 0.9379902542107637,
+    "auc_roc": 0.9940722241577881,
+    "optimal_threshold": 0.05
+  },
+  "data": {
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "train_samples": 11422,
+    "test_samples": 4896,
+    "train_attack_rate": 0.1254
+  },
+  "elapsed_seconds": 65.5
+}

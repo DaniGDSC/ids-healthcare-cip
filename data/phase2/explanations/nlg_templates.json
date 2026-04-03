@@ -1,0 +1,20 @@
+{
+  "severity_header": {
+    "CRITICAL": "CRITICAL SECURITY ALERT \u2014 Immediate action required.",
+    "HIGH": "HIGH PRIORITY ALERT \u2014 Active investigation needed.",
+    "MEDIUM": "MODERATE ALERT \u2014 Flagged for review.",
+    "LOW": "LOW PRIORITY \u2014 Logged for audit."
+  },
+  "detection_sentence": "The intrusion detection system flagged this network flow with {consensus} using a confidence of {confidence:.0%}.",
+  "feature_explanation_network": "{label} showed {direction} (SHAP contribution: {shap_value:+.3f}).",
+  "feature_explanation_biometric": "Patient {label} showed {direction} (SHAP contribution: {shap_value:+.3f}). Clinical review of this vital sign is recommended.",
+  "risk_context": "Composite risk score: {risk_score:.2f} ({risk_level}). Components \u2014 detection confidence: {c_detect:.2f}, device criticality: {d_crit:.2f}, data sensitivity: {s_data:.2f}, patient acuity: {a_patient:.2f}.",
+  "acuity_note_normal": "Patient vitals are within normal ranges.",
+  "acuity_note_abnormal": "Note: {n_abnormal} of 8 biometric readings are outside normal range. Verify patient condition independently.",
+  "action_recommendation": {
+    "CRITICAL": "Recommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response.",
+    "HIGH": "Recommended: Isolate network segment. Notify SOC and biomedical engineering.",
+    "MEDIUM": "Recommended: Enable enhanced monitoring. Queue for security team review.",
+    "LOW": "Recommended: No immediate action. Review at next security audit."
+  }
+}

@@ -1,85 +1,91 @@
-# IoMT IDS — Multi-service deployment
-# Services: API (inference) + Dashboard (Streamlit) + Backup (cron)
+# IDS Healthcare CIP — Full Pipeline + Monitoring Sidecar
+#
+# Architecture:
+#   pipeline  (Phase 0-6) → sequential execution
+#   monitoring (Phase 7)  → parallel sidecar, read-only artifact access
 #
 # Usage:
-#   docker compose up -d              # Start all services
-#   docker compose logs -f api        # Watch API logs
-#   docker compose exec api python -m pytest tests/ -v  # Run tests
-#   docker compose down               # Stop all
+#   docker-compose up              # Run both containers
+#   docker-compose up pipeline     # Pipeline only
+#   docker-compose up monitoring   # Monitoring only (needs artifacts)
+#
+# Reproducibility:
+#   Full system reproducible via: docker-compose up
 
-version: "3.8"
+version: "3.9"
 
 services:
-  # ── Inference API (FastAPI + Uvicorn) ──────────────────────────
-  api:
+  # ── Pipeline container: Phase 0-6 sequential ──────────────────────
+  pipeline:
     build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    command: >
-      uvicorn src.production.api:app
-      --host 0.0.0.0
-      --port 8000
-      --workers 2
-      --log-level info
-    ports:
-      - "8000:8000"
-    volumes:
-      - ../data:/app/data                # Model weights + DB
-      - ../config:/app/config            # Production config
-      - ../logs:/app/logs                # Log files
-      - certs:/app/certs:ro              # TLS certificates (read-only)
+      context: .
+      dockerfile: Dockerfile
+    image: analyst/phase0-phase6:7.0
+    container_name: ids-pipeline
     environment:
-      - TF_CPP_MIN_LOG_LEVEL=2           # Suppress TF warnings
-      - PYTHONPATH=/app
+      - CUDA_VISIBLE_DEVICES=
+      - TF_DETERMINISTIC_OPS=1
+      - MPLBACKEND=Agg
+    volumes:
+      - pipeline-artifacts:/home/analyst/app/data
+      - pipeline-results:/home/analyst/app/results
+    networks:
+      - pipeline_net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: >
+        python -c "
+        from src.phase0_dataset_analysis.phase0 import Phase0Config;
+        from src.phase5_explanation_engine.phase5.config import Phase5Config;
+        print('OK')"
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
-    restart: unless-stopped
 
-  # ── Dashboard (Streamlit) ──────────────────────────────────────
-  dashboard:
+  # ── Monitoring sidecar: Phase 7 parallel ──────────────────────────
+  # Starts alongside pipeline — observes all phases from beginning.
+  # Read-only access to pipeline artifacts — cannot modify pipeline.
+  # Isolated network — monitoring_net for separation of concerns.
+  monitoring:
     build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    command: >
-      streamlit run dashboard/app.py
-      --server.port 8501
-      --server.address 0.0.0.0
-      --server.headless true
-      --browser.gatherUsageStats false
-    ports:
-      - "8501:8501"
-    volumes:
-      - ../data:/app/data
-      - ../config:/app/config
-      - ../logs:/app/logs
-    environment:
-      - TF_CPP_MIN_LOG_LEVEL=2
-      - PYTHONPATH=/app
+      context: .
+      dockerfile: Dockerfile.monitoring
+    image: analyst/phase7-monitoring:1.0
+    container_name: ids-monitoring
     depends_on:
-      api:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # ── Database Backup (periodic) ─────────────────────────────────
-  backup:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    command: >
-      python -m src.production.backup
-      --interval 3600
-      --keep 48
-    volumes:
-      - ../data:/app/data
-      - ../config:/app/config
+      pipeline:
+        condition: service_started
     environment:
-      - PYTHONPATH=/app
-    restart: unless-stopped
+      - CUDA_VISIBLE_DEVICES=
+      - TF_DETERMINISTIC_OPS=1
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Read-only access to pipeline artifacts
+      - pipeline-artifacts:/home/monitor/app/data:ro
+      # Writable output for monitoring logs
+      - monitoring-output:/home/monitor/app/data/phase7
+      - pipeline-results:/home/monitor/app/results
+    networks:
+      - monitoring_net
+    healthcheck:
+      test: >
+        python -c "
+        from src.phase7_monitoring_engine.phase7.config import Phase7Config;
+        from src.phase7_monitoring_engine.phase7.heartbeat_receiver import HeartbeatReceiver;
+        print('OK')"
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
-  certs:
+  pipeline-artifacts:
     driver: local
+  pipeline-results:
+    driver: local
+  monitoring-output:
+    driver: local
+
+networks:
+  pipeline_net:
+    driver: bridge
+  monitoring_net:
+    driver: bridge
