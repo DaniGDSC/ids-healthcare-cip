@@ -37,8 +37,8 @@ import shap
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "data/phase2/explanations"
-CHARTS_DIR = OUTPUT_DIR / "charts"
+OUTPUT_DIR = PROJECT_ROOT / "results/reports"
+CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 BIOMETRIC_FEATURES = frozenset({
     "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
@@ -50,19 +50,19 @@ TOP_K_FEATURES = 10
 
 TRACK_A_MODELS = {
     "xgboost": {
-        "pipeline": "data/phase2/xgboost/final/final_pipeline.pkl",
-        "predictions": "data/phase2/xgboost/final/test_predictions.npz",
-        "report": "data/phase2/xgboost/final/final_report.json",
+        "pipeline": "results/models/xgboost_final_pipeline.pkl",
+        "predictions": "results/models/xgboost_test_predictions.npz",
+        "report": "results/models/xgboost_final_report.json",
     },
     "random_forest": {
-        "pipeline": "data/phase2/random_forest/final/final_pipeline.pkl",
-        "predictions": "data/phase2/random_forest/final/test_predictions.npz",
-        "report": "data/phase2/random_forest/final/final_report.json",
+        "pipeline": "results/models/random_forest_final_pipeline.pkl",
+        "predictions": "results/models/random_forest_test_predictions.npz",
+        "report": "results/models/random_forest_final_report.json",
     },
     "decision_tree": {
-        "pipeline": "data/phase2/decision_tree/final/final_pipeline.pkl",
-        "predictions": "data/phase2/decision_tree/final/test_predictions.npz",
-        "report": "data/phase2/decision_tree/final/final_report.json",
+        "pipeline": "results/models/decision_tree_final_pipeline.pkl",
+        "predictions": "results/models/decision_tree_test_predictions.npz",
+        "report": "results/models/decision_tree_final_report.json",
     },
 }
 
@@ -1215,7 +1215,7 @@ def main() -> None:
         plot_per_category_importance(name, sv, y_test, attack_cats, feat_names)
 
     # ── Track B: DAE ──
-    dae_path = PROJECT_ROOT / "data/phase2/dae/final/dae_detector.pkl"
+    dae_path = PROJECT_ROOT / "results/models/dae_detector.pkl"
     sq_err, weighted_err, feat_weights = compute_dae_feature_errors(
         dae_path, X_test, feat_names,
     )
@@ -1223,7 +1223,7 @@ def main() -> None:
     plot_dae_global_weights(feat_weights, feat_names)
 
     dae_preds = load_predictions(
-        PROJECT_ROOT / "data/phase2/dae/final/test_predictions.npz"
+        PROJECT_ROOT / "results/models/dae_test_predictions.npz"
     )
     plot_dae_breakdowns(weighted_err, feat_names,
                         dae_preds["y_pred"], dae_preds["reconstruction_error"])

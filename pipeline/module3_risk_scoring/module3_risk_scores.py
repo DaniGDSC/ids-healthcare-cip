@@ -39,8 +39,8 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "data/phase2/risk_scores"
-CHARTS_DIR = OUTPUT_DIR / "charts"
+OUTPUT_DIR = PROJECT_ROOT / "results/reports"
+CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 # ── Configuration ──────────────────────────────────────────────────────
 
@@ -124,8 +124,8 @@ def load_test_data() -> tuple:
 
 def load_xgboost_proba() -> tuple:
     """Load XGBoost predict_proba and optimal threshold."""
-    preds = np.load(PROJECT_ROOT / "data/phase2/xgboost/final/test_predictions.npz")
-    with open(PROJECT_ROOT / "data/phase2/xgboost/final/final_report.json") as f:
+    preds = np.load(PROJECT_ROOT / "results/models/xgboost_test_predictions.npz")
+    with open(PROJECT_ROOT / "results/models/xgboost_final_report.json") as f:
         threshold = json.load(f)["optimal_threshold"]
     return preds["y_proba"], threshold
 
@@ -137,7 +137,7 @@ def compute_c_detect(
     X_test: np.ndarray,
 ) -> tuple:
     """Fused detection confidence: C_detect = max(Track_A, Track_B)."""
-    det = joblib.load(PROJECT_ROOT / "data/phase2/dae/final/dae_detector.pkl")
+    det = joblib.load(PROJECT_ROOT / "results/models/dae_detector.pkl")
     c_track_b = det.predict_proba(X_test)
     c_detect = np.maximum(c_track_a, c_track_b)
     return np.clip(c_detect, 0.0, 1.0), c_track_b

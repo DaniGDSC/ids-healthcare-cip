@@ -26,8 +26,8 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "data/phase2/evaluation"
-CHARTS_DIR = OUTPUT_DIR / "charts"
+OUTPUT_DIR = PROJECT_ROOT / "results/reports"
+CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -38,7 +38,7 @@ def curate_evaluation_alerts() -> list:
     """Select 20 diverse alerts spanning all tiers and attack types."""
     logger.info("Curating evaluation alert set...")
 
-    risk_data = np.load(PROJECT_ROOT / "data/phase2/risk_scores/risk_scores.npz",
+    risk_data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
                         allow_pickle=True)
     R = risk_data["R"]
     levels = risk_data["risk_levels"]
@@ -47,14 +47,14 @@ def curate_evaluation_alerts() -> list:
     df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
     attack_cats = df["Attack Category"].values
 
-    with open(PROJECT_ROOT / "data/phase2/explanations/analyst_report.json") as f:
+    with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
         analyst_by_idx = {a["sample_index"]: a for a in json.load(f)}
-    with open(PROJECT_ROOT / "data/phase2/explanations/clinician_summaries.json") as f:
+    with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
         clinician_by_idx = {s["sample_index"]: s for s in json.load(f)}
 
     # Load example explanations for full clinician NLG
     try:
-        with open(PROJECT_ROOT / "data/phase2/explanations/example_explanations.json") as f:
+        with open(PROJECT_ROOT / "results/reports/example_explanations.json") as f:
             examples_by_idx = {e["sample_index"]: e for e in json.load(f)}
     except FileNotFoundError:
         examples_by_idx = {}

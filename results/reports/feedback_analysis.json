@@ -1,0 +1,11 @@
+{
+  "total_evaluated": 3042,
+  "true_positives": 571,
+  "false_positives": 170,
+  "false_negatives": 43,
+  "fp_rate": 0.0559,
+  "fn_rate": 0.0141,
+  "mean_fp_risk_score": 0.553,
+  "mean_tp_risk_score": 0.7239,
+  "suggestions": []
+}

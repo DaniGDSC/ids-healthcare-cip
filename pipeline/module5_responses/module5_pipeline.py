@@ -31,7 +31,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "data/phase2/responses"
+OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 
 BIOMETRIC_FEATURES = frozenset({
     "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
@@ -503,11 +503,11 @@ def main() -> None:
 
     # Load data
     risk_data = {k: v for k, v in
-                 np.load(PROJECT_ROOT / "data/phase2/risk_scores/risk_scores.npz",
+                 np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
                          allow_pickle=True).items()}
-    with open(PROJECT_ROOT / "data/phase2/explanations/analyst_report.json") as f:
+    with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
         analyst_by_idx = {a["sample_index"]: a for a in json.load(f)}
-    with open(PROJECT_ROOT / "data/phase2/explanations/clinician_summaries.json") as f:
+    with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
         clinician_by_idx = {s["sample_index"]: s for s in json.load(f)}
     attack_cats = pd.read_parquet(
         PROJECT_ROOT / "data/processed/test_phase1.parquet",

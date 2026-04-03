@@ -36,8 +36,8 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "data/phase2/responses"
-CHARTS_DIR = OUTPUT_DIR / "charts"
+OUTPUT_DIR = PROJECT_ROOT / "results/reports"
+CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 BIOMETRIC_FEATURES = frozenset({
     "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
@@ -195,16 +195,16 @@ BASE_PROTOCOL = {
 
 def load_risk_scores() -> dict:
     """Load Module 3 risk scores."""
-    data = np.load(PROJECT_ROOT / "data/phase2/risk_scores/risk_scores.npz",
+    data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
                    allow_pickle=True)
     return {k: data[k] for k in data.files}
 
 
 def load_explanations() -> tuple:
     """Load Module 4 analyst reports and clinician summaries."""
-    with open(PROJECT_ROOT / "data/phase2/explanations/analyst_report.json") as f:
+    with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
         analyst = {a["sample_index"]: a for a in json.load(f)}
-    with open(PROJECT_ROOT / "data/phase2/explanations/clinician_summaries.json") as f:
+    with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
         clinician = {s["sample_index"]: s for s in json.load(f)}
     return analyst, clinician
 

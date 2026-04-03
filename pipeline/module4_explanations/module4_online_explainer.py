@@ -35,7 +35,7 @@ import shap
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "data/phase2/explanations/online"
+OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 
 BIOMETRIC_FEATURES = frozenset({
     "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
@@ -70,16 +70,16 @@ CLINICIAN_TEMPLATES = {
 
 TRACK_A = {
     "xgboost": {
-        "pipeline": "data/phase2/xgboost/final/final_pipeline.pkl",
-        "report": "data/phase2/xgboost/final/final_report.json",
+        "pipeline": "results/models/xgboost_final_pipeline.pkl",
+        "report": "results/models/xgboost_final_report.json",
     },
     "random_forest": {
-        "pipeline": "data/phase2/random_forest/final/final_pipeline.pkl",
-        "report": "data/phase2/random_forest/final/final_report.json",
+        "pipeline": "results/models/random_forest_final_pipeline.pkl",
+        "report": "results/models/random_forest_final_report.json",
     },
     "decision_tree": {
-        "pipeline": "data/phase2/decision_tree/final/final_pipeline.pkl",
-        "report": "data/phase2/decision_tree/final/final_report.json",
+        "pipeline": "results/models/decision_tree_final_pipeline.pkl",
+        "report": "results/models/decision_tree_final_report.json",
     },
 }
 
@@ -106,7 +106,7 @@ class AlertExplainer:
 
         # Track B: DAE detector
         self.dae = joblib.load(
-            PROJECT_ROOT / "data/phase2/dae/final/dae_detector.pkl"
+            PROJECT_ROOT / "results/models/dae_detector.pkl"
         )
 
         # Feature names
@@ -345,7 +345,7 @@ def plot_latency_distribution(all_timings: list) -> None:
     ax.set_title("Per-Alert Explanation Latency Distribution")
     ax.legend()
     plt.tight_layout()
-    plt.savefig(OUTPUT_DIR / "latency_distribution.png", dpi=150)
+    plt.savefig(PROJECT_ROOT / "results/charts" / "latency_distribution.png", dpi=150)
     plt.close(fig)
     logger.info("  Chart: latency_distribution.png")
 
@@ -370,7 +370,7 @@ def plot_latency_cdf(all_timings: list) -> None:
     ax.legend()
     ax.set_ylim(0, 105)
     plt.tight_layout()
-    plt.savefig(OUTPUT_DIR / "latency_cdf.png", dpi=150)
+    plt.savefig(PROJECT_ROOT / "results/charts" / "latency_cdf.png", dpi=150)
     plt.close(fig)
     logger.info("  Chart: latency_cdf.png")
 
@@ -399,7 +399,7 @@ def plot_component_breakdown(stats: dict) -> None:
     ax.set_title(f"Per-Alert Explanation — Component Breakdown (p50 total={sum(vals):.1f}ms)")
     ax.legend(loc="lower right")
     plt.tight_layout()
-    plt.savefig(OUTPUT_DIR / "latency_component_breakdown.png", dpi=150)
+    plt.savefig(PROJECT_ROOT / "results/charts" / "latency_component_breakdown.png", dpi=150)
     plt.close(fig)
     logger.info("  Chart: latency_component_breakdown.png")
 
@@ -427,7 +427,7 @@ def main() -> None:
 
     # Load XGBoost predictions to identify alert samples
     xgb_preds = np.load(
-        PROJECT_ROOT / "data/phase2/xgboost/final/test_predictions.npz"
+        PROJECT_ROOT / "results/models/xgboost_test_predictions.npz"
     )
     y_pred_xgb = xgb_preds["y_pred"]
     n_alerts = (y_pred_xgb == 1).sum()
@@ -466,7 +466,7 @@ def main() -> None:
     }
 
     # Save
-    profile_path = OUTPUT_DIR / "latency_profile.json"
+    profile_path = PROJECT_ROOT / "results/charts" / "latency_profile.json"
     profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
     logger.info("Saved: %s", profile_path)
 

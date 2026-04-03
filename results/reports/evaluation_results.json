@@ -1,0 +1,111 @@
+{
+  "metrics": {
+    "n_participants": 15,
+    "n_alerts": 20,
+    "n_responses": 300,
+    "with_xai": {
+      "decision_accuracy": 0.92,
+      "mean_decision_time_sec": 25.6,
+      "mean_confidence": 3.55,
+      "likert_trust": 4.35,
+      "likert_usefulness": 4.49,
+      "likert_comprehensibility": 4.03,
+      "likert_actionability": 4.31
+    },
+    "without_xai": {
+      "decision_accuracy": 0.7533,
+      "mean_decision_time_sec": 42.6,
+      "mean_confidence": 2.97,
+      "likert_trust": 3.07,
+      "likert_usefulness": 3.43,
+      "likert_comprehensibility": 3.01,
+      "likert_actionability": 3.25
+    },
+    "per_role": {
+      "analyst": {
+        "with_xai_accuracy": 0.94,
+        "without_xai_accuracy": 0.86
+      },
+      "clinician": {
+        "with_xai_accuracy": 0.9,
+        "without_xai_accuracy": 0.7
+      },
+      "administrator": {
+        "with_xai_accuracy": 0.92,
+        "without_xai_accuracy": 0.7
+      }
+    }
+  },
+  "statistical_tests": {
+    "decision_correct": {
+      "mean_with_xai": 0.92,
+      "mean_without_xai": 0.7533,
+      "difference": 0.1667,
+      "wilcoxon_statistic": 4.0,
+      "p_value": 0.003292,
+      "significant": "True",
+      "cohens_d": 1.4671,
+      "effect_size": "large"
+    },
+    "decision_time_sec": {
+      "mean_with_xai": 25.6,
+      "mean_without_xai": 42.56,
+      "difference": -16.96,
+      "wilcoxon_statistic": 0.0,
+      "p_value": 6.1e-05,
+      "significant": "True",
+      "cohens_d": -4.585,
+      "effect_size": "large"
+    },
+    "confidence": {
+      "mean_with_xai": 3.5533,
+      "mean_without_xai": 2.9667,
+      "difference": 0.5867,
+      "wilcoxon_statistic": 0.0,
+      "p_value": 0.000648,
+      "significant": "True",
+      "cohens_d": 2.2458,
+      "effect_size": "large"
+    },
+    "likert_trust": {
+      "mean_with_xai": 4.3467,
+      "mean_without_xai": 3.0667,
+      "difference": 1.28,
+      "wilcoxon_statistic": 0.0,
+      "p_value": 0.000642,
+      "significant": "True",
+      "cohens_d": 6.26,
+      "effect_size": "large"
+    },
+    "likert_usefulness": {
+      "mean_with_xai": 4.4933,
+      "mean_without_xai": 3.4333,
+      "difference": 1.06,
+      "wilcoxon_statistic": 0.0,
+      "p_value": 0.000652,
+      "significant": "True",
+      "cohens_d": 4.805,
+      "effect_size": "large"
+    },
+    "likert_comprehensibility": {
+      "mean_with_xai": 4.0267,
+      "mean_without_xai": 3.0067,
+      "difference": 1.02,
+      "wilcoxon_statistic": 0.0,
+      "p_value": 0.00065,
+      "significant": "True",
+      "cohens_d": 3.1273,
+      "effect_size": "large"
+    },
+    "likert_actionability": {
+      "mean_with_xai": 4.3133,
+      "mean_without_xai": 3.2467,
+      "difference": 1.0667,
+      "wilcoxon_statistic": 0.0,
+      "p_value": 0.00065,
+      "significant": "True",
+      "cohens_d": 3.6783,
+      "effect_size": "large"
+    }
+  }
+}

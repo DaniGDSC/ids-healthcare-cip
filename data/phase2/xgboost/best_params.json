@@ -1,9 +1,0 @@
-{
-  "classifier__subsample": 0.9,
-  "classifier__n_estimators": 700,
-  "classifier__min_samples_split": 10,
-  "classifier__min_samples_leaf": 3,
-  "classifier__max_features": null,
-  "classifier__max_depth": 7,
-  "classifier__learning_rate": 0.2
-}

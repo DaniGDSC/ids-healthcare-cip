@@ -1,0 +1,29 @@
+{
+  "description": "Data sensitivity classification mapped to S_data scores",
+  "tiers": {
+    "phi_realtime": {
+      "score": 1.0,
+      "examples": [
+        "real-time vital signs (SpO2, HR, BP)"
+      ]
+    },
+    "phi_stored": {
+      "score": 0.7,
+      "examples": [
+        "stored patient records"
+      ]
+    },
+    "operational": {
+      "score": 0.4,
+      "examples": [
+        "network flow metadata, device telemetry"
+      ]
+    },
+    "administrative": {
+      "score": 0.1,
+      "examples": [
+        "timestamps, flags, non-clinical"
+      ]
+    }
+  }
+}

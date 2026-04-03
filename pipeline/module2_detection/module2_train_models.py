@@ -124,20 +124,20 @@ def evaluate(
 TRACK_A_MODELS = {
     "xgboost": {
         "cls": GradientBoostingClassifier,
-        "params_file": "data/phase2/xgboost/best_params.json",
-        "output_dir": "data/phase2/xgboost/final",
+        "params_file": "results/models/xgboost_best_params.json",
+        "output_dir": "results/models",
         "cls_kwargs": {"random_state": RANDOM_STATE},
     },
     "random_forest": {
         "cls": RandomForestClassifier,
-        "params_file": "data/phase2/random_forest/best_params.json",
-        "output_dir": "data/phase2/random_forest/final",
+        "params_file": "results/models/random_forest_best_params.json",
+        "output_dir": "results/models",
         "cls_kwargs": {"random_state": RANDOM_STATE, "n_jobs": -1, "bootstrap": True},
     },
     "decision_tree": {
         "cls": DecisionTreeClassifier,
-        "params_file": "data/phase2/decision_tree/best_params.json",
-        "output_dir": "data/phase2/decision_tree/final",
+        "params_file": "results/models/decision_tree_best_params.json",
+        "output_dir": "results/models",
         "cls_kwargs": {"random_state": RANDOM_STATE},
     },
 }
@@ -202,7 +202,7 @@ def train_track_a(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Pipeline
-    pipeline_path = output_dir / "final_pipeline.pkl"
+    pipeline_path = output_dir / f"{name}_final_pipeline.pkl"
     joblib.dump(pipeline, pipeline_path)
 
     # Report
@@ -221,12 +221,12 @@ def train_track_a(
         },
         "elapsed_seconds": elapsed,
     }
-    report_path = output_dir / "final_report.json"
+    report_path = output_dir / f"{name}_final_report.json"
     report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
 
     # Test predictions
     np.savez(
-        output_dir / "test_predictions.npz",
+        output_dir / f"{name}_test_predictions.npz",
         y_true=y_test, y_pred=y_pred_test, y_proba=y_proba_test,
     )
 
@@ -252,7 +252,7 @@ def train_track_b_dae(
     logger.info(sep)
 
     # Load best params
-    params_path = PROJECT_ROOT / "data/phase2/dae/best_params.json"
+    params_path = PROJECT_ROOT / "results/models/dae_best_params.json"
     with open(params_path) as f:
         best_hp = json.load(f)
     logger.info("Best params: %s", best_hp)
@@ -276,7 +276,7 @@ def train_track_b_dae(
     elapsed = round(time.perf_counter() - t0, 1)
 
     # Save artifacts
-    output_dir = PROJECT_ROOT / "data/phase2/dae/final"
+    output_dir = PROJECT_ROOT / "results/models"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Weights
@@ -294,14 +294,14 @@ def train_track_b_dae(
     }
     report["elapsed_seconds"] = elapsed
 
-    report_path = output_dir / "final_report.json"
+    report_path = output_dir / "dae_final_report.json"
     report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
 
     # Test predictions
     y_pred = det.predict(X_test)
     errors = det.reconstruction_error(X_test)
     np.savez(
-        output_dir / "test_predictions.npz",
+        output_dir / "dae_test_predictions.npz",
         y_true=y_test, y_pred=y_pred, reconstruction_error=errors,
     )
 

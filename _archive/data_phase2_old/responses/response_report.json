@@ -1,0 +1,202 @@
+{
+  "module": "Module 5 \u2014 Closed-Loop Response Engine (RQ3/RO3)",
+  "total_samples": 4896,
+  "total_alerts": 4896,
+  "statistics": {
+    "total_alerts": 4896,
+    "alerts_by_level": {
+      "LOW": 4155,
+      "HIGH": 553,
+      "CRITICAL": 48,
+      "MEDIUM": 140
+    },
+    "actions_triggered": {
+      "log_event": 4896,
+      "enhanced_monitoring": 4848,
+      "escalate_clinical": 892,
+      "re_authenticate": 337,
+      "forensic_snapshot": 601,
+      "restrict_traffic": 452,
+      "isolate_device": 601
+    },
+    "true_positives_by_level": {
+      "HIGH": 498,
+      "CRITICAL": 48,
+      "LOW": 43,
+      "MEDIUM": 25
+    },
+    "false_positives_by_level": {
+      "LOW": 4112,
+      "HIGH": 55,
+      "MEDIUM": 115
+    },
+    "precision_by_level": {
+      "LOW": 0.0103,
+      "HIGH": 0.9005,
+      "CRITICAL": 1.0,
+      "MEDIUM": 0.1786
+    }
+  },
+  "effectiveness": {
+    "outcome_distribution": {
+      "benign_logged": 4112,
+      "threat_contained": 614,
+      "false_positive_isolated": 170
+    },
+    "per_action_stats": {
+      "log_event": {
+        "true_attacks": 614,
+        "false_positives": 4282,
+        "total": 4896,
+        "precision": 0.1254,
+        "false_positive_rate": 0.8746
+      },
+      "enhanced_monitoring": {
+        "true_attacks": 566,
+        "false_positives": 4282,
+        "total": 4848,
+        "precision": 0.1167,
+        "false_positive_rate": 0.8833
+      },
+      "escalate_clinical": {
+        "true_attacks": 468,
+        "false_positives": 424,
+        "total": 892,
+        "precision": 0.5247,
+        "false_positive_rate": 0.4753
+      },
+      "re_authenticate": {
+        "true_attacks": 337,
+        "false_positives": 0,
+        "total": 337,
+        "precision": 1.0,
+        "false_positive_rate": 0.0
+      },
+      "forensic_snapshot": {
+        "true_attacks": 546,
+        "false_positives": 55,
+        "total": 601,
+        "precision": 0.9085,
+        "false_positive_rate": 0.0915
+      },
+      "restrict_traffic": {
+        "true_attacks": 337,
+        "false_positives": 115,
+        "total": 452,
+        "precision": 0.7456,
+        "false_positive_rate": 0.2544
+      },
+      "isolate_device": {
+        "true_attacks": 546,
+        "false_positives": 55,
+        "total": 601,
+        "precision": 0.9085,
+        "false_positive_rate": 0.0915
+      }
+    },
+    "proportionality_analysis": [
+      {
+        "action": "isolate_device",
+        "cost": 0.8,
+        "precision": 0.9085,
+        "total": 601
+      },
+      {
+        "action": "escalate_clinical",
+        "cost": 0.7,
+        "precision": 0.5247,
+        "total": 892
+      },
+      {
+        "action": "restrict_traffic",
+        "cost": 0.5,
+        "precision": 0.7456,
+        "total": 452
+      },
+      {
+        "action": "forensic_snapshot",
+        "cost": 0.4,
+        "precision": 0.9085,
+        "total": 601
+      },
+      {
+        "action": "re_authenticate",
+        "cost": 0.3,
+        "precision": 1.0,
+        "total": 337
+      },
+      {
+        "action": "enhanced_monitoring",
+        "cost": 0.2,
+        "precision": 0.1167,
+        "total": 4848
+      },
+      {
+        "action": "log_event",
+        "cost": 0.1,
+        "precision": 0.1254,
+        "total": 4896
+      }
+    ],
+    "over_response_count": 170,
+    "under_response_count": 0,
+    "over_response_rate": 0.0347,
+    "under_response_rate": 0.0
+  },
+  "mitigation_catalogue": {
+    "log_event": "Log event to SIEM for audit trail",
+    "enhanced_monitoring": "Enable enhanced logging and monitoring on device",
+    "re_authenticate": "Force device re-authentication and credential verification",
+    "restrict_traffic": "Restrict device to essential clinical traffic only (whitelist mode)",
+    "isolate_device": "Isolate device from network segment via VLAN quarantine",
+    "forensic_snapshot": "Capture full packet capture and device state for forensics",
+    "escalate_clinical": "Escalate to clinical staff \u2014 verify patient vitals independently",
+    "escalate_incident": "Initiate full incident response \u2014 page CISO + on-call physician"
+  },
+  "escalation_routing": {
+    "Spoofing": {
+      "primary": "IT Security",
+      "secondary": "Biomedical Engineering",
+      "tertiary": null,
+      "rationale": "Spoofing targets device identity \u2014 biomed must verify physical device integrity"
+    },
+    "Data Alteration": {
+      "primary": "IT Security",
+      "secondary": "Charge Nurse",
+      "tertiary": "On-call Physician",
+      "rationale": "Data alteration may corrupt biometric readings \u2014 clinical verification required"
+    },
+    "normal": {
+      "primary": null,
+      "secondary": null,
+      "tertiary": null,
+      "rationale": "No attack detected"
+    }
+  },
+  "device_constraints": {
+    "life_sustaining": {
+      "max_action": "restrict_traffic",
+      "fallback_required": true,
+      "clinical_escalation_mandatory": true,
+      "examples": "infusion pump, ventilator"
+    },
+    "vital_monitoring": {
+      "max_action": "isolate_device",
+      "fallback_required": true,
+      "clinical_escalation_mandatory": false,
+      "examples": "ECG monitor, pulse oximeter"
+    },
+    "diagnostic": {
+      "max_action": "isolate_device",
+      "fallback_required": false,
+      "clinical_escalation_mandatory": false,
+      "examples": "blood pressure monitor, thermometer"
+    },
+    "auxiliary": {
+      "max_action": "isolate_device",
+      "fallback_required": false,
+      "clinical_escalation_mandatory": false,
+      "examples": "environmental sensor, room monitor"
+    }
+  }
+}

@@ -19,8 +19,8 @@ from pathlib import Path
 import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-EVAL_DIR = PROJECT_ROOT / "data/phase2/evaluation"
-CHARTS_DIR = PROJECT_ROOT / "data/phase2/explanations/charts"
+EVAL_DIR = PROJECT_ROOT / "results/reports"
+CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 ROLES = ["Security Analyst", "Clinician", "Administrator"]
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
