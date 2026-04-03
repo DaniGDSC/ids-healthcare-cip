@@ -1,0 +1,101 @@
+{
+  "model_type": "Denoising Autoencoder (DAE)",
+  "architecture": {
+    "encoding_dims": [
+      20,
+      12,
+      20
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "clip_percentile": 1.0
+  },
+  "training": {
+    "epochs_run": 100,
+    "final_loss": 0.015989864245057106,
+    "final_val_loss": null
+  },
+  "threshold": 6.417473923647776e-05,
+  "threshold_percentile": 95.0,
+  "test_metrics": {
+    "attack_f1": 0.460573476702509,
+    "attack_f2": 0.43441514536849224,
+    "weighted_f1": 0.8716662124776442,
+    "macro_f1": 0.6955933312512084,
+    "auc_roc": 0.7143249448110185,
+    "threshold": 6.417473923647776e-05,
+    "mean_benign_error": 1.4700145584356505e-05,
+    "mean_attack_error": 0.0001472850126447156
+  },
+  "feature_weights": [
+    0.0031875651329755783,
+    4.7318195584011846e-07,
+    0.027305031195282936,
+    0.0007678543333895504,
+    1.2974805940757506e-05,
+    1.1560716302483343e-05,
+    2.6032437745016068e-05,
+    8.301275897792948e-07,
+    0.3057044446468353,
+    0.2305457890033722,
+    0.0006807516911067069,
+    0.016564473509788513,
+    1.565994170960039e-05,
+    0.020764345303177834,
+    1.4634339095209725e-05,
+    0.34152957797050476,
+    0.05286526679992676,
+    4.427208182278264e-07,
+    3.111413491296844e-07,
+    1.9265124251433008e-07,
+    1.7323181111805752e-07,
+    4.553242831661919e-07,
+    3.926032263734669e-07,
+    4.918575768897426e-07,
+    3.550437668309314e-07
+  ],
+  "stage": "final_training",
+  "best_hyperparameters": {
+    "encoding_dims": [
+      20,
+      12,
+      20
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0
+  },
+  "data": {
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "benign_train_samples": 9990,
+    "test_samples": 4896
+  },
+  "elapsed_seconds": 15.2
+}

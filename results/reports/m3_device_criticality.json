@@ -1,0 +1,46 @@
+{
+  "description": "Device criticality tiers mapped to D_crit scores",
+  "tiers": {
+    "1_life_sustaining": {
+      "score": 1.0,
+      "examples": [
+        "infusion pump",
+        "ventilator"
+      ]
+    },
+    "2_vital_monitoring": {
+      "score": 0.8,
+      "examples": [
+        "ECG monitor",
+        "pulse oximeter"
+      ]
+    },
+    "3_diagnostic": {
+      "score": 0.5,
+      "examples": [
+        "blood pressure monitor",
+        "thermometer"
+      ]
+    },
+    "4_auxiliary": {
+      "score": 0.3,
+      "examples": [
+        "environmental sensor",
+        "room monitor"
+      ]
+    }
+  },
+  "default_tier": "vital_monitoring",
+  "cia_threat_profiles": {
+    "Spoofing": {
+      "C": 0.6,
+      "I": 0.9,
+      "A": 0.3
+    },
+    "Data Alteration": {
+      "C": 0.3,
+      "I": 1.0,
+      "A": 0.2
+    }
+  }
+}

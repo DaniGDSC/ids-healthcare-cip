@@ -1,0 +1,45 @@
+FROM python:3.11-slim AS base
+
+LABEL version="1.0" \
+      description="IDS Healthcare CIP — Phase 7 Monitoring Sidecar" \
+      maintainer="analyst"
+
+# ── Deterministic execution ───────────────────────────────────────────
+ENV CUDA_VISIBLE_DEVICES=""
+ENV TF_DETERMINISTIC_OPS=1
+ENV PYTHONUNBUFFERED=1
+
+# ── Non-root user (OWASP A01) ────────────────────────────────────────
+RUN useradd -m -s /bin/bash monitor
+WORKDIR /home/monitor/app
+
+# ── Minimal dependencies (monitoring only — no TF, no shap) ──────────
+COPY requirements.txt .
+RUN pip install --no-cache-dir \
+    pyyaml>=6.0 \
+    pydantic>=2.0 \
+    cryptography>=41.0.0 \
+    python-json-logger>=2.0.0 \
+    && pip install --no-cache-dir -r requirements.txt
+
+# ── Source + config (monitoring engine + Phase 0 security) ───────────
+COPY src/phase0_dataset_analysis/ src/phase0_dataset_analysis/
+COPY src/phase7_monitoring_engine/ src/phase7_monitoring_engine/
+COPY config/phase7_monitoring_config.yaml config/
+
+# ── Writable output directories ──────────────────────────────────────
+RUN mkdir -p data/phase7 results/phase0_analysis \
+    && chown -R monitor:monitor /home/monitor/app
+
+USER monitor
+
+# ── Health check: verify heartbeat receiver importable ───────────────
+HEALTHCHECK --interval=30s --timeout=10s \
+  CMD python -c "\
+from src.phase7_monitoring_engine.phase7.config import Phase7Config; \
+from src.phase7_monitoring_engine.phase7.pipeline import MonitoringPipeline; \
+from src.phase7_monitoring_engine.phase7.heartbeat_receiver import HeartbeatReceiver; \
+print('OK — Phase 7 monitoring engine importable')"
+
+ENTRYPOINT ["python", "-m"]
+CMD ["src.phase7_monitoring_engine.security_hardened_phase7"]

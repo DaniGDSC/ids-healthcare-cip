@@ -1,0 +1,98 @@
+# Phase 2.5: Hyperparameter Fine-Tuning & Ablation Study
+# Bayesian TPE search (Optuna) + component ablation
+#
+# Two-stage strategy (no SMOTE — avoids synthetic distribution mismatch):
+#   Stage 1: Train head on imbalanced data with class_weight (frozen backbone)
+#   Stage 2: Fine-tune full model on imbalanced data with class_weight
+
+data:
+  phase1_train: "data/processed/train_phase1.parquet"
+  phase1_test: "data/processed/test_phase1.parquet"
+  phase2_config: "config/phase2_config.yaml"
+  label_column: "Label"
+
+# ── Bayesian TPE Search (Optuna) ──────────────────────────────────
+search:
+  max_trials: 30
+  metric: "attack_f2"       # IoMT target: attack_f2 (recall-weighted) | attack_f1 | macro_f1
+  direction: "maximize"
+
+  # 5 core parameters (identified by importance analysis)
+  space:
+    head_lr_low: 0.0005
+    head_lr_high: 0.005
+    finetune_lr_low: 0.000001
+    finetune_lr_high: 0.0001
+    cw_attack_low: 1.0
+    cw_attack_high: 10.0
+    head_epochs: [3, 5, 7, 9]
+    ft_epochs: [1, 2, 3, 4, 5]
+
+# ── Training Settings ─────────────────────────────────────────────
+quick_train:
+  epochs: 5
+  validation_split: 0.2
+  early_stopping_patience: 3
+  classification_head:
+    dense_units: 64
+    dense_activation: "relu"
+    dropout_rate: 0.3
+
+# ── Multi-Seed Validation (disabled by default) ──────────────────
+multi_seed:
+  enabled: false
+  top_k: 3
+  seeds: [42, 123, 456, 789, 1024]
+  full_epochs: 10
+
+# ── Ablation Study ────────────────────────────────────────────────
+ablation:
+  baseline: "full"
+  variants:
+    - name: "no_attention"
+      description: "Replace Bahdanau attention with GlobalAveragePooling1D"
+      remove: "attention"
+
+    - name: "no_bilstm2"
+      description: "Remove second BiLSTM layer (single BiLSTM-256)"
+      remove: "bilstm2"
+
+    - name: "no_cnn2"
+      description: "Remove second CNN layer (single Conv1D-32)"
+      remove: "cnn2"
+
+    - name: "unidirectional_lstm"
+      description: "Replace BiLSTM with unidirectional LSTM"
+      replace: "bilstm_to_lstm"
+
+    - name: "timesteps_10"
+      description: "Reduce window size from 20 to 10 timesteps"
+      override:
+        timesteps: 10
+
+    - name: "timesteps_30"
+      description: "Increase window size from 20 to 30 timesteps"
+      override:
+        timesteps: 30
+
+    - name: "low_dropout"
+      description: "Reduce dropout from 0.3 to 0.1"
+      override:
+        dropout_rate: 0.1
+
+    - name: "high_dropout"
+      description: "Increase dropout from 0.3 to 0.5"
+      override:
+        dropout_rate: 0.5
+
+# ── Output ────────────────────────────────────────────────────────
+output:
+  output_dir: "data/phase2_5"
+  tuning_results_file: "tuning_results.json"
+  ablation_results_file: "ablation_results.json"
+  best_config_file: "best_config.json"
+  importance_file: "param_importance.json"
+  multi_seed_file: "multi_seed_validation.json"
+  report_file: "tuning_report.json"
+
+random_state: 42

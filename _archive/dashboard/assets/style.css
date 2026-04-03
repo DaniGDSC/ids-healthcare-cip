@@ -1,0 +1,100 @@
+/* RA-X-IoMT Dashboard — Custom Styling */
+
+/* HIPAA disclaimer banner */
+.hipaa-banner {
+    background: #1a1a2e;
+    border: 1px solid #e74c3c44;
+    border-radius: 6px;
+    padding: 8px 16px;
+    margin-bottom: 16px;
+    font-size: 0.78em;
+    color: #e0e0e0;
+    text-align: center;
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background: #0f0f1a;
+}
+
+[data-testid="stSidebar"] .stMarkdown h3 {
+    color: #3498db;
+}
+
+/* Metric cards */
+[data-testid="stMetricValue"] {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Data tables */
+[data-testid="stDataFrame"] {
+    border-radius: 6px;
+}
+
+/* Reduce top padding */
+.block-container {
+    padding-top: 2rem;
+}
+
+/* Risk level badges in tables */
+.risk-normal { color: #2ecc71; font-weight: bold; }
+.risk-low { color: #3498db; font-weight: bold; }
+.risk-medium { color: #f39c12; font-weight: bold; }
+.risk-high { color: #e67e22; font-weight: bold; }
+.risk-critical { color: #e74c3c; font-weight: bold; }
+
+/* Clinical severity badges */
+.severity-routine { color: #2ecc71; font-weight: bold; }
+.severity-advisory { color: #3498db; font-weight: bold; }
+.severity-urgent { color: #f39c12; font-weight: bold; }
+.severity-emergent { color: #e67e22; font-weight: bold; }
+.severity-critical { color: #e74c3c; font-weight: bold; }
+
+/* Patient safety flag */
+.patient-safety-flag {
+    background: #e74c3c22;
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    padding: 8px 16px;
+    margin: 8px 0;
+    font-weight: 600;
+}
+
+/* Stakeholder view cards */
+.stakeholder-card {
+    background: #1a1a2e;
+    border: 1px solid #3498db44;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+/* Alert suppressed indicator */
+.alert-suppressed {
+    opacity: 0.5;
+    font-style: italic;
+}
+
+/* Expander styling for device cards */
+[data-testid="stExpander"] {
+    border-left: 3px solid #3498db;
+    margin-bottom: 4px;
+}
+
+/* Tabs styling */
+[data-testid="stTab"] {
+    font-weight: 600;
+}
+
+/* Simulation status indicator */
+.sim-status {
+    background: #1a1a2e;
+    border: 1px solid #3498db44;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8em;
+    color: #3498db;
+    text-align: center;
+    margin-bottom: 8px;
+}
