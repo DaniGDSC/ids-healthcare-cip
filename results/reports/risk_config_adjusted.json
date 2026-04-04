@@ -1,0 +1,22 @@
+{
+  "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
+  "fusion": "C_detect = max(Track_A_proba, Track_B_normalized_RE)",
+  "weights": {
+    "w1": 0.5317,
+    "w2": 0.2622,
+    "w3": 0.0777,
+    "w4": 0.1284
+  },
+  "thresholds": {
+    "CRITICAL": 0.8,
+    "HIGH": 0.6,
+    "MEDIUM": 0.4
+  },
+  "alert_tiers": [
+    "CRITICAL",
+    "HIGH",
+    "MEDIUM",
+    "LOW"
+  ],
+  "source": "feedback_loop_demo \u2014 auto-tuned via closed-loop iteration"
+}

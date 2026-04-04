@@ -107,5 +107,57 @@
       "cohens_d": 3.6783,
       "effect_size": "large"
     }
+  },
+  "inter_rater_reliability": {
+    "chosen_action": {
+      "alpha": 0.6159,
+      "n_coders": 15,
+      "n_items": 20,
+      "interpretation": "moderate"
+    },
+    "likert_trust": {
+      "alpha": 0.168,
+      "n_coders": 15,
+      "n_items": 20,
+      "interpretation": "poor"
+    },
+    "likert_usefulness": {
+      "alpha": 0.1617,
+      "n_coders": 15,
+      "n_items": 20,
+      "interpretation": "poor"
+    },
+    "likert_comprehensibility": {
+      "alpha": 0.0486,
+      "n_coders": 15,
+      "n_items": 20,
+      "interpretation": "poor"
+    },
+    "likert_actionability": {
+      "alpha": 0.1049,
+      "n_coders": 15,
+      "n_items": 20,
+      "interpretation": "poor"
+    }
+  },
+  "feedback_analysis": {
+    "total_feedback_texts": 0,
+    "reclassification_counts": {},
+    "n_reclassifications": 0,
+    "thematic_counts": {
+      "wanted_more_detail": 0,
+      "nlg_helpful": 0,
+      "too_technical": 0,
+      "shap_useful": 0,
+      "trust_concern": 0,
+      "action_unclear": 0
+    },
+    "sample_feedback": [],
+    "corrections_for_modules_3_5": [],
+    "recommendations": [
+      "If 'wanted_more_detail' > 3: expand NLG templates with feature-value context",
+      "If 'too_technical' > 3: simplify analyst view terminology for clinician role",
+      "If 'action_unclear' > 3: add explicit step-by-step response instructions"
+    ]
   }
 }

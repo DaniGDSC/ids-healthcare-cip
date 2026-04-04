@@ -29,6 +29,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
+ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # 6.2  Curate evaluation alert set
@@ -302,6 +304,134 @@ def statistical_analysis(responses: list) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# 6D.5  Inter-rater reliability (Krippendorff's alpha)
+# ═══════════════════════════════════════════════════════════════════════
+
+def compute_inter_rater_reliability(responses: list) -> dict:
+    """Compute Krippendorff's alpha for action selection and Likert scores."""
+    df = pd.DataFrame(responses)
+
+    # Build reliability matrices: participants × alerts
+    results = {}
+
+    for measure in ["chosen_action", "likert_trust", "likert_usefulness",
+                    "likert_comprehensibility", "likert_actionability"]:
+        pivot = df.pivot_table(index="participant_id", columns="alert_id",
+                               values=measure, aggfunc="first")
+
+        if measure == "chosen_action":
+            # Encode actions as integers
+            action_map = {a: i for i, a in enumerate(ACTIONS)}
+            pivot = pivot.map(lambda x: action_map.get(x, -1) if isinstance(x, str) else x)
+
+        matrix = pivot.values.astype(float)
+        # Replace NaN with np.nan for Krippendorff
+        matrix = np.where(np.isnan(matrix), np.nan, matrix)
+
+        # Simple Krippendorff's alpha approximation (without external lib)
+        # Using observed vs expected disagreement
+        n_coders, n_items = matrix.shape
+        valid_pairs = 0
+        observed_disagree = 0
+        all_values = []
+
+        for j in range(n_items):
+            col = matrix[:, j]
+            valid = col[~np.isnan(col)]
+            all_values.extend(valid.tolist())
+            for a in range(len(valid)):
+                for b in range(a + 1, len(valid)):
+                    valid_pairs += 1
+                    if valid[a] != valid[b]:
+                        observed_disagree += 1
+
+        if valid_pairs == 0:
+            results[measure] = {"alpha": 0.0, "n_coders": n_coders, "n_items": n_items}
+            continue
+
+        Do = observed_disagree / valid_pairs
+
+        # Expected disagreement from marginal distribution
+        vals = np.array(all_values)
+        unique_vals = np.unique(vals[~np.isnan(vals)])
+        n_total = len(vals[~np.isnan(vals)])
+        De = 0
+        for v1 in unique_vals:
+            for v2 in unique_vals:
+                if v1 != v2:
+                    p1 = np.sum(vals == v1) / n_total
+                    p2 = np.sum(vals == v2) / n_total
+                    De += p1 * p2
+
+        alpha = 1 - (Do / De) if De > 0 else 1.0
+
+        results[measure] = {
+            "alpha": round(float(alpha), 4),
+            "n_coders": int(n_coders),
+            "n_items": int(n_items),
+            "interpretation": "good" if alpha > 0.67 else "moderate" if alpha > 0.33 else "poor",
+        }
+
+    return results
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 6D.7  Thematic feedback analysis
+# ═══════════════════════════════════════════════════════════════════════
+
+def analyze_feedback(responses: list) -> dict:
+    """Thematic analysis of free-text feedback and reclassifications."""
+    df = pd.DataFrame(responses)
+
+    # Reclassification analysis
+    reclass = df[df["reclassification"].notna() & (df["reclassification"] != "")]
+    reclass_counts = reclass["reclassification"].value_counts().to_dict() if len(reclass) > 0 else {}
+
+    # Keyword-based thematic extraction from feedback
+    themes = {
+        "wanted_more_detail": ["more detail", "more info", "explain more", "unclear"],
+        "nlg_helpful": ["helpful", "clear", "understandable", "good explanation"],
+        "too_technical": ["technical", "jargon", "confusing", "complex"],
+        "shap_useful": ["shap", "feature", "contribution", "waterfall"],
+        "trust_concern": ["trust", "confident", "unsure", "doubt"],
+        "action_unclear": ["action", "what to do", "response", "next step"],
+    }
+
+    feedback_texts = df[df["feedback"].notna() & (df["feedback"] != "")]["feedback"].tolist()
+    theme_counts = {theme: 0 for theme in themes}
+
+    for text in feedback_texts:
+        text_lower = text.lower()
+        for theme, keywords in themes.items():
+            if any(kw in text_lower for kw in keywords):
+                theme_counts[theme] += 1
+
+    # User corrections for Module 3-5 feedback
+    corrections = []
+    for _, row in reclass.iterrows():
+        corrections.append({
+            "alert_id": row["alert_id"],
+            "original_tier": "inferred",
+            "suggested_tier": row["reclassification"],
+            "participant_role": row["participant_role"],
+        })
+
+    return {
+        "total_feedback_texts": len(feedback_texts),
+        "reclassification_counts": reclass_counts,
+        "n_reclassifications": len(reclass),
+        "thematic_counts": theme_counts,
+        "sample_feedback": feedback_texts[:5],
+        "corrections_for_modules_3_5": corrections[:10],
+        "recommendations": [
+            "If 'wanted_more_detail' > 3: expand NLG templates with feature-value context",
+            "If 'too_technical' > 3: simplify analyst view terminology for clinician role",
+            "If 'action_unclear' > 3: add explicit step-by-step response instructions",
+        ],
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # 6.8  Thesis figures
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -400,6 +530,194 @@ def generate_thesis_figures(metrics: dict, stats: dict, responses: list) -> None
     plt.close(fig)
     logger.info("  Chart: accuracy_by_role.png")
 
+    # Figure 5: Radar chart — 4 Likert dimensions × 3 roles (with XAI)
+    _plot_radar_chart(df, stats)
+
+    # Figure 6: Decision time by tier
+    _plot_decision_time_by_tier(df)
+
+    # Figure 7: Per-tier accuracy comparison
+    _plot_accuracy_by_tier(df)
+
+    # Figure 8: Effect size forest plot
+    _plot_effect_sizes(stats)
+
+
+def _plot_radar_chart(df: pd.DataFrame, stats: dict) -> None:
+    """Radar chart: 4 Likert dimensions × 3 roles (with-XAI condition)."""
+    dimensions = ["trust", "usefulness", "comprehensibility", "actionability"]
+    labels = [d.capitalize() for d in dimensions]
+    roles = sorted(df["participant_role"].unique())
+    role_colors = {"analyst": "#3274A1", "clinician": "#2ecc71", "administrator": "#e67e22"}
+
+    # Compute means per role (with XAI only)
+    with_df = df[df["condition"] == "with_xai"]
+    role_means = {}
+    for role in roles:
+        rdf = with_df[with_df["participant_role"] == role]
+        role_means[role] = [float(rdf[f"likert_{d}"].mean()) for d in dimensions]
+
+    # Radar plot
+    angles = np.linspace(0, 2 * np.pi, len(dimensions), endpoint=False).tolist()
+    angles += angles[:1]  # close the polygon
+
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+
+    for role in roles:
+        values = role_means[role] + role_means[role][:1]
+        ax.plot(angles, values, "o-", linewidth=2,
+                color=role_colors.get(role, "#999"),
+                label=role.capitalize())
+        ax.fill(angles, values, alpha=0.15,
+                color=role_colors.get(role, "#999"))
+
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(labels, fontsize=11)
+    ax.set_ylim(0, 5.5)
+    ax.set_yticks([1, 2, 3, 4, 5])
+    ax.set_yticklabels(["1", "2", "3", "4", "5"], fontsize=8)
+    ax.set_title("Likert Ratings by Role (With XAI)", y=1.08, fontsize=13)
+    ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
+    plt.tight_layout()
+    plt.savefig(CHARTS_DIR / "radar_likert_by_role.png", dpi=150,
+                bbox_inches="tight")
+    plt.close(fig)
+    logger.info("  Chart: radar_likert_by_role.png")
+
+
+def _plot_decision_time_by_tier(df: pd.DataFrame) -> None:
+    """Boxplot of decision time grouped by alert tier and A/B condition."""
+    # Merge alert tier info
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    conditions = ["without_xai", "with_xai"]
+    colors = ["#95a5a6", "#3274A1"]
+    positions = []
+    data_groups = []
+    tick_labels = []
+
+    for i, cond in enumerate(conditions):
+        cond_df = df[df["condition"] == cond]
+        for j, role in enumerate(sorted(df["participant_role"].unique())):
+            role_df = cond_df[cond_df["participant_role"] == role]
+            data_groups.append(role_df["decision_time_sec"].values)
+            positions.append(j * 3 + i)
+            if i == 0:
+                tick_labels.append(role.capitalize())
+
+    bp = ax.boxplot(data_groups, positions=positions, widths=0.8,
+                     patch_artist=True)
+    for i, patch in enumerate(bp["boxes"]):
+        patch.set_facecolor(colors[i % 2])
+        patch.set_alpha(0.7)
+
+    # Set ticks at center of each group
+    ax.set_xticks([j * 3 + 0.5 for j in range(len(tick_labels))])
+    ax.set_xticklabels(tick_labels)
+    ax.set_ylabel("Decision Time (seconds)")
+    ax.set_title("Decision Time by Role and Condition")
+
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor="#95a5a6", alpha=0.7, label="Without XAI"),
+        Patch(facecolor="#3274A1", alpha=0.7, label="With XAI"),
+    ]
+    ax.legend(handles=legend_elements)
+    plt.tight_layout()
+    plt.savefig(CHARTS_DIR / "decision_time_by_role.png", dpi=150)
+    plt.close(fig)
+    logger.info("  Chart: decision_time_by_role.png")
+
+
+def _plot_accuracy_by_tier(df: pd.DataFrame) -> None:
+    """Per-condition accuracy broken down by correct_action (proxy for tier)."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    action_order = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
+    action_labels = [a.capitalize() for a in action_order]
+
+    x = np.arange(len(action_order))
+    w = 0.35
+
+    for i, (cond, color, label) in enumerate([
+        ("without_xai", "#95a5a6", "Without XAI"),
+        ("with_xai", "#3274A1", "With XAI"),
+    ]):
+        cdf = df[df["condition"] == cond]
+        accs = []
+        for action in action_order:
+            adf = cdf[cdf["correct_action"] == action]
+            acc = float(adf["decision_correct"].mean()) * 100 if len(adf) > 0 else 0
+            accs.append(acc)
+        offset = -w / 2 + i * w
+        bars = ax.bar(x + offset, accs, w, label=label, color=color, alpha=0.8)
+        for bar, val in zip(bars, accs):
+            if val > 0:
+                ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
+                        f"{val:.0f}%", ha="center", fontsize=8)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(action_labels)
+    ax.set_ylabel("Accuracy (%)")
+    ax.set_title("Decision Accuracy by Correct Action (Tier Proxy)")
+    ax.set_ylim(0, 110)
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(CHARTS_DIR / "accuracy_by_tier.png", dpi=150)
+    plt.close(fig)
+    logger.info("  Chart: accuracy_by_tier.png")
+
+
+def _plot_effect_sizes(stats: dict) -> None:
+    """Forest plot of Cohen's d effect sizes for all measures."""
+    measures = []
+    effects = []
+    ci_lo = []
+    ci_hi = []
+
+    for measure, result in stats.items():
+        if "cohens_d" not in result:
+            continue
+        d = result["cohens_d"]
+        # Approximate 95% CI for Cohen's d: d ± 1.96 * SE(d)
+        # SE(d) ≈ sqrt(2/n + d^2/(2*n)) for paired, n≈15
+        n = 15
+        se = np.sqrt(2 / n + d ** 2 / (2 * n))
+        measures.append(measure.replace("likert_", "").replace("_", " ").title())
+        effects.append(d)
+        ci_lo.append(d - 1.96 * se)
+        ci_hi.append(d + 1.96 * se)
+
+    if not measures:
+        return
+
+    fig, ax = plt.subplots(figsize=(8, max(4, len(measures) * 0.6)))
+    y = np.arange(len(measures))
+
+    colors = ["#2ecc71" if d > 0 else "#e74c3c" for d in effects]
+    ax.barh(y, effects, color=colors, alpha=0.7, height=0.5)
+    ax.errorbar(effects, y, xerr=[
+        [e - lo for e, lo in zip(effects, ci_lo)],
+        [hi - e for e, hi in zip(effects, ci_hi)],
+    ], fmt="none", ecolor="black", capsize=3)
+
+    ax.axvline(0, color="black", linewidth=0.8)
+    ax.axvline(0.5, color="gray", linestyle=":", alpha=0.5, linewidth=0.8)
+    ax.axvline(-0.5, color="gray", linestyle=":", alpha=0.5, linewidth=0.8)
+    ax.axvline(0.8, color="gray", linestyle="--", alpha=0.3, linewidth=0.8)
+    ax.axvline(-0.8, color="gray", linestyle="--", alpha=0.3, linewidth=0.8)
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(measures)
+    ax.set_xlabel("Cohen's d (With XAI − Without XAI)")
+    ax.set_title("Effect Sizes: XAI Impact on Evaluation Measures")
+    ax.text(0.55, -0.6, "medium", fontsize=7, color="gray", ha="center")
+    ax.text(0.85, -0.6, "large", fontsize=7, color="gray", ha="center")
+    plt.tight_layout()
+    plt.savefig(CHARTS_DIR / "effect_size_forest.png", dpi=150)
+    plt.close(fig)
+    logger.info("  Chart: effect_size_forest.png")
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # Main
@@ -458,14 +776,40 @@ def main() -> None:
                     measure, result.get("difference", 0), result.get("p_value", 1),
                     sig, result.get("cohens_d", 0), result.get("effect_size", ""))
 
-    # Save metrics and stats
+    # 6D.5 Inter-rater reliability
+    logger.info("")
+    logger.info("── 6D.5 Inter-Rater Reliability ──")
+    irr = compute_inter_rater_reliability(responses)
+    for measure, result in irr.items():
+        logger.info("  %s: alpha=%.4f (%s)", measure, result["alpha"], result.get("interpretation", ""))
+
+    # 6D.7 Thematic feedback analysis
+    logger.info("")
+    logger.info("── 6D.7 Feedback Analysis ──")
+    feedback = analyze_feedback(responses)
+    logger.info("  Feedback texts: %d, Reclassifications: %d",
+                feedback["total_feedback_texts"], feedback["n_reclassifications"])
+    logger.info("  Themes: %s", feedback["thematic_counts"])
+
+    # Save all results
     eval_results = {
         "metrics": metrics,
         "statistical_tests": stats,
+        "inter_rater_reliability": irr,
+        "feedback_analysis": feedback,
     }
     (OUTPUT_DIR / "evaluation_results.json").write_text(
         json.dumps(eval_results, indent=2, default=str), encoding="utf-8")
     logger.info("  Saved: evaluation_results.json")
+
+    # 6D.8 Feedback recommendations
+    (OUTPUT_DIR / "feedback_recommendations.json").write_text(
+        json.dumps({
+            "corrections": feedback["corrections_for_modules_3_5"],
+            "thematic_recommendations": feedback["recommendations"],
+            "reclassification_summary": feedback["reclassification_counts"],
+        }, indent=2, default=str), encoding="utf-8")
+    logger.info("  Saved: feedback_recommendations.json")
 
     # 6.8 Thesis figures
     logger.info("")

@@ -206,11 +206,134 @@ def compute_composite_risk(
     return np.clip(R, 0.0, 1.0)
 
 
-def assign_risk_levels(R: np.ndarray) -> np.ndarray:
-    """Map composite scores to 4 alert tiers using 3 thresholds."""
-    conditions = [R >= 0.80, R >= 0.60, R >= 0.40]
+def assign_risk_levels(
+    R: np.ndarray,
+    thresholds: dict | None = None,
+) -> np.ndarray:
+    """Map composite scores to 4 alert tiers using 3 thresholds.
+
+    Parameters
+    ----------
+    thresholds : dict, optional
+        {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40}.
+        Falls back to module-level RISK_THRESHOLDS when *None*.
+    """
+    if thresholds is None:
+        t_crit, t_high, t_med = 0.80, 0.60, 0.40
+    else:
+        t_crit = thresholds.get("CRITICAL", 0.80)
+        t_high = thresholds.get("HIGH", 0.60)
+        t_med  = thresholds.get("MEDIUM", 0.40)
+
+    conditions = [R >= t_crit, R >= t_high, R >= t_med]
     choices = ["CRITICAL", "HIGH", "MEDIUM"]
     return np.select(conditions, choices, default="LOW")
+
+
+def apply_feedback(
+    current_thresholds: dict,
+    feedback: dict,
+    max_delta: float = 0.10,
+) -> dict:
+    """Apply feedback-loop adjustments to tier thresholds.
+
+    Takes the *suggested_threshold_change* dict produced by
+    ``FeedbackLoop.compute_adjustments()`` and clamps each per-tier
+    adjustment to ±max_delta to prevent oscillation.
+
+    Parameters
+    ----------
+    current_thresholds : dict
+        e.g. {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40}
+    feedback : dict
+        Must contain ``"suggested_threshold_change"`` key with the same
+        tier keys as *current_thresholds*.
+    max_delta : float
+        Maximum absolute change allowed per tier per iteration (default 0.10).
+
+    Returns
+    -------
+    dict  — updated thresholds with the same keys.
+    """
+    suggested = feedback.get("suggested_threshold_change", {})
+    updated = {}
+    for tier, cur_val in current_thresholds.items():
+        new_val = suggested.get(tier, cur_val)
+        delta = new_val - cur_val
+        clamped = max(-max_delta, min(max_delta, delta))
+        updated[tier] = round(cur_val + clamped, 4)
+    return updated
+
+
+def apply_weight_feedback(
+    current_weights: dict,
+    component_variances: dict,
+    y_true: np.ndarray,
+    c_detect: np.ndarray,
+    d_crit: np.ndarray,
+    s_data: np.ndarray,
+    a_patient: np.ndarray,
+    max_delta: float = 0.05,
+) -> dict:
+    """Adjust Module 3 weights using AUROC as the optimization target.
+
+    If a component has low variance contribution (e.g. D_crit), reduce
+    its weight and redistribute proportionally to the others.  Then do a
+    local 1-D line search per weight to maximise AUROC, clamped to
+    ±max_delta per iteration.
+
+    Returns
+    -------
+    dict  — updated weights (sum = 1.0).
+    """
+    from sklearn.metrics import roc_auc_score
+
+    components = {
+        "w1": c_detect, "w2": d_crit, "w3": s_data, "w4": a_patient,
+    }
+    w = dict(current_weights)
+
+    # --- Variance-based redistribution ---
+    total_var = sum(component_variances.values()) or 1.0
+    low_var_keys = [
+        k for k, v in component_variances.items()
+        if v / total_var < 0.05  # contributes < 5 % of total variance
+    ]
+    if low_var_keys:
+        redistribute = 0.0
+        for k in low_var_keys:
+            reduction = min(w[k] * 0.2, max_delta)  # shrink by 20 % of its weight
+            w[k] -= reduction
+            redistribute += reduction
+        # spread evenly among the others
+        others = [k for k in w if k not in low_var_keys]
+        per_other = redistribute / len(others) if others else 0
+        for k in others:
+            w[k] += per_other
+
+    # --- Local AUROC hill-climb per weight ---
+    for wk in ["w1", "w2", "w3", "w4"]:
+        best_auroc = 0.0
+        best_val = w[wk]
+        for step in np.linspace(-max_delta, max_delta, 11):
+            trial = dict(w)
+            trial[wk] = max(0.05, trial[wk] + step)
+            # re-normalize
+            s = sum(trial.values())
+            trial = {k: v / s for k, v in trial.items()}
+            R_trial = compute_composite_risk(
+                c_detect, d_crit, s_data, a_patient, trial,
+            )
+            auroc = roc_auc_score(y_true, R_trial)
+            if auroc > best_auroc:
+                best_auroc = auroc
+                best_val = trial[wk]
+        w[wk] = best_val
+
+    # Final normalize
+    s = sum(w.values())
+    w = {k: round(float(v / s), 4) for k, v in w.items()}
+    return w
 
 
 # ── Dual-track fusion analysis ─────────────────────────────────────────

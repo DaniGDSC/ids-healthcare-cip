@@ -358,32 +358,71 @@ class FeedbackLoop:
             "is_fn": ground_truth == "attack" and predicted_tier == "LOW",
         })
 
-    def compute_adjustments(self) -> dict:
-        """Suggest weight/threshold adjustments based on TP/FP/FN rates."""
+    def compute_adjustments(self, current_thresholds: dict | None = None) -> dict:
+        """Return numeric threshold adjustments based on TP/FP/FN rates.
+
+        Rules
+        -----
+        * FPR > 10 %  →  raise MEDIUM threshold by  0.05 × (FPR − 0.10) / 0.10
+                         raise HIGH   threshold by  0.03 × (FPR − 0.10) / 0.10
+        * FNR >  5 %  →  lower MEDIUM threshold by  0.05 × (FNR − 0.05) / 0.05
+                         lower HIGH   threshold by  0.03 × (FNR − 0.05) / 0.05
+
+        Returns a structured dict with metrics and suggested_threshold_change.
+        """
         if not self.records:
             return {}
+
+        # Default thresholds mirror risk_config.json
+        if current_thresholds is None:
+            current_thresholds = {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40}
 
         tp = sum(1 for r in self.records if r["is_tp"])
         fp = sum(1 for r in self.records if r["is_fp"])
         fn = sum(1 for r in self.records if r["is_fn"])
         total = len(self.records)
 
-        fp_rate = fp / total if total > 0 else 0
-        fn_rate = fn / total if total > 0 else 0
+        fpr = fp / total if total > 0 else 0.0
+        fnr = fn / total if total > 0 else 0.0
 
-        suggestions = []
-        if fp_rate > 0.10:
-            suggestions.append(
-                f"High FP rate ({fp_rate:.1%}): consider raising MEDIUM threshold from 0.40 to 0.45"
-            )
-        if fn_rate > 0.05:
-            suggestions.append(
-                f"FN rate ({fn_rate:.1%}): consider increasing w1 (C_detect weight) to capture more attacks"
-            )
-        if fp_rate < 0.02 and fn_rate < 0.01:
-            suggestions.append("System well-calibrated. No adjustments recommended.")
+        # Compute numeric adjustments
+        suggested = dict(current_thresholds)
+        adjustments = []
 
-        # Risk score distribution for FP vs TP
+        if fpr > 0.10:
+            # Raise thresholds to reduce false positives
+            delta_med  = 0.05 * (fpr - 0.10) / 0.10
+            delta_high = 0.03 * (fpr - 0.10) / 0.10
+            suggested["MEDIUM"]   += delta_med
+            suggested["HIGH"]     += delta_high
+            suggested["CRITICAL"] += delta_high * 0.5
+            adjustments.append({
+                "metric": "fpr", "current_value": round(fpr, 4),
+                "target": 0.10, "direction": "raise",
+            })
+
+        if fnr > 0.05:
+            # Lower thresholds to catch more attacks
+            delta_med  = 0.05 * (fnr - 0.05) / 0.05
+            delta_high = 0.03 * (fnr - 0.05) / 0.05
+            suggested["MEDIUM"]   -= delta_med
+            suggested["HIGH"]     -= delta_high
+            suggested["CRITICAL"] -= delta_high * 0.5
+            adjustments.append({
+                "metric": "fnr", "current_value": round(fnr, 4),
+                "target": 0.05, "direction": "lower",
+            })
+
+        if fpr <= 0.10 and fnr <= 0.05:
+            adjustments.append({
+                "metric": "calibrated", "current_value": None,
+                "target": None, "direction": "none",
+            })
+
+        # Round suggested thresholds
+        suggested = {k: round(v, 4) for k, v in suggested.items()}
+
+        # Risk score distributions
         fp_scores = [r["risk_score"] for r in self.records if r["is_fp"]]
         tp_scores = [r["risk_score"] for r in self.records if r["is_tp"]]
 
@@ -392,11 +431,13 @@ class FeedbackLoop:
             "true_positives": tp,
             "false_positives": fp,
             "false_negatives": fn,
-            "fp_rate": round(fp_rate, 4),
-            "fn_rate": round(fn_rate, 4),
+            "fpr": round(fpr, 4),
+            "fnr": round(fnr, 4),
             "mean_fp_risk_score": round(float(np.mean(fp_scores)), 4) if fp_scores else None,
             "mean_tp_risk_score": round(float(np.mean(tp_scores)), 4) if tp_scores else None,
-            "suggestions": suggestions,
+            "current_thresholds": current_thresholds,
+            "suggested_threshold_change": suggested,
+            "adjustments": adjustments,
         }
 
 
@@ -573,9 +614,11 @@ def main() -> None:
     logger.info("  TP=%d, FP=%d, FN=%d", adjustments["true_positives"],
                 adjustments["false_positives"], adjustments["false_negatives"])
     logger.info("  FP rate: %.1f%%, FN rate: %.1f%%",
-                adjustments["fp_rate"] * 100, adjustments["fn_rate"] * 100)
-    for s in adjustments["suggestions"]:
-        logger.info("  Suggestion: %s", s)
+                adjustments["fpr"] * 100, adjustments["fnr"] * 100)
+    logger.info("  Current thresholds: %s", adjustments.get("current_thresholds"))
+    logger.info("  Suggested thresholds: %s", adjustments.get("suggested_threshold_change"))
+    for adj in adjustments.get("adjustments", []):
+        logger.info("  Adjustment: %s", adj)
     logger.info("  Saved: feedback_analysis.json")
 
     # Notification stats
