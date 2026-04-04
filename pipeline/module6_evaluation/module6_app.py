@@ -24,6 +24,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 EVAL_DIR = PROJECT_ROOT / "results/reports"
@@ -390,6 +391,11 @@ def dashboard_mode():
     """Full dashboard with risk gauge, alert feed, SHAP, NLG, responses, heatmap."""
     st.title("IoMT IDS — Real-Time Dashboard")
 
+    # Auto-refresh toggle in sidebar
+    dash_refresh = st.sidebar.toggle("Auto-refresh (30s)", value=False)
+    if dash_refresh:
+        st_autorefresh(interval=30_000, limit=None, key="dash_autorefresh")
+
     responses = load_all_responses()
     admin = load_admin_dashboard()
     clin_summaries = load_clinician_summaries()
@@ -733,11 +739,11 @@ def simulation_mode():
             tier_over_time[t].append(counts.get(t, 0))
     st.line_chart(pd.DataFrame(tier_over_time))
 
-    # Auto-refresh
+    # Auto-refresh: non-blocking timer triggers rerun every 2 seconds
     if auto_refresh and idx < len(responses) - 1:
-        time.sleep(1.5)
-        st.session_state.sim_index = min(idx + speed, len(responses) - 1)
-        st.rerun()
+        tick = st_autorefresh(interval=2000, limit=None, key="sim_autorefresh")
+        if tick:
+            st.session_state.sim_index = min(idx + speed, len(responses) - 1)
 
 
 # ═══════════════════════════════════════════════════════════════════════
