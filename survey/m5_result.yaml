@@ -1,0 +1,57 @@
+m5_result:
+  metric_id: "M5"
+  metric_name: "Triage Decision Accuracy"
+
+  primary:
+    composite_rate_A: 0.3520
+    composite_rate_B: 0.5660
+    relative_improvement: 0.6080
+    relative_improvement_pct: "60.80%"
+    pass_threshold: 0.30
+    minimum_threshold: 0.15
+
+  statistical_test:
+    test_used: "two-proportion z-test"
+    statistic: 6.7901
+    p_value: 0.000000
+    effect_size_cohens_h: 0.4329
+    significant: true
+
+  secondary:
+    severity_only_rate_A: 0.4380
+    severity_only_rate_B: 0.6620
+    action_only_rate_A: 0.4940
+    action_only_rate_B: 0.6720
+
+    by_alert_type:
+      - alert_type: "anomalous_outbound_connection"
+        composite_rate_A: 0.3400
+        composite_rate_B: 0.7400
+        relative_improvement: 1.1765
+      - alert_type: "data_exfiltration"
+        composite_rate_A: 0.3520
+        composite_rate_B: 0.5520
+        relative_improvement: 0.5682
+      - alert_type: "iomt_behavioral_deviation"
+        composite_rate_A: 0.3760
+        composite_rate_B: 0.6320
+        relative_improvement: 0.6809
+      - alert_type: "lateral_movement"
+        composite_rate_A: 0.5000
+        composite_rate_B: 0.6800
+        relative_improvement: 0.3600
+      - alert_type: "unauthorized_ehr_access"
+        composite_rate_A: 0.1800
+        composite_rate_B: 0.3000
+        relative_improvement: 0.6667
+
+    failure_modes:
+      under_reaction_rate_A: 0.1220
+      under_reaction_rate_B: 0.0580
+      over_reaction_rate_A: 0.0820
+      over_reaction_rate_B: 0.0100
+
+  verdict: "PASS"
+  gate_1_decision: "GO — proceed to Priority 2 (ML & XAI Validation)"
+  interpretation: >
+    MVE enrichment produced a 60.8% relative improvement in composite triage accuracy (Group A: 35.2%, Group B: 56.6%), well above the 30% pass threshold, with strong statistical significance (z=6.79, p=1.12e-11, Cohen's h=0.433). The largest gain was in 'anomalous_outbound_connection' (A=34.0% → B=74.0%, +118% relative), where clinical device context in the MVE allowed participants to correctly identify critical IoMT and outbound anomalies. The weakest improvement was in 'lateral_movement' (A=50.0% → B=68.0%, +36% relative), suggesting these alert categories remain challenging even with MVE. Under-reaction errors (severity underestimated by ≥2 levels) decreased from 12.2% to 5.8% with MVE, while over-reaction errors decreased from 8.2% to 1.0%, indicating MVE improved calibration in both directions.
