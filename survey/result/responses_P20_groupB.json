@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Infusion pump in ICU Wing 3 with active drug delivery to patients risks parameter alteration so isolate immediately."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "After-hours EHR access by billing user to cardiology records touches patient data workflows I know so needs checking."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unauthorized SMB from admin to medical device subnet risks patient monitors and PACS used in direct care."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "SFTP outbound from LIS lab system could leak test results for all patients processed today."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "New external HTTPS from infusion pump might be firmware update but still touches active medication delivery so verify with biomed."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "High DNS volume on GE CARESCAPE patient monitor in MedSurg could affect vital signs for 24 beds."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Multi-dept EHR access by nursing at 02:30 AM fits float pool coverage I see in shifts so just monitor."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "ICMP sweep from new MGMT asset reached clinical VLAN but seems like possible IT tool not direct patient threat."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Weekend RDP from admin to device VLAN might be quarterly maintenance but device subnet is clinical so check biomed."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large PACS transfer to approved cancer center partner looks like second-opinion workflow but volume high so monitor."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unapproved external HTTPS from PACS archive risks bulk PHI in DICOM images for thousands of patients."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unrecognized wireless pairing on insulin pump in Endocrinology risks remote control of active drug dosing."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Service account bulk access to 312 EHR records across all depts at 01:03 AM is way outside normal reporting."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unexpected Telnet from ICU ventilator could compromise life-sustaining breathing support so block protocol now."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large internal EHR transfer to approved backup during day might be failed overnight run but could slow clinical access."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Weekend outbound from pharmacy system to approved AWS backup is not patient-facing so just confirm schedule."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Elevated traffic on Philips patient monitor matches quarterly diagnostic pattern so likely normal but monitor."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Port scan from EHR-PRIMARY across all internal VLANs including devices means core patient record system is compromised."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "VPN EHR access by physician to own patients at 21:45 is standard after-hours workflow I see all the time."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Rapid 1.1 GB outbound from nurse station 3B during shift risks automated PHI exfil from active care area."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Yes",
+    "q21_note": "Full alerts now include explicit CLINICAL SEVERITY sections spelling out patient risks like active infusions or ventilator impact so nurses and physicians can understand.",
+    "q22_management_justification": "Yes",
+    "q22_note": "Detailed WHY ANOMALOUS plus RECOMMENDED ACTION with specific escalation paths and DO NOTs give clear justification for my choices."
+  }
+]

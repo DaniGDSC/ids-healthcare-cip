@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Infusion pump behaving abnormally with external FTP is a direct patient safety risk."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "After-hours abnormal EHR access to cardiology records suggests possible PHI misuse."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unauthorized SMB access into medical device network could impact patient monitoring systems."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Lab system sending data via new protocol externally risks sensitive lab result exposure."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Infusion pump contacting update server appears expected but should be confirmed."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Patient monitor DNS spike could affect monitoring but may be benign update behavior."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Nurse accessing multiple departments is likely normal workflow for float staff."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Network sweep could be IT activity but needs confirmation to avoid hidden threats."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Possible scheduled maintenance access to device network though needs verification."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large PACS transfer to approved partner likely normal radiology workflow."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "PACS sending data to unknown external system risks imaging data exposure."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Insulin pump pairing attempt with unknown device is immediate patient safety threat."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Mass EHR access across all departments indicates likely compromise of patient records."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Ventilator using unexpected protocol could indicate compromise of life-support equipment."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Internal EHR backup at unusual time may impact operations but likely benign."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Pharmacy system sending data to approved backup location is likely routine."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Patient monitor traffic spike matches known diagnostic pattern and is internal only."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "EHR server scanning network suggests active compromise affecting entire hospital systems."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Physician VPN access aligns with expected remote care workflow."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large rapid data transfer from nurse station indicates possible malware or exfiltration."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Yes",
+    "q21_note": "Alerts clearly describe affected devices and patient safety implications in clinical terms.",
+    "q22_management_justification": "Yes",
+    "q22_note": "Detailed anomaly context and recommended actions support escalation decisions."
+  }
+]
