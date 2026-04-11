@@ -1,0 +1,318 @@
+```yaml
+tasks:
+  - id: T1
+    component: data_models
+    description: "Define all dataclasses for MVEOutput, ScoredAlert, RawAlert, DeviceContext, BehavioralBaseline, UserContext, EventContext, TestReport"
+    file: "src/data_models.py"
+    acceptance_test: "Implicit - used by all other tests"
+    estimated_complexity: medium
+    dependencies: []
+    ambiguities_resolved:
+      - "MVEOutput structure clearly defined in mve_specification.yaml lines 14-93"
+      - "ScoredAlert structure defined in research_spec.yaml lines 131-137"
+      - "All input schemas defined in research_spec.yaml lines 34-68 and 114-129"
+
+  - id: T2.1
+    component: fixtures
+    description: "Generate device_inventory.yaml with 30+ device entries covering CRITICAL/HIGH/MEDIUM/LOW criticality, patchable/unpatchable combinations"
+    file: "tests/fixtures/device_inventory.yaml"
+    acceptance_test: "test_mve_completeness, test_clinical_relevance"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Device inventory serves as lookup table for alert dataset"
+      - "Include realistic device types from mve_specification.yaml examples: BD Alaris pumps, GE CARESCAPE monitors, PACS servers, EHR systems"
+      - "Cover all hospital locations: ICU, MedSurg, Radiology, Pharmacy, Admin"
+
+  - id: T2.2
+    component: fixtures
+    description: "Generate behavioral_baselines.yaml with baseline patterns for each device/user type"
+    file: "tests/fixtures/behavioral_baselines.yaml"
+    acceptance_test: "test_mve_completeness"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Baselines include normal_destinations (1-5 IPs), normal_protocols (HTTPS, HL7, etc.), normal_hours, baseline_days=90"
+      - "Include user baselines for Type 2 alerts (EHR access patterns)"
+
+  - id: T2.3
+    component: fixtures
+    description: "Generate sample_alerts.yaml with 50 labeled alerts (10 per type: T1-T5) matching distribution requirements"
+    file: "tests/fixtures/sample_alerts.yaml"
+    acceptance_test: "All acceptance tests"
+    estimated_complexity: high
+    dependencies: ["T2.1", "T2.2"]
+    ambiguities_resolved:
+      - "Label distribution: true_positive ~50% (25/50), false_positive ~30% (15/50), legitimate_rare ~20% (10/50)"
+      - "Severity distribution: CRITICAL ~15% (7-8), HIGH ~35% (17-18), MEDIUM ~30% (15), LOW ~20% (10)"
+      - "Use mve_specification.yaml examples 1-5 as templates, vary IPs/timestamps/locations"
+      - "Each alert references device from device_inventory.yaml and baseline from behavioral_baselines.yaml"
+      - "Include ground_truth_severity and ground_truth_label for validation"
+
+  - id: T3.1
+    component: harness
+    description: "Write test_mve_completeness to verify all 3 layers and all required elements present"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M1)"
+    estimated_complexity: medium
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Check for presence of: baseline_behavior, deviation_description, confidence_indicator (L1)"
+      - "Check for: affected_system, patient_care_impact, phi_exposure, severity_label, severity_rationale (L2)"
+      - "Check for: immediate_action, clinical_constraint, escalation_path, timeframe (L3)"
+      - "Pass threshold: ≥85%, target 95%"
+
+  - id: T3.2
+    component: harness
+    description: "Write test_clinical_relevance to verify Layer 2 identifies clinical system AND patient-care impact"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M2)"
+    estimated_complexity: medium
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Pattern match for clinical system types: pump, monitor, EHR, PACS, etc."
+      - "Pattern match for patient impact keywords: patients, care, vitals, medication, imaging"
+      - "Pass threshold: ≥75%, target 90%"
+
+  - id: T3.3
+    component: harness
+    description: "Write test_actionability to verify Layer 3 has specific executable action (not vague)"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M3)"
+    estimated_complexity: medium
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Reject vague terms: 'investigate further', 'monitor closely', 'consider isolating'"
+      - "Require imperative verbs + specific technical steps: block, isolate, disable, apply NAC policy"
+      - "Pass threshold: ≥70%, target 85%"
+
+  - id: T3.4
+    component: harness
+    description: "Write test_clinical_constraint_awareness to verify DO NOT statement in clinical alerts"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M4)"
+    estimated_complexity: low
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Pattern match for 'DO NOT' statement in Layer 3 clinical_constraint field"
+      - "Only required for alerts involving clinical systems (CRITICAL/HIGH/MEDIUM)"
+      - "Pass threshold: ≥80%, target 90%"
+
+  - id: T3.5
+    component: harness
+    description: "Write test_severity_label_accuracy to compare generated severity vs ground truth"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M8)"
+    estimated_complexity: low
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Exact match comparison: generated severity_label == ground_truth_severity"
+      - "Hard fail on any CRITICAL↔LOW mismatch"
+      - "Pass threshold: ≥70%, target 80%"
+
+  - id: T3.6
+    component: harness
+    description: "Write test_layer1_length_constraint to verify word limits (L1≤60, L2≤50, L3≤60, total≤150)"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M1b)"
+    estimated_complexity: low
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Word counting: simple whitespace-split (text.split())"
+      - "Count each layer separately plus total across all 3 layers"
+      - "Pass threshold: ≥90%, target 95%"
+
+  - id: T3.7
+    component: harness
+    description: "Write test_risk_adaptive_threshold to verify threshold adjustment rules"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M7)"
+    estimated_complexity: medium
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Binary test: CRITICAL+unpatchable threshold < LOW+patchable threshold"
+      - "CRITICAL+unpatchable should have threshold lowered by ≥30% from baseline (threshold ≤ 0.35 if baseline=0.5)"
+      - "LOW+patchable should have threshold at default (0.5)"
+      - "Must pass 100%"
+
+  - id: T3.8
+    component: harness
+    description: "Write test_false_positive_rate to measure FP reduction vs static threshold baseline"
+    file: "tests/acceptance_tests.py"
+    acceptance_test: "Self-validating (M6)"
+    estimated_complexity: high
+    dependencies: ["T1", "T2.3"]
+    ambiguities_resolved:
+      - "Baseline: count how many false_positive alerts would surface with static threshold=0.5"
+      - "Adaptive: count how many false_positive alerts surface with risk-adaptive scoring"
+      - "FP reduction % = (baseline_FP_count - adaptive_FP_count) / baseline_FP_count"
+      - "Pass threshold: ≥20% reduction, target 40%"
+
+  - id: T4.1
+    component: harness
+    description: "Write test_no_device_discovery_attempted to verify no scanning/discovery code"
+    file: "tests/negative_tests.py"
+    acceptance_test: "Self-validating (negative test)"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Scan codebase for prohibited patterns: nmap, arp-scan, network scanning libraries"
+      - "Must pass with 0 violations"
+
+  - id: T4.2
+    component: harness
+    description: "Write test_no_automated_blocking to verify no automated enforcement"
+    file: "tests/negative_tests.py"
+    acceptance_test: "Self-validating (negative test)"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Verify no code executes blocking actions (firewall rules, NAC commands, system calls to iptables/etc.)"
+      - "Only recommendations allowed, no execution"
+      - "Must pass with 0 violations"
+
+  - id: T4.3
+    component: harness
+    description: "Write test_no_rf_protocol_claims to verify no RF/wireless protocol detection claims"
+    file: "tests/negative_tests.py"
+    acceptance_test: "Self-validating (negative test)"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Scan MVE outputs for prohibited terms: RF, wireless, Bluetooth, Zigbee, proprietary protocol detection"
+      - "Must pass with 0 violations"
+
+  - id: T4.4
+    component: harness
+    description: "Write test_no_ransomware_dwell_time_claims to verify no early ransomware detection claims"
+    file: "tests/negative_tests.py"
+    acceptance_test: "Self-validating (negative test)"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Scan MVE outputs for prohibited claims: ransomware early detection, dwell time reduction for ransomware"
+      - "Must pass with 0 violations"
+
+  - id: T4.5
+    component: harness
+    description: "Write test_severity_uses_clinical_not_cvss to verify severity is clinical-based not CVSS"
+    file: "tests/negative_tests.py"
+    acceptance_test: "Self-validating (negative test)"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Verify severity labels are CRITICAL/HIGH/MEDIUM/LOW only, not CVSS numeric scores"
+      - "Verify severity_rationale mentions clinical function, not CVSS"
+      - "Must pass with 0 violations"
+
+  - id: T4.6
+    component: harness
+    description: "Write test_no_model_internals_exposed to verify no SHAP/feature importance in outputs"
+    file: "tests/negative_tests.py"
+    acceptance_test: "Self-validating (negative test)"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Scan MVE outputs for prohibited terms: SHAP, feature importance, model architecture, neural network"
+      - "Must pass with 0 violations"
+
+  - id: T5
+    component: risk_scorer
+    description: "Implement score_alert function with risk-adaptive threshold logic"
+    file: "src/risk_scorer.py"
+    acceptance_test: "test_risk_adaptive_threshold, test_false_positive_rate"
+    estimated_complexity: medium
+    dependencies: ["T1"]
+    ambiguities_resolved:
+      - "Default threshold = 0.5"
+      - "CRITICAL+unpatchable: risk_multiplier=1.5, threshold=0.35 (30% reduction)"
+      - "LOW+patchable: risk_multiplier=1.0, threshold=0.5"
+      - "Maintenance window + known vendor IP: should_surface=False, suppression_reason set"
+      - "similar_events_past_30d > 5: multiply risk_multiplier by 0.8 (reduction of 0.2)"
+      - "adjusted_score = anomaly_score * risk_multiplier"
+      - "should_surface = adjusted_score > threshold"
+
+  - id: T6.1
+    component: mve_generator
+    description: "Implement rule-based MVE generation (fallback, always available)"
+    file: "src/mve_generator.py"
+    acceptance_test: "All MVE tests (M1, M2, M3, M4, M8, M1b)"
+    estimated_complexity: high
+    dependencies: ["T1", "T2.3"]
+    ambiguities_resolved:
+      - "Template strings per alert type (5 templates for T1-T5)"
+      - "Fill device_context, behavioral_baseline, user_context into templates"
+      - "Severity determined by device criticality: CRITICAL device → CRITICAL severity, etc."
+      - "Confidence: HIGH if baseline_days ≥ 90 and deviation never seen, MEDIUM if rare, LOW otherwise"
+      - "Clinical constraint templates per criticality level"
+      - "Deterministic and testable offline"
+
+  - id: T6.2
+    component: mve_generator
+    description: "Implement LLM-based MVE generation (optional, if ANTHROPIC_API_KEY present)"
+    file: "src/mve_generator.py"
+    acceptance_test: "All MVE tests (M1, M2, M3, M4, M8, M1b)"
+    estimated_complexity: high
+    dependencies: ["T1", "T6.1"]
+    ambiguities_resolved:
+      - "Call Anthropic API with structured prompt using mve_specification.yaml format"
+      - "System prompt enforces 3-layer format, word limits, clinical framing"
+      - "Parse JSON response into MVEOutput dataclass"
+      - "Fallback to rule-based if API call fails or no API key"
+      - "Detection logic: if 'ANTHROPIC_API_KEY' in os.environ, use LLM, else rule-based"
+
+  - id: T7
+    component: harness
+    description: "Implement run_simulation function to orchestrate alert processing and testing"
+    file: "src/harness.py"
+    acceptance_test: "All tests"
+    estimated_complexity: high
+    dependencies: ["T1", "T5", "T6.1"]
+    ambiguities_resolved:
+      - "Load alert_dataset from fixtures/sample_alerts.yaml"
+      - "For each alert: run through risk_scorer (Component 2), if should_surface=True run through mve_generator (Component 1)"
+      - "Collect all MVEOutput + ScoredAlert results"
+      - "Run all acceptance_tests against collected outputs"
+      - "Run all negative_tests against collected outputs"
+      - "Return TestReport with metrics, negative_tests, alignment data"
+
+  - id: T8
+    component: harness
+    description: "Create run_tests.py entry point to load fixtures, run harness, print report, generate alignment_report.yaml"
+    file: "run_tests.py"
+    acceptance_test: "Manual verification of output format"
+    estimated_complexity: medium
+    dependencies: ["T7", "T3.1", "T3.2", "T3.3", "T3.4", "T3.5", "T3.6", "T3.7", "T3.8", "T4.1", "T4.2", "T4.3", "T4.4", "T4.5", "T4.6"]
+    ambiguities_resolved:
+      - "Load fixtures via yaml.safe_load"
+      - "Call run_simulation from harness.py"
+      - "Print test summary to stdout"
+      - "Generate alignment_report.yaml with format from research_spec.yaml lines 443-488"
+      - "Recommendation logic: SHIP_TO_USER_STUDY if all tests PASS, ITERATE if any WARN, BLOCKED if any FAIL"
+
+  - id: T9
+    component: infrastructure
+    description: "Create src/__init__.py and tests/__init__.py for proper module structure"
+    file: "src/__init__.py, tests/__init__.py"
+    acceptance_test: "Python imports work correctly"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "Empty __init__.py files for package recognition"
+
+  - id: T10
+    component: infrastructure
+    description: "Create requirements.txt with dependencies: pyyaml, anthropic (optional)"
+    file: "requirements.txt"
+    acceptance_test: "pip install works"
+    estimated_complexity: low
+    dependencies: []
+    ambiguities_resolved:
+      - "pyyaml required"
+      - "anthropic optional (add with comment)"
+      - "All others are stdlib (dataclasses, re, typing)"
+
+gates:
+  proceed: true
+  reason: "All ambiguities identified and resolved with concrete decisions. Task breakdown covers all 3 components, all 8 automated tests, all 6 negative tests, fixtures, and infrastructure. Build order follows CLAUDE.md specification: data models → fixtures → tests → implementations → harness → entry point. No blockers identified."
+```

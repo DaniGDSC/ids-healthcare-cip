@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 6,
+    "reasoning_note": "Normally I would dismiss outbound FTP as a legacy job, but the MVE telling me this is a BD Alaris pump that has never used FTP in 120 days with active infusions changes my calculus entirely."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "Day-shift billing user hitting 47 cardiology records at 11pm with zero precedent in 90 days is hard to explain away even for a skeptic like me."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "Knowing the source is not one of the two authorized biomed workstations removes my usual benefit-of-the-doubt — unauthorized cross-VLAN SMB to medical devices gets blocked."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 6,
+    "reasoning_note": "LIS has never used SFTP in 180 days and the destination is unapproved — I still want to check with Lab IT first but I would block port 22 outbound on that box while I ask."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "Destination resolves to a legit Baxter update domain, confidence is low, device is operational — this is exactly the kind of alert I expect to dismiss."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "20x DNS volume from a patient monitor could be a firmware check loop but the MVE correctly notes it could also be a beacon, so I will rate-limit and verify with biomed rather than ignore it."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "Float pool nurse covering multiple wards on night shift — the MVE confirms this is expected behavior and the access volume is normal."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "New asset with no baseline doing an ICMP sweep across all VLANs — I would normally dismiss this as SolarWinds or similar, but since it is a brand new device I should verify with IT ops first."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 4,
+    "reasoning_note": "Saturday biomed maintenance is a real thing that happens quarterly, and the MVE confirms this pattern, so I will just verify with the biomed schedule."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "Approved destination, approved partner, volume consistent with a full CT series — the MVE confirms this is a routine second-opinion workflow."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 7,
+    "reasoning_note": "Unlike A-14, this PACS transfer goes to an unapproved destination at 4am — the MVE pointing out embedded PHI in DICOM headers makes this worth blocking and investigating."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 4,
+    "reasoning_note": "An insulin pump getting an unauthorized pairing attempt matching a known wireless vulnerability is the one alert where I drop all skepticism and call the floor immediately."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "312 records in 8 minutes from a service account 5 hours before its scheduled run with no precedent in 180 days — even I cannot hand-wave this as a cron job misfire."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "Telnet from a ventilator with zero precedent in 365 days on a life-sustaining device — the MVE is right to say block the port but keep the device running."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "Internal backup to an approved server, just running at an odd time — almost certainly a rescheduled failed backup, verify with ops and move on."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "Approved AWS destination, pharmacy admin system not connected to dispensing, weekend backup timing is slightly off but benign."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "Quarterly diagnostic pattern matching a previous baseline event three months ago — textbook false positive, add a suppression rule."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 4,
+    "reasoning_note": "The EHR server port-scanning the entire internal network including clinical device VLANs at 3am is active compromise — even my most skeptical instincts cannot explain this away."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 2,
+    "reasoning_note": "Physician accessing his own patient panel via authorized VPN at 9:45pm is the most normal thing in this entire alert set."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 4,
+    "reasoning_note": "1.1 GB in 3 minutes from a nurse station that never initiates external traffic at a velocity exceeding human capability — the MVE is right, this is automated exfiltration, isolate now."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Yes",
+    "q21_note": "The MVE sections explicitly name device types, patient counts, wards, and care disruption risks in language a clinician can act on without needing to understand network protocols.",
+    "q22_management_justification": "Yes",
+    "q22_note": "Each alert includes baseline behavior, confidence levels, specific recommended actions with safeguards, and escalation paths that give management everything they need to approve or challenge my call."
+  }
+]

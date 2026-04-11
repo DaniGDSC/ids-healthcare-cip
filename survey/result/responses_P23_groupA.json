@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 45,
+    "reasoning_note": "FTP outbound from clinical subnet at 2 AM to external IP is suspicious and could be data exfiltration so escalating per procedure."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 30,
+    "reasoning_note": "Billing user accessing 47 records seems high but I am not sure what normal volume looks like for billing staff."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 40,
+    "reasoning_note": "Cross-VLAN SMB from admin to medical device network looks like a policy violation so escalating to senior analyst."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 3,
+    "decision_time_sec": 50,
+    "reasoning_note": "Large SFTP transfer from lab server to external IP is a data loss risk so isolating per DLP response procedure."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 25,
+    "reasoning_note": "Infusion pump connecting to new external destination on HTTPS seems like maybe a vendor update but not sure what this device normally does."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 20,
+    "reasoning_note": "High volume DNS from a medical device to internal DNS server is probably normal device behavior so just monitoring."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 35,
+    "reasoning_note": "Nurse accessing records across three departments at 2:30 AM is unusual but maybe they are a float nurse working night shift."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 30,
+    "reasoning_note": "ICMP sweep across VLANs from management station could be IT doing network discovery or could be reconnaissance so investigating."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 35,
+    "reasoning_note": "RDP from admin to device subnet on a Saturday morning might be scheduled maintenance but should verify with the admin team."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 30,
+    "reasoning_note": "Large PACS transfer to external IP during business hours could be a teleradiology send which I think is normal but checking."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 35,
+    "reasoning_note": "Another large outbound transfer from PACS archive at 4 AM is suspicious timing but could be scheduled backup to offsite."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 55,
+    "reasoning_note": "Unknown wireless device communicating with proprietary protocol has high severity score and I do not understand what this device is so escalating."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 30,
+    "reasoning_note": "Service account pulling 312 records across all departments in 8 minutes at 1 AM is clearly abnormal and matches data exfiltration pattern."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 40,
+    "reasoning_note": "Telnet from a ventilator is unexpected and telnet is insecure so escalating but I am not sure if this is a patient safety issue."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 20,
+    "reasoning_note": "EHR to backup server transfer via SMB during daytime looks like a normal scheduled backup operation."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 35,
+    "reasoning_note": "Large outbound HTTPS from pharmacy system on Saturday at 3 AM is unusual timing and volume so worth checking if this is a scheduled job."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 25,
+    "reasoning_note": "Patient monitor with elevated traffic to its own VLAN gateway at 3 AM is probably a device issue not a security issue but I am not sure."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 25,
+    "reasoning_note": "EHR server scanning all internal subnets on common service ports at 3 AM is textbook lateral movement and needs immediate isolation."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 15,
+    "reasoning_note": "Physician accessing 22 records over VPN in the evening seems like normal remote charting work."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 30,
+    "reasoning_note": "Nurse workstation sending 1.1 GB in 3 minutes to external IP is very fast exfiltration and needs immediate isolation per incident response plan."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "No",
+    "q21_note": "The alerts lack patient context and clinical workflow details so a nurse or physician would not understand the patient safety implications from the raw IDS data alone.",
+    "q22_management_justification": "Partially",
+    "q22_note": "The alerts provide enough technical detail for most escalation decisions but I lack confidence in my severity ratings because I do not understand the clinical significance of many of these devices."
+  }
+]
