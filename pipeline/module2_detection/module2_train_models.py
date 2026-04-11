@@ -21,7 +21,6 @@ import sys
 import time
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 from imblearn.over_sampling import SMOTE
@@ -33,11 +32,15 @@ from sklearn.metrics import (
     fbeta_score,
     roc_auc_score,
 )
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.tree import DecisionTreeClassifier
 
+# Project root needs to be on sys.path so the absolute import below
+# resolves when this script is invoked directly (not via -m).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.phase2_detection_engine.DAE import DAEDetector
+from pipeline.common import dumps_signed
+from pipeline.module2_detection.models.DAE import DAEDetector
 
 logger = logging.getLogger(__name__)
 
@@ -173,22 +176,44 @@ def train_track_a(
     logger.info("Best params: %s", clf_params)
 
     # Build pipeline: SMOTE + classifier with fixed params
-    pipeline = ImbPipeline([
-        ("smote", SMOTE(
-            sampling_strategy="auto",
-            k_neighbors=5,
-            random_state=RANDOM_STATE,
-        )),
-        ("classifier", cfg["cls"](**cfg["cls_kwargs"], **clf_params)),
-    ])
+    def _fresh_pipeline() -> ImbPipeline:
+        return ImbPipeline([
+            ("smote", SMOTE(
+                sampling_strategy="auto",
+                k_neighbors=5,
+                random_state=RANDOM_STATE,
+            )),
+            ("classifier", cfg["cls"](**cfg["cls_kwargs"], **clf_params)),
+        ])
+
+    pipeline = _fresh_pipeline()
 
     # Fit on full training set
     logger.info("Fitting on full training set (%d samples)...", len(y_train))
     pipeline.fit(X_train, y_train)
 
-    # Threshold optimization on training predictions
-    y_proba_train = pipeline.predict_proba(X_train)[:, 1]
-    threshold = find_optimal_threshold(y_train, y_proba_train)
+    # ── Threshold optimization via OUT-OF-FOLD probabilities ──
+    # The previous implementation called
+    #     pipeline.predict_proba(X_train)
+    # which gives back resubstitution probabilities the model has
+    # already memorised — boosting trees and bagged trees on the
+    # WUSTL-EHMS data return probas pinned to ~0/~1 on training rows,
+    # and the F2-optimal threshold derived from that is meaningless.
+    # cross_val_predict on a fresh copy of the same pipeline gives us
+    # the probability distribution an unseen sample would actually
+    # receive, which is the distribution we should optimise against.
+    # See finding #2 in the Phase 2 security review.
+    logger.info("Computing out-of-fold probabilities for threshold fit...")
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+    oof_proba = cross_val_predict(
+        _fresh_pipeline(),
+        X_train,
+        y_train,
+        cv=cv,
+        method="predict_proba",
+        n_jobs=-1,
+    )[:, 1]
+    threshold = find_optimal_threshold(y_train, oof_proba)
 
     # Test evaluation
     y_proba_test = pipeline.predict_proba(X_test)[:, 1]
@@ -201,9 +226,19 @@ def train_track_a(
     output_dir = PROJECT_ROOT / cfg["output_dir"]
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Pipeline
+    # ── Persist the FITTED CLASSIFIER ONLY (not the SMOTE wrapper) ──
+    # SMOTE is a training-time only transform; serialising it bloats
+    # the artefact and adds an unnecessary deserialiser surface
+    # (SMOTE carries its own internal NearestNeighbors fit). The
+    # downstream consumers (Module 3/4) only call ``predict_proba`` —
+    # which lives on the classifier — so they don't need SMOTE.
+    # See finding #15 in the Phase 2 security review.
+    classifier_only = pipeline.named_steps["classifier"]
     pipeline_path = output_dir / f"{name}_final_pipeline.pkl"
-    joblib.dump(pipeline, pipeline_path)
+    # ECDSA-signed; verifier in pipeline.common.signed_pickle refuses
+    # to deserialise without a valid signature against the Module 5
+    # public key. Closes the pickle-RCE sink in finding #3a.
+    dumps_signed(classifier_only, pipeline_path)
 
     # Report
     report = {
@@ -279,8 +314,15 @@ def train_track_b_dae(
     output_dir = PROJECT_ROOT / "results/models"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Weights
-    det.model.save_weights(str(output_dir / "dae_model.weights.h5"))
+    # ── Native (pickle-free) artefacts ──
+    # Canonical persistence: JSON sidecar + Keras weights file. Loading
+    # via DAEDetector.from_artefacts() never executes Python. This is
+    # the format Module 3/4 will eventually load exclusively. See
+    # Phase 2 finding #3b.
+    det.save_artefacts(
+        json_path=output_dir / "dae_detector.json",
+        weights_path=output_dir / "dae_model.weights.h5",
+    )
 
     # Report
     report = det.get_report()
@@ -305,8 +347,12 @@ def train_track_b_dae(
         y_true=y_test, y_pred=y_pred, reconstruction_error=errors,
     )
 
-    # Save detector object for inference
-    joblib.dump(det, output_dir / "dae_detector.pkl")
+    # NOTE: there is no longer a dae_detector.pkl on the load path —
+    # the canonical artefact pair is dae_detector.json + dae_model.weights.h5
+    # written above by det.save_artefacts(). All Module 3/4 callers
+    # were updated to load via DAEDetector.from_artefacts(). Removing
+    # the legacy pickle eliminates the highest-blast-radius pickle RCE
+    # sink in the production inference path. See Phase 2 finding #3b.
 
     logger.info("Saved: %s (%.1fs)", output_dir, elapsed)
     return test_metrics

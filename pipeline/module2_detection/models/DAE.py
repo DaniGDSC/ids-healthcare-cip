@@ -16,17 +16,43 @@ Anomaly scoring:
   - Per-sample MSE between normalised input and reconstruction
   - Threshold set at percentile of benign training errors
   - Samples above threshold classified as attack
+
+Persistence model
+-----------------
+Use ``DAEDetector.save_artefacts(json_path, weights_path)`` and
+``DAEDetector.from_artefacts(json_path, weights_path)`` to round-trip
+the detector via:
+
+  - a JSON sidecar containing all numeric state
+    (``_threshold``, normaliser bounds, feature weights, threshold
+    percentile, hyperparameters)
+  - a Keras-native weights file (``*.weights.h5``)
+
+Loading the JSON is pure ``json.loads`` and ``np.asarray``; loading the
+Keras weights does NOT execute Python. There is no pickle anywhere on
+the load path.
+
+The legacy joblib-pickled detector still loads via ``loads_signed`` from
+``pipeline.common.signed_pickle`` (Phase 2 finding #3a) for backwards
+compatibility, but new code should use the JSON+weights pair —
+``loads_signed`` can be removed once every legacy ``dae_detector.pkl``
+has been re-baselined to the new format.
 """
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+_SIDECAR_FORMAT = "phase2.dae_detector.v1"
 
 
 class DAEDetector:
@@ -113,11 +139,26 @@ class DAEDetector:
         signals.  Features with high error variance are noisy and get
         down-weighted.  Weights are normalised to sum to 1.
         """
-        recon = self._model.predict(X_norm, verbose=0)
+        recon = self._forward(X_norm)
         per_feat_var = np.var((X_norm - recon) ** 2, axis=0)
         # Inverse variance; floor at 1e-12 to avoid division by zero
         inv_var = 1.0 / np.maximum(per_feat_var, 1e-12)
         self._feat_weights = inv_var / inv_var.sum()
+
+    # ------------------------------------------------------------------
+    # Inference helpers
+    # ------------------------------------------------------------------
+
+    def _forward(self, X_norm: np.ndarray) -> np.ndarray:
+        """Single forward pass that bypasses keras.Model.predict().
+
+        keras.Model.predict() carries 20-50ms of per-call setup overhead
+        that dwarfs the actual matmul cost for this 1.5K-parameter
+        autoencoder. Calling the model directly with `training=False`
+        produces bit-identical reconstructions with sub-millisecond
+        per-call latency.
+        """
+        return self._model(X_norm, training=False).numpy()
 
     # ------------------------------------------------------------------
     # Build model
@@ -261,8 +302,33 @@ class DAEDetector:
         if self._model is None:
             raise RuntimeError("Model not fitted. Call fit() first.")
         X_norm = self._normalise(X)
-        recon = self._model.predict(X_norm, verbose=0)
+        recon = self._forward(X_norm)
         return self._weighted_mse(X_norm, recon)
+
+    def reconstruction_error_decomposed(
+        self, X: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """One forward pass; returns (per_sample_error, per_feature_weighted_error).
+
+        Equivalent to calling reconstruction_error(X) and then re-running
+        the same forward pass to compute the per-feature breakdown,
+        except it shares a single forward pass and one normalisation.
+        Used by the online explainer to halve the DAE compute per alert.
+
+        Returns:
+            per_sample: shape (n_samples,) — same as reconstruction_error()
+            per_feature_weighted: shape (n_samples, n_features) —
+                element-wise weighted squared error before the per-row sum.
+                `per_sample == per_feature_weighted.sum(axis=1)` exactly.
+        """
+        if self._model is None:
+            raise RuntimeError("Model not fitted. Call fit() first.")
+        X_norm = self._normalise(X)
+        recon = self._forward(X_norm)
+        sq_err = (X_norm - recon) ** 2                     # (n_samples, n_features)
+        per_feature_weighted = sq_err * self._feat_weights  # (n_samples, n_features)
+        per_sample = per_feature_weighted.sum(axis=1)        # (n_samples,)
+        return per_sample, per_feature_weighted
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Binary anomaly prediction: 1=attack (above threshold)."""
@@ -373,3 +439,176 @@ class DAEDetector:
     @property
     def train_errors(self) -> np.ndarray | None:
         return self._train_errors
+
+    # ------------------------------------------------------------------
+    # Native (pickle-free) persistence
+    # ------------------------------------------------------------------
+
+    def save_artefacts(
+        self,
+        json_path: Path,
+        weights_path: Path,
+    ) -> None:
+        """Persist the detector via a JSON sidecar + Keras weights file.
+
+        The JSON sidecar contains every numeric piece of state the
+        detector needs to reconstruct its inference behaviour
+        (hyperparameters, normaliser bounds, feature weights, the
+        threshold). The Keras weights file is written via the official
+        ``model.save_weights`` API in HDF5 format. Loading either
+        artefact does NOT execute Python — there is no pickle in the
+        round-trip.
+
+        Args:
+            json_path: Destination ``.json`` for the sidecar.
+            weights_path: Destination ``.weights.h5`` for the Keras
+                model weights.
+
+        Raises:
+            RuntimeError: if the detector has not been fitted.
+        """
+        if self._model is None:
+            raise RuntimeError("DAE not fitted. Call fit() first.")
+        if self._feat_weights is None:
+            raise RuntimeError(
+                "DAE feature weights are missing — fit() did not "
+                "complete successfully."
+            )
+
+        json_path = Path(json_path)
+        weights_path = Path(weights_path)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        weights_path.parent.mkdir(parents=True, exist_ok=True)
+
+        body: Dict[str, Any] = {
+            "format":         _SIDECAR_FORMAT,
+            "format_version": 1,
+            "hyperparameters": {
+                "encoding_dims":        list(self._encoding_dims),
+                "noise_rate":           self._noise_rate,
+                "epochs":               self._epochs,
+                "batch_size":           self._batch_size,
+                "learning_rate":        self._lr,
+                "threshold_percentile": self._threshold_pct,
+                "clip_percentile":      self._clip_pct,
+                "random_state":         self._random_state,
+            },
+            "normaliser": {
+                "clip_lo":    self._clip_lo.tolist() if self._clip_lo is not None else None,
+                "clip_hi":    self._clip_hi.tolist() if self._clip_hi is not None else None,
+                "feat_min":   self._feat_min.tolist() if self._feat_min is not None else None,
+                "feat_scale": self._feat_scale.tolist() if self._feat_scale is not None else None,
+            },
+            "feature_weights": self._feat_weights.tolist(),
+            "threshold":       float(self._threshold),
+            "train_errors":    self._train_errors.tolist() if self._train_errors is not None else None,
+            "n_features":      int(self._feat_weights.shape[0]),
+            "test_metrics":    dict(self._test_metrics),
+            "history":         dict(self._history),
+        }
+
+        # Atomic JSON write so a crash mid-write cannot leave a
+        # half-written sidecar that the loader would parse as a
+        # malformed detector.
+        tmp = json_path.with_suffix(json_path.suffix + ".tmp")
+        tmp.write_text(json.dumps(body, indent=2))
+        os.replace(tmp, json_path)
+
+        # Keras weights — non-executable HDF5.
+        self._model.save_weights(str(weights_path))
+
+        logger.info(
+            "DAEDetector.save_artefacts: wrote %s and %s "
+            "(no pickle on the load path)",
+            json_path.name, weights_path.name,
+        )
+
+    @classmethod
+    def from_artefacts(
+        cls,
+        json_path: Path,
+        weights_path: Path,
+    ) -> "DAEDetector":
+        """Reconstruct a fitted detector from the JSON+weights pair.
+
+        This is the only supported pickle-free load path. There is no
+        ``DAEDetector.from_pickle`` and never will be — the pickle
+        loader is exactly the RCE sink that this method exists to
+        replace. Legacy ``dae_detector.pkl`` files still load via
+        ``pipeline.common.signed_pickle.loads_signed`` for backwards
+        compatibility while the migration is rolling out.
+
+        Args:
+            json_path: Path to a sidecar previously written by
+                ``save_artefacts()``.
+            weights_path: Path to the matching Keras weights file.
+
+        Returns:
+            A fitted ``DAEDetector`` whose ``predict``/``predict_proba``/
+            ``reconstruction_error`` behaviour is bit-identical to the
+            original.
+
+        Raises:
+            FileNotFoundError: if either path does not exist.
+            ValueError: if the JSON sidecar is not a recognised format.
+        """
+        json_path = Path(json_path)
+        weights_path = Path(weights_path)
+        if not json_path.exists():
+            raise FileNotFoundError(f"DAE sidecar not found: {json_path}")
+        if not weights_path.exists():
+            raise FileNotFoundError(f"DAE weights not found: {weights_path}")
+
+        body = json.loads(json_path.read_text())
+        if body.get("format") != _SIDECAR_FORMAT:
+            raise ValueError(
+                f"{json_path} is not a {_SIDECAR_FORMAT} sidecar "
+                f"(got format={body.get('format')!r})"
+            )
+
+        hp = body.get("hyperparameters", {})
+        instance = cls(
+            encoding_dims=list(hp.get("encoding_dims", [16, 8, 16])),
+            noise_rate=float(hp.get("noise_rate", 0.1)),
+            epochs=int(hp.get("epochs", 100)),
+            batch_size=int(hp.get("batch_size", 256)),
+            learning_rate=float(hp.get("learning_rate", 1e-3)),
+            threshold_percentile=float(hp.get("threshold_percentile", 95.0)),
+            clip_percentile=float(hp.get("clip_percentile", 1.0)),
+            random_state=int(hp.get("random_state", 42)),
+        )
+
+        # Restore normaliser bounds.
+        norm = body.get("normaliser", {})
+        if norm.get("clip_lo") is None or norm.get("clip_hi") is None:
+            raise ValueError(
+                f"{json_path}: normaliser bounds missing — sidecar is "
+                f"incomplete and cannot reconstruct a fitted detector."
+            )
+        instance._clip_lo    = np.asarray(norm["clip_lo"],    dtype=np.float64)
+        instance._clip_hi    = np.asarray(norm["clip_hi"],    dtype=np.float64)
+        instance._feat_min   = np.asarray(norm["feat_min"],   dtype=np.float64)
+        instance._feat_scale = np.asarray(norm["feat_scale"], dtype=np.float64)
+
+        instance._feat_weights = np.asarray(
+            body.get("feature_weights"), dtype=np.float64,
+        )
+        instance._threshold = float(body.get("threshold", 0.0))
+        if body.get("train_errors") is not None:
+            instance._train_errors = np.asarray(
+                body["train_errors"], dtype=np.float64,
+            )
+        instance._test_metrics = dict(body.get("test_metrics", {}))
+        instance._history = dict(body.get("history", {}))
+
+        # Build the Keras model with the right shape and load weights.
+        n_features = int(body.get("n_features", instance._feat_weights.shape[0]))
+        instance._model = instance._build_model(n_features)
+        instance._model.load_weights(str(weights_path))
+
+        logger.info(
+            "DAEDetector.from_artefacts: loaded %s + %s "
+            "(no pickle on the load path)",
+            json_path.name, weights_path.name,
+        )
+        return instance

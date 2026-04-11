@@ -36,12 +36,29 @@ encoding:
     - "Flgs"
   parse_numeric:
     - "Sport"
-  parse_numeric_sentinel: -1
+  # -99999 sits well outside any valid port or flag-count range so a
+  # one-step discontinuity at -1 ↔ 0 ↔ 1 cannot leak into the model.
+  parse_numeric_sentinel: -99999
 
 # ── Step 3: Data Cleaning ────────────────────────────────────────────────
-# Handle missing data and outliers
+# Handle missing data and outliers.
+#
+# biometric_strategy:
+#   "median" — per-column median imputation (default, patient-safe).
+#   "ffill"  — forward-fill within session_column ONLY. The handler
+#              raises ValueError if session_column is unset, because
+#              forward-fill across patient boundaries silently
+#              cross-contaminates biometrics.
+#
+# network_strategy:
+#   "dropna"    — drop any row with a missing network feature (default).
+#                 Loses samples but never conflates missing with zero.
+#   "fill_zero" — replace NaN with 0. UNSAFE: an attacker who induces
+#                 capture loss in their attack flows can hide the
+#                 attack as zero-traffic, which looks like benign idle
+#                 hosts. The handler emits a WARNING when this is set.
 cleaning:
-  biometric_strategy: "ffill"
+  biometric_strategy: "median"
   biometric_columns:
     - "Temp"
     - "SpO2"
@@ -51,7 +68,9 @@ cleaning:
     - "Heart_rate"
     - "Resp_Rate"
     - "ST"
-  network_strategy: "fill_zero"
+  network_strategy: "dropna"
+  # session_column: "<grouping column>"   # required only if you switch
+  #                                       # biometric_strategy to ffill
 
 # ── Step 4a: Remove Unary (Zero-Variance) Features ──────────────────────
 variance_filtering:
@@ -102,7 +121,8 @@ output:
   train_parquet: "train_phase1.parquet"
   test_parquet: "test_phase1.parquet"
   train_benign_parquet: "train_benign_phase1.parquet"   # Track B: benign-only
-  scaler_file: "robust_scaler.pkl"
+  scaler_file: "robust_scaler.json"            # JSON sidecar — never a pickle
+  encoder_file: "categorical_encoder.json"     # deterministic mappings, JSON-only
   report_file: "phase1_report.json"
 
 logging:

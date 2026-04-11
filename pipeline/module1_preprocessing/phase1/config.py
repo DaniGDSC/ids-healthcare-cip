@@ -1,16 +1,54 @@
 """Phase 1 configuration — pydantic-validated settings.
 
 Loads from ``config.yaml`` and validates all fields at construction time.
-Paths are resolved relative to the project root.
+Paths are resolved relative to the project root and routed through the
+Phase 0 ``PathValidator`` so any path that escapes the workspace is
+rejected at config-load time, before the pipeline touches the disk.
+
+The schema is **strict**: ``from_yaml`` rejects any top-level section
+not in ``ALLOWED_TOP_LEVEL`` (see the constant below). The previous
+permissive loader silently fell back to defaults whenever a CI YAML
+disagreed with the production YAML, so the CI was exercising a
+fictional pipeline. Strict-mode loading makes that class of bug a
+hard failure at config-load time.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 import yaml
 from pydantic import BaseModel, field_validator, model_validator
+
+
+# Strict allowlist of top-level YAML sections. The loader refuses any
+# section not in this set, so a CI config that uses ``hipaa:`` instead
+# of ``identifier_removal:`` (the previous bug) becomes a fail-loud
+# error rather than a silent fall-back to defaults.
+ALLOWED_TOP_LEVEL: frozenset[str] = frozenset({
+    "data",
+    "identifier_removal",
+    "encoding",
+    "cleaning",
+    "variance_filtering",
+    "correlation_removal",
+    "splitting",
+    "normalization",
+    "track_a",
+    "track_b",
+    "output",
+    "logging",  # operator-only; not consumed by from_yaml but tolerated
+})
+
+
+class ConfigError(Exception):
+    """Raised when ``phase1_config.yaml`` is structurally invalid.
+
+    Distinct from ``pydantic.ValidationError`` so callers can tell a
+    YAML-shape failure (operator typo) apart from a semantic failure
+    in a field validator.
+    """
 
 
 class Phase1Config(BaseModel):
@@ -30,12 +68,17 @@ class Phase1Config(BaseModel):
     # Step 2: Encoding
     label_encode_columns: List[str] = []
     parse_numeric_columns: List[str] = []
-    parse_numeric_sentinel: int = -1
+    # Sentinel for unparseable strings. -99999 sits well outside any
+    # valid port (0–65535) or flag-count range, so the model cannot
+    # accidentally learn ``port == -1`` as a meaningful event from a
+    # one-step discontinuity. See finding #23.
+    parse_numeric_sentinel: int = -99999
 
     # Step 3: Cleaning
     biometric_columns: List[str]
-    biometric_strategy: str = "ffill"
-    network_strategy: str = "fill_zero"
+    biometric_strategy: str = "median"   # patient-safe default
+    network_strategy: str = "dropna"     # missing ≠ zero
+    session_column: str | None = None
 
     # Step 4a: Variance filtering
     variance_enabled: bool = True
@@ -71,7 +114,8 @@ class Phase1Config(BaseModel):
     train_parquet: str = "train_phase1.parquet"
     test_parquet: str = "test_phase1.parquet"
     train_benign_parquet: str = "train_benign_phase1.parquet"
-    scaler_file: str = "robust_scaler.pkl"
+    scaler_file: str = "robust_scaler.json"
+    encoder_file: str = "categorical_encoder.json"
     report_file: str = "preprocessing_report.json"
 
     model_config = {"arbitrary_types_allowed": True}
@@ -90,6 +134,26 @@ class Phase1Config(BaseModel):
             raise ValueError(f"smote_k_neighbors must be ≥ 1, got {v}")
         return v
 
+    @field_validator("random_state")
+    @classmethod
+    def _random_state_canonical(cls, v: int) -> int:
+        # Allowlist of vetted seeds. Any deviation produces a WARNING in
+        # the logs because an attacker (or an over-eager researcher)
+        # who can edit the YAML can otherwise pin the train/test split
+        # to a particularly favourable seed and inflate every reported
+        # metric. See finding #17.
+        canonical = {0, 7, 42}
+        if v not in canonical:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Phase1Config.random_state=%d is outside the canonical "
+                "vetted set %s. The integer is logged into the report "
+                "and report renderer, but a non-canonical seed is a "
+                "research-integrity smell — see security review #17.",
+                v, sorted(canonical),
+            )
+        return v
+
     @model_validator(mode="after")
     def _ratios_sum_to_one(self) -> Phase1Config:
         total = round(self.train_ratio + self.test_ratio, 4)
@@ -100,9 +164,55 @@ class Phase1Config(BaseModel):
         return self
 
     @classmethod
-    def from_yaml(cls, path: Path) -> Phase1Config:
-        """Load and validate configuration from a YAML file."""
-        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    def from_yaml(
+        cls,
+        path: Path,
+        *,
+        workspace_root: Path | None = None,
+    ) -> Phase1Config:
+        """Load and validate configuration from a YAML file.
+
+        Strict-mode loading: any top-level section not in
+        ``ALLOWED_TOP_LEVEL`` raises ``ConfigError`` rather than being
+        silently ignored. This prevents the class of bug where a CI
+        config writes ``hipaa:`` while the loader expects
+        ``identifier_removal:``, with the loader silently falling back
+        to defaults and the CI passing on a fictional pipeline.
+
+        Both ``data.input_dir`` and ``data.output_dir`` are routed
+        through ``PathValidator`` so a hostile YAML cannot point at
+        ``/etc`` or escape the workspace via ``../``.
+
+        Raises:
+            FileNotFoundError: if *path* does not exist.
+            ConfigError: if YAML is unparseable or contains an unknown
+                top-level section.
+            PermissionError: if input/output paths escape the workspace.
+        """
+        if not path.exists():
+            raise FileNotFoundError(f"Phase 1 config not found: {path}")
+
+        try:
+            raw: Dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise ConfigError(f"Failed to parse YAML at {path}: {exc}") from exc
+
+        if not isinstance(raw, dict):
+            raise ConfigError(
+                f"{path} must contain a YAML mapping at the top level, "
+                f"got {type(raw).__name__}"
+            )
+
+        unknown = set(raw) - ALLOWED_TOP_LEVEL
+        if unknown:
+            raise ConfigError(
+                f"{path}: unknown top-level section(s) {sorted(unknown)}. "
+                f"Allowed: {sorted(ALLOWED_TOP_LEVEL)}. "
+                f"This is most often caused by a CI config that uses an "
+                f"old field name (e.g. 'hipaa' instead of "
+                f"'identifier_removal') — silent fall-back is intentionally "
+                f"removed."
+            )
 
         data = raw.get("data", {})
         idr = raw.get("identifier_removal", {})
@@ -117,6 +227,23 @@ class Phase1Config(BaseModel):
         track_b = raw.get("track_b", {})
         output = raw.get("output", {})
 
+        # Phase 1 lives at pipeline/module1_preprocessing/phase1/config.py
+        # → workspace root is four parents up.
+        root = workspace_root or Path(__file__).resolve().parents[3]
+        # Lazy import: keep config.py importable even if a developer
+        # builds a venv without the Phase 0 package on the path.
+        from pipeline.module0_analysis.phase0.security import PathValidator
+        validator = PathValidator(root)
+        # validate_input_path requires existence; data dirs may not
+        # exist in CI runs that only exercise config parsing, so we
+        # only require workspace containment here. The pipeline's
+        # _ingest_with_integrity step re-validates with existence.
+        try:
+            validator._resolve_inside_workspace(Path(data.get("input_dir", "data/raw/WUSTL-EHMS")))
+        except PermissionError:
+            raise
+        validator.validate_output_dir(Path(data.get("output_dir", "data/processed")))
+
         return cls(
             input_dir=Path(data.get("input_dir", "data/raw/WUSTL-EHMS")),
             output_dir=Path(data.get("output_dir", "data/processed")),
@@ -127,10 +254,11 @@ class Phase1Config(BaseModel):
             id_removal_columns=idr.get("remove_columns", []),
             label_encode_columns=encoding.get("label_encode", []),
             parse_numeric_columns=encoding.get("parse_numeric", []),
-            parse_numeric_sentinel=encoding.get("parse_numeric_sentinel", -1),
+            parse_numeric_sentinel=encoding.get("parse_numeric_sentinel", -99999),
             biometric_columns=cl.get("biometric_columns", []),
-            biometric_strategy=cl.get("biometric_strategy", "ffill"),
-            network_strategy=cl.get("network_strategy", "fill_zero"),
+            biometric_strategy=cl.get("biometric_strategy", "median"),
+            network_strategy=cl.get("network_strategy", "dropna"),
+            session_column=cl.get("session_column"),
             correlation_enabled=corr.get("enabled", True),
             correlation_threshold=corr.get("threshold", 0.95),
             phase0_corr_file=Path(corr.get(
@@ -151,6 +279,7 @@ class Phase1Config(BaseModel):
             train_parquet=output.get("train_parquet", "train_phase1.parquet"),
             test_parquet=output.get("test_parquet", "test_phase1.parquet"),
             train_benign_parquet=output.get("train_benign_parquet", "train_benign_phase1.parquet"),
-            scaler_file=output.get("scaler_file", "robust_scaler.pkl"),
+            scaler_file=output.get("scaler_file", "robust_scaler.json"),
+            encoder_file=output.get("encoder_file", "categorical_encoder.json"),
             report_file=output.get("report_file", "preprocessing_report.json"),
         )

@@ -26,6 +26,8 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
+from pipeline.common.phi import BIOMETRIC_COLUMNS
+
 from .config import Phase0Config
 
 logger = logging.getLogger(__name__)
@@ -60,30 +62,46 @@ class StatisticsAnalyzer:
     # ------------------------------------------------------------------
 
     def descriptive_stats(self) -> Dict[str, Dict[str, float]]:
-        """Compute mean, median, std, min, and max per numeric feature.
+        """Compute descriptive statistics per numeric feature.
 
         Non-numeric columns are silently ignored.  NaN values are excluded
         from each per-column computation before aggregation.
 
+        Network features get the full ``{mean, median, std, min, max}``.
+        Biometric features ({BIOMETRIC_COLUMNS}) are restricted to
+        ``{mean, std}``: per-patient minima and maxima are quasi-identifiers
+        under HIPAA Safe Harbor and are never published from this layer.
+
         Returns:
-            Nested dict mapping ``feature_name → {mean, median, std, min, max}``.
-            All values are rounded to six decimal places.
+            Nested dict mapping ``feature_name → stats dict``. Stats values
+            are rounded to six decimal places.
         """
         numeric_df = self._df.select_dtypes(include="number")
         stats: Dict[str, Dict[str, float]] = {}
 
         for col in numeric_df.columns:
             series = numeric_df[col].dropna()
-            stats[col] = {
-                "mean":   round(float(series.mean()),   6),
-                "median": round(float(series.median()), 6),
-                "std":    round(float(series.std()),    6),
-                "min":    round(float(series.min()),    6),
-                "max":    round(float(series.max()),    6),
-            }
+            if col in BIOMETRIC_COLUMNS:
+                # Population-level statistics only — no min/max/median.
+                # See pipeline/common/phi.py for the canonical column set.
+                stats[col] = {
+                    "mean": round(float(series.mean()), 6),
+                    "std":  round(float(series.std()),  6),
+                }
+            else:
+                stats[col] = {
+                    "mean":   round(float(series.mean()),   6),
+                    "median": round(float(series.median()), 6),
+                    "std":    round(float(series.std()),    6),
+                    "min":    round(float(series.min()),    6),
+                    "max":    round(float(series.max()),    6),
+                }
 
         logger.info(
-            "Descriptive stats computed for %d numeric features", len(stats)
+            "Descriptive stats computed for %d numeric features "
+            "(%d biometric channels published as mean/std only)",
+            len(stats),
+            sum(1 for c in stats if c in BIOMETRIC_COLUMNS),
         )
         return stats
 
@@ -269,11 +287,17 @@ class OutlierAnalyzer:
     def outlier_report(self) -> List[Dict[str, Any]]:
         """Compute IQR-based outlier statistics for every numeric feature.
 
+        Network features get the full record (q1/q3/iqr/lower_bound/
+        upper_bound/outlier_count/outlier_pct/total).
+
+        Biometric features ({BIOMETRIC_COLUMNS}) only publish
+        ``outlier_count``/``outlier_pct``/``total``: q1/q3 and the derived
+        fences are quantile-based quasi-identifiers under HIPAA Safe
+        Harbor and must not leave this layer.
+
         Returns:
-            List of dicts, one per numeric feature, each containing:
-            ``{feature, q1, q3, iqr, lower_bound, upper_bound,
-              outlier_count, outlier_pct, total}``.
-            Sorted by descending ``outlier_pct``.
+            List of dicts, one per numeric feature, sorted by descending
+            ``outlier_pct``.
         """
         numeric_df = self._df.select_dtypes(include="number")
         k = self._config.outlier_iqr_multiplier
@@ -291,17 +315,26 @@ class OutlierAnalyzer:
             outliers = int(((series < lower) | (series > upper)).sum())
             pct = round(outliers / total * 100, 4) if total else 0.0
 
-            report.append({
-                "feature":      col,
-                "q1":           round(q1, 6),
-                "q3":           round(q3, 6),
-                "iqr":          round(iqr, 6),
-                "lower_bound":  round(lower, 6),
-                "upper_bound":  round(upper, 6),
-                "outlier_count": outliers,
-                "outlier_pct":  pct,
-                "total":        total,
-            })
+            if col in BIOMETRIC_COLUMNS:
+                # Aggregate counts only — no quantile-derived fields.
+                report.append({
+                    "feature":       col,
+                    "outlier_count": outliers,
+                    "outlier_pct":   pct,
+                    "total":         total,
+                })
+            else:
+                report.append({
+                    "feature":       col,
+                    "q1":            round(q1, 6),
+                    "q3":            round(q3, 6),
+                    "iqr":           round(iqr, 6),
+                    "lower_bound":   round(lower, 6),
+                    "upper_bound":   round(upper, 6),
+                    "outlier_count": outliers,
+                    "outlier_pct":   pct,
+                    "total":         total,
+                })
 
         report.sort(key=lambda r: r["outlier_pct"], reverse=True)
         n_with = sum(1 for r in report if r["outlier_count"] > 0)

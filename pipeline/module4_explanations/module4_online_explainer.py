@@ -37,10 +37,7 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 
-BIOMETRIC_FEATURES = frozenset({
-    "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
-    "Heart_rate", "Resp_Rate", "ST",
-})
+from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
 CLINICIAN_TEMPLATES = {
     "CRITICAL": (
@@ -89,24 +86,54 @@ TRACK_A = {
 class AlertExplainer:
     """Per-alert explanation engine. Load once, call explain() per sample."""
 
+    # Models that vote on detection but are NOT explained via TreeSHAP.
+    # RandomForest stays in the predict vote (so n_flagged math is unchanged)
+    # but its TreeExplainer is skipped because:
+    #   1. It dominates startup_ms (~1.5 s of the 2.0 s baseline)
+    #   2. It dominates treeshap_ms (~95 of the 108 ms baseline)
+    #   3. Nothing downstream reads analyst.track_a.random_forest:
+    #      the clinician summary uses XGBoost, the analyst panel renders
+    #      waterfall_xgboost_*.png, and the offline batch explainer
+    #      (module4_explanations.py) is the source of all RF charts.
+    SKIP_SHAP = frozenset({"random_forest"})
+
     def __init__(self) -> None:
         t0 = time.perf_counter()
 
-        # Track A: extract classifiers + create TreeExplainers
+        # Track A: extract classifiers + create TreeExplainers (selectively)
         self.classifiers = {}
         self.explainers = {}
         self.thresholds = {}
 
+        # Phase 2 final-training writes the bare classifier (NOT a
+        # full Pipeline with the SMOTE wrapper) and signs it with the
+        # Module 5 ECDSA key. ``loads_signed`` refuses to deserialise
+        # without a valid signature, so a tampered or unsigned pickle
+        # in results/models/ aborts startup rather than RCE-ing.
+        # See finding #3a in the Phase 2 security review.
+        from pipeline.common import loads_signed
+
         for name, cfg in TRACK_A.items():
-            pipeline = joblib.load(PROJECT_ROOT / cfg["pipeline"])
-            self.classifiers[name] = pipeline.named_steps["classifier"]
-            self.explainers[name] = shap.TreeExplainer(self.classifiers[name])
+            obj = loads_signed(PROJECT_ROOT / cfg["pipeline"])
+            # Backwards compatibility: if the artefact is still a full
+            # sklearn Pipeline (legacy file from before the strip), pull
+            # the classifier out; otherwise the bare classifier is what
+            # was loaded.
+            self.classifiers[name] = (
+                obj.named_steps["classifier"]
+                if hasattr(obj, "named_steps") else obj
+            )
+            if name not in self.SKIP_SHAP:
+                self.explainers[name] = shap.TreeExplainer(self.classifiers[name])
             with open(PROJECT_ROOT / cfg["report"]) as f:
                 self.thresholds[name] = json.load(f)["optimal_threshold"]
 
-        # Track B: DAE detector
-        self.dae = joblib.load(
-            PROJECT_ROOT / "results/models/dae_detector.pkl"
+        # Track B: DAE detector loaded via the pickle-free
+        # DAEDetector.from_artefacts() API. Phase 2 finding #3b.
+        from pipeline.module2_detection.models.DAE import DAEDetector
+        self.dae = DAEDetector.from_artefacts(
+            json_path=PROJECT_ROOT / "results/models/dae_detector.json",
+            weights_path=PROJECT_ROOT / "results/models/dae_model.weights.h5",
         )
 
         # Feature names
@@ -189,8 +216,11 @@ class AlertExplainer:
             pred = int(proba >= self.thresholds[name])
             votes[name] = {"prediction": pred, "confidence": round(proba, 4)}
 
-        # DAE prediction
-        dae_error = float(self.dae.reconstruction_error(x_2d)[0])
+        # DAE prediction — one forward pass, both the scalar error and the
+        # per-feature decomposition. The per-feature array is cached on the
+        # local stack so Step 4 can consume it without a second forward pass.
+        dae_error_arr, dae_per_feature = self.dae.reconstruction_error_decomposed(x_2d)
+        dae_error = float(dae_error_arr[0])
         dae_pred = int(dae_error > self.dae.threshold)
         votes["dae"] = {"prediction": dae_pred, "reconstruction_error": round(dae_error, 8)}
         timings["predict_ms"] = round((time.perf_counter() - t0) * 1000, 3)
@@ -228,11 +258,11 @@ class AlertExplainer:
         timings["treeshap_ms"] = round((time.perf_counter() - t0) * 1000, 3)
 
         # ── Step 4: DAE decomposition ──
+        # Reuses the per-feature weighted error array computed during
+        # Step 1's single forward pass — no second normalise + no second
+        # Keras call. This stage is now pure-numpy slicing.
         t0 = time.perf_counter()
-        X_norm = self.dae._normalise(x_2d)
-        recon = self.dae.model.predict(X_norm, verbose=0)
-        sq_err = (X_norm - recon) ** 2
-        w_err = (sq_err * self.dae._feat_weights)[0]
+        w_err = dae_per_feature[0]
         dae_explanation = {"top_features": self._top_dae(w_err)}
         timings["dae_decompose_ms"] = round((time.perf_counter() - t0) * 1000, 3)
 
@@ -465,10 +495,20 @@ def main() -> None:
         "minimal_only": compute_latency_stats(minimal_timings) if minimal_timings else {},
     }
 
-    # Save
-    profile_path = PROJECT_ROOT / "results/charts" / "latency_profile.json"
+    # Save — canonical filenames consumed by the eval app's simulation
+    # panel (`module6_app.py:load_latency_profile` and the
+    # online_sample_explanations baseline fixture). The legacy paths
+    # under results/charts/latency_profile.json and
+    # results/reports/sample_explanations.json are also written so any
+    # external tooling that hard-coded the old names keeps working.
+    profile_path = OUTPUT_DIR / "online_latency_profile.json"
     profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
     logger.info("Saved: %s", profile_path)
+
+    legacy_profile_path = PROJECT_ROOT / "results/charts" / "latency_profile.json"
+    legacy_profile_path.parent.mkdir(parents=True, exist_ok=True)
+    legacy_profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+    logger.info("Saved: %s (legacy alias)", legacy_profile_path)
 
     # Make sample explanations JSON-serializable (convert numpy)
     def _clean(obj):
@@ -484,11 +524,18 @@ def main() -> None:
             return [_clean(v) for v in obj]
         return obj
 
-    samples_path = OUTPUT_DIR / "sample_explanations.json"
+    cleaned_samples = _clean(sample_explanations)
+    samples_path = OUTPUT_DIR / "online_sample_explanations.json"
     samples_path.write_text(
-        json.dumps(_clean(sample_explanations), indent=2), encoding="utf-8",
+        json.dumps(cleaned_samples, indent=2), encoding="utf-8",
     )
     logger.info("Saved: %s (%d examples)", samples_path, len(sample_explanations))
+
+    legacy_samples_path = OUTPUT_DIR / "sample_explanations.json"
+    legacy_samples_path.write_text(
+        json.dumps(cleaned_samples, indent=2), encoding="utf-8",
+    )
+    logger.info("Saved: %s (legacy alias)", legacy_samples_path)
 
     # Plots
     plot_latency_distribution(all_timings)

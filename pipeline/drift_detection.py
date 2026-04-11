@@ -61,7 +61,13 @@ def load_drift_data() -> dict:
     risk_npz = dict(np.load(
         OUTPUT_DIR / "risk_scores.npz", allow_pickle=True,
     ))
-    detector = joblib.load(
+    # Signed-pickle load (Phase 2 finding #3a). The DAE detector
+    # carries fitted Keras weights through joblib pickling, so its
+    # deserialiser is the highest-blast-radius RCE sink in the
+    # production inference path. Refuses to deserialise unless the
+    # signature verifies against the Module 5 audit key.
+    from pipeline.common import loads_signed
+    detector = loads_signed(
         PROJECT_ROOT / "results" / "models" / "dae_detector.pkl",
     )
 

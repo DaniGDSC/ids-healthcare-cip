@@ -26,10 +26,10 @@ jobs:
         run: pip install ruff black
 
       - name: Ruff check
-        run: ruff check src/ tests/
+        run: ruff check pipeline/module0_analysis/ pipeline/common/
 
       - name: Black format check
-        run: black --check src/ tests/
+        run: black --check pipeline/module0_analysis/ pipeline/common/
 
   # ─────────────────────────────────────────────────────────────────
   # 2. Security scan (bandit + pip-audit + SBOM)
@@ -48,10 +48,10 @@ jobs:
         run: pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — static security analysis
-        run: bandit -r src/ -c pyproject.toml -f json -o bandit-report.json || true
+        run: bandit -r pipeline/module0_analysis/ pipeline/common/ -c pyproject.toml -f json -o bandit-report.json || true
 
       - name: Bandit — fail on high/critical
-        run: bandit -r src/ -c pyproject.toml -ll
+        run: bandit -r pipeline/module0_analysis/ pipeline/common/ -c pyproject.toml -ll
 
       - name: pip-audit — dependency vulnerabilities
         run: pip install -r requirements.txt && pip-audit --strict --desc
@@ -91,13 +91,41 @@ jobs:
       - name: Run Phase 0 tests with coverage
         run: >
           python -m pytest
-          src/phase0_dataset_analysis/phase0/tests/
-          tests/test_phase0.py
+          pipeline/module0_analysis/phase0/tests/
           -v
-          --cov=src/phase0_dataset_analysis
+          --cov=pipeline.module0_analysis
+          --cov=pipeline.common
           --cov-report=xml:coverage.xml
           --cov-report=term-missing
           --cov-fail-under=80
+
+      - name: Regression guard — no biometric values in artefacts
+        run: |
+          python - <<'PY'
+          import re, sys, pathlib
+          biometric = ("Temp","SpO2","Pulse_Rate","SYS","DIA","Heart_rate","Resp_Rate","ST")
+          # Match a biometric column name followed by a numeric literal —
+          # this catches min/max/median/raw rows but allows mean/std fields
+          # to coexist with the column name in JSON keys.
+          pat = re.compile(
+              r'"(?:' + "|".join(biometric) + r')"\s*:\s*\{[^}]*"(?:min|max|median|lower_bound|upper_bound)"',
+              re.S,
+          )
+          root = pathlib.Path("results/phase0_analysis")
+          if not root.exists():
+              print("no phase0 artefacts produced; skipping guard")
+              sys.exit(0)
+          violations = []
+          for p in root.rglob("*"):
+              if p.suffix in (".json", ".md", ".csv"):
+                  text = p.read_text(errors="ignore")
+                  if pat.search(text):
+                      violations.append(str(p))
+          if violations:
+              print("FAIL: biometric min/max/median leaked into:", *violations, sep="\n  ")
+              sys.exit(1)
+          print("OK: no biometric extremes in any phase 0 artefact")
+          PY
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -129,4 +157,4 @@ jobs:
       - name: Verify Phase 0 imports
         run: >
           docker run --rm analyst/phase0:${{ github.sha }}
-          -c "from src.phase0_dataset_analysis.phase0 import Phase0Config, DataLoader; print('OK')"
+          -c "from pipeline.module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator; print('OK')"

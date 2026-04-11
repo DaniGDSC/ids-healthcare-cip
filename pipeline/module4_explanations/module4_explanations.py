@@ -40,10 +40,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
-BIOMETRIC_FEATURES = frozenset({
-    "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
-    "Heart_rate", "Resp_Rate", "ST",
-})
+from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
 TOP_N_WATERFALL = 5
 TOP_K_FEATURES = 10
@@ -124,8 +121,13 @@ def compute_tree_shap(
     logger.info("Computing TreeSHAP for %s...", model_name)
     t0 = time.perf_counter()
 
-    pipeline = joblib.load(pipeline_path)
-    clf = pipeline.named_steps["classifier"]
+    # Signed-pickle load: refuses tampered/unsigned files. The Phase 2
+    # final-training script writes the bare classifier (not a full
+    # Pipeline), so we extract from .named_steps only when the loaded
+    # artefact is still a legacy Pipeline. See Phase 2 finding #3a.
+    from pipeline.common import loads_signed
+    obj = loads_signed(pipeline_path)
+    clf = obj.named_steps["classifier"] if hasattr(obj, "named_steps") else obj
 
     explainer = shap.TreeExplainer(clf)
     sv = explainer.shap_values(X_test)
@@ -182,13 +184,21 @@ def save_global_importance(model_name: str, importance: list) -> None:
 # ── Track B: DAE per-feature error ─────────────────────────────────────
 
 def compute_dae_feature_errors(
-    dae_path: Path,
+    dae_json_path: Path,
+    dae_weights_path: Path,
     X_test: np.ndarray,
     feat_names: list,
 ) -> tuple:
-    """Decompose DAE reconstruction error into per-feature contributions."""
+    """Decompose DAE reconstruction error into per-feature contributions.
+
+    The DAE detector is loaded via ``DAEDetector.from_artefacts``:
+    a JSON sidecar plus a Keras weights file. Loading is pickle-free,
+    so this code path can never invoke arbitrary Python from a
+    tampered model file. See Phase 2 finding #3b.
+    """
     logger.info("Computing DAE per-feature error decomposition...")
-    det = joblib.load(dae_path)
+    from pipeline.module2_detection.models.DAE import DAEDetector
+    det = DAEDetector.from_artefacts(dae_json_path, dae_weights_path)
 
     X_norm = det._normalise(X_test)
     recon = det.model.predict(X_norm, verbose=0)
@@ -993,9 +1003,10 @@ def validate_consistency(
     logger.info("Running consistency check (SHAP vs native importances)...")
     results = {}
 
+    from pipeline.common import loads_signed
     for name, cfg in TRACK_A_MODELS.items():
-        pipeline = joblib.load(PROJECT_ROOT / cfg["pipeline"])
-        clf = pipeline.named_steps["classifier"]
+        obj = loads_signed(PROJECT_ROOT / cfg["pipeline"])
+        clf = obj.named_steps["classifier"] if hasattr(obj, "named_steps") else obj
 
         if not hasattr(clf, "feature_importances_"):
             continue
@@ -1051,9 +1062,10 @@ def validate_perturbation(
     logger.info("Running perturbation test (mask top-%d features)...", top_n_features)
     results = {}
 
+    from pipeline.common import loads_signed
     for name, cfg in TRACK_A_MODELS.items():
-        pipeline = joblib.load(PROJECT_ROOT / cfg["pipeline"])
-        clf = pipeline.named_steps["classifier"]
+        obj = loads_signed(PROJECT_ROOT / cfg["pipeline"])
+        clf = obj.named_steps["classifier"] if hasattr(obj, "named_steps") else obj
 
         # Baseline predictions
         y_proba_base = clf.predict_proba(X_test)[:, 1]

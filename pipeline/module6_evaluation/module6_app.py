@@ -21,22 +21,42 @@ from collections import Counter, deque
 from datetime import datetime
 from pathlib import Path
 
+import sys
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+
+# When invoked via `streamlit run pipeline/module6_evaluation/module6_app.py`
+# the project root is NOT on sys.path (streamlit treats the file as a
+# script, not a package). Prepend it so the absolute import below works.
+_PROJECT_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[2]
+if str(_PROJECT_ROOT_FOR_IMPORT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT_FOR_IMPORT))
+
+# Hardened audit logger from Module 5 — used to bind reviewer attribution
+# (participant_id / role / timestamp) from st.session_state to a signed,
+# hash-chained record in results/reports/audit_log.jsonl.
+from pipeline.module5_responses.module5_pipeline import AuditLogger as HardenedAuditLogger  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 EVAL_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 MODELS_DIR = PROJECT_ROOT / "results/models"
 
+# Singleton hardened logger for reviewer-attributed events. The existing
+# AuditTrailWriter (audit_trail.jsonl) is kept for backward compatibility
+# with offline study mode; reviewer-attributed alert decisions ALSO get
+# logged to the signed audit_log.jsonl chain.
+_hardened_audit = HardenedAuditLogger(EVAL_DIR / "audit_log.jsonl")
+
 ROLES = ["Security Analyst", "Clinician", "Administrator"]
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
 
 TIER_COLORS = {"CRITICAL": "#8e44ad", "HIGH": "#e74c3c", "MEDIUM": "#e67e22", "LOW": "#2ecc71"}
 
-BIOMETRIC_FEATURES = {"Temp", "SpO2", "Pulse_Rate", "SYS", "DIA", "Heart_rate", "Resp_Rate", "ST"}
+from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -178,7 +198,14 @@ def capture_online_interaction(
     action_type: str,
     details: dict | None = None,
 ) -> None:
-    """Log confirm/reject, reclassifications, feedback with timestamps."""
+    """Log confirm/reject, reclassifications, feedback with timestamps.
+
+    Writes to three sinks:
+      1. online_interactions.jsonl  — flat per-interaction log
+      2. AuditTrailWriter           — local hash-chained eval-app trail
+      3. HardenedAuditLogger        — signed, reviewer-attributed entry
+                                       in the Module 5 audit_log.jsonl
+    """
     record = {
         "timestamp": datetime.now().isoformat(),
         "participant_id": participant_id,
@@ -189,8 +216,15 @@ def capture_online_interaction(
     path = EVAL_DIR / "online_interactions.jsonl"
     with open(path, "a") as f:
         f.write(json.dumps(record) + "\n")
-    # Also write to audit trail
+    # Local eval-app audit trail
     audit_log("online_interaction", **record)
+    # Signed Module 5 audit chain with reviewer attribution
+    _hardened_audit.log(
+        {"event_type": "reviewer_interaction", "alert_id": alert_id, "details": details or {}},
+        reviewer_id=participant_id or st.session_state.get("participant_id") or "anon",
+        reviewer_role=st.session_state.get("participant_role") or st.session_state.get("sim_role"),
+        review_action=action_type,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -230,14 +264,14 @@ def render_analyst(alert: dict):
 
     # SHAP waterfall
     idx = alert.get("sample_index", 0)
-    chart = CHARTS_DIR / f"waterfall_xgboost_sample_{idx:04d}.png"
-    if chart.exists():
-        st.image(str(chart), caption="SHAP Waterfall", use_container_width=True)
+    chart_bytes = _cached_png_bytes(str(CHARTS_DIR / f"waterfall_xgboost_sample_{idx:04d}.png"))
+    if chart_bytes:
+        st.image(chart_bytes, caption="SHAP Waterfall", width="stretch")
 
     # Force plot
-    force = CHARTS_DIR / f"force_xgboost_sample_{idx:04d}.png"
-    if force.exists():
-        st.image(str(force), caption="SHAP Force Plot", use_container_width=True)
+    force_bytes = _cached_png_bytes(str(CHARTS_DIR / f"force_xgboost_sample_{idx:04d}.png"))
+    if force_bytes:
+        st.image(force_bytes, caption="SHAP Force Plot", width="stretch")
 
     # Top features table
     feats = alert.get("shap_top_features", [])
@@ -251,7 +285,7 @@ def render_analyst(alert: dict):
                 "Direction": f.get("direction", ""),
                 "Type": "Biometric" if f["feature"] in BIOMETRIC_FEATURES else "Network",
             })
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     # DAE indicators
     dae = alert.get("dae_top_features", [])
@@ -299,12 +333,12 @@ def render_admin(alert: dict):
 
     # Global charts
     gc1, gc2 = st.columns(2)
-    gi = CHARTS_DIR / "global_importance_xgboost.png"
-    bs = CHARTS_DIR / "beeswarm_xgboost.png"
-    if gi.exists():
-        gc1.image(str(gi), caption="Global Feature Importance", use_container_width=True)
-    if bs.exists():
-        gc2.image(str(bs), caption="SHAP Beeswarm", use_container_width=True)
+    gi_bytes = _cached_png_bytes(str(CHARTS_DIR / "global_importance_xgboost.png"))
+    bs_bytes = _cached_png_bytes(str(CHARTS_DIR / "beeswarm_xgboost.png"))
+    if gi_bytes:
+        gc1.image(gi_bytes, caption="Global Feature Importance", width="stretch")
+    if bs_bytes:
+        gc2.image(bs_bytes, caption="SHAP Beeswarm", width="stretch")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -365,6 +399,133 @@ def load_response_policy() -> dict:
     return {}
 
 
+@st.cache_data(max_entries=64, show_spinner=False)
+def _cached_png_bytes(path_str: str) -> bytes | None:
+    """Cache PNG file bytes across reruns.
+
+    `st.image(str)` re-reads and re-decodes the file on every script
+    rerun. With several charts visible per simulation tick this is the
+    single largest piece of waste in the page. Caching the raw bytes
+    lets Streamlit reuse them across reruns; the decoded image is then
+    streamed to the browser exactly once per session per file.
+    """
+    p = Path(path_str)
+    if not p.exists():
+        return None
+    return p.read_bytes()
+
+
+@st.cache_data
+def load_audit_trail() -> dict:
+    """Module 5 FDA-style audit records, keyed by sample index parsed from alert_id."""
+    path = EVAL_DIR / "audit_trail.json"
+    if not path.exists():
+        return {}
+    with open(path) as f:
+        records = json.load(f)
+    out: dict[int, dict] = {}
+    for rec in records:
+        aid = rec.get("alert_id", "")
+        # alert_id format: "ALERT-00042"
+        try:
+            idx = int(aid.split("-")[-1])
+            out[idx] = rec
+        except (ValueError, IndexError):
+            continue
+    return out
+
+
+@st.cache_data
+def load_latency_profile() -> dict:
+    """Module 4 online_latency_profile.json — aggregate per-stage latency stats."""
+    path = EVAL_DIR / "online_latency_profile.json"
+    if not path.exists():
+        return {}
+    with open(path) as f:
+        return json.load(f)
+
+
+@st.cache_data
+def load_live_stream_source() -> pd.DataFrame | None:
+    """Mock 'live data source' — reads the test parquet directly and attaches a
+    synthetic arrival timestamp per row.
+
+    This simulates a feature-extracted flow stream without requiring a real
+    network TAP. Each row is one timestep of mock 'arrived data'; the
+    timestamps are anchored to a fixed start instant so the stream is
+    reproducible across reruns.
+    """
+    path = PROJECT_ROOT / "data/processed/test_phase1.parquet"
+    if not path.exists():
+        return None
+    df = pd.read_parquet(path)
+    # Synthetic arrival timestamps: 1 second between rows, anchored at the
+    # session start. Keeping this deterministic per session is intentional
+    # so timestamps stay stable when Streamlit reruns the script.
+    base = datetime(2026, 4, 9, 8, 0, 0)
+    df = df.reset_index(drop=True)
+    df["arrived_at"] = [
+        (base + pd.Timedelta(seconds=i)).isoformat()
+        for i in range(len(df))
+    ]
+    df["sample_index"] = df.index
+    return df
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 6C.11  Synthetic per-sample latency series
+# ═══════════════════════════════════════════════════════════════════════
+
+def _draw_latency_sample(stage_stats: dict, rng: random.Random) -> float:
+    """Draw a single latency sample for one stage, consistent with the
+    recorded mean / p50 / p95 of the offline latency profile.
+
+    Uses a lognormal fit: μ = ln(p50), σ derived from p95 ≈ exp(μ + 1.645·σ).
+    Falls back to a clamped normal if percentiles are missing.
+    """
+    p50 = stage_stats.get("p50") or stage_stats.get("mean") or 1.0
+    p95 = stage_stats.get("p95") or (p50 * 1.5)
+    if p50 <= 0:
+        return max(0.0, stage_stats.get("mean", 1.0))
+    try:
+        mu = np.log(p50)
+        sigma = max(1e-3, (np.log(p95) - mu) / 1.645)
+        # Use the provided rng so the series is reproducible per session.
+        sample = float(np.exp(rng.gauss(mu, sigma)))
+        lo = stage_stats.get("min", 0.0)
+        hi = stage_stats.get("max", sample * 4)
+        return max(lo, min(hi, sample))
+    except (ValueError, TypeError):
+        return float(p50)
+
+
+def push_latency_sample(profile: dict) -> dict | None:
+    """Append one synthetic per-stage latency sample to the rolling deque
+    held in session state. Returns the new sample, or None if the profile
+    is empty.
+    """
+    if not profile:
+        return None
+    stages = profile.get("all_alerts", {})
+    if not stages:
+        return None
+
+    rng = st.session_state.setdefault(
+        "_latency_rng", random.Random(42)
+    )
+    history = st.session_state.setdefault(
+        "latency_history", deque(maxlen=120)
+    )
+
+    sample = {
+        stage: _draw_latency_sample(stats, rng)
+        for stage, stats in stages.items()
+    }
+    sample["arrival_idx"] = len(history)
+    history.append(sample)
+    return sample
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # Session state
 # ═══════════════════════════════════════════════════════════════════════
@@ -375,12 +536,74 @@ def init_session():
         "responses": [], "alert_start_time": None,
         "study_started": False, "study_complete": False,
         "ab_conditions": [],
-        "app_mode": "dashboard", "sim_index": 0, "sim_running": False,
+        "app_mode": "dashboard", "sim_index": 0, "sim_running": True,
         "sim_history": [],
+        "sim_speed": 1.0,           # 0.5x / 1x / 2x / 4x
+        "sim_source": "alerts",     # "alerts" or "live_parquet"
+        "latency_history": deque(maxlen=120),
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 6C.12  FDA-style audit record export
+# ═══════════════════════════════════════════════════════════════════════
+
+def build_fda_record_for_alert(
+    sample_idx: int,
+    alert: dict,
+    audit_trail: dict[int, dict],
+) -> dict:
+    """Return the FDA-style audit record for a sample.
+
+    Prefers the canonical Module 5 record from `audit_trail.json` when
+    available; otherwise constructs an equivalent record from whatever
+    fields are present on the alert object so the export still works
+    when Module 5 hasn't been run.
+    """
+    canonical = audit_trail.get(sample_idx)
+    if canonical is not None:
+        return canonical
+
+    # Fallback: rebuild a Module-5-shaped record from what we have on hand.
+    response = alert.get("response", {}) or {}
+    explanation = (
+        alert.get("explanation", {}).get("analyst", {}).get("consensus", "")
+        if isinstance(alert.get("explanation"), dict)
+        else ""
+    )
+    payload = json.dumps(
+        {
+            "idx": sample_idx,
+            "risk_score": alert.get("risk_score"),
+            "risk_level": alert.get("risk_level"),
+            "actions": response.get("actions", []),
+        },
+        sort_keys=True,
+    )
+    integrity_hash = hashlib.sha256(payload.encode()).hexdigest()[:16]
+    return {
+        "alert_id": f"ALERT-{sample_idx:05d}",
+        "timestamp": datetime.now().isoformat(),
+        "device_tier": response.get("device_tier", "unknown"),
+        "attack_category": alert.get("attack_category", "unknown"),
+        "risk_score": round(float(alert.get("risk_score", 0.0)), 4),
+        "risk_level": alert.get("risk_level", "LOW"),
+        "recommended_actions": response.get("actions", []),
+        "action_rationale": response.get("rationale", ""),
+        "escalation_chain": response.get("escalation_chain", {}),
+        "explanation_summary": explanation[:200],
+        "simulated_outcome": {
+            "outcome": "n/a — synthesized at export time",
+            "action_effective": None,
+            "time_to_effectiveness_sec": None,
+            "ground_truth": alert.get("ground_truth", "unknown"),
+        },
+        "integrity_hash": integrity_hash,
+        "_source": "fallback (audit_trail.json not found)",
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -474,7 +697,7 @@ def dashboard_mode():
                 "Category": r.get("attack_category", ""),
                 "Actions": "|".join(r.get("response", {}).get("actions", [])),
             })
-        st.dataframe(pd.DataFrame(feed_data), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(feed_data), width="stretch", hide_index=True)
 
     # ── Row 4: SHAP waterfall + NLG clinician alert ──
     st.markdown("---")
@@ -483,14 +706,13 @@ def dashboard_mode():
     with col_shap:
         st.markdown("#### SHAP Waterfall Plot")
         sample_idx = selected["sample_index"]
-        chart_path = CHARTS_DIR / f"waterfall_xgboost_sample_{sample_idx:04d}.png"
-        if chart_path.exists():
-            st.image(str(chart_path), use_container_width=True)
+        wf_bytes = _cached_png_bytes(str(CHARTS_DIR / f"waterfall_xgboost_sample_{sample_idx:04d}.png"))
+        if wf_bytes:
+            st.image(wf_bytes, width="stretch")
         else:
-            # Try force plot
-            force_path = CHARTS_DIR / f"force_xgboost_sample_{sample_idx:04d}.png"
-            if force_path.exists():
-                st.image(str(force_path), use_container_width=True)
+            force_bytes = _cached_png_bytes(str(CHARTS_DIR / f"force_xgboost_sample_{sample_idx:04d}.png"))
+            if force_bytes:
+                st.image(force_bytes, width="stretch")
             else:
                 st.info(f"No SHAP chart for sample {sample_idx}")
 
@@ -528,15 +750,15 @@ def dashboard_mode():
     # ── Row 6: Global SHAP summary ──
     st.markdown("---")
     st.markdown("#### Global Feature Importance (XGBoost)")
-    global_chart = CHARTS_DIR / "global_importance_xgboost.png"
-    beeswarm_chart = CHARTS_DIR / "beeswarm_xgboost.png"
+    global_bytes = _cached_png_bytes(str(CHARTS_DIR / "global_importance_xgboost.png"))
+    beeswarm_bytes = _cached_png_bytes(str(CHARTS_DIR / "beeswarm_xgboost.png"))
     gc1, gc2 = st.columns(2)
     with gc1:
-        if global_chart.exists():
-            st.image(str(global_chart), use_container_width=True)
+        if global_bytes:
+            st.image(global_bytes, width="stretch")
     with gc2:
-        if beeswarm_chart.exists():
-            st.image(str(beeswarm_chart), use_container_width=True)
+        if beeswarm_bytes:
+            st.image(beeswarm_bytes, width="stretch")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -544,15 +766,26 @@ def dashboard_mode():
 # ═══════════════════════════════════════════════════════════════════════
 
 def simulation_mode():
-    """Stream test samples through pipeline, auto-refresh with new alerts.
+    """Stream test samples through pipeline with smooth playback controls,
+    a mock live data source, a real-time latency profile panel, and
+    per-alert FDA-style audit record export.
 
     Includes 6C.1 streaming simulator, 6C.3 risk gauge, 6C.8 role switcher,
-    6C.9 interaction capture, and 6C.10 dynamic threshold display.
+    6C.9 interaction capture, 6C.10 dynamic threshold display,
+    6C.11 latency profile panel, 6C.12 FDA-record export.
     """
+    # Step 0 instrumentation — measure end-to-end render time per script
+    # rerun. Persisted to a JSONL file for offline analysis. Disabled by
+    # default; toggle from the sidebar.
+    _render_t0 = time.perf_counter()
+
     st.title("IoMT IDS — Online Simulation")
 
     responses = load_all_responses()
     clin_summaries = load_clinician_summaries()
+    audit_trail = load_audit_trail()
+    latency_profile = load_latency_profile()
+    live_df = load_live_stream_source()
 
     if not responses:
         st.warning("No alert data. Run Modules 3-5 first.")
@@ -567,65 +800,166 @@ def simulation_mode():
         key="sim_role",
     )
 
-    # Controls
-    col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
-    with col_ctrl1:
-        speed = st.slider("Simulation speed (alerts/batch)", 1, 10, 3)
-    with col_ctrl2:
-        auto_refresh = st.toggle("Auto-refresh", value=False)
-    with col_ctrl3:
-        if st.button("Step Forward"):
+    # ── Step 0 instrumentation toggle ──
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("## Debug")
+    st.session_state["_render_caption_enabled"] = st.sidebar.toggle(
+        "Show render time", value=True, key="dbg_render_caption"
+    )
+    st.session_state["_render_log_enabled"] = st.sidebar.toggle(
+        "Log render time to /tmp/sim_render_timings.jsonl",
+        value=False, key="dbg_render_log",
+    )
+
+    # ── Data source toggle (6C.11 mock live source) ──
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("## Data Source")
+    source_label = st.sidebar.radio(
+        "Stream from:",
+        ["Pre-computed alerts (Module 5)", "Live parquet (mock TAP)"],
+        index=0 if st.session_state.sim_source == "alerts" else 1,
+        help=(
+            "Pre-computed alerts replays Module 5 outputs.\n\n"
+            "Live parquet reads data/processed/test_phase1.parquet row by row "
+            "and attaches synthetic arrival timestamps, simulating a feature-"
+            "extracted flow stream from a network TAP. Alert metadata is "
+            "joined from Module 5 by sample index where available."
+        ),
+    )
+    st.session_state.sim_source = (
+        "live_parquet" if "Live" in source_label else "alerts"
+    )
+    using_live = st.session_state.sim_source == "live_parquet"
+
+    if using_live and live_df is None:
+        st.sidebar.warning(
+            "data/processed/test_phase1.parquet not found — falling back to "
+            "pre-computed alerts."
+        )
+        using_live = False
+        st.session_state.sim_source = "alerts"
+
+    # ── Smoother playback controls ──
+    ctrl_a, ctrl_b, ctrl_c, ctrl_d, ctrl_e = st.columns([1.2, 1, 1, 1, 1.4])
+
+    with ctrl_a:
+        speed_label = st.selectbox(
+            "Speed",
+            ["0.5x", "1x", "2x", "4x"],
+            index=["0.5x", "1x", "2x", "4x"].index(
+                f"{st.session_state.sim_speed:g}x"
+            ) if f"{st.session_state.sim_speed:g}x" in ["0.5x", "1x", "2x", "4x"] else 1,
+            help="Playback speed multiplier for the auto-advance loop.",
+        )
+        st.session_state.sim_speed = float(speed_label.rstrip("x"))
+
+    with ctrl_b:
+        if st.session_state.sim_running:
+            if st.button("⏸ Pause", width="stretch"):
+                st.session_state.sim_running = False
+                audit_log("sim_pause", sim_index=st.session_state.sim_index)
+        else:
+            if st.button("▶ Resume", width="stretch"):
+                st.session_state.sim_running = True
+                audit_log("sim_resume", sim_index=st.session_state.sim_index)
+
+    with ctrl_c:
+        if st.button("⏭ Step", width="stretch",
+                     help="Advance one alert (works while paused)."):
             st.session_state.sim_index = min(
-                st.session_state.sim_index + speed, len(responses) - 1)
+                st.session_state.sim_index + 1, len(responses) - 1
+            )
+            push_latency_sample(latency_profile)
 
-    idx = st.session_state.sim_index
-    current_batch = responses[max(0, idx - speed + 1):idx + 1]
-    history = responses[:idx + 1]
+    with ctrl_d:
+        if st.button("⟲ Reset", width="stretch"):
+            st.session_state.sim_index = 0
+            st.session_state.latency_history.clear()
+            audit_log("sim_reset")
 
-    # ── Row 1: Summary metrics ──
+    with ctrl_e:
+        jump_target = st.number_input(
+            "Jump to alert #",
+            min_value=0,
+            max_value=max(0, len(responses) - 1),
+            value=int(st.session_state.sim_index),
+            step=1,
+            help="Jump the playhead to a specific alert index.",
+        )
+        if jump_target != st.session_state.sim_index:
+            st.session_state.sim_index = int(jump_target)
+            audit_log("sim_jump", target=int(jump_target))
+
+    # ─────────────────────────────────────────────────────────────────
+    # Phase 2 — STATIC ANALYTICS (rendered once per script run)
+    # ─────────────────────────────────────────────────────────────────
+    # These panels do not depend on the playhead. They are derived from
+    # cached JSON files and are placed BEFORE the playhead fragment so
+    # they re-render only when something forces a full script rerun
+    # (sidebar change, control click, page reload). The fragment below
+    # then handles tick-driven updates without re-running these panels.
+
+    # ── Static latency profile (metrics + bar chart + percentile table) ──
     st.markdown("---")
-    mc1, mc2, mc3, mc4, mc5 = st.columns(5)
-    mc1.metric("Samples Processed", idx + 1)
-    tier_counts = Counter(r["risk_level"] for r in history)
-    mc2.metric("CRITICAL", tier_counts.get("CRITICAL", 0))
-    mc3.metric("HIGH", tier_counts.get("HIGH", 0))
-    attacks = sum(1 for r in history if r.get("ground_truth") == "attack")
-    mc4.metric("True Attacks Seen", attacks)
-    if history:
-        mc5.metric("Latest Risk Score", f"{history[-1]['risk_score']:.3f}")
+    st.markdown("#### Real-Time Latency Profile")
+    if not latency_profile:
+        st.info(
+            "No `online_latency_profile.json` found. Run "
+            "`python -m pipeline.module4_explanations.module4_online_explainer` "
+            "to generate it."
+        )
+    else:
+        all_stages = latency_profile.get("all_alerts", {})
+        startup_ms = latency_profile.get("startup_ms")
+        n_total = latency_profile.get("n_alerts_total", 0)
 
-    # ── 6C.3  Risk score gauge (latest alert) ──
-    if current_batch:
-        latest = current_batch[-1]
-        latest_score = latest["risk_score"]
-        latest_level = latest["risk_level"]
+        lc1, lc2, lc3 = st.columns(3)
+        lc1.metric("Profile samples", n_total)
+        if startup_ms is not None:
+            lc2.metric("Startup", f"{startup_ms:.0f} ms")
+        if "total_ms" in all_stages:
+            lc3.metric(
+                "End-to-end p95",
+                f"{all_stages['total_ms'].get('p95', 0):.0f} ms",
+            )
 
-        col_gauge, col_components = st.columns([1, 2])
-        with col_gauge:
-            st.markdown("#### Risk Score Gauge")
-            color = TIER_COLORS.get(latest_level, "#999")
-            st.metric("Current Alert", f"{latest_score:.3f}",
-                       delta=latest_level, delta_color="inverse" if latest_level in ("CRITICAL", "HIGH") else "normal")
-            st.progress(min(latest_score, 1.0))
+        lat_left, lat_right = st.columns(2)
 
-        with col_components:
-            st.markdown("#### 4-Component Breakdown")
-            comps = latest.get("risk_components", {})
-            if comps:
-                comp_df = pd.DataFrame({
-                    "Component": list(comps.keys()),
-                    "Value": [float(v) for v in comps.values()],
-                })
-                st.bar_chart(comp_df.set_index("Component"), color="#3274A1")
-            else:
-                st.caption("Component breakdown not available for this alert")
+        with lat_left:
+            st.markdown("**Per-stage mean latency (ms)**")
+            stage_rows = [
+                {"stage": s, "mean_ms": float(stats.get("mean", 0.0))}
+                for s, stats in all_stages.items()
+                if s != "total_ms"
+            ]
+            if stage_rows:
+                stage_df = pd.DataFrame(stage_rows).set_index("stage")
+                st.bar_chart(stage_df, color="#3274A1")
 
-    # ── 6C.10  Dynamic threshold display ──
+        with lat_right:
+            st.markdown("**Percentiles per stage**")
+            pct_rows = [
+                {
+                    "stage": s,
+                    "p50": round(stats.get("p50", 0.0), 2),
+                    "p95": round(stats.get("p95", 0.0), 2),
+                    "p99": round(stats.get("p99", 0.0), 2),
+                    "max": round(stats.get("max", 0.0), 2),
+                }
+                for s, stats in all_stages.items()
+            ]
+            if pct_rows:
+                st.dataframe(
+                    pd.DataFrame(pct_rows),
+                    hide_index=True,
+                    width="stretch",
+                )
+
+    # ── Static dynamic threshold + drift detection panels ──
     st.markdown("---")
     col_thresh, col_drift = st.columns(2)
     with col_thresh:
         st.markdown("#### Adaptive Threshold Monitor")
-        # Load dynamic threshold results if available
         dyn_path = EVAL_DIR / "dynamic_threshold_results.json"
         if dyn_path.exists():
             with open(dyn_path) as f:
@@ -636,10 +970,9 @@ def simulation_mode():
                 thc1, thc2 = st.columns(2)
                 thc1.metric("Static F1", f"{fm.get('static', {}).get('f1', 0):.4f}")
                 thc2.metric("Adaptive F1", f"{fm.get('adaptive', {}).get('f1', 0):.4f}")
-            # Show threshold chart if exists
-            thresh_chart = CHARTS_DIR / "threshold_over_time.png"
-            if thresh_chart.exists():
-                st.image(str(thresh_chart), use_container_width=True,
+            thresh_bytes = _cached_png_bytes(str(CHARTS_DIR / "threshold_over_time.png"))
+            if thresh_bytes:
+                st.image(thresh_bytes, width="stretch",
                          caption="DAE threshold: static vs adaptive")
         else:
             st.info("Run `dynamic_threshold_sim.py` to enable adaptive threshold monitoring")
@@ -651,99 +984,321 @@ def simulation_mode():
             with open(drift_path) as f:
                 drift = json.load(f)
             psi = drift.get("psi_summary", {})
-            ks = drift.get("ks_summary", {})
             n_events = len(drift.get("drift_events", []))
             dc1, dc2 = st.columns(2)
             dc1.metric("Drift Events", n_events)
             dc2.metric("PSI (max)", f"{psi.get('max', 0):.4f}",
                        delta="DRIFT" if psi.get("max", 0) > 0.1 else "OK",
                        delta_color="inverse" if psi.get("max", 0) > 0.1 else "normal")
-            psi_chart = CHARTS_DIR / "drift_psi.png"
-            if psi_chart.exists():
-                st.image(str(psi_chart), use_container_width=True,
+            psi_bytes = _cached_png_bytes(str(CHARTS_DIR / "drift_psi.png"))
+            if psi_bytes:
+                st.image(psi_bytes, width="stretch",
                          caption="PSI over time")
         else:
             st.info("Run `drift_detection.py` to enable drift monitoring")
 
-    # ── Current batch display ──
-    st.markdown("---")
-    st.markdown("### Current Batch")
-    for r in current_batch:
-        sample_idx = r["sample_index"]
-        level = r["risk_level"]
-        score = r["risk_score"]
-        color = TIER_COLORS.get(level, "#999")
+    # ─────────────────────────────────────────────────────────────────
+    # Phase 2 — PLAYHEAD FRAGMENT (auto-ticks at speed-derived interval)
+    # ─────────────────────────────────────────────────────────────────
+    # Speed multiplier maps to fragment tick interval:
+    #   0.5x → 4.0s, 1x → 2.0s, 2x → 1.0s, 4x → 0.5s
+    # When sim_running is False, run_every is None — the fragment
+    # renders once but does not auto-tick. Pause/Resume/Step/Reset/Jump
+    # buttons live OUTSIDE the fragment, so a click triggers a full
+    # script rerun which re-defines and re-calls the fragment with
+    # fresh closure values.
+    interval_s = 2.0 / max(0.25, st.session_state.sim_speed)
+    fragment_interval = interval_s if st.session_state.sim_running else None
 
-        with st.expander(f"Alert #{sample_idx} — :{color.replace('#','')}[{level}] R={score:.3f}", expanded=(level in ("CRITICAL", "HIGH"))):
-            # Build structured alert for role-specific rendering
-            clin = clin_summaries.get(sample_idx, {})
-            alert_obj = process_alert(sample_idx, {
-                "risk_score": score, "risk_level": level,
-                "attack_category": r.get("attack_category", "unknown"),
-                "xai_explanation": {
-                    "xgboost_top_features": r.get("explanation", {}).get("analyst", {}).get("xgboost_top_features", []),
-                    "dae_top_features": r.get("explanation", {}).get("analyst", {}).get("dae_top_features", []),
-                    "clinician_summary": clin.get("summary", ""),
-                    "consensus": r.get("explanation", {}).get("analyst", {}).get("consensus", ""),
-                },
-            })
+    @st.fragment(run_every=fragment_interval)
+    def _playhead():
+        # Auto-advance: only when running and not at the end. Step/Reset/
+        # Jump live in the control row above and mutate sim_index there.
+        if (
+            st.session_state.sim_running
+            and st.session_state.sim_index < len(responses) - 1
+        ):
+            st.session_state.sim_index = min(
+                st.session_state.sim_index + 1, len(responses) - 1
+            )
+            push_latency_sample(latency_profile)
 
-            # 6C.8 Role-switched rendering
-            if sim_role == "Security Analyst":
-                render_analyst(alert_obj)
-            elif sim_role == "Clinician":
-                render_clinician(alert_obj)
+        idx_local = st.session_state.sim_index
+        history_local = responses[: idx_local + 1]
+        window_size = 3
+        current_batch_local = responses[max(0, idx_local - window_size + 1): idx_local + 1]
+
+        # Status + progress
+        status_col, prog_col = st.columns([1, 4])
+        with status_col:
+            running_local = st.session_state.sim_running
+            st.markdown(
+                f"**Status:** {'🟢 Running' if running_local else '🟡 Paused'} "
+                f"&nbsp;&nbsp; `{st.session_state.sim_speed:g}x`",
+                unsafe_allow_html=True,
+            )
+        with prog_col:
+            st.progress(
+                (idx_local + 1) / max(1, len(responses)),
+                text=f"Alert {idx_local + 1} / {len(responses)}",
+            )
+
+        # Mock live source preview (only when live mode active)
+        if using_live and live_df is not None and idx_local < len(live_df):
+            live_row = live_df.iloc[idx_local]
+            with st.expander(
+                f"📡 Live source — row {idx_local} arrived at "
+                f"{live_row['arrived_at']}",
+                expanded=False,
+            ):
+                st.caption(
+                    "Mock TAP: feature-extracted flow read directly from "
+                    "data/processed/test_phase1.parquet."
+                )
+                preview_cache = st.session_state.setdefault("_live_preview_cache", {})
+                if idx_local not in preview_cache:
+                    preview_cols = [c for c in live_row.index if c != "arrived_at"][:8]
+                    preview_cache[idx_local] = pd.DataFrame(
+                        {"feature": preview_cols,
+                         "value": [live_row[c] for c in preview_cols]}
+                    )
+                    if len(preview_cache) > 256:
+                        preview_cache.pop(next(iter(preview_cache)))
+                st.dataframe(
+                    preview_cache[idx_local],
+                    hide_index=True,
+                    width="stretch",
+                )
+
+        # Summary metrics
+        st.markdown("---")
+        mc1, mc2, mc3, mc4, mc5 = st.columns(5)
+        mc1.metric("Samples Processed", idx_local + 1)
+        tier_counts = Counter(r["risk_level"] for r in history_local)
+        mc2.metric("CRITICAL", tier_counts.get("CRITICAL", 0))
+        mc3.metric("HIGH", tier_counts.get("HIGH", 0))
+        attacks = sum(1 for r in history_local if r.get("ground_truth") == "attack")
+        mc4.metric("True Attacks Seen", attacks)
+        if history_local:
+            mc5.metric("Latest Risk Score", f"{history_local[-1]['risk_score']:.3f}")
+
+        # Risk gauge + 4-component breakdown
+        if current_batch_local:
+            latest = current_batch_local[-1]
+            latest_score = latest["risk_score"]
+            latest_level = latest["risk_level"]
+            col_gauge, col_components = st.columns([1, 2])
+            with col_gauge:
+                st.markdown("#### Risk Score Gauge")
+                st.metric(
+                    "Current Alert", f"{latest_score:.3f}",
+                    delta=latest_level,
+                    delta_color="inverse" if latest_level in ("CRITICAL", "HIGH") else "normal",
+                )
+                st.progress(min(latest_score, 1.0))
+            with col_components:
+                st.markdown("#### 4-Component Breakdown")
+                comps = latest.get("risk_components", {})
+                if comps:
+                    comp_df = pd.DataFrame({
+                        "Component": list(comps.keys()),
+                        "Value": [float(v) for v in comps.values()],
+                    })
+                    st.bar_chart(comp_df.set_index("Component"), color="#3274A1")
+                else:
+                    st.caption("Component breakdown not available for this alert")
+
+        # Rolling per-sample latency line chart (the playhead-driven part
+        # of the latency profile — the static panels are rendered above,
+        # outside the fragment).
+        history_deque = st.session_state.get("latency_history")
+        if history_deque is not None and len(history_deque) > 0:
+            st.markdown(
+                "**Rolling per-sample latency** "
+                "(synthetic draws consistent with the recorded p50/p95)"
+            )
+            roll_df = pd.DataFrame(list(history_deque))
+            chart_cols = [c for c in roll_df.columns if c != "arrival_idx"]
+            st.line_chart(roll_df[chart_cols])
+            if "total_ms" in roll_df.columns:
+                last_total = float(roll_df["total_ms"].iloc[-1])
+                sla_warn = (
+                    " ⚠️ exceeds 150 ms SLA"
+                    if last_total > 150
+                    else " ✅ within 150 ms SLA"
+                )
+                st.caption(f"Latest total latency: {last_total:.1f} ms{sla_warn}")
+        else:
+            st.caption(
+                "Step or resume the simulation to populate the rolling "
+                "latency chart."
+            )
+
+        # Current batch (per-alert expanders with role render + interactions + FDA export)
+        st.markdown("---")
+        st.markdown("### Current Batch")
+        alerts_cache = st.session_state.setdefault("_processed_alerts", {})
+        fda_cache = st.session_state.setdefault("_fda_payload_cache", {})
+        fda_filename_cache = st.session_state.setdefault("_fda_filename_cache", {})
+
+        for r in current_batch_local:
+            sample_idx = r["sample_index"]
+            level = r["risk_level"]
+            score = r["risk_score"]
+            color = TIER_COLORS.get(level, "#999")
+
+            with st.expander(
+                f"Alert #{sample_idx} — :{color.replace('#','')}[{level}] R={score:.3f}",
+                expanded=(level in ("CRITICAL", "HIGH")),
+            ):
+                if sample_idx not in alerts_cache:
+                    clin = clin_summaries.get(sample_idx, {})
+                    alerts_cache[sample_idx] = process_alert(sample_idx, {
+                        "risk_score": score, "risk_level": level,
+                        "attack_category": r.get("attack_category", "unknown"),
+                        "xai_explanation": {
+                            "xgboost_top_features": r.get("explanation", {}).get("analyst", {}).get("xgboost_top_features", []),
+                            "dae_top_features": r.get("explanation", {}).get("analyst", {}).get("dae_top_features", []),
+                            "clinician_summary": clin.get("summary", ""),
+                            "consensus": r.get("explanation", {}).get("analyst", {}).get("consensus", ""),
+                        },
+                    })
+                alert_obj = alerts_cache[sample_idx]
+
+                if sim_role == "Security Analyst":
+                    render_analyst(alert_obj)
+                elif sim_role == "Clinician":
+                    render_clinician(alert_obj)
+                else:
+                    render_admin(alert_obj)
+
+                resp = r.get("response", {})
+                if resp:
+                    st.markdown(f"**Response:** {', '.join(resp.get('actions', []))}")
+
+                if sample_idx not in fda_cache:
+                    fda_record = build_fda_record_for_alert(sample_idx, r, audit_trail)
+                    fda_cache[sample_idx] = json.dumps(fda_record, indent=2).encode("utf-8")
+                    fda_filename_cache[sample_idx] = f"audit_{fda_record['alert_id']}.json"
+                st.download_button(
+                    label="⬇ Export FDA-style Audit Record",
+                    data=fda_cache[sample_idx],
+                    file_name=fda_filename_cache[sample_idx],
+                    mime="application/json",
+                    key=f"fda_{sample_idx}",
+                    help=(
+                        "Download this alert as a Module-5 FDA-style audit "
+                        "record (alert_id, timestamp, risk, actions, "
+                        "rationale, simulated outcome, integrity hash)."
+                    ),
+                )
+
+                btn_col1, btn_col2, btn_col3 = st.columns(3)
+                with btn_col1:
+                    if st.button("Confirm", key=f"confirm_{sample_idx}"):
+                        capture_online_interaction(
+                            st.session_state.get("participant_id", "anon"),
+                            sample_idx, "confirm",
+                            {"tier": level, "score": score},
+                        )
+                        st.success("Confirmed")
+                with btn_col2:
+                    if st.button("Reject", key=f"reject_{sample_idx}"):
+                        capture_online_interaction(
+                            st.session_state.get("participant_id", "anon"),
+                            sample_idx, "reject",
+                            {"tier": level, "score": score},
+                        )
+                        st.warning("Rejected — logged for feedback loop")
+                with btn_col3:
+                    note = st.text_input(
+                        "Note", key=f"note_{sample_idx}",
+                        label_visibility="collapsed",
+                        placeholder="Add feedback note...",
+                    )
+                    if note:
+                        capture_online_interaction(
+                            st.session_state.get("participant_id", "anon"),
+                            sample_idx, "feedback_note",
+                            {"note": note, "tier": level},
+                        )
+
+        # Cumulative tier distribution (incremental, O(1) per advance)
+        st.markdown("### Alert Tier Distribution (cumulative)")
+        TIERS = ("LOW", "MEDIUM", "HIGH", "CRITICAL")
+        tier_state = st.session_state.setdefault(
+            "_tier_history",
+            {"len": 0, "data": {t: [] for t in TIERS}},
+        )
+        target_len = len(history_local)
+        if target_len < tier_state["len"]:
+            # Jumped backwards or reset → rebuild from scratch (O(N) once)
+            tier_state["data"] = {t: [] for t in TIERS}
+            tier_state["len"] = 0
+        while tier_state["len"] < target_len:
+            i = tier_state["len"]
+            new_level = history_local[i]["risk_level"]
+            for t in TIERS:
+                prev = tier_state["data"][t][-1] if tier_state["data"][t] else 0
+                tier_state["data"][t].append(prev + (1 if new_level == t else 0))
+            tier_state["len"] += 1
+        if tier_state["len"] > 0:
+            DISPLAY_LIMIT = 200
+            if tier_state["len"] <= DISPLAY_LIMIT:
+                display = tier_state["data"]
             else:
-                render_admin(alert_obj)
+                display = {t: tier_state["data"][t][-DISPLAY_LIMIT:] for t in TIERS}
+            st.line_chart(pd.DataFrame(display))
 
-            # Response recommendation always shown
-            resp = r.get("response", {})
-            if resp:
-                st.markdown(f"**Response:** {', '.join(resp.get('actions', []))}")
+    # Drive the playhead fragment. The first call renders the playhead
+    # panels using the current sim_index. Subsequent ticks (via the
+    # fragment's run_every timer) re-execute ONLY this function — none
+    # of the static analytics above re-render until the next full script
+    # rerun (sidebar/control change, button click outside the fragment).
+    # Time the fragment call separately so the render-time caption can
+    # report both the page-setup cost and the playhead cost.
+    _playhead_t0 = time.perf_counter()
+    _playhead()
+    st.session_state["_last_playhead_ms"] = (time.perf_counter() - _playhead_t0) * 1000.0
 
-            # 6C.9 Interaction buttons
-            btn_col1, btn_col2, btn_col3 = st.columns(3)
-            with btn_col1:
-                if st.button("Confirm", key=f"confirm_{sample_idx}"):
-                    capture_online_interaction(
-                        st.session_state.get("participant_id", "anon"),
-                        sample_idx, "confirm",
-                        {"tier": level, "score": score},
-                    )
-                    st.success("Confirmed")
-            with btn_col2:
-                if st.button("Reject", key=f"reject_{sample_idx}"):
-                    capture_online_interaction(
-                        st.session_state.get("participant_id", "anon"),
-                        sample_idx, "reject",
-                        {"tier": level, "score": score},
-                    )
-                    st.warning("Rejected — logged for feedback loop")
-            with btn_col3:
-                note = st.text_input("Note", key=f"note_{sample_idx}", label_visibility="collapsed",
-                                      placeholder="Add feedback note...")
-                if note:
-                    capture_online_interaction(
-                        st.session_state.get("participant_id", "anon"),
-                        sample_idx, "feedback_note",
-                        {"note": note, "tier": level},
-                    )
+    # Compute the equivalent autorefresh interval for the render-time
+    # caption below — this is what the previous code reported as
+    # `interval_ms`. Phase 2 no longer uses st_autorefresh, but the
+    # number is still meaningful as the fragment tick interval.
+    interval_ms = int(2000 / max(0.25, st.session_state.sim_speed))
 
-    # ── Tier distribution over time ──
-    st.markdown("### Alert Tier Distribution (cumulative)")
-    tier_over_time = {"LOW": [], "MEDIUM": [], "HIGH": [], "CRITICAL": []}
-    for i in range(min(len(history), 50)):
-        window = history[:i + 1]
-        counts = Counter(r["risk_level"] for r in window)
-        for t in tier_over_time:
-            tier_over_time[t].append(counts.get(t, 0))
-    st.line_chart(pd.DataFrame(tier_over_time))
+    # Step 0 instrumentation tail — measure and record end-to-end render
+    # cost of this rerun. Writes to /tmp/sim_render_timings.jsonl when
+    # the sidebar toggle is on; otherwise no-op except for the rolling
+    # in-memory deque used for the live caption.
+    _render_ms = (time.perf_counter() - _render_t0) * 1000.0
+    _hist = st.session_state.setdefault("_render_ms_history", deque(maxlen=50))
+    _hist.append(_render_ms)
+    _mean50 = sum(_hist) / len(_hist) if _hist else 0.0
 
-    # Auto-refresh: non-blocking timer triggers rerun every 2 seconds
-    if auto_refresh and idx < len(responses) - 1:
-        tick = st_autorefresh(interval=2000, limit=None, key="sim_autorefresh")
-        if tick:
-            st.session_state.sim_index = min(idx + speed, len(responses) - 1)
+    if st.session_state.get("_render_log_enabled"):
+        try:
+            with open("/tmp/sim_render_timings.jsonl", "a") as _rf:
+                _rf.write(json.dumps({
+                    "ts": datetime.now().isoformat(),
+                    "render_ms": round(_render_ms, 3),
+                    "sim_index": int(st.session_state.sim_index),
+                    "sim_speed": float(st.session_state.sim_speed),
+                    "sim_running": bool(st.session_state.sim_running),
+                    "sim_source": st.session_state.sim_source,
+                }) + "\n")
+        except Exception:  # noqa: BLE001
+            pass
+
+    if st.session_state.get("_render_caption_enabled", True):
+        playhead_ms = st.session_state.get("_last_playhead_ms", 0.0)
+        static_ms = _render_ms - playhead_ms
+        st.caption(
+            f"render: {_render_ms:.0f} ms (mean50={_mean50:.0f} ms, "
+            f"interval={interval_ms} ms)  •  "
+            f"playhead fragment: {playhead_ms:.0f} ms  •  "
+            f"static page setup: {static_ms:.0f} ms"
+        )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -787,9 +1342,9 @@ def display_alert(alert: dict, show_xai: bool):
         if clin:
             st.warning(clin[:500])
 
-        chart_path = CHARTS_DIR / f"waterfall_xgboost_sample_{alert['sample_index']:04d}.png"
-        if chart_path.exists():
-            st.image(str(chart_path), caption="SHAP Waterfall Plot", use_container_width=True)
+        wf_bytes = _cached_png_bytes(str(CHARTS_DIR / f"waterfall_xgboost_sample_{alert['sample_index']:04d}.png"))
+        if wf_bytes:
+            st.image(wf_bytes, caption="SHAP Waterfall Plot", width="stretch")
     else:
         st.markdown("---")
         st.info("No explanation available. Decide based on risk score and level only.")

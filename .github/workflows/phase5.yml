@@ -257,7 +257,7 @@ jobs:
           output:
             train_parquet: "train_phase1.parquet"
             test_parquet: "test_phase1.parquet"
-            scaler_file: "robust_scaler.pkl"
+            scaler_file: "robust_scaler.json"
             report_file: "phase1_report.json"
           YAMLEOF
 

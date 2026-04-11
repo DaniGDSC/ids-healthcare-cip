@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -48,7 +48,12 @@ class PreprocessingExporter:
         filename: str,
         y_multi: np.ndarray | None = None,
     ) -> Path:
-        """Export a scaled partition as a Parquet file.
+        """Export a scaled partition as a Parquet file (atomic write).
+
+        Writes to ``<filename>.tmp`` first and then ``os.replace`` so a
+        crash mid-write cannot leave a half-written Parquet file that
+        the next stage would parse as truncated. ``os.replace`` is
+        atomic on POSIX and Windows for same-filesystem moves.
 
         Args:
             X: Scaled feature matrix.
@@ -66,31 +71,58 @@ class PreprocessingExporter:
         df[self._label_col] = y
         if y_multi is not None and len(y_multi) > 0:
             df[self._multi_label_col] = y_multi
-        df.to_parquet(path, index=False)
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        df.to_parquet(tmp, index=False)
+        os.replace(tmp, path)
         logger.info("Exported %s: %d rows × %d cols", path.name, *df.shape)
         return path
 
     def export_scaler(self, scaler: Any, filename: str) -> Path:
-        """Persist the fitted scaler to disk.
+        """Persist the fitted scaler to disk as a JSON sidecar.
+
+        ``scaler`` must implement ``.save(path)`` (i.e. be a
+        ``RobustScalerTransformer``). The exporter no longer falls back
+        to ``joblib.dump`` — pickling the scaler is the RCE sink that
+        the JSON sidecar exists to eliminate, so an unsupported scaler
+        type is a hard error rather than a silent pickle.
+
+        If *filename* still ends in ``.pkl`` (legacy config), the actual
+        file written is the ``.json`` sibling. The returned path
+        reflects the real on-disk location.
 
         Args:
-            scaler: Fitted scaler object (e.g. RobustScalerTransformer).
-            filename: Output file name.
+            scaler: Fitted scaler object exposing ``.save(path)``.
+            filename: Output file name from config.
 
         Returns:
-            Absolute path to the written file.
+            Absolute path to the written sidecar.
         """
+        if not hasattr(scaler, "save"):
+            raise TypeError(
+                f"export_scaler refuses to pickle a {type(scaler).__name__} "
+                f"— wrap it in RobustScalerTransformer (which implements "
+                f"a JSON-only save) instead. Pickling fitted estimators "
+                f"is an RCE sink at every load site."
+            )
         self._scaler_dir.mkdir(parents=True, exist_ok=True)
         path = self._scaler_dir / filename
-        if hasattr(scaler, "save"):
-            scaler.save(path)
-        else:
-            joblib.dump(scaler, path)
-        logger.info("Exported scaler: %s", path.name)
+        scaler.save(path)
+        # ``RobustScalerTransformer.save`` rewrites .pkl → .json on disk;
+        # reflect that in the returned path so callers point at the real
+        # file rather than a phantom .pkl.
+        if path.suffix == ".pkl":
+            path = path.with_suffix(".json")
+        logger.info("Exported scaler sidecar: %s", path.name)
         return path
 
     def export_report(self, report: Dict[str, Any], filename: str) -> Path:
-        """Write the pipeline report as JSON.
+        """Write the pipeline report as JSON (atomic, strict serialisation).
+
+        ``default=str`` is intentionally NOT used: a value that doesn't
+        round-trip through ``json.dumps`` is a bug at the producer that
+        should fail loudly here, not be coerced to a ``repr()`` string
+        that looks legitimate in the JSON. The only known offender (the
+        unsigned integrity baseline) was removed in finding #1.
 
         Args:
             report: Complete pipeline report dict.
@@ -101,8 +133,16 @@ class PreprocessingExporter:
         """
         self._output_dir.mkdir(parents=True, exist_ok=True)
         path = self._output_dir / filename
-        path.write_text(
-            json.dumps(report, indent=2, default=str), encoding="utf-8"
-        )
+        try:
+            payload = json.dumps(report, indent=2)
+        except TypeError as exc:
+            raise TypeError(
+                f"Phase 1 report contains a non-JSON-serialisable value "
+                f"(detail: {exc}). Fix the producer; this exporter no "
+                f"longer silently coerces with default=str."
+            ) from exc
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(payload, encoding="utf-8")
+        os.replace(tmp, path)
         logger.info("Exported report: %s", path.name)
         return path

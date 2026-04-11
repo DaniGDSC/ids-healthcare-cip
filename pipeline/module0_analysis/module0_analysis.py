@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
+from pipeline.common.phi import BIOMETRIC_COLUMNS
+
 # ---------------------------------------------------------------------------
 # Named constants — no magic numbers
 # ---------------------------------------------------------------------------
@@ -30,7 +32,6 @@ RESULTS_DIR: Path = PROJECT_ROOT / "results/phase0_analysis"
 LABEL_COLUMN: str = "Label"
 ATTACK_CATEGORY_COLUMN: str = "Attack Category"
 CORRELATION_THRESHOLD: float = 0.95
-HEAD_ROWS: int = 5
 DECIMAL_PLACES: int = 4
 TRAIN_RATIO: float = 0.70
 TEST_RATIO: float = 0.30
@@ -69,33 +70,49 @@ logger = logging.getLogger(__name__)
 
 
 def load_dataset(path: Path) -> pd.DataFrame:
-    """Load the WUSTL-EHMS-2020 CSV dataset.
+    """Load the WUSTL-EHMS-2020 CSV dataset through the SOLID security stack.
+
+    Delegates to ``phase0.DataLoader``, which enforces workspace
+    containment, signed SHA-256 integrity verification, and TOCTOU-free
+    in-memory parsing. This thin wrapper exists only for backwards
+    compatibility with callers that import ``load_dataset`` from this
+    flat-script entry point.
 
     Args:
-        path: Absolute or relative path to the CSV file.
+        path: Path to the CSV file (absolute or workspace-relative).
 
     Returns:
         Raw DataFrame with all original columns preserved.
 
     Raises:
-        FileNotFoundError: If *path* does not exist on disk.
+        FileNotFoundError: If *path* does not exist.
+        PermissionError: If *path* escapes the workspace root.
+        IntegrityError: If the signed baseline check fails.
     """
-    if not path.exists():
-        raise FileNotFoundError(f"Dataset not found: {path}")
-    df = pd.read_csv(path, low_memory=False)
-    logger.info("Loaded %d rows × %d columns from %s", len(df), len(df.columns), path.name)
-    return df
+    from pipeline.module0_analysis.phase0 import DataLoader, Phase0Config
+
+    cfg = Phase0Config.from_yaml(
+        PROJECT_ROOT / "pipeline/module0_analysis/phase0/config.yaml"
+    )
+    # Honor an explicit override path while preserving the rest of the
+    # config (output_dir, label column, etc.).
+    cfg.data_path = path
+    return DataLoader(cfg).load()
 
 
 def display_overview(df: pd.DataFrame) -> None:
-    """Log dataset shape, column dtypes, and the first rows.
+    """Log dataset shape and column dtypes only.
+
+    Raw row contents are NEVER logged: the dataset contains patient
+    biometrics (Temp/SpO2/Pulse_Rate/SYS/DIA/Heart_rate/Resp_Rate/ST)
+    which are PHI under HIPAA. Only schema-level information escapes
+    this function.
 
     Args:
         df: Raw dataset DataFrame.
     """
     logger.info("Shape : %d rows × %d columns", *df.shape)
     logger.info("Dtypes:\n%s", df.dtypes.to_string())
-    logger.info("Head (%d rows):\n%s", HEAD_ROWS, df.head(HEAD_ROWS).to_string())
 
 
 # ===================================================================
@@ -104,27 +121,44 @@ def display_overview(df: pd.DataFrame) -> None:
 
 
 def compute_descriptive_stats(df: pd.DataFrame) -> Dict[str, Dict[str, float]]:
-    """Compute mean, median, std, min, max per numeric feature.
+    """Compute descriptive statistics per numeric feature.
+
+    Network features get the full ``{mean, median, std, min, max}``.
+    Biometric features (see ``pipeline.common.phi.BIOMETRIC_COLUMNS``)
+    are restricted to ``{mean, std}``: per-patient minima and maxima are
+    quasi-identifiers under HIPAA Safe Harbor and are never published
+    from this layer.
 
     Args:
         df: Dataset DataFrame (non-numeric columns silently ignored).
 
     Returns:
-        Nested dict: ``feature → {mean, median, std, min, max}``,
-        all values rounded to ``DECIMAL_PLACES``.
+        Nested dict mapping feature → stats dict, rounded to
+        ``DECIMAL_PLACES``.
     """
     numeric_df = df.select_dtypes(include="number")
     stats: Dict[str, Dict[str, float]] = {}
     for col in numeric_df.columns:
         s = numeric_df[col].dropna()
-        stats[col] = {
-            "mean":   round(float(s.mean()),   DECIMAL_PLACES),
-            "median": round(float(s.median()), DECIMAL_PLACES),
-            "std":    round(float(s.std()),    DECIMAL_PLACES),
-            "min":    round(float(s.min()),    DECIMAL_PLACES),
-            "max":    round(float(s.max()),    DECIMAL_PLACES),
-        }
-    logger.info("Descriptive stats: %d numeric features", len(stats))
+        if col in BIOMETRIC_COLUMNS:
+            stats[col] = {
+                "mean": round(float(s.mean()), DECIMAL_PLACES),
+                "std":  round(float(s.std()),  DECIMAL_PLACES),
+            }
+        else:
+            stats[col] = {
+                "mean":   round(float(s.mean()),   DECIMAL_PLACES),
+                "median": round(float(s.median()), DECIMAL_PLACES),
+                "std":    round(float(s.std()),    DECIMAL_PLACES),
+                "min":    round(float(s.min()),    DECIMAL_PLACES),
+                "max":    round(float(s.max()),    DECIMAL_PLACES),
+            }
+    logger.info(
+        "Descriptive stats: %d numeric features (%d biometric channels "
+        "published as mean/std only)",
+        len(stats),
+        sum(1 for c in stats if c in BIOMETRIC_COLUMNS),
+    )
     return stats
 
 

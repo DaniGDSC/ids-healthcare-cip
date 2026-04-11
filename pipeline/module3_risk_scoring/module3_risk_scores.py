@@ -50,10 +50,11 @@ WEIGHTS = {"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}
 # Risk level thresholds — 3 boundaries, 4 tiers
 RISK_THRESHOLDS = [(0.80, "CRITICAL"), (0.60, "HIGH"), (0.40, "MEDIUM")]
 
-BIOMETRIC_FEATURES = [
-    "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
-    "Heart_rate", "Resp_Rate", "ST",
-]
+from pipeline.common.phi import BIOMETRIC_COLUMNS
+
+# Stable list ordering for downstream callers; backed by the canonical
+# PHI set in pipeline/common/phi.py.
+BIOMETRIC_FEATURES = sorted(BIOMETRIC_COLUMNS)
 SIGMA_THRESHOLD = 1.5
 
 # CIA threat profile per attack category
@@ -136,8 +137,18 @@ def compute_c_detect(
     c_track_a: np.ndarray,
     X_test: np.ndarray,
 ) -> tuple:
-    """Fused detection confidence: C_detect = max(Track_A, Track_B)."""
-    det = joblib.load(PROJECT_ROOT / "results/models/dae_detector.pkl")
+    """Fused detection confidence: C_detect = max(Track_A, Track_B).
+
+    The DAE detector is loaded via the pickle-free
+    ``DAEDetector.from_artefacts`` API: a JSON sidecar plus a Keras
+    weights file. Loading either is bytes-only and never executes
+    Python. See Phase 2 finding #3b.
+    """
+    from pipeline.module2_detection.models.DAE import DAEDetector
+    det = DAEDetector.from_artefacts(
+        json_path=PROJECT_ROOT / "results/models/dae_detector.json",
+        weights_path=PROJECT_ROOT / "results/models/dae_model.weights.h5",
+    )
     c_track_b = det.predict_proba(X_test)
     c_detect = np.maximum(c_track_a, c_track_b)
     return np.clip(c_detect, 0.0, 1.0), c_track_b

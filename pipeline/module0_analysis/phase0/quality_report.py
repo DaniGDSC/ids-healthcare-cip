@@ -101,14 +101,19 @@ def _section_outliers(
     w("| Feature | Outlier Count | Outlier (%) | Lower Bound | Upper Bound |")
     w("|---------|-------------:|------------:|------------:|------------:|")
 
-    # Only show features that actually have outliers
+    # Only show features that actually have outliers. Biometric rows omit
+    # lower_bound/upper_bound (PHI quasi-identifiers) — render as "—".
     features_with_outliers = [r for r in outlier_report if r["outlier_count"] > 0]
     for r in features_with_outliers:
+        lb = r.get("lower_bound")
+        ub = r.get("upper_bound")
+        lb_cell = f"{lb:>11.{_DP}f}" if lb is not None else f"{'—':>11}"
+        ub_cell = f"{ub:>11.{_DP}f}" if ub is not None else f"{'—':>11}"
         w(f"| {r['feature']:<15} "
           f"| {r['outlier_count']:>13,} "
           f"| {r['outlier_pct']:>11.{_DP}f} "
-          f"| {r['lower_bound']:>11.{_DP}f} "
-          f"| {r['upper_bound']:>11.{_DP}f} |")
+          f"| {lb_cell} "
+          f"| {ub_cell} |")
 
     w("")
 

@@ -25,7 +25,11 @@ from sklearn.metrics import (
     fbeta_score,
     roc_auc_score,
 )
-from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
+from sklearn.model_selection import (
+    RandomizedSearchCV,
+    StratifiedKFold,
+    cross_val_predict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +146,30 @@ class XGBoostDetector:
             "n_folds": self._cv_folds,
         }
 
-        # Optimal threshold on training predictions
-        y_proba = search.best_estimator_.predict_proba(X_train)[:, 1]
-        self._optimal_threshold = self._find_optimal_threshold(y_train, y_proba)
+        # ── Optimal threshold via OUT-OF-FOLD probabilities ──
+        # The previous implementation called
+        #     predict_proba(X_train)
+        # which returns resubstitution probabilities the model has
+        # already memorised — boosting trees on the WUSTL-EHMS data
+        # produce probas pinned to ~0/~1 on training rows, and the
+        # F2-optimal threshold derived from that distribution is
+        # meaningless. Switching to cross_val_predict gives us a
+        # validation-fold view of the probability distribution that
+        # an unseen sample would actually receive. This is the
+        # threshold the production model will face at inference, so
+        # it's also the threshold we should optimise against.
+        # See finding #2 in the Phase 2 security review.
+        oof_proba = cross_val_predict(
+            self._build_pipeline(),
+            X_train,
+            y_train,
+            cv=cv,
+            method="predict_proba",
+            n_jobs=-1,
+        )[:, 1]
+        self._optimal_threshold = self._find_optimal_threshold(
+            y_train, oof_proba,
+        )
 
         elapsed = time.perf_counter() - t0
         self._cv_results["elapsed_seconds"] = round(elapsed, 1)

@@ -22,7 +22,6 @@ dataset:
 
 analysis:
   correlation_threshold: 0.95
-  head_rows: 5
   missing_value_warn_pct: 5.0   # log WARNING when a feature exceeds this %
   outlier_iqr_multiplier: 1.5   # IQR fence multiplier for outlier detection
   top_variance_k: 5             # number of features to rank by variance

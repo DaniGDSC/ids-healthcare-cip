@@ -1,18 +1,32 @@
-"""Security controls for Phase 0 — OWASP Top 10 + HIPAA compliance.
+"""Security controls for Phase 0 — actually wired into the loader.
 
 Classes
 -------
-IntegrityVerifier   — A02: SHA-256 dataset integrity hashing and verification
-PathValidator       — A01: path traversal protection, workspace containment
-ConfigSanitizer     — A03: input sanitization, column allowlist enforcement
-AuditLogger         — A09: HIPAA-compliant security event logging
+IntegrityVerifier   — A02: SHA-256 dataset integrity, signed with the
+                      Module 5 ECDSA P-256 key, no auto-baseline footgun.
+PathValidator       — A01: workspace containment via resolve()+relative_to().
+ColumnAllowlist     — A03: column-name allowlist enforcement (the only
+                      injection control that maps to a real attack surface
+                      in this layer; sanitize_string() was theatre and is
+                      gone).
+log_phase0_event    — A09: routes Phase-0 audit events into the same
+                      hardened, hash-chained, signed JSONL audit log used
+                      by Module 5, so Phase 0 events inherit chain +
+                      signature guarantees.
 
-Design Principles
------------------
-- Single Responsibility: each class addresses exactly one OWASP risk.
-- No ``eval()`` or ``exec()`` anywhere in this module or its callers.
-- Biometric *values* are never logged — only column *names*.
-- All file access events are logged with ISO-8601 timestamps.
+Design notes
+------------
+- ``security.py`` is now wired into ``DataLoader.load()`` and
+  ``Phase0Config.from_yaml``. None of it is dead code.
+- The integrity baseline is bootstrapped explicitly via the
+  ``bootstrap_integrity`` CLI; ``verify()`` refuses to create a new
+  baseline silently. This closes the "delete the JSON to whitewash a
+  tampered file" attack surface that the previous implementation had.
+- The dataset is hashed and parsed from the same in-memory bytes to
+  eliminate the TOCTOU window between hash and read.
+- Path traversal detection is delegated to ``Path.resolve() +
+  relative_to(root)``. The previous substring check on ``..``/``~``/``$``
+  was theatre that produced false positives without adding protection.
 """
 
 from __future__ import annotations
@@ -21,11 +35,12 @@ import hashlib
 import json
 import logging
 import os
-import re
 import stat
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+
+from pipeline.common.phi import BIOMETRIC_COLUMNS
 
 logger = logging.getLogger(__name__)
 
@@ -34,414 +49,493 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _HASH_ALGORITHM: str = "sha256"
-_HASH_CHUNK_SIZE: int = 65_536  # 64 KiB read chunks for streaming hash
 _METADATA_FILE: str = "dataset_integrity.json"
-
-# Characters allowed in config string values (printable ASCII minus shell-dangerous)
-_SAFE_STRING_RE = re.compile(r"^[a-zA-Z0-9 _\-./,;:=+\[\](){}@#%&*!?]+$")
-
-# Patterns that signal path traversal
-_TRAVERSAL_PATTERNS = ("..", "~", "$")
-
-# Biometric columns whose *values* must never appear in logs
-BIOMETRIC_COLUMNS: frozenset = frozenset({
-    "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
-    "Heart_rate", "Resp_Rate", "ST",
-})
+_METADATA_VERSION: int = 2  # bumped from the unsigned/auto-baseline format
 
 
 # ===================================================================
-# A02 — Cryptographic Failures: Dataset Integrity
+# A02 — Cryptographic Failures: Dataset Integrity (signed, no auto-baseline)
 # ===================================================================
+
+
+class IntegrityError(Exception):
+    """Raised when a dataset's SHA-256 hash does not match its baseline,
+    or when the integrity metadata file is missing/corrupt/forged.
+    """
 
 
 class IntegrityVerifier:
-    """SHA-256 integrity verification for the raw dataset.
+    """SHA-256 integrity verification with an ECDSA-signed metadata file.
 
-    On first load, computes and stores the hash in a metadata JSON file.
-    On subsequent loads, recomputes and verifies against the stored hash,
-    raising ``IntegrityError`` on mismatch.
+    Lifecycle:
+        1. ``bootstrap(path)`` — explicit, one-time. Refuses to overwrite
+           an existing baseline. Hashes the file, signs the record with
+           the Module 5 ECDSA P-256 key, and persists.
+        2. ``verify_and_read(path)`` — every load. Reads the file once
+           into memory, hashes the bytes, verifies the stored hash and
+           the signature, and returns the bytes for the caller to parse.
+           Refuses to run if no baseline exists for the file.
+
+    The verifier and the parser operate on the same in-memory buffer to
+    eliminate the TOCTOU window between hashing and reading.
 
     Args:
         metadata_dir: Directory where ``dataset_integrity.json`` is stored.
+                      In production this should be on a volume only the
+                      operator UID can write to.
     """
 
     def __init__(self, metadata_dir: Path) -> None:
         self._metadata_dir = metadata_dir
         self._metadata_path = metadata_dir / _METADATA_FILE
 
-    def compute_hash(self, file_path: Path) -> str:
-        """Compute the SHA-256 hex digest of a file.
+    # ── public API ─────────────────────────────────────────────────
 
-        Args:
-            file_path: Path to the file to hash.
+    def bootstrap(self, file_path: Path) -> str:
+        """Establish (or refresh) the signed baseline for *file_path*.
 
-        Returns:
-            Lowercase hexadecimal SHA-256 digest string.
+        Refuses to overwrite an existing baseline for the same path —
+        operators must explicitly delete the entry first if they want
+        to re-baseline a known-good file.
+
+        Returns the SHA-256 hex digest written to the baseline.
 
         Raises:
-            FileNotFoundError: If *file_path* does not exist.
+            FileNotFoundError: if *file_path* does not exist.
+            IntegrityError: if a baseline already exists for *file_path*.
         """
-        if not file_path.exists():
-            raise FileNotFoundError(f"Cannot hash: file not found: {file_path}")
+        data = self._read_bytes(file_path)
+        digest = hashlib.new(_HASH_ALGORITHM, data).hexdigest()
 
-        h = hashlib.new(_HASH_ALGORITHM)
-        with open(file_path, "rb") as f:
-            while chunk := f.read(_HASH_CHUNK_SIZE):
-                h.update(chunk)
+        existing = self._read_metadata()
+        key = str(file_path)
+        if key in existing.get("entries", {}):
+            raise IntegrityError(
+                f"Baseline already exists for {file_path}. "
+                f"Delete the entry from {self._metadata_path} first if "
+                f"you intentionally want to re-baseline a tampered file."
+            )
 
-        digest = h.hexdigest()
-        AuditLogger.log_file_access("HASH_COMPUTED", file_path, extra=f"sha256={digest[:16]}…")
+        record = {
+            "sha256":      digest,
+            "size_bytes":  len(data),
+            "bootstrapped_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._write_signed_metadata(file_path=file_path, record=record)
+        log_phase0_event(
+            "INTEGRITY_BOOTSTRAPPED",
+            {"file": file_path.name, "sha256_prefix": digest[:16]},
+        )
         return digest
 
-    def store_hash(self, file_path: Path, digest: str) -> None:
-        """Persist the computed hash to the metadata JSON file.
+    def verify_and_read(self, file_path: Path) -> Tuple[bytes, str]:
+        """Verify *file_path* against its signed baseline and return its bytes.
 
-        Args:
-            file_path: Original file that was hashed.
-            digest: SHA-256 hex digest to store.
-        """
-        self._metadata_dir.mkdir(parents=True, exist_ok=True)
-        metadata: Dict[str, Any] = {}
-        if self._metadata_path.exists():
-            metadata = json.loads(self._metadata_path.read_text())
-
-        metadata[str(file_path)] = {
-            "sha256": digest,
-            "verified_at": datetime.now(timezone.utc).isoformat(),
-        }
-        self._metadata_path.write_text(json.dumps(metadata, indent=2))
-        AuditLogger.log_file_access("HASH_STORED", self._metadata_path)
-
-    def verify(self, file_path: Path) -> str:
-        """Compute hash and verify against stored value.
-
-        On first invocation (no stored hash), computes and stores the hash.
-        On subsequent invocations, verifies the recomputed hash matches.
-
-        Args:
-            file_path: Path to the dataset file.
+        The returned bytes are the exact same buffer that was hashed,
+        so the caller must parse them via ``io.BytesIO`` rather than
+        re-opening the file.
 
         Returns:
-            The verified SHA-256 hex digest.
+            (file_bytes, sha256_hex_digest)
 
         Raises:
-            IntegrityError: If the recomputed hash does not match the stored one.
+            FileNotFoundError: if *file_path* does not exist.
+            IntegrityError: if the baseline is missing, the signature is
+                invalid, or the recomputed hash does not match.
         """
-        current_digest = self.compute_hash(file_path)
-
         if not self._metadata_path.exists():
-            self.store_hash(file_path, current_digest)
-            logger.info("First load — integrity baseline stored for %s", file_path.name)
-            return current_digest
-
-        metadata = json.loads(self._metadata_path.read_text())
-        stored = metadata.get(str(file_path))
-
-        if stored is None:
-            self.store_hash(file_path, current_digest)
-            logger.info("New file — integrity baseline stored for %s", file_path.name)
-            return current_digest
-
-        stored_digest = stored["sha256"]
-        if current_digest != stored_digest:
-            msg = (
-                f"INTEGRITY VIOLATION: {file_path.name} — "
-                f"expected {stored_digest[:16]}…, got {current_digest[:16]}…"
+            raise IntegrityError(
+                f"No integrity baseline at {self._metadata_path}. "
+                f"Run `python -m pipeline.module0_analysis.phase0."
+                f"bootstrap_integrity` once to establish the baseline."
             )
-            logger.critical(msg)
-            raise IntegrityError(msg)
 
-        AuditLogger.log_file_access(
-            "INTEGRITY_VERIFIED", file_path,
-            extra=f"sha256={current_digest[:16]}… ✓",
+        data = self._read_bytes(file_path)
+        digest = hashlib.new(_HASH_ALGORITHM, data).hexdigest()
+
+        metadata = self._read_metadata_verified()
+        entries = metadata.get("entries", {})
+        stored = entries.get(str(file_path))
+        if stored is None:
+            raise IntegrityError(
+                f"No integrity baseline for {file_path}. "
+                f"Run bootstrap_integrity to establish one."
+            )
+
+        if digest != stored["sha256"]:
+            log_phase0_event(
+                "INTEGRITY_VIOLATION",
+                {
+                    "file":     file_path.name,
+                    "expected": stored["sha256"][:16],
+                    "actual":   digest[:16],
+                },
+                level=logging.CRITICAL,
+            )
+            raise IntegrityError(
+                f"INTEGRITY VIOLATION: {file_path.name} — "
+                f"expected {stored['sha256'][:16]}…, got {digest[:16]}…"
+            )
+
+        log_phase0_event(
+            "INTEGRITY_VERIFIED",
+            {"file": file_path.name, "sha256_prefix": digest[:16]},
         )
-        return current_digest
+        return data, digest
 
+    # ── internals ──────────────────────────────────────────────────
 
-class IntegrityError(Exception):
-    """Raised when a dataset file's SHA-256 hash does not match the stored baseline."""
+    @staticmethod
+    def _read_bytes(file_path: Path) -> bytes:
+        if not file_path.exists():
+            raise FileNotFoundError(f"Cannot hash: file not found: {file_path}")
+        return file_path.read_bytes()
+
+    def _read_metadata(self) -> Dict[str, Any]:
+        """Read raw metadata without signature checking (bootstrap path)."""
+        if not self._metadata_path.exists():
+            return {"version": _METADATA_VERSION, "entries": {}}
+        try:
+            return json.loads(self._metadata_path.read_text())
+        except json.JSONDecodeError as exc:
+            log_phase0_event(
+                "INTEGRITY_METADATA_CORRUPT",
+                {"path": str(self._metadata_path), "error": str(exc)},
+                level=logging.CRITICAL,
+            )
+            raise IntegrityError(
+                f"Integrity metadata at {self._metadata_path} is corrupt: "
+                f"{exc}. Refusing to proceed."
+            ) from exc
+
+    def _read_metadata_verified(self) -> Dict[str, Any]:
+        """Read metadata AND verify the ECDSA signature on the entries."""
+        meta = self._read_metadata()
+        entries = meta.get("entries", {})
+        signature_b64 = meta.get("signature")
+        if not signature_b64:
+            raise IntegrityError(
+                "Integrity metadata is unsigned. Re-bootstrap with the "
+                "current security.py to produce a signed baseline."
+            )
+
+        # Lazy import: keep cryptography optional for environments that
+        # only run unit tests against the analyzers.
+        from pipeline.module5_responses.module5_pipeline import (
+            _canonical_json,
+            _load_signing_key,
+            _HAVE_CRYPTOGRAPHY,
+        )
+        if not _HAVE_CRYPTOGRAPHY:
+            raise IntegrityError(
+                "cryptography package is not installed; cannot verify "
+                "signed integrity baseline."
+            )
+
+        import base64
+        from cryptography.exceptions import InvalidSignature
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives import serialization
+
+        _, public_path, _ = _load_signing_key()
+        public_key = serialization.load_pem_public_key(public_path.read_bytes())
+
+        signed_payload = _canonical_json(
+            {"version": meta.get("version"), "entries": entries}
+        )
+        try:
+            public_key.verify(
+                base64.b64decode(signature_b64),
+                signed_payload,
+                ec.ECDSA(hashes.SHA256()),
+            )
+        except InvalidSignature as exc:
+            log_phase0_event(
+                "INTEGRITY_METADATA_FORGED",
+                {"path": str(self._metadata_path)},
+                level=logging.CRITICAL,
+            )
+            raise IntegrityError(
+                f"Integrity metadata signature is invalid — "
+                f"{self._metadata_path} has been tampered with."
+            ) from exc
+
+        return meta
+
+    def _write_signed_metadata(self, file_path: Path, record: Dict[str, Any]) -> None:
+        """Add *record* under *file_path* and re-sign the entries block."""
+        from pipeline.module5_responses.module5_pipeline import (
+            _canonical_json,
+            _load_signing_key,
+            _HAVE_CRYPTOGRAPHY,
+        )
+        if not _HAVE_CRYPTOGRAPHY:
+            raise IntegrityError(
+                "cryptography package is not installed; cannot sign the "
+                "integrity baseline. Install with `pip install cryptography>=42`."
+            )
+        import base64
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        meta = self._read_metadata()
+        entries = meta.get("entries", {})
+        entries[str(file_path)] = record
+        body = {"version": _METADATA_VERSION, "entries": entries}
+
+        private_key, _, signing_key_id = _load_signing_key()
+        signature = private_key.sign(
+            _canonical_json(body), ec.ECDSA(hashes.SHA256())
+        )
+        body["signature"] = base64.b64encode(signature).decode("ascii")
+        body["signing_key_id"] = signing_key_id
+        body["signature_alg"] = "ECDSA_P256_SHA256"
+
+        self._metadata_dir.mkdir(parents=True, exist_ok=True)
+        # Atomic write so a crash mid-write cannot leave us with a
+        # half-baselined file that verify() would refuse on next load.
+        tmp = self._metadata_path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(body, indent=2))
+        os.replace(tmp, self._metadata_path)
+        try:
+            os.chmod(self._metadata_path, 0o640)
+        except OSError:
+            pass
 
 
 # ===================================================================
-# A01 — Broken Access Control: Path Validation
+# A01 — Broken Access Control: workspace containment
 # ===================================================================
 
 
 class PathValidator:
-    """Validate file paths against workspace boundaries and traversal attacks.
+    """Validate file paths against workspace boundaries.
+
+    The only real defense here is ``Path.resolve() + relative_to(root)``;
+    the previous substring check on ``..``/``~``/``$`` was theatre that
+    produced false positives without catching real escapes (URL-encoded
+    traversal, NUL bytes, symlink games). It is gone.
 
     Args:
-        workspace_root: The top-level project directory.  All resolved paths
-                        must reside within this directory tree.
+        workspace_root: The top-level project directory. All resolved
+                        paths must reside within this directory tree.
     """
 
     def __init__(self, workspace_root: Path) -> None:
         self._root = workspace_root.resolve()
 
     def validate_input_path(self, path: Path) -> Path:
-        """Validate and resolve an input file path.
-
-        Args:
-            path: Raw path from configuration (may be relative).
+        """Resolve *path* and assert it lives inside the workspace.
 
         Returns:
-            Resolved absolute path guaranteed to be within the workspace.
+            Resolved absolute path inside the workspace.
 
         Raises:
-            ValueError: If the path contains traversal patterns.
-            PermissionError: If the resolved path escapes the workspace.
-            FileNotFoundError: If the resolved file does not exist.
+            PermissionError: if the resolved path escapes the workspace.
+            FileNotFoundError: if the resolved path does not exist.
         """
-        self._check_traversal(path)
-        resolved = (self._root / path).resolve()
-        self._check_containment(resolved)
-
+        resolved = self._resolve_inside_workspace(path)
         if not resolved.exists():
             raise FileNotFoundError(f"Input path does not exist: {resolved}")
-
-        AuditLogger.log_file_access("INPUT_VALIDATED", resolved)
+        log_phase0_event("INPUT_VALIDATED", {"path": str(resolved)})
         return resolved
 
     def validate_output_dir(self, path: Path) -> Path:
-        """Validate and resolve an output directory path.
-
-        Args:
-            path: Raw output directory path from configuration.
+        """Resolve *path*, assert workspace containment, then mkdir.
 
         Returns:
-            Resolved absolute path guaranteed to be within the workspace.
-            The directory is created if it does not exist.
+            Resolved absolute path inside the workspace.
 
         Raises:
-            ValueError: If the path contains traversal patterns.
-            PermissionError: If the resolved path escapes the workspace.
+            PermissionError: if the resolved path escapes the workspace.
         """
-        self._check_traversal(path)
-        resolved = (self._root / path).resolve()
-        self._check_containment(resolved)
+        resolved = self._resolve_inside_workspace(path)
         resolved.mkdir(parents=True, exist_ok=True)
-        AuditLogger.log_file_access("OUTPUT_DIR_VALIDATED", resolved)
+        log_phase0_event("OUTPUT_DIR_VALIDATED", {"path": str(resolved)})
         return resolved
 
-    def check_read_only(self, path: Path) -> bool:
-        """Check whether a file has read-only permissions (chmod 444 or similar).
+    def check_read_only(self, path: Path, *, enforce: bool = False) -> bool:
+        """Check (or enforce) that *path* is read-only for the owner.
 
-        Args:
-            path: Resolved path to check.
-
-        Returns:
-            True if the file is read-only for the owner, False otherwise.
+        When called with ``enforce=True`` (set automatically when the
+        ``PHASE0_PROD=1`` environment variable is present), a writable
+        raw dataset becomes a hard failure rather than a warning. This
+        prevents an in-place tamper-then-rerun attack on a production
+        host.
         """
         mode = path.stat().st_mode
         is_readonly = not (mode & stat.S_IWUSR)
         if not is_readonly:
-            logger.warning(
-                "A01: File %s is writable (mode=%o). "
-                "Consider chmod 444 for raw datasets.",
-                path.name, mode & 0o777,
+            msg = (
+                f"File {path.name} is writable (mode={mode & 0o777:o}). "
+                f"Raw datasets must be chmod 444 in production."
             )
+            if enforce or os.environ.get("PHASE0_PROD") == "1":
+                log_phase0_event(
+                    "RAW_DATASET_WRITABLE",
+                    {"file": path.name, "mode_octal": f"{mode & 0o777:o}"},
+                    level=logging.CRITICAL,
+                )
+                raise PermissionError(msg)
+            logger.warning("A01: %s", msg)
         return is_readonly
 
-    def _check_traversal(self, path: Path) -> None:
-        """Reject paths containing traversal patterns.
-
-        Raises:
-            ValueError: If any segment contains '..', '~', or '$'.
-        """
-        path_str = str(path)
-        for pattern in _TRAVERSAL_PATTERNS:
-            if pattern in path_str:
-                msg = f"A01: Path traversal detected — '{pattern}' in path: {path}"
-                logger.error(msg)
-                raise ValueError(msg)
-
-    def _check_containment(self, resolved: Path) -> None:
-        """Ensure a resolved path is inside the workspace.
-
-        Raises:
-            PermissionError: If the path escapes the workspace root.
-        """
+    def _resolve_inside_workspace(self, path: Path) -> Path:
+        resolved = (self._root / path).resolve()
         try:
             resolved.relative_to(self._root)
-        except ValueError:
-            msg = (
-                f"A01: Path escapes workspace — {resolved} "
-                f"is outside {self._root}"
+        except ValueError as exc:
+            log_phase0_event(
+                "PATH_ESCAPE",
+                {"path": str(resolved), "root": str(self._root)},
+                level=logging.ERROR,
             )
-            logger.error(msg)
-            raise PermissionError(msg)
+            raise PermissionError(
+                f"A01: Path escapes workspace — {resolved} is outside {self._root}"
+            ) from exc
+        return resolved
 
 
 # ===================================================================
-# A03 — Injection: Config Sanitization
+# A03 — Injection: Column allowlist (the only piece worth keeping)
 # ===================================================================
 
 
-class ConfigSanitizer:
-    """Sanitize configuration inputs and enforce column allowlists.
+class ColumnAllowlist:
+    """Enforce that requested column names are present in the DataFrame.
 
-    All string values from ``config.yaml`` are validated against a safe
-    character regex.  Column names used in analysis are checked against
-    the actual DataFrame columns (allowlist), preventing injection of
-    arbitrary strings into SQL-like operations or shell commands.
+    The previous ``ConfigSanitizer.sanitize_string`` regex tried to
+    police arbitrary config values for "shell-dangerous characters", but
+    Phase 0 has no shell, no SQL, no eval surface — the regex blocked
+    legitimate strings (apostrophes, accented author names) without
+    protecting against any real attack. It is gone.
+
+    What does map to a real attack surface is column-name validation:
+    if the config asks for a column that the DataFrame does not have,
+    silently producing zeros or NaNs would corrupt every downstream
+    statistic. So we keep that check, and only that check.
     """
 
     @staticmethod
-    def sanitize_string(value: str, field_name: str) -> str:
-        """Validate that a config string contains only safe characters.
-
-        Args:
-            value: The raw string from config.yaml.
-            field_name: Name of the config field (for error messages).
-
-        Returns:
-            The original string if it passes validation.
-
-        Raises:
-            ValueError: If the string contains disallowed characters.
-        """
-        if not _SAFE_STRING_RE.match(value):
-            msg = f"A03: Unsafe characters in config field '{field_name}': {value!r}"
-            logger.error(msg)
-            raise ValueError(msg)
-        return value
-
-    @staticmethod
-    def validate_column_allowlist(
-        requested_columns: List[str],
+    def validate(
+        requested_columns: Sequence[str],
         actual_columns: Set[str],
+        *,
         context: str = "config",
     ) -> List[str]:
-        """Validate that all requested column names exist in the DataFrame.
-
-        Args:
-            requested_columns: Column names from configuration.
-            actual_columns: Set of actual DataFrame column names.
-            context: Label for log messages (e.g. "required_columns").
-
-        Returns:
-            The validated column list (unchanged).
-
-        Raises:
-            ValueError: If any requested column is not in the allowlist.
-        """
         invalid = [c for c in requested_columns if c not in actual_columns]
         if invalid:
-            msg = (
+            log_phase0_event(
+                "COLUMN_ALLOWLIST_VIOLATION",
+                {"context": context, "unknown_columns": invalid},
+                level=logging.ERROR,
+            )
+            raise ValueError(
                 f"A03: Column allowlist violation in {context} — "
                 f"unknown columns: {invalid}"
             )
-            logger.error(msg)
-            raise ValueError(msg)
-        return requested_columns
-
-    @staticmethod
-    def sanitize_config_dict(raw: Dict[str, Any], prefix: str = "") -> None:
-        """Recursively sanitize all string values in a config dict.
-
-        Args:
-            raw: Configuration dictionary (mutated in-place via validation).
-            prefix: Dot-separated key path for error context.
-
-        Raises:
-            ValueError: If any string value contains disallowed characters.
-        """
-        for key, value in raw.items():
-            full_key = f"{prefix}.{key}" if prefix else key
-            if isinstance(value, str):
-                ConfigSanitizer.sanitize_string(value, full_key)
-            elif isinstance(value, dict):
-                ConfigSanitizer.sanitize_config_dict(value, full_key)
-            elif isinstance(value, list):
-                for i, item in enumerate(value):
-                    if isinstance(item, str):
-                        ConfigSanitizer.sanitize_string(item, f"{full_key}[{i}]")
+        return list(requested_columns)
 
 
 # ===================================================================
-# A09 — Security Logging: HIPAA-Compliant Audit Trail
+# A09 — Security Logging: routed through the Module 5 hardened chain
 # ===================================================================
 
 
-class AuditLogger:
-    """HIPAA-compliant security event logger.
+_phase0_logger: Optional[logging.Logger] = None
+_hardened_audit = None  # lazy: HardenedAuditLogger or None
 
-    Design constraints:
-        - All events include ISO-8601 UTC timestamps.
-        - Biometric *values* are NEVER logged — only column *names*.
-        - File access events are logged at INFO level.
-        - Security violations are logged at ERROR / CRITICAL.
+
+def _get_phase0_logger() -> logging.Logger:
+    global _phase0_logger
+    if _phase0_logger is None:
+        _phase0_logger = logging.getLogger("phase0.security.audit")
+    return _phase0_logger
+
+
+def _get_hardened_audit():
+    """Lazily construct (or reuse) the Module 5 signed-chain logger.
+
+    Returns ``None`` if Module 5 cannot be imported (e.g. cryptography
+    not installed). Phase 0 events still go to the local logger in that
+    case so they are not silently lost.
     """
+    global _hardened_audit
+    if _hardened_audit is not None:
+        return _hardened_audit
+    try:
+        from pipeline.module5_responses.module5_pipeline import (
+            AuditLogger as HardenedAuditLogger,
+            OUTPUT_DIR,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "phase0.security: cannot reach Module 5 hardened audit log "
+            "(%s); falling back to local logger only.",
+            exc,
+        )
+        _hardened_audit = False
+        return None
+    try:
+        _hardened_audit = HardenedAuditLogger(OUTPUT_DIR / "audit_log.jsonl")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "phase0.security: failed to construct hardened audit logger "
+            "(%s); falling back to local logger only.",
+            exc,
+        )
+        _hardened_audit = False
+        return None
+    return _hardened_audit
 
-    _audit_logger: Optional[logging.Logger] = None
 
-    @classmethod
-    def _get_logger(cls) -> logging.Logger:
-        """Return (or lazily create) the dedicated audit logger."""
-        if cls._audit_logger is None:
-            cls._audit_logger = logging.getLogger("phase0.security.audit")
-        return cls._audit_logger
+def log_phase0_event(
+    event: str,
+    payload: Optional[Dict[str, Any]] = None,
+    *,
+    level: int = logging.INFO,
+) -> None:
+    """Log a Phase 0 audit event.
 
-    @classmethod
-    def log_file_access(
-        cls,
-        event: str,
-        path: Path,
-        extra: str = "",
-    ) -> None:
-        """Log a file access event with an ISO-8601 timestamp.
+    Writes to two sinks:
+      1. Local ``phase0.security.audit`` logger (always).
+      2. Module 5 hardened, hash-chained, ECDSA-signed audit log
+         (when available). Phase 0 events therefore inherit the same
+         tamper-evident properties as Module 5 events.
 
-        Args:
-            event: Short event label (e.g. "READ", "HASH_COMPUTED").
-            path: Path to the file being accessed.
-            extra: Optional additional context (never biometric values).
-        """
-        ts = datetime.now(timezone.utc).isoformat()
-        msg = f"[{ts}] {event}: {path}"
-        if extra:
-            msg += f"  ({extra})"
-        cls._get_logger().info(msg)
+    Payloads must NEVER contain biometric values. The function does not
+    enforce this — callers are responsible — but a defensive check is
+    applied to redact any keys whose names match a biometric column.
+    """
+    payload = dict(payload or {})
+    # Defensive: if a caller passes a biometric column name as a key,
+    # replace its value rather than letting it leak into the chain.
+    for k in list(payload.keys()):
+        if k in BIOMETRIC_COLUMNS:
+            payload[k] = "[REDACTED-PHI]"
 
-    @classmethod
-    def log_security_event(
-        cls,
-        event: str,
-        detail: str,
-        level: int = logging.WARNING,
-    ) -> None:
-        """Log a security-relevant event.
+    ts = datetime.now(timezone.utc).isoformat()
+    _get_phase0_logger().log(
+        level, "[%s] %s: %s", ts, event, payload if payload else ""
+    )
 
-        Args:
-            event: Short event label (e.g. "PATH_TRAVERSAL", "INTEGRITY_FAIL").
-            detail: Human-readable description (must not contain PHI).
-            level: Logging level (default WARNING).
-        """
-        ts = datetime.now(timezone.utc).isoformat()
-        cls._get_logger().log(level, "[%s] %s: %s", ts, event, detail)
-
-    @staticmethod
-    def redact_biometric_values(
-        columns: List[str],
-        values: Any,
-    ) -> Dict[str, str]:
-        """Return a redacted dict safe for logging.
-
-        Biometric columns have their values replaced with ``"[REDACTED]"``.
-        Non-biometric columns are represented as ``"<present>"``
-        (column name only — no raw values).
-
-        Args:
-            columns: List of column names.
-            values: Ignored — values are never included.
-
-        Returns:
-            Dict mapping column name to a safe placeholder string.
-        """
-        result: Dict[str, str] = {}
-        for col in columns:
-            if col in BIOMETRIC_COLUMNS:
-                result[col] = "[REDACTED-PHI]"
-            else:
-                result[col] = "<present>"
-        return result
+    audit = _get_hardened_audit()
+    if audit:
+        try:
+            audit.log(
+                {
+                    "event_type": "phase0_security",
+                    "subtype": event,
+                    "payload": payload,
+                    "level": logging.getLevelName(level),
+                    "logged_at": ts,
+                }
+            )
+        except Exception as exc:  # noqa: BLE001
+            # Never let an audit-sink failure block Phase 0 execution,
+            # but DO surface it loudly so an operator notices.
+            logger.error(
+                "phase0.security: failed to append to hardened audit log: %s",
+                exc,
+            )

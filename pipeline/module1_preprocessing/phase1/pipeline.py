@@ -16,6 +16,7 @@ Pipeline (matches canonical diagram):
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 import time
@@ -24,6 +25,12 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+
+from pipeline.module0_analysis.phase0.security import (
+    IntegrityError,
+    IntegrityVerifier,
+    PathValidator,
+)
 
 from .artifact_reader import Phase0ArtifactReader
 from .config import Phase1Config
@@ -36,6 +43,13 @@ from .report import render_preprocessing_report
 from .scaler import RobustScalerTransformer
 from .splitter import DataSplitter
 from .variance import VarianceFilter
+
+# Hard cap on a single CSV file before pandas attempts to parse it.
+# 200 MB comfortably accommodates the WUSTL-EHMS-2020 dataset (~25 MB)
+# and pads for future captures, while preventing a hostile or accidental
+# multi-gigabyte file from OOMing the host. See finding #11 in the
+# Phase 1 security review.
+_MAX_INPUT_BYTES: int = 200 * 1024 * 1024
 
 logger = logging.getLogger(__name__)
 
@@ -63,15 +77,22 @@ class PreprocessingPipeline:
         self._reader = artifact_reader
         self._root = project_root
         self._report: Dict[str, Any] = {}
+        # Captured during _pre_split_transforms so _export can persist
+        # the deterministic mappings as a JSON sidecar (finding #9).
+        self._encoder: CategoricalEncoder | None = None
 
     def run(self) -> Dict[str, Any]:
         """Execute all pipeline steps and return the report dict."""
         t0 = time.perf_counter()
         cfg = self._config
 
-        # ── Verify & ingest ──
-        self._verify_integrity(cfg)
-        df = self._ingest(self._root / cfg.input_dir, cfg.file_pattern)
+        # ── Verify & ingest (single in-memory pass per file) ──
+        # Each CSV in the input directory is hashed against the SIGNED
+        # Phase 0 baseline AND parsed from the same in-memory bytes.
+        # The previous flow hashed only the first CSV via a fail-open
+        # reader and re-opened the file for pd.read_csv, leaving a
+        # TOCTOU window AND a multi-file bypass — both closed below.
+        df = self._ingest_with_integrity(cfg)
 
         # ── Pre-split transforms (Steps 1–4) ──
         df, y_binary, y_multi = self._pre_split_transforms(df, cfg)
@@ -151,21 +172,31 @@ class PreprocessingPipeline:
             "n_samples": len(y_binary),
         }
 
-        # Step 2: Encode non-numeric features
+        # Step 2: Encode non-numeric features. The encoder builds
+        # deterministic alphabetical mappings (NOT order-dependent
+        # LabelEncoder codes) and is captured here so the JSON sidecar
+        # can be persisted in _export — that sidecar is the only thing
+        # that lets downstream inference reproduce the same integer
+        # codes for unseen samples without re-fitting.
         encoder = CategoricalEncoder(
             label_encode=cfg.label_encode_columns,
             parse_numeric=cfg.parse_numeric_columns,
             sentinel=cfg.parse_numeric_sentinel,
         )
         df = encoder.transform(df)
+        self._encoder = encoder
         self._report["encoding"] = encoder.get_report()
 
-        # Step 3: Data cleaning
+        # Step 3: Data cleaning. The handler refuses ffill without a
+        # session_column (closes the cross-patient leakage hole) and
+        # warns on fill_zero (closes the attacker-induced capture-loss
+        # masking hole). See missing.py for the threat model.
         handler = MissingValueHandler(
             biometric_columns=cfg.biometric_columns,
             label_column=cfg.label_column,
             biometric_strategy=cfg.biometric_strategy,
             network_strategy=cfg.network_strategy,
+            session_column=cfg.session_column,
         )
         df = handler.transform(df)
         self._report["cleaning"] = handler.get_report()
@@ -176,10 +207,17 @@ class PreprocessingPipeline:
             df = var_filter.transform(df)
             self._report["variance"] = var_filter.get_report()
 
-        # Step 4b: Correlation-based redundancy
+        # Step 4b: Correlation-based redundancy. The remover refuses
+        # to drop the binary or multi-class label even if the Phase 0
+        # correlations CSV lists them as feature_b — closes the
+        # tampered-corr-file attack documented in finding #14.
         if cfg.correlation_enabled:
             corr_df = self._reader.read_correlations()
-            remover = RedundancyRemover(corr_df, cfg.correlation_threshold)
+            remover = RedundancyRemover(
+                corr_df,
+                cfg.correlation_threshold,
+                protected_columns=(cfg.label_column, cfg.multi_label_column),
+            )
             df = remover.transform(df)
             self._report["redundancy"] = remover.get_report()
 
@@ -254,6 +292,15 @@ class PreprocessingPipeline:
 
         exporter.export_scaler(scaler, cfg.scaler_file)
 
+        # Persist the deterministic categorical-encoder mappings as a
+        # JSON sidecar so downstream inference can reproduce the same
+        # integer codes for unseen samples without re-fitting (which
+        # would otherwise drift silently from the training codes).
+        if self._encoder is not None:
+            encoder_path = output_dir / cfg.encoder_file
+            self._encoder.save(encoder_path)
+            self._report["encoder_sidecar"] = str(encoder_path.name)
+
         self._report["output"] = {
             "feature_names": feat_names,
             "n_features": len(feat_names),
@@ -261,41 +308,128 @@ class PreprocessingPipeline:
         exporter.export_report(self._report, cfg.report_file)
 
         md = render_preprocessing_report(self._report)
-        md_path = self._root / "results" / "phase0_analysis" / "report_section_preprocessing.md"
+        # Phase 1 output goes under results/phase1_preprocessing/, NOT
+        # results/phase0_analysis/. The previous path crossed module
+        # boundaries and broke the Phase 0 biometric-leak regression
+        # guard, which scans phase0_analysis/ for biometric column
+        # names — a Phase 1 file with biometric column names in a
+        # table header would have tripped it. See finding #20.
+        md_path = (
+            self._root / "results" / "phase1_preprocessing"
+            / "report_section_preprocessing.md"
+        )
         md_path.parent.mkdir(parents=True, exist_ok=True)
         md_path.write_text(md, encoding="utf-8")
         logger.info("Thesis report → %s", md_path)
 
     # ------------------------------------------------------------------
-    # Ingestion & integrity
+    # Ingestion & integrity (single in-memory pass per file)
     # ------------------------------------------------------------------
 
-    def _verify_integrity(self, cfg: Phase1Config) -> None:
-        data_dir = self._root / cfg.input_dir
-        csv_files = sorted(data_dir.glob(cfg.file_pattern))
-        if csv_files:
-            sha = self._reader.verify_integrity(csv_files[0])
-            self._report["integrity"] = {"sha256": sha, "verified": True}
+    def _ingest_with_integrity(self, cfg: Phase1Config) -> pd.DataFrame:
+        """Verify and parse every input CSV in one in-memory pass.
 
-    def _ingest(self, data_dir: Path, file_pattern: str) -> pd.DataFrame:
-        csv_files = sorted(data_dir.glob(file_pattern))
+        Discipline enforced here:
+          1. ``input_dir`` is resolved through ``PathValidator`` so any
+             configured directory that escapes the workspace is rejected
+             before we touch the filesystem.
+          2. ``file_pattern`` is restricted to a basename glob (no path
+             separators) so a hostile YAML can't traverse out via
+             ``../**``.
+          3. Each matching file's size is checked against
+             ``_MAX_INPUT_BYTES`` before any read.
+          4. **Every** matching CSV is verified against the SIGNED
+             Phase 0 baseline via ``IntegrityVerifier.verify_and_read``,
+             not just the first one. This closes the multi-file bypass
+             where an attacker dropped an extra CSV that sorted after
+             the legitimate file (the old code only hashed
+             ``csv_files[0]`` but ``concat``'d them all).
+          5. The verified bytes are parsed with
+             ``pd.read_csv(io.BytesIO(data))`` so the parser sees the
+             exact buffer that was hashed — no second open, no TOCTOU.
+          6. ``self._report["integrity"]`` is populated only after a
+             successful verification AND only with the per-file digests
+             that actually validated. The previous code hard-coded
+             ``verified: True`` regardless.
+        """
+        validator = PathValidator(self._root)
+        data_dir = validator.validate_input_path(cfg.input_dir)
+
+        # Refuse globs that traverse out of the input directory.
+        if "/" in cfg.file_pattern or "\\" in cfg.file_pattern:
+            raise ValueError(
+                f"Phase 1 file_pattern must be a basename glob, "
+                f"got {cfg.file_pattern!r}"
+            )
+
+        csv_files = sorted(data_dir.glob(cfg.file_pattern))
         if not csv_files:
             raise FileNotFoundError(
-                f"No files matching '{file_pattern}' in {data_dir}."
+                f"No files matching '{cfg.file_pattern}' in {data_dir}."
             )
-        frames: List[pd.DataFrame] = []
-        for path in csv_files:
-            df = pd.read_csv(path, low_memory=False)
-            logger.info("  Loaded %s: %d × %d", path.name, *df.shape)
-            frames.append(df)
 
-        combined = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+        # Stand up the hardened verifier against the same metadata
+        # directory Phase 0 uses. The verifier itself refuses to run
+        # without an existing signed baseline (no auto-bootstrap), so
+        # we cannot reach the parse step on a missing or forged file.
+        verifier = IntegrityVerifier(
+            metadata_dir=self._root / "pipeline/module0_analysis/phase0",
+        )
+
+        frames: List[pd.DataFrame] = []
+        per_file_integrity: List[Dict[str, Any]] = []
+        for path in csv_files:
+            size = path.stat().st_size
+            if size > _MAX_INPUT_BYTES:
+                raise ValueError(
+                    f"Refusing to read {path.name}: {size} bytes exceeds "
+                    f"the {_MAX_INPUT_BYTES}-byte safety cap. Pin "
+                    f"input_dir / file_pattern to the expected file or "
+                    f"raise _MAX_INPUT_BYTES if this is intentional."
+                )
+
+            # ONE read: verify against the signed baseline AND get the
+            # bytes the parser will see. IntegrityError propagates and
+            # aborts the pipeline.
+            try:
+                data, digest = verifier.verify_and_read(path)
+            except IntegrityError:
+                # Make sure the failure leaves a visible mark in the
+                # report rather than a half-populated dict.
+                self._report["integrity"] = {
+                    "verified":   False,
+                    "failure_at": path.name,
+                }
+                raise
+
+            df = pd.read_csv(io.BytesIO(data), low_memory=False)
+            logger.info("  Loaded %s: %d × %d (sha256=%s…)",
+                        path.name, df.shape[0], df.shape[1], digest[:16])
+            frames.append(df)
+            per_file_integrity.append({
+                "file":   path.name,
+                "sha256": digest,
+                "rows":   int(df.shape[0]),
+            })
+
+        combined = (
+            pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+        )
         self._report["ingestion"] = {
             "files_loaded": len(csv_files),
-            "raw_rows": int(combined.shape[0]),
-            "raw_columns": int(combined.shape[1]),
+            "raw_rows":     int(combined.shape[0]),
+            "raw_columns":  int(combined.shape[1]),
         }
-        logger.info("Ingestion: %d rows × %d cols", *combined.shape)
+        # Only populated when every file actually verified — see (6).
+        self._report["integrity"] = {
+            "verified":         True,
+            "n_files_verified": len(per_file_integrity),
+            "files":            per_file_integrity,
+        }
+        logger.info(
+            "Ingestion: %d rows × %d cols across %d verified file(s)",
+            combined.shape[0], combined.shape[1], len(csv_files),
+        )
         return combined
 
     # ------------------------------------------------------------------
@@ -345,20 +479,31 @@ PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def main() -> None:
-    """Run the Phase 1 preprocessing pipeline."""
+    """Run the Phase 1 preprocessing pipeline.
+
+    Looks up the YAML at the canonical in-package location first
+    (``pipeline/module1_preprocessing/phase1_config.yaml``) and falls
+    back to the legacy ``config/phase1_config.yaml`` only if the
+    in-package file is missing. The previous default-path-only lookup
+    crashed unless an operator first ``cp``-ed the YAML into
+    ``config/`` — see finding #21.
+    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
-    config_path = PROJECT_ROOT / "config" / "phase1_config.yaml"
+    in_package = PROJECT_ROOT / "pipeline/module1_preprocessing/phase1_config.yaml"
+    legacy = PROJECT_ROOT / "config" / "phase1_config.yaml"
+    config_path = in_package if in_package.exists() else legacy
     config = Phase1Config.from_yaml(config_path)
 
+    # The artifact reader no longer touches the integrity file —
+    # IntegrityVerifier owns that responsibility (finding #1).
     reader = Phase0ArtifactReader(
         project_root=PROJECT_ROOT,
         stats_file=config.phase0_stats_file,
         corr_file=config.phase0_corr_file,
-        integrity_file=config.phase0_integrity_file,
     )
 
     pipeline = PreprocessingPipeline(config, reader, PROJECT_ROOT)

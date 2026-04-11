@@ -39,10 +39,10 @@ jobs:
         run: pip install ruff black
 
       - name: Ruff — Phase 1
-        run: ruff check src/phase1_preprocessing/ tests/test_phase1.py
+        run: ruff check pipeline/module1_preprocessing/
 
       - name: Black — Phase 1
-        run: black --check src/phase1_preprocessing/ tests/test_phase1.py
+        run: black --check pipeline/module1_preprocessing/
 
   # ─────────────────────────────────────────────────────────────────
   # 2. Unit tests for Phase 1 (coverage ≥ 80%)
@@ -63,9 +63,9 @@ jobs:
       - name: Run Phase 1 unit tests with coverage
         run: >
           python -m pytest
-          src/phase1_preprocessing/phase1/tests/
+          pipeline/module1_preprocessing/phase1/tests/
           -v
-          --cov=src/phase1_preprocessing/phase1
+          --cov=pipeline.module1_preprocessing.phase1
           --cov-report=xml:coverage-phase1.xml
           --cov-report=term-missing
           --cov-fail-under=80
@@ -96,7 +96,7 @@ jobs:
           pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — Phase 1 static analysis
-        run: bandit -r src/phase1_preprocessing/ -c pyproject.toml -ll
+        run: bandit -r pipeline/module1_preprocessing/ -c pyproject.toml -ll
 
       - name: pip-audit — dependency vulnerabilities
         run: pip-audit --strict --desc
@@ -129,32 +129,64 @@ jobs:
       - name: Create 100-row test subset
         run: |
           python -c "
-          import pandas as pd, numpy as np, os, json, hashlib
+          import pandas as pd, os
 
-          # Read full dataset header + 100 rows with balanced classes
+          # Slice a balanced 100-row subset out of the full WUSTL-EHMS CSV.
+          # The integrity baseline is established in the next step via the
+          # signed bootstrap_integrity CLI — NOT inline here. Constructing
+          # an unsigned legacy baseline in CI is the very pattern that
+          # tricked Phase 1 into accepting fail-open verification, so the
+          # CI workflow now exclusively uses the production code path.
           df = pd.read_csv('data/raw/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv', low_memory=False)
           normal = df[df['Label'] == 0].head(80)
           attack = df[df['Label'] == 1].head(20)
           subset = pd.concat([normal, attack], ignore_index=True)
 
-          # Write subset
           os.makedirs('data/ci_test/WUSTL-EHMS', exist_ok=True)
           subset_path = 'data/ci_test/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv'
           subset.to_csv(subset_path, index=False)
-
-          # Create integrity baseline for the subset
-          os.makedirs('results/ci_test', exist_ok=True)
-          h = hashlib.sha256()
-          with open(subset_path, 'rb') as f:
-              while chunk := f.read(65536):
-                  h.update(chunk)
-          digest = h.hexdigest()
-          metadata = {subset_path: {'sha256': digest, 'verified_at': '2026-01-01T00:00:00+00:00'}}
-          with open('results/ci_test/dataset_integrity.json', 'w') as f:
-              json.dump(metadata, f, indent=2)
-
-          print(f'Subset: {len(subset)} rows, SHA-256: {digest[:16]}…')
+          print(f'Subset: {len(subset)} rows written to {subset_path}')
           "
+
+      - name: Bootstrap signed integrity baseline (Phase 0 CLI)
+        run: |
+          # Use the real production CLI so CI exercises the same signed
+          # baseline format Phase 1 will require at runtime. Anything
+          # short of this re-introduces the legacy unsigned format that
+          # the hardened verifier refuses.
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          # Point the CLI at a CI-only config that overrides data_path
+          # to the subset CSV. We write a minimal phase0 config inline
+          # because the real one points at the full dataset.
+          ci_config = Path('config/ci_test_phase0.yaml')
+          ci_config.parent.mkdir(parents=True, exist_ok=True)
+          ci_config.write_text('''
+          dataset:
+            data_path: "data/ci_test/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv"
+            label_column: "Label"
+            required_columns: ["Label"]
+            leakage_columns: []
+            network_feature_count: 0
+            biometric_feature_count: 0
+          analysis:
+            correlation_threshold: 0.95
+            missing_value_warn_pct: 5.0
+            outlier_iqr_multiplier: 1.5
+            top_variance_k: 5
+            random_state: 42
+            train_ratio: 0.7
+            test_ratio: 0.3
+          output:
+            output_dir: "results/ci_test"
+            stats_report_file: "stats_report.json"
+            high_correlations_file: "high_correlations.csv"
+            correlation_matrix_file: "correlation_matrix.parquet"
+          ''')
+          PY
+          python -m pipeline.module0_analysis.phase0.bootstrap_integrity \
+            --config config/ci_test_phase0.yaml
 
       - name: Generate Phase 0 artifacts for subset
         run: |
@@ -188,27 +220,41 @@ jobs:
 
       - name: Create CI test config
         run: |
+          # Section names MUST match the production YAML schema. The
+          # loader rejects unknown top-level keys (see Phase1Config
+          # finding #15), so this CI config exercises the same code
+          # path the production pipeline takes.
           cat > config/ci_test_phase1.yaml << 'YAMLEOF'
           data:
             input_dir: "data/ci_test/WUSTL-EHMS"
             output_dir: "data/ci_test/processed"
             file_pattern: "*.csv"
             label_column: "Label"
+            multi_label_column: "Attack Category"
 
-          hipaa:
+          identifier_removal:
             enabled: true
             remove_columns:
               - "SrcAddr"
               - "DstAddr"
-              - "Sport"
-              - "Dport"
               - "SrcMac"
               - "DstMac"
+              - "Packet_num"
+
+          encoding:
+            label_encode:
               - "Dir"
               - "Flgs"
+            parse_numeric:
+              - "Sport"
+            parse_numeric_sentinel: -99999
 
-          missing_values:
-            biometric_strategy: "ffill"
+          cleaning:
+            # Patient-safe defaults: median imputation cannot leak
+            # across patients, dropna cannot conflate missing-flow
+            # with zero-flow. See pipeline/module1_preprocessing/
+            # phase1/missing.py for the threat model.
+            biometric_strategy: "median"
             biometric_columns:
               - "Temp"
               - "SpO2"
@@ -219,6 +265,10 @@ jobs:
               - "Resp_Rate"
               - "ST"
             network_strategy: "dropna"
+
+          variance_filtering:
+            enabled: true
+            max_unique: 1
 
           correlation_removal:
             enabled: true
@@ -231,19 +281,23 @@ jobs:
             stratify: true
             random_state: 42
 
-          smote:
-            enabled: true
-            sampling_strategy: "auto"
-            k_neighbors: 3
-            random_state: 42
-
           normalization:
             method: "robust"
+
+          track_a:
+            smote:
+              enabled: true
+              sampling_strategy: "auto"
+              k_neighbors: 3
+              random_state: 42
+
+          track_b:
+            enabled: true
 
           output:
             train_parquet: "train_phase1.parquet"
             test_parquet: "test_phase1.parquet"
-            scaler_file: "robust_scaler.pkl"
+            scaler_file: "robust_scaler.json"
             report_file: "phase1_report.json"
           YAMLEOF
 
@@ -254,18 +308,22 @@ jobs:
           logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
           from pathlib import Path
-          from src.phase1_preprocessing.phase1.config import Phase1Config
-          from src.phase1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-          from src.phase1_preprocessing.phase1.pipeline import PreprocessingPipeline
+          from pipeline.module1_preprocessing.phase1.config import Phase1Config
+          from pipeline.module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
+          from pipeline.module1_preprocessing.phase1.pipeline import PreprocessingPipeline
 
           PROJECT_ROOT = Path.cwd()
           config = Phase1Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase1.yaml')
 
+          # Phase 1 no longer reads an integrity file via the artifact
+          # reader — the hardened phase0.security.IntegrityVerifier owns
+          # that responsibility and reads the SIGNED baseline produced
+          # by `bootstrap_integrity` in the previous step. The reader is
+          # now only responsible for stats + correlations.
           reader = Phase0ArtifactReader(
               project_root=PROJECT_ROOT,
               stats_file=Path('results/ci_test/stats_report.json'),
               corr_file=config.phase0_corr_file,
-              integrity_file=Path('results/ci_test/dataset_integrity.json'),
           )
 
           pipeline = PreprocessingPipeline(config, reader, PROJECT_ROOT)
@@ -273,12 +331,18 @@ jobs:
           report = pipeline.run()
           elapsed = time.perf_counter() - t0
           print(f'Pipeline completed in {elapsed:.2f}s')
+          assert report['integrity']['verified'] is True, \
+              'integrity must verify against the signed baseline'
+          assert report['integrity']['n_files_verified'] == 1, \
+              f'expected 1 file verified, got {report[\"integrity\"]}'
+          print(f'integrity: {report[\"integrity\"]}')
           "
 
       - name: Integration assertions
         run: |
           python -c "
-          import pandas as pd, joblib, numpy as np, json, sys
+          import pandas as pd, numpy as np, json, sys
+          from pipeline.module1_preprocessing.phase1.scaler import RobustScalerTransformer
 
           errors = []
 
@@ -302,14 +366,25 @@ jobs:
               errors.append(f'FAIL  test.parquet: {e}')
               print(f'FAIL  test.parquet: {e}')
 
-          # 3. scaler.pkl loadable
+          # 3. robust_scaler.json loadable via the JSON-only sidecar API
+          #    (joblib/pickle is intentionally NOT used — see scaler.py)
           try:
-              scaler = joblib.load('models/scalers/robust_scaler.pkl')
+              scaler = RobustScalerTransformer.from_json('models/scalers/robust_scaler.json')
               assert hasattr(scaler, 'transform'), 'scaler has no transform method'
-              print(f'PASS  scaler.pkl loadable: {type(scaler).__name__}')
+              # Round-trip a tiny array through transform to confirm the
+              # reconstructed sklearn estimator is actually fitted.
+              probe = np.zeros((1, train.shape[1] - 1), dtype=np.float64)
+              _ = scaler.transform(probe)
+              print(f'PASS  robust_scaler.json loadable + transformable: {type(scaler).__name__}')
+              # Belt-and-braces: assert the legacy pickle is gone so a
+              # downstream consumer cannot accidentally pick it up.
+              import os
+              assert not os.path.exists('models/scalers/robust_scaler.pkl'), \\
+                  'legacy robust_scaler.pkl still on disk — pickle migration regression'
+              print(f'PASS  no legacy robust_scaler.pkl on disk')
           except Exception as e:
-              errors.append(f'FAIL  scaler.pkl: {e}')
-              print(f'FAIL  scaler.pkl: {e}')
+              errors.append(f'FAIL  robust_scaler.json: {e}')
+              print(f'FAIL  robust_scaler.json: {e}')
 
           # 4. Feature count matches between train and test
           try:
@@ -394,8 +469,9 @@ jobs:
         run: >
           docker run --rm analyst/phase0-phase1:${{ github.sha }}
           -c "
-          from src.phase0_dataset_analysis.phase0 import Phase0Config, DataLoader;
-          from src.phase1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
+          from pipeline.module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
+          from pipeline.module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
+          from pipeline.module1_preprocessing.phase1.scaler import RobustScalerTransformer;
           print('Phase 0 + Phase 1: OK')
           "
 

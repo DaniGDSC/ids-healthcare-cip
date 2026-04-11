@@ -18,25 +18,71 @@ Usage:
 
 from __future__ import annotations
 
+import argparse
+import base64
 import hashlib
 import json
 import logging
+import os
+import shutil
+import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
+# `cryptography` is used for ECDSA P-256 signing of audit records.
+# Imported lazily so that the rest of the module is still importable in
+# environments where the package is not installed (e.g. unit tests that
+# only exercise the policy engine). The AuditLogger constructor will
+# fail loudly if it can't load the library when signing is required.
+try:
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    _HAVE_CRYPTOGRAPHY = True
+except ImportError:  # pragma: no cover
+    _HAVE_CRYPTOGRAPHY = False
+
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results/reports"
+ARCHIVE_DIR = OUTPUT_DIR / "audit_archive"
 
-BIOMETRIC_FEATURES = frozenset({
-    "Temp", "SpO2", "Pulse_Rate", "SYS", "DIA",
-    "Heart_rate", "Resp_Rate", "ST",
-})
+# ─────────────────────────────────────────────────────────────────────────
+# Audit Log Retention Policy
+# ─────────────────────────────────────────────────────────────────────────
+# Default retention: 365 days. Override per deployment via the
+# IOMT_AUDIT_RETENTION_DAYS environment variable or the constructor
+# argument `retention_days`.
+#
+# Jurisdictional minima (informational — pick the strictest that applies):
+#   HIPAA §164.530(j)        : 6 years from creation OR last effective date
+#   FDA 21 CFR Part 11       : as long as the predicate record is required
+#   EU AI Act Annex IV §4    : 6 months minimum for high-risk AI logs
+#                              unless EU/national law specifies longer
+#   GDPR Art. 5(1)(e)        : data minimization — no fixed number;
+#                              hospital DPO determines proportionality
+#   Vietnam Decree 13/2023   : duration set in DPIA, registered with MPS
+#
+# This default does NOT make the system compliant with any of the above
+# by itself. It is a sensible technical default that the deployment
+# owner must verify against their jurisdiction.
+DEFAULT_RETENTION_DAYS = 365
+
+# Default key locations. The private key is auto-bootstrapped on first
+# run if no operator-provided key is available via IOMT_AUDIT_SIGNING_KEY.
+# The public key is written next to the audit log so verifiers find it
+# without configuration.
+DEFAULT_PRIVATE_KEY_PATH = Path.home() / ".iomt-ids" / "audit_signing_key.pem"
+DEFAULT_PUBLIC_KEY_PATH = OUTPUT_DIR / "audit_signing_key.pub.pem"
+
+SIGNATURE_ALG = "ECDSA_P256_SHA256"
+
+from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -315,24 +361,592 @@ class NotificationService:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 5.6  Audit Logger (JSONL)
+# 5.6  Audit Logger (JSONL) — hash-chained, ECDSA-signed, rotatable
 # ═══════════════════════════════════════════════════════════════════════
 
+# ── Key management helpers ──────────────────────────────────────────────
+
+def _require_cryptography() -> None:
+    if not _HAVE_CRYPTOGRAPHY:
+        raise RuntimeError(
+            "audit log signing requires the `cryptography` package. "
+            "Install it with `pip install cryptography>=42.0`."
+        )
+
+
+def _bootstrap_local_key(private_path: Path, public_path: Path) -> None:
+    """Generate a fresh ECDSA P-256 keypair on first run.
+
+    Private key is written with 0600 permissions to a user-local directory
+    (default: ~/.iomt-ids). The public key is written next to the audit
+    log so verifiers find it without extra configuration.
+
+    SECURITY WARNING: an auto-generated key is convenient for development
+    but offers no protection against an attacker who already has shell
+    access on the host. For production, set IOMT_AUDIT_SIGNING_KEY to a
+    key issued by your operator (HSM, KMS, or operator-provisioned PEM)
+    so the private key never lives next to the data it signs.
+    """
+    _require_cryptography()
+    private_path.parent.mkdir(parents=True, exist_ok=True)
+    public_path.parent.mkdir(parents=True, exist_ok=True)
+
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    pem_priv = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    pem_pub = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    private_path.write_bytes(pem_priv)
+    try:
+        os.chmod(private_path, 0o600)
+    except OSError:
+        # Best effort on platforms without POSIX perms
+        pass
+    public_path.write_bytes(pem_pub)
+    logger.warning(
+        "AuditLogger: bootstrapped a local ECDSA P-256 signing key at %s. "
+        "Replace with an operator-provisioned key for production.",
+        private_path,
+    )
+
+
+def _load_signing_key(
+    private_path: Path | None = None,
+    public_path: Path | None = None,
+):
+    """Load (or bootstrap) the ECDSA private key used to sign records.
+
+    Resolution order:
+      1. IOMT_AUDIT_SIGNING_KEY environment variable (operator override)
+      2. Explicit `private_path` argument
+      3. DEFAULT_PRIVATE_KEY_PATH (~/.iomt-ids/audit_signing_key.pem)
+      4. Bootstrap a fresh key at the default path
+    """
+    _require_cryptography()
+    env_path = os.environ.get("IOMT_AUDIT_SIGNING_KEY")
+    if env_path:
+        private_path = Path(env_path)
+    elif private_path is None:
+        private_path = DEFAULT_PRIVATE_KEY_PATH
+
+    public_path = public_path or DEFAULT_PUBLIC_KEY_PATH
+
+    if not private_path.exists():
+        _bootstrap_local_key(private_path, public_path)
+
+    private_key = serialization.load_pem_private_key(
+        private_path.read_bytes(), password=None
+    )
+
+    # Always (re)export the matching public key next to the audit log so
+    # verification works without operator intervention. Idempotent.
+    pem_pub = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    public_path.parent.mkdir(parents=True, exist_ok=True)
+    if not public_path.exists() or public_path.read_bytes() != pem_pub:
+        public_path.write_bytes(pem_pub)
+
+    key_id = "ecdsa-p256-" + hashlib.sha256(pem_pub).hexdigest()[:16]
+    return private_key, public_path, key_id
+
+
+def _canonical_json(record: dict) -> bytes:
+    """Deterministic JSON encoding used for hashing and signing."""
+    return json.dumps(record, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+# ── AuditLogger ─────────────────────────────────────────────────────────
+
 class AuditLogger:
-    """Immutable append-only JSONL audit log with integrity hashes."""
+    """Hash-chained, ECDSA-signed append-only JSONL audit log.
 
-    def __init__(self, path: Path):
-        self.path = path
-        self.prev_hash = "0" * 64
+    Each record carries:
+      - `prev_hash`        : sha256 of the previous record (hash chain)
+      - `integrity_hash`   : sha256 of the current record (covers prev_hash)
+      - `signature`        : ECDSA P-256 signature over the canonical JSON
+                             of the record (covers integrity_hash and
+                             everything below it)
+      - `signing_key_id`   : stable id derived from the public key
+      - `signature_alg`    : "ECDSA_P256_SHA256"
 
-    def log(self, record: dict) -> None:
+    Optional reviewer attribution: when callers pass `reviewer_id` /
+    `reviewer_role` to `log()`, a `reviewer` block is added to the record
+    *before* signing, so reviewer attribution is bound to the signature.
+
+    Restart safety: if the target file already exists, the constructor
+    walks the last record and continues the chain from its
+    `integrity_hash`, so multiple invocations of the same pipeline do
+    not produce a fake chain break.
+
+    Retention: `rotate_and_purge(days)` archives the active log into a
+    sealed file under `audit_archive/`, then starts a new active log
+    whose first `prev_hash` points back at the last archived record so
+    the cross-rotation chain remains walkable for forensics.
+    """
+
+    def __init__(
+        self,
+        path: Path,
+        *,
+        signing_key_path: Path | None = None,
+        public_key_path: Path | None = None,
+        retention_days: int | None = None,
+        sign: bool = True,
+    ) -> None:
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+
+        self.sign_enabled = sign and _HAVE_CRYPTOGRAPHY
+        if sign and not _HAVE_CRYPTOGRAPHY:
+            logger.warning(
+                "AuditLogger: cryptography not installed; signing disabled. "
+                "Records will be hash-chained only."
+            )
+
+        if self.sign_enabled:
+            self._private_key, self.public_key_path, self.signing_key_id = (
+                _load_signing_key(signing_key_path, public_key_path)
+            )
+        else:
+            self._private_key = None
+            self.public_key_path = public_key_path or DEFAULT_PUBLIC_KEY_PATH
+            self.signing_key_id = "unsigned"
+
+        # Retention policy: env var > constructor arg > default
+        env_days = os.environ.get("IOMT_AUDIT_RETENTION_DAYS")
+        if retention_days is not None:
+            self.retention_days = int(retention_days)
+        elif env_days:
+            self.retention_days = int(env_days)
+        else:
+            self.retention_days = DEFAULT_RETENTION_DAYS
+
+        # Recover chain from existing file (genesis-on-restart fix)
+        self.prev_hash = self._recover_prev_hash()
+
+    # ── chain recovery ─────────────────────────────────────────────
+
+    def _recover_prev_hash(self) -> str:
+        """Walk the existing file (if any) and return the last
+        integrity_hash so the new chain continues seamlessly.
+        """
+        if not self.path.exists() or self.path.stat().st_size == 0:
+            return "0" * 64
+        last_line = ""
+        with open(self.path, "rb") as f:
+            for raw in f:
+                line = raw.decode("utf-8", errors="ignore").strip()
+                if line:
+                    last_line = line
+        if not last_line:
+            return "0" * 64
+        try:
+            last_record = json.loads(last_line)
+            recovered = last_record.get("integrity_hash")
+            if isinstance(recovered, str) and len(recovered) == 64:
+                return recovered
+        except json.JSONDecodeError:
+            logger.warning(
+                "AuditLogger: tail of %s is unparseable; starting new "
+                "chain at genesis.",
+                self.path,
+            )
+        return "0" * 64
+
+    # ── log ────────────────────────────────────────────────────────
+
+    def log(
+        self,
+        record: dict,
+        *,
+        reviewer_id: str | None = None,
+        reviewer_role: str | None = None,
+        review_timestamp: str | None = None,
+        review_action: str | None = None,
+    ) -> dict:
+        """Append a hash-chained, signed record to the audit log.
+
+        Args:
+            record: arbitrary JSON-serializable event payload.
+            reviewer_id: optional human reviewer identifier (e.g. P03).
+            reviewer_role: optional role (Security Analyst / Clinician
+                / Administrator).
+            review_timestamp: ISO-8601 timestamp; defaults to now() in
+                UTC if any other reviewer field is provided.
+            review_action: optional free-text action label
+                (confirm / reject / acknowledge / ...).
+
+        Returns:
+            The record as it was written (with all envelope fields).
+        """
+        record = dict(record)  # do not mutate caller's dict
+
+        # Reviewer block (only present when at least one field supplied)
+        if any(x is not None for x in (reviewer_id, reviewer_role, review_action)):
+            if review_timestamp is None:
+                review_timestamp = datetime.now(timezone.utc).isoformat()
+            record["reviewer"] = {
+                "reviewer_id": reviewer_id,
+                "reviewer_role": reviewer_role,
+                "review_timestamp": review_timestamp,
+                "review_action": review_action,
+            }
+
+        # 1. Chain
         record["prev_hash"] = self.prev_hash
-        payload = json.dumps(record, sort_keys=True)
-        record["integrity_hash"] = hashlib.sha256(payload.encode()).hexdigest()
-        self.prev_hash = record["integrity_hash"]
 
-        with open(self.path, "a") as f:
+        # 2. Integrity hash over (record + prev_hash)
+        record["integrity_hash"] = hashlib.sha256(_canonical_json(record)).hexdigest()
+
+        # 3. Signature over the record including integrity_hash
+        if self.sign_enabled:
+            sig_payload = _canonical_json(record)
+            signature_der = self._private_key.sign(
+                sig_payload, ec.ECDSA(hashes.SHA256())
+            )
+            record["signature"] = base64.b64encode(signature_der).decode("ascii")
+            record["signing_key_id"] = self.signing_key_id
+            record["signature_alg"] = SIGNATURE_ALG
+
+        # 4. Advance chain and persist
+        self.prev_hash = record["integrity_hash"]
+        with open(self.path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
+        return record
+
+    # ── verification ───────────────────────────────────────────────
+
+    @classmethod
+    def verify(
+        cls,
+        path: Path,
+        public_key_path: Path | None = None,
+        *,
+        legacy_ok: bool = True,
+    ) -> dict:
+        """Walk an audit log and verify hash chain + signatures.
+
+        Args:
+            path: path to the audit log JSONL file.
+            public_key_path: PEM file containing the ECDSA P-256 public
+                key. Defaults to DEFAULT_PUBLIC_KEY_PATH.
+            legacy_ok: if True, records without a `signature` field are
+                accepted as `legacy` (chain still verified). If False,
+                they are reported as `unsigned`. The migration default
+                is True; flip to False after a clean rotation.
+
+        Returns:
+            Dict with totals, the line number of the first break (if
+            any), and a list of per-broken-line reasons.
+        """
+        path = Path(path)
+        public_key_path = Path(public_key_path or DEFAULT_PUBLIC_KEY_PATH)
+
+        result: dict = {
+            "path": str(path),
+            "public_key": str(public_key_path),
+            "total": 0,
+            "valid_signed": 0,
+            "valid_legacy": 0,
+            "broken": [],
+            "first_break_at": None,
+        }
+
+        if not path.exists():
+            result["broken"].append({"line": 0, "reason": "file does not exist"})
+            return result
+
+        public_key = None
+        if _HAVE_CRYPTOGRAPHY and public_key_path.exists():
+            try:
+                public_key = serialization.load_pem_public_key(
+                    public_key_path.read_bytes()
+                )
+            except Exception as exc:  # noqa: BLE001
+                result["broken"].append(
+                    {"line": 0, "reason": f"failed to load public key: {exc}"}
+                )
+                return result
+
+        prev_hash_expected = "0" * 64
+        result["legacy_chain_restarts"] = 0
+        with open(path, "r", encoding="utf-8") as f:
+            for line_no, raw in enumerate(f, start=1):
+                line = raw.strip()
+                if not line:
+                    continue
+                result["total"] += 1
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError as exc:
+                    cls._mark_break(result, line_no, f"json parse: {exc}")
+                    return result
+
+                is_unsigned = "signature" not in record
+
+                # 1. chain
+                if record.get("prev_hash") != prev_hash_expected:
+                    # Legacy migration: the pre-hardening AuditLogger
+                    # reset the chain to genesis on every process start.
+                    # In legacy mode, accept a fresh genesis block as a
+                    # known-good restart marker rather than tampering.
+                    if (
+                        legacy_ok
+                        and is_unsigned
+                        and record.get("prev_hash") == "0" * 64
+                        and line_no > 1
+                    ):
+                        result["legacy_chain_restarts"] += 1
+                        prev_hash_expected = "0" * 64
+                    else:
+                        cls._mark_break(
+                            result,
+                            line_no,
+                            f"prev_hash mismatch (expected "
+                            f"{prev_hash_expected[:12]}..., got "
+                            f"{str(record.get('prev_hash'))[:12]}...)",
+                        )
+                        return result
+
+                # 2. integrity hash
+                signature_b64 = record.pop("signature", None)
+                signing_key_id = record.pop("signing_key_id", None)
+                signature_alg = record.pop("signature_alg", None)
+                stored_integrity = record.get("integrity_hash")
+                # Recompute integrity hash from record minus integrity_hash
+                without_hash = {k: v for k, v in record.items() if k != "integrity_hash"}
+                computed = hashlib.sha256(_canonical_json(without_hash)).hexdigest()
+                # Legacy records (no signature) used the default-separator
+                # form of json.dumps; accept that variant during the
+                # migration window.
+                if computed != stored_integrity and signature_b64 is None:
+                    legacy_payload = json.dumps(
+                        without_hash, sort_keys=True
+                    ).encode("utf-8")
+                    legacy_hash = hashlib.sha256(legacy_payload).hexdigest()
+                    if legacy_hash == stored_integrity:
+                        computed = stored_integrity
+                if computed != stored_integrity:
+                    cls._mark_break(
+                        result,
+                        line_no,
+                        "integrity_hash mismatch (record body tampered)",
+                    )
+                    return result
+
+                # 3. signature (if present)
+                if signature_b64 is None:
+                    if legacy_ok:
+                        result["valid_legacy"] += 1
+                        prev_hash_expected = stored_integrity
+                        continue
+                    cls._mark_break(result, line_no, "record is unsigned")
+                    return result
+
+                if public_key is None:
+                    cls._mark_break(
+                        result,
+                        line_no,
+                        "signature present but no public key available",
+                    )
+                    return result
+
+                try:
+                    # Re-add the integrity_hash to the dict so the payload
+                    # we verify matches what was signed.
+                    sig_record = dict(record)
+                    sig_payload = _canonical_json(sig_record)
+                    public_key.verify(
+                        base64.b64decode(signature_b64),
+                        sig_payload,
+                        ec.ECDSA(hashes.SHA256()),
+                    )
+                    result["valid_signed"] += 1
+                except InvalidSignature:
+                    cls._mark_break(result, line_no, "invalid signature")
+                    return result
+                except Exception as exc:  # noqa: BLE001
+                    cls._mark_break(result, line_no, f"signature verify error: {exc}")
+                    return result
+
+                prev_hash_expected = stored_integrity
+
+        return result
+
+    @staticmethod
+    def _mark_break(result: dict, line_no: int, reason: str) -> None:
+        result["broken"].append({"line": line_no, "reason": reason})
+        if result["first_break_at"] is None:
+            result["first_break_at"] = line_no
+
+    # ── rotation + purge ───────────────────────────────────────────
+
+    def rotate_and_purge(
+        self,
+        retention_days: int | None = None,
+        archive_dir: Path | None = None,
+    ) -> dict:
+        """Archive the current active log if it contains records older
+        than the retention cutoff, then start a new active log whose
+        first chain link points back at the archived log's tail.
+
+        Returns a dict describing what happened.
+        """
+        days = retention_days if retention_days is not None else self.retention_days
+        archive_dir = Path(archive_dir or ARCHIVE_DIR)
+        archive_dir.mkdir(parents=True, exist_ok=True)
+
+        report: dict = {
+            "rotated": False,
+            "reason": None,
+            "archived_path": None,
+            "manifest_path": None,
+            "retention_days": days,
+            "verify_before_rotate": None,
+        }
+
+        if not self.path.exists() or self.path.stat().st_size == 0:
+            report["reason"] = "active log empty or missing"
+            return report
+
+        # Step 1: verify before any destructive action
+        verify_report = self.verify(self.path, self.public_key_path, legacy_ok=True)
+        report["verify_before_rotate"] = {
+            "total": verify_report["total"],
+            "valid_signed": verify_report["valid_signed"],
+            "valid_legacy": verify_report["valid_legacy"],
+            "first_break_at": verify_report["first_break_at"],
+        }
+        if verify_report["first_break_at"] is not None:
+            report["reason"] = (
+                f"refusing to rotate a tampered log (first break at "
+                f"line {verify_report['first_break_at']})"
+            )
+            # Emit a SECURITY_INCIDENT marker into the active log so the
+            # event of refusing to rotate is itself audited.
+            self.log(
+                {
+                    "event_type": "SECURITY_INCIDENT",
+                    "subtype": "rotate_refused_chain_broken",
+                    "first_break_at": verify_report["first_break_at"],
+                    "broken_count": len(verify_report["broken"]),
+                }
+            )
+            return report
+
+        # Step 2: read first/last records to compute the time window
+        first_record = None
+        last_record = None
+        with open(self.path, "r", encoding="utf-8") as f:
+            for raw in f:
+                line = raw.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                if first_record is None:
+                    first_record = rec
+                last_record = rec
+
+        if first_record is None or last_record is None:
+            report["reason"] = "active log has no parseable records"
+            return report
+
+        # Try to find a usable timestamp on each record. We support a
+        # couple of common shapes; falls back to mtime if neither exists.
+        def _record_ts(rec: dict) -> datetime:
+            for key in ("timestamp", "review_timestamp"):
+                v = rec.get(key)
+                if isinstance(v, str):
+                    try:
+                        return datetime.fromisoformat(v.replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
+            r = rec.get("reviewer", {})
+            if isinstance(r, dict):
+                v = r.get("review_timestamp")
+                if isinstance(v, str):
+                    try:
+                        return datetime.fromisoformat(v.replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
+            return datetime.fromtimestamp(self.path.stat().st_mtime, tz=timezone.utc)
+
+        first_ts = _record_ts(first_record)
+        last_ts = _record_ts(last_record)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        # Make naive timestamps tz-aware (assume UTC) so the comparison
+        # below doesn't blow up on legacy records.
+        if first_ts.tzinfo is None:
+            first_ts = first_ts.replace(tzinfo=timezone.utc)
+        if last_ts.tzinfo is None:
+            last_ts = last_ts.replace(tzinfo=timezone.utc)
+
+        if first_ts >= cutoff:
+            report["reason"] = (
+                f"oldest record ({first_ts.isoformat()}) is within "
+                f"the {days}-day retention window; nothing to rotate"
+            )
+            return report
+
+        # Step 3: archive
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        archived_path = archive_dir / f"{self.path.stem}.{stamp}.jsonl"
+        shutil.move(str(self.path), str(archived_path))
+
+        manifest = {
+            "archived_path": str(archived_path),
+            "first_record_ts": first_ts.isoformat(),
+            "last_record_ts": last_ts.isoformat(),
+            "n_records": verify_report["total"],
+            "first_integrity_hash": first_record.get("integrity_hash"),
+            "last_integrity_hash": last_record.get("integrity_hash"),
+            "signing_key_id": last_record.get("signing_key_id"),
+            "sealed_at": datetime.now(timezone.utc).isoformat(),
+            "verifier_summary": report["verify_before_rotate"],
+        }
+        manifest_path = archived_path.with_suffix(".manifest.json")
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
+        # Step 4: start a fresh chain in the new active log. The
+        # cross-rotation forensic link is preserved in two places:
+        #   - the sealed manifest sidecar (archive_dir/*.manifest.json)
+        #   - the AUDIT_LOG_ROTATED marker's *payload*, which carries
+        #     the archived tail's integrity_hash and is itself signed
+        # Each active file therefore verifies independently from
+        # genesis ("0"*64), and a forensic walker reconstructs the
+        # full history by following the marker → manifest → archive.
+        self.prev_hash = "0" * 64
+        self.log(
+            {
+                "event_type": "AUDIT_LOG_ROTATED",
+                "archived_path": str(archived_path),
+                "archived_first_ts": first_ts.isoformat(),
+                "archived_last_ts": last_ts.isoformat(),
+                "archived_n_records": verify_report["total"],
+                "archived_last_integrity_hash": last_record.get("integrity_hash"),
+                "archived_first_integrity_hash": first_record.get("integrity_hash"),
+                "manifest_path": str(manifest_path),
+                "retention_days": days,
+                "rotated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+
+        report["rotated"] = True
+        report["archived_path"] = str(archived_path)
+        report["manifest_path"] = str(manifest_path)
+        report["reason"] = (
+            f"archived {verify_report['total']} records spanning "
+            f"{first_ts.isoformat()} → {last_ts.isoformat()}"
+        )
+        return report
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -638,5 +1252,80 @@ def main() -> None:
     logger.info(sep)
 
 
+def _cli_verify(args: argparse.Namespace) -> int:
+    path = Path(args.path or (OUTPUT_DIR / "audit_log.jsonl"))
+    pubkey = Path(args.public_key) if args.public_key else None
+    report = AuditLogger.verify(path, pubkey, legacy_ok=not args.strict)
+    print(json.dumps(report, indent=2))
+    return 0 if report["first_break_at"] is None else 1
+
+
+def _cli_rotate(args: argparse.Namespace) -> int:
+    path = Path(args.path or (OUTPUT_DIR / "audit_log.jsonl"))
+    audit = AuditLogger(
+        path,
+        retention_days=args.retention_days,
+        sign=not args.no_sign,
+    )
+    report = audit.rotate_and_purge(retention_days=args.retention_days)
+    print(json.dumps(report, indent=2))
+    return 0 if report["verify_before_rotate"] is None or report[
+        "verify_before_rotate"]["first_break_at"] is None else 2
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="python -m pipeline.module5_responses.module5_pipeline",
+        description="Module 5 — response pipeline + audit log management",
+    )
+    parser.add_argument(
+        "--verify-audit-log",
+        dest="verify_audit_log",
+        action="store_true",
+        help="Verify hash chain + signatures of an audit log JSONL file.",
+    )
+    parser.add_argument(
+        "--rotate-audit-log",
+        dest="rotate_audit_log",
+        action="store_true",
+        help="Rotate the active audit log if its oldest record is "
+             "older than the retention window. Refuses to rotate a "
+             "tampered log.",
+    )
+    parser.add_argument(
+        "--path",
+        default=None,
+        help="Audit log path (default: results/reports/audit_log.jsonl)",
+    )
+    parser.add_argument(
+        "--public-key",
+        default=None,
+        help="Public key PEM for verification "
+             "(default: results/reports/audit_signing_key.pub.pem)",
+    )
+    parser.add_argument(
+        "--retention-days",
+        type=int,
+        default=None,
+        help=f"Retention window in days (default: {DEFAULT_RETENTION_DAYS}; "
+             f"env: IOMT_AUDIT_RETENTION_DAYS)",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Treat unsigned (legacy) records as verification failures.",
+    )
+    parser.add_argument(
+        "--no-sign",
+        action="store_true",
+        help="Disable signing for the rotate marker (testing only).",
+    )
+
+    args = parser.parse_args()
+
+    if args.verify_audit_log:
+        sys.exit(_cli_verify(args))
+    if args.rotate_audit_log:
+        sys.exit(_cli_rotate(args))
+
     main()

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, Tuple
@@ -83,14 +84,21 @@ class JsonExporter(BaseExporter):
         self._indent = indent
 
     def export(self, data: dict, path: Path) -> None:
-        """Write *data* as JSON to *path*.
+        """Write *data* as JSON to *path* atomically.
+
+        Writes to ``path.json.tmp`` and then ``os.replace`` so a crash
+        mid-write cannot leave a half-written file that another tool
+        would mistake for a complete report. ``os.replace`` is atomic
+        on POSIX and Windows for same-filesystem moves.
 
         Args:
             data: Serialisable Python dict.
             path: Destination ``.json`` file.
         """
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(data, indent=self._indent))
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(data, indent=self._indent))
+        os.replace(tmp, path)
         logger.info("JSON exported → %s", path)
 
 

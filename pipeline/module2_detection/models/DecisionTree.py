@@ -25,7 +25,11 @@ from sklearn.metrics import (
     fbeta_score,
     roc_auc_score,
 )
-from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
+from sklearn.model_selection import (
+    RandomizedSearchCV,
+    StratifiedKFold,
+    cross_val_predict,
+)
 from sklearn.tree import DecisionTreeClassifier
 
 logger = logging.getLogger(__name__)
@@ -142,9 +146,19 @@ class DecisionTreeDetector:
             "n_folds": self._cv_folds,
         }
 
-        # Optimal threshold on training predictions
-        y_proba = search.best_estimator_.predict_proba(X_train)[:, 1]
-        self._optimal_threshold = self._find_optimal_threshold(y_train, y_proba)
+        # ── Optimal threshold via OUT-OF-FOLD probabilities ──
+        # See finding #2 in the Phase 2 security review.
+        oof_proba = cross_val_predict(
+            self._build_pipeline(),
+            X_train,
+            y_train,
+            cv=cv,
+            method="predict_proba",
+            n_jobs=-1,
+        )[:, 1]
+        self._optimal_threshold = self._find_optimal_threshold(
+            y_train, oof_proba,
+        )
 
         elapsed = time.perf_counter() - t0
         self._cv_results["elapsed_seconds"] = round(elapsed, 1)

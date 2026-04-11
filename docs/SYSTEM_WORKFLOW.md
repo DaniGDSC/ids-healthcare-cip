@@ -1,477 +1,358 @@
-# IoMT IDS System Algorithm & Data Workflow
+# IoMT IDS — System Workflow
 
-## System Overview
+Healthcare Intrusion Detection System for IoMT (Internet of Medical Things)
+networks, built on the **WUSTL-EHMS-2020** dataset (network flow features +
+patient biometrics). The current implementation is a **batch research
+pipeline** of seven sequential modules; there is no streaming inference
+service or real-time dashboard in the active codebase.
 
-Healthcare Intrusion Detection System for IoMT (Internet of Medical Things) networks.
-CNN-BiLSTM-Attention model (477K params) processes sliding windows of 20 network flows
-(24 features each) to detect anomalies, classify risk, and generate clinical alerts.
+The detection layer is **dual-track**:
+
+- **Track A (supervised):** XGBoost / Random Forest / Decision Tree on
+  SMOTE-balanced training data — produces calibrated attack probabilities.
+- **Track B (novelty):** Denoising Autoencoder trained on benign-only data —
+  produces a per-sample reconstruction error that flags out-of-distribution
+  behavior, including attacks the supervised models miss.
+
+The two tracks are fused into a composite risk score that incorporates
+device criticality, data sensitivity, and patient acuity, then explained,
+routed to a response policy, and finally evaluated.
 
 ---
 
-## Algorithm Workflow
+## Pipeline Workflow
 
 ```
-                        WUSTL Flow Data
-                    (flows.npy, labels.npy)
-                             |
-                             v
+                       data/raw/WUSTL-EHMS/
+                wustl-ehms-2020_with_attacks_categories.csv
+                                |
+                                v
               +------------------------------+
-              |   1. STREAMING SIMULATOR     |
-              |   wustl_simulator.py         |
+              |   MODULE 0 — EDA             |
+              |   pipeline/module0_analysis  |
               |                              |
-              |  - Memory-mapped I/O (0.001ms)|
-              |  - Sequential file ordering  |
-              |  - Random jitter (10-50ms)   |
-              |  - Per-flow ground truth     |
+              |  - Descriptive stats         |
+              |  - Class distribution        |
+              |  - Correlation matrix        |
+              |  - Quality + repro reports   |
               +------------------------------+
-                             |
-                     vec[24], gt_label
-                             |
-                             v
+                                |
+                  results/phase0_analysis/
+                                |
+                                v
               +------------------------------+
-              |   2. WINDOW BUFFER           |
-              |   window_buffer.py           |
+              |   MODULE 1 — PREPROCESSING   |
+              |   pipeline/module1_*         |
               |                              |
-              |  deque[maxlen=5000]           |
-              |  Sliding window: last 20     |
-              |  Output: (1, 20, 24)         |
-              |                              |
-              |  State machine:              |
-              |  INIT -> CALIBRATE -> OPS    |
-              |   <20    20-199     >=200    |
+              |  1. HIPAA identifier removal |
+              |  2. Encode Dir/Flgs, parse   |
+              |     Sport                    |
+              |  3. Missing-value handling   |
+              |     (ffill biometrics,       |
+              |      fill-zero network)      |
+              |  4. Variance + correlation   |
+              |     redundancy removal       |
+              |  --- LEAKAGE BARRIER ---     |
+              |  5. Stratified 70/30 split   |
+              |  6. RobustScaler             |
+              |     (fit train → transform)  |
+              |  7. Track A: SMOTE config    |
+              |  8. Track B: benign-only     |
+              |     subset                   |
               +------------------------------+
-                             |
-                    window (1, 20, 24)
-                             |
-                             v
+                                |
+                       data/processed/
+                  train_phase1.parquet
+                  test_phase1.parquet
+                  train_benign_phase1.parquet
+                  robust_scaler.pkl
+                                |
+                                v
 +================================================================+
-|                    INFERENCE SERVICE                             |
-|                    inference_service.py                          |
+|           MODULE 2 — DUAL-TRACK DETECTION                       |
+|           pipeline/module2_detection                            |
 |================================================================|
 |                                                                  |
-|   +--------------------------------------------------------+   |
-|   |  3. CNN-BiLSTM-ATTENTION MODEL                         |   |
-|   |  @tf.function (compiled, single graph execution)       |   |
-|   |                                                         |   |
-|   |  Input (1, 20, 24)                                     |   |
-|   |    |                                                    |   |
-|   |    v                                                    |   |
-|   |  Conv1D(64) -> MaxPool -> Conv1D(128) -> MaxPool       |   |
-|   |    |                                                    |   |
-|   |    v                                                    |   |
-|   |  BiLSTM(128) -> Dropout -> BiLSTM(64)                  |   |
-|   |    |                                                    |   |
-|   |    v                                                    |   |
-|   |  BahdanauAttention(128) -> context vector              |   |
-|   |    |                                                    |   |
-|   |    v                                                    |   |
-|   |  Dense(32, relu) -> Dropout -> Dense(1, sigmoid)       |   |
-|   |    |                                                    |   |
-|   |    +---> score (raw sigmoid)                           |   |
-|   |    +---> backbone (attention context vector)           |   |
-|   |    +---> gradients (d_score/d_input)                   |   |
-|   +--------------------------------------------------------+   |
-|                          |                                       |
-|           score, attn_magnitude, gradients                       |
-|                          |                                       |
-|                          v                                       |
-|   +--------------------------------------------------------+   |
-|   |  4. ATTENTION ANOMALY DETECTION                        |   |
-|   |                                                         |   |
-|   |  attn_magnitude = ||backbone||  (L2 norm)              |   |
-|   |  threshold = median + 3 * MAD                          |   |
-|   |                                                         |   |
-|   |  attn_flag = (attn_magnitude > threshold)              |   |
-|   |  If True: potential novel/zero-day threat              |   |
-|   +--------------------------------------------------------+   |
-|                          |                                       |
-|                          v                                       |
-|   +--------------------------------------------------------+   |
-|   |  5. SCORE CALIBRATION                                  |   |
-|   |  score_calibrator.py                                   |   |
-|   |                                                         |   |
-|   |  Auto-fits after 200 flows (calibration phase):        |   |
-|   |                                                         |   |
-|   |  IF n_attack >= 5 AND Youden's J > 0.3:               |   |
-|   |    Two-Class Mode:                                     |   |
-|   |    1. ROC-optimal threshold (Youden's J)               |   |
-|   |    2. Platt scaling (LogReg, C=1e4)                    |   |
-|   |    3. Target FPR ~10% (P90 of benign probs)            |   |
-|   |    score -> Platt prob -> risk_level                   |   |
-|   |                                                         |   |
-|   |  ELSE (fallback):                                      |   |
-|   |    Benign-Only Mode:                                   |   |
-|   |    score -> percentile of benign dist -> risk_level    |   |
-|   |    <P75: NORMAL | <P85: LOW | <P93: MEDIUM             |   |
-|   |    <P97: HIGH   | >=P97: CRITICAL                      |   |
-|   +--------------------------------------------------------+   |
-|                          |                                       |
-|                    risk_level                                    |
-|                          |                                       |
-|                          v                                       |
-|   +--------------------------------------------------------+   |
-|   |  6. ATTENTION ESCALATION                               |   |
-|   |                                                         |   |
-|   |  IF attn_flag AND risk in {NORMAL, LOW}:               |   |
-|   |    -> Escalate to MEDIUM                               |   |
-|   |    (Novel attack: model uncertain but attention         |   |
-|   |     diverges from baseline)                             |   |
-|   +--------------------------------------------------------+   |
-|                          |                                       |
+|   +------------------------+    +--------------------------+   |
+|   |  Track A (supervised)  |    |  Track B (novelty)       |   |
+|   |                        |    |                          |   |
+|   |  XGBoost               |    |  Denoising Autoencoder   |   |
+|   |  Random Forest         |    |  trained on              |   |
+|   |  Decision Tree         |    |  train_benign_phase1     |   |
+|   |                        |    |                          |   |
+|   |  trained on            |    |  Output:                 |   |
+|   |  SMOTE-balanced        |    |    reconstruction_error  |   |
+|   |  train_phase1          |    |    per sample            |   |
+|   |                        |    |                          |   |
+|   |  Output:               |    |  Threshold = function    |   |
+|   |    p_attack ∈ [0,1]    |    |    of benign RE dist     |   |
+|   +------------------------+    +--------------------------+   |
+|                                                                  |
 +================================================================+
-                           |
-                     risk_level
-                           |
-                           v
+                                |
+                                v
               +------------------------------+
-              |  7. CIA RISK MODIFICATION    |
-              |  cia_risk_modifier.py        |
+              |   MODULE 3 — COMPOSITE RISK  |
+              |   module3_risk_scores.py     |
               |                              |
-              |  Scenario detection:         |
-              |  - HIGH_THREAT:              |
-              |    attn_flag OR HIGH/CRIT    |
-              |    Weights: I>A>C            |
-              |  - CLINICAL_EMERGENCY:       |
-              |    risk == MEDIUM            |
-              |    Weights: A>I>C            |
-              |  - NORMAL_MONITORING:        |
-              |    otherwise                 |
-              |    Weights: I>=C>A           |
+              |  C_detect = max(             |
+              |    Track_A_proba,            |
+              |    Track_B_normalized_RE)    |
               |                              |
-              |  CIA score per dimension:    |
-              |  score[d] = threat[d]        |
-              |           x device[d]        |
-              |           x scenario[d]      |
+              |  R = w1·C_detect             |
+              |    + w2·D_crit               |
+              |    + w3·S_data               |
+              |    + w4·A_patient            |
               |                              |
-              |  IF max(CIA) >= 0.7:         |
-              |    -> Escalate risk by 1     |
-              |  (CIA can only escalate)     |
+              |  Tier mapping:               |
+              |    LOW / MEDIUM /            |
+              |    HIGH / CRITICAL           |
+              |                              |
+              |  Demonstrates dual-track     |
+              |  fusion value (Track A ∪ B)  |
               +------------------------------+
-                           |
-                   adjusted_risk_level
-                           |
-                           v
+                                |
+                  results/reports/risk_report.json
+                                |
+                                v
               +------------------------------+
-              |  8. CLINICAL IMPACT          |
-              |  clinical_impact.py          |
+              |   MODULE 4 — EXPLANATIONS    |
+              |   module4_explanations.py    |
               |                              |
-              |  Risk -> Severity:           |
-              |  NORMAL  -> ROUTINE (1)      |
-              |  LOW     -> ADVISORY (2)     |
-              |  MEDIUM  -> URGENT (3)       |
-              |  HIGH    -> EMERGENT (4)     |
-              |  CRITICAL-> CRITICAL (5)     |
+              |  Track A:                    |
+              |    TreeSHAP global +         |
+              |    local attributions        |
+              |    (XGB / RF / DT)           |
               |                              |
-              |  Biometric check:            |
-              |  For each vital sign:        |
-              |    IF |value| > 1.5 sigma    |
-              |    -> flag abnormal          |
+              |  Track B:                    |
+              |    per-feature weighted      |
+              |    reconstruction-error      |
+              |    decomposition             |
               |                              |
-              |  Escalation:                 |
-              |  IF safety_device AND        |
-              |     abnormal_vitals AND      |
-              |     risk != NORMAL:          |
-              |    -> severity += 1          |
-              |                              |
-              |  Patient safety flag:        |
-              |  IF safety_device AND        |
-              |     (HIGH/CRIT OR attn_flag) |
-              |    -> flag = True            |
-              |                              |
-              |  Response protocol:          |
-              |  ROUTINE:  log, 0 min        |
-              |  ADVISORY: review, 8 hrs     |
-              |  URGENT:   restrict, 60 min  |
-              |  EMERGENT: isolate, 15 min   |
-              |  CRITICAL: isolate, 5 min    |
+              |  Stakeholder views:          |
+              |    - analyst (forensic)      |
+              |    - clinician (NLG)         |
+              |    - administrator (agg.)    |
               +------------------------------+
-                           |
-                  clinical_severity
-                           |
-                           v
+                                |
+                  results/reports/{global_importance_*.json,
+                                   analyst_report.json,
+                                   clinician_summaries.json,
+                                   admin_dashboard.json,
+                                   dae_feature_errors.npz}
+                                |
+                                v
               +------------------------------+
-              |  9. ALERT FATIGUE MGMT      |
-              |  alert_fatigue.py            |
+              |   MODULE 5 — RESPONSES       |
+              |   module5_responses.py +     |
+              |   module5_pipeline.py        |
               |                              |
-              |  Decision rules (ordered):   |
+              |  PolicyEngine                |
+              |    + adaptive mitigation     |
+              |      (magnitude / device /   |
+              |       attack-aware)          |
+              |    + clinical safety         |
+              |      override                |
+              |    + simulated ActionExec    |
+              |    + NotificationService     |
+              |    + immutable audit log     |
+              |    + feedback-loop stub      |
               |                              |
-              |  1. ROUTINE -> SUPPRESS      |
-              |     (never emit)             |
-              |                              |
-              |  2. ESCALATION -> EMIT       |
-              |     (severity increased)     |
-              |                              |
-              |  3. DE-ESCALATION -> EMIT    |
-              |     (signal recovery)        |
-              |                              |
-              |  4. RATE LIMIT -> SUPPRESS   |
-              |     (>5 alerts per 100 flows)|
-              |                              |
-              |  5. AGGREGATION:             |
-              |     1st -> EMIT              |
-              |     Every 10th -> EMIT       |
-              |     2-9th -> SUPPRESS        |
+              |  Worked examples:            |
+              |    CRITICAL / HIGH / LOW     |
               +------------------------------+
-                           |
-                   alert_emit (T/F)
-                           |
-                           v
+                                |
+                  results/reports/{response_policy.json,
+                                   all_responses.json,
+                                   audit_log.jsonl,
+                                   effectiveness_analysis.json}
+                                |
+                                v
               +------------------------------+
-              |  10. CONDITIONAL EXPLANATION |
-              |  conditional_explainer.py    |
+              |   MODULE 6 — EVALUATION      |
+              |   module6_evaluation.py +    |
+              |   module6_app.py (Streamlit) |
               |                              |
-              |  Policy by severity:         |
+              |  Batch script:               |
+              |    - curate alert set        |
+              |    - participant metrics     |
+              |    - thesis figures          |
               |                              |
-              |  ROUTINE/ADVISORY:           |
-              |    -> NONE (0ms)             |
-              |                              |
-              |  URGENT:                     |
-              |    -> LIGHTWEIGHT (~1ms)     |
-              |    Attention weights only    |
-              |    timestep_importance[20]   |
-              |                              |
-              |  EMERGENT/CRITICAL:          |
-              |    -> FULL (~5-10ms)         |
-              |    Attention weights +       |
-              |    Gradient attribution:     |
-              |    feat_imp = mean(|grads|)  |
-              |    top_5 features ranked     |
+              |  Eval app (3 modes):         |
+              |    a) offline browse +       |
+              |       Likert questionnaire   |
+              |    b) online simulation      |
+              |       (stream test rows)     |
+              |    c) dashboard (gauge,      |
+              |       feed, SHAP, NLG,       |
+              |       response panel)        |
               +------------------------------+
-                           |
-                    explanation{}
-                           |
-                           v
-              +------------------------------+
-              |  11. RESULT ASSEMBLY         |
-              |                              |
-              |  result = {                  |
-              |    anomaly_score,            |
-              |    risk_level,               |
-              |    attention_flag,           |
-              |    clinical_severity,        |
-              |    patient_safety_flag,      |
-              |    response_time_minutes,    |
-              |    device_action,            |
-              |    cia_scores {C, I, A},     |
-              |    explanation {},            |
-              |    alert_emit,               |
-              |    ground_truth,             |
-              |    latency_ms,               |
-              |  }                           |
-              +------------------------------+
-                           |
-                           v
-              +------------------------------+
-              |  12. BUFFER RECORDING        |
-              |  window_buffer.py            |
-              |                              |
-              |  - Store in predictions[500] |
-              |  - Update risk_counts        |
-              |  - Update detection_counts   |
-              |    (TP/FN/FP/TN cumulative)  |
-              |  - If HIGH/CRITICAL:         |
-              |    -> Add to alerts[200]     |
-              |  - If CRITICAL:              |
-              |    -> State = ALERT          |
-              +------------------------------+
-                           |
-                           v
-              +------------------------------+
-              |  13. DASHBOARD DISPLAY       |
-              |  @st.fragment(run_every=2)   |
-              |                              |
-              |  6 panels, 5 roles (RBAC):   |
-              |                              |
-              |  Live Monitor:               |
-              |    Threat gauge, timeline,   |
-              |    risk distribution,        |
-              |    network heatmap           |
-              |                              |
-              |  Alert Feed:                 |
-              |    Recent HIGH/CRITICAL,     |
-              |    drill-down detail         |
-              |                              |
-              |  Explanations:               |
-              |    Role-specific views       |
-              |    (5 different renderers)   |
-              |                              |
-              |  Performance:                |
-              |    Accuracy, Recall, F1,     |
-              |    confusion matrix          |
-              |                              |
-              |  Stakeholder Intelligence:   |
-              |    SOC / Clinician / CISO /  |
-              |    BioMed role-specific      |
-              |                              |
-              |  System & Compliance:        |
-              |    Model info, audit trail,  |
-              |    FDA/HIPAA compliance      |
-              +------------------------------+
+                                |
+                  results/reports/{evaluation_alerts.json,
+                                   evaluation_results.json,
+                                   participant_responses.json}
+                  results/charts/*.png
 ```
 
 ---
 
-## Data Flow Diagram
+## Standalone Analyses (Phase B / C)
+
+These three scripts run independently against the trained models +
+test split. They are not part of `run_all_modules.py`.
 
 ```
-+------------------+     +------------------+     +------------------+
-| WUSTL Dataset    |     | Phase 2 Model    |     | Phase 4 Baseline |
-| flows.npy (7296) | --> | Weights (.h5)    | --> | Config (.json)   |
-| labels.npy       |     | 477K params      |     | median, MAD      |
-| filenames.json   |     | CNN-BiLSTM-Attn  |     | threshold        |
-+------------------+     +------------------+     +------------------+
-         |                        |                        |
-         v                        v                        v
-+========================================================================+
-|                     STREAMING PIPELINE                                  |
-|                                                                         |
-|  Simulator         Buffer          Model           Calibrator          |
-|  (per-flow)   -->  (window)   -->  (inference) --> (risk mapping)      |
-|  vec[24]           (1,20,24)       score           risk_level          |
-|  0.001ms           <1ms            ~15ms           <1ms                |
-|                                                                         |
-|  Flow 0-19: INITIALIZING (no inference, filling window)                |
-|  Flow 20-199: CALIBRATING (inference active, alerts suppressed)        |
-|  Flow 200+: OPERATIONAL (full pipeline, alerts enabled)                |
-+========================================================================+
-         |                                                    |
-         v                                                    v
-+------------------+                              +------------------+
-| Risk Pipeline    |                              | Dashboard        |
-|                  |                              | (Streamlit)      |
-| Risk Scorer      |                              |                  |
-|   -> CIA Modifier |                             | @st.fragment     |
-|   -> Clinical    |                              | (run_every=2s)   |
-|   -> Fatigue Mgr |                              |                  |
-|   -> Explainer   |                              | 6 panels         |
-|                  |                              | 5 roles (RBAC)   |
-| ~175ms total     |                              | Live updating    |
-+------------------+                              +------------------+
+data/processed/test_phase1.parquet  +  trained DAE / Module 3 outputs
+                              |
+              +---------------+----------------+
+              |               |                |
+              v               v                v
+   +------------------+  +------------+  +---------------+
+   | drift_detection  |  | dynamic_   |  | feedback_     |
+   | (PSI + KS over   |  | threshold_ |  | loop_demo     |
+   |  DAE RE stream)  |  | sim        |  | (closed-loop  |
+   |                  |  | (sliding W |  |  iteration)   |
+   | Recalibration    |  |  median +  |  |               |
+   | trigger          |  |  k·MAD     |  | C.3 single    |
+   |                  |  |  adaptive) |  | C.4 multi-    |
+   |                  |  |            |  |     cycle     |
+   |                  |  | Static vs  |  | C.5 AUROC     |
+   |                  |  | adaptive   |  |     reweight  |
+   |                  |  | grid W×k   |  | C.6 adjusted  |
+   |                  |  |            |  |     config    |
+   +------------------+  +------------+  +---------------+
+              |               |                |
+              v               v                v
+   drift_detection_     dynamic_threshold_  feedback_loop_
+   results.json         results.json        results.json
+                                            adjusted_risk_
+                                            configuration.json
 ```
 
 ---
 
-## Feature Schema (24 dimensions)
+## Data Flow Summary
 
 ```
-+------------------------------------------------------------------+
-|                    MODEL INPUT FEATURES                            |
-+------------------------------------------------------------------+
-| NETWORK FEATURES (16)              | BIOMETRIC FEATURES (8)       |
-|------------------------------------+------------------------------|
-| SrcBytes    - Source bytes         | Temp       - Temperature     |
-| DstBytes    - Destination bytes    | SpO2       - Blood oxygen    |
-| SrcLoad     - Source load          | Pulse_Rate - Pulse rate      |
-| DstLoad     - Destination load     | SYS        - Systolic BP     |
-| SIntPkt     - Src inter-packet     | DIA        - Diastolic BP    |
-| DIntPkt     - Dst inter-packet     | Heart_rate - Heart rate      |
-| SIntPktAct  - Src inter-pkt active | Resp_Rate  - Respiratory     |
-| sMaxPktSz   - Src max packet size  | ST         - ST segment      |
-| dMaxPktSz   - Dst max packet size  |                              |
-| sMinPktSz   - Src min packet size  |                              |
-| Dur         - Flow duration        |                              |
-| TotBytes    - Total bytes          |                              |
-| Load        - Total load           |                              |
-| pSrcLoss    - Source packet loss   |                              |
-| pDstLoss    - Dest packet loss     |                              |
-| Packet_num  - Packet count         |                              |
-+------------------------------------------------------------------+
-| 5 dropped (zero-variance in WUSTL):                               |
-| SrcGap, DstGap, DIntPktAct, dMinPktSz, Trans                     |
-+------------------------------------------------------------------+
-```
-
----
-
-## Key Thresholds & Decision Points
-
-| Component | Threshold | Value | Purpose |
-|-----------|-----------|-------|---------|
-| Window Buffer | window_size | 20 | Model input timesteps |
-| Window Buffer | calibration_threshold | 200 | Flows before alerts enabled |
-| Baseline | median | 0.129 | Benign score center |
-| Baseline | MAD | 0.025 | Score spread measure |
-| Baseline | baseline_threshold | 0.255 | median + 3*MAD |
-| Risk Scorer | LOW/MEDIUM | 0.5 * MAD | Risk boundary |
-| Risk Scorer | MEDIUM/HIGH | 1.0 * MAD | Risk boundary |
-| Risk Scorer | HIGH/CRITICAL | 2.0 * MAD | Risk boundary |
-| CIA Modifier | escalation | >= 0.7 | CIA modifier escalation trigger |
-| Clinical | biometric warn | 1.5 sigma | Vital sign abnormality |
-| Calibrator | Youden's J | > 0.3 | Two-class mode activation |
-| Calibrator | target FPR | 10% | Detection boundary tuning |
-| Calibrator (benign) | P75/P85/P93/P97 | percentile | Risk level boundaries |
-| Alert Fatigue | rate limit | 5 per 100 | Max alerts per device |
-| Alert Fatigue | aggregation | every 10th | Same-severity suppression |
-| Explanation | URGENT (sev>=3) | severity | Enable explanations |
-
----
-
-## Latency Budget (per flow)
-
-```
-Component                    Time        Cumulative
--------------------------------------------------
-Flow read (mmap)             0.001ms     0.001ms
-Buffer append                <0.01ms     ~0.01ms
-Window extraction            <0.1ms      ~0.1ms
-Model inference (@tf.func)   ~15ms       ~15ms
-  (score + backbone + grads in single compiled graph)
-Score calibration            <0.1ms      ~15ms
-Risk scoring                 <0.1ms      ~15ms
-CIA modification             <0.1ms      ~15ms
-Clinical assessment          <0.1ms      ~15ms
-Alert fatigue                <0.1ms      ~15ms
-Explanation (conditional):
-  NONE                       0ms         ~15ms
-  LIGHTWEIGHT                ~1ms        ~16ms
-  FULL                       ~5-10ms     ~20-25ms
-Buffer recording             <0.1ms      ~15-25ms
--------------------------------------------------
-Total per flow:              ~15-25ms
-Clinical SLA:                5 minutes (300,000ms)
-Safety margin:               12,000-20,000x
++---------------------+      +---------------------+      +---------------------+
+| data/raw/WUSTL-EHMS | ---> | Module 0  EDA       | ---> | results/phase0_*    |
++---------------------+      +---------------------+      +---------------------+
+                                                                    |
++---------------------+      +---------------------+                |
+| data/processed/     | <--- | Module 1  Preproc   | <--------------+
+|   train_phase1      |      +---------------------+
+|   test_phase1       |
+|   train_benign      |
+|   robust_scaler.pkl |
++---------------------+
+           |
+           +-------------------------+
+           |                         |
+           v                         v
++---------------------+      +---------------------+
+| Module 2  Track A   |      | Module 2  Track B   |
+| XGB / RF / DT       |      | DAE (benign-only)   |
+| → p_attack          |      | → reconstr. error   |
++---------------------+      +---------------------+
+           |                         |
+           +------------+------------+
+                        v
+              +---------------------+
+              | Module 3  Composite |
+              | Risk: R = Σ wi·xi   |
+              +---------------------+
+                        |
+                        v
+              +---------------------+
+              | Module 4  Explain   |
+              | TreeSHAP + DAE      |
+              | error decomposition |
+              +---------------------+
+                        |
+                        v
+              +---------------------+
+              | Module 5  Respond   |
+              | PolicyEngine +      |
+              | audit + actions     |
+              +---------------------+
+                        |
+                        v
+              +---------------------+
+              | Module 6  Evaluate  |
+              | + Streamlit app     |
+              +---------------------+
 ```
 
 ---
 
-## RBAC Access Matrix
+## Feature Schema
 
-```
-                     Live    Alert  Explain  Perform  Stake   System
-                     Monitor  Feed  ations   ance     holder  Comply
-IT Security Analyst    X       X       X       X        X       X
-Clinical IT Admin      X       X       X                X       X
-Attending Physician    X       X       X                X
-Hospital Manager       X               X       X        X       X
-Regulatory Auditor     X               X                X       X
+After Module 1 sanitization, the WUSTL-EHMS-2020 schema is **35 network +
+8 biometric features** (some are dropped further by variance / correlation
+filtering — the exact final feature list is recorded in
+`data/processed/selected_features.json`).
+
+| Group | Features |
+|---|---|
+| **Network (35)** | `Dir`, `Flgs`, `Sport`, `Dport`, `SrcBytes`, `DstBytes`, `SrcLoad`, `DstLoad`, `SrcGap`, `DstGap`, `SIntPkt`, `DIntPkt`, `SIntPktAct`, `DIntPktAct`, `SrcJitter`, `DstJitter`, `sMaxPktSz`, `dMaxPktSz`, `sMinPktSz`, `dMinPktSz`, `Dur`, `Trans`, `TotPkts`, `TotBytes`, `Load`, `Loss`, `pLoss`, `pSrcLoss`, `pDstLoss`, `Rate`, … |
+| **Biometric (8)** | `Temp`, `SpO2`, `Pulse_Rate`, `SYS`, `DIA`, `Heart_rate`, `Resp_Rate`, `ST` |
+| **Labels** | `Label` (binary), `Attack Category` (multi-class) |
+
+Identifier columns dropped by HIPAA step: `SrcAddr`, `DstAddr`, `SrcMac`,
+`DstMac`, `Packet_num` (also implicated in label leakage).
+
+---
+
+## Eval App Roles
+
+The Streamlit interface in `pipeline/module6_evaluation/module6_app.py`
+defines **three** stakeholder roles:
+
+| Role | View Focus |
+|---|---|
+| Security Analyst | Forensic detail, SHAP waterfall, response panel |
+| Clinician | Plain-language NLG, biometric context, patient impact |
+| Administrator | Aggregate alert tier distribution, role accuracy charts |
+
+Available actions in the eval workflow: `dismiss`, `monitor`,
+`investigate`, `isolate`, `escalate`.
+
+This is a research evaluation interface, **not** a production RBAC dashboard.
+There is no LDAP, no SSO, no per-role authorization layer in the active code.
+
+---
+
+## Execution
+
+```bash
+# Module 0 — EDA
+python -m pipeline.module0_analysis.module0_analysis
+
+# Module 1 — Preprocessing
+python -m pipeline.module1_preprocessing.phase1
+
+# Modules 2..6 (orchestrated)
+python run_all_modules.py
+python run_all_modules.py --from 3
+python run_all_modules.py --only 4
+
+# Standalone analyses
+python -m pipeline.drift_detection
+python -m pipeline.dynamic_threshold_sim
+python -m pipeline.feedback_loop_demo
+
+# Evaluation app
+streamlit run pipeline/module6_evaluation/module6_app.py
 ```
 
 ---
 
-## System State Machine
+## What is *not* in the current code
 
-```
-                 flow_count < 20
-INITIALIZING  ----------------------->  (no inference)
-     |
-     | flow_count == 20
-     v
-CALIBRATING   ----------------------->  (inference active,
-     |          20 <= flow_count < 200     alerts suppressed,
-     |                                     collecting calibration data)
-     | flow_count == 200
-     | (calibrator auto-fits)
-     v
-OPERATIONAL   ----------------------->  (full pipeline,
-     |                                     alerts enabled)
-     |
-     | risk_level == CRITICAL
-     v
-ALERT         ----------------------->  (active threat,
-     |                                     all alerts emitted)
-     |
-     | dataset exhausted
-     v
-EXHAUSTED     ----------------------->  (streaming complete,
-                                          summary metrics displayed)
-```
+The earlier project iteration described a streaming inference service with
+a CNN-BiLSTM-Attention model, FastAPI, mTLS, LDAP, Splunk/HL7 integration,
+Docker Compose, and a 6-panel RBAC dashboard. **None of that lives in the
+active codebase.** The relevant files are preserved under `_archive/` for
+reference but are not imported, tested, or executed by the current
+pipeline. If you need any of those capabilities you must port them
+forward — they are out of scope for the current modules.

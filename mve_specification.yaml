@@ -1,0 +1,373 @@
+# ================================================================
+# mve_specification.yaml
+# Minimum Viable Explanation (MVE) for XAI-Enhanced IDS
+# Target: IT Security Generalist at 200-500 bed hospital
+# Derived from: problem_evidence_v2.yaml + falsification_explainability.yaml
+# Generated: 2026-04-11
+# ================================================================
+
+
+# ================================================================
+# VIỆC 1: 3-LAYER OUTPUT STRUCTURE
+# ================================================================
+
+layer_specification:
+
+  layer_1_why_anomalous:
+    purpose: "Tell the operator WHY the system flagged this — what normal looks like and how this deviates."
+    required_elements:
+      - element: "baseline_behavior"
+        description: "What this device/user normally does on the network."
+        example: "This device (BD Alaris pump, ICU-3) normally communicates only with the EHR gateway on port 443."
+        format: "1 sentence, plain English, names device/user and normal pattern"
+      - element: "deviation_description"
+        description: "What happened differently — the specific trigger."
+        example: "At 02:47 AM, it initiated an outbound FTP connection to an external IP (203.0.113.42) not in any approved list."
+        format: "1 sentence, includes timestamp, protocol, destination"
+      - element: "confidence_indicator"
+        description: "How certain the system is that this is truly anomalous."
+        example: "Confidence: HIGH — never observed in 120 days of baseline for this device class."
+        format: "'Confidence: HIGH/MEDIUM/LOW — [one-clause justification]'"
+    max_length: "60 words"
+    audience: "IT generalist with basic network knowledge"
+    what_NOT_to_include:
+      - "Raw SHAP values or feature importance scores"
+      - "Model architecture details"
+      - "Statistical measures (p-values, standard deviations)"
+      - "Multiple competing hypotheses"
+
+  layer_2_clinical_severity:
+    purpose: "Translate the technical anomaly into patient-care terms. Answer: 'Wake someone up at 3 AM, or wait until morning?'"
+    required_elements:
+      - element: "affected_system_type"
+        description: "Clinical system category and its function in patient care."
+        example: "Infusion pump network (ICU wing 3) — active drug delivery to 8 patients."
+        format: "[system] ([location]) — [clinical function]"
+      - element: "patient_care_impact"
+        description: "What could go wrong for patients if unaddressed."
+        example: "Compromise could alter infusion parameters affecting 8 ICU patients."
+        format: "1-2 sentences, names patient count and clinical consequence"
+      - element: "phi_exposure_potential"
+        description: "What patient data could be accessed or exfiltrated."
+        example: "Medication records and dosing history for current ICU census."
+        format: "1 sentence, names data types and scope"
+      - element: "severity_label"
+        values: ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+        criteria: |
+          CRITICAL: Life-sustaining systems (ventilators, active infusion, surgical). Respond immediately.
+          HIGH: Clinical systems affecting current care (EHR, active PACS, pharmacy). Respond within 1 hour.
+          MEDIUM: Clinical-support not immediately affecting safety (scheduling, archived imaging). Respond within 4 hours.
+          LOW: Administrative with minimal PHI (guest Wi-Fi, marketing). Review within 24 hours.
+    max_length: "50 words"
+    audience: "IT generalist + clinical leadership (forwardable without rewriting)"
+    what_NOT_to_include:
+      - "Generic CVSS scores without clinical translation"
+      - "Raw CVE numbers without plain-language impact"
+      - "Attacker intent or attribution assumptions"
+
+  layer_3_recommended_action:
+    purpose: "Give a specific, followable action plan respecting clinical constraints. Prevent doing nothing (under-reaction) and disrupting care (over-reaction)."
+    required_elements:
+      - element: "immediate_action"
+        description: "Single most important step, phrased as imperative verb + specific technical step."
+        example: "Isolate device via NAC policy ICU-QUARANTINE-01 (blocks outbound non-HTTPS while preserving EHR connectivity)."
+        format: "Imperative verb + specific step + what it preserves"
+      - element: "clinical_constraint"
+        description: "What NOT to do to avoid disrupting patient care."
+        example: "DO NOT power-cycle pumps during active infusions — coordinate with ICU charge nurse first."
+        format: "'DO NOT [action] during/while [condition] — [who to coordinate with]'"
+      - element: "escalation_path"
+        description: "Who to notify and in what order."
+        example: "Notify: (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse."
+        format: "Numbered list with role titles"
+      - element: "timeframe"
+        description: "How quickly to act, aligned with severity."
+        example: "Act within 15 minutes. Preserve all logs for forensic review."
+        format: "'Act within [time]. [preservation instruction]'"
+    max_length: "60 words"
+    audience: "IT generalist who may be the only security-aware person on shift"
+    what_NOT_to_include:
+      - "Vague advice ('investigate further', 'monitor closely')"
+      - "Forensic steps (Tier-2/IR team work)"
+      - "Actions requiring tools the org doesn't have"
+
+
+# ================================================================
+# VIỆC 2: TOP 5 ALERT TYPES
+# ================================================================
+
+alert_type_taxonomy:
+
+  - rank: 1
+    alert_type: "Anomalous outbound connection from clinical device subnet"
+    trigger_description: "Device on clinical VLAN initiates outbound connection to external IP on protocol not in behavioral baseline (FTP, SSH, raw TCP to non-whitelisted destination)."
+    frequency_in_target_env: "common"
+    current_tool_handling: "IDS/SIEM: source IP, dest IP, protocol, timestamp, generic severity score."
+    xai_gap: "Doesn't identify which clinical device, what it normally does, whether blocking disrupts care, or what to do."
+
+  - rank: 2
+    alert_type: "Unauthorized EHR/EMR access outside normal patterns"
+    trigger_description: "User account accesses records at unusual time, from unusual location, or accesses records outside their department/role at unusual volume."
+    frequency_in_target_env: "common"
+    current_tool_handling: "SIEM correlates login events with time/location baselines. Shows user ID, time, record count."
+    xai_gap: "Doesn't provide role-context: is this user a night-shift nurse (normal) or day-shift billing clerk (anomalous)? Volume normal for their role?"
+
+  - rank: 3
+    alert_type: "Lateral movement between network segments"
+    trigger_description: "Host on admin VLAN initiates RDP/SMB/WMI to clinical VLAN crossing segmentation boundaries."
+    frequency_in_target_env: "uncommon but high-severity"
+    current_tool_handling: "IDS/firewall: cross-VLAN traffic matching lateral movement signatures. Source/dest IPs, protocol."
+    xai_gap: "Doesn't say whether source is authorized biomed workstation, whether this is a maintenance window, or what clinical systems are on the destination subnet."
+
+  - rank: 4
+    alert_type: "Data exfiltration indicator from clinical system"
+    trigger_description: "Clinical system (EHR, PACS, LIS) transfers unusually large data volume outbound to unrecognized destination."
+    frequency_in_target_env: "uncommon"
+    current_tool_handling: "DLP/SIEM: source system, data volume, destination, protocol."
+    xai_gap: "High false-positive rate because legitimate transfers (radiology sharing, HIE, backups) also large. Doesn't say whether destination is approved partner."
+
+  - rank: 5
+    alert_type: "IoMT device behavioral deviation"
+    trigger_description: "Medical device communicates with new endpoint, new protocol, or at abnormal frequency vs. learned baseline."
+    frequency_in_target_env: "common (often false positive from firmware updates, vendor maintenance)"
+    current_tool_handling: "IoMT platform/SIEM: device ID, new pattern, anomaly score."
+    xai_gap: "B3 confirms #1 alert fatigue source. Doesn't say whether this is a known vendor maintenance window or firmware update cycle."
+
+
+# ================================================================
+# VIỆC 3: 5 CONCRETE EXAMPLES
+# ================================================================
+
+alert_examples:
+
+  # ----- EXAMPLE 1: Anomalous outbound from infusion pump -----
+  - alert_type: "Anomalous outbound connection from clinical device subnet"
+    raw_ids_output:
+      alert_name: "IDS-2847: Outbound FTP from Clinical Subnet"
+      source_ip: "10.4.12.8"
+      dest_ip: "203.0.113.42"
+      protocol: "FTP (port 21)"
+      timestamp: "2026-04-11T02:47:33Z"
+      severity_score: "6.5/10"
+    xai_output:
+      layer_1_why_anomalous: >
+        This device (BD Alaris pump, ICU-3) normally communicates
+        only with the EHR gateway on port 443. At 02:47 AM it
+        initiated outbound FTP to an external IP not on any
+        approved list. Confidence: HIGH — never observed in
+        120 days for this device class.
+      layer_2_clinical_severity:
+        affected_system: "Infusion pump network (ICU-3) — active drug delivery to 8 patients"
+        patient_care_impact: "Compromise could alter infusion parameters. Disconnection requires manual medication for 8 ICU patients."
+        phi_exposure: "Medication records and dosing history for ICU census (8-12 patients)."
+        severity_label: "CRITICAL"
+        severity_rationale: "Life-sustaining system with active drug delivery."
+      layer_3_recommended_action:
+        immediate: "Apply NAC policy ICU-QUARANTINE-01: block outbound non-HTTPS, preserve internal EHR connectivity."
+        clinical_constraint: "DO NOT power-cycle or disconnect pumps during active infusions — coordinate with ICU charge nurse first."
+        escalate_to: "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse."
+        timeframe: "Act within 15 minutes. Preserve logs 02:00-03:00."
+    generalist_decision_enabled: >
+      Without MVE: sees 'FTP from 10.4.12.8, severity 6.5' — doesn't
+      know it's a pump with active patients. Might ignore or disconnect
+      and disrupt 8 patients. With MVE: applies network quarantine
+      preserving pump function, escalates correctly within 15 min.
+
+  # ----- EXAMPLE 2: Unauthorized EHR access -----
+  - alert_type: "Unauthorized EHR/EMR access outside normal patterns"
+    raw_ids_output:
+      alert_name: "SIEM-4102: Anomalous EHR Access Volume"
+      source_ip: "10.2.5.31 (ADMIN-BILLING-07)"
+      dest_ip: "10.1.1.10 (EHR-PRIMARY)"
+      protocol: "HTTPS (port 443)"
+      timestamp: "2026-04-10T23:14:00Z"
+      severity_score: "5.0/10"
+    xai_output:
+      layer_1_why_anomalous: >
+        User jsmith (Billing, day-shift 08-17) accessed 47 Cardiology
+        records at 11:14 PM from billing workstation. Baseline: 8-12
+        records/day in Billing module during business hours. Confidence:
+        HIGH — after-hours clinical-department access has zero
+        precedent in 90 days.
+      layer_2_clinical_severity:
+        affected_system: "EHR (Epic) — Cardiology patient records"
+        patient_care_impact: "No direct care disruption. Risk: unauthorized PHI viewing or exfiltration."
+        phi_exposure: "Full records for 47 cardiology patients: diagnoses, procedures, insurance, contacts."
+        severity_label: "HIGH"
+        severity_rationale: "Bulk PHI exposure. Pattern consistent with insider snooping or compromised credentials."
+      layer_3_recommended_action:
+        immediate: "Disable jsmith's EHR session and force MFA re-authentication. Do NOT delete account — preserve audit trail."
+        clinical_constraint: "DO NOT lock workstation if shared by night-shift clinical staff — isolate user session only."
+        escalate_to: "(1) Privacy Officer, (2) HR, (3) Security lead."
+        timeframe: "Act within 30 minutes. Preserve EHR audit logs for jsmith, past 72 hours."
+    generalist_decision_enabled: >
+      Without MVE: sees 'anomalous EHR access, 5.0' — might dismiss
+      as routine. With MVE: immediately sees role mismatch (billing
+      clerk → cardiology, after hours) and scale (47 vs baseline 12).
+
+  # ----- EXAMPLE 3: Lateral movement -----
+  - alert_type: "Lateral movement between network segments"
+    raw_ids_output:
+      alert_name: "IDS-1933: Cross-VLAN SMB Connection"
+      source_ip: "10.2.3.15 (ADMIN-VLAN)"
+      dest_ip: "10.4.8.22 (MEDICAL-DEVICE-VLAN)"
+      protocol: "SMB (port 445)"
+      timestamp: "2026-04-11T14:22:11Z"
+      severity_score: "7.0/10"
+    xai_output:
+      layer_1_why_anomalous: >
+        Admin-VLAN workstation initiated SMB to medical device
+        subnet. Policy permits this for 2 authorized biomed
+        workstations — source 10.2.3.15 is NOT one of them.
+        Confidence: HIGH — unauthorized cross-segment SMB is a
+        lateral movement indicator.
+      layer_2_clinical_severity:
+        affected_system: "Medical device management subnet — patient monitor gateways and PACS interface servers"
+        patient_care_impact: "Attacker reaching monitors could disrupt or falsify vital signs. PACS disruption affects radiology reads."
+        phi_exposure: "Patient vitals, radiology images, device configuration files."
+        severity_label: "HIGH"
+        severity_rationale: "Active boundary crossing into clinical infrastructure from unauthorized host."
+      layer_3_recommended_action:
+        immediate: "Block source 10.2.3.15 at inter-VLAN firewall. Isolate source workstation from all segments."
+        clinical_constraint: "DO NOT block entire ADMIN-to-DEVICE path — authorized biomed workstations (10.2.3.40, .41) need continued access."
+        escalate_to: "(1) Security lead (potential active intrusion), (2) Clinical Engineering, (3) Network Admin."
+        timeframe: "Act within 15 minutes. Trigger IR playbook 3.1."
+    generalist_decision_enabled: >
+      Without MVE: might assume IT maintenance and deprioritize, or
+      block entire VLAN path cutting off authorized biomed access.
+      With MVE: isolates only unauthorized source, preserves biomed.
+
+  # ----- EXAMPLE 4: Data exfiltration indicator -----
+  - alert_type: "Data exfiltration indicator from clinical system"
+    raw_ids_output:
+      alert_name: "DLP-0712: Large Outbound Transfer"
+      source_ip: "10.1.5.3 (PACS-ARCHIVE-01)"
+      dest_ip: "198.51.100.77"
+      protocol: "HTTPS (port 443)"
+      timestamp: "2026-04-11T04:05:00Z"
+      severity_score: "5.5/10"
+    xai_output:
+      layer_1_why_anomalous: >
+        PACS archive transferred 2.3 GB outbound at 04:05 AM.
+        Baseline: outbound only to 3 approved radiology partners.
+        Destination 198.51.100.77 is not approved. Confidence:
+        MEDIUM — PACS does large transfers legitimately, but this
+        destination is unrecognized.
+      layer_2_clinical_severity:
+        affected_system: "PACS archive — all diagnostic imaging (X-ray, CT, MRI)"
+        patient_care_impact: "No immediate care disruption. Risk: bulk exfiltration of imaging with embedded PHI in DICOM headers."
+        phi_exposure: "Potentially thousands of imaging studies with patient name, DOB, MRN in DICOM metadata."
+        severity_label: "HIGH"
+        severity_rationale: "Bulk PHI exfiltration via imaging. DICOM identifiers cannot be redacted after transfer."
+      layer_3_recommended_action:
+        immediate: "Block PACS-ARCHIVE-01 outbound to 198.51.100.77. Verify with radiology IT if a new image-sharing agreement was configured."
+        clinical_constraint: "DO NOT block all PACS outbound — active radiology reads depend on image delivery to approved partners."
+        escalate_to: "(1) Security lead, (2) Radiology IT admin, (3) Privacy Officer."
+        timeframe: "Act within 30 minutes. Capture NetFlow for PACS from past 24 hours."
+    generalist_decision_enabled: >
+      Without MVE: sees '2.3 GB outbound, 5.5' — likely deprioritizes
+      because PACS transfers are routine. With MVE: sees destination
+      is UNRECOGNIZED, understands DICOM contains embedded PHI, blocks
+      only suspicious destination while preserving imaging workflows.
+
+  # ----- EXAMPLE 5: IoMT behavioral deviation -----
+  - alert_type: "IoMT device behavioral deviation"
+    raw_ids_output:
+      alert_name: "IOT-3301: Behavioral Anomaly — Medical Device"
+      source_ip: "10.4.20.6 (patient monitor, MedSurg)"
+      dest_ip: "10.1.1.50 (EHR) + 172.16.0.3 (UNKNOWN)"
+      protocol: "HL7 (port 443) + DNS (port 53, high volume)"
+      timestamp: "2026-04-11T09:30:00Z"
+      severity_score: "4.0/10"
+    xai_output:
+      layer_1_why_anomalous: >
+        Patient monitor (GE CARESCAPE, MedSurg 2nd floor) normally
+        sends vitals via HL7 every 30s. Starting 09:30, it began
+        300+ DNS queries/min — 20x normal volume. Confidence:
+        MEDIUM — could indicate malware beacon or firmware update
+        check loop.
+      layer_2_clinical_severity:
+        affected_system: "Patient monitoring (MedSurg 2nd floor) — vital signs for 24 beds"
+        patient_care_impact: "Monitor sending vitals normally. If compromised, false vitals possible. If isolated, 24 beds lose automated monitoring."
+        phi_exposure: "Real-time vitals (HR, SpO2, BP) with patient identifiers for MedSurg census."
+        severity_label: "MEDIUM"
+        severity_rationale: "Monitor functioning normally. DNS anomaly warrants investigation before escalation."
+      layer_3_recommended_action:
+        immediate: "Check with biomed engineering if firmware update was scheduled for GE CARESCAPE today. If NO: rate-limit DNS to 10 queries/min."
+        clinical_constraint: "DO NOT isolate monitor from EHR gateway — vital sign reporting to nursing station must continue."
+        escalate_to: "(1) Biomed Engineering, (2) Security lead if no update confirmed."
+        timeframe: "Verify with biomed within 1 hour. If unconfirmed: escalate to HIGH."
+    generalist_decision_enabled: >
+      Without MVE: sees 'anomaly 4.0' on medical device — ignores
+      (under-reaction) or isolates monitor serving 24 patients
+      (over-reaction). With MVE: makes one phone call to biomed,
+      applies DNS rate-limiting preserving clinical function, has
+      clear escalation trigger if activity is unscheduled.
+
+
+# ================================================================
+# VIỆC 4: MVE QUALITY CRITERIA
+# ================================================================
+
+mve_quality_criteria:
+
+  completeness:
+    description: "Does the MVE contain all 3 layers with all required elements?"
+    pass_condition: "All required_elements present: baseline + deviation + confidence (L1), affected_system + patient_impact + phi_exposure + severity_label (L2), immediate_action + clinical_constraint + escalation_path + timeframe (L3)."
+    fail_condition: "Any required_element missing or placeholder-only."
+
+  clinical_relevance:
+    description: "Does Layer 2 translate technical findings into patient-care impact?"
+    pass_condition: "Names clinical system function, states patient count or care consequence, identifies PHI data types at risk."
+    fail_condition: "Uses only technical severity (CVSS, anomaly %) without mentioning patients or clinical function."
+
+  actionability:
+    description: "Can the IT generalist follow Layer 3 without asking what to do?"
+    pass_condition: "Immediate action specifies exact technical step (policy name, rule) AND what clinical function it preserves."
+    fail_condition: "Vague: 'investigate further,' 'consider isolating,' 'contact appropriate personnel.'"
+
+  clinical_constraint_awareness:
+    description: "Does Layer 3 warn against care-disrupting actions?"
+    pass_condition: "Contains 'DO NOT [action] during/while [condition]' naming clinical consequence."
+    fail_condition: "No clinical constraint mention, or generic 'be careful.'"
+
+  audience_appropriateness:
+    description: "Would an IT generalist with 2-4 years experience understand every term?"
+    pass_condition: "All terms are common IT vocabulary or explained in context. Clinical terms used as encountered daily in hospital IT."
+    fail_condition: "Unexplained jargon: SHAP, entropy, Markov, C2 beaconing (undefined), MITRE IDs without description."
+
+  length_constraint:
+    description: "Can entire MVE be read in 30 seconds?"
+    pass_condition: "Total across 3 layers is 150 words or fewer."
+    fail_condition: "Exceeds 150 words total or 60 words per layer."
+
+
+# ================================================================
+# DESIGN IMPLICATIONS FOR RESEARCH
+# ================================================================
+
+design_implications:
+
+  what_model_must_learn:
+    - "Per-device behavioral baselines from network traffic"
+    - "Clinical system inventory mapping: IP → device → clinical function → patient scope"
+    - "Approved communication partner lists per device/system"
+    - "User role-context for access pattern assessment"
+    - "Known maintenance windows and vendor schedules (false-positive suppression)"
+
+  what_model_must_produce:
+    - "Natural-language baseline deviation narrative (Layer 1)"
+    - "Clinical severity classification via 4-level schema with response timeframes (Layer 2)"
+    - "Specific executable response actions with clinical constraints (Layer 3)"
+
+  what_model_does_NOT_do:
+    - "Device discovery/inventory (solved: Claroty/Armis/Medigate)"
+    - "Raw anomaly detection (solved: existing IDS/SIEM)"
+    - "Automated enforcement/blocking (human-in-loop required for clinical systems)"
+    - "Forensic analysis (Tier-2/IR team responsibility)"
+
+  evaluation_approach: >
+    Present alert scenarios (with/without MVE) to IT generalists at
+    target hospitals. Measure: (1) triage decision accuracy, (2) time
+    to decision, (3) confidence level, (4) rate of unnecessary clinical
+    disruption from over-reaction. This is the validation study design.

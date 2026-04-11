@@ -2,12 +2,33 @@
 """Run DAE (Denoising Autoencoder) fine-tuning pipeline.
 
 Track B novelty detector: trains on benign-only data, sweeps architecture
-and threshold hyperparameters, evaluates anomaly detection on the mixed
-test set, and persists all artifacts.
+and threshold hyperparameters, and persists all artifacts.
 
-Usage:
-    python src/phase2_5_fine_tuning/run_dae.py
-    python src/phase2_5_fine_tuning/run_dae.py --epochs 200 --threshold-pct 97
+HP selection protocol (research-integrity hardened, finding #1)
+---------------------------------------------------------------
+The previous version of this script picked the winning hyperparameter
+configuration by ``det.evaluate(X_test, y_test)`` *inside the grid loop*
+— meaning the held-out test set was used as the model-selection signal
+for 81 candidate configurations, then re-used to "evaluate" the chosen
+model. Every reported test metric was inflated by the optimisation
+gain on the very labels it was meant to be benchmarked against.
+
+The new protocol:
+
+  1. The benign training set is split into ``X_benign_fit`` (80%) and
+     ``X_benign_val`` (20%) with a deterministic seed.
+  2. A held-out **attack** validation slice is sliced from
+     ``X_train`` (NOT the test set) using ``y_train==1``. This gives
+     the grid loop a real positive-class signal so it can pick a
+     configuration that actually separates attacks from benigns.
+  3. For each candidate config, the DAE is fit on ``X_benign_fit``
+     and scored on ``X_val = vstack(X_benign_val, X_attack_val)`` with
+     the corresponding ``y_val``. The selection metric is attack-F2 on
+     this *validation* slice.
+  4. The winner is then re-fit on the **full** benign training set
+     (no inner split) and evaluated **once** on the untouched test set.
+
+The test set is touched exactly once in step 4. The leak is closed.
 """
 
 from __future__ import annotations
@@ -20,17 +41,16 @@ import sys
 import time
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
-from src.phase2_detection_engine.DAE import DAEDetector
+from pipeline.module2_detection.models.DAE import DAEDetector
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 # ── Hyperparameter grid for DAE ──────────────────────────────────────────
 # All architectures enforce bottleneck < n_features (25) for compression.
@@ -54,7 +74,11 @@ def load_data(
     test_path: Path,
     label_col: str = "Label",
 ) -> tuple:
-    """Load train/test parquet, extract benign-only train subset."""
+    """Load train/test parquets and extract the benign-only train subset.
+
+    Returns:
+        (X_benign, X_train, X_test, y_train, y_test, feat_names)
+    """
     train_df = pd.read_parquet(train_path)
     test_df = pd.read_parquet(test_path)
 
@@ -68,7 +92,6 @@ def load_data(
 
     feat_names = [c for c in train_df.columns if c not in drop_cols]
 
-    # Benign-only subset for autoencoder training
     benign_mask = y_train == 0
     X_benign = X_train[benign_mask]
 
@@ -80,32 +103,100 @@ def load_data(
     return X_benign, X_train, X_test, y_train, y_test, feat_names
 
 
+def make_validation_split(
+    X_benign: np.ndarray,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    *,
+    benign_val_frac: float = 0.20,
+    random_state: int = 42,
+) -> tuple:
+    """Construct a train-only validation slice for HP selection.
+
+    Splits ``X_benign`` into a fit portion and a benign-validation
+    portion, then pulls all attacks out of ``X_train`` to form the
+    attack-validation portion. The combined ``(X_val, y_val)`` is the
+    signal the grid search optimises against — it is computed entirely
+    from the training partition, so the test set is never seen during
+    HP selection.
+
+    Returns:
+        (X_benign_fit, X_val, y_val) where:
+          - ``X_benign_fit`` is what the DAE trains on per candidate
+          - ``X_val`` is the mixed validation matrix
+          - ``y_val`` is the corresponding {0,1} labels
+    """
+    rng = np.random.default_rng(random_state)
+    n_benign = len(X_benign)
+    n_val = int(round(n_benign * benign_val_frac))
+    if n_val < 1:
+        raise ValueError(
+            f"Need at least 1 benign validation sample; "
+            f"got benign_val_frac={benign_val_frac} on {n_benign} samples."
+        )
+    perm = rng.permutation(n_benign)
+    val_idx = perm[:n_val]
+    fit_idx = perm[n_val:]
+
+    X_benign_fit = X_benign[fit_idx]
+    X_benign_val = X_benign[val_idx]
+    X_attack_val = X_train[y_train == 1]
+    if len(X_attack_val) < 1:
+        raise ValueError(
+            "No attack samples in the training partition — DAE HP "
+            "selection requires a positive class signal in validation."
+        )
+
+    X_val = np.vstack([X_benign_val, X_attack_val]).astype(np.float32)
+    y_val = np.concatenate([
+        np.zeros(len(X_benign_val), dtype=np.int32),
+        np.ones(len(X_attack_val),  dtype=np.int32),
+    ])
+
+    logger.info(
+        "Validation split (TRAIN-ONLY): benign_fit=%d, "
+        "benign_val=%d, attack_val=%d",
+        len(X_benign_fit), len(X_benign_val), len(X_attack_val),
+    )
+    return X_benign_fit, X_val, y_val
+
+
 # ── HP search ────────────────────────────────────────────────────────────
 
 def grid_search(
-    X_benign: np.ndarray,
-    X_test: np.ndarray,
-    y_test: np.ndarray,
+    X_benign_fit: np.ndarray,
+    X_val: np.ndarray,
+    y_val: np.ndarray,
     epochs: int,
     batch_size: int,
     random_state: int,
 ) -> tuple:
     """Exhaustive grid search over DAE hyperparameters.
 
-    Selects the configuration that maximises attack-class F2 on the test set.
+    Selects the configuration that maximises attack-class F2 on the
+    **train-only validation slice** (not the held-out test set). Each
+    candidate is fitted on ``X_benign_fit`` and scored on ``X_val``,
+    which is constructed from a slice of the training partition. The
+    test set is NOT touched here — see finding #1 in the Phase 2
+    security review.
+
+    The function returns the best HP dict, the per-candidate val
+    metrics, and the *unfitted* best HP for the caller to use as the
+    seed of a final fit on the full benign training set.
     """
     keys = list(HP_GRID.keys())
     combos = list(itertools.product(*HP_GRID.values()))
-    logger.info("DAE grid search: %d configurations", len(combos))
+    logger.info(
+        "DAE grid search: %d configurations (selection on train-only val slice)",
+        len(combos),
+    )
 
     best_f2 = -1.0
-    best_det = None
     best_hp: dict = {}
     all_results = []
 
     for i, vals in enumerate(combos, 1):
         hp = dict(zip(keys, vals))
-
         det = DAEDetector(
             encoding_dims=hp["encoding_dims"],
             noise_rate=hp["noise_rate"],
@@ -115,27 +206,62 @@ def grid_search(
             batch_size=batch_size,
             random_state=random_state,
         )
-        det.fit(X_benign)
-        metrics = det.evaluate(X_test, y_test)
+        det.fit(X_benign_fit, validation_split=0.0)
 
-        result = {**hp, **metrics}
+        # Score on the validation slice — NEVER on the test set.
+        val_metrics = det.evaluate(X_val, y_val)
+
+        result = {**hp}
+        for k, v in val_metrics.items():
+            result[f"val_{k}"] = v
         all_results.append(result)
 
-        f2 = metrics["attack_f2"]
+        f2 = val_metrics["attack_f2"]
         logger.info(
-            "  [%d/%d] dims=%s noise=%.2f lr=%.4f pct=%.0f → F2=%.4f AUC=%.4f",
+            "  [%d/%d] dims=%s noise=%.2f lr=%.4f pct=%.0f → val_F2=%.4f val_AUC=%.4f",
             i, len(combos),
             hp["encoding_dims"], hp["noise_rate"],
             hp["learning_rate"], hp["threshold_percentile"],
-            f2, metrics["auc_roc"],
+            f2, val_metrics["auc_roc"],
         )
 
         if f2 > best_f2:
             best_f2 = f2
-            best_det = det
             best_hp = hp
 
-    return best_det, best_hp, all_results
+    logger.info(
+        "Best HP by val attack_f2 (=%.4f): %s",
+        best_f2, best_hp,
+    )
+    return best_hp, all_results
+
+
+def fit_final_dae(
+    best_hp: dict,
+    X_benign: np.ndarray,
+    epochs: int,
+    batch_size: int,
+    random_state: int,
+) -> DAEDetector:
+    """Re-fit the winning HP configuration on the FULL benign training set.
+
+    The grid loop fitted on a 80% slice so a 20% benign-val slice was
+    available for HP selection. The final model is trained on the full
+    benign set so it sees every available training sample, exactly as
+    the production-final model would. This is then evaluated **once**
+    against the held-out test set in the caller.
+    """
+    det = DAEDetector(
+        encoding_dims=best_hp["encoding_dims"],
+        noise_rate=best_hp["noise_rate"],
+        learning_rate=best_hp["learning_rate"],
+        threshold_percentile=best_hp["threshold_percentile"],
+        epochs=epochs,
+        batch_size=batch_size,
+        random_state=random_state,
+    )
+    det.fit(X_benign, validation_split=0.0)
+    return det
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
@@ -180,21 +306,38 @@ def main() -> None:
         train_path, test_path,
     )
 
-    # ── Grid search ──
-    logger.info("")
-    logger.info("── DAE Grid Search (epochs=%d, batch=%d) ──",
-                args.epochs, args.batch_size)
+    # ── Train-only validation slice (closes finding #1 leakage) ──
+    X_benign_fit, X_val, y_val = make_validation_split(
+        X_benign, X_train, y_train,
+        random_state=args.random_state,
+    )
 
-    best_det, best_hp, all_results = grid_search(
-        X_benign, X_test, y_test,
+    # ── Grid search on the validation slice ──
+    logger.info("")
+    logger.info(
+        "── DAE Grid Search (epochs=%d, batch=%d, selection=val_attack_f2) ──",
+        args.epochs, args.batch_size,
+    )
+    best_hp, all_results = grid_search(
+        X_benign_fit, X_val, y_val,
         epochs=args.epochs,
         batch_size=args.batch_size,
         random_state=args.random_state,
     )
 
-    # ── Final evaluation with best model ──
+    # ── Re-fit the winner on the FULL benign training set ──
     logger.info("")
-    logger.info("── Best Configuration ──")
+    logger.info("── Re-fitting best HP on full benign training set ──")
+    best_det = fit_final_dae(
+        best_hp, X_benign,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        random_state=args.random_state,
+    )
+
+    # ── Single, final test-set evaluation (touched once) ──
+    logger.info("")
+    logger.info("── Held-out Test Set Evaluation (single touch) ──")
     test_metrics = best_det.evaluate(X_test, y_test)
 
     # ── Save artifacts ──

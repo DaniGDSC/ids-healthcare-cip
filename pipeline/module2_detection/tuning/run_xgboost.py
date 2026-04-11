@@ -25,18 +25,19 @@ import sys
 import time
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 
-# Direct execution fix: add project root to sys.path for src imports
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+# Direct execution fix: add project root to sys.path so the absolute
+# import below resolves when this script is invoked directly.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
-from src.phase2_detection_engine.XGBoost import XGBoostDetector
+from pipeline.common import dumps_signed
+from pipeline.module2_detection.models.XGBoost import XGBoostDetector
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 # ── Data loading ─────────────────────────────────────────────────────────
@@ -149,10 +150,15 @@ def main() -> None:
     output_dir = PROJECT_ROOT / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Best pipeline (SMOTE + classifier)
+    # 1. Best classifier — bare estimator, NOT the SMOTE wrapper.
+    # SMOTE is training-only and bloats the deserialiser surface
+    # (finding #15). The persisted artefact is signed via the Module 5
+    # ECDSA key so downstream consumers refuse to deserialise tampered
+    # files (finding #3a).
     pipeline_path = output_dir / "best_pipeline.pkl"
-    joblib.dump(detector.pipeline, pipeline_path)
-    logger.info("Saved pipeline: %s", pipeline_path)
+    classifier_only = detector.pipeline.named_steps["classifier"]
+    dumps_signed(classifier_only, pipeline_path)
+    logger.info("Saved signed classifier: %s", pipeline_path)
 
     # 2. Full report
     report = detector.get_report()

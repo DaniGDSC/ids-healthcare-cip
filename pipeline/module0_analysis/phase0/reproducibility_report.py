@@ -170,12 +170,19 @@ def _section_dataset_versioning(
     w("| Dataset | WUSTL-EHMS-2020 |")
     w(f"| SHA-256 | `{dataset_hash[:32]}...` |")
     w(f"| Source | [{dataset_url}]({dataset_url}) |")
-    w("| Integrity | Verified via `IntegrityVerifier` on every pipeline run |")
+    w("| Integrity | Verified via `IntegrityVerifier` on every load; "
+      "baseline is ECDSA P-256 signed |")
     w("")
-    w("The SHA-256 hash is computed on first load and automatically verified "
-      "on all subsequent loads. Any modification to the raw dataset triggers "
-      "an `IntegrityError`, preventing silent data corruption from affecting "
-      "experimental results.")
+    w("The signed SHA-256 baseline is established once via "
+      "`python -m pipeline.module0_analysis.phase0.bootstrap_integrity` "
+      "and stored in `pipeline/module0_analysis/phase0/dataset_integrity.json`. "
+      "Every subsequent `DataLoader.load()` call reads the dataset bytes "
+      "into memory, recomputes the hash, verifies the ECDSA P-256 signature "
+      "on the baseline (using the Module 5 audit-signing key), and only "
+      "then parses the in-memory buffer with pandas. Any modification to "
+      "the raw dataset, the baseline file, or the signature triggers an "
+      "`IntegrityError`, preventing silent data corruption — or a tamper-"
+      "then-rebaseline attack — from affecting experimental results.")
     w("")
 
 

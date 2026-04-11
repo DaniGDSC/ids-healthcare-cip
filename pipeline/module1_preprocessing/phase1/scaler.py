@@ -1,17 +1,34 @@
-"""Robust scaler transformer — fit on train only.
+"""Robust scaler transformer — fit on train only, persisted as a JSON sidecar.
 
-Wraps ``sklearn.preprocessing.RobustScaler`` directly.  Uses median
-and IQR, making it robust to the heavy-tailed distributions
-identified in the Phase 0 outlier analysis (§3.2.1).
+Wraps ``sklearn.preprocessing.RobustScaler`` directly. Uses median and
+IQR, making it robust to the heavy-tailed distributions identified in
+the Phase 0 outlier analysis (§3.2.1).
+
+Persistence model
+-----------------
+The fitted scaler is written to disk as a **JSON sidecar** containing
+only the learned parameters (``center_``, ``scale_``, ``n_features_in_``,
+plus the scaler ``method`` used). It is NOT written as a joblib pickle.
+
+Why: ``joblib.load`` (and any ``pickle.load`` underneath) executes
+arbitrary Python embedded in the byte stream at deserialisation time,
+making any trust boundary that crosses the file a remote-code-execution
+sink. Phase 1's scaler artefact is consumed only as inspection /
+audit material — production inference loads the sklearn Pipelines that
+embed the scaler internally — so there is no need to ship a pickle.
+The JSON sidecar carries exactly the information needed to reconstruct
+the scaler via ``RobustScalerTransformer.from_json`` and refuses to
+execute anything during load.
 """
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
-import joblib
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 
@@ -24,6 +41,19 @@ _SCALERS = {
     "standard": StandardScaler,
     "minmax": MinMaxScaler,
 }
+
+# Per-scaler-type list of fitted attribute names that fully determine
+# the transform. Anything outside this allowlist is NOT serialised, so
+# a future sklearn version that adds an executable attribute cannot
+# silently smuggle data through the JSON sidecar.
+_SCALER_PARAMS: Dict[str, Tuple[str, ...]] = {
+    "robust":   ("center_", "scale_", "n_features_in_"),
+    "standard": ("mean_",   "scale_", "var_", "n_features_in_"),
+    "minmax":   ("min_",    "scale_", "data_min_", "data_max_",
+                 "data_range_", "n_features_in_"),
+}
+
+_SIDECAR_FORMAT_VERSION = 1
 
 
 class RobustScalerTransformer(BaseTransformer):
@@ -108,14 +138,141 @@ class RobustScalerTransformer(BaseTransformer):
         return X_train_s, X_test_s
 
     def save(self, path: Path) -> None:
-        """Persist the fitted scaler to disk.
+        """Persist the fitted scaler as a JSON sidecar (NOT a pickle).
+
+        The output file contains only the learned numeric parameters
+        (``center_``/``scale_``/``n_features_in_`` for RobustScaler,
+        with the matching set for the other scaler types). Loading is
+        a pure ``json.loads`` + ``np.asarray`` round-trip; no Python
+        code is ever executed during deserialisation.
+
+        If the destination path was historically ``robust_scaler.pkl``,
+        the actual file is written next to it as ``robust_scaler.json``
+        and any pre-existing ``robust_scaler.pkl`` is removed so a
+        downstream consumer cannot silently load a stale pickle.
 
         Args:
-            path: Destination pickle file.
+            path: Destination path. ``.pkl`` is rewritten to ``.json``.
         """
+        if not self._fitted:
+            raise RuntimeError("Scaler not fitted. Call fit(X_train) first.")
+
+        path = Path(path)
+        # Migrate any caller still passing the legacy ``.pkl`` name.
+        if path.suffix == ".pkl":
+            legacy_pickle = path
+            path = path.with_suffix(".json")
+            if legacy_pickle.exists():
+                try:
+                    legacy_pickle.unlink()
+                    logger.warning(
+                        "Removed legacy pickle scaler at %s; the JSON "
+                        "sidecar at %s is now the canonical artefact.",
+                        legacy_pickle, path,
+                    )
+                except OSError as exc:
+                    logger.warning(
+                        "Could not remove legacy pickle %s: %s "
+                        "(downstream consumers must be updated to load "
+                        "the JSON sidecar)",
+                        legacy_pickle, exc,
+                    )
+
+        attrs = _SCALER_PARAMS.get(self._method)
+        if attrs is None:
+            raise ValueError(
+                f"Refusing to serialise unknown scaler method '{self._method}'"
+            )
+
+        params: Dict[str, Any] = {}
+        for attr in attrs:
+            if not hasattr(self._scaler, attr):
+                raise RuntimeError(
+                    f"Scaler {type(self._scaler).__name__} has no fitted "
+                    f"attribute '{attr}' — cannot serialise."
+                )
+            value = getattr(self._scaler, attr)
+            if isinstance(value, np.ndarray):
+                params[attr] = value.tolist()
+            elif isinstance(value, (np.integer, np.floating)):
+                params[attr] = value.item()
+            else:
+                params[attr] = value
+
+        body = {
+            "format":         "phase1.scaler.v1",
+            "format_version": _SIDECAR_FORMAT_VERSION,
+            "method":         self._method,
+            "params":         params,
+        }
+
         path.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(self._scaler, path)
-        logger.info("Scaler saved: %s", path)
+        # Atomic write: a crash mid-write must not leave a half-written
+        # JSON that the loader would parse as a malformed scaler.
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(body, indent=2))
+        os.replace(tmp, path)
+        logger.info("Scaler sidecar saved: %s (method=%s)", path, self._method)
+
+    @classmethod
+    def from_json(cls, path: Path) -> "RobustScalerTransformer":
+        """Reconstruct a fitted scaler from a JSON sidecar.
+
+        This is the only supported load path. There is no
+        ``RobustScalerTransformer.from_pickle`` and never will be — a
+        pickle loader is the same RCE sink the JSON sidecar exists to
+        avoid.
+
+        Args:
+            path: Path to a sidecar previously written by ``save()``.
+
+        Returns:
+            A fitted ``RobustScalerTransformer`` whose internal sklearn
+            scaler has the same ``transform`` behaviour as the original.
+
+        Raises:
+            FileNotFoundError: if *path* does not exist.
+            ValueError: if the file is not a recognised sidecar.
+        """
+        path = Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f"Scaler sidecar not found: {path}")
+
+        body = json.loads(path.read_text())
+        if body.get("format") != "phase1.scaler.v1":
+            raise ValueError(
+                f"{path} is not a phase1.scaler.v1 sidecar "
+                f"(got format={body.get('format')!r})"
+            )
+        method = body.get("method")
+        if method not in _SCALERS:
+            raise ValueError(f"Unknown scaler method '{method}' in {path}")
+
+        attrs = _SCALER_PARAMS[method]
+        params = body.get("params", {})
+
+        instance = cls(method=method)
+        # Materialise a fresh, fitted sklearn scaler by setting the
+        # learned attributes directly. Each attribute is checked against
+        # the per-method allowlist; everything else is rejected.
+        scaler = _SCALERS[method]()
+        for attr in attrs:
+            if attr not in params:
+                raise ValueError(
+                    f"{path}: missing required parameter '{attr}' for "
+                    f"method '{method}'"
+                )
+            value = params[attr]
+            if isinstance(value, list):
+                value = np.asarray(value, dtype=np.float64)
+            setattr(scaler, attr, value)
+        instance._scaler = scaler
+        instance._fitted = True
+        logger.info(
+            "Scaler sidecar loaded: %s (method=%s, n_features=%s)",
+            path, method, params.get("n_features_in_"),
+        )
+        return instance
 
     @property
     def is_fitted(self) -> bool:

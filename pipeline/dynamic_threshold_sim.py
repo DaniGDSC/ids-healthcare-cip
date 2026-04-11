@@ -85,7 +85,9 @@ def load_stream_data() -> dict:
     risk_npz = dict(np.load(
         OUTPUT_DIR / "risk_scores.npz", allow_pickle=True,
     ))
-    detector = joblib.load(
+    # Signed-pickle load (Phase 2 finding #3a).
+    from pipeline.common import loads_signed
+    detector = loads_signed(
         PROJECT_ROOT / "results" / "models" / "dae_detector.pkl",
     )
 
