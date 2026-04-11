@@ -1,0 +1,100 @@
+# device_inventory.yaml
+# Reference device inventory for XAI-IDS-Healthcare prototype
+# Derived from WUSTL-EHMS-2020 device types extended to full hospital context
+# Full device details are embedded in sample_alerts.yaml per alert.
+# This file serves as the canonical device registry consumed by the system.
+
+devices:
+  # Life-sustaining (CRITICAL)
+  - device_type: "BD Alaris infusion pump"
+    criticality: CRITICAL
+    patchable: false
+    subnets: ["10.4.12.0/24", "10.4.20.0/24", "10.4.26.0/24"]
+    clinical_function_template: "active drug delivery to N patients"
+
+  - device_type: "Dräger Evita ventilator"
+    criticality: CRITICAL
+    patchable: false
+    subnets: ["10.4.11.0/24"]
+    clinical_function_template: "mechanical ventilation for N ICU patients"
+
+  - device_type: "ICU patient monitor gateway"
+    criticality: CRITICAL
+    patchable: false
+    subnets: ["10.4.8.0/24"]
+    clinical_function_template: "monitor gateway for ICU life-critical devices"
+
+  - device_type: "PACS archive server"
+    criticality: CRITICAL
+    patchable: false
+    subnets: ["10.1.5.0/24"]
+    clinical_function_template: "radiology image archive — all diagnostic imaging"
+
+  # Active clinical care (HIGH)
+  - device_type: "GE CARESCAPE B650 patient monitor"
+    criticality: HIGH
+    patchable: false
+    subnets: ["10.4.20.0/24", "10.4.21.0/24"]
+    clinical_function_template: "vital signs monitoring for N patients"
+
+  - device_type: "Philips IntelliVue patient monitor"
+    criticality: HIGH
+    patchable: true
+    subnets: ["10.4.21.0/24"]
+    clinical_function_template: "vital signs for N MedSurg patients"
+
+  - device_type: "Epic EHR server"
+    criticality: HIGH
+    patchable: true
+    subnets: ["10.1.1.0/24"]
+    clinical_function_template: "electronic health records for all inpatients"
+
+  - device_type: "pharmacy management system"
+    criticality: HIGH
+    patchable: true
+    subnets: ["10.1.6.0/24"]
+    clinical_function_template: "medication dispensing and prescription management"
+
+  - device_type: "GE CARESCAPE patient monitor"
+    criticality: HIGH
+    patchable: false
+    subnets: ["10.4.21.0/24"]
+    clinical_function_template: "vital signs monitoring for N patients"
+
+  # Clinical-support (MEDIUM)
+  - device_type: "blood pressure monitoring hub"
+    criticality: MEDIUM
+    patchable: true
+    subnets: ["10.3.5.0/24", "10.4.23.0/24"]
+    clinical_function_template: "continuous BP monitoring for N patients"
+
+  - device_type: "temperature monitoring sensor array"
+    criticality: MEDIUM
+    patchable: true
+    subnets: ["10.3.6.0/24", "10.4.25.0/24"]
+    clinical_function_template: "environmental temperature monitoring"
+
+  - device_type: "ECG monitoring system"
+    criticality: MEDIUM
+    patchable: true
+    subnets: ["10.4.22.0/24"]
+    clinical_function_template: "continuous cardiac monitoring for N patients"
+
+  - device_type: "pulse oximeter gateway"
+    criticality: MEDIUM
+    patchable: true
+    subnets: ["10.4.24.0/24"]
+    clinical_function_template: "SpO2 monitoring for N patients"
+
+  # Administrative (LOW)
+  - device_type: "IT admin workstation"
+    criticality: LOW
+    patchable: true
+    subnets: ["10.2.1.0/24"]
+    clinical_function_template: "IT administrative operations"
+
+  - device_type: "guest Wi-Fi access point"
+    criticality: LOW
+    patchable: true
+    subnets: ["192.168.100.0/24"]
+    clinical_function_template: "guest internet access"

@@ -28,6 +28,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
+
 # When invoked via `streamlit run pipeline/module6_evaluation/module6_app.py`
 # the project root is NOT on sys.path (streamlit treats the file as a
 # script, not a package). Prepend it so the absolute import below works.
@@ -44,7 +45,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 EVAL_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 MODELS_DIR = PROJECT_ROOT / "results/models"
-
 # Singleton hardened logger for reviewer-attributed events. The existing
 # AuditTrailWriter (audit_trail.jsonl) is kept for backward compatibility
 # with offline study mode; reviewer-attributed alert decisions ALSO get
@@ -62,6 +62,7 @@ from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa:
 # ═══════════════════════════════════════════════════════════════════════
 # 6A.7  Audit Trail Writer (JSONL, immutable with integrity hashes)
 # ═══════════════════════════════════════════════════════════════════════
+
 
 class AuditTrailWriter:
     """Append-only JSONL audit log for every user interaction."""
@@ -97,6 +98,7 @@ def audit_log(event_type: str, **kwargs) -> None:
 # 6A.5  Reusable Likert questionnaire component
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def likert_form(alert_id: str, form_key: str) -> dict | None:
     """Reusable 5-point Likert × 4 dimensions + action + free-text.
 
@@ -104,24 +106,27 @@ def likert_form(alert_id: str, form_key: str) -> dict | None:
     """
     with st.form(form_key):
         st.markdown("#### Your Response")
-        action = st.selectbox("What action would you take?", ACTIONS,
-                              format_func=lambda x: x.capitalize())
+        action = st.selectbox(
+            "What action would you take?", ACTIONS, format_func=lambda x: x.capitalize()
+        )
         confidence = st.slider("Confidence in your decision (1–5)", 1, 5, 3)
 
         st.markdown("#### Rate the alert presentation (1 = strongly disagree, 5 = strongly agree)")
-        trust = st.slider("I trust this classification", 1, 5, 3,
-                           key=f"lt_{form_key}")
-        usefulness = st.slider("The information helps me respond appropriately", 1, 5, 3,
-                                key=f"lu_{form_key}")
-        comprehensibility = st.slider("I understand why this alert was triggered", 1, 5, 3,
-                                       key=f"lc_{form_key}")
-        actionability = st.slider("I know what action to take", 1, 5, 3,
-                                   key=f"la_{form_key}")
+        trust = st.slider("I trust this classification", 1, 5, 3, key=f"lt_{form_key}")
+        usefulness = st.slider(
+            "The information helps me respond appropriately", 1, 5, 3, key=f"lu_{form_key}"
+        )
+        comprehensibility = st.slider(
+            "I understand why this alert was triggered", 1, 5, 3, key=f"lc_{form_key}"
+        )
+        actionability = st.slider("I know what action to take", 1, 5, 3, key=f"la_{form_key}")
 
         feedback = st.text_area("Free-text feedback (optional)", key=f"fb_{form_key}")
-        reclass = st.selectbox("Reclassify tier?",
-                               ["No change", "CRITICAL", "HIGH", "MEDIUM", "LOW", "Benign/Dismiss"],
-                               key=f"rc_{form_key}")
+        reclass = st.selectbox(
+            "Reclassify tier?",
+            ["No change", "CRITICAL", "HIGH", "MEDIUM", "LOW", "Benign/Dismiss"],
+            key=f"rc_{form_key}",
+        )
 
         if st.form_submit_button("Submit & Next"):
             return {
@@ -141,6 +146,7 @@ def likert_form(alert_id: str, form_key: str) -> dict | None:
 # ═══════════════════════════════════════════════════════════════════════
 # 6B.3  A/B condition assignment (counterbalanced)
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def assign_ab_conditions(n_alerts: int, participant_id: str) -> list[bool]:
     """Counterbalanced A/B assignment: half with XAI, half without.
@@ -178,6 +184,7 @@ def assign_ab_conditions(n_alerts: int, participant_id: str) -> list[bool]:
 # 6C.1  Streaming data simulator
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def stream_simulator(responses: list, delay: float = 1.0):
     """Generator yielding test samples with configurable delay.
 
@@ -191,6 +198,7 @@ def stream_simulator(responses: list, delay: float = 1.0):
 # ═══════════════════════════════════════════════════════════════════════
 # 6C.9  Online interaction capture (JSONL)
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def capture_online_interaction(
     participant_id: str,
@@ -231,6 +239,7 @@ def capture_online_interaction(
 # 6A.3  process_alert() — end-to-end sample → structured alert object
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def process_alert(sample_index: int, alert_data: dict) -> dict:
     """Take a raw alert record and produce a fully structured alert object.
 
@@ -258,6 +267,7 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
 # 6A.4  Stakeholder view renderers
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def render_analyst(alert: dict):
     """Analyst view: SHAP plots + feature table + classification detail."""
     st.markdown("#### Security Analyst View")
@@ -279,12 +289,14 @@ def render_analyst(alert: dict):
         st.markdown("**Top SHAP Features:**")
         rows = []
         for f in feats[:5]:
-            rows.append({
-                "Feature": f["feature"],
-                "SHAP Value": f"{f.get('shap_value', 0):+.4f}",
-                "Direction": f.get("direction", ""),
-                "Type": "Biometric" if f["feature"] in BIOMETRIC_FEATURES else "Network",
-            })
+            rows.append(
+                {
+                    "Feature": f["feature"],
+                    "SHAP Value": f"{f.get('shap_value', 0):+.4f}",
+                    "Direction": f.get("direction", ""),
+                    "Type": "Biometric" if f["feature"] in BIOMETRIC_FEATURES else "Network",
+                }
+            )
         st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     # DAE indicators
@@ -308,8 +320,11 @@ def render_clinician(alert: dict):
         st.info("No clinician summary available for this alert.")
 
     # Highlight biometric features
-    bio_feats = [f["feature"] for f in alert.get("shap_top_features", [])
-                 if f["feature"] in BIOMETRIC_FEATURES]
+    bio_feats = [
+        f["feature"]
+        for f in alert.get("shap_top_features", [])
+        if f["feature"] in BIOMETRIC_FEATURES
+    ]
     if bio_feats:
         st.error(f"Patient safety note: Biometric features affected: {', '.join(bio_feats)}")
     else:
@@ -344,6 +359,7 @@ def render_admin(alert: dict):
 # ═══════════════════════════════════════════════════════════════════════
 # Data loading
 # ═══════════════════════════════════════════════════════════════════════
+
 
 @st.cache_data
 def load_alerts() -> list:
@@ -464,10 +480,7 @@ def load_live_stream_source() -> pd.DataFrame | None:
     # so timestamps stay stable when Streamlit reruns the script.
     base = datetime(2026, 4, 9, 8, 0, 0)
     df = df.reset_index(drop=True)
-    df["arrived_at"] = [
-        (base + pd.Timedelta(seconds=i)).isoformat()
-        for i in range(len(df))
-    ]
+    df["arrived_at"] = [(base + pd.Timedelta(seconds=i)).isoformat() for i in range(len(df))]
     df["sample_index"] = df.index
     return df
 
@@ -475,6 +488,7 @@ def load_live_stream_source() -> pd.DataFrame | None:
 # ═══════════════════════════════════════════════════════════════════════
 # 6C.11  Synthetic per-sample latency series
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def _draw_latency_sample(stage_stats: dict, rng: random.Random) -> float:
     """Draw a single latency sample for one stage, consistent with the
@@ -510,17 +524,10 @@ def push_latency_sample(profile: dict) -> dict | None:
     if not stages:
         return None
 
-    rng = st.session_state.setdefault(
-        "_latency_rng", random.Random(42)
-    )
-    history = st.session_state.setdefault(
-        "latency_history", deque(maxlen=120)
-    )
+    rng = st.session_state.setdefault("_latency_rng", random.Random(42))
+    history = st.session_state.setdefault("latency_history", deque(maxlen=120))
 
-    sample = {
-        stage: _draw_latency_sample(stats, rng)
-        for stage, stats in stages.items()
-    }
+    sample = {stage: _draw_latency_sample(stats, rng) for stage, stats in stages.items()}
     sample["arrival_idx"] = len(history)
     history.append(sample)
     return sample
@@ -530,16 +537,26 @@ def push_latency_sample(profile: dict) -> dict | None:
 # Session state
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def init_session():
     defaults = {
-        "participant_id": "", "participant_role": "", "current_alert": 0,
-        "responses": [], "alert_start_time": None,
-        "study_started": False, "study_complete": False,
+        "participant_id": "",
+        "participant_role": "",
+        "participant_years": 1,
+        "participant_ids_exp": "No",
+        "current_alert": 0,
+        "responses": [],
+        "alert_start_time": None,
+        "study_started": False,
+        "study_complete": False,
+        "study_alerts": [],
         "ab_conditions": [],
-        "app_mode": "dashboard", "sim_index": 0, "sim_running": True,
+        "app_mode": "dashboard",
+        "sim_index": 0,
+        "sim_running": True,
         "sim_history": [],
-        "sim_speed": 1.0,           # 0.5x / 1x / 2x / 4x
-        "sim_source": "alerts",     # "alerts" or "live_parquet"
+        "sim_speed": 1.0,  # 0.5x / 1x / 2x / 4x
+        "sim_source": "alerts",  # "alerts" or "live_parquet"
         "latency_history": deque(maxlen=120),
     }
     for k, v in defaults.items():
@@ -550,6 +567,7 @@ def init_session():
 # ═══════════════════════════════════════════════════════════════════════
 # 6C.12  FDA-style audit record export
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def build_fda_record_for_alert(
     sample_idx: int,
@@ -610,6 +628,7 @@ def build_fda_record_for_alert(
 # 6.3c  Dashboard Components
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def dashboard_mode():
     """Full dashboard with risk gauge, alert feed, SHAP, NLG, responses, heatmap."""
     st.title("IoMT IDS — Real-Time Dashboard")
@@ -669,8 +688,11 @@ def dashboard_mode():
     with col_gauge:
         st.markdown("#### Risk Score Gauge")
         # Show gauge for selected/latest alert
-        alert_idx = st.selectbox("Select alert", range(min(20, len(responses))),
-                                 format_func=lambda i: f"#{responses[i]['sample_index']} ({responses[i]['risk_level']})")
+        alert_idx = st.selectbox(
+            "Select alert",
+            range(min(20, len(responses))),
+            format_func=lambda i: f"#{responses[i]['sample_index']} ({responses[i]['risk_level']})",
+        )
         selected = responses[alert_idx]
         score = selected["risk_score"]
         level = selected["risk_level"]
@@ -690,13 +712,15 @@ def dashboard_mode():
         st.markdown("#### Alert Feed (latest 15)")
         feed_data = []
         for r in responses[:15]:
-            feed_data.append({
-                "Sample": r["sample_index"],
-                "Level": r["risk_level"],
-                "Score": round(r["risk_score"], 3),
-                "Category": r.get("attack_category", ""),
-                "Actions": "|".join(r.get("response", {}).get("actions", [])),
-            })
+            feed_data.append(
+                {
+                    "Sample": r["sample_index"],
+                    "Level": r["risk_level"],
+                    "Score": round(r["risk_score"], 3),
+                    "Category": r.get("attack_category", ""),
+                    "Actions": "|".join(r.get("response", {}).get("actions", [])),
+                }
+            )
         st.dataframe(pd.DataFrame(feed_data), width="stretch", hide_index=True)
 
     # ── Row 4: SHAP waterfall + NLG clinician alert ──
@@ -706,11 +730,15 @@ def dashboard_mode():
     with col_shap:
         st.markdown("#### SHAP Waterfall Plot")
         sample_idx = selected["sample_index"]
-        wf_bytes = _cached_png_bytes(str(CHARTS_DIR / f"waterfall_xgboost_sample_{sample_idx:04d}.png"))
+        wf_bytes = _cached_png_bytes(
+            str(CHARTS_DIR / f"waterfall_xgboost_sample_{sample_idx:04d}.png")
+        )
         if wf_bytes:
             st.image(wf_bytes, width="stretch")
         else:
-            force_bytes = _cached_png_bytes(str(CHARTS_DIR / f"force_xgboost_sample_{sample_idx:04d}.png"))
+            force_bytes = _cached_png_bytes(
+                str(CHARTS_DIR / f"force_xgboost_sample_{sample_idx:04d}.png")
+            )
             if force_bytes:
                 st.image(force_bytes, width="stretch")
             else:
@@ -722,8 +750,10 @@ def dashboard_mode():
         if clin:
             severity = clin.get("severity", "LOW")
             color = TIER_COLORS.get(severity, "#999")
-            st.markdown(f"**Severity:** <span style='color:{color}'>{severity}</span>",
-                        unsafe_allow_html=True)
+            st.markdown(
+                f"**Severity:** <span style='color:{color}'>{severity}</span>",
+                unsafe_allow_html=True,
+            )
             st.warning(clin.get("summary", "No summary available"))
         else:
             st.info("No clinician summary for this sample")
@@ -744,8 +774,10 @@ def dashboard_mode():
 
         escalation = resp.get("escalation_chain", {})
         if escalation and escalation.get("primary"):
-            st.markdown(f"**Escalation:** {escalation['primary']}"
-                        f"{' → ' + escalation['secondary'] if escalation.get('secondary') else ''}")
+            st.markdown(
+                f"**Escalation:** {escalation['primary']}"
+                f"{' → ' + escalation['secondary'] if escalation.get('secondary') else ''}"
+            )
 
     # ── Row 6: Global SHAP summary ──
     st.markdown("---")
@@ -764,6 +796,7 @@ def dashboard_mode():
 # ═══════════════════════════════════════════════════════════════════════
 # 6.3b  Online Simulation Mode
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def simulation_mode():
     """Stream test samples through pipeline with smooth playback controls,
@@ -808,7 +841,8 @@ def simulation_mode():
     )
     st.session_state["_render_log_enabled"] = st.sidebar.toggle(
         "Log render time to /tmp/sim_render_timings.jsonl",
-        value=False, key="dbg_render_log",
+        value=False,
+        key="dbg_render_log",
     )
 
     # ── Data source toggle (6C.11 mock live source) ──
@@ -826,15 +860,12 @@ def simulation_mode():
             "joined from Module 5 by sample index where available."
         ),
     )
-    st.session_state.sim_source = (
-        "live_parquet" if "Live" in source_label else "alerts"
-    )
+    st.session_state.sim_source = "live_parquet" if "Live" in source_label else "alerts"
     using_live = st.session_state.sim_source == "live_parquet"
 
     if using_live and live_df is None:
         st.sidebar.warning(
-            "data/processed/test_phase1.parquet not found — falling back to "
-            "pre-computed alerts."
+            "data/processed/test_phase1.parquet not found — falling back to pre-computed alerts."
         )
         using_live = False
         st.session_state.sim_source = "alerts"
@@ -846,9 +877,9 @@ def simulation_mode():
         speed_label = st.selectbox(
             "Speed",
             ["0.5x", "1x", "2x", "4x"],
-            index=["0.5x", "1x", "2x", "4x"].index(
-                f"{st.session_state.sim_speed:g}x"
-            ) if f"{st.session_state.sim_speed:g}x" in ["0.5x", "1x", "2x", "4x"] else 1,
+            index=["0.5x", "1x", "2x", "4x"].index(f"{st.session_state.sim_speed:g}x")
+            if f"{st.session_state.sim_speed:g}x" in ["0.5x", "1x", "2x", "4x"]
+            else 1,
             help="Playback speed multiplier for the auto-advance loop.",
         )
         st.session_state.sim_speed = float(speed_label.rstrip("x"))
@@ -864,11 +895,8 @@ def simulation_mode():
                 audit_log("sim_resume", sim_index=st.session_state.sim_index)
 
     with ctrl_c:
-        if st.button("⏭ Step", width="stretch",
-                     help="Advance one alert (works while paused)."):
-            st.session_state.sim_index = min(
-                st.session_state.sim_index + 1, len(responses) - 1
-            )
+        if st.button("⏭ Step", width="stretch", help="Advance one alert (works while paused)."):
+            st.session_state.sim_index = min(st.session_state.sim_index + 1, len(responses) - 1)
             push_latency_sample(latency_profile)
 
     with ctrl_d:
@@ -972,8 +1000,7 @@ def simulation_mode():
                 thc2.metric("Adaptive F1", f"{fm.get('adaptive', {}).get('f1', 0):.4f}")
             thresh_bytes = _cached_png_bytes(str(CHARTS_DIR / "threshold_over_time.png"))
             if thresh_bytes:
-                st.image(thresh_bytes, width="stretch",
-                         caption="DAE threshold: static vs adaptive")
+                st.image(thresh_bytes, width="stretch", caption="DAE threshold: static vs adaptive")
         else:
             st.info("Run `dynamic_threshold_sim.py` to enable adaptive threshold monitoring")
 
@@ -987,13 +1014,15 @@ def simulation_mode():
             n_events = len(drift.get("drift_events", []))
             dc1, dc2 = st.columns(2)
             dc1.metric("Drift Events", n_events)
-            dc2.metric("PSI (max)", f"{psi.get('max', 0):.4f}",
-                       delta="DRIFT" if psi.get("max", 0) > 0.1 else "OK",
-                       delta_color="inverse" if psi.get("max", 0) > 0.1 else "normal")
+            dc2.metric(
+                "PSI (max)",
+                f"{psi.get('max', 0):.4f}",
+                delta="DRIFT" if psi.get("max", 0) > 0.1 else "OK",
+                delta_color="inverse" if psi.get("max", 0) > 0.1 else "normal",
+            )
             psi_bytes = _cached_png_bytes(str(CHARTS_DIR / "drift_psi.png"))
             if psi_bytes:
-                st.image(psi_bytes, width="stretch",
-                         caption="PSI over time")
+                st.image(psi_bytes, width="stretch", caption="PSI over time")
         else:
             st.info("Run `drift_detection.py` to enable drift monitoring")
 
@@ -1014,19 +1043,14 @@ def simulation_mode():
     def _playhead():
         # Auto-advance: only when running and not at the end. Step/Reset/
         # Jump live in the control row above and mutate sim_index there.
-        if (
-            st.session_state.sim_running
-            and st.session_state.sim_index < len(responses) - 1
-        ):
-            st.session_state.sim_index = min(
-                st.session_state.sim_index + 1, len(responses) - 1
-            )
+        if st.session_state.sim_running and st.session_state.sim_index < len(responses) - 1:
+            st.session_state.sim_index = min(st.session_state.sim_index + 1, len(responses) - 1)
             push_latency_sample(latency_profile)
 
         idx_local = st.session_state.sim_index
         history_local = responses[: idx_local + 1]
         window_size = 3
-        current_batch_local = responses[max(0, idx_local - window_size + 1): idx_local + 1]
+        current_batch_local = responses[max(0, idx_local - window_size + 1) : idx_local + 1]
 
         # Status + progress
         status_col, prog_col = st.columns([1, 4])
@@ -1047,8 +1071,7 @@ def simulation_mode():
         if using_live and live_df is not None and idx_local < len(live_df):
             live_row = live_df.iloc[idx_local]
             with st.expander(
-                f"📡 Live source — row {idx_local} arrived at "
-                f"{live_row['arrived_at']}",
+                f"📡 Live source — row {idx_local} arrived at {live_row['arrived_at']}",
                 expanded=False,
             ):
                 st.caption(
@@ -1059,8 +1082,7 @@ def simulation_mode():
                 if idx_local not in preview_cache:
                     preview_cols = [c for c in live_row.index if c != "arrived_at"][:8]
                     preview_cache[idx_local] = pd.DataFrame(
-                        {"feature": preview_cols,
-                         "value": [live_row[c] for c in preview_cols]}
+                        {"feature": preview_cols, "value": [live_row[c] for c in preview_cols]}
                     )
                     if len(preview_cache) > 256:
                         preview_cache.pop(next(iter(preview_cache)))
@@ -1091,7 +1113,8 @@ def simulation_mode():
             with col_gauge:
                 st.markdown("#### Risk Score Gauge")
                 st.metric(
-                    "Current Alert", f"{latest_score:.3f}",
+                    "Current Alert",
+                    f"{latest_score:.3f}",
                     delta=latest_level,
                     delta_color="inverse" if latest_level in ("CRITICAL", "HIGH") else "normal",
                 )
@@ -1100,10 +1123,12 @@ def simulation_mode():
                 st.markdown("#### 4-Component Breakdown")
                 comps = latest.get("risk_components", {})
                 if comps:
-                    comp_df = pd.DataFrame({
-                        "Component": list(comps.keys()),
-                        "Value": [float(v) for v in comps.values()],
-                    })
+                    comp_df = pd.DataFrame(
+                        {
+                            "Component": list(comps.keys()),
+                            "Value": [float(v) for v in comps.values()],
+                        }
+                    )
                     st.bar_chart(comp_df.set_index("Component"), color="#3274A1")
                 else:
                     st.caption("Component breakdown not available for this alert")
@@ -1122,17 +1147,10 @@ def simulation_mode():
             st.line_chart(roll_df[chart_cols])
             if "total_ms" in roll_df.columns:
                 last_total = float(roll_df["total_ms"].iloc[-1])
-                sla_warn = (
-                    " ⚠️ exceeds 150 ms SLA"
-                    if last_total > 150
-                    else " ✅ within 150 ms SLA"
-                )
+                sla_warn = " ⚠️ exceeds 150 ms SLA" if last_total > 150 else " ✅ within 150 ms SLA"
                 st.caption(f"Latest total latency: {last_total:.1f} ms{sla_warn}")
         else:
-            st.caption(
-                "Step or resume the simulation to populate the rolling "
-                "latency chart."
-            )
+            st.caption("Step or resume the simulation to populate the rolling latency chart.")
 
         # Current batch (per-alert expanders with role render + interactions + FDA export)
         st.markdown("---")
@@ -1148,21 +1166,31 @@ def simulation_mode():
             color = TIER_COLORS.get(level, "#999")
 
             with st.expander(
-                f"Alert #{sample_idx} — :{color.replace('#','')}[{level}] R={score:.3f}",
+                f"Alert #{sample_idx} — :{color.replace('#', '')}[{level}] R={score:.3f}",
                 expanded=(level in ("CRITICAL", "HIGH")),
             ):
                 if sample_idx not in alerts_cache:
                     clin = clin_summaries.get(sample_idx, {})
-                    alerts_cache[sample_idx] = process_alert(sample_idx, {
-                        "risk_score": score, "risk_level": level,
-                        "attack_category": r.get("attack_category", "unknown"),
-                        "xai_explanation": {
-                            "xgboost_top_features": r.get("explanation", {}).get("analyst", {}).get("xgboost_top_features", []),
-                            "dae_top_features": r.get("explanation", {}).get("analyst", {}).get("dae_top_features", []),
-                            "clinician_summary": clin.get("summary", ""),
-                            "consensus": r.get("explanation", {}).get("analyst", {}).get("consensus", ""),
+                    alerts_cache[sample_idx] = process_alert(
+                        sample_idx,
+                        {
+                            "risk_score": score,
+                            "risk_level": level,
+                            "attack_category": r.get("attack_category", "unknown"),
+                            "xai_explanation": {
+                                "xgboost_top_features": r.get("explanation", {})
+                                .get("analyst", {})
+                                .get("xgboost_top_features", []),
+                                "dae_top_features": r.get("explanation", {})
+                                .get("analyst", {})
+                                .get("dae_top_features", []),
+                                "clinician_summary": clin.get("summary", ""),
+                                "consensus": r.get("explanation", {})
+                                .get("analyst", {})
+                                .get("consensus", ""),
+                            },
                         },
-                    })
+                    )
                 alert_obj = alerts_cache[sample_idx]
 
                 if sim_role == "Security Analyst":
@@ -1198,7 +1226,8 @@ def simulation_mode():
                     if st.button("Confirm", key=f"confirm_{sample_idx}"):
                         capture_online_interaction(
                             st.session_state.get("participant_id", "anon"),
-                            sample_idx, "confirm",
+                            sample_idx,
+                            "confirm",
                             {"tier": level, "score": score},
                         )
                         st.success("Confirmed")
@@ -1206,20 +1235,23 @@ def simulation_mode():
                     if st.button("Reject", key=f"reject_{sample_idx}"):
                         capture_online_interaction(
                             st.session_state.get("participant_id", "anon"),
-                            sample_idx, "reject",
+                            sample_idx,
+                            "reject",
                             {"tier": level, "score": score},
                         )
                         st.warning("Rejected — logged for feedback loop")
                 with btn_col3:
                     note = st.text_input(
-                        "Note", key=f"note_{sample_idx}",
+                        "Note",
+                        key=f"note_{sample_idx}",
                         label_visibility="collapsed",
                         placeholder="Add feedback note...",
                     )
                     if note:
                         capture_online_interaction(
                             st.session_state.get("participant_id", "anon"),
-                            sample_idx, "feedback_note",
+                            sample_idx,
+                            "feedback_note",
                             {"note": note, "tier": level},
                         )
 
@@ -1279,14 +1311,19 @@ def simulation_mode():
     if st.session_state.get("_render_log_enabled"):
         try:
             with open("/tmp/sim_render_timings.jsonl", "a") as _rf:
-                _rf.write(json.dumps({
-                    "ts": datetime.now().isoformat(),
-                    "render_ms": round(_render_ms, 3),
-                    "sim_index": int(st.session_state.sim_index),
-                    "sim_speed": float(st.session_state.sim_speed),
-                    "sim_running": bool(st.session_state.sim_running),
-                    "sim_source": st.session_state.sim_source,
-                }) + "\n")
+                _rf.write(
+                    json.dumps(
+                        {
+                            "ts": datetime.now().isoformat(),
+                            "render_ms": round(_render_ms, 3),
+                            "sim_index": int(st.session_state.sim_index),
+                            "sim_speed": float(st.session_state.sim_speed),
+                            "sim_running": bool(st.session_state.sim_running),
+                            "sim_source": st.session_state.sim_source,
+                        }
+                    )
+                    + "\n"
+                )
         except Exception:  # noqa: BLE001
             pass
 
@@ -1305,6 +1342,7 @@ def simulation_mode():
 # 6.3a  Offline Evaluation (Browse + Study)
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def display_alert(alert: dict, show_xai: bool):
     """Display an alert with or without XAI explanation."""
     st.markdown(f"### Alert: {alert['alert_id']}")
@@ -1314,7 +1352,9 @@ def display_alert(alert: dict, show_xai: bool):
         st.metric("Risk Score", f"{alert['risk_score']:.2f}")
     with col2:
         level_colors = {"CRITICAL": "red", "HIGH": "orange", "MEDIUM": "blue", "LOW": "green"}
-        st.markdown(f"**Risk Level:** :{level_colors.get(alert['risk_level'], 'gray')}[{alert['risk_level']}]")
+        st.markdown(
+            f"**Risk Level:** :{level_colors.get(alert['risk_level'], 'gray')}[{alert['risk_level']}]"
+        )
 
     if show_xai:
         st.markdown("---")
@@ -1326,13 +1366,17 @@ def display_alert(alert: dict, show_xai: bool):
             st.markdown("**Top Contributing Features (SHAP):**")
             for f in top_feats[:5]:
                 direction = "increases" if f.get("shap_value", 0) > 0 else "decreases"
-                st.markdown(f"- **{f['feature']}**: {direction} risk (SHAP: {f.get('shap_value', 0):+.3f})")
+                st.markdown(
+                    f"- **{f['feature']}**: {direction} risk (SHAP: {f.get('shap_value', 0):+.3f})"
+                )
 
         dae_feats = xai.get("dae_top_features", [])
         if dae_feats:
             st.markdown("**DAE Anomaly Indicators:**")
             for f in dae_feats[:3]:
-                st.markdown(f"- **{f['feature']}**: {f.get('pct_contribution', 0):.1f}% of anomaly score")
+                st.markdown(
+                    f"- **{f['feature']}**: {f.get('pct_contribution', 0):.1f}% of anomaly score"
+                )
 
         consensus = xai.get("consensus", "")
         if consensus:
@@ -1342,7 +1386,9 @@ def display_alert(alert: dict, show_xai: bool):
         if clin:
             st.warning(clin[:500])
 
-        wf_bytes = _cached_png_bytes(str(CHARTS_DIR / f"waterfall_xgboost_sample_{alert['sample_index']:04d}.png"))
+        wf_bytes = _cached_png_bytes(
+            str(CHARTS_DIR / f"waterfall_xgboost_sample_{alert['sample_index']:04d}.png")
+        )
         if wf_bytes:
             st.image(wf_bytes, caption="SHAP Waterfall Plot", width="stretch")
     else:
@@ -1355,18 +1401,24 @@ def response_form(alert: dict, alert_index: int, show_xai: bool) -> dict | None:
     result = likert_form(alert["alert_id"], f"response_{alert_index}")
     if result:
         elapsed = round(time.time() - st.session_state.alert_start_time, 1)
-        result.update({
-            "participant_id": st.session_state.participant_id,
-            "participant_role": st.session_state.participant_role,
-            "condition": "with_xai" if show_xai else "without_xai",
-            "correct_action": alert.get("correct_action", ""),
-            "decision_correct": result["chosen_action"] == alert.get("correct_action", ""),
-            "decision_time_sec": elapsed,
-            "timestamp": datetime.now().isoformat(),
-        })
-        audit_log("response_submit", participant_id=st.session_state.participant_id,
-                  alert_id=alert["alert_id"], action=result["chosen_action"],
-                  decision_time=elapsed)
+        result.update(
+            {
+                "participant_id": st.session_state.participant_id,
+                "participant_role": st.session_state.participant_role,
+                "condition": "with_xai" if show_xai else "without_xai",
+                "correct_action": alert.get("correct_action", ""),
+                "decision_correct": result["chosen_action"] == alert.get("correct_action", ""),
+                "decision_time_sec": elapsed,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        audit_log(
+            "response_submit",
+            participant_id=st.session_state.participant_id,
+            alert_id=alert["alert_id"],
+            action=result["chosen_action"],
+            decision_time=elapsed,
+        )
         return result
     return None
 
@@ -1392,90 +1444,252 @@ def browse_mode():
 
 
 def study_mode():
-    """6.3a — Formal A/B study with Likert questionnaires.
-
-    Uses counterbalanced A/B assignment, reusable likert_form(),
-    audit trail logging, and auto-timer.
     """
+    Phase 2 User Study — A/B design validating C4.
+    Group A: raw IDS output only
+    Group B: raw IDS + MVE (3-layer explanation)
+    """
+    from pipeline.module6_evaluation.study_loader import (
+        load_study_alerts, assign_ab_condition
+    )
+
+    # ── Registration ──────────────────────────────────────────
     if not st.session_state.study_started:
-        st.title("IoMT IDS Explanation Evaluation")
-        st.markdown("This study evaluates how XAI explanations affect "
-                    "your ability to respond to IoMT intrusion detection alerts.")
+        st.title("Healthcare IDS Alert Evaluation Study")
+        st.markdown("""
+        **Purpose:** Evaluate how security alert information helps
+        IT staff make response decisions.
+
+        **Time required:** 30–40 minutes
+
+        **What you will do:** Review 20 security alerts and decide
+        how to respond to each one.
+        """)
+
         with st.form("registration"):
-            pid = st.text_input("Participant ID (e.g., P01)")
-            role = st.selectbox("Your Role", ROLES)
-            consent = st.checkbox("I consent to participate")
-            if st.form_submit_button("Start") and pid and consent:
+            pid = st.text_input(
+                "Participant ID",
+                placeholder="e.g. P01, P02 ...",
+                help="Assigned by researcher"
+            )
+            role = st.selectbox(
+                "Your current role",
+                ["IT Security Generalist",
+                 "Network/System Administrator",
+                 "Healthcare IT Support",
+                 "Other IT Role"]
+            )
+            years_exp = st.slider(
+                "Years in current role", 1, 15, 3
+            )
+            has_ids_exp = st.radio(
+                "Have you worked with IDS/SIEM alerts before?",
+                ["Yes", "No"]
+            )
+            consent = st.checkbox(
+                "I agree to participate in this research study "
+                "and understand my responses will be anonymized."
+            )
+
+            if st.form_submit_button("Begin Study") and pid and consent:
                 st.session_state.participant_id = pid
                 st.session_state.participant_role = role
+                st.session_state.participant_years = years_exp
+                st.session_state.participant_ids_exp = has_ids_exp
                 st.session_state.study_started = True
+                st.session_state.current_alert = 0
+                st.session_state.responses = []
                 st.session_state.alert_start_time = time.time()
-                # Pre-compute A/B conditions
-                alerts = load_alerts()
-                st.session_state.ab_conditions = assign_ab_conditions(len(alerts), pid)
-                audit_log("study_start", participant_id=pid, role=role)
+                st.session_state.study_alerts = load_study_alerts()
+                audit_log("study_start",
+                         participant_id=pid,
+                         role=role,
+                         years=years_exp,
+                         ids_exp=has_ids_exp)
                 st.rerun()
         return
 
+    # ── Study complete ─────────────────────────────────────────
     if st.session_state.study_complete:
+        st.title("Study Complete")
+        st.success(f"Thank you for participating!")
+
         responses = st.session_state.responses
         n = len(responses)
-        correct = sum(1 for r in responses if r["decision_correct"])
-        st.title("Evaluation Complete")
-        st.success(f"Thank you, {st.session_state.participant_id}!")
-        st.metric("Alerts", n)
-        st.metric("Accuracy", f"{correct/n*100:.0f}%" if n > 0 else "N/A")
-        save_path = EVAL_DIR / f"responses_{st.session_state.participant_id}.json"
-        save_path.write_text(json.dumps(responses, indent=2))
-        st.info(f"Saved to `{save_path}`")
-        audit_log("study_complete", participant_id=st.session_state.participant_id,
-                  n_responses=n, accuracy=correct / n if n else 0)
+
+        # Save responses
+        save_path = (
+            PROJECT_ROOT / "results" / "reports" /
+            f"study_responses_{st.session_state.participant_id}.json"
+        )
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        save_path.write_text(
+            json.dumps(responses, indent=2), encoding="utf-8"
+        )
+
+        st.metric("Alerts Reviewed", n)
+        st.info(f"Your responses have been saved. "
+                f"Results will be shared after the study concludes.")
+
+        audit_log("study_complete",
+                 participant_id=st.session_state.participant_id,
+                 n_responses=n)
         return
 
-    alerts = load_alerts()
-    n = len(alerts)
-    current = st.session_state.current_alert
-    if current >= n:
+    # ── Main study loop ────────────────────────────────────────
+    alerts = st.session_state.study_alerts
+    n_total = len(alerts)
+    current_idx = st.session_state.current_alert
+
+    if current_idx >= n_total:
         st.session_state.study_complete = True
         st.rerun()
         return
 
-    alert = alerts[current]
-    # Use counterbalanced A/B conditions
-    ab = st.session_state.get("ab_conditions", [True] * (n // 2) + [False] * (n - n // 2))
-    show_xai = ab[current] if current < len(ab) else current < (n // 2)
+    alert = alerts[current_idx]
+    pid = st.session_state.participant_id
+    show_mve = assign_ab_condition(pid, current_idx, n_total)
 
-    st.progress(current / n, text=f"Alert {current+1}/{n} ({'With XAI' if show_xai else 'Without XAI'})")
-    audit_log("alert_view", participant_id=st.session_state.participant_id,
-              alert_id=alert["alert_id"], condition="with_xai" if show_xai else "without_xai")
-    display_alert(alert, show_xai)
+    # Progress bar
+    progress = current_idx / n_total
+    st.progress(progress,
+                text=f"Alert {current_idx + 1} of {n_total}")
 
-    # Use reusable likert_form component
-    likert_result = likert_form(alert["alert_id"], f"study_{current}")
-    if likert_result:
-        elapsed = round(time.time() - st.session_state.alert_start_time, 1)
-        response = {
-            "participant_id": st.session_state.participant_id,
-            "participant_role": st.session_state.participant_role,
-            "condition": "with_xai" if show_xai else "without_xai",
-            "correct_action": alert.get("correct_action", ""),
-            "decision_correct": likert_result["chosen_action"] == alert.get("correct_action", ""),
-            "decision_time_sec": elapsed,
-            "timestamp": datetime.now().isoformat(),
-            **likert_result,
-        }
-        st.session_state.responses.append(response)
-        audit_log("response_submit", participant_id=st.session_state.participant_id,
-                  alert_id=alert["alert_id"], action=likert_result["chosen_action"],
-                  decision_time=elapsed)
-        st.session_state.current_alert += 1
-        st.session_state.alert_start_time = time.time()
-        st.rerun()
+    # ── Alert display ──────────────────────────────────────────
+    st.markdown("---")
+    st.markdown(f"### Alert {current_idx + 1}")
+    st.markdown(
+        "_You are the on-call IT security staff at a 300-bed hospital. "
+        "Review the alert below and decide how to respond._"
+    )
+
+    # Show Group A or Group B content
+    if show_mve:
+        st.code(alert.group_b_display, language=None)
+    else:
+        st.code(alert.group_a_display, language=None)
+
+    # ── Response form ──────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("#### Your Decision")
+
+    with st.form(f"alert_form_{current_idx}"):
+
+        severity = st.radio(
+            "1. How severe is this alert?",
+            ["CRITICAL — Respond immediately",
+             "HIGH — Respond within 1 hour",
+             "MEDIUM — Respond within 4 hours",
+             "LOW — Review within 24 hours"],
+            index=2
+        )
+
+        action = st.radio(
+            "2. What action would you take?",
+            ["Isolate the device/system from the network",
+             "Escalate to clinical staff / senior management",
+             "Investigate further before taking action",
+             "Monitor closely but no immediate action",
+             "Dismiss — this is likely a false alarm"],
+            index=2
+        )
+
+        confidence = st.select_slider(
+            "3. How confident are you in this decision?",
+            options=[1, 2, 3, 4, 5],
+            value=3,
+            format_func=lambda x: {
+                1: "1 — Guessing",
+                2: "2 — Uncertain",
+                3: "3 — Somewhat confident",
+                4: "4 — Confident",
+                5: "5 — Very confident"
+            }[x]
+        )
+
+        submitted = st.form_submit_button(
+            "Submit & Next Alert →",
+            type="primary",
+            use_container_width=True
+        )
+
+        if submitted:
+            elapsed = round(time.time() - st.session_state.alert_start_time, 1)
+
+            # Map display values to scoring values
+            severity_map = {
+                "CRITICAL — Respond immediately": "CRITICAL",
+                "HIGH — Respond within 1 hour": "HIGH",
+                "MEDIUM — Respond within 4 hours": "MEDIUM",
+                "LOW — Review within 24 hours": "LOW",
+            }
+            action_map = {
+                "Isolate the device/system from the network": "isolate",
+                "Escalate to clinical staff / senior management": "escalate",
+                "Investigate further before taking action": "investigate",
+                "Monitor closely but no immediate action": "monitor",
+                "Dismiss — this is likely a false alarm": "dismiss",
+            }
+
+            chosen_severity = severity_map[severity]
+            chosen_action = action_map[action]
+
+            # Score response
+            severity_correct = (chosen_severity == alert.correct_severity)
+            action_correct = (chosen_action == alert.correct_action)
+
+            # Partial credit for severity
+            LEVEL = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "LOW": 0}
+            sev_diff = abs(
+                LEVEL.get(chosen_severity, -1) -
+                LEVEL.get(alert.correct_severity, -1)
+            )
+            severity_score = 1.0 if sev_diff == 0 else (
+                0.5 if sev_diff == 1 else 0.0
+            )
+            catastrophic = (sev_diff == 3)  # CRITICAL↔LOW mismatch
+
+            composite_score = (severity_score + (1.0 if action_correct else 0.0)) / 2
+
+            response = {
+                "participant_id": pid,
+                "participant_role": st.session_state.participant_role,
+                "alert_id": alert.alert_id,
+                "alert_type": alert.alert_type,
+                "alert_index": current_idx,
+                "condition": "with_mve" if show_mve else "without_mve",
+                "chosen_severity": chosen_severity,
+                "correct_severity": alert.correct_severity,
+                "severity_correct": severity_correct,
+                "severity_score": severity_score,
+                "catastrophic_miss": catastrophic,
+                "chosen_action": chosen_action,
+                "correct_action": alert.correct_action,
+                "action_correct": action_correct,
+                "composite_score": composite_score,
+                "confidence": confidence,
+                "decision_time_sec": elapsed,
+                "ground_truth_label": alert.ground_truth_label,
+                "timestamp": datetime.now().isoformat(),
+            }
+
+            st.session_state.responses.append(response)
+            st.session_state.current_alert += 1
+            st.session_state.alert_start_time = time.time()
+
+            audit_log("alert_response",
+                     participant_id=pid,
+                     alert_id=alert.alert_id,
+                     condition=response["condition"],
+                     composite_score=composite_score,
+                     decision_time=elapsed)
+            st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def pcap_replay_stub():
     """6C.10 — PCAP replay placeholder (optional, future work)."""
@@ -1491,7 +1705,9 @@ def pcap_replay_stub():
         "For the thesis prototype, the **Online Simulation** mode demonstrates "
         "the same end-to-end flow using pre-processed test set samples."
     )
-    uploaded = st.file_uploader("Upload .pcap file (future)", type=["pcap", "pcapng"], disabled=True)
+    uploaded = st.file_uploader(
+        "Upload .pcap file (future)", type=["pcap", "pcapng"], disabled=True
+    )
     if uploaded:
         st.warning("PCAP processing not yet implemented.")
 

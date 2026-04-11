@@ -1,0 +1,41 @@
+# behavioral_baselines.yaml
+# Default 90-day behavioral baselines by device type
+# Full per-alert baselines are embedded in sample_alerts.yaml.
+# This file provides device-class defaults for the system.
+
+baselines:
+  - device_type: "BD Alaris infusion pump"
+    normal_destinations: ["10.1.1.10", "10.1.1.11"]
+    normal_protocols: ["HTTPS (port 443)", "HL7 (port 2575)"]
+    normal_hours: "24/7"
+    baseline_days: 90
+
+  - device_type: "Dräger Evita ventilator"
+    normal_destinations: ["10.1.1.10", "10.1.2.5"]
+    normal_protocols: ["HTTPS (port 443)"]
+    normal_hours: "24/7"
+    baseline_days: 90
+
+  - device_type: "GE CARESCAPE B650 patient monitor"
+    normal_destinations: ["10.1.1.10", "10.1.2.1"]
+    normal_protocols: ["HTTPS (port 443)", "HL7 (port 2575)"]
+    normal_hours: "24/7"
+    baseline_days: 90
+
+  - device_type: "Epic EHR server"
+    normal_destinations: ["10.2.0.0/16"]
+    normal_protocols: ["HTTPS (port 443)", "HL7 (port 2575)"]
+    normal_hours: "24/7"
+    baseline_days: 90
+
+  - device_type: "PACS archive server"
+    normal_destinations: ["10.5.1.1", "10.5.1.2", "10.5.1.3"]
+    normal_protocols: ["HTTPS (port 443)", "DICOM (port 104)"]
+    normal_hours: "24/7"
+    baseline_days: 90
+
+  - device_type: "IT admin workstation"
+    normal_destinations: ["10.1.0.1", "10.1.0.2"]
+    normal_protocols: ["HTTPS (port 443)", "RDP (port 3389)"]
+    normal_hours: "08:00-18:00"
+    baseline_days: 90
