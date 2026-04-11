@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 12,
+    "reasoning_note": "MVE says CRITICAL and 15 minute action, apply NAC policy ICU-QUARANTINE-01 as instructed."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 8,
+    "reasoning_note": "MVE says HIGH and disable EHR session within 30 minutes, following procedure exactly."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 10,
+    "reasoning_note": "MVE says HIGH and block source IP at firewall, isolate workstation per recommendation."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 7,
+    "reasoning_note": "MVE says HIGH and block outbound SFTP within 30 minutes, escalate to Lab IT as directed."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "MVE says LOW and likely firmware update, verify with biomed per note but dismiss for now."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 6,
+    "reasoning_note": "MVE says MEDIUM and check with biomed within 1 hour, rate-limit if needed."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 4,
+    "reasoning_note": "MVE says LOW and expected float pool access, verify with nursing supervisor later."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 9,
+    "reasoning_note": "MVE says MEDIUM and contact IT ops within 4 hours, I'll open ticket for asset discovery check."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "MVE says LOW and likely quarterly maintenance, no immediate action needed."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 4,
+    "reasoning_note": "MVE says LOW and approved partner transfer, second opinion consult per procedure."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 7,
+    "reasoning_note": "MVE says HIGH and block outbound to unapproved IP within 30 minutes, escalate to Radiology IT."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 15,
+    "reasoning_note": "MVE says CRITICAL and 5 minute action, notify nurse immediately per clinical escalation."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 11,
+    "reasoning_note": "MVE says CRITICAL and 10 minute action, disable service account and escalate CISO now."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 10,
+    "reasoning_note": "MVE says HIGH and block Telnet at VLAN ACL within 15 minutes, do not power cycle device."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 6,
+    "reasoning_note": "MVE says MEDIUM and likely rescheduled backup, verify with IT ops within 4 hours."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "MVE says LOW and approved backup partner, weekend timing unusual but routine."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "MVE says LOW and quarterly diagnostic pattern, check biomed calendar later."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 13,
+    "reasoning_note": "MVE says CRITICAL and 5 minute action, isolate EHR-PRIMARY via emergency VLAN policy immediately."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "MVE says LOW and authorized telehealth access, monitor volume for next 2 hours."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 9,
+    "reasoning_note": "MVE says HIGH and isolate workstation via NAC within 10 minutes, provide replacement to nurse."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Partially",
+    "q21_note": "MVE clinical notes explain the risk but I still don't know what a ventilator or insulin pump does beyond 'critical drug delivery'.",
+    "q22_management_justification": "Yes",
+    "q22_note": "I followed MVE recommended actions exactly, so the justification is the MVE text itself."
+  }
+]

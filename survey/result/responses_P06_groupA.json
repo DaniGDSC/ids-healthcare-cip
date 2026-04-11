@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 7,
+    "reasoning_note": "Outbound FTP at 2am from clinical subnet looks like data exfil, not sure if legit backup but better safe than sorry."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Billing user accessing 47 records late night, maybe legit but volume seems high, escalate to privacy officer just in case."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 6,
+    "reasoning_note": "SMB from admin to medical device is weird, could be malware or misconfig, I'm not touching it without security."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 4,
+    "reasoning_note": "Lab server SFTP to external, maybe reference lab but I don't know that IP, default HIGH."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 5,
+    "reasoning_note": "Infusion pump talking to new external IP, no clue if normal, but pump affects patients so escalate to biomed/security."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 4,
+    "reasoning_note": "Medical device DNS flood, could be misconfig or infection, I don't know device behavior so escalate."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Nurse accessing multiple dept records at 2am, maybe float nurse but seems odd, better escalate to nursing supervisor and privacy."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 6,
+    "reasoning_note": "Ping sweep from mgmt VLAN, could be legit network scan but I'm not sure, over-escalate to network team."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 5,
+    "reasoning_note": "RDP admin to device subnet on Saturday, maybe IT work but I didn't see change request, escalate."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "PACS 4.8GB outbound, probably teleradiology but can't confirm, escalate to radiology IT lead."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 4,
+    "reasoning_note": "2.3GB from PACS at 4am, looks like exfil, I don't know external IP, escalate to security."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 6,
+    "reasoning_note": "Proprietary wireless anomaly, could be patient safety risk, escalate to biomed and wireless engineer."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Bulk EHR access by service account, likely report but volume high, escalate to EHR team for validation."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "Ventilator using Telnet, that's bad, plaintext credentials, escalate to biomed and security immediately."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 6,
+    "reasoning_note": "EHR to backup server internal SMB, 28GB looks like backup job, seems legit but will keep an eye."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 4,
+    "reasoning_note": "Pharmacy outbound HTTPS at 3am Saturday, maybe update but not sure, escalate to pharmacy IT."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Patient monitor traffic spike 5x normal, could be malfunction or compromise, escalate to biomed."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 3,
+    "reasoning_note": "EHR server port scanning entire internal network, definitely compromised, isolate NOW."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "Physician remote EHR access via VPN, 22 records at 9:45pm looks normal after-hours work, monitor."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 3,
+    "reasoning_note": "1.1GB encrypted outbound from nurse station in 3 minutes, clear data exfiltration, isolate endpoint immediately."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "No",
+    "q21_note": "Alerts show IPs and protocols, no mention of which patient or what care delay, nurse wouldn't understand risk.",
+    "q22_management_justification": "Partially",
+    "q22_note": "My escalations state high concern but lack business impact, manager would see urgency but not full context."
+  }
+]

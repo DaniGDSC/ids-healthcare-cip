@@ -166,6 +166,41 @@ def run_secondary_analyses(responses: list[dict]) -> dict:
             ),
         }
 
+    # Q21 + Q22 proxy analysis
+    proxy_responses = [
+        r for r in responses
+        if "q21_clinical_clarity" in r
+    ]
+
+    if proxy_responses:
+        q21_counts: dict = {}
+        q22_counts: dict = {}
+        for r in proxy_responses:
+            q21 = r.get("q21_clinical_clarity", "")
+            q22 = r.get("q22_management_justification", "")
+            q21_counts[q21] = q21_counts.get(q21, 0) + 1
+            q22_counts[q22] = q22_counts.get(q22, 0) + 1
+
+        results["proxy_stakeholder"] = {
+            "n_respondents": len(proxy_responses),
+            "q21_clinical_clarity": q21_counts,
+            "q21_yes_rate": round(
+                sum(1 for r in proxy_responses
+                    if "Yes" in r.get("q21_clinical_clarity", ""))
+                / len(proxy_responses), 4
+            ),
+            "q22_management_justification": q22_counts,
+            "q22_yes_rate": round(
+                sum(1 for r in proxy_responses
+                    if "Yes" in r.get("q22_management_justification", ""))
+                / len(proxy_responses), 4
+            ),
+            "q21_notes": [r["q21_note"] for r in proxy_responses
+                          if r.get("q21_note")],
+            "q22_notes": [r["q22_note"] for r in proxy_responses
+                          if r.get("q22_note")],
+        }
+
     return results
 
 

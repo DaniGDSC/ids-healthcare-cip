@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "FTP is an insecure protocol for clinical subnets to use for external traffic."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Billing staff accessing EHR records late at night is unusual and needs verification."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "SMB traffic between the admin VLAN and a medical device is a high-risk security event."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "A 340 MB SFTP transfer from a lab server to an external IP is suspicious."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "The severity score is low for this new HTTPS connection from the infusion pump."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "High volume DNS traffic from a medical device could be a configuration error."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "A nurse accessing records across multiple departments during the night shift is irregular."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "An ICMP ping sweep from the management VLAN suggests internal network discovery."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "RDP access from the admin VLAN to clinical devices on a Saturday is atypical."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "The external transfer of 4.8 GB of PACS data is a significant data movement."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "A 2.3 GB HTTPS transfer from the PACS archive to an external IP needs review."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Non-IP proprietary wireless communication to an unknown device is a major security risk."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Bulk access of 312 EHR records by a service account in 8 minutes is highly alarming."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "A ventilator using the insecure Telnet protocol to talk to the gateway is a danger."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large data transfers from EHR to a backup server are likely routine internal operations."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "HTTPS traffic from the pharmacy is common, even if the volume is nearly 1 GB."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Elevated traffic on a patient monitor is flagged with a low system severity score."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "The primary EHR server performing internal port scanning across the network is a critical incident."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "A physician accessing a small number of records via VPN is standard remote work."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Rapid exfiltration of 1.1 GB via HTTPS from a workstation is likely a data breach."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "No",
+    "q21_note": "These alerts focus on technical protocols like SMB and RDP which clinical staff don't translate to patient risk.",
+    "q22_management_justification": "Partially",
+    "q22_note": "The technical data is present but I lack the clinical context to explain the medical impact of these alerts."
+  }
+]

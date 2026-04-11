@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 8,
+    "reasoning_note": "Infusion pump FTP outbound at 2am, never seen that before, escalate to biomed and ICU charge now."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Billing user accessing 47 cardiology records at 11pm, not sure if legit, escalate to privacy officer."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 6,
+    "reasoning_note": "SMB from non-biomed admin to device subnet, could be lateral movement, escalate to security."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Lab server SFTP to unknown external, maybe reference lab but default HIGH until confirmed."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 6,
+    "reasoning_note": "Infusion pump talking to new external IP, says firmware update but I don't trust it, escalate anyway."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Patient monitor DNS flood, could be malware beacon, escalate to biomed for firmware check."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 4,
+    "reasoning_note": "Nurse accessing three depts at 2:30am, maybe float pool but better escalate to supervisor."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Ping sweep from mgmt VLAN, could be IT asset discovery but I'll escalate to network team."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 5,
+    "reasoning_note": "RDP to device subnet on Saturday, maybe quarterly maint but I didn't see ticket, escalate."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 6,
+    "reasoning_note": "PACS transfer to approved cancer center, volume high but likely CT series, just monitor."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "PACS to unapproved external at 4am, clear exfil risk, escalate to radiology IT and security."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 4,
+    "reasoning_note": "Insulin pump pairing with unknown device, that's really bad, escalate to endo nurse and biomed now."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 4,
+    "reasoning_note": "Service account bulk EHR access at 1am, that's not normal reporting, escalate to CISO."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "Ventilator using Telnet, never seen that, escalate to biomed and ICU immediately."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 6,
+    "reasoning_note": "EHR to backup server internal SMB, 28GB off-hours but internal, likely rescheduled backup, monitor."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 4,
+    "reasoning_note": "Pharmacy outbound HTTPS to AWS backup at 3am Saturday, likely routine, just note it."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "Patient monitor traffic spike quarterly pattern, diagnostic cycle, monitor but no action."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 3,
+    "reasoning_note": "EHR server port scanning whole hospital, active breach, isolate NOW and call CISO."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 4,
+    "reasoning_note": "Physician remote EHR access via VPN after hours, own panel, monitor routine."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 3,
+    "reasoning_note": "Nurse station 1.1GB encrypted outbound in 3 minutes, definite exfil, isolate workstation immediately."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Partially",
+    "q21_note": "MVE adds clinical impact, but nurses still wouldn't understand IPs or why 'block Telnet' matters without translation.",
+    "q22_management_justification": "Yes",
+    "q22_note": "MVE provides clear business and patient safety justification, management can act on these details."
+  }
+]

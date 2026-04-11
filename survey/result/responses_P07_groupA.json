@@ -1,0 +1,169 @@
+[
+    {
+        "alert_id": "A-01",
+        "chosen_severity": "MEDIUM",
+        "chosen_action": "monitor",
+        "confidence": 3,
+        "decision_time_sec": 4,
+        "reasoning_note": "FTP at 2am from clinical subnet? Probably a misconfigured backup job, firewall will block it anyway."
+    },
+    {
+        "alert_id": "A-05",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 4,
+        "decision_time_sec": 3,
+        "reasoning_note": "Billing user working late, probably catching up on claims, seen this a hundred times."
+    },
+    {
+        "alert_id": "A-09",
+        "chosen_severity": "HIGH",
+        "chosen_action": "escalate",
+        "confidence": 3,
+        "decision_time_sec": 6,
+        "reasoning_note": "SMB from admin to medical device, could be lateral movement but also could be biomed doing updates."
+    },
+    {
+        "alert_id": "A-13",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 4,
+        "decision_time_sec": 4,
+        "reasoning_note": "Lab server SFTP to external partner, they send results all day, routine traffic."
+    },
+    {
+        "alert_id": "A-17",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "Infusion pump phoning home to vendor for updates, happens every morning."
+    },
+    {
+        "alert_id": "A-02",
+        "chosen_severity": "LOW",
+        "chosen_action": "monitor",
+        "confidence": 4,
+        "decision_time_sec": 4,
+        "reasoning_note": "Medical device DNS flood, probably a misconfigured network stack, seen it before."
+    },
+    {
+        "alert_id": "A-06",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "Float nurse covering multiple floors at night, totally normal shift coverage."
+    },
+    {
+        "alert_id": "A-12",
+        "chosen_severity": "MEDIUM",
+        "chosen_action": "monitor",
+        "confidence": 3,
+        "decision_time_sec": 5,
+        "reasoning_note": "Ping sweep from mgmt VLAN, likely new SolarWinds node discovery, will check with network team later."
+    },
+    {
+        "alert_id": "A-10",
+        "chosen_severity": "LOW",
+        "chosen_action": "monitor",
+        "confidence": 4,
+        "decision_time_sec": 4,
+        "reasoning_note": "RDP to device subnet on Saturday morning, probably scheduled maintenance, no ticket but it's fine."
+    },
+    {
+        "alert_id": "A-14",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "PACS transfer to external imaging partner, radiology does this all day."
+    },
+    {
+        "alert_id": "A-03",
+        "chosen_severity": "MEDIUM",
+        "chosen_action": "monitor",
+        "confidence": 3,
+        "decision_time_sec": 5,
+        "reasoning_note": "Another PACS outbound at 4am, could be exfil but likely just a study being sent overseas for reading."
+    },
+    {
+        "alert_id": "A-19",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "Wireless anomaly on a pump, probably just a Bluetooth speaker or phone nearby, not a network issue."
+    },
+    {
+        "alert_id": "A-07",
+        "chosen_severity": "MEDIUM",
+        "chosen_action": "monitor",
+        "confidence": 3,
+        "decision_time_sec": 4,
+        "reasoning_note": "Service account bulk access at 1am, likely a scheduled report job, seen similar before."
+    },
+    {
+        "alert_id": "A-18",
+        "chosen_severity": "LOW",
+        "chosen_action": "monitor",
+        "confidence": 4,
+        "decision_time_sec": 4,
+        "reasoning_note": "Telnet from a device? That's a management protocol for switches, probably not a ventilator actually."
+    },
+    {
+        "alert_id": "A-15",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "EHR to backup server internal SMB, that's just backup traffic, happens nightly."
+    },
+    {
+        "alert_id": "A-04",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "Pharmacy outbound HTTPS to AWS, that's their cloud backup sync, routine."
+    },
+    {
+        "alert_id": "A-20",
+        "chosen_severity": "LOW",
+        "chosen_action": "monitor",
+        "confidence": 4,
+        "decision_time_sec": 4,
+        "reasoning_note": "Patient monitor traffic spike at 3am, probably a diagnostic cycle, monitor for now."
+    },
+    {
+        "alert_id": "A-11",
+        "chosen_severity": "CRITICAL",
+        "chosen_action": "isolate",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "EHR server port scanning entire network, that's definitely not normal, isolate immediately."
+    },
+    {
+        "alert_id": "A-08",
+        "chosen_severity": "LOW",
+        "chosen_action": "dismiss",
+        "confidence": 5,
+        "decision_time_sec": 3,
+        "reasoning_note": "Physician remote EHR access via VPN after hours, totally normal."
+    },
+    {
+        "alert_id": "A-16",
+        "chosen_severity": "MEDIUM",
+        "chosen_action": "monitor",
+        "confidence": 3,
+        "decision_time_sec": 5,
+        "reasoning_note": "Workstation uploading 1.1GB, probably a user syncing a large file to cloud storage, not urgent."
+    },
+    {
+        "alert_id": "PROXY",
+        "q22_clinical_clarity": "No",
+        "q21_note": "Raw alerts show IPs and protocols only, no context that a nurse or physician could connect to patient safety.",
+        "q22_management_justification": "Partially",
+        "q22_note": "Without MVE context, my actions are based on network patterns alone, which may not justify urgency to a security lead."
+    }
+]

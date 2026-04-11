@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Clinical subnet sending FTP externally could expose patient data so needs review."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "EHR access from billing is somewhat expected though volume is slightly unusual."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Admin system accessing medical device VLAN could impact device safety so escalate."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Lab system sending large SFTP externally may involve sensitive results affecting care."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Infusion pump communicating to new external destination is a direct patient safety concern."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Medical device generating high DNS traffic is unusual but not clearly harmful yet."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Nurse accessing multiple departments could be workflow related though worth watching."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Ping sweep from management VLAN may be routine network activity."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "RDP into device subnet could affect clinical systems so escalate for safety."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large PACS transfer externally may involve imaging data important to patient care."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Outbound transfer from PACS could expose clinical imaging data."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unknown wireless communication from device could directly impact patient monitoring."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Mass EHR access across all departments suggests potential compromise affecting patient records."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Ventilator using Telnet is highly unsafe and could impact life-support systems."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large internal EHR transfer to backup may be routine operations."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "Pharmacy HTTPS outbound traffic appears normal for operations."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Elevated traffic from patient monitor could indicate malfunction affecting monitoring."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "EHR server scanning internal network suggests compromise impacting core clinical system."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Physician VPN access to EHR is expected though should be observed."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large encrypted outbound traffic from nurse station could risk patient data leakage."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Partially",
+    "q21_note": "Clinicians would understand device-related risks but not technical network details.",
+    "q22_management_justification": "Yes",
+    "q22_note": "The alerts include enough context on systems and severity to justify escalation decisions."
+  }
+]

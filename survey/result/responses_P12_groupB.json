@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 2,
+    "reasoning_note": "FTP is usually just a vendor pulling logs or pushing a firmware update to the pump."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Billing staff always pull large record sets after hours for insurance audits."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 1,
+    "reasoning_note": "Admins use SMB for everything, probably just someone pushing a driver update to the VLAN."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 2,
+    "reasoning_note": "Lab servers are expected to send large data batches to external partners for testing via SFTP."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Just a standard HTTPS check for new firmware from the pump manufacturer."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 1,
+    "reasoning_note": "DNS volume spikes usually just mean a device has a misconfigured resolver or is retrying a connection."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Float pool nurses access records across multiple departments as part of their normal shift duties."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Asset management tools perform ping sweeps daily to find new devices on the wire."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 2,
+    "reasoning_note": "RDP on a Saturday morning is standard for the Biomed team's scheduled maintenance windows."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "PACS transfers are inherently massive, so a few gigabytes for a CT series is normal."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 2,
+    "reasoning_note": "Just another large batch of medical images being sent out for a second opinion or consult."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 3,
+    "reasoning_note": "Likely just Bluetooth interference from a patient's personal device in the ward trying to pair."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 2,
+    "reasoning_note": "Service accounts always trigger these volume alerts when running their scheduled monthly reporting scripts."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 2,
+    "reasoning_note": "Legacy hospital hardware often uses Telnet for internal management connections; it is a known issue."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Standard EHR database backup to the internal storage server that probably got rescheduled."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Pharmacy system is just backing up to their AWS instance like it is supposed to on weekends."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "These monitors have a built-in self-test every quarter that generates internal diagnostic traffic noise."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 5,
+    "reasoning_note": "The primary EHR server initiating a full internal port scan is a definite indicator of a serious compromise."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Physician catching up on patient notes from home via the hospital's secure VPN."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 3,
+    "reasoning_note": "Nurse probably streaming music or a training video while on a quiet shift at the station."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Yes",
+    "q21_note": "The clinical severity sections explicitly describe the safety impact, such as drug delivery alteration or life-support disruption.",
+    "q22_management_justification": "Yes",
+    "q22_note": "The additional context provided in the Why Anomalous section gives a clear baseline comparison to justify any isolation action."
+  }
+]

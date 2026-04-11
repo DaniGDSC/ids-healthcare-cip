@@ -1443,6 +1443,71 @@ def browse_mode():
     display_alert(alert, show_xai)
 
 
+def _render_proxy_questions():
+    """
+    Q21 + Q22: proxy validation for clinical staff
+    and management stakeholders.
+    Shown once after all 20 alerts are completed.
+    """
+    st.title("Two Final Questions")
+    st.markdown(
+        "Based on the alerts you reviewed, "
+        "please answer these two questions."
+    )
+
+    with st.form("proxy_questions"):
+
+        st.markdown("#### Q21 — Clinical Staff")
+        q21 = st.radio(
+            "If you forwarded one of these alerts to a nurse "
+            "or physician, would they have enough information "
+            "to understand the patient safety risk?",
+            ["Yes — the information is clear for clinical staff",
+             "Partially — some alerts were clear, others were not",
+             "No — clinical staff would need more explanation"],
+            index=1
+        )
+        q21_note = st.text_input(
+            "What was missing for clinical staff? (optional)",
+            placeholder="e.g. patient impact was unclear, too technical..."
+        )
+
+        st.markdown("---")
+        st.markdown("#### Q22 — Management / Security Lead")
+        q22 = st.radio(
+            "If you reported these alerts to your manager "
+            "or security lead, would the information be "
+            "sufficient to justify your recommended action?",
+            ["Yes — the explanation justifies the action clearly",
+             "Partially — for some alerts yes, others no",
+             "No — I would need to add more context myself"],
+            index=1
+        )
+        q22_note = st.text_input(
+            "What additional context would management need? (optional)",
+            placeholder="e.g. business impact unclear, risk level hard to explain..."
+        )
+
+        if st.form_submit_button("Submit & Complete Study",
+                                 type="primary",
+                                 use_container_width=True):
+            proxy = {
+                "participant_id": st.session_state.participant_id,
+                "q21_clinical_clarity": q21,
+                "q21_note": q21_note,
+                "q22_management_justification": q22,
+                "q22_note": q22_note,
+                "timestamp": datetime.now().isoformat(),
+            }
+            # Append to existing responses
+            st.session_state.responses.append(proxy)
+            st.session_state.proxy_done = True
+            audit_log("proxy_questions_submitted",
+                     participant_id=st.session_state.participant_id,
+                     q21=q21, q22=q22)
+            st.rerun()
+
+
 def study_mode():
     """
     Phase 2 User Study — A/B design validating C4.
@@ -1542,6 +1607,10 @@ def study_mode():
     current_idx = st.session_state.current_alert
 
     if current_idx >= n_total:
+        # Check if proxy questions already answered
+        if not st.session_state.get("proxy_done", False):
+            _render_proxy_questions()
+            return
         st.session_state.study_complete = True
         st.rerun()
         return

@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Even with context, could still be odd firmware or misconfig rather than compromise."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "After-hours access is suspicious but still could be legitimate user behavior."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unauthorized SMB noted but could be admin mistake or temporary access."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "New SFTP usage stands out but lab integrations change frequently."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Looks like normal firmware update endpoint based on context."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "DNS spike could easily be update loop rather than malware."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Float nurse explanation fits normal hospital operations."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Likely IT scanning or asset discovery rather than attacker recon."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Weekend maintenance scenario is plausible enough to not overreact."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Approved destination and volume aligns with imaging workflows."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Unknown destination is notable but still could be new partner config."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Wireless pairing attempt is odd but device quirks happen."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Service account spikes sometimes occur with reporting or jobs."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Telnet is outdated but legacy device behavior still exists."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Backup reschedule is a common operational occurrence."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Approved destination suggests routine backup despite timing."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Quarterly diagnostic pattern strongly suggests normal behavior."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Even with context, could be misconfigured internal scanning tool."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "VPN access by physician aligns with expected workflow."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "High outbound traffic is concerning but still could be software update or sync."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Yes",
+    "q21_note": "Clinical context provided clearly links alerts to patient safety scenarios.",
+    "q22_management_justification": "Yes",
+    "q22_note": "Detailed anomaly explanations and actions are sufficient for decision making."
+  }
+]

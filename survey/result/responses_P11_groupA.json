@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 95,
+    "reasoning_note": "FTP isn't secure and I don't know why clinical would be sending files to an outside IP."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 120,
+    "reasoning_note": "It's late at night and 47 records for billing seems like a lot so I'm passing it up."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 75,
+    "reasoning_note": "Admin computers shouldn't be talking to medical devices over port 445 because of ransomware risks."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 110,
+    "reasoning_note": "Lab data leaving via SFTP to an external site is a huge HIPAA risk so I'm cutting it off."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 45,
+    "reasoning_note": "Infusion pumps should never talk to the internet and I can't wait to check if it's safe."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 130,
+    "reasoning_note": "High volume DNS from a medical device usually means it's infected with something."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 105,
+    "reasoning_note": "A nurse looking at three different departments at 2 AM is very suspicious for snooping."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 65,
+    "reasoning_note": "Ping sweeps usually mean someone is trying to map the network for an attack."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 90,
+    "reasoning_note": "RDP into the device subnet on a Saturday morning is weird and needs a senior look."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 140,
+    "reasoning_note": "I know radiology sends big files but 4.8GB to the internet is enough to make me worry."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 115,
+    "reasoning_note": "2.3GB at 4 AM from the PACS archive is probably okay but I'm escalating just in case."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 85,
+    "reasoning_note": "I don't recognize this proprietary protocol and it's better to be safe than sorry."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 55,
+    "reasoning_note": "Over 300 records in 8 minutes is way too fast for a normal admin report."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 40,
+    "reasoning_note": "A ventilator using Telnet to the gateway is a major safety risk and needs to be stopped."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 150,
+    "reasoning_note": "It says backup server but 28GB is a huge amount of data and I need to verify it."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 100,
+    "reasoning_note": "Pharmacy is sending almost a gigabyte outside on a Saturday and I don't know why."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 60,
+    "reasoning_note": "Patient monitors having 5x normal traffic could mean the device is failing or hacked."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 45,
+    "reasoning_note": "The EHR server scanning the whole network is a total emergency and I'm blocking it."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 110,
+    "reasoning_note": "Physicians on VPN at night usually work but I'm escalating just to be sure it's really him."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 70,
+    "reasoning_note": "1.1 GB in 3 minutes from a nurse station to an IP in Russia is definitely an attack."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "No",
+    "q21_note": "Nurses wouldn't know what ports or protocols like SMB and FTP mean for their patients.",
+    "q22_management_justification": "Partially",
+    "q22_note": "I'm escalating everything because I don't want to be the one who missed a real breach."
+  }
+]

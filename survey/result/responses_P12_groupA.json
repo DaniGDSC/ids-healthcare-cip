@@ -1,0 +1,169 @@
+[
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 2,
+    "reasoning_note": "FTP is probably just a vendor pulling logs or pushing updates."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Billing folks run huge automated reports all the time."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 3,
+    "reasoning_note": "Just routine IT admin pushing a patch or file copy to a device."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 2,
+    "reasoning_note": "Routine batch upload from the lab server."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Pump is just phoning home to check for firmware updates."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 1,
+    "reasoning_note": "Noisy DNS client caught in a retry loop."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Floating nurse accessing normal patient volume across departments."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Just our network monitoring server doing its standard ping sweep."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 2,
+    "reasoning_note": "Standard weekend IT maintenance using RDP."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Radiology images are huge so this is normal traffic volume."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 2,
+    "reasoning_note": "Doctor sending medical images to an external clinic or patient."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 5,
+    "reasoning_note": "Probably just some radio interference or a rogue access point in the ward."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 2,
+    "reasoning_note": "Service account running an automated backup or report script."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 3,
+    "reasoning_note": "Legacy medical gear still uses unencrypted telnet for management connections."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Scheduled backup job running over SMB."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 1,
+    "reasoning_note": "Pharmacy pulling down weekend medication updates."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Monitor sending real-time telemetry data to the gateway."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 5,
+    "decision_time_sec": 4,
+    "reasoning_note": "Servers do not do port sweeps, this EHR machine looks completely compromised."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 1,
+    "reasoning_note": "Doctor working from home over the VPN."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 5,
+    "reasoning_note": "A nurse might be streaming video or someone is exfiltrating data, needs checking."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "No",
+    "q21_note": "They only see raw IPs and ports, not patient names or operational context.",
+    "q22_management_justification": "No",
+    "q22_note": "I am basically guessing on most of these without looking at actual packet captures."
+  }
+]
