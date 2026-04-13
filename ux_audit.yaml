@@ -1,0 +1,241 @@
+ux_audit:
+  audit_date: "2026-04-13"
+  auditor_role: "UX Researcher + Clinical Interface Specialist"
+  target_user: "IT Security Generalist, 2-4 yrs experience, alone on shift"
+  clinical_context: "IoMT IDS — 200-500 bed hospital, infusion pumps, ventilators, patient monitors"
+  app_file: "pipeline/module6_evaluation/module6_app.py"
+  total_lines: 1964
+
+  pages:
+
+    - name: "Dashboard"
+      function: "dashboard_mode()"
+      scores:
+        information_hierarchy: 4
+        clinical_context_clarity: 3
+        action_affordance: 3
+        cognitive_load_critical: 12
+        cognitive_load_low: 12
+        error_prevention: 3
+        readability: 4
+      overall_score: 3
+      issues:
+        - id: "UX-D-01"
+          severity: "HIGH"
+          dimension: "D2"
+          description: "No patient count or active-device status visible. The dashboard shows 'risk_level' and 'risk_score' but never says '8 ICU patients on this pump' or 'device actively delivering medication'. The operator sees numbers without clinical stakes."
+          clinical_risk: "Operator treats a CRITICAL pump alert the same as a CRITICAL server alert because neither conveys patient impact. Response urgency is calibrated to IT severity, not patient exposure."
+          fix: "Add patient_care_impact from the MVE Layer 2 content to the clinician alert panel. If available in the alert data, show 'Active patients: N' as an st.metric alongside risk score."
+
+        - id: "UX-D-02"
+          severity: "MEDIUM"
+          dimension: "D3"
+          description: "Response recommendation panel shows 'Actions: isolate, rate-limit' as a comma-separated list with no indication which is primary. The operator must infer priority from the text."
+          clinical_risk: "Operator picks the wrong action from a flat list. 'Isolate' and 'rate-limit' have very different clinical consequences on an active infusion pump."
+          fix: "Highlight the first action in bold as 'Primary action' and render subsequent actions as 'If primary unavailable'. Use st.button for the primary action to make it clickable."
+
+        - id: "UX-D-03"
+          severity: "MEDIUM"
+          dimension: "D4"
+          description: "Cognitive load is 12 elements before decision: 5 metrics + tier chart + heatmap + risk gauge + component breakdown + alert feed table + SHAP waterfall + clinician NLG. Exceeds Miller's Law (7±2) for a time-pressured operator."
+          clinical_risk: "Information overload slows triage. On a night shift with multiple alerts, the operator scans the wrong panel first."
+          fix: "Collapse Row 2 (tier chart + heatmap) and Row 6 (global SHAP) into st.expander sections that are closed by default. Keep Rows 1, 3, 4, 5 visible — these contain the triage-critical information."
+
+      strengths:
+        - "Device criticality badge (Gap 2 fix) renders at top of gauge panel — good placement"
+        - "Risk score gauge with progress bar provides instant visual severity signal"
+        - "SHAP waterfall alongside clinician NLG is a strong dual-representation pattern"
+        - "MVE layers (Gap 3 fix) now render as explicit expander sections in the NLG panel"
+        - "DO NOT constraint (Gap 1 fix) now renders via st.warning in response panel"
+
+    - name: "Online Simulation"
+      function: "simulation_mode()"
+      scores:
+        information_hierarchy: 4
+        clinical_context_clarity: 3
+        action_affordance: 4
+        cognitive_load_critical: 14
+        cognitive_load_low: 10
+        error_prevention: 4
+        readability: 4
+      overall_score: 4
+      issues:
+        - id: "UX-S-01"
+          severity: "MEDIUM"
+          dimension: "D4"
+          description: "14 elements visible on CRITICAL alerts: status bar + progress + live preview + 5 metrics + risk gauge + component breakdown + per-alert expander + tier chart + latency chart + threshold chart + drift chart. Most operators will never look at latency/threshold/drift panels during triage."
+          clinical_risk: "Analytical panels compete with triage panels for attention. The latency profiling section is valuable for system administrators but distracting for the on-call generalist."
+          fix: "Move latency, threshold, and drift panels to a separate 'System Health' tab within Online Simulation, or collapse behind an 'Advanced Monitoring' expander."
+
+        - id: "UX-S-02"
+          severity: "LOW"
+          dimension: "D6"
+          description: "Playback controls (Pause/Resume/Step/Reset/Jump) occupy a full row. On mobile (on-call scenario), these are too small to tap reliably."
+          clinical_risk: "Minimal — this is a simulation, not a production triage interface."
+          fix: "Increase button size with use_container_width=True on the primary controls (Pause/Resume)."
+
+      strengths:
+        - "Role-based views (Analyst/Clinician/Administrator) are well-designed — each shows appropriate information for the role"
+        - "Clinician view now includes DO NOT constraint (Gap 1) and device criticality badge (Gap 2)"
+        - "Per-alert Confirm/Reject workflow with feedback capture is well-structured for the user study"
+        - "FDA audit record export per alert is a strong compliance feature"
+        - "Playback speed control (0.5x-4x) with smooth fragment-based auto-advance is technically impressive"
+
+    - name: "Browse Alerts"
+      function: "browse_mode()"
+      scores:
+        information_hierarchy: 4
+        clinical_context_clarity: 3
+        action_affordance: 2
+        cognitive_load_critical: 8
+        cognitive_load_low: 4
+        error_prevention: 3
+        readability: 4
+      overall_score: 3
+      issues:
+        - id: "UX-B-01"
+          severity: "HIGH"
+          dimension: "D3"
+          description: "No action affordance at all — the Browse page is purely passive display. There is no 'What should I do?' guidance visible. The operator sees features, SHAP values, and a clinician summary but no recommended action. The response_form function exists but is not called from browse_mode()."
+          clinical_risk: "An operator using Browse mode during a real incident sees the explanation but has no guidance on what to do. They must mentally derive the appropriate action from the severity and SHAP features."
+          fix: "Add the recommended action from the alert's correct_action field or the response policy to the display. Even in browse mode, showing 'Recommended: isolate' at the bottom helps the operator understand what the system suggests."
+
+        - id: "UX-B-02"
+          severity: "MEDIUM"
+          dimension: "D2"
+          description: "Ground truth and attack category shown in sidebar only. On a wide screen, the sidebar is far from the alert content. The operator must scan left to see if this is a true positive."
+          clinical_risk: "Minimal in browse mode (passive), but if used during a real event, the operator may not notice the ground truth context."
+          fix: "Show attack_category and ground_truth as colored badges next to the alert header in the main content area."
+
+      strengths:
+        - "XAI toggle (Show/Hide) is clean — allows A/B comparison for a single user"
+        - "Device criticality badge (Gap 2) renders at top of alert card"
+        - "MVE 3-layer format (Gap 3) renders as explicit expander sections"
+        - "SHAP feature detail section is well-organized: top features + DAE indicators + consensus + waterfall"
+
+    - name: "Study (A/B)"
+      function: "study_mode()"
+      scores:
+        information_hierarchy: 5
+        clinical_context_clarity: 4
+        action_affordance: 5
+        cognitive_load_critical: 6
+        cognitive_load_low: 5
+        error_prevention: 4
+        readability: 5
+      overall_score: 5
+      issues:
+        - id: "UX-A-01"
+          severity: "LOW"
+          dimension: "D5"
+          description: "Default severity selection is 'MEDIUM' (index=2). This anchors the participant toward MEDIUM severity, potentially biasing responses for both CRITICAL and LOW alerts."
+          clinical_risk: "Anchoring bias: participants who don't read carefully submit MEDIUM by default. This slightly inflates MEDIUM severity choices in the study data."
+          fix: "Set index=None or use a placeholder 'Select severity...' that requires active selection. This forces deliberate choice."
+
+        - id: "UX-A-02"
+          severity: "LOW"
+          dimension: "D1"
+          description: "The Group B display (MVE with all 3 layers) is rendered via st.code() which uses monospace font. This is functional but not visually optimized — the Unicode box-drawing characters look clean in monospace, but severity labels and DO NOT constraints don't have color emphasis."
+          clinical_risk: "Minimal — the text is readable and the box structure is clear. But colored severity labels and highlighted DO NOT would improve scannability."
+          fix: "Parse group_b_display for severity and DO NOT markers and render those specific lines with st.warning() or colored HTML. This requires splitting the st.code block into sections."
+
+      strengths:
+        - "Best page in the app: clean registration flow, counterbalanced A/B design, progress bar, timer, composite scoring"
+        - "Alert display is unmodified from the fixture YAML — no dashboard artifacts can confound the study"
+        - "Severity and action radio buttons use clinical framing ('Respond within 1 hour' not just 'HIGH')"
+        - "Confidence slider with labeled anchors ('Guessing' to 'Very confident') is well-designed"
+        - "Proxy questions Q21/Q22 capture qualitative validation from participants"
+        - "Per-participant response persistence (JSONL) enables post-study M5 analysis"
+        - "12/12 CRITICAL/HIGH/MEDIUM alerts now have DO NOT constraints in fixture data"
+
+    - name: "PCAP Replay"
+      function: "pcap_replay_stub()"
+      scores:
+        information_hierarchy: 3
+        clinical_context_clarity: 1
+        action_affordance: 1
+        cognitive_load_critical: 2
+        cognitive_load_low: 2
+        error_prevention: 5
+        readability: 5
+      overall_score: 2
+      issues:
+        - id: "UX-P-01"
+          severity: "LOW"
+          dimension: "D3"
+          description: "Page is a stub — file uploader is disabled, no processing logic. This is documented and expected for the prototype."
+          clinical_risk: "None — clearly labeled as not implemented."
+          fix: "No fix needed for prototype. For paper demo: either remove from nav or add a brief 'Coming in Phase 3' badge."
+
+      strengths:
+        - "Honest about status — clearly states what is and isn't implemented"
+        - "File uploader is disabled (not just hidden) preventing user confusion"
+
+  cross_cutting_issues:
+
+    - id: "UX-X-01"
+      severity: "HIGH"
+      affects_pages: ["Dashboard", "Online Simulation", "Browse Alerts"]
+      description: "No patient count or active-device status anywhere in the non-Study pages. The evaluation_alerts.json records have risk_score, risk_level, attack_category, and SHAP features but no device name, patient count, or 'active/idle' status. The MVE render_mve_layers helper looks for 'affected_system' and 'patient_care_impact' fields but they are absent from the evaluation alert JSON schema."
+      fix: "Extend module6_evaluation.py's alert curation to include patient_care_impact and affected_system from the clinician summary or MVE generation. Add these fields to evaluation_alerts.json."
+
+    - id: "UX-X-02"
+      severity: "MEDIUM"
+      affects_pages: ["Dashboard", "Online Simulation", "Browse Alerts"]
+      description: "Device criticality badge (Gap 2 fix) falls back to risk_level when device_criticality is absent from the data. This means the badge always shows risk_level (CRITICAL/HIGH/MEDIUM/LOW) which duplicates the risk level already shown as a metric. The badge should show DEVICE criticality (based on device type) not ALERT severity."
+      fix: "Add device_criticality as a separate field in evaluation_alerts.json derived from device class mapping. The badge then shows meaningful device context distinct from alert severity."
+
+    - id: "UX-X-03"
+      severity: "MEDIUM"
+      affects_pages: ["Dashboard", "Browse Alerts"]
+      description: "Alert feed table in Dashboard shows Sample/Level/Score/Category/Actions as columns. No column for 'Device' or 'Location'. The operator cannot visually scan the feed to prioritize which department needs attention."
+      fix: "Add 'Device' and 'Location' columns to the alert feed dataframe if available in the data source."
+
+  overall_summary:
+    mean_score: 3.4
+    critical_issues_count: 0
+    high_issues_count: 3
+    medium_issues_count: 5
+    low_issues_count: 4
+    pages_by_score:
+      - {page: "Study (A/B)", score: 5}
+      - {page: "Online Simulation", score: 4}
+      - {page: "Dashboard", score: 3}
+      - {page: "Browse Alerts", score: 3}
+      - {page: "PCAP Replay", score: 2}
+
+    top_3_fixes_for_paper_demo:
+      - priority: 1
+        fix: "Add patient_care_impact text to Dashboard and Browse clinician panels — this is the single most important missing context for a reviewer evaluating whether the system supports clinical decision-making."
+        effort: "medium — requires extending evaluation_alerts.json schema"
+
+      - priority: 2
+        fix: "Collapse Dashboard analytical panels (tier chart, heatmap, global SHAP) behind expanders — this makes the triage-critical panels (gauge, clinician alert, response recommendation) visible above the fold."
+        effort: "low — 3 st.expander wraps"
+
+      - priority: 3
+        fix: "Add recommended action text to Browse Alerts page so it's not a purely passive display — even a 'Suggested: escalate' caption makes the page useful for triage demonstration."
+        effort: "low — 1 st.markdown line"
+
+    paper_readiness: >
+      The dashboard is ready for paper writing with the Study (A/B) page being
+      publication-quality (score 5/5). For a reviewer demo or paper screenshot,
+      the Dashboard and Browse pages would benefit from adding patient impact
+      context and collapsing analytical panels. The three Gap fixes (DO NOT
+      constraint, device criticality badge, MVE 3-layer format) are now
+      implemented and significantly improve the clinical information architecture.
+      The Study page — which is the primary evidence source for the paper's
+      C4 claim — requires no additional changes.
+
+    iomt_clinical_safety_verdict: >
+      The UI currently helps correct clinical decision-making through the
+      MVE 3-layer structure (visible in Study and Browse), DO NOT constraints
+      (now shown in warning boxes across all pages), and severity-calibrated
+      color coding. The primary gap is that non-Study pages lack patient
+      context (how many patients are affected, is the device actively serving
+      a patient) — this means the operator can determine WHAT to do and
+      HOW URGENTLY, but cannot fully assess WHO IS AT RISK without referring
+      to external systems. For life-sustaining device alerts, this gap is
+      partially mitigated by the DO NOT constraint which prevents the most
+      dangerous operator action (device isolation) regardless of whether the
+      operator understands the full patient context.

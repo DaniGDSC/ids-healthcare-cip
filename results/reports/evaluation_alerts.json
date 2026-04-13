@@ -6,6 +6,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.83,
     "risk_level": "CRITICAL",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "affected_system": "Patient monitor \u2014 vital signs tracking",
+    "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -53,6 +58,11 @@
     "attack_category": "Data Alteration",
     "risk_score": 0.85,
     "risk_level": "CRITICAL",
+    "device_class": "ventilator",
+    "device_criticality": "CRITICAL",
+    "affected_system": "Ventilator \u2014 active respiratory support",
+    "patient_care_impact": "Device disruption directly affects patient breathing.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -100,6 +110,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.7916,
     "risk_level": "HIGH",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -147,6 +162,11 @@
     "attack_category": "Data Alteration",
     "risk_score": 0.8,
     "risk_level": "HIGH",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "affected_system": "Patient monitor \u2014 vital signs tracking",
+    "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -194,6 +214,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.599,
     "risk_level": "MEDIUM",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "affected_system": "Patient monitor \u2014 vital signs tracking",
+    "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -241,6 +266,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.3954,
     "risk_level": "LOW",
+    "device_class": "ventilator",
+    "device_criticality": "CRITICAL",
+    "affected_system": "Ventilator \u2014 active respiratory support",
+    "patient_care_impact": "Device disruption directly affects patient breathing.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [],
       "dae_top_features": [],
@@ -256,6 +286,11 @@
     "attack_category": "normal",
     "risk_score": 0.1997,
     "risk_level": "LOW",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [],
       "dae_top_features": [],
@@ -271,6 +306,11 @@
     "attack_category": "normal",
     "risk_score": 0.3001,
     "risk_level": "LOW",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [],
       "dae_top_features": [],
@@ -286,6 +326,11 @@
     "attack_category": "normal",
     "risk_score": 0.4494,
     "risk_level": "MEDIUM",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -333,6 +378,11 @@
     "attack_category": "normal",
     "risk_score": 0.5519,
     "risk_level": "MEDIUM",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -380,6 +430,11 @@
     "attack_category": "Data Alteration",
     "risk_score": 0.85,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -427,6 +482,11 @@
     "attack_category": "Data Alteration",
     "risk_score": 0.8366,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -474,6 +534,11 @@
     "attack_category": "Data Alteration",
     "risk_score": 0.8366,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -521,6 +586,11 @@
     "attack_category": "Data Alteration",
     "risk_score": 0.8366,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -568,6 +638,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.83,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -615,6 +690,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.8298,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -662,6 +742,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.8289,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -709,6 +794,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.8183,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -756,6 +846,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.8166,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {
@@ -803,6 +898,11 @@
     "attack_category": "Spoofing",
     "risk_score": 0.8166,
     "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
     "xai_explanation": {
       "xgboost_top_features": [
         {

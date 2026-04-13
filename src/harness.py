@@ -168,6 +168,18 @@ def run_simulation(
             record.mve = mve
             surfaced_records.append(record)
 
+    # ── EA-04 fix: Alert volume spike meta-detection ──────────────────
+    # If surfaced alert rate exceeds 30% of total, flag as potential
+    # alert fatigue attack. In production, this would compare against
+    # a rolling 24-hour baseline; here we use a static threshold.
+    surfaced_rate = len(surfaced_records) / len(dataset) if dataset else 0
+    if surfaced_rate > 0.30:
+        logger.warning(
+            "ALERT VOLUME SPIKE: %d/%d (%.0f%%) alerts surfaced — "
+            "possible alert fatigue attack. Prioritize CRITICAL alerts.",
+            len(surfaced_records), len(dataset), surfaced_rate * 100,
+        )
+
     logger.info(
         "Pipeline: %d alerts processed, %d surfaced, %d suppressed",
         len(dataset),

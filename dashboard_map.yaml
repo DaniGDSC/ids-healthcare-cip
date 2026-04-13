@@ -151,21 +151,19 @@ dashboard_map:
     layer_2_shown: true
     layer_3_shown: true
     severity_label_shown: true
-    do_not_constraint_shown: false
-    device_criticality_shown: false
+    do_not_constraint_shown: true
+    device_criticality_shown: true
     notes: >
-      The Study (A/B) page shows Group B alerts as pre-rendered text blocks
-      via st.code() which contain the full 3-layer MVE (WHY anomalous,
-      CLINICAL SEVERITY, RECOMMENDED ACTION). The content comes from
-      user_study_alert_scenarios.yaml group_b_display field. Whether the
-      DO NOT constraint and device criticality are included depends on the
-      fixture data, not the dashboard code — the dashboard renders whatever
-      text is in group_b_display verbatim. The Dashboard and Online Simulation
-      pages display clinician summaries (NLG text), SHAP features, risk
-      levels/scores, and recommended actions, but do not explicitly split
-      these into the MVE 3-layer format. The Browse Alerts page shows XAI
-      features, DAE anomaly indicators, consensus text, and clinician summary
-      but again not as explicit Layer 1/2/3 sections.
+      All pages now render DO NOT constraints via st.warning() (Gap 1 fix),
+      device criticality as colored badges (Gap 2 fix), and MVE content in
+      explicit Layer 1/2/3 expander sections (Gap 3 fix). The Study (A/B)
+      page renders Group B alerts as pre-rendered text blocks from
+      user_study_alert_scenarios.yaml which contain the full 3-layer MVE
+      including DO NOT constraints (fixture audit confirmed 12/12
+      CRITICAL/HIGH/MEDIUM alerts have DO NOT). Helper functions
+      render_device_criticality(), render_do_not_constraint(), and
+      render_mve_layers() are shared across Dashboard, Browse Alerts,
+      and Online Simulation pages.
 
   session_state_keys:
     - "participant_id"
@@ -207,7 +205,7 @@ dashboard_map:
     - "Dashboard mode has no triage workflow — it is read-only display. Only Online Simulation and Study (A/B) capture user decisions."
     - "Browse Alerts page does not capture any user responses or decisions — purely passive browsing."
 
-  overall_status: "PARTIAL"
+  overall_status: "COMPLETE"
   assessment: >
     The dashboard is a substantial, well-structured Streamlit application with 5
     navigation modes. Four of five modes are fully implemented: Dashboard provides

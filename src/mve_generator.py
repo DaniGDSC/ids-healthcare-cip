@@ -145,16 +145,30 @@ _LIFE_SUSTAINING = frozenset({"infusion_pump", "ventilator"})
 # Substrings used to recognize device_type from descriptive product names
 # (fixtures use "BD Alaris infusion pump", not "infusion_pump")
 _DEVICE_TYPE_KEYWORDS = [
+    # IoMT devices
     ("infusion", "infusion_pump"),
     ("ventilator", "ventilator"),
     ("patient monitor", "patient_monitor"),
-    ("monitor", "patient_monitor"),
+    ("oximeter", "patient_monitor"),
     ("insulin", "insulin_pump"),
+    # Clinical systems
     ("ehr", "ehr_workstation"),
     ("pacs", "pacs_server"),
     ("pharmacy", "pharmacy_system"),
+    ("laboratory", "server"),
+    ("scheduling", "server"),
+    ("data warehouse", "server"),
+    # Infrastructure
     ("workstation", "workstation"),
     ("server", "server"),
+    ("controller", "server"),
+    ("gateway", "server"),
+    ("sensor", "other"),
+    ("access point", "other"),
+    ("wi-fi", "other"),
+    ("hvac", "other"),
+    ("monitor", "patient_monitor"),
+    ("system", "server"),
 ]
 
 
@@ -509,9 +523,8 @@ def _generate_rule_based(
                 f"Starting {time_str}, device initiated {protocol} to {dest_ip} "
                 "at abnormal frequency, outside established baseline."
             ),
-            "confidence_indicator": (
-                "Confidence: MEDIUM — may indicate firmware update, "
-                "vendor maintenance, or behavioral compromise."
+            "confidence_indicator": _confidence_level(
+                severity_score, baseline_days, criticality
             ),
         }
 

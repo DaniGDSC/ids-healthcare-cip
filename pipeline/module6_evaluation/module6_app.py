@@ -60,6 +60,247 @@ from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa:
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# MVE Display Helpers (Gap 1, Gap 2, Gap 3 fixes)
+# ═══════════════════════════════════════════════════════════════════════
+
+# FIX B: Infer device class from attack category when asset lookup fails
+_CATEGORY_TO_DEVICE = {
+    "Spoofing": "iomt_device",
+    "Data Alteration": "iomt_device",
+    "iomt_deviation": "iomt_device",
+    "anomalous_outbound": "iomt_device",
+    "lateral_movement": "workstation",
+    "data_exfiltration": "ehr_workstation",
+    "ehr_access": "ehr_workstation",
+}
+
+# FIX C: Action priority ordering for consensus display
+_ACTION_DISPLAY = {
+    "isolate_device":        (1, "\U0001f534", "Isolate device"),
+    "escalate_incident":     (2, "\U0001f7e0", "Escalate to security lead"),
+    "escalate_clinical":     (2, "\U0001f7e0", "Escalate to clinical engineering"),
+    "restrict_traffic":      (3, "\U0001f7e1", "Restrict suspicious traffic"),
+    "re_authenticate":       (3, "\U0001f7e1", "Force re-authentication"),
+    "forensic_snapshot":     (4, "\U0001f535", "Capture forensic snapshot"),
+    "enhanced_monitoring":   (5, "\U0001f7e2", "Enable enhanced monitoring"),
+    "log_event":             (6, "\u26aa", "Log event"),
+}
+
+_CRIT_COLOR_HEX = {
+    "CRITICAL": "#d32f2f", "HIGH": "#f57c00",
+    "MEDIUM": "#1976d2", "LOW": "#388e3c",
+}
+
+
+def render_device_criticality(alert: dict) -> None:
+    """Gap 2 + UX-X-02: Render device class criticality badge + context."""
+    criticality = str(alert.get("device_criticality", "")).upper()
+    if not criticality or criticality not in _CRIT_COLOR_HEX:
+        criticality = str(alert.get("risk_level", "UNKNOWN")).upper()
+    hex_c = _CRIT_COLOR_HEX.get(criticality, "#757575")
+
+    # FIX B: infer device class when missing
+    device_cls, was_inferred = infer_device_class(alert)
+    affected = alert.get("affected_system", "")
+
+    st.markdown(
+        f'<span style="background:{hex_c};color:white;'
+        f'padding:3px 10px;border-radius:4px;font-weight:bold;">'
+        f'Device: {criticality}</span>',
+        unsafe_allow_html=True,
+    )
+    if device_cls or affected:
+        st.caption(f"{device_cls}{' — ' + affected if affected else ''}")
+    if was_inferred:
+        st.caption(
+            f"\u26a0\ufe0f Device class inferred from attack category "
+            f"({alert.get('attack_category', '?')}) — asset inventory lookup unavailable."
+        )
+
+    # UX-X-01: Patient impact warning
+    impact = alert.get("patient_care_impact", "")
+    active = alert.get("active_device", False)
+    if active and impact:
+        st.warning(f"\U0001f3e5 Active device — {impact}")
+    elif impact:
+        st.info(f"\u2139\ufe0f {impact}")
+
+
+def infer_device_class(alert: dict) -> tuple[str, bool]:
+    """FIX B: Return (device_class, was_inferred) with fallback from attack category."""
+    device_cls = alert.get("device_class", "")
+    if device_cls and device_cls not in ("", "other", "unknown"):
+        return device_cls, False
+    attack_cat = alert.get("attack_category", "")
+    inferred = _CATEGORY_TO_DEVICE.get(attack_cat, "")
+    if inferred:
+        return inferred, True
+    return device_cls or "unknown", not bool(device_cls)
+
+
+def render_prioritized_actions(actions: list) -> None:
+    """FIX C: Render response actions in priority order with icons."""
+    if not actions:
+        return
+    sorted_actions = sorted(
+        actions,
+        key=lambda a: _ACTION_DISPLAY.get(a, (99, "", a))[0],
+    )
+    st.markdown("**Response (in priority order):**")
+    for act in sorted_actions:
+        priority, icon, label = _ACTION_DISPLAY.get(act, (99, "\u26aa", act))
+        if priority == 1:
+            st.error(f"{icon} **Primary: {label}**")
+        elif priority <= 3:
+            st.warning(f"{icon} {label}")
+        else:
+            st.info(f"{icon} {label}")
+
+
+def render_do_not_constraint(layer3_text: str, severity: str = "") -> None:
+    """Extract and render DO NOT constraint from Layer 3 text."""
+    if not layer3_text:
+        return
+    for line in layer3_text.replace("\n", " ").split(". "):
+        stripped = line.strip()
+        if "DO NOT" in stripped.upper():
+            st.warning(f"\u26a0\ufe0f {stripped.rstrip('.')}.")
+            return
+    # No DO NOT found — silence is correct.
+    # Device-class fallbacks are handled by render_mve_layers().
+
+
+# Text matches src/mve_generator.py T5 device-specific constraints exactly
+_DO_NOT_FALLBACKS = {
+    "infusion_pump": "DO NOT power-cycle pump during active infusion. SAFE: NAC quarantine blocking non-HTTPS preserves controller.",
+    "ventilator": "DO NOT power off or disconnect ventilator. SAFE: block port at switch — clinical traffic on 443 unaffected.",
+    "patient_monitor": "DO NOT isolate from EHR gateway — vitals must continue. SAFE: DNS rate-limit or port block — HL7 on 443 unaffected.",
+    "insulin_pump": "DO NOT disrupt wireless control loop. SAFE: destination-specific block only if IP-connected.",
+    "ehr_workstation": "DO NOT suspend account without verifying role — disrupts active clinical documentation.",
+    "pacs_server": "DO NOT shut down PACS — active radiology reads depend on image delivery.",
+    "pharmacy_system": "DO NOT disable dispensing system — automated drug delivery depends on availability.",
+    "iomt_device": "DO NOT isolate without contacting Biomed Engineering — clinical function unconfirmed.",
+    "workstation": "DO NOT lock workstation without verifying active clinical sessions.",
+}
+
+
+def render_mve_layers(alert: dict) -> None:
+    """Render alert content as explicit Layer 1/2/3 sections.
+
+    Searches alert top-level, nested xai_explanation, and nested
+    explanation dicts. Falls back to clinician summary, response
+    policy fields, and device-class-based DO NOT fallbacks.
+    """
+    xai = alert.get("xai_explanation", {})
+    expl = alert.get("explanation", {})
+    resp = alert.get("response", {})
+
+    def _get(*keys):
+        """First non-empty string across alert, xai, explanation, response."""
+        for k in keys:
+            for source in (alert, xai, expl, resp):
+                if not isinstance(source, dict):
+                    continue
+                v = source.get(k)
+                if v and isinstance(v, str) and v.strip():
+                    return v
+        return ""
+
+    # ── Layer 1: Why Anomalous ──
+    l1 = _get("why_anomalous", "layer_1", "baseline_behavior",
+              "deviation_description", "confidence_indicator",
+              "clinician_summary", "nlg_text")
+    consensus = _get("consensus")
+
+    with st.expander("\U0001f50d Layer 1 \u2014 Why Anomalous", expanded=True):
+        if l1:
+            st.write(l1)
+            if consensus:
+                st.caption(f"Model consensus: {consensus}")
+        else:
+            st.caption("Baseline deviation detected. See SHAP features below.")
+
+    # ── Layer 2: Clinical Severity ──
+    affected = _get("affected_system")
+    impact = _get("patient_care_impact")
+    severity = _get("severity_label", "severity", "risk_level", "tier")
+    device_tier = _get("device_tier", "device_class")
+
+    with st.expander("\U0001f3e5 Layer 2 \u2014 Clinical Severity", expanded=True):
+        if severity:
+            color = TIER_COLORS.get(severity.upper(), "#999")
+            st.markdown(
+                f"**Severity:** <span style='color:{color}'>"
+                f"{severity}</span>",
+                unsafe_allow_html=True,
+            )
+        if affected:
+            st.write(f"**Affected system:** {affected}")
+        elif device_tier:
+            st.write(f"**Device tier:** {device_tier}")
+        if impact:
+            st.write(f"**Patient impact:** {impact}")
+        if not affected and not impact and not severity:
+            st.caption("Layer 2 data not available for this alert.")
+
+    # ── Layer 3: Recommended Action ──
+    action = _get("recommended_action", "layer_3", "immediate_action",
+                  "response_action", "correct_action")
+    constraint = _get("clinical_constraint")
+    rationale = _get("rationale")
+
+    # If no explicit action field, derive from response.actions policy list
+    if not action and isinstance(resp, dict):
+        policy_actions = resp.get("actions", [])
+        _PA_MAP = {
+            "isolate_device": "Isolate device", "escalate_incident": "Escalate to security lead",
+            "escalate_clinical": "Escalate to clinical engineering",
+            "restrict_traffic": "Restrict suspicious traffic",
+            "re_authenticate": "Force re-authentication",
+            "enhanced_monitoring": "Enhanced monitoring",
+            "forensic_snapshot": "Capture forensic snapshot",
+            "log_event": "Log and monitor",
+        }
+        for pa in reversed(policy_actions):
+            if pa in _PA_MAP:
+                action = _PA_MAP[pa]
+                break
+
+    with st.expander("\u26a1 Layer 3 \u2014 Recommended Action", expanded=True):
+        if action:
+            st.write(f"**Recommended:** {action}")
+        else:
+            actions_list = resp.get("actions", []) if isinstance(resp, dict) else []
+            if actions_list:
+                st.write(f"**Actions:** {', '.join(actions_list)}")
+            elif rationale:
+                st.write(rationale[:200])
+            else:
+                st.caption("Layer 3 data not available for this alert.")
+
+        # DO NOT constraint — explicit field, fallback, or silence
+        full_l3 = f"{action} {constraint} {rationale}"
+        if "DO NOT" in full_l3.upper():
+            render_do_not_constraint(full_l3, severity)
+        else:
+            # FIX B: device-class fallback for HIGH/CRITICAL
+            device_cls, _ = infer_device_class(alert)
+            if not device_cls:
+                device_cls = _get("device_tier")
+            sev_upper = severity.upper() if severity else ""
+            if sev_upper in ("CRITICAL", "HIGH"):
+                fallback = _DO_NOT_FALLBACKS.get(device_cls, "")
+                if fallback:
+                    st.warning(f"\u26a0\ufe0f {fallback}")
+                else:
+                    st.warning(
+                        "\u26a0\ufe0f DO NOT isolate or power off without "
+                        "contacting Biomed Engineering \u2014 clinical function unknown."
+                    )
+            # MEDIUM/LOW: show nothing (silence is correct)
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # 6A.7  Audit Trail Writer (JSONL, immutable with integrity hashes)
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -247,6 +488,35 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
     from pre-computed artifacts (risk scores, SHAP, NLG, responses).
     """
     xai = alert_data.get("xai_explanation", {})
+    expl = alert_data.get("explanation", {})
+    clinician_summary = (
+        xai.get("clinician_summary", "")
+        or (expl.get("clinician_summary", "") if isinstance(expl, dict) else "")
+    )
+
+    # Derive recommended action: correct_action > response.actions > risk-level default
+    resp = alert_data.get("response", {})
+    action = alert_data.get("correct_action", "")
+    if not action and isinstance(resp, dict):
+        # Use the highest-priority policy action (last in list = most severe)
+        policy_actions = resp.get("actions", [])
+        _ACTION_PRIORITY = {
+            "isolate_device": "isolate", "escalate_incident": "escalate",
+            "escalate_clinical": "escalate", "restrict_traffic": "investigate",
+            "forensic_snapshot": "investigate", "re_authenticate": "investigate",
+            "enhanced_monitoring": "monitor", "log_event": "monitor",
+        }
+        for pa in reversed(policy_actions):
+            mapped = _ACTION_PRIORITY.get(pa)
+            if mapped:
+                action = mapped
+                break
+    if not action:
+        # Last resort: derive from risk_level
+        level = alert_data.get("risk_level", "LOW")
+        action = {"CRITICAL": "isolate", "HIGH": "escalate",
+                  "MEDIUM": "investigate", "LOW": "monitor"}.get(level, "monitor")
+
     return {
         "sample_index": sample_index,
         "prediction": 1 if alert_data.get("risk_score", 0) >= 0.4 else 0,
@@ -257,9 +527,19 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
         "ground_truth": alert_data.get("ground_truth", "unknown"),
         "shap_top_features": xai.get("xgboost_top_features", []),
         "dae_top_features": xai.get("dae_top_features", []),
-        "nlg_text": xai.get("clinician_summary", ""),
-        "consensus": xai.get("consensus", ""),
-        "response_action": alert_data.get("correct_action", "monitor"),
+        "nlg_text": clinician_summary,
+        "consensus": xai.get("consensus", "") or (expl.get("consensus", "") if isinstance(expl, dict) else ""),
+        "response_action": action,
+        "response": resp,
+        # Device context
+        "device_class": alert_data.get("device_class", ""),
+        "device_criticality": alert_data.get("device_criticality", ""),
+        "affected_system": alert_data.get("affected_system", ""),
+        "patient_care_impact": alert_data.get("patient_care_impact", ""),
+        "active_device": alert_data.get("active_device", False),
+        # MVE layer content
+        "clinician_summary": clinician_summary,
+        "severity_label": alert_data.get("risk_level", ""),
     }
 
 
@@ -271,6 +551,9 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
 def render_analyst(alert: dict):
     """Analyst view: SHAP plots + feature table + classification detail."""
     st.markdown("#### Security Analyst View")
+
+    # Gap 2: Device criticality badge
+    render_device_criticality(alert)
 
     # SHAP waterfall
     idx = alert.get("sample_index", 0)
@@ -313,6 +596,9 @@ def render_clinician(alert: dict):
     """Clinician view: plain-language NLG summary + biometric safety notes."""
     st.markdown("#### Clinician View")
 
+    # Gap 2: Device criticality badge
+    render_device_criticality(alert)
+
     nlg = alert.get("nlg_text", "")
     if nlg:
         st.warning(nlg)
@@ -333,10 +619,21 @@ def render_clinician(alert: dict):
     st.metric("Risk Score", f"{alert.get('risk_score', 0):.2f}")
     st.markdown(f"**Recommended action:** {alert.get('response_action', 'N/A')}")
 
+    # Gap 1: DO NOT constraint
+    action_text = alert.get("response_action", "") or alert.get("clinical_constraint", "")
+    render_do_not_constraint(action_text, alert.get("tier", ""))
+
+    # Gap 3: MVE layers (collapsed in clinician view)
+    with st.expander("View full MVE explanation"):
+        render_mve_layers(alert)
+
 
 def render_admin(alert: dict):
     """Administrator view: summary statistics + risk breakdown."""
     st.markdown("#### Administrator View")
+
+    # Gap 2: Device criticality badge
+    render_device_criticality(alert)
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Risk Score", f"{alert.get('risk_score', 0):.3f}")
@@ -373,11 +670,30 @@ def load_alerts() -> list:
 
 @st.cache_data
 def load_all_responses() -> list:
+    """Load alert_responses.json, enriched with device context from evaluation_alerts.json."""
     path = EVAL_DIR / "alert_responses.json"
-    if path.exists():
-        with open(path) as f:
-            return json.load(f)
-    return []
+    if not path.exists():
+        return []
+    with open(path) as f:
+        responses = json.load(f)
+
+    # M4: Join with evaluation_alerts.json for device context fields
+    eval_path = EVAL_DIR / "evaluation_alerts.json"
+    if eval_path.exists():
+        with open(eval_path) as f:
+            eval_alerts = {a["sample_index"]: a for a in json.load(f)}
+        _ENRICH_KEYS = (
+            "device_class", "device_criticality", "affected_system",
+            "patient_care_impact", "active_device", "correct_action",
+        )
+        for r in responses:
+            ea = eval_alerts.get(r.get("sample_index"))
+            if ea:
+                for k in _ENRICH_KEYS:
+                    if k in ea and k not in r:
+                        r[k] = ea[k]
+
+    return responses
 
 
 @st.cache_data
@@ -660,26 +976,27 @@ def dashboard_mode():
     c4.metric("MEDIUM", tier_counts.get("MEDIUM", 0))
     c5.metric("LOW", tier_counts.get("LOW", 0))
 
-    # ── Row 2: Alert tier distribution + Risk heatmap ──
-    col_left, col_right = st.columns(2)
+    # ── Row 2: Alert distribution (collapsed to reduce cognitive load) ──
+    with st.expander("\U0001f4ca Alert Distribution", expanded=False):
+        col_left, col_right = st.columns(2)
 
-    with col_left:
-        st.markdown("#### Alert Tier Distribution")
-        tiers = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
-        counts = [tier_counts.get(t, 0) for t in tiers]
-        chart_df = pd.DataFrame({"Tier": tiers, "Count": counts})
-        st.bar_chart(chart_df.set_index("Tier"), color="#3274A1")
+        with col_left:
+            st.markdown("#### Alert Tier Distribution")
+            tiers = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+            counts = [tier_counts.get(t, 0) for t in tiers]
+            chart_df = pd.DataFrame({"Tier": tiers, "Count": counts})
+            st.bar_chart(chart_df.set_index("Tier"), color="#3274A1")
 
-    with col_right:
-        st.markdown("#### Risk Score Heatmap (by Attack Category)")
-        if admin:
-            cat_stats = admin.get("alerts_by_attack_category", {}) if admin else {}
-            if cat_stats:
-                st.bar_chart(pd.Series(cat_stats), color="#e74c3c")
-            else:
-                st.info("No category data available")
-        elif risk_data is not None:
-            st.info("Admin dashboard not loaded")
+        with col_right:
+            st.markdown("#### Risk Score Heatmap (by Attack Category)")
+            if admin:
+                cat_stats = admin.get("alerts_by_attack_category", {}) if admin else {}
+                if cat_stats:
+                    st.bar_chart(pd.Series(cat_stats), color="#e74c3c")
+                else:
+                    st.info("No category data available")
+            elif risk_data is not None:
+                st.info("Admin dashboard not loaded")
 
     # ── Row 3: Risk gauge (latest alert) + Alert feed ──
     st.markdown("---")
@@ -696,6 +1013,9 @@ def dashboard_mode():
         selected = responses[alert_idx]
         score = selected["risk_score"]
         level = selected["risk_level"]
+
+        # Gap 2: Device criticality badge
+        render_device_criticality(selected)
 
         # Gauge visualization using progress bar + color
         st.metric("Risk Score", f"{score:.3f}", delta=level)
@@ -717,8 +1037,9 @@ def dashboard_mode():
                     "Sample": r["sample_index"],
                     "Level": r["risk_level"],
                     "Score": round(r["risk_score"], 3),
+                    "Device": r.get("device_class", "\u2014"),
                     "Category": r.get("attack_category", ""),
-                    "Actions": "|".join(r.get("response", {}).get("actions", [])),
+                    "Action": r.get("correct_action", "\u2014"),
                 }
             )
         st.dataframe(pd.DataFrame(feed_data), width="stretch", hide_index=True)
@@ -758,15 +1079,20 @@ def dashboard_mode():
         else:
             st.info("No clinician summary for this sample")
 
+        # Gap 3: MVE layer rendering for the selected alert
+        render_mve_layers(selected)
+
     # ── Row 5: Response recommendation panel ──
     st.markdown("---")
     st.markdown("#### Response Recommendation")
     resp = selected.get("response", {})
     if resp:
-        rc1, rc2, rc3 = st.columns(3)
-        rc1.markdown(f"**Actions:** {', '.join(resp.get('actions', []))}")
-        rc2.markdown(f"**Max Response:** {resp.get('max_response_min', 'N/A')} min")
-        rc3.markdown(f"**Priority:** {resp.get('priority', 'N/A')}")
+        rc1, rc2 = st.columns([2, 1])
+        with rc1:
+            render_prioritized_actions(resp.get("actions", []))
+        with rc2:
+            st.metric("Max Response", f"{resp.get('max_response_min', 'N/A')} min")
+            st.metric("Priority", resp.get("priority", "N/A"))
 
         rationale = resp.get("rationale", "")
         if rationale:
@@ -779,18 +1105,22 @@ def dashboard_mode():
                 f"{' → ' + escalation['secondary'] if escalation.get('secondary') else ''}"
             )
 
-    # ── Row 6: Global SHAP summary ──
+        # Gap 1: DO NOT constraint from response policy
+        constraint = resp.get("clinical_constraint", "") or resp.get("rationale", "")
+        render_do_not_constraint(constraint, level)
+
+    # ── Row 6: Global SHAP (collapsed to reduce cognitive load) ──
     st.markdown("---")
-    st.markdown("#### Global Feature Importance (XGBoost)")
-    global_bytes = _cached_png_bytes(str(CHARTS_DIR / "global_importance_xgboost.png"))
-    beeswarm_bytes = _cached_png_bytes(str(CHARTS_DIR / "beeswarm_xgboost.png"))
-    gc1, gc2 = st.columns(2)
-    with gc1:
-        if global_bytes:
-            st.image(global_bytes, width="stretch")
-    with gc2:
-        if beeswarm_bytes:
-            st.image(beeswarm_bytes, width="stretch")
+    with st.expander("\U0001f52c Global Feature Importance", expanded=False):
+        global_bytes = _cached_png_bytes(str(CHARTS_DIR / "global_importance_xgboost.png"))
+        beeswarm_bytes = _cached_png_bytes(str(CHARTS_DIR / "beeswarm_xgboost.png"))
+        gc1, gc2 = st.columns(2)
+        with gc1:
+            if global_bytes:
+                st.image(global_bytes, width="stretch")
+        with gc2:
+            if beeswarm_bytes:
+                st.image(beeswarm_bytes, width="stretch")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -927,104 +1257,104 @@ def simulation_mode():
     # (sidebar change, control click, page reload). The fragment below
     # then handles tick-driven updates without re-running these panels.
 
-    # ── Static latency profile (metrics + bar chart + percentile table) ──
+    # ── System health panels (UX-S-01: collapsed to reduce triage distraction) ──
     st.markdown("---")
-    st.markdown("#### Real-Time Latency Profile")
-    if not latency_profile:
-        st.info(
-            "No `online_latency_profile.json` found. Run "
-            "`python -m pipeline.module4_explanations.module4_online_explainer` "
-            "to generate it."
-        )
-    else:
-        all_stages = latency_profile.get("all_alerts", {})
-        startup_ms = latency_profile.get("startup_ms")
-        n_total = latency_profile.get("n_alerts_total", 0)
-
-        lc1, lc2, lc3 = st.columns(3)
-        lc1.metric("Profile samples", n_total)
-        if startup_ms is not None:
-            lc2.metric("Startup", f"{startup_ms:.0f} ms")
-        if "total_ms" in all_stages:
-            lc3.metric(
-                "End-to-end p95",
-                f"{all_stages['total_ms'].get('p95', 0):.0f} ms",
+    with st.expander("\U0001f4c8 System Health (Latency / Threshold / Drift)", expanded=False):
+        st.markdown("#### Real-Time Latency Profile")
+        if not latency_profile:
+            st.info(
+                "No `online_latency_profile.json` found. Run "
+                "`python -m pipeline.module4_explanations.module4_online_explainer` "
+                "to generate it."
             )
+        else:
+            all_stages = latency_profile.get("all_alerts", {})
+            startup_ms = latency_profile.get("startup_ms")
+            n_total = latency_profile.get("n_alerts_total", 0)
 
-        lat_left, lat_right = st.columns(2)
-
-        with lat_left:
-            st.markdown("**Per-stage mean latency (ms)**")
-            stage_rows = [
-                {"stage": s, "mean_ms": float(stats.get("mean", 0.0))}
-                for s, stats in all_stages.items()
-                if s != "total_ms"
-            ]
-            if stage_rows:
-                stage_df = pd.DataFrame(stage_rows).set_index("stage")
-                st.bar_chart(stage_df, color="#3274A1")
-
-        with lat_right:
-            st.markdown("**Percentiles per stage**")
-            pct_rows = [
-                {
-                    "stage": s,
-                    "p50": round(stats.get("p50", 0.0), 2),
-                    "p95": round(stats.get("p95", 0.0), 2),
-                    "p99": round(stats.get("p99", 0.0), 2),
-                    "max": round(stats.get("max", 0.0), 2),
-                }
-                for s, stats in all_stages.items()
-            ]
-            if pct_rows:
-                st.dataframe(
-                    pd.DataFrame(pct_rows),
-                    hide_index=True,
-                    width="stretch",
+            lc1, lc2, lc3 = st.columns(3)
+            lc1.metric("Profile samples", n_total)
+            if startup_ms is not None:
+                lc2.metric("Startup", f"{startup_ms:.0f} ms")
+            if "total_ms" in all_stages:
+                lc3.metric(
+                    "End-to-end p95",
+                    f"{all_stages['total_ms'].get('p95', 0):.0f} ms",
                 )
 
-    # ── Static dynamic threshold + drift detection panels ──
-    st.markdown("---")
-    col_thresh, col_drift = st.columns(2)
-    with col_thresh:
-        st.markdown("#### Adaptive Threshold Monitor")
-        dyn_path = EVAL_DIR / "dynamic_threshold_results.json"
-        if dyn_path.exists():
-            with open(dyn_path) as f:
-                dyn = json.load(f)
-            b1 = dyn.get("b1_static_vs_adaptive", {})
-            fm = b1.get("final_metrics", {})
-            if fm:
-                thc1, thc2 = st.columns(2)
-                thc1.metric("Static F1", f"{fm.get('static', {}).get('f1', 0):.4f}")
-                thc2.metric("Adaptive F1", f"{fm.get('adaptive', {}).get('f1', 0):.4f}")
-            thresh_bytes = _cached_png_bytes(str(CHARTS_DIR / "threshold_over_time.png"))
-            if thresh_bytes:
-                st.image(thresh_bytes, width="stretch", caption="DAE threshold: static vs adaptive")
-        else:
-            st.info("Run `dynamic_threshold_sim.py` to enable adaptive threshold monitoring")
+            lat_left, lat_right = st.columns(2)
 
-    with col_drift:
-        st.markdown("#### Drift Detection Status")
-        drift_path = EVAL_DIR / "drift_detection_results.json"
-        if drift_path.exists():
-            with open(drift_path) as f:
-                drift = json.load(f)
-            psi = drift.get("psi_summary", {})
-            n_events = len(drift.get("drift_events", []))
-            dc1, dc2 = st.columns(2)
-            dc1.metric("Drift Events", n_events)
-            dc2.metric(
-                "PSI (max)",
-                f"{psi.get('max', 0):.4f}",
-                delta="DRIFT" if psi.get("max", 0) > 0.1 else "OK",
-                delta_color="inverse" if psi.get("max", 0) > 0.1 else "normal",
-            )
-            psi_bytes = _cached_png_bytes(str(CHARTS_DIR / "drift_psi.png"))
-            if psi_bytes:
-                st.image(psi_bytes, width="stretch", caption="PSI over time")
-        else:
-            st.info("Run `drift_detection.py` to enable drift monitoring")
+            with lat_left:
+                st.markdown("**Per-stage mean latency (ms)**")
+                stage_rows = [
+                    {"stage": s, "mean_ms": float(stats.get("mean", 0.0))}
+                    for s, stats in all_stages.items()
+                    if s != "total_ms"
+                ]
+                if stage_rows:
+                    stage_df = pd.DataFrame(stage_rows).set_index("stage")
+                    st.bar_chart(stage_df, color="#3274A1")
+
+            with lat_right:
+                st.markdown("**Percentiles per stage**")
+                pct_rows = [
+                    {
+                        "stage": s,
+                        "p50": round(stats.get("p50", 0.0), 2),
+                        "p95": round(stats.get("p95", 0.0), 2),
+                        "p99": round(stats.get("p99", 0.0), 2),
+                        "max": round(stats.get("max", 0.0), 2),
+                    }
+                    for s, stats in all_stages.items()
+                ]
+                if pct_rows:
+                    st.dataframe(
+                        pd.DataFrame(pct_rows),
+                        hide_index=True,
+                        width="stretch",
+                    )
+
+        st.markdown("---")
+        col_thresh, col_drift = st.columns(2)
+        with col_thresh:
+            st.markdown("#### Adaptive Threshold Monitor")
+            dyn_path = EVAL_DIR / "dynamic_threshold_results.json"
+            if dyn_path.exists():
+                with open(dyn_path) as f:
+                    dyn = json.load(f)
+                b1 = dyn.get("b1_static_vs_adaptive", {})
+                fm = b1.get("final_metrics", {})
+                if fm:
+                    thc1, thc2 = st.columns(2)
+                    thc1.metric("Static F1", f"{fm.get('static', {}).get('f1', 0):.4f}")
+                    thc2.metric("Adaptive F1", f"{fm.get('adaptive', {}).get('f1', 0):.4f}")
+                thresh_bytes = _cached_png_bytes(str(CHARTS_DIR / "threshold_over_time.png"))
+                if thresh_bytes:
+                    st.image(thresh_bytes, width="stretch", caption="DAE threshold: static vs adaptive")
+            else:
+                st.info("Run `dynamic_threshold_sim.py` to enable adaptive threshold monitoring")
+
+        with col_drift:
+            st.markdown("#### Drift Detection Status")
+            drift_path = EVAL_DIR / "drift_detection_results.json"
+            if drift_path.exists():
+                with open(drift_path) as f:
+                    drift = json.load(f)
+                psi = drift.get("psi_summary", {})
+                n_events = len(drift.get("drift_events", []))
+                dc1, dc2 = st.columns(2)
+                dc1.metric("Drift Events", n_events)
+                dc2.metric(
+                    "PSI (max)",
+                    f"{psi.get('max', 0):.4f}",
+                    delta="DRIFT" if psi.get("max", 0) > 0.1 else "OK",
+                    delta_color="inverse" if psi.get("max", 0) > 0.1 else "normal",
+                )
+                psi_bytes = _cached_png_bytes(str(CHARTS_DIR / "drift_psi.png"))
+                if psi_bytes:
+                    st.image(psi_bytes, width="stretch", caption="PSI over time")
+            else:
+                st.info("Run `drift_detection.py` to enable drift monitoring")
 
     # ─────────────────────────────────────────────────────────────────
     # Phase 2 — PLAYHEAD FRAGMENT (auto-ticks at speed-derived interval)
@@ -1202,7 +1532,7 @@ def simulation_mode():
 
                 resp = r.get("response", {})
                 if resp:
-                    st.markdown(f"**Response:** {', '.join(resp.get('actions', []))}")
+                    render_prioritized_actions(resp.get("actions", []))
 
                 if sample_idx not in fda_cache:
                     fda_record = build_fda_record_for_alert(sample_idx, r, audit_trail)
@@ -1347,6 +1677,9 @@ def display_alert(alert: dict, show_xai: bool):
     """Display an alert with or without XAI explanation."""
     st.markdown(f"### Alert: {alert['alert_id']}")
 
+    # Gap 2: Device criticality badge at the top
+    render_device_criticality(alert)
+
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Risk Score", f"{alert['risk_score']:.2f}")
@@ -1358,7 +1691,12 @@ def display_alert(alert: dict, show_xai: bool):
 
     if show_xai:
         st.markdown("---")
-        st.markdown("#### XAI Explanation")
+
+        # Gap 3: MVE 3-layer format
+        render_mve_layers(alert)
+
+        st.markdown("---")
+        st.markdown("#### XAI Feature Detail")
 
         xai = alert.get("xai_explanation", {})
         top_feats = xai.get("xgboost_top_features", [])
@@ -1381,10 +1719,6 @@ def display_alert(alert: dict, show_xai: bool):
         consensus = xai.get("consensus", "")
         if consensus:
             st.info(f"Model consensus: {consensus}")
-
-        clin = xai.get("clinician_summary", "")
-        if clin:
-            st.warning(clin[:500])
 
         wf_bytes = _cached_png_bytes(
             str(CHARTS_DIR / f"waterfall_xgboost_sample_{alert['sample_index']:04d}.png")
@@ -1441,6 +1775,30 @@ def browse_mode():
     st.title("IoMT Alert Browser")
     st.caption(f"Alert {idx + 1} of {n} — {'With XAI' if show_xai else 'Without XAI'}")
     display_alert(alert, show_xai)
+
+    # UX-B-01: Action affordance — show recommended action
+    st.divider()
+    st.subheader("\u26a1 Recommended Action")
+    correct_action = alert.get("correct_action", "")
+    _ACTION_GUIDANCE = {
+        "isolate": ("\U0001f534 Isolate device from network",
+                    "Block all non-essential connections while preserving clinical paths."),
+        "escalate": ("\U0001f7e0 Escalate immediately",
+                     "Notify security lead and clinical engineering on-call."),
+        "investigate": ("\U0001f7e1 Investigate before acting",
+                        "Gather more information. Check with Biomed for scheduled maintenance."),
+        "monitor": ("\U0001f7e2 Monitor — no immediate action",
+                    "Watch for escalation. Set alert for threshold change."),
+        "dismiss": ("\u26aa Dismiss — expected behavior",
+                    "Verify with asset owner. Document reason for dismissal."),
+    }
+    label, guidance = _ACTION_GUIDANCE.get(
+        correct_action,
+        ("\u2139\ufe0f Review recommended",
+         "Check response policy for this alert type."),
+    )
+    st.markdown(f"**{label}**")
+    st.caption(guidance)
 
 
 def _render_proxy_questions():
@@ -1506,6 +1864,57 @@ def _render_proxy_questions():
                      participant_id=st.session_state.participant_id,
                      q21=q21, q22=q22)
             st.rerun()
+
+
+_SEV_COLORS = {
+    "CRITICAL": "#d32f2f", "HIGH": "#f57c00",
+    "MEDIUM": "#1976d2", "LOW": "#388e3c",
+}
+
+
+def _render_group_b_highlighted(display_text: str) -> None:
+    """FIX 8: Render Group B display with severity color + DO NOT highlight."""
+    lines = display_text.split("\n")
+    regular: list[str] = []
+
+    def _flush_regular():
+        if regular:
+            st.code("\n".join(regular), language=None)
+            regular.clear()
+
+    for line in lines:
+        upper = line.upper()
+
+        # DO NOT constraint → warning box
+        if "DO NOT" in upper:
+            _flush_regular()
+            clean = line.strip().lstrip("\u2502").strip()
+            st.warning(f"\u26a0\ufe0f {clean}")
+            continue
+
+        # Severity label line → colored banner
+        detected_sev = next(
+            (s for s in ("CRITICAL", "HIGH", "MEDIUM", "LOW")
+             if f"SEVERITY: {s}" in upper or f"\u25ba {s}" in upper
+             or f"SEVERITY {s}" in upper),
+            None,
+        )
+        if detected_sev:
+            _flush_regular()
+            hex_c = _SEV_COLORS.get(detected_sev, "#757575")
+            st.markdown(
+                f'<div style="background:{hex_c};color:white;'
+                f'padding:4px 10px;border-radius:4px;'
+                f'font-family:monospace;margin:2px 0;">'
+                f'{line.strip()}</div>',
+                unsafe_allow_html=True,
+            )
+            continue
+
+        # Regular line → batch for code block
+        regular.append(line)
+
+    _flush_regular()
 
 
 def study_mode():
@@ -1634,7 +2043,7 @@ def study_mode():
 
     # Show Group A or Group B content
     if show_mve:
-        st.code(alert.group_b_display, language=None)
+        _render_group_b_highlighted(alert.group_b_display)
     else:
         st.code(alert.group_a_display, language=None)
 
@@ -1645,22 +2054,22 @@ def study_mode():
     with st.form(f"alert_form_{current_idx}"):
 
         severity = st.radio(
-            "1. How severe is this alert?",
+            "1. How severe is this alert? *(select one)*",
             ["CRITICAL — Respond immediately",
              "HIGH — Respond within 1 hour",
              "MEDIUM — Respond within 4 hours",
              "LOW — Review within 24 hours"],
-            index=2
+            index=None,
         )
 
         action = st.radio(
-            "2. What action would you take?",
+            "2. What action would you take? *(select one)*",
             ["Isolate the device/system from the network",
              "Escalate to clinical staff / senior management",
              "Investigate further before taking action",
              "Monitor closely but no immediate action",
              "Dismiss — this is likely a false alarm"],
-            index=2
+            index=None,
         )
 
         confidence = st.select_slider(
@@ -1683,6 +2092,14 @@ def study_mode():
         )
 
         if submitted:
+            # Validate selections (FIX 7: no default → must select)
+            if severity is None or action is None:
+                if severity is None:
+                    st.error("Please select a severity level before submitting.")
+                if action is None:
+                    st.error("Please select an action before submitting.")
+                st.stop()
+
             elapsed = round(time.time() - st.session_state.alert_start_time, 1)
 
             # Map display values to scoring values
@@ -1762,23 +2179,30 @@ def study_mode():
 
 def pcap_replay_stub():
     """6C.10 — PCAP replay placeholder (optional, future work)."""
-    st.title("PCAP Replay Mode")
+    st.title("\U0001f4e6 PCAP Replay")
+
     st.info(
-        "**PCAP Replay** loads a `.pcap` file, extracts network flows via ARGUS/Scapy, "
-        "and feeds them through the full preprocessing + detection + risk scoring + "
-        "explanation pipeline in real time.\n\n"
-        "**Status:** Stub — not yet implemented. This requires:\n"
-        "- `scapy` for packet parsing\n"
-        "- ARGUS for flow extraction\n"
-        "- Integration with Phase 1 preprocessing pipeline\n\n"
-        "For the thesis prototype, the **Online Simulation** mode demonstrates "
-        "the same end-to-end flow using pre-processed test set samples."
+        "**Phase 3 Feature \u2014 Not yet implemented**\n\n"
+        "This module will allow upload of raw .pcap / .pcapng "
+        "network capture files for offline replay through the "
+        "full IoMT IDS pipeline (DAE anomaly detection \u2192 "
+        "risk scoring \u2192 MVE explanation generation).\n\n"
+        "**Planned for:** Phase 3 (hospital pilot deployment)"
     )
-    uploaded = st.file_uploader(
-        "Upload .pcap file (future)", type=["pcap", "pcapng"], disabled=True
+
+    st.markdown("#### Planned capabilities:")
+    st.markdown(
+        "- Upload PCAP files from network taps or span ports\n"
+        "- Replay packet-by-packet through the detection pipeline\n"
+        "- Generate MVE explanations for each detected anomaly\n"
+        "- Export audit trail in FDA-compatible format\n"
+        "- Compare replay results against known attack signatures"
     )
-    if uploaded:
-        st.warning("PCAP processing not yet implemented.")
+
+    st.caption(
+        "For live demo: use the **Online Simulation** page which "
+        "replays pre-processed test data through the same pipeline."
+    )
 
 
 def main():

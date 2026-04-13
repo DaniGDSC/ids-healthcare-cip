@@ -819,6 +819,8 @@ alerts:
         │  If YES: whitelist 10.2.1.88 for ICMP.      │
         │  If NO: treat as active reconnaissance —     │
         │  isolate and escalate to Security lead.      │
+        │  DO NOT block entire management VLAN —       │
+        │  authorized IT tools need continued access.  │
         │  Resolve within 4 hours.                     │
         └──────────────────────────────────────────────┘
 
@@ -884,7 +886,8 @@ alerts:
         ├──────────────────────────────────────────────┤
         │  RECOMMENDED ACTION                          │
         │  Block LIS outbound SFTP (port 22) only.     │
-        │  Preserve HTTPS to approved lab partners.    │
+        │  DO NOT block all LIS outbound — active      │
+        │  lab results depend on HTTPS to partners.    │
         │  Check with Lab IT: was new reference lab    │
         │  integration deployed recently?              │
         │  Escalate: Security lead → Lab IT Director  │
@@ -1019,6 +1022,8 @@ alerts:
         │  If YES: monitor for performance impact,     │
         │  no security action required.                │
         │  If NO: investigate further before action.  │
+        │  DO NOT interrupt transfer if scheduled —    │
+        │  interruption delays EHR restore capability. │
         │  Resolve within 4 hours.                     │
         └──────────────────────────────────────────────┘
 

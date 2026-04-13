@@ -361,10 +361,20 @@ class DAEDetector:
         per_sample = per_feature_weighted.sum(axis=1) + ood # (n_samples,)
         return per_sample, per_feature_weighted
 
+    def _noisy_threshold(self) -> float:
+        """Return threshold with ±10% random noise (TM-04 fix).
+
+        Prevents attackers from mapping the exact decision boundary
+        via repeated probing. Each call returns a slightly different
+        threshold, making the boundary non-deterministic.
+        """
+        noise = np.random.uniform(-0.10, 0.10)
+        return self._threshold * (1.0 + noise)
+
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Binary anomaly prediction: 1=attack (above threshold)."""
+        """Binary anomaly prediction: 1=attack (above noisy threshold)."""
         errors = self.reconstruction_error(X)
-        return (errors > self._threshold).astype(int)
+        return (errors > self._noisy_threshold()).astype(int)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Anomaly score normalized to [0, 1] range.

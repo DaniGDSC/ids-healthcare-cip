@@ -31,6 +31,97 @@ CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
 
+# UX-X-01 / UX-X-02: Device context for evaluation alerts
+DEVICE_CONTEXT = {
+    "infusion_pump": {
+        "affected_system": "Infusion pump — active drug delivery",
+        "patient_care_impact": "Compromise could alter infusion parameters for active patients.",
+        "device_criticality": "CRITICAL",
+        "active_device": True,
+    },
+    "ventilator": {
+        "affected_system": "Ventilator — active respiratory support",
+        "patient_care_impact": "Device disruption directly affects patient breathing.",
+        "device_criticality": "CRITICAL",
+        "active_device": True,
+    },
+    "patient_monitor": {
+        "affected_system": "Patient monitor — vital signs tracking",
+        "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
+        "device_criticality": "HIGH",
+        "active_device": True,
+    },
+    "ehr_workstation": {
+        "affected_system": "EHR workstation — clinical documentation",
+        "patient_care_impact": "Disruption affects active patient charting for floor nurses.",
+        "device_criticality": "HIGH",
+        "active_device": False,
+    },
+    "pacs_server": {
+        "affected_system": "PACS server — diagnostic imaging",
+        "patient_care_impact": "Disruption affects radiology reads and image delivery.",
+        "device_criticality": "HIGH",
+        "active_device": False,
+    },
+    "insulin_pump": {
+        "affected_system": "Insulin pump — active drug delivery (mobile)",
+        "patient_care_impact": "Compromise could alter insulin dosing. Hypo/hyperglycemia risk.",
+        "device_criticality": "HIGH",
+        "active_device": True,
+    },
+    "pharmacy_system": {
+        "affected_system": "Pharmacy system — medication dispensing",
+        "patient_care_impact": "Disruption affects automated drug dispensing for all patients.",
+        "device_criticality": "HIGH",
+        "active_device": False,
+    },
+    "server": {
+        "affected_system": "Clinical server — infrastructure",
+        "patient_care_impact": "Server disruption may cascade to dependent clinical systems.",
+        "device_criticality": "MEDIUM",
+        "active_device": False,
+    },
+    "other": {
+        "affected_system": "Clinical network device",
+        "patient_care_impact": "Impact depends on device function — verify with Biomed.",
+        "device_criticality": "MEDIUM",
+        "active_device": False,
+    },
+}
+
+_DEVICE_TYPE_KEYWORDS = [
+    ("infusion", "infusion_pump"), ("ventilator", "ventilator"),
+    ("insulin", "insulin_pump"),
+    ("patient monitor", "patient_monitor"), ("monitor", "patient_monitor"),
+    ("ehr", "ehr_workstation"), ("pacs", "pacs_server"),
+    ("pharmacy", "pharmacy_system"),
+    ("workstation", "ehr_workstation"), ("server", "server"),
+]
+
+
+def _derive_device_class(sample_index: int, test_df: pd.DataFrame) -> str:
+    """Derive device class from biometric feature patterns."""
+    row = test_df.iloc[sample_index]
+    bio_feats = ['Temp', 'SpO2', 'Pulse_Rate', 'Heart_rate', 'Resp_Rate', 'ST']
+    bio_active = sum(1 for f in bio_feats if abs(float(row.get(f, 0))) > 0.5)
+    resp_a = abs(float(row.get('Resp_Rate', 0))) > 0.5
+    spo2_a = abs(float(row.get('SpO2', 0))) > 0.5
+    pulse_a = abs(float(row.get('Pulse_Rate', 0))) > 0.5
+    hr_a = abs(float(row.get('Heart_rate', 0))) > 0.5
+    temp_a = abs(float(row.get('Temp', 0))) > 0.5
+
+    if resp_a and spo2_a and bio_active >= 4:
+        return "ventilator"
+    if pulse_a and hr_a and bio_active >= 3:
+        return "patient_monitor"
+    if temp_a and bio_active >= 2:
+        return "infusion_pump"
+    sport = abs(float(row.get('Sport', 0)))
+    src = abs(float(row.get('SrcBytes', 0)))
+    if bio_active <= 1 and (sport > 0.1 or src > 0.1):
+        return "ehr_workstation"
+    return "other"
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # 6.2  Curate evaluation alert set
@@ -86,6 +177,7 @@ def curate_evaluation_alerts() -> list:
                 alerts.append(_build_eval_alert(
                     idx, R, levels, y_true, attack_cats,
                     analyst_by_idx, clinician_by_idx, examples_by_idx,
+                    test_df=df,
                 ))
 
     # Benign calibration: 4 benign at various risk levels
@@ -124,12 +216,19 @@ def curate_evaluation_alerts() -> list:
 
 
 def _build_eval_alert(idx, R, levels, y_true, attack_cats,
-                      analyst_by_idx, clinician_by_idx, examples_by_idx) -> dict:
+                      analyst_by_idx, clinician_by_idx, examples_by_idx,
+                      test_df=None) -> dict:
     """Build a single evaluation alert with all context."""
     analyst = analyst_by_idx.get(idx, {})
     clinician = clinician_by_idx.get(idx, {})
     xgb_top = analyst.get("models", {}).get("xgboost", {}).get("top_features", [])
     dae_top = analyst.get("models", {}).get("dae", {}).get("top_features", [])
+
+    # UX-X-01/X-02: Derive device context
+    device_cls = "other"
+    if test_df is not None:
+        device_cls = _derive_device_class(idx, test_df)
+    ctx = DEVICE_CONTEXT.get(device_cls, DEVICE_CONTEXT["other"])
 
     return {
         "alert_id": f"EVAL-{idx:04d}",
@@ -138,6 +237,11 @@ def _build_eval_alert(idx, R, levels, y_true, attack_cats,
         "attack_category": str(attack_cats[idx]),
         "risk_score": round(float(R[idx]), 4),
         "risk_level": str(levels[idx]),
+        "device_class": device_cls,
+        "device_criticality": ctx["device_criticality"],
+        "affected_system": ctx["affected_system"],
+        "patient_care_impact": ctx["patient_care_impact"],
+        "active_device": ctx["active_device"],
         "xai_explanation": {
             "xgboost_top_features": xgb_top,
             "dae_top_features": dae_top,
