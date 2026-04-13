@@ -86,16 +86,24 @@ class XGBoostDetector:
 
     def _build_pipeline(self) -> ImbPipeline:
         """SMOTE + GradientBoosting inside an imblearn pipeline."""
-        return ImbPipeline([
-            ("smote", SMOTE(
-                sampling_strategy=self._smote_strategy,
-                k_neighbors=self._smote_k,
-                random_state=self._random_state,
-            )),
-            ("classifier", GradientBoostingClassifier(
-                random_state=self._random_state,
-            )),
-        ])
+        return ImbPipeline(
+            [
+                (
+                    "smote",
+                    SMOTE(
+                        sampling_strategy=self._smote_strategy,
+                        k_neighbors=self._smote_k,
+                        random_state=self._random_state,
+                    ),
+                ),
+                (
+                    "classifier",
+                    GradientBoostingClassifier(
+                        random_state=self._random_state,
+                    ),
+                ),
+            ]
+        )
 
     # ------------------------------------------------------------------
     # Train
@@ -168,7 +176,8 @@ class XGBoostDetector:
             n_jobs=-1,
         )[:, 1]
         self._optimal_threshold = self._find_optimal_threshold(
-            y_train, oof_proba,
+            y_train,
+            oof_proba,
         )
 
         elapsed = time.perf_counter() - t0
@@ -176,8 +185,10 @@ class XGBoostDetector:
 
         logger.info(
             "XGBoost fit: best CV %s=%.4f, threshold=%.3f, %.1fs",
-            self._scoring, search.best_score_,
-            self._optimal_threshold, elapsed,
+            self._scoring,
+            search.best_score_,
+            self._optimal_threshold,
+            elapsed,
         )
         return self
 
@@ -222,18 +233,30 @@ class XGBoostDetector:
             "attack_f2": float(fbeta_score(y_test, y_pred, beta=2, pos_label=1)),
             "weighted_f1": float(f1_score(y_test, y_pred, average="weighted")),
             "macro_f1": float(f1_score(y_test, y_pred, average="macro")),
-            "auc_roc": float(roc_auc_score(y_test, y_proba)) if len(np.unique(y_test)) > 1 else float("nan"),
+            "auc_roc": (
+                float(roc_auc_score(y_test, y_proba))
+                if len(np.unique(y_test)) > 1
+                else float("nan")
+            ),
             "optimal_threshold": self._optimal_threshold,
         }
         self._test_metrics = metrics
 
         logger.info(
             "XGBoost eval: attack_f1=%.4f, attack_f2=%.4f, AUC=%.4f",
-            metrics["attack_f1"], metrics["attack_f2"], metrics["auc_roc"],
+            metrics["attack_f1"],
+            metrics["attack_f2"],
+            metrics["auc_roc"],
         )
-        logger.info("\n%s", classification_report(
-            y_test, y_pred, target_names=["Normal", "Attack"], digits=4,
-        ))
+        logger.info(
+            "\n%s",
+            classification_report(
+                y_test,
+                y_pred,
+                target_names=["Normal", "Attack"],
+                digits=4,
+            ),
+        )
         return metrics
 
     # ------------------------------------------------------------------

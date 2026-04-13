@@ -77,10 +77,12 @@ def _section_header(w) -> None:
     """Render the report title."""
     w("## 3.2 Data Quality Assessment")
     w("")
-    w("This section presents a systematic data-quality evaluation of the "
-      "WUSTL-EHMS-2020 dataset [WUSTL-EHMS-2020] conducted prior to any "
-      "preprocessing transformation. Each subsection documents a specific "
-      "quality dimension with quantitative evidence and interpretation.")
+    w(
+        "This section presents a systematic data-quality evaluation of the "
+        "WUSTL-EHMS-2020 dataset [WUSTL-EHMS-2020] conducted prior to any "
+        "preprocessing transformation. Each subsection documents a specific "
+        "quality dimension with quantitative evidence and interpretation."
+    )
     w("")
 
 
@@ -92,11 +94,13 @@ def _section_outliers(
     """Render the IQR-based outlier analysis table."""
     w("### 3.2.1 Outlier Analysis (IQR Method)")
     w("")
-    w(f"Outliers are identified using the Interquartile Range (IQR) method "
-      f"with a fence multiplier of *k* = {config.outlier_iqr_multiplier}. "
-      f"A sample is flagged as an outlier if it falls outside "
-      f"[Q1 − {config.outlier_iqr_multiplier}·IQR, "
-      f"Q3 + {config.outlier_iqr_multiplier}·IQR].")
+    w(
+        f"Outliers are identified using the Interquartile Range (IQR) method "
+        f"with a fence multiplier of *k* = {config.outlier_iqr_multiplier}. "
+        f"A sample is flagged as an outlier if it falls outside "
+        f"[Q1 − {config.outlier_iqr_multiplier}·IQR, "
+        f"Q3 + {config.outlier_iqr_multiplier}·IQR]."
+    )
     w("")
     w("| Feature | Outlier Count | Outlier (%) | Lower Bound | Upper Bound |")
     w("|---------|-------------:|------------:|------------:|------------:|")
@@ -109,21 +113,25 @@ def _section_outliers(
         ub = r.get("upper_bound")
         lb_cell = f"{lb:>11.{_DP}f}" if lb is not None else f"{'—':>11}"
         ub_cell = f"{ub:>11.{_DP}f}" if ub is not None else f"{'—':>11}"
-        w(f"| {r['feature']:<15} "
-          f"| {r['outlier_count']:>13,} "
-          f"| {r['outlier_pct']:>11.{_DP}f} "
-          f"| {lb_cell} "
-          f"| {ub_cell} |")
+        w(
+            f"| {r['feature']:<15} "
+            f"| {r['outlier_count']:>13,} "
+            f"| {r['outlier_pct']:>11.{_DP}f} "
+            f"| {lb_cell} "
+            f"| {ub_cell} |"
+        )
 
     w("")
 
     n_with = len(features_with_outliers)
     n_total = len(outlier_report)
-    w(f"**{n_with}** of {n_total} numeric features contain at least one "
-      f"outlier. This confirms that network-traffic features exhibit "
-      f"heavy-tailed distributions characteristic of bursty IoMT traffic, "
-      f"justifying the use of RobustScaler (IQR-based normalisation) in "
-      f"Phase 1 rather than Z-score or min–max scaling.")
+    w(
+        f"**{n_with}** of {n_total} numeric features contain at least one "
+        f"outlier. This confirms that network-traffic features exhibit "
+        f"heavy-tailed distributions characteristic of bursty IoMT traffic, "
+        f"justifying the use of RobustScaler (IQR-based normalisation) in "
+        f"Phase 1 rather than Z-score or min–max scaling."
+    )
     w("")
 
 
@@ -143,14 +151,16 @@ def _section_class_imbalance(
     w(f"| Normal | {normal['count']:>7,} | {normal['percentage']:.{_DP}f}% |")
     w(f"| Attack | {attack['count']:>7,} | {attack['percentage']:.{_DP}f}% |")
     w("")
-    w(f"The imbalance ratio of **{ratio:.{_DP}f}:1** (Normal : Attack) "
-      f"justifies the use of SMOTE (Synthetic Minority Oversampling "
-      f"Technique) applied exclusively to the training partition. Without "
-      f"resampling, classifiers trained on the raw distribution would achieve "
-      f"high accuracy by trivially predicting the majority class, yielding "
-      f"unacceptable recall on attack samples. SMOTE is applied before "
-      f"feature scaling to generate synthetic samples in the original "
-      f"feature space.")
+    w(
+        f"The imbalance ratio of **{ratio:.{_DP}f}:1** (Normal : Attack) "
+        f"justifies the use of SMOTE (Synthetic Minority Oversampling "
+        f"Technique) applied exclusively to the training partition. Without "
+        f"resampling, classifiers trained on the raw distribution would achieve "
+        f"high accuracy by trivially predicting the majority class, yielding "
+        f"unacceptable recall on attack samples. SMOTE is applied before "
+        f"feature scaling to generate synthetic samples in the original "
+        f"feature space."
+    )
     w("")
 
 
@@ -162,10 +172,12 @@ def _section_correlation_heatmap(
     """Render a text-based description of the correlation heatmap."""
     w("### 3.2.3 Feature Correlation Analysis")
     w("")
-    w(f"Pearson correlation analysis identifies **{len(high_pairs)}** feature "
-      f"pairs with |*r*| > {config.correlation_threshold}. These pairs "
-      f"represent redundant linear relationships that inflate dimensionality "
-      f"without contributing independent discriminative information.")
+    w(
+        f"Pearson correlation analysis identifies **{len(high_pairs)}** feature "
+        f"pairs with |*r*| > {config.correlation_threshold}. These pairs "
+        f"represent redundant linear relationships that inflate dimensionality "
+        f"without contributing independent discriminative information."
+    )
     w("")
     w("| # | Feature A       | Feature B       | *r*       | Interpretation |")
     w("|--:|-----------------|-----------------|----------:|----------------|")
@@ -175,13 +187,15 @@ def _section_correlation_heatmap(
         w(f"| {idx} | {fa:<15} | {fb:<15} | {r:>+9.{_DP + 2}f} | {interp} |")
 
     w("")
-    w("The correlation heatmap reveals two dominant clusters of collinearity: "
-      "(1) inter-arrival timing features (SIntPktAct ↔ SrcJitter ↔ Loss), "
-      "and (2) volume-rate features (DstLoad ↔ Rate, DstBytes ↔ TotPkts). "
-      "Phase 1 redundancy elimination retains one member of each pair "
-      f"(threshold |*r*| > {config.correlation_threshold}), reducing the "
-      f"feature space by {len(high_pairs) - 1} columns while preserving "
-      f"the full information content.")
+    w(
+        "The correlation heatmap reveals two dominant clusters of collinearity: "
+        "(1) inter-arrival timing features (SIntPktAct ↔ SrcJitter ↔ Loss), "
+        "and (2) volume-rate features (DstLoad ↔ Rate, DstBytes ↔ TotPkts). "
+        "Phase 1 redundancy elimination retains one member of each pair "
+        f"(threshold |*r*| > {config.correlation_threshold}), reducing the "
+        f"feature space by {len(high_pairs) - 1} columns while preserving "
+        f"the full information content."
+    )
     w("")
 
 
@@ -199,15 +213,19 @@ def _section_missing_values(
         for feat, info in missing.items():
             w(f"| {feat} | {info['count']:,} | {info['percentage']:.{_DP}f}% |")
         w("")
-        w("This demonstrates that the affected features require imputation "
-          "or domain-specific handling prior to model training. Phase 1 "
-          "applies forward-fill for biometric channels (temporal continuity "
-          "assumption) and row-wise deletion for network features.")
+        w(
+            "This demonstrates that the affected features require imputation "
+            "or domain-specific handling prior to model training. Phase 1 "
+            "applies forward-fill for biometric channels (temporal continuity "
+            "assumption) and row-wise deletion for network features."
+        )
     else:
-        w(f"The dataset contains **zero missing values** across all "
-          f"{n_cols} attributes. This confirms that the WUSTL-EHMS-2020 "
-          f"capture pipeline produced acquisition-complete records, "
-          f"eliminating imputation as a potential source of information bias.")
+        w(
+            f"The dataset contains **zero missing values** across all "
+            f"{n_cols} attributes. This confirms that the WUSTL-EHMS-2020 "
+            f"capture pipeline produced acquisition-complete records, "
+            f"eliminating imputation as a potential source of information bias."
+        )
     w("")
 
 
@@ -222,15 +240,17 @@ def _section_leakage(
         col_list = ", ".join(f"`{c}`" for c in config.leakage_columns)
         w(f"Features dropped due to leakage risk: [{col_list}]")
         w("")
-        w(f"**Justification:** These {len(config.leakage_columns)} columns "
-          f"encode network identifiers (IP addresses, MAC addresses, port "
-          f"numbers, and direction/flag fields) that are environment-specific "
-          f"artefacts of the capture topology. A model trained on these "
-          f"features would memorise source/destination pairs rather than "
-          f"learning generalisable intrusion signatures, resulting in "
-          f"artificially inflated test performance that does not transfer "
-          f"to unseen network environments. Their removal is also required "
-          f"for HIPAA Safe Harbor de-identification compliance.")
+        w(
+            f"**Justification:** These {len(config.leakage_columns)} columns "
+            f"encode network identifiers (IP addresses, MAC addresses, port "
+            f"numbers, and direction/flag fields) that are environment-specific "
+            f"artefacts of the capture topology. A model trained on these "
+            f"features would memorise source/destination pairs rather than "
+            f"learning generalisable intrusion signatures, resulting in "
+            f"artificially inflated test performance that does not transfer "
+            f"to unseen network environments. Their removal is also required "
+            f"for HIPAA Safe Harbor de-identification compliance."
+        )
     else:
         w("No columns were identified as leakage risks.")
     w("")
@@ -246,14 +266,16 @@ def _section_reproducibility(
 
     w("### 3.2.6 Reproducibility Statement")
     w("")
-    w(f"All experiments use `random_state={config.random_state}` and "
-      f"stratified split {train_pct}/{test_pct} to ensure deterministic "
-      f"partitioning and reproducible results across independent runs. "
-      f"Stratification preserves the original class prior in both the "
-      f"training and test partitions, preventing evaluation bias due to "
-      f"sampling variance. The complete analysis pipeline is version-"
-      f"controlled and the configuration is externalised in `config.yaml` "
-      f"to enable exact replication by independent researchers.")
+    w(
+        f"All experiments use `random_state={config.random_state}` and "
+        f"stratified split {train_pct}/{test_pct} to ensure deterministic "
+        f"partitioning and reproducible results across independent runs. "
+        f"Stratification preserves the original class prior in both the "
+        f"training and test partitions, preventing evaluation bias due to "
+        f"sampling variance. The complete analysis pipeline is version-"
+        f"controlled and the configuration is externalised in `config.yaml` "
+        f"to enable exact replication by independent researchers."
+    )
     w("")
 
 
@@ -275,19 +297,14 @@ def _correlation_interpretation(feature_a: str, feature_b: str) -> str:
     pair = frozenset({feature_a, feature_b})
 
     interpretations = {
-        frozenset({"SIntPktAct", "SrcJitter"}):
-            "Timing jitter derives from inter-packet intervals",
-        frozenset({"Loss", "pLoss"}):
-            "Absolute and proportional loss are co-determined",
-        frozenset({"DstLoad", "Rate"}):
-            "Destination load is a rate-normalised throughput",
-        frozenset({"DIntPkt", "DstJitter"}):
-            "Destination jitter derives from inter-packet intervals",
-        frozenset({"SIntPktAct", "Loss"}):
-            "Packet timing correlates with loss under congestion",
-        frozenset({"SrcJitter", "Loss"}):
-            "Jitter and loss co-occur during network degradation",
-        frozenset({"DstBytes", "TotPkts"}):
-            "Byte volume scales linearly with packet count",
+        frozenset({"SIntPktAct", "SrcJitter"}): "Timing jitter derives from inter-packet intervals",
+        frozenset({"Loss", "pLoss"}): "Absolute and proportional loss are co-determined",
+        frozenset({"DstLoad", "Rate"}): "Destination load is a rate-normalised throughput",
+        frozenset(
+            {"DIntPkt", "DstJitter"}
+        ): "Destination jitter derives from inter-packet intervals",
+        frozenset({"SIntPktAct", "Loss"}): "Packet timing correlates with loss under congestion",
+        frozenset({"SrcJitter", "Loss"}): "Jitter and loss co-occur during network degradation",
+        frozenset({"DstBytes", "TotPkts"}): "Byte volume scales linearly with packet count",
     }
     return interpretations.get(pair, "Linear dependency detected")

@@ -1,0 +1,3002 @@
+[
+  {
+    "response_id": "V2-P01",
+    "group": "B_v2",
+    "persona": "Maria",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "The MVE says the monitor is still sending vitals normally and I need to check with Biomed first before doing anything. I'll contact Biomed Engineering to confirm whether a firmware update was scheduled before applying any rate limit."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P01",
+    "group": "B_v2",
+    "persona": "Maria",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "MVE says role is UNCONFIRMED and I shouldn't suspend without checking \u2014 I'll force re-auth now and then contact the charge nurse to confirm float assignment before doing anything else. Cross-department at 2am needs verification but could be legitimate float coverage."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P01",
+    "group": "B_v2",
+    "persona": "Maria",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "MVE confirms role is CONFIRMED and this looks like normal after-hours charting via authorized VPN. I'll schedule the force re-auth at next session break as the MVE instructs rather than disrupting active documentation."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P01",
+    "group": "B_v2",
+    "persona": "Maria",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "MVE explains this is a scheduled Tuesday backup to the internal backup server, volume is within the 25-31 GB normal range, and today is Tuesday. I'll verify in the backup console to confirm and then close the alert."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P01",
+    "group": "B_v2",
+    "persona": "Maria",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "1.1 GB in 3 minutes to an unknown external IP is very alarming. The MVE says to block just that destination rather than isolate the whole workstation so nurses can keep charting \u2014 I'll apply the destination block and notify the security lead right away."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P01",
+    "group": "B_v2",
+    "persona": "Maria",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Telnet on a ventilator with no maintenance window scheduled is deeply alarming. The MVE reassures me that blocking port 23 at the switch won't affect the ventilator's clinical function, so I'll do that and immediately contact Biomed and the ICU charge nurse."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P02",
+    "group": "B_v2",
+    "persona": "James",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Telnet from the IT admin VLAN to a ventilator with zero baseline precedent in 180 days \u2014 blocking port 23 at the switch immediately, which the MVE confirms is safe since the vent uses port 443 for clinical traffic. Calling Biomed on-call and security lead now."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P02",
+    "group": "B_v2",
+    "persona": "James",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "300 DNS queries/min from a patient monitor is clearly abnormal but the MVE says vitals are still flowing normally. I'll check with Biomed for any scheduled firmware update and if none, apply the DNS rate-limit at switch level \u2014 that won't touch HL7 traffic."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P02",
+    "group": "B_v2",
+    "persona": "James",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "This is a textbook scheduled Tuesday backup \u2014 internal destination, correct protocol, volume in the 25-31 GB expected range, fired at 02:10 exactly when it should. Confirming in backup console and closing."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P02",
+    "group": "B_v2",
+    "persona": "James",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Role confirmed, record count normal, VPN authorized \u2014 this is after-hours charting. MVE says to do a force re-auth at next session break as standard hygiene, which I'll schedule, but this is clearly not an incident."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P02",
+    "group": "B_v2",
+    "persona": "James",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Cross-department access with UNCONFIRMED role at 2am needs to be checked. I'll force re-auth the session now and contact the charge nurse to verify float assignment \u2014 the MVE is right that suspending without confirmation could disrupt care."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P02",
+    "group": "B_v2",
+    "persona": "James",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "1.1 GB in 3 minutes to an external IP with no prior history is active exfiltration. Applying destination-specific firewall block immediately per the MVE recommendation \u2014 leaving other workstation traffic untouched so floor nursing isn't disrupted. Notifying security lead and Privacy Officer."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P03",
+    "group": "B_v2",
+    "persona": "Anh",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Role UNCONFIRMED and 34 records across three departments outside ward assignment at 2am is something I need to verify first. Forcing re-auth and checking with the charge nurse before I do anything more drastic."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P03",
+    "group": "B_v2",
+    "persona": "Anh",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "That transfer speed and volume to an unknown external IP is way outside normal. The MVE clarifies I should block just the destination rather than the whole workstation so nurses can keep charting \u2014 doing that now and escalating to security lead."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P03",
+    "group": "B_v2",
+    "persona": "Anh",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "I need to check with Biomed whether a firmware update was scheduled before doing anything \u2014 if not, applying the DNS rate-limit sounds like the right move since the MVE says it won't affect the HL7 vitals feed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P03",
+    "group": "B_v2",
+    "persona": "Anh",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Telnet on a life-support device at 1:45am with no maintenance window is a serious red flag. The MVE's reassurance that blocking port 23 at the switch is safe gives me confidence to act \u2014 doing that and notifying Biomed and ICU nurse."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P03",
+    "group": "B_v2",
+    "persona": "Anh",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "MVE lays it out clearly: scheduled Tuesday backup, internal destination, volume in normal range. I'll confirm in the backup console but this is a benign alert."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P03",
+    "group": "B_v2",
+    "persona": "Anh",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "Physician accessing their own patients via authorized VPN after hours with normal record counts \u2014 this is routine. I'll schedule the standard force re-auth at session end per the MVE guidance."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P04",
+    "group": "B_v2",
+    "persona": "Carlos",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "This matches every criterion of a legitimate scheduled backup: correct day, correct destination, correct protocol, volume in range. Verifying in backup console and closing \u2014 the MVE makes clear interrupting it would cause more harm than good."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P04",
+    "group": "B_v2",
+    "persona": "Carlos",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "Role CONFIRMED, VPN authorized, record count normal \u2014 this is a physician doing after-hours charting. Scheduling force re-auth at session end as required for all EHR access events, per the MVE guidance."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P04",
+    "group": "B_v2",
+    "persona": "Carlos",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "The speed and volume to an unapproved external destination is well outside any normal pattern. Following the MVE: blocking the specific destination only, keeping EHR connections alive so floor nurses aren't disrupted, and escalating to security lead."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P04",
+    "group": "B_v2",
+    "persona": "Carlos",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Cross-department access with UNCONFIRMED role at 2am needs verification. The MVE makes it clear I should force re-auth and verify float authorization before suspending \u2014 suspending without checking could interrupt patient care."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P04",
+    "group": "B_v2",
+    "persona": "Carlos",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Telnet has never appeared on this ventilator in 180 days and no maintenance was scheduled \u2014 that's a strong indicator of unauthorized access. Blocking port 23 at the switch per the MVE (safe because vent uses port 443 for clinical traffic) and calling Biomed immediately."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P04",
+    "group": "B_v2",
+    "persona": "Carlos",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "20x DNS spike from a patient monitor covering 24 beds warrants Biomed check before any action. If no firmware update was scheduled, the rate-limit approach in the MVE is the right move since it won't disrupt HL7 vitals."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P05",
+    "group": "B_v2",
+    "persona": "Priya",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "1.1 GB in 3 minutes to an unknown external IP at 3am from a nurse workstation \u2014 that's clearly not normal. The destination-only block preserves clinical workflow which is smart; doing that and escalating to security lead and Privacy Officer immediately."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P05",
+    "group": "B_v2",
+    "persona": "Priya",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Telnet on a ventilator is never acceptable. The MVE's guidance to block at the switch rather than touching the device itself is exactly right \u2014 I'd never disconnect a vent directly. Doing the switch-level block and contacting Biomed and ICU nurse."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P05",
+    "group": "B_v2",
+    "persona": "Priya",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Float nurses genuinely do cover multiple departments at night \u2014 I've seen this before. Force re-auth the session and check with the charge nurse before escalating. If float assignment is confirmed, I just need HR to update AD."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P05",
+    "group": "B_v2",
+    "persona": "Priya",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Biomed check first \u2014 if a firmware update was scheduled this makes sense. If not, the DNS rate-limit is a clean surgical fix that keeps vitals flowing. Not isolating a monitor serving 24 beds without being sure."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P05",
+    "group": "B_v2",
+    "persona": "Priya",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Attending physician charting on their own patients after hours via authorized VPN is completely normal. Scheduling force re-auth at session end as standard EHR hygiene."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P05",
+    "group": "B_v2",
+    "persona": "Priya",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Everything checks out: Tuesday window, internal destination, SMB protocol, volume in range. Quick backup console confirmation and this is closed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P06",
+    "group": "B_v2",
+    "persona": "David",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Role CONFIRMED, VPN authorized, Internal Medicine records, 22 records well within normal range. Standard force re-auth at session end. No incident here."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P06",
+    "group": "B_v2",
+    "persona": "David",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Scheduled Tuesday EHR backup to internal server, correct protocol, volume within expected range. Confirming in backup management console and marking resolved."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P06",
+    "group": "B_v2",
+    "persona": "David",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Zero prior Telnet on this ventilator, no scheduled maintenance \u2014 this is not authorized. Blocking port 23 at the switch level immediately and contacting Biomed. The MVE correctly notes this doesn't affect the vent's clinical operation."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P06",
+    "group": "B_v2",
+    "persona": "David",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Active exfiltration to external IP at automated speed from a nursing workstation. Applying destination-specific block now \u2014 not isolating the full workstation \u2014 and escalating to security lead. The surgical approach preserves floor nursing workflow."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P06",
+    "group": "B_v2",
+    "persona": "David",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "20x DNS spike needs Biomed verification first. If no update was scheduled, the DNS rate-limit is the right tool \u2014 it's surgical and leaves HL7 vitals intact. Logging DNS queries for the last 24 hours now."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P06",
+    "group": "B_v2",
+    "persona": "David",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Role UNCONFIRMED for multi-department access is the key issue here. Force re-auth and verify float assignment with charge nurse \u2014 the MVE is right that I shouldn't suspend without confirming."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P07",
+    "group": "B_v2",
+    "persona": "Yuki",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "I'd never isolate a monitor serving 24 beds without talking to Biomed first. The MVE explains the vitals are still flowing normally and there's a possible benign cause. Checking with Biomed Engineering before taking any network action."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P07",
+    "group": "B_v2",
+    "persona": "Yuki",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Telnet on a ventilator is frightening but the MVE makes clear the switch-level block is safe and won't disrupt the patient. I'm very relieved I don't have to physically touch the device \u2014 doing the switch block and calling Biomed on-call."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P07",
+    "group": "B_v2",
+    "persona": "Yuki",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 3,
+      "reasoning_summary": "That transfer is way too big and too fast to be anything legitimate. I was worried about disrupting nurses but the MVE says I only block the bad destination, not the whole workstation. Doing that and calling security lead."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P07",
+    "group": "B_v2",
+    "persona": "Yuki",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Cross-department access at 2am with unconfirmed role \u2014 I need to check with the charge nurse before I do anything. The MVE makes sense: force re-auth first, then verify float coverage, don't suspend blindly."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P07",
+    "group": "B_v2",
+    "persona": "Yuki",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE breaks down exactly why this is normal \u2014 scheduled backup, right day, right destination, right protocol, volume in range. Confirming in backup console and closing."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P07",
+    "group": "B_v2",
+    "persona": "Yuki",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "Doctor accessing their own patients from home via authorized VPN in the evening \u2014 this is completely normal. Scheduling force re-auth at session break as the MVE instructs for standard EHR hygiene."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P08",
+    "group": "B_v2",
+    "persona": "Fatima",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "From a compliance perspective, unauthorized Telnet access to a ventilator is a serious incident requiring immediate response and documentation. Blocking port 23 at the switch (confirmed safe per MVE) and escalating to Biomed, ICU charge nurse, and security lead."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P08",
+    "group": "B_v2",
+    "persona": "Fatima",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "HIPAA requires we verify whether access to these three departments was authorized. Force re-auth the session, confirm float assignment with charge nurse and HR, and preserve the access logs for audit. This is the correct compliance response."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P08",
+    "group": "B_v2",
+    "persona": "Fatima",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Biomed check first, then DNS rate-limit if no update was scheduled. I want to preserve the DNS logs for the past 24 hours as the MVE recommends \u2014 that's important for any potential audit trail."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P08",
+    "group": "B_v2",
+    "persona": "Fatima",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "Internal backup to internal server, scheduled window, volume in range \u2014 no PHI leaves the network. Verifying the schedule in the backup console for documentation and flagging for the next backup audit."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P08",
+    "group": "B_v2",
+    "persona": "Fatima",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Role CONFIRMED, authorized VPN, own patient records, normal volume. The MVE guidance to force re-auth at session end is good practice from a compliance standpoint \u2014 logging this for audit trail."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P08",
+    "group": "B_v2",
+    "persona": "Fatima",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Potential bulk PHI exfiltration to an external IP \u2014 this triggers HIPAA breach notification timelines. Blocking the destination immediately, preserving NetFlow as the MVE requires, and escalating to security lead and Privacy Officer."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P09",
+    "group": "B_v2",
+    "persona": "Omar",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Scheduled backup, internal destination, correct protocol, volume within expected range for Tuesday \u2014 this is a clean benign. Confirming in backup console."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P09",
+    "group": "B_v2",
+    "persona": "Omar",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "From a network perspective this is clearly anomalous \u2014 1.1 GB in 3 minutes from a nurse workstation to an external IP with no baseline precedent. Applying a specific firewall rule for that destination only and escalating."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P09",
+    "group": "B_v2",
+    "persona": "Omar",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Role confirmed, VPN authorized, record count normal. Scheduling force re-auth at session end as standard hygiene per the MVE."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P09",
+    "group": "B_v2",
+    "persona": "Omar",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Telnet from the IT admin VLAN to a ventilator \u2014 this is either a misconfigured tool or active intrusion. Either way, blocking port 23 at the switch immediately. The MVE confirms the clinical path (port 443) is on a separate network path and won't be affected."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P09",
+    "group": "B_v2",
+    "persona": "Omar",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Role UNCONFIRMED is the key flag here \u2014 even if this is a float nurse, it needs to be on record in AD. Force re-auth, verify with charge nurse, update AD if confirmed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P09",
+    "group": "B_v2",
+    "persona": "Omar",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "20x DNS increase from a patient monitor is unusual at the network level. Biomed check first for firmware update; if none, DNS rate-limit at switch level is the correct surgical response."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P10",
+    "group": "B_v2",
+    "persona": "Lena",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 2,
+      "reasoning_summary": "I wasn't sure what to do but the MVE tells me exactly: force re-auth first, then check with the charge nurse about float assignment before escalating. I feel much more confident with this guidance than I would without it."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P10",
+    "group": "B_v2",
+    "persona": "Lena",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "The MVE is helpful here \u2014 it explains the benign possibility and what to do if Biomed confirms no update. I wouldn't have known about the DNS rate-limit approach on my own, but it makes sense since it won't disrupt the vitals."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P10",
+    "group": "B_v2",
+    "persona": "Lena",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE explains this step by step \u2014 scheduled Tuesday backup, internal server, normal volume. I'll verify in the backup console like the MVE says. This one is clear to me."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P10",
+    "group": "B_v2",
+    "persona": "Lena",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "Role CONFIRMED, normal activity, authorized VPN \u2014 the MVE makes it easy to see this is routine. Force re-auth at session end and log it."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P10",
+    "group": "B_v2",
+    "persona": "Lena",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 3,
+      "reasoning_summary": "This one scares me \u2014 1.1 GB out in 3 minutes to somewhere unknown. The MVE helps me understand I should block only the bad destination and not the whole workstation so nurses can keep working. Escalating to security lead."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P10",
+    "group": "B_v2",
+    "persona": "Lena",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Telnet on a ventilator is something I'd have escalated to my supervisor immediately without knowing what to do. The MVE tells me exactly \u2014 block port 23 at the switch, which is safe, then call Biomed and ICU nurse. I can actually do this now."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P11",
+    "group": "B_v2",
+    "persona": "Thomas",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "I've seen exfiltration patterns before and this is a textbook one. Destination-only block is the right call \u2014 you don't want to drop the whole workstation when nurses are actively charting. NetFlow capture now, security lead notified, Privacy Officer on standby."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P11",
+    "group": "B_v2",
+    "persona": "Thomas",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Normal after-hours charting via authorized VPN. Force re-auth at session end as standard hygiene. Nothing to see here."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P11",
+    "group": "B_v2",
+    "persona": "Thomas",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Unauthorized Telnet session on a ventilator is an incident \u2014 period. Switch-level port 23 block terminates it safely; the vent's clinical path is unaffected. Biomed Engineering and ICU charge nurse are my next calls."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P11",
+    "group": "B_v2",
+    "persona": "Thomas",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Biomed first \u2014 could be a firmware update loop. If not, DNS rate-limit at the switch is a clean fix that won't affect HL7 traffic. Preserving DNS logs now."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P11",
+    "group": "B_v2",
+    "persona": "Thomas",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "This is a scheduled backup. Confirmed by day, time, destination, protocol, and volume range. Backup console verification and close."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P11",
+    "group": "B_v2",
+    "persona": "Thomas",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Float coverage is a real thing in hospitals \u2014 I've dealt with this before. Force re-auth, call the charge nurse, and if float is confirmed, get HR to update AD. Don't suspend without confirming."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P12",
+    "group": "B_v2",
+    "persona": "Nadia",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Working night shifts I see physicians charting from home all the time \u2014 this is completely routine. Role CONFIRMED, VPN authorized, records normal. Scheduling force re-auth at session end."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P12",
+    "group": "B_v2",
+    "persona": "Nadia",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Tuesday backup to internal server at the normal window \u2014 I see this every week. Confirming in console and closing."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P12",
+    "group": "B_v2",
+    "persona": "Nadia",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Night shift float coverage is real and I know it. The UNCONFIRMED role flag is the important part \u2014 force re-auth and check with the charge nurse before doing anything else. The MVE guidance matches what I'd expect."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P12",
+    "group": "B_v2",
+    "persona": "Nadia",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "1.1 GB in 3 minutes at 3am from a nurse workstation to an external IP is active exfiltration. Destination-only block is essential \u2014 floor nurses are still charting at this hour. Escalating to security lead."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P12",
+    "group": "B_v2",
+    "persona": "Nadia",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "With IoMT devices I always check with Biomed first \u2014 the MVE confirms this is the right call. DNS rate-limit if no firmware update is confirmed, and I won't touch the HL7 path."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P12",
+    "group": "B_v2",
+    "persona": "Nadia",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Telnet on a ventilator at 1:45am with no maintenance window \u2014 this is an active incident. The MVE's clarification that port 23 block at the switch doesn't affect the vent's clinical operation is critical knowledge; acting on it now and calling Biomed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P13",
+    "group": "B_v2",
+    "persona": "Ravi",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE gives me the step-by-step procedure I need: block port 23 at switch ICU-2-SW-P08 (safe per the MVE), then call Biomed and ICU nurse. Without the documented action, I'd have had to escalate up the chain and wait."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P13",
+    "group": "B_v2",
+    "persona": "Ravi",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE specifies the exact firewall rule (EXFIL-BLOCK-EXT) to apply \u2014 this is exactly what I need to take confident action without improvising. Applying destination block and escalating."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P13",
+    "group": "B_v2",
+    "persona": "Ravi",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Following the procedure: check Biomed for firmware update, then apply DNS rate-limit if no update confirmed. The MVE specifies to preserve DNS logs for past 24 hours, which I'll do now."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P13",
+    "group": "B_v2",
+    "persona": "Ravi",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Force re-auth, contact charge nurse, preserve session logs \u2014 the MVE gives me the exact procedure to follow. Not suspending without confirmed float status."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P13",
+    "group": "B_v2",
+    "persona": "Ravi",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "Role CONFIRMED, authorized VPN, normal record count \u2014 per the MVE this is routine and force re-auth at session break is the documented response for LOW severity EHR events."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P13",
+    "group": "B_v2",
+    "persona": "Ravi",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "Scheduled backup matching documented pattern. Confirming in backup management console and flagging for next backup audit as the MVE specifies."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P14",
+    "group": "B_v2",
+    "persona": "Sophie",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "The MVE explains this clearly enough that I can brief Biomed Engineering with confidence about what happened and what I need to know. If no firmware update, I'll apply the DNS rate-limit per the MVE guidance."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P14",
+    "group": "B_v2",
+    "persona": "Sophie",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Physician accessing own patients from home via VPN in the evening \u2014 this is normal remote charting. I'll communicate to the physician that their next session will need re-authentication per standard policy."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P14",
+    "group": "B_v2",
+    "persona": "Sophie",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Destination-specific block is the right call per the MVE \u2014 I need to tell the charge nurse why the workstation is behaving differently without causing alarm. Blocking the destination, escalating to security, and communicating clearly with the floor."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P14",
+    "group": "B_v2",
+    "persona": "Sophie",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "Scheduled backup that matches every expected parameter. Confirming in the backup console and notifying backup admin to acknowledge as the MVE specifies."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P14",
+    "group": "B_v2",
+    "persona": "Sophie",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE helps me explain this to both the ICU charge nurse and Biomed clearly \u2014 Telnet session on ventilator, switch block applied (safe), maintenance not scheduled, investigating source. Good communication framework."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P14",
+    "group": "B_v2",
+    "persona": "Sophie",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Force re-auth and float verification is the right sequence. I'll communicate to the charge nurse what I need to confirm and explain that I'm not suspending the nurse's access until I have confirmation."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P15",
+    "group": "B_v2",
+    "persona": "Kevin",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "I actually looked into how EHR backups work to understand this alert type \u2014 the MVE confirms what I suspected: Tuesday window, internal destination, expected volume range. Checking the backup console and closing."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P15",
+    "group": "B_v2",
+    "persona": "Kevin",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "The UNCONFIRMED role status is interesting \u2014 the MVE explains the float nurse scenario which I hadn't considered. Force re-auth and check with charge nurse; if float, push HR to update AD so this doesn't keep firing."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P15",
+    "group": "B_v2",
+    "persona": "Kevin",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Clearly benign \u2014 confirmed role, authorized VPN, own patients, normal count. Force re-auth at session end as required for all EHR events. Adding to audit log."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P15",
+    "group": "B_v2",
+    "persona": "Kevin",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "I've read about vulnerabilities in medical device management protocols and Telnet is a known risk vector. The switch-level port 23 block is a clean response \u2014 doesn't affect clinical operation, terminates the suspicious session. Calling Biomed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P15",
+    "group": "B_v2",
+    "persona": "Kevin",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Automated exfiltration speed to an unknown external IP \u2014 this is the kind of thing I've studied. Destination-only block is exactly right to preserve clinical workflow; applying it and capturing NetFlow."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P15",
+    "group": "B_v2",
+    "persona": "Kevin",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "DNS amplification or C2 beaconing are both plausible but the firmware update loop is also a real possibility for medical devices. Biomed check first, then DNS rate-limit if no update confirmed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P16",
+    "group": "B_v2",
+    "persona": "Amara",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "From a clinical informatics perspective, multi-department access at night for a ward nurse is a significant access control flag. Float coverage is the most likely explanation but the MVE is right \u2014 UNCONFIRMED role means verify before acting. Force re-auth and charge nurse call."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P16",
+    "group": "B_v2",
+    "persona": "Amara",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Any unauthorized access to a ventilator is a clinical safety concern, not just a security concern. The MVE's guidance to block at the network layer rather than touching the device is exactly right from a clinical safety standpoint. Escalating immediately."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P16",
+    "group": "B_v2",
+    "persona": "Amara",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "Scheduled backup to internal server \u2014 the MVE confirms no PHI leaves the network. From an informatics standpoint this is clearly the routine Tuesday backup job. Confirming in console."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P16",
+    "group": "B_v2",
+    "persona": "Amara",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Vital sign monitoring for 24 beds is clinically important \u2014 I agree with the MVE that investigating before acting is essential here. Biomed check, DNS logs, and rate-limit only if update not confirmed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P16",
+    "group": "B_v2",
+    "persona": "Amara",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Potential PHI bulk transfer from a clinical workstation is a HIPAA concern that needs immediate response. The destination-only block protects clinical workflow while addressing the threat. Escalating to security and Privacy Officer."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P16",
+    "group": "B_v2",
+    "persona": "Amara",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Physician doing after-hours charting via authorized VPN is a normal clinical workflow pattern I see all the time. Force re-auth at session end per policy; no escalation needed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P17",
+    "group": "B_v2",
+    "persona": "Jin",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "I've seen real exfiltration before and this matches the pattern \u2014 speed, volume, unknown external destination. Destination-only block is smarter than full isolation in a clinical environment; you can't take down a charting workstation during an active shift. Blocking and escalating."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P17",
+    "group": "B_v2",
+    "persona": "Jin",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "DNS rate-limit approach is exactly right \u2014 it's surgical and doesn't risk disrupting the vitals feed. Checking Biomed first and if no firmware update, applying the rate-limit immediately."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P17",
+    "group": "B_v2",
+    "persona": "Jin",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Float nurse scenario is common but role must be confirmed. Force re-auth, charge nurse verification, HR update if float \u2014 that's the right playbook."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P17",
+    "group": "B_v2",
+    "persona": "Jin",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Routine after-hours charting. Force re-auth at session end \u2014 standard hygiene."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P17",
+    "group": "B_v2",
+    "persona": "Jin",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Scheduled Tuesday backup. Confirming in console and closing \u2014 the MVE breakdown makes it easy to verify each criterion."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P17",
+    "group": "B_v2",
+    "persona": "Jin",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "After handling a ransomware incident, I'm very alert to anything unusual on critical devices. Telnet on a ventilator is not acceptable under any circumstances. Switch-level block now, Biomed call, and initiating incident tracking."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P18",
+    "group": "B_v2",
+    "persona": "Beatriz",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Reading carefully: role CONFIRMED, VPN authorized, 22 records within normal 15-25 range, own department, appropriate patient types. The only deviation is location. Force re-auth at session break, log for audit trail."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P18",
+    "group": "B_v2",
+    "persona": "Beatriz",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Reading carefully: 1.1 GB in exactly 3 minutes to an IP not in any approved list, from a workstation with 50-200 MB/day baseline \u2014 at automated exfiltration speed. Destination-specific block and NetFlow capture immediately."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P18",
+    "group": "B_v2",
+    "persona": "Beatriz",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Reading the detail: Telnet (port 23), 180-day baseline with zero Telnet, session active 12 minutes, from IT admin VLAN. The MVE's distinction between the Telnet path (port 23) and clinical path (port 443) is technically important \u2014 blocking port 23 is safe and appropriate."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P18",
+    "group": "B_v2",
+    "persona": "Beatriz",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Reading carefully: 34 records across 3 departments, role UNCONFIRMED for multi-department access in AD, night shift timing consistent with float. The key is confirming float status before acting \u2014 force re-auth now, charge nurse call next."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P18",
+    "group": "B_v2",
+    "persona": "Beatriz",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Details: GE CARESCAPE, MedSurg 2nd floor, 10-15 DNS/min baseline, 300+ observed, secondary connection to unknown internal host. MVE is clear: Biomed check first, preserve DNS logs, rate-limit only if update unconfirmed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P18",
+    "group": "B_v2",
+    "persona": "Beatriz",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Detail check: EHR-PROD-01 to BACKUP-SRV-01 (internal), SMB port 445, Tuesday 02:10, 28 GB within 25-31 GB prior Tuesday range. Every criterion matches. Confirming in backup console and flagging for next audit."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P19",
+    "group": "B_v2",
+    "persona": "Samuel",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Telnet on a ventilator \u2014 escalating immediately. The MVE tells me I can act on this myself by blocking port 23 at the switch, which is a relief since I know it's safe, but I'm also notifying Biomed and ICU nurse right away."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P19",
+    "group": "B_v2",
+    "persona": "Samuel",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 3,
+      "reasoning_summary": "The MVE makes a clear case that this is a legitimate scheduled backup. I'll verify in the backup console to be sure before closing \u2014 I want to confirm before I dismiss rather than just trust it."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P19",
+    "group": "B_v2",
+    "persona": "Samuel",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "When I'm uncertain I usually escalate, but the MVE guides me not to suspend without float confirmation. I'll do the force re-auth and charge nurse check instead \u2014 that's a more measured response than what I'd normally default to."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P19",
+    "group": "B_v2",
+    "persona": "Samuel",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "This is serious and I'm escalating immediately. The MVE reassures me that destination-only block preserves nurse workflow \u2014 without that guidance I would have isolated the whole workstation and caused disruption."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P19",
+    "group": "B_v2",
+    "persona": "Samuel",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE confirms this is routine and I should just schedule the force re-auth at session end. Without the context I would have escalated this one unnecessarily."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P19",
+    "group": "B_v2",
+    "persona": "Samuel",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "I would have escalated this one but the MVE guides me to check Biomed first \u2014 firmware update loop is a real possibility. Following the procedure: Biomed check, DNS logs, rate-limit if unconfirmed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P20",
+    "group": "B_v2",
+    "persona": "Hana",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Balancing security and clinical workflow \u2014 the DNS rate-limit is exactly the right surgical approach here. Vitals must keep flowing; I'll check Biomed first and apply the rate-limit only after ruling out a scheduled update."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P20",
+    "group": "B_v2",
+    "persona": "Hana",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Float nurses regularly cover multiple departments \u2014 clinical workflow reality. The MVE's guidance not to suspend without float confirmation is essential to avoid care disruption. Force re-auth and charge nurse call."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P20",
+    "group": "B_v2",
+    "persona": "Hana",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Active exfiltration needs immediate response, but isolating a nurse workstation during an active shift would harm clinical operations. Destination-only block is the right balance \u2014 applying it now and escalating."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P20",
+    "group": "B_v2",
+    "persona": "Hana",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Unauthorized access to a ventilator requires immediate response, but the clinical-safety-first approach means switch-level block rather than touching the device. The MVE gives me exactly the right framework here."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P20",
+    "group": "B_v2",
+    "persona": "Hana",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Routine backup \u2014 no clinical workflow impact, no PHI leaving the network. Quick console confirmation and done."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P20",
+    "group": "B_v2",
+    "persona": "Hana",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Physician after-hours charting on own patients \u2014 normal clinical workflow. Force re-auth at session end, log for audit. No disruption to care."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P21",
+    "group": "B_v2",
+    "persona": "Ethan",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 3,
+      "reasoning_summary": "The MVE helps me see this is a scheduled backup \u2014 I usually check with the backup admin on these before dismissing and I will here too. Volume is within normal range and destination is internal."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P21",
+    "group": "B_v2",
+    "persona": "Ethan",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 3,
+      "reasoning_summary": "I always ask Biomed before acting on medical device alerts and the MVE confirms I should contact them. The switch-level block is something I can do myself \u2014 the MVE assures it's safe \u2014 and I'll do that while getting Biomed on the phone."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P21",
+    "group": "B_v2",
+    "persona": "Ethan",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "My instinct is to call Biomed immediately for anything on the device network \u2014 the MVE confirms that's the right first step. DNS rate-limit at the switch is the action if no update is confirmed, which I can do myself."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P21",
+    "group": "B_v2",
+    "persona": "Ethan",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "I need to confirm float coverage with the charge nurse before doing anything \u2014 the MVE backs this up. Force re-auth first, then call the charge nurse to verify."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P21",
+    "group": "B_v2",
+    "persona": "Ethan",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "Role confirmed, VPN authorized, physician accessing own patients \u2014 this is routine. Force re-auth at session end and logging."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P21",
+    "group": "B_v2",
+    "persona": "Ethan",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "1.1 GB in 3 minutes to an unknown external IP is not something I can explain away. Applying the destination block per the MVE and escalating to security lead \u2014 relieved I don't have to isolate the whole workstation and disrupt the floor."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P22",
+    "group": "B_v2",
+    "persona": "Leila",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "New to healthcare IT but the MVE explains the float nurse scenario which I didn't know about. Force re-auth and charge nurse verification is the right approach \u2014 the MVE prevents me from over-reacting with a suspension."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P22",
+    "group": "B_v2",
+    "persona": "Leila",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE confirms this is routine after-hours charting \u2014 in general IT I would have flagged VPN from external IP but in healthcare this is normal for physicians. Force re-auth at session end."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P22",
+    "group": "B_v2",
+    "persona": "Leila",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "Tuesday backup to internal server \u2014 the MVE explains the SMB protocol and Tuesday schedule clearly. This would have confused me without the context since 28 GB sounds large. Confirming in console."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P22",
+    "group": "B_v2",
+    "persona": "Leila",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "In general IT a DNS spike like this would be unusual. The MVE explains the medical device context \u2014 firmware update loop is plausible. Biomed check, and DNS rate-limit if no update confirmed per the MVE guidance."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P22",
+    "group": "B_v2",
+    "persona": "Leila",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "From general IT experience, Telnet is never acceptable on any device in 2026. On a ventilator it's terrifying. The MVE's clarification that switch-level port block doesn't affect the device's clinical function is something I wouldn't have known \u2014 essential guidance."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P22",
+    "group": "B_v2",
+    "persona": "Leila",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "1.1 GB in 3 minutes from a nurse workstation \u2014 I recognize this as a serious exfiltration pattern from general IT. The destination-only block approach is new to me but makes sense given nurses are still working. Applying and escalating."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P23",
+    "group": "B_v2",
+    "persona": "Marcus",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "isolate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Active exfiltration at this speed warrants full isolation in my view \u2014 but the MVE specifically warns against isolating the workstation to protect clinical workflow. I'm following the MVE on this: destination block only, but I'm logging my disagreement."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P23",
+    "group": "B_v2",
+    "persona": "Marcus",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "The MVE makes a solid case for this being a legitimate backup. Confirming in console \u2014 if it doesn't match I'm escalating immediately."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P23",
+    "group": "B_v2",
+    "persona": "Marcus",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 4,
+      "reasoning_summary": "Role confirmed, everything normal. Force re-auth at session end. I'd normally have escalated this just to be safe but the MVE confirms it's routine."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P23",
+    "group": "B_v2",
+    "persona": "Marcus",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "CRITICAL",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Telnet access to a ventilator is a CRITICAL security incident in my assessment even if the MVE says HIGH \u2014 this is life-support equipment with unauthorized remote access. Port 23 block at switch immediately and escalating to CISO as well as Biomed."
+    },
+    "scoring": {
+      "severity_correct": false,
+      "action_correct": true,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P23",
+    "group": "B_v2",
+    "persona": "Marcus",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Secondary connection to unknown internal host is more concerning to me than the DNS spike \u2014 I'm treating this as HIGH even though the MVE rates it MEDIUM. Biomed check first, then rate-limit, but I'm also checking what that secondary host is."
+    },
+    "scoring": {
+      "severity_correct": false,
+      "action_correct": true,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P23",
+    "group": "B_v2",
+    "persona": "Marcus",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Cross-department access at 2am with unconfirmed role \u2014 I'm inclined to escalate this rather than just verify float. The MVE cautions against suspension without confirmation but I want security lead involved before I just accept the float explanation."
+    },
+    "scoring": {
+      "severity_correct": false,
+      "action_correct": true,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P24",
+    "group": "B_v2",
+    "persona": "Zara",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Role confirmed, authorized VPN, normal record count \u2014 routine. Force re-auth at session end per policy."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P24",
+    "group": "B_v2",
+    "persona": "Zara",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Calm assessment: vitals still flowing, 20x DNS spike, ambiguous cause. Biomed check for firmware update, DNS logs preserved, rate-limit ready to apply if update unconfirmed. Respond within 4 hours."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P24",
+    "group": "B_v2",
+    "persona": "Zara",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Unauthorized Telnet on a ventilator \u2014 acting immediately but calmly. Port 23 block at the switch is safe per the MVE. Biomed on-call, ICU charge nurse, and security lead notified. Logs preserved."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P24",
+    "group": "B_v2",
+    "persona": "Zara",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 5,
+      "reasoning_summary": "Scheduled Tuesday backup. All parameters confirmed. Backup admin acknowledged. Closed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P24",
+    "group": "B_v2",
+    "persona": "Zara",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Float nurse scenario is credible. Force re-auth now, charge nurse verification, HR update if confirmed. Following the MVE protocol step by step."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P24",
+    "group": "B_v2",
+    "persona": "Zara",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 5,
+      "reasoning_summary": "Active exfiltration confirmed by speed, volume, and unknown destination. Destination block applied \u2014 clinical workflow preserved. Security lead notified. NetFlow captured. Privacy Officer on standby pending PHI confirmation."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P25",
+    "group": "B_v2",
+    "persona": "Noah",
+    "alert_id": "A18",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "isolate_contact_biomed",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Documenting: Telnet (port 23) on Puritan Bennett 980 ventilator (ICU-2, 10.4.15.8), session from 10.1.2.33 (IT admin VLAN), active 12 minutes at 01:45, no maintenance scheduled. Action: port 23 blocked at switch ICU-2-SW-P08. Contacts: Biomed on-call, ICU charge nurse, security lead notified."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P25",
+    "group": "B_v2",
+    "persona": "Noah",
+    "alert_id": "A16",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "HIGH",
+    "ground_truth_action": "block_destination_preserve_approved",
+    "response": {
+      "severity_chosen": "HIGH",
+      "action_chosen": "escalate",
+      "confidence_rating": 4,
+      "reasoning_summary": "Documenting: NURSE-WS-07 (10.2.3.45), 1.1 GB in 3 min to 198.51.100.42 (external, not approved) at 03:22. Baseline 50-200 MB/day. Action: firewall rule EXFIL-BLOCK-EXT applied to destination only. NetFlow capture initiated for past 6 hours. Security lead, MedSurg charge nurse, Privacy Officer notified."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P25",
+    "group": "B_v2",
+    "persona": "Noah",
+    "alert_id": "A15",
+    "alert_type": "data_exfiltration",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_schedule_monitor",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "dismiss",
+      "confidence_rating": 4,
+      "reasoning_summary": "Documenting: EHR-PROD-01 to BACKUP-SRV-01, SMB port 445, Tuesday 02:10, 28 GB (range 25-31 GB confirmed). Schedule verified in backup management console. Backup admin acknowledged. Flagged for next backup audit."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P25",
+    "group": "B_v2",
+    "persona": "Noah",
+    "alert_id": "A08",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "LOW",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "LOW",
+      "action_chosen": "monitor",
+      "confidence_rating": 5,
+      "reasoning_summary": "Documenting: DR-PHYSICIAN-0047, 22 records via VPN from external IP at 19:45, role CONFIRMED, Internal Medicine, within normal range. Force re-auth scheduled at next session break. Logged for audit trail."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": false,
+      "composite_correct": false
+    }
+  },
+  {
+    "response_id": "V2-P25",
+    "group": "B_v2",
+    "persona": "Noah",
+    "alert_id": "A02",
+    "alert_type": "iomt_behavioral_deviation",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_biomed_rate_limit",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Documenting: GE CARESCAPE (10.4.20.6, MedSurg 2nd floor), 300+ DNS/min vs 10-15 baseline (20x), secondary connection to 172.16.0.3 (unknown). Action pending Biomed Engineering response re: firmware update schedule. DNS logs for past 24 hours preserved. Rate-limit ready if update unconfirmed."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  },
+  {
+    "response_id": "V2-P25",
+    "group": "B_v2",
+    "persona": "Noah",
+    "alert_id": "A06",
+    "alert_type": "unauthorized_ehr_access",
+    "ground_truth_severity": "MEDIUM",
+    "ground_truth_action": "verify_force_reauth",
+    "response": {
+      "severity_chosen": "MEDIUM",
+      "action_chosen": "investigate",
+      "confidence_rating": 3,
+      "reasoning_summary": "Documenting: NURSE-1142 (MedSurg), 34 records in 40 min across Cardiology, Oncology, Pediatrics at 02:15, role UNCONFIRMED for multi-department access. Force re-auth applied. Charge nurse contacted for float authorization confirmation. Session logs preserved."
+    },
+    "scoring": {
+      "severity_correct": true,
+      "action_correct": true,
+      "composite_correct": true
+    }
+  }
+]

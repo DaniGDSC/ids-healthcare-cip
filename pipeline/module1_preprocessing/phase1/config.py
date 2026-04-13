@@ -26,20 +26,22 @@ from pydantic import BaseModel, field_validator, model_validator
 # section not in this set, so a CI config that uses ``hipaa:`` instead
 # of ``identifier_removal:`` (the previous bug) becomes a fail-loud
 # error rather than a silent fall-back to defaults.
-ALLOWED_TOP_LEVEL: frozenset[str] = frozenset({
-    "data",
-    "identifier_removal",
-    "encoding",
-    "cleaning",
-    "variance_filtering",
-    "correlation_removal",
-    "splitting",
-    "normalization",
-    "track_a",
-    "track_b",
-    "output",
-    "logging",  # operator-only; not consumed by from_yaml but tolerated
-})
+ALLOWED_TOP_LEVEL: frozenset[str] = frozenset(
+    {
+        "data",
+        "identifier_removal",
+        "encoding",
+        "cleaning",
+        "variance_filtering",
+        "correlation_removal",
+        "splitting",
+        "normalization",
+        "track_a",
+        "track_b",
+        "output",
+        "logging",  # operator-only; not consumed by from_yaml but tolerated
+    }
+)
 
 
 class ConfigError(Exception):
@@ -76,8 +78,8 @@ class Phase1Config(BaseModel):
 
     # Step 3: Cleaning
     biometric_columns: List[str]
-    biometric_strategy: str = "median"   # patient-safe default
-    network_strategy: str = "dropna"     # missing ≠ zero
+    biometric_strategy: str = "median"  # patient-safe default
+    network_strategy: str = "dropna"  # missing ≠ zero
     session_column: str | None = None
 
     # Step 4a: Variance filtering
@@ -145,12 +147,14 @@ class Phase1Config(BaseModel):
         canonical = {0, 7, 42}
         if v not in canonical:
             import logging
+
             logging.getLogger(__name__).warning(
                 "Phase1Config.random_state=%d is outside the canonical "
                 "vetted set %s. The integer is logged into the report "
                 "and report renderer, but a non-canonical seed is a "
                 "research-integrity smell — see security review #17.",
-                v, sorted(canonical),
+                v,
+                sorted(canonical),
             )
         return v
 
@@ -158,9 +162,7 @@ class Phase1Config(BaseModel):
     def _ratios_sum_to_one(self) -> Phase1Config:
         total = round(self.train_ratio + self.test_ratio, 4)
         if abs(total - 1.0) > 1e-6:
-            raise ValueError(
-                f"train_ratio + test_ratio must equal 1.0, got {total}"
-            )
+            raise ValueError(f"train_ratio + test_ratio must equal 1.0, got {total}")
         return self
 
     @classmethod
@@ -199,8 +201,7 @@ class Phase1Config(BaseModel):
 
         if not isinstance(raw, dict):
             raise ConfigError(
-                f"{path} must contain a YAML mapping at the top level, "
-                f"got {type(raw).__name__}"
+                f"{path} must contain a YAML mapping at the top level, " f"got {type(raw).__name__}"
             )
 
         unknown = set(raw) - ALLOWED_TOP_LEVEL
@@ -233,6 +234,7 @@ class Phase1Config(BaseModel):
         # Lazy import: keep config.py importable even if a developer
         # builds a venv without the Phase 0 package on the path.
         from pipeline.module0_analysis.phase0.security import PathValidator
+
         validator = PathValidator(root)
         # validate_input_path requires existence; data dirs may not
         # exist in CI runs that only exercise config parsing, so we
@@ -261,10 +263,12 @@ class Phase1Config(BaseModel):
             session_column=cl.get("session_column"),
             correlation_enabled=corr.get("enabled", True),
             correlation_threshold=corr.get("threshold", 0.95),
-            phase0_corr_file=Path(corr.get(
-                "phase0_corr_file",
-                "results/phase0_analysis/high_correlations.csv",
-            )),
+            phase0_corr_file=Path(
+                corr.get(
+                    "phase0_corr_file",
+                    "results/phase0_analysis/high_correlations.csv",
+                )
+            ),
             variance_enabled=var.get("enabled", True),
             variance_max_unique=var.get("max_unique", 1),
             train_ratio=split.get("train_ratio", 0.70),

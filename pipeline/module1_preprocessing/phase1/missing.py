@@ -111,10 +111,7 @@ class MissingValueHandler(BaseTransformer):
         exclude = set(bio_cols) | {self._label_col, "Attack Category"}
         if self._session_col:
             exclude.add(self._session_col)
-        net_cols = [
-            c for c in df.select_dtypes(include=[np.number]).columns
-            if c not in exclude
-        ]
+        net_cols = [c for c in df.select_dtypes(include=[np.number]).columns if c not in exclude]
 
         # ── Biometric imputation ──
         bio_filled = 0
@@ -148,19 +145,22 @@ class MissingValueHandler(BaseTransformer):
         rows_dropped = rows_before - len(df)
 
         self._stats = {
-            "biometric_strategy":     self._bio_strategy,
+            "biometric_strategy": self._bio_strategy,
             "biometric_cells_filled": bio_filled,
-            "network_strategy":       self._net_strategy,
-            "network_cells_missing":  net_missing,
+            "network_strategy": self._net_strategy,
+            "network_cells_missing": net_missing,
             "network_cells_filled_zero": net_filled,
-            "rows_dropped":           rows_dropped,
-            "rows_remaining":         len(df),
+            "rows_dropped": rows_dropped,
+            "rows_remaining": len(df),
         }
         logger.info(
             "MissingValueHandler: bio=%s (%d cells filled), net=%s "
             "(%d cells zeroed, %d rows dropped)",
-            self._bio_strategy, bio_filled,
-            self._net_strategy, net_filled, rows_dropped,
+            self._bio_strategy,
+            bio_filled,
+            self._net_strategy,
+            net_filled,
+            rows_dropped,
         )
         return df
 

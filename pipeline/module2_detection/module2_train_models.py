@@ -265,11 +265,44 @@ def train_track_a(
         y_true=y_test, y_pred=y_pred_test, y_proba=y_proba_test,
     )
 
+    # OOF probabilities for cascaded DAE input
+    oof_path = output_dir / f"{name}_oof_proba.npy"
+    np.save(oof_path, oof_proba)
+    logger.info("Saved OOF probas: %s", oof_path)
+
     logger.info("Saved: %s (%.1fs)", output_dir, elapsed)
     return metrics
 
 
 # ── Track B: DAE ────────────────────────────────────────────────────────
+
+def _load_oof_probas(output_dir: Path, benign_mask: np.ndarray) -> np.ndarray:
+    """Load Track A out-of-fold probabilities and select benign rows.
+
+    Returns:
+        Array of shape (n_benign, 3) — one column per Track A model.
+    """
+    cols = []
+    for name in ("xgboost", "random_forest", "decision_tree"):
+        oof = np.load(output_dir / f"{name}_oof_proba.npy")
+        cols.append(oof[benign_mask])
+    return np.column_stack(cols)
+
+
+def _track_a_test_probas(X_test: np.ndarray, output_dir: Path) -> np.ndarray:
+    """Run Track A models on test set, return stacked probabilities.
+
+    Returns:
+        Array of shape (n_test, 3).
+    """
+    from pipeline.common import loads_signed
+
+    cols = []
+    for name in ("xgboost", "random_forest", "decision_tree"):
+        clf = loads_signed(output_dir / f"{name}_final_pipeline.pkl")
+        cols.append(clf.predict_proba(X_test)[:, 1])
+    return np.column_stack(cols)
+
 
 def train_track_b_dae(
     X_train: np.ndarray,
@@ -278,47 +311,81 @@ def train_track_b_dae(
     y_test: np.ndarray,
     feat_names: list,
 ) -> dict:
-    """Train DAE on full benign-only training set with best params."""
+    """Train cascaded DAE: input = [raw features || Track A OOF probas].
+
+    Track A must be trained first. The DAE learns to reconstruct benign
+    samples in the joint (features + Track-A-prediction) space. Spoofing
+    attacks that look normal in raw features but trigger Track A become
+    visible as high reconstruction error.
+    """
     t0 = time.perf_counter()
     sep = "-" * 60
 
     logger.info(sep)
-    logger.info("FINAL TRAINING: DAE (TRACK B)")
+    logger.info("FINAL TRAINING: DAE (TRACK B — CASCADED)")
     logger.info(sep)
 
+    output_dir = PROJECT_ROOT / "results/models"
+
     # Load best params
-    params_path = PROJECT_ROOT / "results/models/dae_best_params.json"
+    params_path = output_dir / "dae_best_params.json"
     with open(params_path) as f:
         best_hp = json.load(f)
     logger.info("Best params: %s", best_hp)
 
-    # Benign-only subset
-    X_benign = X_train[y_train == 0]
-    logger.info("Fitting on full benign training set (%d samples)...", len(X_benign))
+    # Benign-only mask
+    benign_mask = y_train == 0
+    X_benign = X_train[benign_mask]
 
-    # Train with NO validation split — use all benign data for final model
+    # Load Track A OOF probabilities for benign training rows
+    oof_probas = _load_oof_probas(output_dir, benign_mask)
+    logger.info(
+        "Track A OOF probas (benign): shape=%s, means=%s",
+        oof_probas.shape,
+        np.round(oof_probas.mean(axis=0), 4),
+    )
+
+    # Augmented input: [25 raw features || 3 Track A probas] = 28 features
+    X_benign_aug = np.column_stack([X_benign, oof_probas])
+    aug_feat_names = feat_names + ["track_a_xgb", "track_a_rf", "track_a_dt"]
+    logger.info(
+        "Cascaded DAE input: %d features (%d raw + %d Track A)",
+        X_benign_aug.shape[1], len(feat_names), oof_probas.shape[1],
+    )
+
+    # Adjust architecture for 28 features
+    # Bottleneck must be < n_features; scale encoder/decoder proportionally
+    n_feat = X_benign_aug.shape[1]
+    enc_dim = max(best_hp.get("encoding_dims", [20, 12, 20])[0], n_feat - 4)
+    bot_dim = min(best_hp.get("encoding_dims", [20, 12, 20])[1], n_feat - 2)
+    dec_dim = enc_dim
+    adjusted_dims = [enc_dim, bot_dim, dec_dim]
+    logger.info("Adjusted architecture: %s (for %d features)", adjusted_dims, n_feat)
+
     det = DAEDetector(
-        **best_hp,
+        encoding_dims=adjusted_dims,
+        noise_rate=best_hp.get("noise_rate", 0.2),
+        learning_rate=best_hp.get("learning_rate", 0.0001),
+        threshold_percentile=best_hp.get("threshold_percentile", 95.0),
+        clip_percentile=best_hp.get("clip_percentile", 1.0),
         epochs=100,
         batch_size=256,
         random_state=RANDOM_STATE,
     )
-    det.fit(X_benign, validation_split=0.0)
+    det.fit(X_benign_aug, validation_split=0.0)
+
+    # Augmented test set
+    test_probas = _track_a_test_probas(X_test, output_dir)
+    X_test_aug = np.column_stack([X_test, test_probas])
 
     # Evaluate
-    test_metrics = det.evaluate(X_test, y_test)
+    test_metrics = det.evaluate(X_test_aug, y_test)
 
     elapsed = round(time.perf_counter() - t0, 1)
 
     # Save artifacts
-    output_dir = PROJECT_ROOT / "results/models"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── Native (pickle-free) artefacts ──
-    # Canonical persistence: JSON sidecar + Keras weights file. Loading
-    # via DAEDetector.from_artefacts() never executes Python. This is
-    # the format Module 3/4 will eventually load exclusively. See
-    # Phase 2 finding #3b.
     det.save_artefacts(
         json_path=output_dir / "dae_detector.json",
         weights_path=output_dir / "dae_model.weights.h5",
@@ -327,11 +394,15 @@ def train_track_b_dae(
     # Report
     report = det.get_report()
     report["stage"] = "final_training"
+    report["architecture"] = "cascaded"
     report["best_hyperparameters"] = best_hp
+    report["adjusted_encoding_dims"] = adjusted_dims
     report["data"] = {
-        "n_features": len(feat_names),
-        "feature_names": feat_names,
-        "benign_train_samples": int((y_train == 0).sum()),
+        "n_raw_features": len(feat_names),
+        "n_track_a_features": 3,
+        "n_total_features": n_feat,
+        "feature_names": aug_feat_names,
+        "benign_train_samples": int(benign_mask.sum()),
         "test_samples": int(len(y_test)),
     }
     report["elapsed_seconds"] = elapsed
@@ -339,20 +410,13 @@ def train_track_b_dae(
     report_path = output_dir / "dae_final_report.json"
     report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
 
-    # Test predictions
-    y_pred = det.predict(X_test)
-    errors = det.reconstruction_error(X_test)
+    # Test predictions (on augmented input)
+    y_pred = det.predict(X_test_aug)
+    errors = det.reconstruction_error(X_test_aug)
     np.savez(
         output_dir / "dae_test_predictions.npz",
         y_true=y_test, y_pred=y_pred, reconstruction_error=errors,
     )
-
-    # NOTE: there is no longer a dae_detector.pkl on the load path —
-    # the canonical artefact pair is dae_detector.json + dae_model.weights.h5
-    # written above by det.save_artefacts(). All Module 3/4 callers
-    # were updated to load via DAEDetector.from_artefacts(). Removing
-    # the legacy pickle eliminates the highest-blast-radius pickle RCE
-    # sink in the production inference path. See Phase 2 finding #3b.
 
     logger.info("Saved: %s (%.1fs)", output_dir, elapsed)
     return test_metrics

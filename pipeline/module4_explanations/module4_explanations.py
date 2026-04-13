@@ -67,20 +67,20 @@ CLINICIAN_TEMPLATES = {
     "CRITICAL": (
         "CRITICAL ALERT (Sample {idx}): The system detected a likely intrusion "
         "affecting this patient's monitoring session. The primary indicator was "
-        "abnormal {top_feature} ({feature_type} metric). "
-        "{biometric_note}"
+        "{narrative}. "
+        "{secondary_note}"
         "Recommend immediate review of device connectivity and patient vitals."
     ),
     "HIGH": (
         "HIGH ALERT (Sample {idx}): Suspicious activity detected. "
-        "Key factor: {top_feature} ({feature_type}). "
-        "{biometric_note}"
+        "Key factor: {narrative}. "
+        "{secondary_note}"
         "Consider verifying device integrity."
     ),
     "MEDIUM": (
-        "MODERATE ALERT (Sample {idx}): Minor anomaly detected in "
-        "{top_feature} ({feature_type}). "
-        "{biometric_note}"
+        "MODERATE ALERT (Sample {idx}): Minor anomaly detected — "
+        "{narrative}. "
+        "{secondary_note}"
         "No immediate clinical action required, but flagged for review."
     ),
     "LOW": (
@@ -88,6 +88,11 @@ CLINICIAN_TEMPLATES = {
         "Likely benign; logged for audit purposes."
     ),
 }
+
+# Import feature group mapping from the online explainer
+from pipeline.module4_explanations.module4_online_explainer import (
+    _feature_to_narrative,
+)
 
 
 # ── Data loading ────────────────────────────────────────────────────────
@@ -576,22 +581,29 @@ def build_clinician_summaries(
         severity = _severity(n_flagged)
 
         top = _top_features_shap(xgb_shap[idx], feat_names, k=3)
-        top_feature = top[0]["feature"]
-        feature_type = "biometric" if top_feature in BIOMETRIC_FEATURES else "network"
+        top1_feat = top[0]["feature"]
+        top1_val = abs(top[0]["shap_value"])
+        narrative, category = _feature_to_narrative(top1_feat)
 
-        # Biometric safety note
-        bio_feats = [f["feature"] for f in top if f["feature"] in BIOMETRIC_FEATURES]
-        biometric_note = (
-            f"Note: Biometric data ({', '.join(bio_feats)}) showed unusual values. "
-            if bio_feats else ""
-        )
+        # Confidence band: cite secondary feature when ambiguous
+        secondary_note = ""
+        if len(top) >= 2:
+            top2_val = abs(top[1]["shap_value"])
+            if top1_val > 0 and top2_val / top1_val > 0.8:
+                narrative_2, cat_2 = _feature_to_narrative(top[1]["feature"])
+                if category != cat_2:
+                    secondary_note = f"A secondary indicator ({narrative_2}) also contributed. "
+            bio_feats = [f["feature"] for f in top if f["feature"] in BIOMETRIC_FEATURES]
+            if bio_feats and category != "biometric":
+                secondary_note += (
+                    f"Note: Biometric data ({', '.join(bio_feats)}) showed unusual values. "
+                )
 
         template = CLINICIAN_TEMPLATES[severity]
         summary = template.format(
             idx=idx,
-            top_feature=top_feature,
-            feature_type=feature_type,
-            biometric_note=biometric_note,
+            narrative=narrative,
+            secondary_note=secondary_note,
         )
         summaries.append({
             "sample_index": int(idx),

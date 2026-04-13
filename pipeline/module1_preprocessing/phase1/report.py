@@ -30,15 +30,17 @@ _N_BIOMETRIC: int = len(BIOMETRIC_COLUMNS)
 # table that depends on it will fall back to its empty form rather than
 # crashing — but the render-time logger emits a WARNING so the mismatch
 # is at least visible.
-EXPECTED_REPORT_KEYS: frozenset[str] = frozenset({
-    "ingestion",
-    "identifier_removal",
-    "cleaning",
-    "redundancy",
-    "split",
-    "track_a",
-    "output",
-})
+EXPECTED_REPORT_KEYS: frozenset[str] = frozenset(
+    {
+        "ingestion",
+        "identifier_removal",
+        "cleaning",
+        "redundancy",
+        "split",
+        "track_a",
+        "output",
+    }
+)
 
 
 def render_preprocessing_report(report: Dict[str, Any]) -> str:
@@ -65,7 +67,7 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     # Pipeline writes ``identifier_removal``; never ``hipaa``.
     hip = report.get("identifier_removal", {})
     # Pipeline writes ``cleaning``; never ``missing_values``.
-    mv  = report.get("cleaning", {})
+    mv = report.get("cleaning", {})
     red = report.get("redundancy", {})
     spl = report.get("split", {})
     # SMOTE is applied inside the Phase 2 CV pipeline, not in Phase 1,
@@ -80,10 +82,12 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
 
     w("## 4.1 Data Preprocessing Pipeline")
     w("")
-    w("This section documents the seven-step preprocessing pipeline applied "
-      "to the WUSTL-EHMS-2020 dataset prior to model training. Each step is "
-      "justified with reference to the data quality assessment in §3.2 and "
-      "the security controls documented in §3.3.")
+    w(
+        "This section documents the seven-step preprocessing pipeline applied "
+        "to the WUSTL-EHMS-2020 dataset prior to model training. Each step is "
+        "justified with reference to the data quality assessment in §3.2 and "
+        "the security controls documented in §3.3."
+    )
     w("")
 
     # ── Pipeline steps table ──
@@ -99,11 +103,13 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     col_list = ", ".join(f"`{c}`" for c in dropped)
     w(f"**{len(dropped)} columns dropped:** [{col_list}]")
     w("")
-    w("These columns encode network identifiers (IP addresses, MAC addresses, "
-      "port numbers) and flow metadata that constitute environment-specific "
-      "artefacts. Their removal satisfies HIPAA Safe Harbor §164.514(b)(2) "
-      "and prevents the model from memorising topology-specific patterns "
-      "that do not generalise to unseen network environments.")
+    w(
+        "These columns encode network identifiers (IP addresses, MAC addresses, "
+        "port numbers) and flow metadata that constitute environment-specific "
+        "artefacts. Their removal satisfies HIPAA Safe Harbor §164.514(b)(2) "
+        "and prevents the model from memorising topology-specific patterns "
+        "that do not generalise to unseen network environments."
+    )
     w("")
 
     # ── 4.1.2 Missing Values ──
@@ -111,12 +117,16 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     w("")
     w("| Stream | Strategy | Justification |")
     w("|--------|----------|---------------|")
-    w(f"| Biometric ({_N_BIOMETRIC} features) | Forward-fill (ffill) "
-      f"| Sensor dropout produces temporal gaps; the most recent valid "
-      f"reading is the best available estimate |")
-    w(f"| Network (remaining features) | Row-wise dropna "
-      f"| Corrupted packets produce incomplete flow records that cannot "
-      f"be reliably imputed |")
+    w(
+        f"| Biometric ({_N_BIOMETRIC} features) | Forward-fill (ffill) "
+        f"| Sensor dropout produces temporal gaps; the most recent valid "
+        f"reading is the best available estimate |"
+    )
+    w(
+        f"| Network (remaining features) | Row-wise dropna "
+        f"| Corrupted packets produce incomplete flow records that cannot "
+        f"be reliably imputed |"
+    )
     w("")
     bio_filled = mv.get("biometric_cells_filled", 0)
     rows_dropped = mv.get("rows_dropped", 0)
@@ -136,26 +146,36 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     # peer-review reader can audit the magnitude of the residual.
     w("### 4.1.x Residual Leakage Disclosure")
     w("")
-    w("The leakage barrier in this pipeline sits between Step 4 and "
-      "Step 5. Steps 3–4 compute their decisions on the full dataset:")
+    w(
+        "The leakage barrier in this pipeline sits between Step 4 and "
+        "Step 5. Steps 3–4 compute their decisions on the full dataset:"
+    )
     w("")
-    w("- **Cleaning**: median imputation is fit on the full dataset. "
-      "Per-feature medians are population-level statistics, so the "
-      "leak is bounded by the difference between the train median "
-      "and the full-dataset median (typically <1% on this corpus).")
-    w("- **Variance filter**: a feature is dropped if its full-dataset "
-      "unique-value count falls below the threshold. The decision is "
-      "binary, so the leak is upper-bounded by the count of features "
-      "whose train-only `nunique` would have changed the verdict.")
-    w("- **Redundancy filter**: feature pairs are read from Phase 0's "
-      "`high_correlations.csv`, which was computed on the full "
-      "dataset. The leak is upper-bounded by features whose "
-      "train-only correlation falls below the threshold.")
+    w(
+        "- **Cleaning**: median imputation is fit on the full dataset. "
+        "Per-feature medians are population-level statistics, so the "
+        "leak is bounded by the difference between the train median "
+        "and the full-dataset median (typically <1% on this corpus)."
+    )
+    w(
+        "- **Variance filter**: a feature is dropped if its full-dataset "
+        "unique-value count falls below the threshold. The decision is "
+        "binary, so the leak is upper-bounded by the count of features "
+        "whose train-only `nunique` would have changed the verdict."
+    )
+    w(
+        "- **Redundancy filter**: feature pairs are read from Phase 0's "
+        "`high_correlations.csv`, which was computed on the full "
+        "dataset. The leak is upper-bounded by features whose "
+        "train-only correlation falls below the threshold."
+    )
     w("")
-    w("None of these are patient-data leaks (the cleaning step is now "
-      "session-safe). They are *test-distribution* leaks that may "
-      "modestly inflate test-set metrics. A future revision will "
-      "compute Steps 3–4 over the train partition only.")
+    w(
+        "None of these are patient-data leaks (the cleaning step is now "
+        "session-safe). They are *test-distribution* leaks that may "
+        "modestly inflate test-set metrics. A future revision will "
+        "compute Steps 3–4 over the train partition only."
+    )
     w("")
 
     # ── 4.1.3 Redundancy ──
@@ -163,11 +183,13 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     w("")
     red_cols = red.get("columns_dropped", [])
     threshold = red.get("threshold", 0.95)
-    w(f"High-correlation pairs (|*r*| ≥ {threshold}) were identified in "
-      f"Phase 0 (§3.2.3) and read from `high_correlations.csv` — the "
-      f"correlation matrix was **not** recomputed. For each pair, the "
-      f"secondary feature was dropped, reducing the feature space by "
-      f"**{len(red_cols)}** columns:")
+    w(
+        f"High-correlation pairs (|*r*| ≥ {threshold}) were identified in "
+        f"Phase 0 (§3.2.3) and read from `high_correlations.csv` — the "
+        f"correlation matrix was **not** recomputed. For each pair, the "
+        f"secondary feature was dropped, reducing the feature space by "
+        f"**{len(red_cols)}** columns:"
+    )
     w("")
     if red_cols:
         w("| Dropped Feature | Reason |")
@@ -187,9 +209,11 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     w(f"| Train | {train_n:,} | {spl.get('train_ratio', 0.70):.0%} |")
     w(f"| Test | {test_n:,} | {spl.get('test_ratio', 0.30):.0%} |")
     w("")
-    w(f"Stratification via `StratifiedShuffleSplit` with "
-      f"`random_state={random_state}` preserves the original class prior "
-      f"in both partitions, preventing evaluation bias from sampling variance.")
+    w(
+        f"Stratification via `StratifiedShuffleSplit` with "
+        f"`random_state={random_state}` preserves the original class prior "
+        f"in both partitions, preventing evaluation bias from sampling variance."
+    )
     w("")
 
     # ── 4.1.5 SMOTE (forward reference to Phase 2 CV pipeline) ──
@@ -198,18 +222,22 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     # ── 4.1.6 Scaling ──
     w("### 4.1.6 Robust Scaling")
     w("")
-    w("RobustScaler (median / IQR normalisation) is chosen over StandardScaler "
-      "(mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 "
-      "identified heavy-tailed distributions in network-traffic features. "
-      "RobustScaler is insensitive to extreme values, preserving the "
-      "morphology of attack signatures for downstream explainability "
-      "analysis.")
+    w(
+        "RobustScaler (median / IQR normalisation) is chosen over StandardScaler "
+        "(mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 "
+        "identified heavy-tailed distributions in network-traffic features. "
+        "RobustScaler is insensitive to extreme values, preserving the "
+        "morphology of attack signatures for downstream explainability "
+        "analysis."
+    )
     w("")
-    w(f"Scaler fitted exclusively on training set (n={train_n:,}). "
-      f"Test set transformed without refitting — preventing information "
-      f"leakage from test distribution. The fitted parameters are "
-      f"persisted as a JSON sidecar (`robust_scaler.json`), not a "
-      f"pickle, so loading the artefact never executes Python.")
+    w(
+        f"Scaler fitted exclusively on training set (n={train_n:,}). "
+        f"Test set transformed without refitting — preventing information "
+        f"leakage from test distribution. The fitted parameters are "
+        f"persisted as a JSON sidecar (`robust_scaler.json`), not a "
+        f"pickle, so loading the artefact never executes Python."
+    )
     w("")
 
     # ── 4.1.7 Output ──
@@ -218,12 +246,12 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     n_features = out.get("n_features", 0)
     w("| Artifact | Format | Description |")
     w("|----------|--------|-------------|")
-    w(f"| `train_phase1.parquet` | Apache Parquet | "
-      f"{train_n:,} rows × {n_features} features |")
-    w(f"| `test_phase1.parquet` | Apache Parquet | "
-      f"{test_n:,} rows × {n_features} features |")
-    w(f"| `robust_scaler.json` | JSON sidecar | "
-      f"Fitted RobustScaler params (`center_`, `scale_`) — pickle-free |")
+    w(f"| `train_phase1.parquet` | Apache Parquet | " f"{train_n:,} rows × {n_features} features |")
+    w(f"| `test_phase1.parquet` | Apache Parquet | " f"{test_n:,} rows × {n_features} features |")
+    w(
+        f"| `robust_scaler.json` | JSON sidecar | "
+        f"Fitted RobustScaler params (`center_`, `scale_`) — pickle-free |"
+    )
     w(f"| `preprocessing_report.json` | JSON | Per-step audit trail |")
     w("")
     elapsed = report.get("elapsed_seconds", 0)
@@ -271,9 +299,13 @@ def _steps_table(w, ing, hip, mv, red, spl, track_a, out) -> None:
     w(f"| 3. Missing | {after_hipaa} | {after_mv} | ffill bio, fill_zero net |")
     w(f"| 4. Redundancy | {after_mv} | {after_red} | {n_red} correlated features dropped |")
     w(f"| 5. Split | {after_red} | train {train_n:,} / test {test_n:,} | Stratified 70/30 |")
-    w(f"| 6. Scale | train {train_n:,} × {n_feat} | train {train_n:,} × {n_feat} | RobustScaler (train fit) |")
-    w(f"| 7. SMOTE | (deferred) | (deferred) | "
-      f"{'enabled' if smote_enabled else 'disabled'}, applied inside Phase 2 CV |")
+    w(
+        f"| 6. Scale | train {train_n:,} × {n_feat} | train {train_n:,} × {n_feat} | RobustScaler (train fit) |"
+    )
+    w(
+        f"| 7. SMOTE | (deferred) | (deferred) | "
+        f"{'enabled' if smote_enabled else 'disabled'}, applied inside Phase 2 CV |"
+    )
     w("")
 
 
@@ -318,13 +350,15 @@ def _smote_section(w, track_a) -> None:
     w(f"| `k_neighbors` | {k} |")
     w(f"| Applied at | Phase 2 cross-validation, train fold only |")
     w("")
-    w("SMOTE is configured here but executed inside the Phase 2 "
-      "stratified cross-validation loop, where each training fold is "
-      "resampled independently before the model is fit. Performing "
-      "the resampling inside CV (rather than as a standalone Phase 1 "
-      "step) prevents synthetic samples from any single fold from "
-      "leaking into the validation fold, which would inflate every "
-      "reported metric. The resampling is also performed in the "
-      "**unscaled** feature space so synthetic interpolations are "
-      "generated in the same geometry as the real data.")
+    w(
+        "SMOTE is configured here but executed inside the Phase 2 "
+        "stratified cross-validation loop, where each training fold is "
+        "resampled independently before the model is fit. Performing "
+        "the resampling inside CV (rather than as a standalone Phase 1 "
+        "step) prevents synthetic samples from any single fold from "
+        "leaking into the validation fold, which would inflate every "
+        "reported metric. The resampling is also performed in the "
+        "**unscaled** feature space so synthetic interpolations are "
+        "generated in the same geometry as the real data."
+    )
     w("")

@@ -39,24 +39,72 @@ OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 
 from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
+# ── Feature group mapping (Fix 3: SHAP stability) ─────────────────────
+# Map individual SHAP features to clinically meaningful narrative
+# categories. This absorbs within-category feature swaps (e.g.,
+# DIntPkt↔Sport) that account for most SHAP instability, producing
+# stable narratives even when the exact top-1 feature changes.
+_FEATURE_GROUPS = {
+    # Network timing anomalies
+    "DIntPkt":    ("unusual network packet timing",     "network_timing"),
+    "SIntPkt":    ("unusual network packet timing",     "network_timing"),
+    "SIntPktAct": ("unusual network packet timing",     "network_timing"),
+    "Dur":        ("abnormal connection duration",      "network_timing"),
+    # Network protocol anomalies
+    "Sport":      ("unexpected network port activity",  "network_protocol"),
+    "Flgs":       ("abnormal protocol flags",           "network_protocol"),
+    # Transfer volume anomalies
+    "SrcBytes":   ("unusual data transfer volume",      "network_volume"),
+    "DstBytes":   ("unusual data transfer volume",      "network_volume"),
+    "TotBytes":   ("unusual data transfer volume",      "network_volume"),
+    "SrcLoad":    ("abnormal network load",             "network_volume"),
+    "DstLoad":    ("abnormal network load",             "network_volume"),
+    "Load":       ("abnormal network load",             "network_volume"),
+    # Packet structure anomalies
+    "sMaxPktSz":  ("unusual packet structure",          "network_packet"),
+    "dMaxPktSz":  ("unusual packet structure",          "network_packet"),
+    "sMinPktSz":  ("unusual packet structure",          "network_packet"),
+    "pSrcLoss":   ("abnormal packet loss",              "network_loss"),
+    "pDstLoss":   ("abnormal packet loss",              "network_loss"),
+    # Biometric anomalies
+    "Temp":       ("abnormal temperature reading",      "biometric"),
+    "SpO2":       ("abnormal oxygen saturation",        "biometric"),
+    "Pulse_Rate": ("abnormal pulse rate",               "biometric"),
+    "SYS":        ("abnormal blood pressure",           "biometric"),
+    "DIA":        ("abnormal blood pressure",           "biometric"),
+    "Heart_rate": ("abnormal heart rate",               "biometric"),
+    "Resp_Rate":  ("abnormal respiratory rate",         "biometric"),
+    "ST":         ("abnormal ST segment",               "biometric"),
+}
+
+
+def _feature_to_narrative(feature_name: str) -> tuple:
+    """Map a SHAP feature name to (narrative_phrase, category).
+
+    Returns:
+        (narrative_phrase, category) — e.g., ("unusual network packet timing", "network_timing")
+    """
+    return _FEATURE_GROUPS.get(feature_name, (feature_name, "unknown"))
+
+
 CLINICIAN_TEMPLATES = {
     "CRITICAL": (
         "CRITICAL ALERT: The system detected a likely intrusion "
         "affecting this patient's monitoring session. The primary indicator was "
-        "abnormal {top_feature} ({feature_type} metric). "
-        "{biometric_note}"
+        "{narrative}. "
+        "{secondary_note}"
         "Recommend immediate review of device connectivity and patient vitals."
     ),
     "HIGH": (
         "HIGH ALERT: Suspicious activity detected. "
-        "Key factor: {top_feature} ({feature_type}). "
-        "{biometric_note}"
+        "Key factor: {narrative}. "
+        "{secondary_note}"
         "Consider verifying device integrity."
     ),
     "MEDIUM": (
-        "MODERATE ALERT: Minor anomaly detected in "
-        "{top_feature} ({feature_type}). "
-        "{biometric_note}"
+        "MODERATE ALERT: Minor anomaly detected — "
+        "{narrative}. "
+        "{secondary_note}"
         "No immediate clinical action required, but flagged for review."
     ),
     "LOW": (
@@ -178,19 +226,51 @@ class AlertExplainer:
         ]
 
     def _clinician_nlg(self, severity: str, top_features: list) -> str:
+        """Generate clinician narrative using feature group categories.
+
+        Fix 2 (confidence band): when the top-2 SHAP feature is ≥80% of
+        top-1 magnitude, cite both in the narrative to be honest about
+        explanation ambiguity.
+
+        Fix 3 (feature groups): map individual features to clinically
+        meaningful categories (e.g., DIntPkt → "unusual network packet
+        timing") to absorb within-category feature swaps.
+        """
         if severity == "LOW":
             return CLINICIAN_TEMPLATES["LOW"]
-        top_feature = top_features[0]["feature"]
-        feature_type = "biometric" if top_feature in BIOMETRIC_FEATURES else "network"
-        bio_feats = [f["feature"] for f in top_features if f["feature"] in BIOMETRIC_FEATURES]
-        biometric_note = (
-            f"Note: Biometric data ({', '.join(bio_feats)}) showed unusual values. "
-            if bio_feats else ""
-        )
+
+        top1_feat = top_features[0]["feature"]
+        top1_val = abs(top_features[0]["shap_value"])
+        narrative_1, category_1 = _feature_to_narrative(top1_feat)
+
+        # Fix 2: confidence band — check if top-2 is close to top-1
+        secondary_note = ""
+        if len(top_features) >= 2:
+            top2_feat = top_features[1]["feature"]
+            top2_val = abs(top_features[1]["shap_value"])
+            ambiguity_ratio = top2_val / top1_val if top1_val > 0 else 0
+
+            if ambiguity_ratio > 0.8:
+                # Ambiguous: cite both features
+                narrative_2, category_2 = _feature_to_narrative(top2_feat)
+                if category_1 != category_2:
+                    secondary_note = (
+                        f"A secondary indicator ({narrative_2}) also contributed. "
+                    )
+                # else: same category, single narrative covers both
+
+            # Add biometric note if any top feature is biometric
+            bio_feats = [f["feature"] for f in top_features
+                         if f["feature"] in BIOMETRIC_FEATURES]
+            if bio_feats and category_1 != "biometric":
+                secondary_note += (
+                    f"Note: Biometric data ({', '.join(bio_feats)}) "
+                    "showed unusual values. "
+                )
+
         return CLINICIAN_TEMPLATES[severity].format(
-            top_feature=top_feature,
-            feature_type=feature_type,
-            biometric_note=biometric_note,
+            narrative=narrative_1,
+            secondary_note=secondary_note,
         )
 
     def explain(self, x_sample: np.ndarray, feat_names: list) -> dict:
@@ -216,10 +296,16 @@ class AlertExplainer:
             pred = int(proba >= self.thresholds[name])
             votes[name] = {"prediction": pred, "confidence": round(proba, 4)}
 
-        # DAE prediction — one forward pass, both the scalar error and the
-        # per-feature decomposition. The per-feature array is cached on the
-        # local stack so Step 4 can consume it without a second forward pass.
-        dae_error_arr, dae_per_feature = self.dae.reconstruction_error_decomposed(x_2d)
+        # Cascaded DAE prediction: augment input with Track A probabilities.
+        # The DAE was trained on [raw_features || Track_A_OOF_probas],
+        # so inference must provide the same augmented input.
+        track_a_probas = np.array([[
+            votes[name]["confidence"]
+            for name in self.classifiers
+        ]])  # shape (1, 3)
+        x_augmented = np.column_stack([x_2d, track_a_probas])
+
+        dae_error_arr, dae_per_feature = self.dae.reconstruction_error_decomposed(x_augmented)
         dae_error = float(dae_error_arr[0])
         dae_pred = int(dae_error > self.dae.threshold)
         votes["dae"] = {"prediction": dae_pred, "reconstruction_error": round(dae_error, 8)}

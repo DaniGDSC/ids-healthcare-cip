@@ -100,15 +100,17 @@ class RedundancyRemover(BaseTransformer):
         self._refused = refused
         logger.info(
             "RedundancyRemover: dropped %d features (|r| ≥ %.2f): %s",
-            len(cols_to_drop), self._threshold, cols_to_drop,
+            len(cols_to_drop),
+            self._threshold,
+            cols_to_drop,
         )
         return df
 
     def get_report(self) -> Dict[str, Any]:
         return {
-            "threshold":          self._threshold,
-            "columns_dropped":    self._dropped,
-            "columns_refused":    self._refused,
-            "n_dropped":          len(self._dropped),
+            "threshold": self._threshold,
+            "columns_dropped": self._dropped,
+            "columns_refused": self._refused,
+            "n_dropped": len(self._dropped),
             "n_refused_protected": len(self._refused),
         }

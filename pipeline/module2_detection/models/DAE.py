@@ -229,6 +229,7 @@ class DAEDetector:
         np.random.seed(self._random_state)
         try:
             import tensorflow as tf
+
             tf.random.set_seed(self._random_state)
         except ImportError:
             pass
@@ -250,14 +251,17 @@ class DAEDetector:
 
         callbacks = []
         if validation_split > 0:
-            callbacks.append(keras.callbacks.EarlyStopping(
-                monitor="val_loss",
-                patience=10,
-                restore_best_weights=True,
-            ))
+            callbacks.append(
+                keras.callbacks.EarlyStopping(
+                    monitor="val_loss",
+                    patience=10,
+                    restore_best_weights=True,
+                )
+            )
 
         history = self._model.fit(
-            X_norm, X_norm,  # autoencoder: input == target
+            X_norm,
+            X_norm,  # autoencoder: input == target
             epochs=self._epochs,
             batch_size=self._batch_size,
             validation_split=validation_split if validation_split > 0 else 0.0,
@@ -283,8 +287,13 @@ class DAEDetector:
         logger.info(
             "DAE fit: %d benign samples, %d features, %d epochs (early stop), "
             "loss=%.6f, threshold=%.6f (p%.0f), %.1fs",
-            len(X_benign), n_features, actual_epochs,
-            final_loss, self._threshold, self._threshold_pct, elapsed,
+            len(X_benign),
+            n_features,
+            actual_epochs,
+            final_loss,
+            self._threshold,
+            self._threshold_pct,
+            elapsed,
         )
         return self
 
@@ -305,9 +314,7 @@ class DAEDetector:
         recon = self._forward(X_norm)
         return self._weighted_mse(X_norm, recon)
 
-    def reconstruction_error_decomposed(
-        self, X: np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def reconstruction_error_decomposed(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """One forward pass; returns (per_sample_error, per_feature_weighted_error).
 
         Equivalent to calling reconstruction_error(X) and then re-running
@@ -325,9 +332,9 @@ class DAEDetector:
             raise RuntimeError("Model not fitted. Call fit() first.")
         X_norm = self._normalise(X)
         recon = self._forward(X_norm)
-        sq_err = (X_norm - recon) ** 2                     # (n_samples, n_features)
+        sq_err = (X_norm - recon) ** 2  # (n_samples, n_features)
         per_feature_weighted = sq_err * self._feat_weights  # (n_samples, n_features)
-        per_sample = per_feature_weighted.sum(axis=1)        # (n_samples,)
+        per_sample = per_feature_weighted.sum(axis=1)  # (n_samples,)
         return per_sample, per_feature_weighted
 
     def predict(self, X: np.ndarray) -> np.ndarray:
@@ -384,22 +391,37 @@ class DAEDetector:
             "attack_f2": float(fbeta_score(y_test, y_pred, beta=2, pos_label=1)),
             "weighted_f1": float(f1_score(y_test, y_pred, average="weighted")),
             "macro_f1": float(f1_score(y_test, y_pred, average="macro")),
-            "auc_roc": float(roc_auc_score(y_test, errors)) if len(np.unique(y_test)) > 1 else float("nan"),
+            "auc_roc": (
+                float(roc_auc_score(y_test, errors)) if len(np.unique(y_test)) > 1 else float("nan")
+            ),
             "threshold": self._threshold,
-            "mean_benign_error": float(errors[y_test == 0].mean()) if (y_test == 0).any() else float("nan"),
-            "mean_attack_error": float(errors[y_test == 1].mean()) if (y_test == 1).any() else float("nan"),
+            "mean_benign_error": (
+                float(errors[y_test == 0].mean()) if (y_test == 0).any() else float("nan")
+            ),
+            "mean_attack_error": (
+                float(errors[y_test == 1].mean()) if (y_test == 1).any() else float("nan")
+            ),
         }
         self._test_metrics = metrics
 
         logger.info(
             "DAE eval: attack_f1=%.4f, attack_f2=%.4f, AUC=%.4f, "
             "benign_err=%.6f, attack_err=%.6f",
-            metrics["attack_f1"], metrics["attack_f2"], metrics["auc_roc"],
-            metrics["mean_benign_error"], metrics["mean_attack_error"],
+            metrics["attack_f1"],
+            metrics["attack_f2"],
+            metrics["auc_roc"],
+            metrics["mean_benign_error"],
+            metrics["mean_attack_error"],
         )
-        logger.info("\n%s", classification_report(
-            y_test, y_pred, target_names=["Normal", "Attack"], digits=4,
-        ))
+        logger.info(
+            "\n%s",
+            classification_report(
+                y_test,
+                y_pred,
+                target_names=["Normal", "Attack"],
+                digits=4,
+            ),
+        )
         return metrics
 
     # ------------------------------------------------------------------
@@ -418,7 +440,9 @@ class DAEDetector:
             "training": {
                 "epochs_run": len(self._history.get("loss", [])),
                 "final_loss": self._history["loss"][-1] if self._history.get("loss") else None,
-                "final_val_loss": self._history["val_loss"][-1] if self._history.get("val_loss") else None,
+                "final_val_loss": (
+                    self._history["val_loss"][-1] if self._history.get("val_loss") else None
+                ),
             },
             "threshold": self._threshold,
             "threshold_percentile": self._threshold_pct,
@@ -471,8 +495,7 @@ class DAEDetector:
             raise RuntimeError("DAE not fitted. Call fit() first.")
         if self._feat_weights is None:
             raise RuntimeError(
-                "DAE feature weights are missing — fit() did not "
-                "complete successfully."
+                "DAE feature weights are missing — fit() did not " "complete successfully."
             )
 
         json_path = Path(json_path)
@@ -481,30 +504,30 @@ class DAEDetector:
         weights_path.parent.mkdir(parents=True, exist_ok=True)
 
         body: Dict[str, Any] = {
-            "format":         _SIDECAR_FORMAT,
+            "format": _SIDECAR_FORMAT,
             "format_version": 1,
             "hyperparameters": {
-                "encoding_dims":        list(self._encoding_dims),
-                "noise_rate":           self._noise_rate,
-                "epochs":               self._epochs,
-                "batch_size":           self._batch_size,
-                "learning_rate":        self._lr,
+                "encoding_dims": list(self._encoding_dims),
+                "noise_rate": self._noise_rate,
+                "epochs": self._epochs,
+                "batch_size": self._batch_size,
+                "learning_rate": self._lr,
                 "threshold_percentile": self._threshold_pct,
-                "clip_percentile":      self._clip_pct,
-                "random_state":         self._random_state,
+                "clip_percentile": self._clip_pct,
+                "random_state": self._random_state,
             },
             "normaliser": {
-                "clip_lo":    self._clip_lo.tolist() if self._clip_lo is not None else None,
-                "clip_hi":    self._clip_hi.tolist() if self._clip_hi is not None else None,
-                "feat_min":   self._feat_min.tolist() if self._feat_min is not None else None,
+                "clip_lo": self._clip_lo.tolist() if self._clip_lo is not None else None,
+                "clip_hi": self._clip_hi.tolist() if self._clip_hi is not None else None,
+                "feat_min": self._feat_min.tolist() if self._feat_min is not None else None,
                 "feat_scale": self._feat_scale.tolist() if self._feat_scale is not None else None,
             },
             "feature_weights": self._feat_weights.tolist(),
-            "threshold":       float(self._threshold),
-            "train_errors":    self._train_errors.tolist() if self._train_errors is not None else None,
-            "n_features":      int(self._feat_weights.shape[0]),
-            "test_metrics":    dict(self._test_metrics),
-            "history":         dict(self._history),
+            "threshold": float(self._threshold),
+            "train_errors": self._train_errors.tolist() if self._train_errors is not None else None,
+            "n_features": int(self._feat_weights.shape[0]),
+            "test_metrics": dict(self._test_metrics),
+            "history": dict(self._history),
         }
 
         # Atomic JSON write so a crash mid-write cannot leave a
@@ -518,9 +541,9 @@ class DAEDetector:
         self._model.save_weights(str(weights_path))
 
         logger.info(
-            "DAEDetector.save_artefacts: wrote %s and %s "
-            "(no pickle on the load path)",
-            json_path.name, weights_path.name,
+            "DAEDetector.save_artefacts: wrote %s and %s " "(no pickle on the load path)",
+            json_path.name,
+            weights_path.name,
         )
 
     @classmethod
@@ -585,18 +608,20 @@ class DAEDetector:
                 f"{json_path}: normaliser bounds missing — sidecar is "
                 f"incomplete and cannot reconstruct a fitted detector."
             )
-        instance._clip_lo    = np.asarray(norm["clip_lo"],    dtype=np.float64)
-        instance._clip_hi    = np.asarray(norm["clip_hi"],    dtype=np.float64)
-        instance._feat_min   = np.asarray(norm["feat_min"],   dtype=np.float64)
+        instance._clip_lo = np.asarray(norm["clip_lo"], dtype=np.float64)
+        instance._clip_hi = np.asarray(norm["clip_hi"], dtype=np.float64)
+        instance._feat_min = np.asarray(norm["feat_min"], dtype=np.float64)
         instance._feat_scale = np.asarray(norm["feat_scale"], dtype=np.float64)
 
         instance._feat_weights = np.asarray(
-            body.get("feature_weights"), dtype=np.float64,
+            body.get("feature_weights"),
+            dtype=np.float64,
         )
         instance._threshold = float(body.get("threshold", 0.0))
         if body.get("train_errors") is not None:
             instance._train_errors = np.asarray(
-                body["train_errors"], dtype=np.float64,
+                body["train_errors"],
+                dtype=np.float64,
             )
         instance._test_metrics = dict(body.get("test_metrics", {}))
         instance._history = dict(body.get("history", {}))
@@ -607,8 +632,8 @@ class DAEDetector:
         instance._model.load_weights(str(weights_path))
 
         logger.info(
-            "DAEDetector.from_artefacts: loaded %s + %s "
-            "(no pickle on the load path)",
-            json_path.name, weights_path.name,
+            "DAEDetector.from_artefacts: loaded %s + %s " "(no pickle on the load path)",
+            json_path.name,
+            weights_path.name,
         )
         return instance

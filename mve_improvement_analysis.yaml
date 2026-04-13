@@ -173,7 +173,24 @@ mve_gaps:
         this system (internal destination, SMB protocol, similar volume to previous
         Tuesdays)." Reserve anomaly framing for genuinely suspicious signals.
         The confidence indicator should read: "Confidence: LOW — pattern consistent
-        with scheduled backup; no action required unless destination changes."
+        with scheduled backup; verify schedule before escalating."
+      v2_followup:
+        v2_result: "NEW REGRESSION — 0% composite accuracy (0/25) in full n=25 study"
+        v2_failure_pattern: "sev_right_act_wrong (25/25) — all chose LOW + dismiss"
+        v2_root_cause: >
+          IMP-04 (benign_first_framing) corrected the over-elevation from v1 but
+          introduced a dismiss bias. Participants verify the schedule (correct) then
+          close the alert (wrong). "Verify schedule before escalating" is read as
+          "verify → not escalating → therefore done." No Layer 3 guidance exists
+          for LOW + benign_first_framing, so participants fill the gap with dismiss.
+          The failure is not in Layer 1 framing — it is the absence of an explicit
+          monitor-and-hold instruction in Layer 3.
+        v2_fix: "IMP-09 — see mve_specification.yaml layer_3_required_action under benign_first_framing"
+        severity_note: >
+          Worse than v1 in absolute terms (0% vs 52%) but different failure mode.
+          v1 failure: wrong severity (MEDIUM instead of LOW). v2 failure: wrong
+          action (dismiss instead of monitor). Severity identification is now perfect
+          in v2 (25/25 chose LOW); the fix is purely a Layer 3 addition.
 
 
 # ================================================================
@@ -434,6 +451,28 @@ improvement_recommendations:
         a 'likely_benign' flag to Layer 1 output schema for alerts with
         confidence: LOW and matching known-safe patterns.
 
+    - id: "IMP-09"
+      affects_alerts: [15]
+      alert_type: "data_exfiltration"
+      issue: "benign_first_framing creates dismiss bias — no Layer 3 monitor instruction"
+      current_mve_behavior: >
+        IMP-04 benign_first_framing corrects over-elevation but provides no Layer 3
+        action. Participants verify the schedule and then close the alert because
+        "verify before escalating" implies the decision tree ends at 'not escalating.'
+        In v2 full study (n=25): 100% chose dismiss, 0% chose monitor.
+      fix: >
+        Add layer_3_required_action for data_exfiltration + benign_first_framing:
+        (a) Confirm job is authorized in backup scheduler / firewall log.
+        (b) Monitor destination in firewall logs for next 24h.
+        (c) Keep alert open until destination confirmed on approved whitelist.
+        Explicitly prohibit 'close', 'dismiss', or 'no action' language.
+        Make explicit: LOW severity = low urgency, not zero action.
+      paper_implication: >
+        Updates Claim C3 discussion: clinical-constraint guidance prevents over-reaction,
+        but the LOW-severity dismiss bias is a new under-action failure mode not
+        captured by the original M3/M4 metrics. Report as a v2 finding requiring
+        one more iteration before Phase 2 human study.
+
   priority_2_strengthen_paper:
     # These improve claims and discussion sections
 
@@ -507,4 +546,5 @@ paper_summary:
     - "Simulation uses single AI model — human study required for full validation (Phase 2)"
     - "unauthorized_ehr_access requires RBAC data integration not in current prototype"
     - "Network vs physical isolation distinction not explicit in current Layer 3 spec"
-    - "LOW-severity framing can inadvertently elevate benign alerts (alert_15 regression)"
+    - "LOW-severity framing can inadvertently elevate benign alerts (alert_15 v1 regression)"
+    - "benign_first_framing (IMP-04) creates dismiss bias on A-15 in v2 — Layer 3 monitor instruction missing (IMP-09 fix required before Phase 2)"

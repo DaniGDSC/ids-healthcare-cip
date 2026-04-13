@@ -215,8 +215,8 @@ class ReportExporter:
         """
         report = {
             "descriptive_statistics": descriptive,
-            "missing_values":         missing,
-            "class_distribution":     class_dist,
+            "missing_values": missing,
+            "class_distribution": class_dist,
         }
         path = self._config.output_dir / self._config.stats_report_file
         self._json.export(report, path)
@@ -232,9 +232,7 @@ class ReportExporter:
         Args:
             pairs: Output of ``CorrelationAnalyzer.high_correlation_pairs()``.
         """
-        df = pd.DataFrame(
-            pairs, columns=["feature_a", "feature_b", "correlation"]
-        )
+        df = pd.DataFrame(pairs, columns=["feature_a", "feature_b", "correlation"])
         path = self._config.output_dir / self._config.high_correlations_file
         self._csv.export(df, path)
 

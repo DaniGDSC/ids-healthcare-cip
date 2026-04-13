@@ -101,8 +101,10 @@ class DataSplitter:
         }
         logger.info(
             "DataSplitter: train=%d (attack=%.1f%%) | test=%d (attack=%.1f%%)",
-            len(X_train), y_train.mean() * 100,
-            len(X_test), y_test.mean() * 100,
+            len(X_train),
+            y_train.mean() * 100,
+            len(X_test),
+            y_test.mean() * 100,
         )
         return X_train, X_test, y_train, y_test, feature_names, y_multi_train, y_multi_test
 

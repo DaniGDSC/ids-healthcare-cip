@@ -99,7 +99,9 @@ class CategoricalEncoder(BaseTransformer):
             logger.info(
                 "CategoricalEncoder: label-encoded '%s' (%d classes, "
                 "deterministic alphabetical: %s)",
-                col, len(categories), categories[:8],
+                col,
+                len(categories),
+                categories[:8],
             )
 
         # ── Parse string columns to numeric with sentinel for failures ──
@@ -112,16 +114,17 @@ class CategoricalEncoder(BaseTransformer):
             df[col] = df[col].fillna(self._sentinel)
             parsed[col] = n_coerced
             logger.info(
-                "CategoricalEncoder: parsed '%s' to numeric "
-                "(%d non-parseable → sentinel=%d)",
-                col, n_coerced, self._sentinel,
+                "CategoricalEncoder: parsed '%s' to numeric " "(%d non-parseable → sentinel=%d)",
+                col,
+                n_coerced,
+                self._sentinel,
             )
 
         self._report_data = {
-            "label_encoded":   label_encoded,
-            "parsed_numeric":  parsed,
-            "sentinel":        self._sentinel,
-            "unknown_value":   self._unknown_value,
+            "label_encoded": label_encoded,
+            "parsed_numeric": parsed,
+            "sentinel": self._sentinel,
+            "unknown_value": self._unknown_value,
             "mapping_classes": {col: len(m) for col, m in self._mappings.items()},
         }
         return df
@@ -155,18 +158,19 @@ class CategoricalEncoder(BaseTransformer):
                     logger.warning(
                         "Removed legacy pickle encoder at %s; sidecar "
                         "at %s is now the canonical artefact.",
-                        legacy, path,
+                        legacy,
+                        path,
                     )
                 except OSError as exc:
                     logger.warning("Could not remove %s: %s", legacy, exc)
 
         body = {
-            "format":         _SIDECAR_FORMAT,
+            "format": _SIDECAR_FORMAT,
             "format_version": 1,
-            "sentinel":       self._sentinel,
-            "unknown_value":  self._unknown_value,
-            "mappings":       self._mappings,
-            "parse_numeric":  self._parse_numeric,
+            "sentinel": self._sentinel,
+            "unknown_value": self._unknown_value,
+            "mappings": self._mappings,
+            "parse_numeric": self._parse_numeric,
         }
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(path.suffix + ".tmp")
@@ -174,7 +178,8 @@ class CategoricalEncoder(BaseTransformer):
         os.replace(tmp, path)
         logger.info(
             "CategoricalEncoder sidecar saved: %s (%d mapped columns)",
-            path, len(self._mappings),
+            path,
+            len(self._mappings),
         )
         return path
 
@@ -194,8 +199,7 @@ class CategoricalEncoder(BaseTransformer):
         body = json.loads(path.read_text())
         if body.get("format") != _SIDECAR_FORMAT:
             raise ValueError(
-                f"{path} is not a {_SIDECAR_FORMAT} sidecar "
-                f"(got format={body.get('format')!r})"
+                f"{path} is not a {_SIDECAR_FORMAT} sidecar " f"(got format={body.get('format')!r})"
             )
         instance = cls(
             label_encode=list(body.get("mappings", {}).keys()),
@@ -209,6 +213,7 @@ class CategoricalEncoder(BaseTransformer):
         }
         logger.info(
             "CategoricalEncoder sidecar loaded: %s (%d mapped columns)",
-            path, len(instance._mappings),
+            path,
+            len(instance._mappings),
         )
         return instance

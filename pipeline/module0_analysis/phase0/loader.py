@@ -95,9 +95,7 @@ class DataLoader:
             IntegrityError: If the file hash differs from the baseline,
                 the metadata signature is invalid, or no baseline exists.
         """
-        validated_path = self._path_validator.validate_input_path(
-            self._config.data_path
-        )
+        validated_path = self._path_validator.validate_input_path(self._config.data_path)
         self._path_validator.check_read_only(validated_path)
 
         data, digest = self._integrity.verify_and_read(validated_path)
@@ -106,16 +104,17 @@ class DataLoader:
         log_phase0_event(
             "DATASET_LOADED",
             {
-                "file":          validated_path.name,
-                "rows":          len(df),
-                "cols":          len(df.columns),
+                "file": validated_path.name,
+                "rows": len(df),
+                "cols": len(df.columns),
                 "sha256_prefix": digest[:16],
             },
         )
         logger.info(
-            "Loaded dataset: %d rows × %d columns from %s "
-            "(integrity verified)",
-            len(df), len(df.columns), validated_path,
+            "Loaded dataset: %d rows × %d columns from %s " "(integrity verified)",
+            len(df),
+            len(df.columns),
+            validated_path,
         )
         return df
 

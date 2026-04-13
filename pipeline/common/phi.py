@@ -15,13 +15,15 @@ locally — import from here:
 from __future__ import annotations
 
 # Frozen so accidental mutation in one caller cannot leak into another.
-BIOMETRIC_COLUMNS: frozenset[str] = frozenset({
-    "Temp",
-    "SpO2",
-    "Pulse_Rate",
-    "SYS",
-    "DIA",
-    "Heart_rate",
-    "Resp_Rate",
-    "ST",
-})
+BIOMETRIC_COLUMNS: frozenset[str] = frozenset(
+    {
+        "Temp",
+        "SpO2",
+        "Pulse_Rate",
+        "SYS",
+        "DIA",
+        "Heart_rate",
+        "Resp_Rate",
+        "ST",
+    }
+)

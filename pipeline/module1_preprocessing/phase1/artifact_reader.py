@@ -47,9 +47,7 @@ class Phase0ArtifactReader:
         self._stats_path = project_root / stats_file
         self._corr_path = project_root / corr_file
         # Retained for backwards-compatible constructor signatures only.
-        self._integrity_path = (
-            project_root / integrity_file if integrity_file is not None else None
-        )
+        self._integrity_path = project_root / integrity_file if integrity_file is not None else None
 
     def read_stats(self) -> Dict[str, Any]:
         """Read descriptive statistics and class distribution from Phase 0.
@@ -64,9 +62,11 @@ class Phase0ArtifactReader:
         if not self._stats_path.exists():
             raise FileNotFoundError(f"Phase 0 stats not found: {self._stats_path}")
         data = json.loads(self._stats_path.read_text(encoding="utf-8"))
-        logger.info("Phase 0 stats: %d features, missing=%s",
-                     len(data.get("descriptive_statistics", {})),
-                     "none" if not data.get("missing_values") else "present")
+        logger.info(
+            "Phase 0 stats: %d features, missing=%s",
+            len(data.get("descriptive_statistics", {})),
+            "none" if not data.get("missing_values") else "present",
+        )
         return data
 
     def read_correlations(self) -> pd.DataFrame:
@@ -80,9 +80,7 @@ class Phase0ArtifactReader:
             FileNotFoundError: If the correlations file is missing.
         """
         if not self._corr_path.exists():
-            raise FileNotFoundError(
-                f"Phase 0 correlations not found: {self._corr_path}"
-            )
+            raise FileNotFoundError(f"Phase 0 correlations not found: {self._corr_path}")
         df = pd.read_csv(self._corr_path)
         logger.info("Phase 0 correlations: %d pairs loaded", len(df))
         return df

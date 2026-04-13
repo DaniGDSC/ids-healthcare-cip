@@ -36,16 +36,15 @@ class VarianceFilter(BaseTransformer):
         Returns:
             DataFrame with zero-variance features removed.
         """
-        cols_to_drop = [
-            c for c in df.columns
-            if df[c].nunique() <= self._max_unique
-        ]
+        cols_to_drop = [c for c in df.columns if df[c].nunique() <= self._max_unique]
 
         df = df.drop(columns=cols_to_drop, errors="ignore")
         self._dropped = cols_to_drop
         logger.info(
             "VarianceFilter: dropped %d features (unique ≤ %d): %s",
-            len(cols_to_drop), self._max_unique, cols_to_drop,
+            len(cols_to_drop),
+            self._max_unique,
+            cols_to_drop,
         )
         return df
 

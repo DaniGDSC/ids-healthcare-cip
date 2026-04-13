@@ -1,0 +1,79 @@
+xai_faithfulness:
+
+  perturbation_faithfulness:
+    n_alerts_tested: 4896
+    faithfulness_rate_overall: 0.9013
+    faithfulness_rate_life_sustaining: 0.8797
+    faithfulness_rate_ehr: 0.9290
+    life_sustaining_n: 1297
+    ehr_n: 1493
+    clinical_safety_concern: true
+    concern_detail: >
+      Life-sustaining device faithfulness (88.0%) is 4.9 pp lower than EHR
+      (92.9%). The gap is driven by biometric features (Temp, Pulse_Rate) being
+      top SHAP for IoMT devices — perturbation of these features changes the
+      model score but the MVE template only reflects network-level changes
+      (protocol, destination, timestamp). Discrete-valued network features
+      (Flgs: 3 values, Sport: binned) dominate the remaining failures.
+    top_failing_features: [Flgs, Sport, SIntPkt, DIntPkt, DstLoad]
+    result: "PASS"
+
+  explanation_consistency:
+    n_alerts_tested: 20
+    n_runs_per_alert: 3
+    n_pairs_evaluated: 60
+    consistent_pairs: 60
+    consistency_rate: 1.0000
+    result: "PASS"
+    notes: "Rule-based MVE generation (Option B) is fully deterministic — identical inputs always produce identical Layer 1 narratives. LLM-based generation (Option A) would require separate consistency testing."
+
+  shap_feature_coverage:
+    n_alerts_tested: 4896
+    coverage_rate: 0.3103
+    result: "FAIL"
+    most_common_uncovered_features:
+      Temp: 2872
+      DIntPkt: 2073
+      Dur: 2055
+      SIntPkt: 732
+      Pulse_Rate: 495
+    root_cause: >
+      The MVE generator's T1 (anomalous outbound) template describes network
+      anomalies (protocol, destination IP, timestamp) but does not mention
+      biometric features. SHAP identifies Temp as top-1 for 24.1% of samples
+      and DIntPkt for 24.5%, but the Layer 1 narrative says "initiated HTTPS
+      to 198.51.100.1, not on any approved destination list" — a network
+      framing that does not reflect the biometric evidence the model uses.
+      This is a genuine faithfulness gap: the explanation is plausible but
+      does not represent the model's actual decision basis.
+    clinical_impact: >
+      For 35.5% of alerts, ≥2 of the model's top-3 decision features are
+      absent from the clinical narrative. A nurse reading "unauthorized
+      external connection" when the model actually flagged "abnormal
+      temperature pattern" receives a misleading explanation that could
+      lead to wrong remediation actions.
+    fix_required: >
+      The MVE template must be extended to include biometric context when
+      biometric features dominate SHAP attribution. The feature group
+      mapping (already implemented in module4_online_explainer.py) provides
+      the vocabulary — it needs to flow into the prototype's Layer 1 template.
+
+  overall_result: "FAIL"
+  gate_2_ready: false
+  gate_2_blocking_test: "shap_feature_coverage (0.3103 vs 0.65 minimum)"
+
+  clinical_safety_flags:
+    - "Life-sustaining device perturbation faithfulness (88.0%) is lower than EHR (92.9%) — explanation quality degrades for highest-stakes alerts."
+    - "SHAP feature coverage is 31.0% — the majority of clinical narratives do not reflect the model's actual top decision features. This is a patient safety issue: operators act on explanations that misrepresent the evidence."
+
+  notes: >
+    Perturbation faithfulness (90.1%) and consistency (100%) both PASS,
+    confirming that the MVE narrative changes when inputs change and is
+    deterministic. However, SHAP feature coverage FAILs at 31.0% because
+    the MVE template vocabulary is limited to network concepts (protocol,
+    destination, timing) while the model's top features are often biometric
+    (Temp 24.1%, Pulse_Rate 1.9%). The feature group narrative mapping
+    implemented in the pipeline explainer (module4_online_explainer.py)
+    addresses this for real-time alerts but has not been backported to the
+    prototype's rule-based MVE generator (src/mve_generator.py). Gate 2
+    is blocked until coverage reaches ≥0.65.

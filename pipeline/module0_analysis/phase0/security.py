@@ -117,8 +117,8 @@ class IntegrityVerifier:
             )
 
         record = {
-            "sha256":      digest,
-            "size_bytes":  len(data),
+            "sha256": digest,
+            "size_bytes": len(data),
             "bootstrapped_at": datetime.now(timezone.utc).isoformat(),
         }
         self._write_signed_metadata(file_path=file_path, record=record)
@@ -166,9 +166,9 @@ class IntegrityVerifier:
             log_phase0_event(
                 "INTEGRITY_VIOLATION",
                 {
-                    "file":     file_path.name,
+                    "file": file_path.name,
                     "expected": stored["sha256"][:16],
-                    "actual":   digest[:16],
+                    "actual": digest[:16],
                 },
                 level=logging.CRITICAL,
             )
@@ -226,10 +226,10 @@ class IntegrityVerifier:
             _load_signing_key,
             _HAVE_CRYPTOGRAPHY,
         )
+
         if not _HAVE_CRYPTOGRAPHY:
             raise IntegrityError(
-                "cryptography package is not installed; cannot verify "
-                "signed integrity baseline."
+                "cryptography package is not installed; cannot verify " "signed integrity baseline."
             )
 
         import base64
@@ -241,9 +241,7 @@ class IntegrityVerifier:
         _, public_path, _ = _load_signing_key()
         public_key = serialization.load_pem_public_key(public_path.read_bytes())
 
-        signed_payload = _canonical_json(
-            {"version": meta.get("version"), "entries": entries}
-        )
+        signed_payload = _canonical_json({"version": meta.get("version"), "entries": entries})
         try:
             public_key.verify(
                 base64.b64decode(signature_b64),
@@ -270,6 +268,7 @@ class IntegrityVerifier:
             _load_signing_key,
             _HAVE_CRYPTOGRAPHY,
         )
+
         if not _HAVE_CRYPTOGRAPHY:
             raise IntegrityError(
                 "cryptography package is not installed; cannot sign the "
@@ -285,9 +284,7 @@ class IntegrityVerifier:
         body = {"version": _METADATA_VERSION, "entries": entries}
 
         private_key, _, signing_key_id = _load_signing_key()
-        signature = private_key.sign(
-            _canonical_json(body), ec.ECDSA(hashes.SHA256())
-        )
+        signature = private_key.sign(_canonical_json(body), ec.ECDSA(hashes.SHA256()))
         body["signature"] = base64.b64encode(signature).decode("ascii")
         body["signing_key_id"] = signing_key_id
         body["signature_alg"] = "ECDSA_P256_SHA256"
@@ -432,8 +429,7 @@ class ColumnAllowlist:
                 level=logging.ERROR,
             )
             raise ValueError(
-                f"A03: Column allowlist violation in {context} — "
-                f"unknown columns: {invalid}"
+                f"A03: Column allowlist violation in {context} — " f"unknown columns: {invalid}"
             )
         return list(requested_columns)
 
@@ -516,9 +512,7 @@ def log_phase0_event(
             payload[k] = "[REDACTED-PHI]"
 
     ts = datetime.now(timezone.utc).isoformat()
-    _get_phase0_logger().log(
-        level, "[%s] %s: %s", ts, event, payload if payload else ""
-    )
+    _get_phase0_logger().log(level, "[%s] %s: %s", ts, event, payload if payload else "")
 
     audit = _get_hardened_audit()
     if audit:

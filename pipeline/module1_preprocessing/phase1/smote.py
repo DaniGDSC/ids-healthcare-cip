@@ -75,7 +75,9 @@ class SMOTEBalancer:
         }
         logger.info(
             "SMOTEBalancer: %d → %d (+%d synthetic)",
-            n_before, n_after, n_after - n_before,
+            n_before,
+            n_after,
+            n_after - n_before,
         )
         return X_res, y_res
 

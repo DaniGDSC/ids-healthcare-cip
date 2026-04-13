@@ -6,8 +6,9 @@ with device criticality, data sensitivity, and patient acuity:
 
     R = w1·C_detect + w2·D_crit + w3·S_data + w4·A_patient
 
-where C_detect = max(Track_A_proba, Track_B_normalized_RE) fuses
-supervised and novelty-based anomaly scores.
+where C_detect uses cascaded Track A → Track B fusion: the DAE receives
+[raw_features || Track_A_probabilities] as input, making spoofing attacks
+visible through the joint feature-prediction space.
 
 Maps scores to alert priority levels and demonstrates dual-track fusion
 value — cases where combining Track A + Track B catches threats that
@@ -137,21 +138,51 @@ def compute_c_detect(
     c_track_a: np.ndarray,
     X_test: np.ndarray,
 ) -> tuple:
-    """Fused detection confidence: C_detect = max(Track_A, Track_B).
+    """Fused detection confidence: cascaded Track A → Track B.
 
-    The DAE detector is loaded via the pickle-free
-    ``DAEDetector.from_artefacts`` API: a JSON sidecar plus a Keras
-    weights file. Loading either is bytes-only and never executes
-    Python. See Phase 2 finding #3b.
+    The DAE (Track B) receives ``[raw_features || Track_A_probas]`` so it
+    learns what "normal" looks like in the joint feature-prediction space.
+    Spoofing attacks that are invisible to reconstruction error on raw
+    features alone become detectable because Track A's elevated
+    probabilities are far outside the DAE's benign training distribution.
+
+    Fusion: ``C_detect = max(Track_A, Track_B)`` — the DAE can elevate
+    but never suppress Track A.
     """
     from pipeline.module2_detection.models.DAE import DAEDetector
+
+    # Load all Track A model probabilities for the augmented DAE input
+    track_a_probas = _load_track_a_probas_for_dae(X_test)
+
+    # Augment: [25 raw features || 3 Track A probabilities]
+    X_augmented = np.column_stack([X_test, track_a_probas])
+
     det = DAEDetector.from_artefacts(
         json_path=PROJECT_ROOT / "results/models/dae_detector.json",
         weights_path=PROJECT_ROOT / "results/models/dae_model.weights.h5",
     )
-    c_track_b = det.predict_proba(X_test)
+    c_track_b = det.predict_proba(X_augmented)
+
+    # Fusion: DAE elevates, never suppresses
     c_detect = np.maximum(c_track_a, c_track_b)
     return np.clip(c_detect, 0.0, 1.0), c_track_b
+
+
+def _load_track_a_probas_for_dae(X_test: np.ndarray) -> np.ndarray:
+    """Load Track A model probabilities for DAE cascaded input.
+
+    At inference, runs all three Track A models on X_test and stacks
+    their P(attack) predictions as columns.
+    """
+    from pipeline.common import loads_signed
+
+    probas = []
+    for name in ("xgboost", "random_forest", "decision_tree"):
+        pipeline_path = PROJECT_ROOT / f"results/models/{name}_final_pipeline.pkl"
+        clf = loads_signed(pipeline_path)
+        p = clf.predict_proba(X_test)[:, 1]
+        probas.append(p)
+    return np.column_stack(probas)
 
 
 def compute_d_crit(attack_cats: np.ndarray) -> np.ndarray:
@@ -687,7 +718,7 @@ def export_config_jsons() -> None:
     # 3.8 Risk scoring config
     risk_cfg = {
         "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
-        "fusion": "C_detect = max(Track_A_proba, Track_B_normalized_RE)",
+        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
         "weights": WEIGHTS,
         "thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
         "alert_tiers": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
@@ -922,7 +953,7 @@ def save_outputs(
 
     report = {
         "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
-        "fusion": "C_detect = max(Track_A_proba, Track_B_normalized_RE)",
+        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
         "weights": WEIGHTS,
         "risk_thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
         "total_samples": int(len(R)),
@@ -999,7 +1030,7 @@ def main() -> None:
     logger.info("  Track A: XGBoost proba, threshold=%.3f", xgb_threshold)
 
     c_detect, c_track_b = compute_c_detect(c_track_a, X_test)
-    logger.info("  C_detect (max fusion): range [%.4f, %.4f]",
+    logger.info("  C_detect (cascaded fusion): range [%.4f, %.4f]",
                 c_detect.min(), c_detect.max())
 
     d_crit = compute_d_crit(attack_cats)
@@ -1084,7 +1115,7 @@ def main() -> None:
     logger.info(sep)
     logger.info("  Formula   : R = %.2f·C_detect + %.2f·D_crit + %.2f·S_data + %.2f·A_patient",
                 WEIGHTS["w1"], WEIGHTS["w2"], WEIGHTS["w3"], WEIGHTS["w4"])
-    logger.info("  Fusion    : C_detect = max(Track_A, Track_B)")
+    logger.info("  Fusion    : C_detect = cascaded(Track_A → Track_B)")
     logger.info("  Output    : %s", OUTPUT_DIR)
     logger.info(sep)
 

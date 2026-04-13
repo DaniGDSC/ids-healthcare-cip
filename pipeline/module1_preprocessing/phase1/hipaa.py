@@ -41,7 +41,8 @@ class HIPAASanitizer(BaseTransformer):
         self._dropped = present
         logger.info(
             "HIPAASanitizer: dropped %d columns: %s",
-            len(present), present,
+            len(present),
+            present,
         )
         return df
 

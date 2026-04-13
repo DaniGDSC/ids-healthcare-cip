@@ -86,15 +86,15 @@ class StatisticsAnalyzer:
                 # See pipeline/common/phi.py for the canonical column set.
                 stats[col] = {
                     "mean": round(float(series.mean()), 6),
-                    "std":  round(float(series.std()),  6),
+                    "std": round(float(series.std()), 6),
                 }
             else:
                 stats[col] = {
-                    "mean":   round(float(series.mean()),   6),
+                    "mean": round(float(series.mean()), 6),
                     "median": round(float(series.median()), 6),
-                    "std":    round(float(series.std()),    6),
-                    "min":    round(float(series.min()),    6),
-                    "max":    round(float(series.max()),    6),
+                    "std": round(float(series.std()), 6),
+                    "min": round(float(series.min()), 6),
+                    "max": round(float(series.max()), 6),
                 }
 
         logger.info(
@@ -129,14 +129,16 @@ class StatisticsAnalyzer:
 
             if pct > self._config.missing_value_warn_pct:
                 logger.warning(
-                    "Feature '%s' has %.2f%% missing values "
-                    "(threshold: %.1f%%)",
-                    col, pct, self._config.missing_value_warn_pct,
+                    "Feature '%s' has %.2f%% missing values " "(threshold: %.1f%%)",
+                    col,
+                    pct,
+                    self._config.missing_value_warn_pct,
                 )
 
         logger.info(
             "Missing values: %d / %d features affected",
-            len(result), len(self._df.columns),
+            len(result),
+            len(self._df.columns),
         )
         return result
 
@@ -164,14 +166,16 @@ class StatisticsAnalyzer:
         for code, name in label_map.items():
             count = int(value_counts.get(code, 0))
             dist[name] = {
-                "count":      count,
+                "count": count,
                 "percentage": round(count / total * 100, 4),
             }
 
         logger.info(
             "Class distribution → Normal: %d (%.1f%%)  |  Attack: %d (%.1f%%)",
-            dist["Normal"]["count"], dist["Normal"]["percentage"],
-            dist["Attack"]["count"], dist["Attack"]["percentage"],
+            dist["Normal"]["count"],
+            dist["Normal"]["percentage"],
+            dist["Attack"]["count"],
+            dist["Attack"]["percentage"],
         )
         return dist
 
@@ -242,7 +246,7 @@ class CorrelationAnalyzer:
 
         pairs: List[Tuple[str, str, float]] = []
         for i, col_a in enumerate(cols):
-            for col_b in cols[i + 1:]:
+            for col_b in cols[i + 1 :]:
                 r = matrix.loc[col_a, col_b]
                 if not np.isnan(r) and abs(r) > threshold:
                     pairs.append((col_a, col_b, round(float(r), 6)))
@@ -250,7 +254,8 @@ class CorrelationAnalyzer:
         pairs.sort(key=lambda t: abs(t[2]), reverse=True)
         logger.info(
             "High-correlation pairs (|r| > %.2f): %d found",
-            threshold, len(pairs),
+            threshold,
+            len(pairs),
         )
         return pairs
 
@@ -317,29 +322,35 @@ class OutlierAnalyzer:
 
             if col in BIOMETRIC_COLUMNS:
                 # Aggregate counts only — no quantile-derived fields.
-                report.append({
-                    "feature":       col,
-                    "outlier_count": outliers,
-                    "outlier_pct":   pct,
-                    "total":         total,
-                })
+                report.append(
+                    {
+                        "feature": col,
+                        "outlier_count": outliers,
+                        "outlier_pct": pct,
+                        "total": total,
+                    }
+                )
             else:
-                report.append({
-                    "feature":       col,
-                    "q1":            round(q1, 6),
-                    "q3":            round(q3, 6),
-                    "iqr":           round(iqr, 6),
-                    "lower_bound":   round(lower, 6),
-                    "upper_bound":   round(upper, 6),
-                    "outlier_count": outliers,
-                    "outlier_pct":   pct,
-                    "total":         total,
-                })
+                report.append(
+                    {
+                        "feature": col,
+                        "q1": round(q1, 6),
+                        "q3": round(q3, 6),
+                        "iqr": round(iqr, 6),
+                        "lower_bound": round(lower, 6),
+                        "upper_bound": round(upper, 6),
+                        "outlier_count": outliers,
+                        "outlier_pct": pct,
+                        "total": total,
+                    }
+                )
 
         report.sort(key=lambda r: r["outlier_pct"], reverse=True)
         n_with = sum(1 for r in report if r["outlier_count"] > 0)
         logger.info(
             "Outlier analysis (k=%.1f): %d / %d features have outliers",
-            k, n_with, len(report),
+            k,
+            n_with,
+            len(report),
         )
         return report

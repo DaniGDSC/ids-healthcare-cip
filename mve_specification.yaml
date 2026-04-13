@@ -98,6 +98,39 @@ layer_specification:
         If benign_first_framing applies, confidence_indicator MUST read:
         "Confidence: LOW — pattern consistent with [benign explanation];
         verify schedule before escalating."
+      # ── IMP-09: dismiss_prohibition_for_benign_low ───────────────────────
+      # Added 2026-04-13. Applies to data_exfiltration LOW + benign_first_framing.
+      # Fixes A-15 v2 regression: n=25 full study found ALL 25 personas chose
+      # dismiss after verifying schedule. benign_first_framing (IMP-04) corrected
+      # the original over-elevation (LOW→MEDIUM) but over-corrected: participants
+      # now interpret "verify schedule before escalating" as "verify once, then
+      # close." Root cause: no Layer 3 guidance exists for this case — the
+      # format_addition_exfil rule targets destination-blocking (HIGH alerts),
+      # not verify-and-monitor (LOW alerts). Participants fill the gap with dismiss.
+      layer_3_required_action:
+        applies_to: "data_exfiltration + benign_first_framing condition"
+        pattern: "monitor_with_verification"
+        rule: >
+          Layer 3 immediate_action MUST use the monitor-with-verification
+          pattern. Required elements:
+          (a) Verification step: "Confirm [transfer/backup job] is authorized
+              in [scheduler/firewall/backup console]."
+          (b) Monitor instruction: "Monitor destination in firewall logs for
+              next [24h / next scheduled occurrence]."
+          (c) Alert retention: "Keep alert open until destination confirmed on
+              internal approved whitelist."
+        example: >
+          "Confirm this backup job is authorized in the backup scheduler
+          (check Tuesday job log for BACKUP-SRV-01). Monitor destination IP
+          in firewall logs for the next 24 hours. Keep alert open until
+          destination verified on the approved internal list."
+        dismiss_prohibition: >
+          DO NOT use 'close', 'dismiss', 'no action required', or 'no further
+          action' language. LOW severity means low urgency, NOT no action.
+          Even confirmed-benign data transfers require destination verification
+          and 24h monitoring before closure. The distinction is:
+            dismiss = close now, no follow-up
+            monitor = keep open, scheduled re-check (CORRECT for LOW data_exfiltration)
     what_NOT_to_include:
       - "Raw SHAP values or feature importance scores"
       - "Model architecture details"

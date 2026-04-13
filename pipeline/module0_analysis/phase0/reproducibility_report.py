@@ -73,10 +73,12 @@ def render_reproducibility_report(
 def _section_header(w) -> None:
     w("## 3.4 Reproducibility and Environment Specification")
     w("")
-    w("This section documents the computational environment, random seed "
-      "configuration, CI/CD pipeline status, and dataset versioning to "
-      "ensure full reproducibility of the reported results as required "
-      "by IEEE Q1 standards.")
+    w(
+        "This section documents the computational environment, random seed "
+        "configuration, CI/CD pipeline status, and dataset versioning to "
+        "ensure full reproducibility of the reported results as required "
+        "by IEEE Q1 standards."
+    )
     w("")
 
 
@@ -93,9 +95,18 @@ def _section_environment(
 
     # Key packages table
     key_packages = [
-        "tensorflow", "keras", "pandas", "numpy", "scikit-learn",
-        "scipy", "imbalanced-learn", "hdbscan", "matplotlib",
-        "pyyaml", "cryptography", "pytest",
+        "tensorflow",
+        "keras",
+        "pandas",
+        "numpy",
+        "scikit-learn",
+        "scipy",
+        "imbalanced-learn",
+        "hdbscan",
+        "matplotlib",
+        "pyyaml",
+        "cryptography",
+        "pytest",
     ]
 
     w("| Package | Version |")
@@ -104,8 +115,10 @@ def _section_environment(
         ver = packages.get(pkg, packages.get(pkg.replace("-", "_"), "—"))
         w(f"| {pkg} | {ver} |")
     w("")
-    w(f"Full dependency list is maintained in `requirements.txt` "
-      f"({len(packages)} packages total).")
+    w(
+        f"Full dependency list is maintained in `requirements.txt` "
+        f"({len(packages)} packages total)."
+    )
     w("")
 
 
@@ -119,9 +132,11 @@ def _section_experiment_reproducibility(
 
     w("### 3.4.2 Experiment Reproducibility")
     w("")
-    w(f"All random seeds are fixed at `random_state={config.random_state}`. "
-      f"The dataset is split {train_pct}/{test_pct} (train/test) with "
-      f"stratified sampling to preserve class priors.")
+    w(
+        f"All random seeds are fixed at `random_state={config.random_state}`. "
+        f"The dataset is split {train_pct}/{test_pct} (train/test) with "
+        f"stratified sampling to preserve class priors."
+    )
     w("")
     w(f"Dataset SHA-256: `{dataset_hash}`")
     w("")
@@ -153,8 +168,7 @@ def _section_cicd_summary(
     w("| Build | Docker | Image verified |")
     w("| SBOM | CycloneDX | Generated per build |")
     w("")
-    w("Pre-commit hooks enforce black, ruff, bandit, and detect-secrets "
-      "on every local commit.")
+    w("Pre-commit hooks enforce black, ruff, bandit, and detect-secrets " "on every local commit.")
     w("")
 
 
@@ -170,19 +184,23 @@ def _section_dataset_versioning(
     w("| Dataset | WUSTL-EHMS-2020 |")
     w(f"| SHA-256 | `{dataset_hash[:32]}...` |")
     w(f"| Source | [{dataset_url}]({dataset_url}) |")
-    w("| Integrity | Verified via `IntegrityVerifier` on every load; "
-      "baseline is ECDSA P-256 signed |")
+    w(
+        "| Integrity | Verified via `IntegrityVerifier` on every load; "
+        "baseline is ECDSA P-256 signed |"
+    )
     w("")
-    w("The signed SHA-256 baseline is established once via "
-      "`python -m pipeline.module0_analysis.phase0.bootstrap_integrity` "
-      "and stored in `pipeline/module0_analysis/phase0/dataset_integrity.json`. "
-      "Every subsequent `DataLoader.load()` call reads the dataset bytes "
-      "into memory, recomputes the hash, verifies the ECDSA P-256 signature "
-      "on the baseline (using the Module 5 audit-signing key), and only "
-      "then parses the in-memory buffer with pandas. Any modification to "
-      "the raw dataset, the baseline file, or the signature triggers an "
-      "`IntegrityError`, preventing silent data corruption — or a tamper-"
-      "then-rebaseline attack — from affecting experimental results.")
+    w(
+        "The signed SHA-256 baseline is established once via "
+        "`python -m pipeline.module0_analysis.phase0.bootstrap_integrity` "
+        "and stored in `pipeline/module0_analysis/phase0/dataset_integrity.json`. "
+        "Every subsequent `DataLoader.load()` call reads the dataset bytes "
+        "into memory, recomputes the hash, verifies the ECDSA P-256 signature "
+        "on the baseline (using the Module 5 audit-signing key), and only "
+        "then parses the in-memory buffer with pandas. Any modification to "
+        "the raw dataset, the baseline file, or the signature triggers an "
+        "`IntegrityError`, preventing silent data corruption — or a tamper-"
+        "then-rebaseline attack — from affecting experimental results."
+    )
     w("")
 
 

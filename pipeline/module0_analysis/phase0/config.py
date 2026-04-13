@@ -72,18 +72,15 @@ class Phase0Config:
         """
         if not 0.0 < self.correlation_threshold < 1.0:
             raise ValueError(
-                f"correlation_threshold must be in (0, 1), "
-                f"got {self.correlation_threshold}"
+                f"correlation_threshold must be in (0, 1), " f"got {self.correlation_threshold}"
             )
         if self.missing_value_warn_pct < 0.0:
             raise ValueError(
-                f"missing_value_warn_pct must be >= 0, "
-                f"got {self.missing_value_warn_pct}"
+                f"missing_value_warn_pct must be >= 0, " f"got {self.missing_value_warn_pct}"
             )
         if self.outlier_iqr_multiplier <= 0.0:
             raise ValueError(
-                f"outlier_iqr_multiplier must be > 0, "
-                f"got {self.outlier_iqr_multiplier}"
+                f"outlier_iqr_multiplier must be > 0, " f"got {self.outlier_iqr_multiplier}"
             )
         if not self.label_column:
             raise ValueError("label_column must not be empty")
@@ -129,14 +126,12 @@ class Phase0Config:
 
         if not isinstance(raw, dict):
             raise ConfigError(
-                f"{path} must contain a YAML mapping at the top level, "
-                f"got {type(raw).__name__}"
+                f"{path} must contain a YAML mapping at the top level, " f"got {type(raw).__name__}"
             )
         for required_section in ("dataset", "analysis", "output"):
             if required_section not in raw:
                 raise ConfigError(
-                    f"{path} is missing required top-level section "
-                    f"'{required_section}'"
+                    f"{path} is missing required top-level section " f"'{required_section}'"
                 )
         dataset = raw["dataset"]
         analysis = raw["analysis"]
@@ -145,7 +140,8 @@ class Phase0Config:
         # Resolve data_path and output_dir through the workspace
         # boundary check before any code reads them.
         from .security import PathValidator
-        root = (workspace_root or Path(__file__).resolve().parents[3])
+
+        root = workspace_root or Path(__file__).resolve().parents[3]
         validator = PathValidator(root)
         # Note: data_path is validated for *containment* here but not
         # for existence (the dataset may not be present in CI runs that
@@ -161,9 +157,7 @@ class Phase0Config:
             data_path=Path(dataset["data_path"]),
             output_dir=Path(output["output_dir"]),
             label_column=dataset["label_column"],
-            required_columns=list(
-                dataset.get("required_columns", [dataset["label_column"]])
-            ),
+            required_columns=list(dataset.get("required_columns", [dataset["label_column"]])),
             leakage_columns=list(dataset.get("leakage_columns", [])),
             network_feature_count=int(dataset.get("network_feature_count", 0)),
             biometric_feature_count=int(dataset.get("biometric_feature_count", 0)),
@@ -171,9 +165,7 @@ class Phase0Config:
             missing_value_warn_pct=float(
                 analysis.get("missing_value_warn_pct", _MISSING_WARN_PCT_DEFAULT)
             ),
-            outlier_iqr_multiplier=float(
-                analysis.get("outlier_iqr_multiplier", 1.5)
-            ),
+            outlier_iqr_multiplier=float(analysis.get("outlier_iqr_multiplier", 1.5)),
             top_variance_k=int(analysis.get("top_variance_k", 5)),
             random_state=int(analysis.get("random_state", 42)),
             train_ratio=float(analysis.get("train_ratio", 0.70)),
@@ -181,9 +173,7 @@ class Phase0Config:
             stats_report_file=output["stats_report_file"],
             high_correlations_file=output["high_correlations_file"],
             correlation_matrix_file=output["correlation_matrix_file"],
-            quality_report_file=output.get(
-                "quality_report_file", "report_section_quality.md"
-            ),
+            quality_report_file=output.get("quality_report_file", "report_section_quality.md"),
         )
         logger.info("Configuration loaded from %s", path)
         return cfg

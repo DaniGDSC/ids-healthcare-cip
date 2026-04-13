@@ -26,10 +26,7 @@ from pathlib import Path
 from .config import Phase0Config
 from .security import IntegrityError, IntegrityVerifier, PathValidator
 
-_DEFAULT_CONFIG = (
-    Path(__file__).resolve().parents[2]
-    / "module0_analysis/phase0/config.yaml"
-)
+_DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "module0_analysis/phase0/config.yaml"
 
 
 def main(argv: list[str] | None = None) -> int:
