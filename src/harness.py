@@ -20,15 +20,15 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import yaml
 
+from src import sanitize_for_log
 from src.data_models import (
     AlertGroundTruth,
     AlertRecord,
     MVEOutput,
-    ScoredAlert,
     TestReport,
 )
 from src.mve_generator import generate_mve
@@ -76,19 +76,23 @@ def load_dataset(path: Optional[Path] = None) -> List[AlertRecord]:
             event_context=a.get("event_context"),
         ))
 
-    logger.info("Loaded %d alerts from %s", len(records), fixture_path)
+    logger.info(
+        "Loaded %d alerts from %s",
+        len(records),
+        sanitize_for_log(fixture_path),
+    )
     return records
 
 
 # ── Pipeline execution ───────────────────────────────────────────────────
 
-def _build_system_logs(records: List[AlertRecord]) -> List[dict]:
+def _build_system_logs(records: List[AlertRecord]) -> List[dict[str, Any]]:
     """Build system action log for negative test_no_device_discovery_attempted.
 
     Records what the harness actually did — loads inventory from fixture,
     runs scoring, generates MVE. Never calls scan/discover/fingerprint.
     """
-    logs = []
+    logs: list[dict[str, Any]] = []
     for r in records:
         logs.append({"action": "score_alert", "alert_id": r.alert_id})
         if r.mve is not None:
@@ -96,14 +100,14 @@ def _build_system_logs(records: List[AlertRecord]) -> List[dict]:
     return logs
 
 
-def _build_system_actions(records: List[AlertRecord]) -> List[dict]:
+def _build_system_actions(records: List[AlertRecord]) -> List[dict[str, Any]]:
     """Build recommendation list for negative test_no_automated_blocking.
 
     All actions are tagged type='recommendation'. The harness never calls
     any enforcement function — it mirrors module5's ActionExecutor
     (simulated-only) design.
     """
-    actions = []
+    actions: list[dict[str, Any]] = []
     for r in records:
         if r.mve is not None:
             actions.append({
@@ -133,8 +137,8 @@ def run_simulation(
     if dataset is None:
         dataset = load_dataset(fixture_path)
 
-    baseline_results: List[dict] = []   # static threshold for M6
-    adaptive_results: List[dict] = []   # adaptive for M6
+    baseline_results: List[dict[str, Any]] = []   # static threshold for M6
+    adaptive_results: List[dict[str, Any]] = []   # adaptive for M6
     surfaced_records: List[AlertRecord] = []
 
     # ── Step 2: Run each alert through pipeline ──────────────────────────
@@ -172,14 +176,17 @@ def run_simulation(
     )
 
     # ── Step 3: Extract lists for acceptance tests ───────────────────────
-    mve_outputs: List[MVEOutput] = [r.mve for r in surfaced_records]
+    mve_outputs: List[MVEOutput] = [
+        r.mve for r in surfaced_records if r.mve is not None
+    ]
     surfaced_gts: List[AlertGroundTruth] = [r.ground_truth for r in surfaced_records]
     all_gts: List[AlertGroundTruth] = [r.ground_truth for r in dataset]
 
     # ── Step 4: Build test inputs for negative tests ─────────────────────
-    mve_dicts = [
+    mve_dicts: list[dict[str, Any]] = [
         r.mve.to_dict(alert_id=r.alert_id)
         for r in surfaced_records
+        if r.mve is not None
     ]
     system_logs = _build_system_logs(dataset)
     system_actions = _build_system_actions(dataset)
@@ -202,14 +209,14 @@ def run_simulation(
                 )
                 m["result_value"] = round(val, 4)
                 if val >= m["target"]:
-                    m["pass_fail"] = "PASS"
+                    m["pass_fail"] = "PASS"  # noqa: S105 — status string, not credential
                 elif val >= m["minimum"]:
-                    m["pass_fail"] = "WARN"
+                    m["pass_fail"] = "WARN"  # noqa: S105
                 else:
-                    m["pass_fail"] = "FAIL"
+                    m["pass_fail"] = "FAIL"  # noqa: S105
                 m["detail"] = ""
             except AssertionError as exc:
-                m["pass_fail"] = "FAIL"
+                m["pass_fail"] = "FAIL"  # noqa: S105
                 m["detail"] = str(exc)
 
     # ── Step 6: Run negative tests ────────────────────────────────────────
@@ -227,7 +234,7 @@ def run_simulation(
 
 # ── Alignment mapping ────────────────────────────────────────────────────
 
-_CLAIM_MAP = [
+_CLAIM_MAP: list[dict[str, Any]] = [
     {
         "claim_id": "C1",
         "claim_text": "explainable anomaly narratives that translate network "
@@ -269,10 +276,12 @@ _CLAIM_MAP = [
 ]
 
 
-def _build_alignment(metric_results: List[dict]) -> List[dict]:
+def _build_alignment(metric_results: List[dict[str, Any]]) -> List[dict[str, Any]]:
     """Map metrics to research claims and compute verdicts."""
-    metric_by_id = {m["metric_id"]: m for m in metric_results}
-    alignment = []
+    metric_by_id: dict[str, dict[str, Any]] = {
+        m["metric_id"]: m for m in metric_results
+    }
+    alignment: list[dict[str, Any]] = []
 
     for claim in _CLAIM_MAP:
         if not claim["supported_by"]:

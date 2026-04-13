@@ -29,7 +29,7 @@ test_results:
   detail: ''
 - metric_id: M8
   metric_name: test_severity_label_accuracy
-  result_value: 0.9655
+  result_value: 0.931
   target: 0.8
   minimum: 0.7
   pass_fail: PASS
@@ -124,84 +124,3 @@ claims_not_tested:
   claim_text: reducing dwell time for non-ransomware intrusions
   reason: NOT_TESTED — requires longitudinal field deployment (Phase 3)
 recommendation: SHIP_TO_USER_STUDY
-
-ml_pipeline_validation:
-  dae_separation_test:
-    architecture: cascaded (Track A output feeds Track B input)
-    combined_auroc: 0.9374
-    spoofing_auroc: 0.8964
-    data_alteration_auroc: 0.9873
-    detection_rate_at_95th: 0.8534
-    separation_ratio: 33.8338
-    result: PASS
-    iomt_device_tests:
-      critical_detection_rate: 0.9006
-      critical_fpr: 0.0582
-      ventilator_detection: 0.8868
-      infusion_pump_detection: 0.9200
-      result: PASS
-
-  risk_monotonicity_test:
-    criticality_order: CRITICAL(0.813) > HIGH(0.721) > MEDIUM(0.496) > LOW(0.248)
-    patchability_all_quartiles: PASS
-    m7_compensating_control:
-      min_critical_unpatchable: 0.800
-      max_low_patchable: 0.399
-      gap: 0.401
-      no_overlap: true
-    iomt_uplift:
-      ventilator_vs_ehr: +0.104
-      infusion_pump_vs_ehr: +0.072
-    result: PASS
-
-  shap_stability_test:
-    cross_model_result: FAIL (structural — 3 different model families)
-    bootstrap_within_model:
-      top3_rank_stability: 0.7914
-      sign_consistency_at_shap_above_0.1: 0.9984
-      narrative_category_stability: 0.8460
-    fixes_applied:
-      - feature_group_narratives (25 features → 7 categories)
-      - confidence_band (secondary feature cited when ambiguous)
-    result: FAIL (cross-model) / PASS (narrative-level)
-
-  xai_faithfulness:
-    perturbation_faithfulness: 0.9013
-    explanation_consistency: 1.0000
-    shap_feature_coverage: 0.9496
-    fixes_applied:
-      - corrected concept map (+57 pp coverage)
-      - biometric enrichment via shap_context (+7 pp coverage)
-    gate_2_ready: true
-    result: PASS
-
-  user_study_validation:
-    m5_triage_accuracy:
-      group_a: 0.3520
-      group_b: 0.5660
-      relative_improvement: 0.6080
-      p_value: 1.1e-11
-      result: PASS
-    v2_comparison:
-      original_b: 0.2867
-      v2: 0.8133
-      delta: +52.67 pp
-      p_value: 4.81e-20
-      result: PARTIAL_PASS (5/6 alerts improved, A-08 GT calibration issue)
-
-  pipeline_architecture_changes:
-    cascaded_dae:
-      description: Track A normal output feeds Track B input
-      files:
-        - pipeline/module2_detection/module2_train_models.py
-        - pipeline/module3_risk_scoring/module3_risk_scores.py
-        - pipeline/module4_explanations/module4_online_explainer.py
-    feature_group_narratives:
-      description: SHAP features mapped to 7 clinical narrative categories
-      files:
-        - pipeline/module4_explanations/module4_online_explainer.py
-        - pipeline/module4_explanations/module4_explanations.py
-    biometric_enrichment:
-      description: Layer 1 includes biometric context when SHAP top feature is biometric
-      files:
-        - src/mve_generator.py

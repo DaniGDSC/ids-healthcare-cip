@@ -12,7 +12,7 @@ Usage:
 from __future__ import annotations
 
 import re
-from typing import List
+from typing import Any, List
 
 # ── Forbidden pattern sets ───────────────────────────────────────────────
 
@@ -29,8 +29,12 @@ _ENFORCEMENT_ACTION_TYPES = [
 _RF_KEYWORDS = [
     "bluetooth", "zigbee", "rf protocol", "wireless pairing",
     "radio frequency", "proprietary wireless", "z-wave", "802.15",
-    "ble", "near field",
+    "near field",
 ]
+
+# BLE requires word-boundary matching to avoid false positives from
+# words like "available", "unreliable", "configurable"
+_RF_WORD_BOUNDARY_KEYWORDS = ["ble"]
 
 _RANSOMWARE_CLAIM_PATTERNS = re.compile(
     r"early\s+detection\s+of\s+ransomware|"
@@ -53,7 +57,7 @@ _MODEL_INTERNALS = [
 
 # ── Individual negative tests ────────────────────────────────────────────
 
-def test_no_device_discovery_attempted(system_logs: List[dict]) -> dict:
+def test_no_device_discovery_attempted(system_logs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system must consume existing inventory, never scan/discover.
 
     Verifies that no log entry records a device discovery action.
@@ -83,7 +87,7 @@ def test_no_device_discovery_attempted(system_logs: List[dict]) -> dict:
     }
 
 
-def test_no_automated_blocking(system_actions: List[dict]) -> dict:
+def test_no_automated_blocking(system_actions: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system recommends only, never executes enforcement.
 
     Verifies all system actions are tagged as 'recommendation' type
@@ -117,7 +121,7 @@ def test_no_automated_blocking(system_actions: List[dict]) -> dict:
     }
 
 
-def test_no_rf_protocol_claims(outputs: List[dict]) -> dict:
+def test_no_rf_protocol_claims(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system must not claim detection of Bluetooth/Zigbee/RF attacks.
 
     IoMT RF/proprietary wireless attacks (CVE-2019-10964, CVE-2022-32537)
@@ -140,6 +144,13 @@ def test_no_rf_protocol_claims(outputs: List[dict]) -> dict:
                     f"RF keyword '{kw}' in alert {output.get('alert_id', '?')}: "
                     f"'{explanation[:100]}'"
                 )
+        # Word-boundary check for short keywords that cause false positives
+        for kw in _RF_WORD_BOUNDARY_KEYWORDS:
+            if re.search(rf"\b{re.escape(kw)}\b", explanation):
+                violations.append(
+                    f"RF keyword '{kw}' in alert {output.get('alert_id', '?')}: "
+                    f"'{explanation[:100]}'"
+                )
 
     return {
         "test_name": "test_no_rf_protocol_claims",
@@ -149,7 +160,7 @@ def test_no_rf_protocol_claims(outputs: List[dict]) -> dict:
     }
 
 
-def test_no_ransomware_dwell_time_claims(outputs: List[dict]) -> dict:
+def test_no_ransomware_dwell_time_claims(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system must not claim early ransomware detection.
 
     Per research_spec.yaml: 96% of ransomware is actor-disclosed (DBIR 2025),
@@ -184,7 +195,7 @@ def test_no_ransomware_dwell_time_claims(outputs: List[dict]) -> dict:
     }
 
 
-def test_severity_uses_clinical_not_cvss(outputs: List[dict]) -> dict:
+def test_severity_uses_clinical_not_cvss(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: severity labels must be based on clinical impact, NOT CVSS.
 
     Checks that 'CVSS' does not appear in severity_rationale.
@@ -213,7 +224,7 @@ def test_severity_uses_clinical_not_cvss(outputs: List[dict]) -> dict:
     }
 
 
-def test_no_model_internals_exposed(outputs: List[dict]) -> dict:
+def test_no_model_internals_exposed(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: explanations must not expose SHAP, model names, or statistics.
 
     Per mve_specification.yaml what_NOT_to_include:
@@ -250,10 +261,10 @@ def test_no_model_internals_exposed(outputs: List[dict]) -> dict:
 # ── Runner ───────────────────────────────────────────────────────────────
 
 def run_negative_tests(
-    mve_dicts: List[dict],
-    system_logs: List[dict],
-    system_actions: List[dict],
-) -> List[dict]:
+    mve_dicts: List[dict[str, Any]],
+    system_logs: List[dict[str, Any]],
+    system_actions: List[dict[str, Any]],
+) -> List[dict[str, Any]]:
     """Run all 6 negative tests and return results.
 
     Args:

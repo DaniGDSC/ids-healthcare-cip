@@ -5,9 +5,8 @@ Build order step 1: all shared dataclasses used by Components 1, 2, and 3.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import List, Optional
-
+from dataclasses import dataclass
+from typing import Any, List, Optional
 
 # ── Component 2 output ──────────────────────────────────────────────────
 
@@ -51,15 +50,15 @@ class MVEOutput:
     directly, matching the pseudo-code in research_claims.yaml.
     """
 
-    layer_1: dict
+    layer_1: dict[str, str]
     """Keys: baseline_behavior, deviation_description, confidence_indicator.
     Max 60 words combined."""
 
-    layer_2: dict
+    layer_2: dict[str, str]
     """Keys: affected_system, patient_care_impact, phi_exposure,
     severity_label, severity_rationale. Max 50 words combined."""
 
-    layer_3: dict
+    layer_3: dict[str, str]
     """Keys: immediate_action, clinical_constraint, escalation_path,
     timeframe. Max 60 words combined."""
 
@@ -86,7 +85,7 @@ class MVEOutput:
                 total += len(layer.get(f, "").split())
         return total
 
-    def to_dict(self, alert_id: str = "") -> dict:
+    def to_dict(self, alert_id: str = "") -> dict[str, Any]:
         """Flat dict for negative tests and alignment report.
 
         Includes alert_id so negative tests can cite the failing alert.
@@ -132,13 +131,13 @@ class AlertRecord:
     """Complete pipeline record for one alert."""
 
     alert_id: str
-    raw_alert: dict
-    device_context: dict
-    behavioral_baseline: dict
-    user_context: Optional[dict]
+    raw_alert: dict[str, Any]
+    device_context: dict[str, Any]
+    behavioral_baseline: dict[str, Any]
+    user_context: Optional[dict[str, Any]]
     ground_truth: AlertGroundTruth
     anomaly_score: float
-    event_context: Optional[dict] = None
+    event_context: Optional[dict[str, Any]] = None
     scored: Optional[ScoredAlert] = None
     mve: Optional[MVEOutput] = None
 
@@ -149,14 +148,14 @@ class AlertRecord:
 class TestReport:
     """Output of the Alert Simulation Harness (Component 3)."""
 
-    metrics: List[dict]
+    metrics: List[dict[str, Any]]
     """One dict per automated test:
     {metric_id, metric_name, result_value, target, minimum, pass_fail, detail}."""
 
-    negative_tests: List[dict]
+    negative_tests: List[dict[str, Any]]
     """One dict per negative test:
     {test_name, violations_found, pass_fail, violations}."""
 
-    alignment: List[dict]
+    alignment: List[dict[str, Any]]
     """Claim-to-test mapping:
     {claim_id, claim_text, supported_by, all_tests_pass, verdict}."""

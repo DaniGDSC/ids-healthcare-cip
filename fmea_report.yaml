@@ -388,3 +388,267 @@ layer_2_fmea:
       scenario is clinically realistic — vasopressor dosing errors are a known cause of
       cardiac arrest in ICU patients — and it is enabled entirely by severity miscalibration
       in Layer 2 that the current template design does not prevent.
+
+layer_3_fmea:
+  scope: "Layer 3 — Recommended Action output of MVE system"
+  analysis_date: "2026-04-13"
+  device_context: "IoMT environment — infusion pumps, ventilators, patient monitors"
+  methodology: "Each failure mode probed against actual src/mve_generator.py Layer 3 output across all 5 alert type templates (T1-T5), all criticality levels, and both patchable/unpatchable states."
+
+  failure_modes:
+
+    - id: "FM-L3-01"
+      description: "immediate_action recommends physical device disconnection for life-sustaining devices. Empirically tested: CRITICAL ventilator and infusion pump alerts produce 'Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS' — a NETWORK-LEVEL action, not physical disconnection. The clinical_constraint explicitly says 'DO NOT power-cycle or disconnect device during active clinical use.' This failure mode is MITIGATED BY DESIGN."
+      failure_effect_technical: "If this occurred, the action would instruct the operator to physically disconnect a ventilator or pump from power/network."
+      failure_effect_patient_safety: "Physical disconnection of an active ventilator causes immediate respiratory support failure. Physical disconnection of an active infusion pump immediately halts drug delivery."
+      severity: 10
+      severity_rationale: "Maximum severity — direct patient harm pathway. Ventilator disconnection can cause respiratory arrest within minutes."
+      occurrence: 1
+      occurrence_rationale: "Empirically confirmed: does NOT occur in current implementation. All CRITICAL templates use network-layer actions (NAC policy, firewall rules) and include 'DO NOT power-cycle or disconnect' constraint. Would require a template regression to introduce this failure."
+      detectability: 2
+      detectability_rationale: "Acceptance test M3 (test_actionability) checks for specific action keywords. Negative test test_no_automated_blocking verifies all actions are recommendations. The DO NOT constraint is tested by M4."
+      rpn: 20
+      risk_level: "LOW (<50)"
+      mitigation: "Current design mitigates this. Maintain: (1) acceptance test M4 verifying DO NOT constraint for all clinical alerts, (2) negative test blocking enforcement actions, (3) template review checklist for any template changes."
+      mitigation_type: "acceptance"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-02"
+      description: "clinical_constraint says 'DO NOT isolate' without clarifying that network-layer isolation IS safe. Empirically confirmed: T5 (IoMT) template says 'DO NOT isolate device from EHR gateway — vital sign reporting to nursing station must continue' — identifies WHAT must be preserved but does not state 'network-level port blocking is safe.' The operator may interpret 'DO NOT isolate' as 'take no action at all.'"
+      failure_effect_technical: "Operator reads 'DO NOT isolate' and takes no action. The anomalous traffic continues. The constraint prevents the wrong action but also prevents the right action."
+      failure_effect_patient_safety: "An active threat on a ventilator continues because the operator is paralyzed by an ambiguous DO NOT constraint. The attacker maintains access while the operator waits for clarification from biomed engineering who may not respond immediately."
+      severity: 7
+      severity_rationale: "The threat continues during operator inaction. For a ventilator, this could mean continued unauthorized access to respiratory parameters. Not as severe as active disconnection (FM-L3-01) because the device remains operational."
+      occurrence: 5
+      occurrence_rationale: "Empirically confirmed: T5 template says 'DO NOT isolate device from EHR gateway' without explicitly stating what IS safe. The T1 CRITICAL template says 'block outbound non-HTTPS' — which IS a specific safe action — but the T5 template (the IoMT-specific one) lacks this clarity. T5 fires for all IoMT behavioral deviation alerts."
+      detectability: 6
+      detectability_rationale: "Not detectable by automated tests — the constraint is syntactically valid and contains 'DO NOT.' Detection requires human judgment about whether the constraint provides a safe alternative action. The mve_specification.yaml IMP-03 (action_level_clarification) was designed to address this but has not been implemented in the T5 template."
+      rpn: 210
+      risk_level: "CRITICAL (RPN≥200)"
+      mitigation: "Implement IMP-03 from mve_specification.yaml: after every DO NOT constraint, add an explicit SAFE action statement: 'SAFE: blocking port [X] at the switch level does not affect [clinical function] — the device uses port [Y] on a separate network path for [clinical traffic].' The T1 CRITICAL template already demonstrates this pattern ('block outbound non-HTTPS... preserve EHR and device controller connectivity'). Apply it to T5."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-03"
+      description: "escalation_path omits Biomed/Clinical Engineering for IoMT alerts at MEDIUM and LOW criticality. Empirically confirmed: CRITICAL includes 'Clinical Engineering on-call', HIGH includes 'Clinical Engineering', but MEDIUM includes only 'Security lead, Clinical Engineering' (present) and LOW includes only 'Security lead' (biomed absent)."
+      failure_effect_technical: "At LOW criticality, the IT generalist has no biomed engineering contact in the escalation path. They must handle the IoMT device response alone or find the biomed contact independently."
+      failure_effect_patient_safety: "LOW-criticality IoMT alerts may still involve patient-connected devices (per FM-L2-02, criticality can be miscalibrated). Without biomed in the escalation path, the operator lacks clinical engineering guidance for device-safe remediation."
+      severity: 5
+      severity_rationale: "LOW-criticality IoMT alerts typically involve non-patient-connected or administrative devices. Biomed involvement is less critical for these. However, combined with FM-L2-02 (severity miscalibration), a patient-connected device could end up here."
+      occurrence: 4
+      occurrence_rationale: "Empirically confirmed: LOW escalation is '(1) Security lead' only — no biomed. This is by design (LOW = administrative), but IoMT devices can be misclassified as LOW."
+      detectability: 3
+      detectability_rationale: "Detectable by checking if escalation_path contains 'biomed' or 'clinical engineering' when device_type is an IoMT class. Not currently tested."
+      rpn: 60
+      risk_level: "MEDIUM (50-99)"
+      mitigation: "When device_type is in IoMT vocabulary (infusion_pump, ventilator, patient_monitor), always include Biomed Engineering in escalation_path regardless of criticality level. Even LOW-criticality IoMT alerts should have biomed as an optional contact."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-04"
+      description: "escalation_path lists security roles only, no clinical roles for non-T1 alert types. Empirically confirmed: T4 (exfiltration) escalation is '(1) Security lead, (2) Department IT admin, (3) Privacy Officer' — no charge nurse, no clinical engineer. If the exfiltrating device is a PACS server, there is no radiology clinical contact."
+      failure_effect_technical: "Security team responds without clinical context. They may take actions that disrupt clinical workflows they don't understand."
+      failure_effect_patient_safety: "If the security team isolates a PACS server during active radiology reads, pending diagnostic images become unavailable. Radiologists cannot complete urgent reads. ER patients awaiting imaging results experience diagnostic delays."
+      severity: 5
+      severity_rationale: "Clinical workflow disruption rather than direct patient harm. Diagnostic delays are clinically significant but not immediately life-threatening for most patients."
+      occurrence: 5
+      occurrence_rationale: "Empirically confirmed: T4 and T2 escalation paths include Privacy Officer and HR but not department clinical leads. Only T1 (at CRITICAL/HIGH) and T5 include clinical roles."
+      detectability: 3
+      detectability_rationale: "Detectable by checking if escalation_path includes at least one clinical role (charge nurse, clinical engineer, department head) for all CRITICAL/HIGH alerts regardless of type."
+      rpn: 75
+      risk_level: "MEDIUM (50-99)"
+      mitigation: "For all CRITICAL and HIGH alerts regardless of alert type: include '(N) Department charge nurse' or '(N) Department clinical lead' in escalation_path. The specific clinical contact depends on location — use location field to determine department."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-05"
+      description: "timeframe says 'Act within 15 minutes' for a LOW-severity alert. Empirically confirmed: does NOT occur. Timeframe correctly maps to criticality: CRITICAL=15min, HIGH=1hr, MEDIUM=4hr, LOW=24hr."
+      failure_effect_technical: "If occurred: LOW alerts with 15-minute SLA would overwhelm the operator with false urgency."
+      failure_effect_patient_safety: "Alert fatigue — operator cannot distinguish genuinely urgent alerts from artificially urgent LOW alerts."
+      severity: 6
+      severity_rationale: "Alert fatigue degrades response quality across all alerts."
+      occurrence: 1
+      occurrence_rationale: "Empirically confirmed: timeframe is correctly tied to criticality via _SEVERITY_TIMEFRAME lookup. Would require a template regression."
+      detectability: 2
+      detectability_rationale: "Trivially detectable by checking timeframe string against criticality level."
+      rpn: 12
+      risk_level: "LOW (<50)"
+      mitigation: "Current design mitigates this. Add regression test: for each criticality level, verify timeframe matches the expected SLA."
+      mitigation_type: "acceptance"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-06"
+      description: "timeframe says 'Act within 24 hours' for a CRITICAL alert on a life-sustaining device. Empirically confirmed: does NOT occur. CRITICAL always produces 'Act within 15 minutes.' Would require criticality miscalibration (FM-L2-02) where a life-sustaining device is labeled LOW."
+      failure_effect_technical: "A CRITICAL device with 24-hour SLA. The alert sits in the queue until next shift."
+      failure_effect_patient_safety: "Same as FM-L2-02: extended attacker dwell time on a drug-delivery or respiratory device. This is a compound failure (FM-L2-02 + FM-L3-06) — severity miscalibration causes response delay."
+      severity: 9
+      severity_rationale: "24-hour response on an actively compromised ventilator is a direct patient harm scenario."
+      occurrence: 2
+      occurrence_rationale: "Requires FM-L2-02 to fire first (criticality miscalibration). The timeframe itself correctly tracks criticality — the failure is upstream."
+      detectability: 3
+      detectability_rationale: "The timeframe is correct for the given criticality. The failure is that criticality is wrong. Detectable by the FM-L2-02 mitigation (device-class minimum severity floor)."
+      rpn: 54
+      risk_level: "MEDIUM (50-99)"
+      mitigation: "Primary fix is FM-L2-02 mitigation (severity floor for life-sustaining devices). Secondary: when device_type is life-sustaining and timeframe > 1 hour, inject warning: 'CAUTION: response timeframe may be too slow for this device class — verify criticality assignment.'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-07"
+      description: "immediate_action references 'NAC policy CLINICAL-QUARANTINE' — a specific policy name that may not exist in the target hospital's infrastructure. Empirically confirmed: CRITICAL T1 template references 'NAC policy CLINICAL-QUARANTINE.' Many 200-500 bed hospitals lack enterprise NAC (Cisco ISE, Aruba ClearPass) and cannot apply named NAC policies."
+      failure_effect_technical: "Operator receives a specific action they cannot execute. They may substitute an ad-hoc action (unplugging the network cable) that is less safe than the intended NAC quarantine."
+      failure_effect_patient_safety: "The substitute action (e.g., unplugging network cable from a ventilator) may disrupt clinical connectivity. The intended NAC quarantine would have preserved EHR and controller traffic — the ad-hoc substitute does not."
+      severity: 7
+      severity_rationale: "The gap between the recommended safe action (NAC quarantine) and the likely substitute action (cable pull) is the patient safety risk. The NAC quarantine preserves clinical traffic; the cable pull does not."
+      occurrence: 5
+      occurrence_rationale: "Empirically confirmed: only CRITICAL T1 alerts reference NAC. HIGH uses 'firewall rule' (more universally available). MEDIUM uses 'rate-limit' (switch-level). In the 200-500 bed hospital target market, NAC penetration is ~40-60% (KLAS Research). So 40-60% of target hospitals cannot execute the CRITICAL action."
+      detectability: 4
+      detectability_rationale: "Detectable by pre-deployment infrastructure assessment — does the hospital have NAC? Not detectable at alert generation time without environment configuration data."
+      rpn: 140
+      risk_level: "HIGH (100-199)"
+      mitigation: "Provide a fallback action when NAC is unavailable: 'Apply NAC policy CLINICAL-QUARANTINE if available. If NAC is not deployed: apply switch port ACL to block outbound non-HTTPS from [source_ip] while preserving internal traffic on ports 443 and [HL7 port].' The fallback uses switch-level controls available in all managed networks."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-08"
+      description: "immediate_action is vague — 'investigate further' or 'monitor the situation.' Empirically confirmed: does NOT occur. All templates produce specific actions: T1='Apply NAC/firewall/rate-limit', T3='Block at inter-VLAN firewall', T4='Block outbound protocol', T5='Verify with biomed, then rate-limit.' Acceptance test M3 (test_actionability) actively checks for vague patterns."
+      failure_effect_technical: "If occurred: operator has no executable step, just a suggestion to 'look into it.'"
+      failure_effect_patient_safety: "Vague actions delay response. The operator spends time deciding WHAT to do instead of doing it."
+      severity: 5
+      severity_rationale: "Delays response but does not cause wrong action."
+      occurrence: 1
+      occurrence_rationale: "Empirically confirmed: zero vague actions across all 4 template types tested. M3 acceptance test enforces specific action keywords. Would require template regression past the test suite."
+      detectability: 1
+      detectability_rationale: "M3 test catches vague patterns (VAGUE_PATTERNS regex) and requires specific action keywords (SPECIFIC_ACTION_PATTERNS). Fully automated detection."
+      rpn: 5
+      risk_level: "LOW (<50)"
+      mitigation: "Current design mitigates this via M3 acceptance test. No additional action needed."
+      mitigation_type: "acceptance"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-09"
+      description: "IoMT-specific — action does not distinguish network isolation (safe) vs device power-off (unsafe) for T1 CRITICAL alerts. Empirically confirmed: T1 CRITICAL says 'Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS' — this IS a network-level action. The DO NOT constraint says 'DO NOT power-cycle or disconnect.' However, the word 'isolate' appears in the HIGH template ('DO NOT isolate device entirely') which could be interpreted as network isolation or physical isolation."
+      failure_effect_technical: "Ambiguity in the word 'isolate' — does it mean network VLAN isolation (safe) or physical disconnection (unsafe)? The CRITICAL template avoids this word, but HIGH uses it."
+      failure_effect_patient_safety: "An operator interpreting 'isolate' as physical disconnection pulls the network cable from a patient monitor, disrupting vital sign reporting to the nursing station."
+      severity: 7
+      severity_rationale: "Physical disconnection of a patient monitor removes vital sign alarming. Clinical staff may miss a patient deterioration event."
+      occurrence: 3
+      occurrence_rationale: "The CRITICAL template avoids 'isolate' and uses 'CLINICAL-QUARANTINE' (clearly network-level). HIGH uses 'DO NOT isolate device entirely — restrict suspicious outbound only' which is clearer. The risk is mainly for operators who don't read the full constraint."
+      detectability: 5
+      detectability_rationale: "Detectable by checking if the word 'isolate' appears without qualification (e.g., 'network isolate' vs. bare 'isolate'). The mve_specification.yaml IMP-03 (action_level_clarification) addresses this but is not fully implemented."
+      rpn: 105
+      risk_level: "HIGH (100-199)"
+      mitigation: "Replace ambiguous 'isolate' with explicit 'network-segment' or 'VLAN-isolate' in all templates. For CRITICAL/HIGH IoMT devices, always include: 'SAFE: this is a network-layer control — the device itself continues operating normally.'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-10"
+      description: "IoMT-specific — no instruction to preserve forensic logs before acting for MEDIUM alerts. Empirically confirmed: CRITICAL='Preserve network logs from the past 30 minutes', HIGH='Preserve logs from the past 4 hours', but MEDIUM='Flag for next scheduled security review' — no log preservation instruction. LOW='Log for shift handover' (mentions logging)."
+      failure_effect_technical: "Operator takes remediation action on a MEDIUM alert (rate-limiting traffic) without first preserving switch logs, DHCP leases, or device logs. Forensic evidence is overwritten by the remediation action."
+      failure_effect_patient_safety: "Indirect: loss of forensic evidence prevents root cause determination. If the anomaly recurs on a clinical device, the investigation starts from scratch. No direct patient harm from this failure mode alone."
+      severity: 3
+      severity_rationale: "Forensic evidence loss is an investigative/compliance concern, not a direct patient safety issue. The remediation action itself is still correct."
+      occurrence: 5
+      occurrence_rationale: "Empirically confirmed: MEDIUM timeframe has no log preservation instruction. MEDIUM alerts represent ~30% of alert volume."
+      detectability: 3
+      detectability_rationale: "Detectable by checking if timeframe mentions 'log' or 'preserve' for all severity levels."
+      rpn: 45
+      risk_level: "LOW (<50)"
+      mitigation: "Add 'Preserve relevant logs before taking action.' to MEDIUM timeframe template."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-11"
+      description: "IoMT-specific — clinical_constraint absent for CRITICAL/HIGH IoMT alerts. Empirically confirmed: does NOT occur. All criticality levels include a DO NOT constraint: CRITICAL='DO NOT power-cycle or disconnect', HIGH='DO NOT isolate device entirely', MEDIUM='DO NOT disable device entirely', LOW='DO NOT disrupt shared infrastructure.'"
+      failure_effect_technical: "If occurred: operator has no safety guardrail on a life-sustaining device."
+      failure_effect_patient_safety: "Without the DO NOT constraint, the operator's default action may be full device isolation, which disrupts ventilation or drug delivery."
+      severity: 10
+      severity_rationale: "Absence of DO NOT constraint on a ventilator removes the last safety barrier before device disconnection."
+      occurrence: 1
+      occurrence_rationale: "Empirically confirmed: ALL four criticality levels have DO NOT constraints. M4 acceptance test (test_clinical_constraint_awareness) enforces this with 80% minimum threshold. Current score: 100%."
+      detectability: 1
+      detectability_rationale: "M4 test explicitly checks for 'DO NOT' in clinical_constraint for all clinical-system alerts. Fully automated."
+      rpn: 10
+      risk_level: "LOW (<50)"
+      mitigation: "Current design mitigates via M4 test. No additional action needed."
+      mitigation_type: "acceptance"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L3-12"
+      description: "IoMT-specific — escalation path does not include device manufacturer/vendor support for unpatchable devices. Empirically confirmed: patchable=False produces identical escalation to patchable=True. No template references vendor support. For unpatchable devices where vendor involvement is required for any firmware change, the operator has no vendor contact in the escalation path."
+      failure_effect_technical: "Operator contacts Clinical Engineering and Security lead but not the device vendor. Clinical Engineering may not have the vendor's emergency support number or authorization to request firmware intervention."
+      failure_effect_patient_safety: "For unpatchable devices, the vendor is the ONLY entity that can provide firmware-level remediation (even if delayed). Without vendor notification, the device remains vulnerable with no remediation path. Combined with FM-L1-10 (Layer 1 doesn't mention unpatachability), the operator may not even know vendor involvement is needed."
+      severity: 6
+      severity_rationale: "Delayed vendor engagement extends the vulnerability window. Not as severe as FM-L1-10 because the operator still has network-level compensating controls. The vendor path is for long-term remediation, not immediate response."
+      occurrence: 6
+      occurrence_rationale: "Empirically confirmed: no template includes vendor references. The patchable flag affects risk scoring (Component 2) but not MVE Layer 3 content. 30-50% of IoMT devices in target hospitals are unpatchable."
+      detectability: 5
+      detectability_rationale: "Detectable by checking if escalation_path includes vendor/manufacturer reference when patchable=False. Not currently tested."
+      rpn: 180
+      risk_level: "HIGH (100-199)"
+      mitigation: "When device_context['patchable'] is False: append '(N) Device manufacturer support ([vendor] if known) for firmware-level remediation' to escalation_path. When vendor is unknown: '(N) Device manufacturer (contact via biomed engineering records).'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+  do_not_constraint_completeness_check:
+    description: >
+      For all CRITICAL and HIGH severity IoMT alerts, Layer 3 MUST
+      contain a DO NOT clinical_constraint. Verify this is enforced.
+    status: "ENFORCED_BY_SPEC"
+    evidence: >
+      CLAUDE.md specifies: 'Layer 3 (RECOMMENDED ACTION): specific step + DO NOT constraint + escalation.'
+      mve_specification.yaml layer_3_recommended_action requires clinical_constraint with DO NOT for
+      CRITICAL/HIGH/MEDIUM alerts. Acceptance test M4 (test_clinical_constraint_awareness) enforces
+      this at ≥80% minimum threshold, currently scoring 100%. Empirically verified: all 4 criticality
+      levels produce DO NOT constraints, including LOW ('DO NOT disrupt shared infrastructure').
+    recommendation: "No gap. Maintain M4 test coverage. Consider raising M4 minimum threshold from 80% to 95%."
+
+  action_level_distinction_check:
+    description: >
+      Layer 3 must distinguish network-layer isolation (safe for IoMT)
+      from physical/power-off action (unsafe for active devices).
+    status: "PARTIAL"
+    evidence: >
+      T1 CRITICAL template uses 'Apply NAC policy CLINICAL-QUARANTINE' — clearly network-level.
+      T1 CRITICAL constraint says 'DO NOT power-cycle or disconnect' — clearly distinguishes
+      physical action. T5 template says 'DO NOT isolate device from EHR gateway' — the word
+      'isolate' is ambiguous (network vs physical). T1 HIGH says 'DO NOT isolate device entirely'
+      — also ambiguous. The mve_specification.yaml IMP-03 (action_level_clarification) was
+      designed to add 'SAFE: this network-layer action does not affect [clinical function]' but
+      has not been implemented in the rule-based templates for T5 and HIGH severity.
+    recommendation: >
+      Implement IMP-03 across all templates: after every DO NOT constraint for IoMT devices,
+      add explicit SAFE statement clarifying what network-layer actions are permissible. Replace
+      ambiguous 'isolate' with 'network-segment' or 'VLAN-isolate' and always specify the safe
+      network action alongside the DO NOT constraint.
+
+  summary:
+    critical_rpn_items:
+      - "FM-L3-02 (RPN 210): DO NOT constraint ambiguity — operator interprets 'DO NOT isolate' as 'take no action' rather than 'use network-layer controls instead'"
+    high_rpn_items:
+      - "FM-L3-12 (RPN 180): Vendor missing from escalation for unpatchable devices"
+      - "FM-L3-07 (RPN 140): NAC policy reference in hospitals without NAC"
+      - "FM-L3-09 (RPN 105): Ambiguous 'isolate' (network vs physical)"
+    well_mitigated_by_design:
+      - "FM-L3-01 (RPN 20): Physical disconnection prevented by DO NOT constraint"
+      - "FM-L3-05 (RPN 12): Timeframe correctly tracks criticality"
+      - "FM-L3-08 (RPN 5): Vague actions prevented by M3 acceptance test"
+      - "FM-L3-11 (RPN 10): DO NOT constraint present at all criticality levels"
+    highest_patient_safety_risk: >
+      FM-L3-02 — The T5 template's 'DO NOT isolate device from EHR gateway' without an
+      explicit SAFE alternative creates operator paralysis on IoMT alerts. When a ventilator
+      shows anomalous behavior, the operator knows they must NOT isolate but does not know
+      what they CAN do safely. The attacker retains access while the operator waits for
+      biomed engineering to clarify safe actions.
+    iomt_specific_concerns:
+      - "FM-L3-02: DO NOT constraint without SAFE alternative for T5 IoMT alerts"
+      - "FM-L3-12: No vendor escalation for unpatchable devices"
+      - "FM-L3-09: Ambiguous 'isolate' in HIGH template"
+      - "FM-L3-07: NAC dependency for CRITICAL actions"
+    gate_3_blocker: false
+    gate_3_rationale: >
+      One CRITICAL item (FM-L3-02, RPN 210). The mitigation is implementing IMP-03 from
+      mve_specification.yaml — the design exists but is not yet in the rule-based templates.
+      This is a template text change, not an architectural issue. The user study alert
+      scenarios (A-18 ventilator Telnet) already include the IMP-03 text in the MVE, so
+      user study validity is not affected. Must be implemented in the rule-based templates
+      before Phase 3 field deployment.

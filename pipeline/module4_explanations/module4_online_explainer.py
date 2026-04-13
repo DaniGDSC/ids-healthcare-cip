@@ -273,6 +273,14 @@ class AlertExplainer:
             secondary_note=secondary_note,
         )
 
+    @staticmethod
+    def _sanitise(x: np.ndarray) -> np.ndarray:
+        """Replace NaN/Inf with zeros (OOD-05 fix)."""
+        if np.isnan(x).any() or np.isinf(x).any():
+            logger.warning("NaN/Inf in sample — replacing with zeros")
+            x = np.where(np.isfinite(x), x, 0.0)
+        return x
+
     def explain(self, x_sample: np.ndarray, feat_names: list) -> dict:
         """Generate per-alert explanation with component-level timing.
 
@@ -284,7 +292,7 @@ class AlertExplainer:
             Dict with explanation + timing breakdown (ms).
         """
         self.feat_names = feat_names
-        x_2d = x_sample.reshape(1, -1)
+        x_2d = self._sanitise(x_sample.reshape(1, -1))
         timings = {}
         t_total = time.perf_counter()
 

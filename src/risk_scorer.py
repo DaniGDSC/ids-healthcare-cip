@@ -13,7 +13,7 @@ Key additions over module3:
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from src.data_models import ScoredAlert
 
@@ -25,7 +25,7 @@ DEFAULT_THRESHOLD: float = 0.50
 # Threshold multipliers per (criticality, patchable).
 # CRITICAL + unpatchable: 0.70 → threshold = 0.50 * 0.70 = 0.35 (30% reduction).
 # LOW + patchable: 1.00 → threshold = 0.50 (default, per spec).
-_THRESHOLD_MULT: dict = {
+_THRESHOLD_MULT: dict[tuple[str, bool], float] = {
     ("CRITICAL", False): 0.70,   # ≥30% reduction required by spec
     ("CRITICAL", True):  0.80,
     ("HIGH",     False): 0.85,
@@ -39,7 +39,7 @@ _THRESHOLD_MULT: dict = {
 # Risk multipliers per (criticality, patchable).
 # CRITICAL + unpatchable: ≥1.5 required by spec.
 # LOW + patchable: 1.0 required by spec.
-_RISK_MULT: dict = {
+_RISK_MULT: dict[tuple[str, bool], float] = {
     ("CRITICAL", False): 1.50,   # ≥1.5 required by spec
     ("CRITICAL", True):  1.30,
     ("HIGH",     False): 1.20,
@@ -68,14 +68,14 @@ def get_threshold(device_criticality: str, patchable: bool) -> float:
         Float threshold in [0.0, 1.0].
     """
     key = (device_criticality.upper(), bool(patchable))
-    mult = _THRESHOLD_MULT.get(key, 1.00)
+    mult: float = _THRESHOLD_MULT.get(key, 1.00)
     return round(DEFAULT_THRESHOLD * mult, 4)
 
 
 def score_alert(
     anomaly_score: float,
-    device_context: dict,
-    event_context: Optional[dict],
+    device_context: dict[str, Any],
+    event_context: Optional[dict[str, Any]],
 ) -> ScoredAlert:
     """Adjust alert threshold and multiplier based on device context.
 
@@ -106,21 +106,25 @@ def score_alert(
     criticality = str(device_context.get("criticality", "LOW")).upper()
     patchable = bool(device_context.get("patchable", True))
 
-    # Rule: maintenance window + known vendor IP → suppress entirely
+    # Rule: maintenance window + known vendor IP → reduced confidence
+    # EA-02 fix: binary suppression created a guaranteed evasion window.
+    # Now: surface with reduced multiplier instead of suppressing entirely.
+    # The alert surfaces at LOW priority so the operator can verify, rather
+    # than being silenced completely.
     if event_context:
         if (event_context.get("is_maintenance_window", False)
                 and event_context.get("is_known_vendor_ip", False)):
             return ScoredAlert(
-                adjusted_score=round(float(anomaly_score), 4),
+                adjusted_score=round(float(anomaly_score) * 0.5, 4),
                 threshold=DEFAULT_THRESHOLD,
-                should_surface=False,
-                risk_multiplier=1.0,
-                suppression_reason="known maintenance window with authorized vendor IP",
+                should_surface=float(anomaly_score) * 0.5 > DEFAULT_THRESHOLD,
+                risk_multiplier=0.5,
+                suppression_reason="maintenance window — reduced confidence, verify with biomed",
             )
 
     # Base multiplier and threshold from criticality + patchability
     key = (criticality, patchable)
-    risk_multiplier = _RISK_MULT.get(key, 1.0)
+    risk_multiplier: float = _RISK_MULT.get(key, 1.0)
     threshold = get_threshold(criticality, patchable)
 
     # Adaptive rule: reduce multiplier for frequently-seen patterns
@@ -129,8 +133,22 @@ def score_alert(
         if similar > 5:
             risk_multiplier = max(0.5, risk_multiplier - 0.20)
 
+        # TM-02 fix: baseline quarantine for newly enrolled devices.
+        # Devices with < 14 days of baseline data get a lower threshold
+        # (30% reduction) to compensate for the DAE's unreliable baseline.
+        baseline_days = int(event_context.get("baseline_days", 90))
+        if baseline_days < 14:
+            threshold = threshold * 0.70
+
     adjusted_score = min(1.0, float(anomaly_score) * risk_multiplier)
     should_surface = adjusted_score > threshold
+
+    # Safety floor: CRITICAL + unpatchable devices must ALWAYS surface.
+    # The IDS is the ONLY compensating control for unpatchable devices —
+    # suppressing any signal, however weak, leaves the device unmonitored.
+    # Fixes ST-03: anomaly_score=0.2 on CRITICAL+unpatchable was suppressed.
+    if criticality == "CRITICAL" and not patchable:
+        should_surface = True
 
     return ScoredAlert(
         adjusted_score=round(adjusted_score, 4),
@@ -141,7 +159,7 @@ def score_alert(
     )
 
 
-def score_alert_static(anomaly_score: float) -> dict:
+def score_alert_static(anomaly_score: float) -> dict[str, bool]:
     """Static-threshold baseline for false-positive reduction comparison.
 
     Applies the same fixed 0.5 threshold to every alert regardless of

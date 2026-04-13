@@ -14,7 +14,7 @@ Usage:
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+from typing import Any, List
 
 from src.data_models import AlertGroundTruth, MVEOutput
 
@@ -346,8 +346,8 @@ def test_risk_adaptive_threshold() -> bool:
 # ── M6: False Positive Rate Reduction ───────────────────────────────────
 
 def test_false_positive_rate(
-    baseline_results: List[dict],
-    adaptive_results: List[dict],
+    baseline_results: List[dict[str, Any]],
+    adaptive_results: List[dict[str, Any]],
     ground_truths: List[AlertGroundTruth],
 ) -> float:
     """Claim C8: Risk-adaptive thresholds reduce false positive rate vs.
@@ -366,7 +366,7 @@ def test_false_positive_rate(
     Returns:
         FP reduction fraction [0.0, 1.0].
     """
-    def calc_fp_rate(results: List[dict], gts: List[AlertGroundTruth]) -> float:
+    def calc_fp_rate(results: List[dict[str, Any]], gts: List[AlertGroundTruth]) -> float:
         surfaced = [
             (r, g) for r, g in zip(results, gts)
             if r.get("surfaced", False)
@@ -401,9 +401,9 @@ def test_false_positive_rate(
 def run_acceptance_tests(
     mve_outputs: List[MVEOutput],
     ground_truths: List[AlertGroundTruth],
-    baseline_results: List[dict],
-    adaptive_results: List[dict],
-) -> List[dict]:
+    baseline_results: List[dict[str, Any]],
+    adaptive_results: List[dict[str, Any]],
+) -> List[dict[str, Any]]:
     """Run all 8 acceptance tests and return metric results.
 
     Args:

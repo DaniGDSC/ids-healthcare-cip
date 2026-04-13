@@ -126,6 +126,28 @@ class DAEDetector:
         self._feat_scale = feat_max - self._feat_min
         self._feat_scale[self._feat_scale == 0] = 1.0  # constant features
 
+    def _ood_penalty(self, X: np.ndarray) -> np.ndarray:
+        """Per-sample penalty for features outside Winsorize bounds.
+
+        OOD-02 fix: the Winsorize clipper masks novelty by pulling
+        extreme values back into the training range. This penalty
+        measures how far outside the bounds each sample is BEFORE
+        clipping, ensuring truly novel inputs produce elevated error
+        even after normalisation.
+
+        Returns:
+            penalty: shape (n_samples,) — sum of squared exceedances
+            scaled by feature weights.
+        """
+        below = np.maximum(self._clip_lo - X, 0)
+        above = np.maximum(X - self._clip_hi, 0)
+        exceedance = (below ** 2 + above ** 2)
+        if self._feat_scale is not None:
+            exceedance = exceedance / (self._feat_scale ** 2 + 1e-12)
+        if self._feat_weights is not None:
+            return exceedance @ self._feat_weights
+        return exceedance.sum(axis=1)
+
     def _normalise(self, X: np.ndarray) -> np.ndarray:
         """Winsorize and MinMax-scale features to [0, 1]."""
         X_clipped = np.clip(X, self._clip_lo, self._clip_hi)
@@ -307,12 +329,13 @@ class DAEDetector:
         return sq_err @ self._feat_weights  # (n_samples,)
 
     def reconstruction_error(self, X: np.ndarray) -> np.ndarray:
-        """Per-sample weighted MSE reconstruction error on normalised features."""
+        """Per-sample weighted MSE + OOD penalty on normalised features."""
         if self._model is None:
             raise RuntimeError("Model not fitted. Call fit() first.")
+        ood = self._ood_penalty(X)
         X_norm = self._normalise(X)
         recon = self._forward(X_norm)
-        return self._weighted_mse(X_norm, recon)
+        return self._weighted_mse(X_norm, recon) + ood
 
     def reconstruction_error_decomposed(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """One forward pass; returns (per_sample_error, per_feature_weighted_error).
@@ -330,11 +353,12 @@ class DAEDetector:
         """
         if self._model is None:
             raise RuntimeError("Model not fitted. Call fit() first.")
+        ood = self._ood_penalty(X)
         X_norm = self._normalise(X)
         recon = self._forward(X_norm)
-        sq_err = (X_norm - recon) ** 2  # (n_samples, n_features)
+        sq_err = (X_norm - recon) ** 2                     # (n_samples, n_features)
         per_feature_weighted = sq_err * self._feat_weights  # (n_samples, n_features)
-        per_sample = per_feature_weighted.sum(axis=1)  # (n_samples,)
+        per_sample = per_feature_weighted.sum(axis=1) + ood # (n_samples,)
         return per_sample, per_feature_weighted
 
     def predict(self, X: np.ndarray) -> np.ndarray:

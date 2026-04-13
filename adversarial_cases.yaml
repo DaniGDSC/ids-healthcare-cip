@@ -1,0 +1,631 @@
+evasion_attacks:
+  analysis_date: "2026-04-13"
+  threat_model: "Attacker with knowledge of DAE-based anomaly detection, 90-day behavioral baseline, and clinical workflow constraints in a 200-500 bed hospital"
+
+  - id: "EA-01"
+    name: "Slow-frequency exfiltration via legitimate protocol"
+    attack_description: >
+      Attacker compromises an infusion pump and encodes exfiltrated patient data
+      (medication records, dosing history) within normal HL7 message fields sent
+      to the EHR gateway. Traffic volume, connection frequency, destination, and
+      protocol all match the pump's learned baseline exactly. The exfiltrated
+      data rides inside the HL7 payload at the application layer.
+    iomt_opportunity: >
+      Infusion pumps have extremely predictable network profiles: near-zero
+      SrcBytes/DstBytes (mean 0.118, p95=0.000 in normalized space), consistent
+      HL7 protocol to a single EHR gateway, and stable inter-packet timing
+      (DIntPkt mean 1.057). An attacker who matches these parameters is
+      indistinguishable from legitimate pump traffic at the network flow level.
+    evasion_mechanism: >
+      The DAE reconstructs based on network flow features (byte counts, port
+      numbers, timing, flags). It does NOT inspect payload content. HL7 messages
+      with modified field values produce identical flow-level features to
+      legitimate messages. The attacker's traffic produces reconstruction error
+      indistinguishable from normal pump traffic.
+    evasion_success_probability: "HIGH"
+    probability_rationale: "The DAE operates on network flow metadata, not packet payloads. Any attack that preserves flow-level features while modifying payload content is fundamentally invisible to this detection architecture."
+    clinical_impact_if_successful: "Bulk exfiltration of medication records, dosing histories, and patient identifiers for all patients served by the compromised pump. HIPAA breach affecting ICU patient population. No direct patient physiological harm unless the attacker also modifies infusion parameters."
+    current_system_detection_capability: "BLIND"
+    detection_hardening: >
+      Deep packet inspection (DPI) of HL7 message content is required. Validate
+      that HL7 field values conform to expected schemas (medication codes,
+      patient ID formats). Flag HL7 messages with unexpected field lengths,
+      non-standard character sets, or fields that don't match the pump's
+      configured drug library. This requires a protocol-aware layer that the
+      current flow-based DAE does not provide.
+    paper_relevance: "Challenges the claim that the DAE provides comprehensive anomaly detection for IoMT devices. The detection operates at the network flow level only — application-layer attacks that preserve flow characteristics are out of scope."
+
+  - id: "EA-02"
+    name: "Maintenance window exploitation"
+    attack_description: >
+      Attacker times malicious activity to coincide with scheduled vendor
+      firmware update windows. During these windows, the risk scorer suppresses
+      alerts entirely when is_maintenance_window=True AND is_known_vendor_ip=True.
+      The attacker spoofs the vendor's source IP or compromises the vendor's
+      update server to deliver malicious firmware alongside legitimate updates.
+    iomt_opportunity: >
+      IoMT vendor maintenance windows are predictable: monthly update cycles,
+      published change windows, and consistent vendor IP ranges. In 200-500 bed
+      hospitals, 30-50% of devices are on vendor-managed maintenance contracts
+      with scheduled remote access. The maintenance suppression is documented
+      in the risk scorer and accessible via the system's configuration.
+    evasion_mechanism: >
+      The risk scorer's maintenance window logic is binary: if
+      is_maintenance_window=True AND is_known_vendor_ip=True, the alert is
+      suppressed with should_surface=False. Empirically confirmed: an anomaly
+      score of 0.7 on a CRITICAL unpatchable device is completely silenced
+      during a vendor maintenance window. The attacker needs only to match
+      the vendor IP range and the maintenance schedule.
+    evasion_success_probability: "MEDIUM"
+    probability_rationale: "Requires either IP spoofing (detectable by network controls) or vendor supply chain compromise (rare but high-impact). The maintenance window timing is predictable, but the vendor IP matching adds a barrier."
+    clinical_impact_if_successful: "Malicious firmware installed on infusion pumps, ventilators, or patient monitors. The attacker gains persistent control of the device. Firmware-level compromise survives network isolation and can modify device behavior (dosing, ventilation parameters) at will."
+    current_system_detection_capability: "BLIND"
+    detection_hardening: >
+      Three-layer defense: (1) Never fully suppress alerts during maintenance —
+      reduce confidence to LOW but still surface with a maintenance context note.
+      (2) Validate firmware update integrity via cryptographic hash comparison
+      against vendor-published manifests (requires vendor cooperation). (3) Add
+      post-maintenance behavioral verification: after each maintenance window,
+      re-baseline the device and flag any behavioral changes not consistent with
+      the published update changelog.
+    paper_relevance: "Challenges the maintenance window suppression design in the risk scorer. The binary suppression (surface=False) creates a guaranteed evasion window that scales with the frequency of vendor maintenance."
+
+  - id: "EA-03"
+    name: "Gradual baseline poisoning over 60 days"
+    attack_description: >
+      Attacker incrementally shifts a compromised device's network behavior over
+      60 days, staying just below the DAE anomaly threshold each day. By day 60,
+      the malicious behavior pattern has been incorporated into the 90-day
+      rolling baseline. The DAE now considers the attacker's C2 communication
+      pattern as "normal" and produces low reconstruction error for it.
+    iomt_opportunity: >
+      IoMT devices have long operational lifecycles (5-15 years) and slow
+      behavioral evolution. A 60-day poisoning campaign is a small fraction
+      of the device's operational life. Hospital IT staff rarely re-baseline
+      devices proactively — the baseline updates automatically. The attacker
+      has stable, predictable firmware (unpatchable devices don't change
+      behavior) to calibrate their incremental shifts against.
+    evasion_mechanism: >
+      The DAE's 90-day baseline continuously updates. Empirically, the DAE
+      threshold is at the 95th percentile of normal reconstruction errors
+      (0.0000172). Normal samples have a p99 of 0.0001116, meaning there is
+      significant headroom (6.5x between p95 and p99) for an attacker to
+      introduce gradually increasing anomalies that remain below the threshold.
+      26.7% of current Spoofing attacks already fall below the DAE threshold
+      without any optimization — a patient attacker could increase this to
+      near 100% by calibrating their traffic against the detection boundary.
+    evasion_success_probability: "HIGH"
+    probability_rationale: "The DAE retrains on new data. Any behavior that persists for >50% of the baseline window (45+ days) becomes part of the normal distribution. The attacker only needs to stay below the p95 threshold during the poisoning phase, which has 6.5x headroom above the p90 level."
+    clinical_impact_if_successful: "Persistent undetected access to any device in the network. The attacker can use the poisoned baseline as a permanent operating platform for lateral movement, data exfiltration, or device manipulation. The IDS becomes an ally — it certifies the attacker's traffic as normal."
+    current_system_detection_capability: "BLIND"
+    detection_hardening: >
+      (1) Implement baseline drift detection: compare current 30-day baseline
+      against historical 90-day baseline and flag statistically significant
+      shifts (Kolmogorov-Smirnov test on per-feature distributions). (2) Maintain
+      an immutable reference baseline from initial device enrollment — new
+      behavior that diverges from the enrollment baseline requires explicit
+      human approval to incorporate. (3) Rate-limit baseline updates: a device
+      can shift its behavioral profile by at most X% per 30-day window. Changes
+      exceeding this rate trigger a "baseline evolution alert" for human review.
+    paper_relevance: "Challenges the assumption that the 90-day baseline provides a stable reference. If the baseline itself is compromised through gradual poisoning, the entire detection architecture is undermined. This is a fundamental limitation of unsupervised anomaly detection, not specific to the DAE."
+
+  - id: "EA-04"
+    name: "Alert fatigue amplification"
+    attack_description: >
+      Attacker deliberately generates many benign-looking anomalies across
+      non-critical devices (guest WiFi, admin workstations) to flood the
+      operator with LOW-severity alerts. After 2-3 days of high alert volume,
+      operator attention is degraded. The attacker then executes the real
+      attack on a CRITICAL device, which surfaces as one more alert among
+      dozens. The operator dismisses it due to fatigue.
+    iomt_opportunity: >
+      The target IT generalist processes 10-50 alerts/day alongside EHR support
+      and network admin duties. They are NOT a dedicated SOC analyst. The
+      system's own FPR of 2.4% means ~101 false positives in the test set.
+      An attacker injecting an additional 50-100 spurious alerts per day
+      doubles the operator's workload, virtually guaranteeing alert fatigue
+      within 48 hours.
+    evasion_mechanism: >
+      The attack does not evade the DAE — the real attack IS detected and
+      surfaced. The evasion is psychological: the operator has been conditioned
+      by 48 hours of false alarms to treat alerts as noise. The system's risk-
+      adaptive scoring correctly flags the CRITICAL attack, but the operator's
+      trust in the system has been eroded by the amplified false positive
+      volume. This exploits the human-in-the-loop, not the model.
+    evasion_success_probability: "MEDIUM"
+    probability_rationale: "Requires the attacker to control enough non-critical devices to generate plausible anomalies. The system's FP reduction (77.4%) is good but not immune to deliberate FP amplification. The real barrier is operator training — well-trained operators prioritize CRITICAL alerts regardless of volume."
+    clinical_impact_if_successful: "The real attack on the CRITICAL device proceeds unimpeded. If targeting a ventilator, the attacker can modify respiratory parameters. If targeting an infusion pump, dosing can be altered. The delay between alert surfacing and operator response determines the window for patient harm."
+    current_system_detection_capability: "PARTIAL"
+    detection_hardening: >
+      (1) Implement alert rate anomaly detection: if the alert volume increases
+      by >200% over a 24-hour window, surface a meta-alert: "SUSPICIOUS: alert
+      volume spike may indicate deliberate fatigue attack — prioritize CRITICAL
+      alerts." (2) Auto-escalate CRITICAL device alerts via separate channel
+      (SMS, pager) that bypasses the normal alert queue. (3) Implement alert
+      deduplication: collapse repeated similar LOW alerts into a single summary,
+      reducing queue volume without losing signal.
+    paper_relevance: "Challenges the system's reliance on a single human operator for triage. The MVE's clinical framing and severity labels help, but cannot fully overcome cognitive fatigue when the attack vector is the operator's attention capacity, not the detection model."
+
+  - id: "EA-05"
+    name: "Protocol downgrade on unpatchable device with clinical constraint shield"
+    attack_description: >
+      Attacker exploits a known Telnet vulnerability on a legacy infusion pump
+      (consistent with FDA ICSMA-20-170-01, BD Alaris). The DAE correctly flags
+      the Telnet session as anomalous (never in 90-day baseline). The system
+      generates a CRITICAL alert with the correct DO NOT constraint. But the
+      operator cannot isolate the pump because it is actively delivering
+      medication to an ICU patient. The attacker maintains the Telnet session
+      indefinitely, using the clinical constraint as a shield.
+    iomt_opportunity: >
+      11 of 13 FDA IoMT cybersecurity advisories involve infusion pumps. Open
+      Telnet/FTP ports are endemic in older pump firmware. The pump cannot be
+      patched (FDA certification constraint). The clinical workflow prohibits
+      isolation during active infusion. The attacker knows all of this from
+      publicly available FDA advisories and hospital workflow documentation.
+    evasion_mechanism: >
+      This is NOT a detection evasion — the system correctly detects and
+      explains the anomaly. It is an ACTION evasion: the clinical constraint
+      ("DO NOT power-cycle pump during active infusion") prevents the operator
+      from taking the recommended remediation. The NAC quarantine ("SAFE: NAC
+      quarantine blocking non-HTTPS preserves controller") is a partial
+      mitigation — it blocks outbound non-HTTPS but the Telnet session is
+      already established inbound. The attacker pivots to using the
+      pump as a persistent network foothold.
+    evasion_success_probability: "HIGH"
+    probability_rationale: "The detection works perfectly. The evasion is inherent in the clinical constraint — the system correctly tells the operator NOT to isolate, which is exactly what the attacker needs. The only remaining mitigation (NAC quarantine) does not terminate an established session."
+    clinical_impact_if_successful: "Persistent unauthorized access to an active infusion pump. The attacker can read drug delivery parameters, medication records, and patient identifiers. If the Telnet interface exposes configuration commands (common in older BD Alaris firmware), dosing parameters can be modified. The pump continues delivering medication — potentially at an altered rate — while the operator believes the NAC quarantine has contained the threat."
+    current_system_detection_capability: "DETECTS"
+    detection_hardening: >
+      (1) The NAC quarantine must terminate EXISTING sessions, not just block
+      new connections. Implement stateful session teardown: "Apply NAC policy
+      that terminates active Telnet session (RST injection at switch) while
+      preserving HL7/HTTPS sessions." This requires the NAC infrastructure to
+      distinguish between protocol-specific sessions on the same device. (2)
+      Add a time-limited clinical override: "If Telnet session persists >15
+      minutes after NAC quarantine: escalate to CISO with recommendation to
+      transfer patient to alternative pump and then isolate the compromised
+      device." (3) Pre-stage replacement pumps in ICU to reduce the clinical
+      barrier to isolation.
+    paper_relevance: "This scenario demonstrates that detection alone is insufficient — the system correctly identifies and explains the threat but cannot enforce remediation due to clinical constraints. This is a fundamental tension in IoMT security: patient safety constraints that protect against over-reaction simultaneously protect the attacker."
+
+  summary:
+    highest_risk_attack: >
+      EA-03 (baseline poisoning) — an attacker who slowly poisons the behavioral
+      baseline over 60 days can render the entire DAE detection architecture
+      ineffective. Unlike EA-01 (payload evasion) which is limited to data
+      exfiltration, a poisoned baseline provides a permanent platform for any
+      subsequent attack type. The system has no defense against this today.
+    blind_spots:
+      - "EA-01: Application-layer payload encoding (flow-based DAE cannot inspect HL7 content)"
+      - "EA-02: Vendor maintenance window suppression (binary suppression creates guaranteed evasion window)"
+      - "EA-03: Gradual baseline poisoning (no drift detection or immutable reference baseline)"
+    partially_detected:
+      - "EA-04: Alert fatigue amplification (detection works, human-in-the-loop is the weak point)"
+    correctly_detected_but_unenforceable:
+      - "EA-05: Protocol downgrade with clinical constraint shield (detection perfect, remediation constrained)"
+    iomt_specific_vulnerabilities:
+      - "EA-02: Maintenance window predictability unique to vendor-managed medical devices"
+      - "EA-03: Long device lifecycles (5-15 years) give attacker ample time for baseline poisoning"
+      - "EA-05: Clinical constraint as attacker shield is unique to life-sustaining device environments"
+    fundamental_architectural_limitation: >
+      The system operates at the network flow level and cannot inspect
+      application-layer payloads (EA-01), enforce session termination (EA-05),
+      or detect gradual baseline drift (EA-03). These are not bugs — they are
+      boundaries of the detection architecture. The paper should frame these
+      as scope limitations with specific countermeasure recommendations, not
+      as system failures.
+
+threshold_manipulation:
+  analysis_date: "2026-04-13"
+  threat_model: "Attacker with knowledge of the risk-adaptive scoring logic, device criticality mappings, and threshold asymmetry between device classes"
+
+  - id: "TM-01"
+    name: "Asset inventory spoofing"
+    attack_description: >
+      Attacker compromises the asset inventory database and changes an infusion
+      pump's metadata from criticality=CRITICAL, patchable=False to
+      criticality=LOW, patchable=True. The risk scorer's threshold rises from
+      0.35 to 0.50 and the multiplier drops from 1.5x to 1.0x. An anomaly
+      score of 0.3 that would surface as adjusted=0.45 (above 0.35 threshold)
+      now registers as adjusted=0.30 (below 0.50 threshold) — the alert is
+      suppressed. The safety floor (FIX-F: CRITICAL+unpatchable always surfaces)
+      is also defeated because the device is no longer labeled CRITICAL+unpatchable.
+    exploited_mechanism: >
+      The risk scorer trusts device_context verbatim. Criticality and patchability
+      are lookup values from an external inventory database — there is no
+      independent validation. Empirically confirmed: score=0.3 surfaces as
+      CRITICAL+unpatchable (adjusted=0.45 > thr=0.35) but is suppressed as
+      LOW+patchable (adjusted=0.30 < thr=0.50). The safety floor only protects
+      devices that are LABELED CRITICAL+unpatchable — a spoofed label defeats it.
+    feasibility: "MEDIUM"
+    feasibility_rationale: "Requires write access to the asset inventory database. Hospital CMMS/CMDB systems (ServiceNow, Nuvolo) have known access control weaknesses, especially for service accounts used by biomed integration systems."
+    system_vulnerability: "VULNERABLE"
+    vulnerability_detail: >
+      The entire risk-adaptive threshold mechanism is defeated by a single
+      database write. The compensating control for unpatchable devices (lowered
+      threshold, elevated multiplier, forced surfacing) depends entirely on
+      the accuracy of two boolean fields. No cryptographic binding, no
+      hardware attestation, no independent verification.
+    clinical_impact: >
+      An active infusion pump delivering medication becomes invisible to the IDS.
+      Attacks on the pump proceed with 50% headroom below the new threshold
+      (any score < 0.50 is safe). The patient safety consequences are identical
+      to a system with no IDS at all — the compensating control is nullified.
+    hardening_recommendation: >
+      (1) Implement integrity monitoring on the asset inventory: any change to
+      criticality or patchable fields for IoMT devices triggers an alert to
+      biomed engineering for confirmation. (2) Add a device-type minimum
+      criticality floor independent of the database: infusion_pump and ventilator
+      device_types (detected by MAC OUI or network fingerprint) must be ≥ HIGH
+      regardless of database value. (3) Log all inventory changes with
+      attribution and require dual approval for criticality downgrades.
+    requires_system_change: true
+
+  - id: "TM-02"
+    name: "New device enrollment exploitation"
+    attack_description: >
+      Attacker introduces a rogue device to the clinical network during a
+      legitimate device enrollment period (new equipment delivery, loaner
+      device rotation). The rogue device mimics an infusion pump's network
+      profile during the 7-30 day baseline establishment period. During
+      this window, the DAE has no baseline to compare against, confidence
+      is LOW (FIX-C), and the operator has been conditioned by FIX-C to
+      expect LOW confidence on new devices. The rogue device establishes
+      its malicious traffic pattern AS the baseline.
+    exploited_mechanism: >
+      Two mechanisms: (1) The DAE's 95th-percentile threshold is computed from
+      the device's own training data — if the attacker controls the training
+      data during enrollment, they control the threshold. (2) The confidence
+      calibration (FIX-C) correctly downgrades confidence to LOW for
+      baseline_days < 14, but this means the operator is told the alert is
+      "weak" and "may be benign" — exactly what the attacker wants. FIX-C's
+      honest uncertainty messaging becomes the attacker's ally.
+    feasibility: "MEDIUM"
+    feasibility_rationale: "Requires physical or network access to introduce a rogue device during an enrollment window. Hospital networks have weak 802.1X enforcement on clinical VLANs — plugging in a device that responds to ARP with a medical device MAC OUI is often sufficient."
+    system_vulnerability: "VULNERABLE"
+    vulnerability_detail: >
+      The risk scorer does not use baseline_days — only the confidence
+      indicator in Layer 1 reflects the baseline maturity. The DAE threshold
+      is a fixed 95th percentile regardless of sample size. A device with
+      3 days of attacker-controlled traffic has the same threshold computation
+      as a device with 90 days of legitimate traffic. No minimum baseline
+      period is enforced before the device is considered "enrolled."
+    clinical_impact: >
+      Rogue device establishes a baseline that includes malicious C2 traffic.
+      All subsequent attacks from this device are within its "normal" baseline.
+      If the rogue device is positioned on the clinical VLAN, it can reach
+      other medical devices for lateral movement while appearing normal to
+      the IDS.
+    hardening_recommendation: >
+      (1) Enforce a minimum baseline quarantine period: new devices must
+      complete 14 days of observation before their baseline is used for
+      anomaly detection. During quarantine, all traffic is logged and
+      any communication outside the hospital's approved IoMT communication
+      policy triggers immediate investigation. (2) New device baselines
+      must be approved by biomed engineering before promotion from
+      quarantine. (3) Cross-reference new device MAC addresses against
+      the hospital's purchase order system — devices not in the PO system
+      trigger an "UNREGISTERED DEVICE" alert (FIX-D already implements this
+      for unknown device_type).
+    requires_system_change: true
+
+  - id: "TM-03"
+    name: "Stale criticality label exploitation"
+    attack_description: >
+      A device was labeled CRITICAL because it was actively delivering
+      medication to an ICU patient. The patient has been discharged and the
+      pump is now idle in storage, but the criticality label remains CRITICAL
+      and the clinical constraint still says "DO NOT power-cycle pump during
+      active infusion." The attacker compromises the idle pump knowing the
+      operator will read the CRITICAL label and the DO NOT constraint, and
+      will NOT isolate the device — even though isolation is perfectly safe
+      because no patient is connected.
+    exploited_mechanism: >
+      The system has no operational_state field (identified in FMEA FM-L2-01,
+      FM-L2-06). Criticality is a static label assigned at device enrollment,
+      not updated when the device's clinical state changes. The clinical
+      constraint is generated from device_type + criticality, not from
+      real-time patient connection status. Empirically confirmed: an infusion
+      pump always receives "DO NOT power-cycle pump during active infusion"
+      regardless of whether it is in ICU-2 or in storage.
+    feasibility: "HIGH"
+    feasibility_rationale: "No attacker action needed to create the stale label — it occurs naturally when patients are discharged. In a 300-bed hospital with 100 pumps, 20-40 are idle at any time while retaining their CRITICAL label."
+    system_vulnerability: "VULNERABLE"
+    vulnerability_detail: >
+      The clinical constraint is static text derived from device_type, not
+      from real-time device state. There is no integration with the hospital's
+      biomed asset tracking system (Nuvolo, TRIMEDX) or the infusion pump's
+      own status API (most modern pumps report active/idle state via HL7).
+      The FMEA identified this gap (FM-L2-01 RPN=180, FM-L2-06 RPN=245)
+      but the fix requires an operational_state field that does not exist
+      in the current device_context schema.
+    clinical_impact: >
+      The attacker has a persistent foothold on a device that the operator
+      believes cannot be safely isolated. The idle pump on the clinical
+      network can be used for lateral movement to other devices. No direct
+      patient harm (the pump is not connected to a patient), but the
+      attacker's presence on the clinical VLAN puts all connected devices
+      at risk.
+    hardening_recommendation: >
+      (1) Integrate with biomed asset tracking to populate operational_state
+      in real-time: active_patient_connected, idle, maintenance, storage.
+      (2) When operational_state = idle or storage, downgrade the clinical
+      constraint to permit full isolation: "Device is idle — isolation is
+      safe. No patient is currently connected." (3) As a near-term fix
+      without integration: add a manual confirmation step: "Is this device
+      currently connected to a patient? [Y/N]" before applying the DO NOT
+      constraint.
+    requires_system_change: true
+
+  - id: "TM-04"
+    name: "Threshold boundary probing"
+    attack_description: >
+      Attacker sends carefully crafted traffic at exactly the 95th percentile
+      of the device's normal behavior — just below the DAE anomaly threshold.
+      Over several days, the attacker maps the decision boundary precisely by
+      observing which traffic patterns trigger alerts and which do not. Once
+      the boundary is mapped, the attacker operates permanently just inside
+      it, achieving malicious objectives while staying below the detection
+      threshold.
+    exploited_mechanism: >
+      The DAE threshold is a fixed percentile of reconstruction error
+      distribution. The decision boundary is deterministic — the same input
+      always produces the same reconstruction error. The attacker can use
+      binary search (increase traffic volume until alert fires, then back off)
+      to map the boundary with ~10 probes per feature dimension. Empirically,
+      only 21 normal samples (0.49%) fall within 10% of the threshold and
+      10 (0.23%) within 5%, meaning the boundary is sharp — small adjustments
+      cross it, making it easy to probe.
+    feasibility: "MEDIUM"
+    feasibility_rationale: "Requires the attacker to observe whether their traffic triggers alerts (possible if they have access to any network monitoring or if they can infer alert status from operator response time). The sharp threshold boundary (0.23% of samples in the 5% margin) makes probing efficient."
+    system_vulnerability: "PARTIALLY_MITIGATED"
+    vulnerability_detail: >
+      The cascaded architecture (Track A → Track B) provides defense in depth:
+      even if the attacker maps the DAE threshold, the XGBoost ensemble has a
+      different (non-linear, non-deterministic from the attacker's perspective)
+      decision boundary. Evading both simultaneously requires the attacker to
+      stay below the DAE reconstruction error threshold AND below the XGBoost
+      probability threshold — a much harder optimization problem. However, for
+      the 26.7% of Spoofing attacks that already evade the DAE, the attacker
+      only needs to evade XGBoost (88.7% recall, meaning 11.3% already evade).
+    clinical_impact: >
+      If successful, the attacker has a permanent channel for data exfiltration
+      or C2 communication that the IDS certifies as normal. The attack volume
+      is constrained by the threshold boundary (must stay within normal
+      behavioral envelope), but low-bandwidth persistent access is sufficient
+      for most IoMT attack objectives.
+    hardening_recommendation: >
+      (1) Add noise to the threshold: randomly vary the detection threshold
+      by ±10% each evaluation cycle, making the boundary non-deterministic
+      and preventing precise mapping. (2) Implement threshold hysteresis:
+      once a device triggers an alert, lower its threshold by 20% for the
+      next 7 days, making repeated boundary probing self-defeating.
+      (3) Monitor for boundary-testing patterns: traffic that repeatedly
+      appears at the 90th-95th percentile and then drops should itself be
+      flagged as suspicious (meta-detection of probing behavior).
+    requires_system_change: true
+
+  asset_inventory_integrity_assessment:
+    is_single_point_of_failure: true
+    explanation: >
+      The asset inventory (device_context dict) is the single source of truth
+      for criticality, patchability, device_type, and location. The risk scorer's
+      threshold adjustment, the MVE generator's clinical constraint selection,
+      the severity floor for life-sustaining devices, and the safety floor for
+      unpatchable devices ALL depend on these fields being accurate. A single
+      database compromise — changing criticality from CRITICAL to LOW and
+      patchable from False to True — defeats: (1) the risk-adaptive threshold,
+      (2) the safety surfacing floor (FIX-F), (3) the severity floor (FIX-E),
+      (4) the device-specific DO NOT constraint (FIX-A), and (5) the
+      unpatchable enrichment in Layer 3. Five safety mechanisms neutralized
+      by one data integrity failure.
+    current_integrity_controls: >
+      None in the prototype. The device_context dict is accepted as-is from
+      the caller. No validation against an independent source. No change
+      detection. No audit trail. The FIX-D safe-failure default (unknown
+      device → CRITICAL) only triggers when device_type is missing or
+      unrecognized — a spoofed device_type that is in the known vocabulary
+      (e.g., "workstation" for a pump) passes all validation.
+    recommendation: >
+      (1) Implement cryptographic binding of device identity to inventory
+      metadata: the device's MAC address, network fingerprint, and HL7
+      device identifier must match the inventory record. Mismatches trigger
+      an integrity alert. (2) Make criticality and patchability fields
+      immutable without biomed engineering dual-approval workflow. (3) Add
+      device-type validation via network behavior fingerprinting: a device
+      claiming to be a "workstation" but exhibiting HL7 traffic patterns
+      is flagged as a potential inventory discrepancy. (4) For the paper:
+      document the asset inventory as a trust boundary dependency in the
+      system architecture diagram.
+
+slow_burn_test:
+  test_date: "2026-04-13"
+  device_class_tested: "infusion_pump"
+  n_clean_baseline_samples: 507
+  baseline_mean_error: 0.0000112161
+  baseline_p95_error: 0.0000186834
+  dae_threshold: 0.0000192229
+
+  poisoning_parameters:
+    base_sample_error: 0.0000075329
+    target_anomaly_level: 0.0000224322
+    target_description: "2× mean reconstruction error of clean infusion pump traffic"
+    total_magnitude: 0.142425
+    step_size_per_iteration: 0.004748
+    direction: "gradient of reconstruction error (steepest-ascent in feature space)"
+    n_iterations: 30
+
+  iteration_log:
+    - {day: 1,  error: 0.0000078, anomaly: false, drift: false, ks_p: 0.9999}
+    - {day: 2,  error: 0.0000081, anomaly: false, drift: false, ks_p: 0.9839}
+    - {day: 3,  error: 0.0000084, anomaly: false, drift: false, ks_p: 0.8335}
+    - {day: 4,  error: 0.0000087, anomaly: false, drift: false, ks_p: 0.5719}
+    - {day: 5,  error: 0.0000090, anomaly: false, drift: false, ks_p: 0.5719}
+    - {day: 6,  error: 0.0000093, anomaly: false, drift: false, ks_p: null}
+    - {day: 7,  error: 0.0000096, anomaly: false, drift: false, ks_p: null}
+    - {day: 8,  error: 0.0000100, anomaly: false, drift: false, ks_p: null}
+    - {day: 9,  error: 0.0000104, anomaly: false, drift: true,  ks_p: 0.0334}
+    - {day: 10, error: 0.0000108, anomaly: false, drift: true,  ks_p: 0.0124}
+    - {day: 15, error: 0.0000129, anomaly: false, drift: true,  ks_p: 0.0001}
+    - {day: 20, error: 0.0000155, anomaly: false, drift: true,  ks_p: 0.0000}
+    - {day: 25, error: 0.0000186, anomaly: false, drift: true,  ks_p: 0.0000}
+    - {day: 26, error: 0.0000193, anomaly: true,  drift: true,  ks_p: 0.0000}
+    - {day: 30, error: 0.0000224, anomaly: true,  drift: true,  ks_p: 0.0000}
+
+  detection_result:
+    first_dae_threshold_crossed: 26
+    first_drift_detected: 9
+    first_detection_day: 9
+    detection_verdict: "EARLY"
+    detection_mechanism: "drift_detector"
+    detection_detail: >
+      The KS drift detector flagged distributional shift at day 9 (p=0.0334)
+      — 17 days before the DAE threshold was crossed at day 26. The DAE alone
+      would have been LATE/BLIND; the drift detector provided early warning.
+      By day 12, drift confidence was strong (p=0.0012). The DAE threshold
+      only triggers at day 26 when reconstruction error (0.0000193) exceeds
+      the 95th percentile threshold (0.0000192).
+
+  recovery_test:
+    days_of_clean_traffic_to_recover: 23
+    full_recovery_achieved: true
+    recovery_detail: >
+      After 23 days of clean infusion pump traffic, the rolling 30-day window
+      no longer shows statistically significant drift from the clean baseline
+      (KS p > 0.10, rolling mean within 2 std of clean baseline mean).
+
+  overall_verdict: "EARLY"
+  detection_timeline: >
+    Day 0: clean baseline (error=0.0000075). Day 1-8: poisoning below all
+    detection thresholds. Day 9: KS drift test triggers (p=0.0334) — FIRST
+    DETECTION. Day 9-25: drift detector continuously alarming, DAE threshold
+    not yet crossed. Day 26: DAE threshold crossed (error > 0.0000192) —
+    both detectors now alarming. Day 30: poisoning complete, error at 2x
+    baseline (0.0000224).
+
+  clinical_implication: >
+    With drift detection active, the system detects baseline poisoning at
+    day 9 — well before the attacker achieves their target anomaly level
+    (day 30). An operator responding at day 9 can investigate the device,
+    compare against enrollment baseline, and halt the poisoning before
+    the DAE's detection capability is compromised. WITHOUT drift detection,
+    the DAE alone would not detect the poisoning until day 26 — by which
+    point 87% of the poisoning is complete and the attacker is close to
+    achieving a permanently undetectable operating state.
+
+  hardening_recommendation: >
+    (1) The KS drift detector is effective and should be deployed as a
+    mandatory companion to the DAE threshold detector. It provides 17 days
+    of early warning before the DAE threshold is breached. (2) Maintain an
+    immutable enrollment baseline for each device: never allow the reference
+    baseline to be overwritten by new observations without human approval.
+    (3) When drift is detected: freeze the current baseline (prevent further
+    poisoning), alert biomed engineering to verify device behavior, and
+    compare current traffic against the enrollment baseline. (4) The 23-day
+    recovery period means that even after successful detection and intervention,
+    the device needs 3+ weeks of clean traffic before the baseline is reliable
+    again. During recovery, apply elevated monitoring (lower DAE threshold by
+    30%) to compensate for the unreliable baseline.
+
+  ea03_reassessment: >
+    The original EA-03 evasion analysis rated the system as BLIND to baseline
+    poisoning. This empirical test upgrades that assessment to EARLY DETECTION
+    when the KS drift detector is active. The drift detector is not currently
+    integrated into the real-time pipeline (it exists in the evaluation module
+    at results/reports/drift_detection_results.json) but the mechanism works:
+    a 30-sample rolling window compared against historical baseline via KS test
+    reliably detects gradual shifts before the DAE threshold is compromised.
+    Integration into the real-time pipeline is a deployment requirement.
+
+ood_detection:
+  test_date: "2026-04-13"
+  methodology: "Crafted inputs outside training distribution fed through the full cascaded pipeline (Track A → Track B DAE). Tested MVE generation, risk scoring, and error handling."
+
+  - id: "OOD-01"
+    name: "Novel device class — surgical robot"
+    input_description: "Simulated surgical robot traffic: high SrcBytes (video stream), unusual port, high DstLoad (real-time control), long duration, zero biometric features. Device type 'surgical_robot' not in training data."
+    expected_behavior: "DAE flags as anomalous (novel pattern), MVE flags device class as unrecognized, confidence LOW."
+    actual_behavior: "DAE correctly flags anomalous (error 0.0000347 > threshold 0.0000192). MVE assigns CRITICAL severity with LOW confidence. However, _normalize_device_type maps 'surgical_robot' to a recognized pattern (contains no IoMT keywords), so the UNREGISTERED DEVICE prefix does NOT appear. The narrative says 'surgical_robot (OR-2) normally communicates...' as if the system knows this device class."
+    handled_safely: true
+    confidence_appropriately_low: true
+    ood_explicitly_flagged: false
+    result: "PARTIAL"
+    detail: "Detection correct (DAE flags anomaly), severity correct (CRITICAL), confidence correct (LOW due to 0-day baseline). But the system does not explicitly flag that 'surgical_robot' is outside its training distribution — it generates a plausible-sounding baseline narrative for a device class it has never seen."
+    clinical_implication_if_fail: "In a real deployment, a novel device class would receive a confident-looking explanation ('surgical_robot normally communicates with...') based on zero training data. The operator trusts the explanation because it names the device type and describes a baseline that was never actually learned."
+
+  - id: "OOD-02"
+    name: "Known device, unknown protocol — MQTT on infusion pump"
+    input_description: "Normal infusion pump sample with Sport (port) feature changed to 5.0 (far outside pump's normal ~0.15 range), simulating MQTT protocol."
+    expected_behavior: "DAE reconstruction error should be HIGH because the pump-MQTT combination was never in training data."
+    actual_behavior: "DAE error DECREASED from 0.0000009 (normal pump) to 0.0000007 (MQTT pump) — a 0.7x reduction. The DAE's Winsorize+MinMax normalizer clips the extreme Sport value to the 99th percentile ceiling, then normalizes to [0,1]. After clipping, the unusual port looks like a typical high-port value that the autoencoder can reconstruct easily."
+    handled_safely: false
+    confidence_appropriately_low: false
+    ood_explicitly_flagged: false
+    result: "FAIL"
+    detail: "The DAE normalizer's Winsorize clipping actively defeats OOD detection for single-feature deviations. By clipping extreme values to the 99th percentile boundary, truly novel inputs are pulled back into the training distribution. The autoencoder then reconstructs the clipped (in-distribution) version with LOW error, producing false familiarity."
+    clinical_implication_if_fail: "A compromised infusion pump using MQTT (a protocol it has never used) would NOT trigger a DAE alert. The system would classify MQTT traffic from a pump as NORMAL because the normalizer masks the protocol novelty. An attacker switching to MQTT for C2 on a pump would be invisible to the DAE."
+
+  - id: "OOD-03"
+    name: "Adversarial input — all features at 99th percentile"
+    input_description: "Synthetic sample with every feature set to the 99th percentile of the training distribution simultaneously. Represents maximum-deviation-while-plausible input."
+    expected_behavior: "System flags as anomalous with HIGH confidence."
+    actual_behavior: "DAE error 0.0000845 — 2.1x normal mean, 4.4x above threshold. Correctly flagged as anomalous. XGBoost probability is 0.0001 (does not flag), but the DAE catches it."
+    handled_safely: true
+    confidence_appropriately_low: false
+    ood_explicitly_flagged: false
+    result: "PASS"
+    detail: "The DAE correctly identifies that all features at their extremes simultaneously is highly anomalous — even though each individual feature is within the training range. This demonstrates that the autoencoder captures feature correlations, not just marginal distributions."
+    clinical_implication_if_fail: "N/A — test passed."
+
+  - id: "OOD-04"
+    name: "Firmware update traffic on infusion pump"
+    input_description: "Normal pump sample with elevated byte counts (firmware download), HTTPS protocol, and long session duration. Tested with and without maintenance_window flag."
+    expected_behavior: "With maintenance flag → suppressed or LOW confidence. Without maintenance flag → flagged as anomaly."
+    actual_behavior: "DAE error 0.0000122 — below threshold (does not flag). With maintenance_window+vendor_ip: risk scorer suppresses completely (should_surface=False). Without maintenance: risk scorer surfaces (should_surface=True, safety floor for CRITICAL+unpatchable). MVE confidence is MEDIUM ('may indicate firmware update, vendor maintenance, or behavioral compromise')."
+    handled_safely: true
+    confidence_appropriately_low: true
+    ood_explicitly_flagged: false
+    result: "PASS"
+    detail: "Correct dual behavior: firmware traffic during maintenance is suppressed (reducing false positives), while identical traffic outside maintenance is surfaced (detecting potential attacks). The T5 template explicitly mentions 'firmware update' as a benign possibility in the confidence indicator."
+    clinical_implication_if_fail: "N/A — test passed. Note: the maintenance window suppression is exploitable per EA-02 evasion analysis."
+
+  - id: "OOD-05"
+    name: "Truncated and malformed inputs"
+    input_description: "Three MVE generation tests: (1) completely empty dicts, (2) missing timestamp and dest_ip, (3) all None arguments. One DAE test: NaN feature vector."
+    expected_behavior: "MVE returns safe CRITICAL fallback. DAE handles gracefully."
+    actual_behavior: "MVE tests all pass: empty input → CRITICAL with 'UNREGISTERED DEVICE' prefix, missing fields → CRITICAL with safe defaults, all None → CRITICAL. NaN features crash XGBoost with ValueError: 'Input X contains NaN. GradientBoostingClassifier does not accept missing values.'"
+    handled_safely: false
+    confidence_appropriately_low: true
+    ood_explicitly_flagged: true
+    result: "PARTIAL"
+    detail: "The MVE generator's FIX-D safe-failure defaults work correctly for empty/missing device context — all three non-numeric tests produce CRITICAL severity with appropriate warnings. However, NaN feature values crash the XGBoost model with an unhandled ValueError. In a real deployment, a malformed network flow record with NaN features would crash the entire detection pipeline."
+    clinical_implication_if_fail: "A single malformed flow record (e.g., from a network tap parsing error or a deliberately crafted packet) would crash the XGBoost classifier. During the crash window, no alerts are generated for ANY device. An attacker who can inject one NaN-producing packet can temporarily blind the entire IDS."
+
+  overall_ood_verdict: "PARTIAL"
+  safe_handling_rate: "3/5 cases handled safely (OOD-01 partial, OOD-02 fail, OOD-03 pass, OOD-04 pass, OOD-05 partial)"
+
+  critical_finding: >
+    OOD-02 reveals that the DAE's Winsorize+MinMax normalizer actively
+    defeats OOD detection for single-feature deviations. By clipping extreme
+    values to the 99th percentile boundary, truly novel inputs (unknown
+    protocols, unusual ports) are pulled back into the training distribution.
+    The autoencoder reconstructs the clipped version with LOW error, producing
+    false familiarity. This is a fundamental architectural issue: the normalizer
+    that makes the DAE robust to outliers also makes it blind to novelty.
+
+  nan_crash_finding: >
+    XGBoost (GradientBoostingClassifier) crashes on NaN input features.
+    This is an unhandled exception that would crash the detection pipeline
+    in production. Requires a NaN guard at the pipeline entry point:
+    replace NaN values with feature means (or flag the sample as malformed)
+    before passing to any model.
+
+  paper_note: >
+    The system handles most OOD scenarios safely through the cascaded
+    architecture and safe-failure defaults, but has two gaps: (1) the DAE
+    normalizer's Winsorize clipping masks single-feature novelty, allowing
+    unknown protocols on known devices to evade detection (OOD-02), and (2)
+    NaN feature values crash the XGBoost classifier without graceful
+    degradation (OOD-05). Both require fixes before clinical deployment —
+    the normalizer needs a pre-clipping OOD check, and the pipeline needs
+    NaN input validation.

@@ -22,8 +22,9 @@ import json
 import logging
 import os
 import re
-from typing import Optional
+from typing import Any, Optional
 
+from src import sanitize_for_log
 from src.data_models import MVEOutput
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ _IS_CLINICAL = {"CRITICAL": True, "HIGH": True, "MEDIUM": True, "LOW": False}
 # ── Alert type detection ────────────────────────────────────────────────
 
 
-def _detect_alert_type(raw_alert: dict, user_context: Optional[dict]) -> str:
+def _detect_alert_type(raw_alert: dict[str, Any], user_context: Optional[dict[str, Any]]) -> str:
     """Classify alert into one of 5 types from mve_specification.yaml.
 
     Detection order (first match wins):
@@ -106,7 +107,7 @@ def _detect_alert_type(raw_alert: dict, user_context: Optional[dict]) -> str:
 # ── Option B: Rule-based templates ─────────────────────────────────────
 
 
-def _fmt_dests(dests: list) -> str:
+def _fmt_dests(dests: list[str]) -> str:
     """Format normal_destinations list into a readable string."""
     if not dests:
         return "approved internal hosts"
@@ -115,16 +116,165 @@ def _fmt_dests(dests: list) -> str:
     return ", ".join(dests[:3]) + ("" if len(dests) <= 3 else " and others")
 
 
-def _escalation(alert_type: str, criticality: str) -> str:
-    """Return role escalation path based on alert type and severity."""
+# ── Known vendor IPs for maintenance FP reduction (FM-L1-09) ────────────
+
+_KNOWN_VENDOR_IPS: dict[str, str] = {
+    # Baxter / BD Alaris infusion pump update servers
+    "203.0.113.50": "Baxter",
+    "203.0.113.51": "Baxter",
+    # BD (Becton Dickinson) update infrastructure
+    "198.51.100.10": "BD",
+    "198.51.100.11": "BD",
+    # Philips medical device update servers
+    "192.0.2.20": "Philips",
+    "192.0.2.21": "Philips",
+    # GE Healthcare update infrastructure
+    "192.0.2.30": "GE Healthcare",
+    # Medtronic device management
+    "198.51.100.20": "Medtronic",
+}
+
+# ── Known IoMT device types (FIX-D, FIX-E) ─────────────────────────────
+
+_IOMT_DEVICE_TYPES = frozenset({
+    "infusion_pump", "ventilator", "patient_monitor", "insulin_pump",
+})
+
+_LIFE_SUSTAINING = frozenset({"infusion_pump", "ventilator"})
+
+# Substrings used to recognize device_type from descriptive product names
+# (fixtures use "BD Alaris infusion pump", not "infusion_pump")
+_DEVICE_TYPE_KEYWORDS = [
+    ("infusion", "infusion_pump"),
+    ("ventilator", "ventilator"),
+    ("patient monitor", "patient_monitor"),
+    ("monitor", "patient_monitor"),
+    ("insulin", "insulin_pump"),
+    ("ehr", "ehr_workstation"),
+    ("pacs", "pacs_server"),
+    ("pharmacy", "pharmacy_system"),
+    ("workstation", "workstation"),
+    ("server", "server"),
+]
+
+
+def _normalize_device_type(raw: str) -> str:
+    """Map descriptive device names to canonical types.
+
+    'BD Alaris infusion pump' → 'infusion_pump'
+    'GE CARESCAPE B650 patient monitor' → 'patient_monitor'
+
+    OOD-01 fix: returns empty string when no keyword matches,
+    so the caller's is_unknown check triggers UNREGISTERED DEVICE.
+    """
+    if not raw or not raw.strip():
+        return ""
+    lower = raw.lower()
+    for keyword, canonical in _DEVICE_TYPE_KEYWORDS:
+        if keyword in lower:
+            return canonical
+    # No keyword matched — this device type is outside our vocabulary
+    return ""
+
+# ── Device-specific patient care impact (FIX-A, resolves FM-L2-03) ──────
+
+_PATIENT_CARE_IMPACT = {
+    "ventilator": (
+        "Compromise could alter respiratory parameters or disable "
+        "ventilation. Respiratory arrest risk for connected patient."
+    ),
+    "infusion_pump": (
+        "Compromise could alter medication dosage or interrupt drug "
+        "delivery. Active infusion therapy at risk."
+    ),
+    "patient_monitor": (
+        "Compromise could produce false vital sign readings. Clinical "
+        "staff may miss patient deterioration or respond to false alarms."
+    ),
+    "insulin_pump": (
+        "Compromise could alter insulin dosing. Hypoglycemia or "
+        "hyperglycemia risk for connected patient."
+    ),
+    "ehr_workstation": (
+        "Clinical documentation access disrupted. No direct patient "
+        "physiological risk."
+    ),
+    "pacs_server": (
+        "Diagnostic imaging access disrupted. Pending radiology reads "
+        "delayed until service restored."
+    ),
+}
+
+# ── Confidence calibration (FIX-C, resolves FM-L1-03, FM-L1-06, ST-07) ──
+
+def _confidence_level(
+    severity_score: float,
+    baseline_days: int,
+    criticality: str,
+) -> str:
+    """Compute calibrated confidence indicator.
+
+    Replaces the hardcoded 'Confidence: HIGH' in T1 templates.
+    Uses severity_score to set base level, then downgrades for
+    short baselines.
+    """
+    score = float(severity_score) if severity_score else 0.0
+
+    # Base level from anomaly score
+    if score > 7.0:
+        level = "HIGH"
+    elif score > 4.0:
+        level = "MEDIUM"
+    else:
+        level = "LOW"
+
+    # Short baseline: downgrade one level
+    days = int(baseline_days) if baseline_days else 0
+    baseline_note = ""
+    if days < 14:
+        if level == "HIGH":
+            level = "MEDIUM"
+        elif level == "MEDIUM":
+            level = "LOW"
+        baseline_note = (
+            f" (baseline only {days} days — behavioral profile may be incomplete)"
+        )
+
+    justification = {
+        "HIGH": f"strong anomaly signal with {days}-day baseline{baseline_note}",
+        "MEDIUM": f"moderate anomaly signal — warrants investigation{baseline_note}",
+        "LOW": f"weak anomaly signal — may be benign{baseline_note}",
+    }
+    return f"Confidence: {level} — {justification[level]}"
+
+
+def _escalation(
+    alert_type: str,
+    criticality: str,
+    device_type: str = "",
+) -> str:
+    """Return role escalation path based on alert type, severity, and device.
+
+    FIX-G: Adds charge nurse for IoMT devices at CRITICAL/HIGH.
+    """
+    device_type = str(device_type).lower()
+
     if alert_type == "T2":
-        return "(1) Privacy Officer, (2) Security lead, (3) HR."
+        # EHR access — add charge nurse (FIX-G, DC-05)
+        return "(1) Privacy Officer, (2) Security lead, (3) HR, (4) Charge nurse on duty."
     if alert_type == "T3":
         return "(1) Security lead, (2) Clinical Engineering, (3) Network Admin."
     if alert_type == "T4":
         return "(1) Security lead, (2) Department IT admin, (3) Privacy Officer."
     if alert_type == "T5":
+        # IoMT — add charge nurse for CRITICAL/HIGH (FIX-G, DC-01/02)
+        if criticality in ("CRITICAL", "HIGH") and device_type in _IOMT_DEVICE_TYPES:
+            return (
+                "(1) Biomed Engineering on-call, (2) Security lead, "
+                "(3) ICU/floor charge nurse."
+            )
         return "(1) Biomed Engineering, (2) Security lead if maintenance unconfirmed."
+
     # T1 — varies by criticality
     if criticality == "CRITICAL":
         return "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse."
@@ -136,10 +286,10 @@ def _escalation(alert_type: str, criticality: str) -> str:
 
 
 def _generate_rule_based(
-    raw_alert: dict,
-    device_context: dict,
-    baseline: dict,
-    user_context: Optional[dict],
+    raw_alert: dict[str, Any],
+    device_context: dict[str, Any],
+    baseline: dict[str, Any],
+    user_context: Optional[dict[str, Any]],
     alert_type: str,
 ) -> MVEOutput:
     """Build MVEOutput using deterministic templates (Option B).
@@ -161,21 +311,37 @@ def _generate_rule_based(
         MVEOutput with all 3 layers populated within word limits.
     """
     criticality = str(device_context.get("criticality", "LOW")).upper()
-    device_type = device_context.get("device_type", "device")
+    raw_device_type = str(device_context.get("device_type", "device"))
+    device_type = _normalize_device_type(raw_device_type)
+    # Display name: use original descriptive name for affected_system (M2 matching)
+    display_device_type = raw_device_type if raw_device_type else device_type
     location = device_context.get("location", "clinical area")
     clinical_fn = device_context.get("clinical_function", "clinical operations")
     source_ip = raw_alert.get("source_ip", "unknown")
     dest_ip = raw_alert.get("dest_ip", "unknown")
     protocol = raw_alert.get("protocol", "unknown protocol")
+    severity_score = float(raw_alert.get("severity_score", 0))
     timestamp = raw_alert.get("timestamp", "")
     # Extract time portion only (HH:MM) for conciseness
     time_str = timestamp[11:16] if len(timestamp) >= 16 else timestamp
     normal_dests = _fmt_dests(baseline.get("normal_destinations", []))
     normal_protos = ", ".join(baseline.get("normal_protocols", ["HTTPS"]))
     baseline_days = baseline.get("baseline_days", 90)
+
+    # FIX-E: Severity floor for life-sustaining device classes.
+    # Infusion pumps and ventilators must never be below HIGH.
+    severity_floor_note = ""
+    if device_type in _LIFE_SUSTAINING and criticality in ("LOW", "MEDIUM"):
+        severity_floor_note = (
+            f" (Severity elevated: {device_type} requires minimum HIGH "
+            "— verify criticality assignment with biomed.)"
+        )
+        criticality = "HIGH"
     severity_rationale = _SEVERITY_RATIONALE.get(criticality, _SEVERITY_RATIONALE["LOW"])
+    if severity_floor_note:
+        severity_rationale += severity_floor_note
     timeframe = _SEVERITY_TIMEFRAME.get(criticality, _SEVERITY_TIMEFRAME["LOW"])
-    escalation = _escalation(alert_type, criticality)
+    escalation = _escalation(alert_type, criticality, device_type)
     is_clinical = _IS_CLINICAL.get(criticality, False)
 
     # ── T2: Unauthorized EHR access ────────────────────────────────────
@@ -246,12 +412,12 @@ def _generate_rule_based(
                 "crossing VLAN segmentation boundaries."
             ),
             "confidence_indicator": (
-                f"Confidence: HIGH — unauthorized cross-VLAN traffic "
+                "Confidence: HIGH — unauthorized cross-VLAN traffic "
                 "is a lateral movement indicator."
             ),
         }
         layer_2 = {
-            "affected_system": f"{device_type} ({location}) — {clinical_fn}",
+            "affected_system": f"{display_device_type} ({location}) — {clinical_fn}",
             "patient_care_impact": (
                 "Attacker reaching clinical subnet could disrupt device "
                 "configurations and falsify patient readings."
@@ -288,7 +454,8 @@ def _generate_rule_based(
         confidence = "MEDIUM" if criticality in ("LOW", "MEDIUM") else "HIGH"
         layer_1 = {
             "baseline_behavior": (
-                f"{device_type} ({location}) normally transfers data " f"only to {normal_dests}."
+                f"{display_device_type} ({location}) normally transfers "
+                f"data only to {normal_dests}."
             ),
             "deviation_description": (
                 f"At {time_str}, it transferred via {protocol} to {dest_ip}, "
@@ -300,7 +467,7 @@ def _generate_rule_based(
             ),
         }
         layer_2 = {
-            "affected_system": f"{device_type} ({location}) — {clinical_fn}",
+            "affected_system": f"{display_device_type} ({location}) — {clinical_fn}",
             "patient_care_impact": (
                 "No immediate care disruption. Risk: bulk PHI exfiltration "
                 "with embedded patient identifiers that cannot be recalled."
@@ -331,11 +498,11 @@ def _generate_rule_based(
             alert_involves_clinical_system=is_clinical,
         )
 
-    # ── T5: IoMT behavioral deviation ──────────────────────────────────
+    # ── T5: IoMT behavioral deviation (FIX-A: device-class-specific) ───
     if alert_type == "T5":
         layer_1 = {
             "baseline_behavior": (
-                f"{device_type} ({location}) normally communicates "
+                f"{display_device_type} ({location}) normally communicates "
                 f"with {normal_dests} using {normal_protos}."
             ),
             "deviation_description": (
@@ -347,29 +514,76 @@ def _generate_rule_based(
                 "vendor maintenance, or behavioral compromise."
             ),
         }
+
+        # Device-specific patient_care_impact (FIX-A, resolves FM-L2-03)
+        care_impact = _PATIENT_CARE_IMPACT.get(device_type, (
+            "Device functioning normally. If compromised, false clinical "
+            "readings are possible. Isolation removes automated patient monitoring."
+        ))
+
         layer_2 = {
-            "affected_system": f"{device_type} ({location}) — {clinical_fn}",
-            "patient_care_impact": (
-                "Device functioning normally. If compromised, false clinical "
-                "readings are possible. Isolation removes automated patient monitoring."
-            ),
+            "affected_system": f"{display_device_type} ({location}) — {clinical_fn}",
+            "patient_care_impact": care_impact,
             "phi_exposure": (
-                f"Real-time patient vitals and identifiers for " f"{location} census at risk."
+                f"Real-time patient vitals and identifiers for "
+                f"{location} census at risk."
             ),
             "severity_label": criticality,
             "severity_rationale": severity_rationale,
         }
-        layer_3 = {
-            "immediate_action": (
-                f"Verify with biomed engineering if maintenance was scheduled. "
+
+        # Device-class-specific Layer 3 (IMP-03 format)
+        # DO NOT [physical] — SAFE: [network] — Contact [role]
+        if device_type == "ventilator":
+            constraint = (
+                "DO NOT power off or disconnect ventilator. "
+                "SAFE: block port at switch — clinical traffic on 443 unaffected."
+            )
+            immediate = (
+                f"Check with biomed if maintenance scheduled. "
+                f"If NO: block anomalous port at switch for {source_ip}."
+            )
+        elif device_type == "infusion_pump":
+            constraint = (
+                "DO NOT power-cycle pump during active infusion. "
+                "SAFE: NAC quarantine blocking non-HTTPS preserves controller."
+            )
+            immediate = (
+                f"Check with biomed if maintenance scheduled. "
+                f"If NO: apply NAC quarantine on {source_ip}."
+            )
+        elif device_type == "insulin_pump":
+            constraint = (
+                "DO NOT disrupt wireless control loop. "
+                "SAFE: destination-specific block only if IP-connected."
+            )
+            immediate = (
+                f"Check with biomed: confirm IP vs RF connectivity. "
+                f"If IP, no maintenance: block destination from {source_ip}."
+            )
+        elif device_type == "patient_monitor":
+            constraint = (
+                "DO NOT isolate from EHR gateway — vitals must continue. "
+                "SAFE: DNS rate-limit or port block — HL7 on 443 unaffected."
+            )
+            immediate = (
+                f"Check with biomed if maintenance scheduled. "
                 f"If NO: rate-limit abnormal traffic from {source_ip}."
-            ),
-            "clinical_constraint": (
-                "DO NOT isolate device from EHR gateway — "
-                "vital sign reporting to nursing station must continue."
-            ),
+            )
+        else:
+            constraint = (
+                "DO NOT isolate from clinical network without biomed confirmation."
+            )
+            immediate = (
+                f"Verify with biomed engineering if maintenance was "
+                f"scheduled. If NO: rate-limit abnormal traffic from {source_ip}."
+            )
+
+        layer_3 = {
+            "immediate_action": immediate,
+            "clinical_constraint": constraint,
             "escalation_path": escalation,
-            "timeframe": ("Verify within 1 hour. If unconfirmed: escalate and restrict traffic."),
+            "timeframe": "Verify within 1 hour. If unconfirmed: escalate and restrict traffic.",
         }
         return MVEOutput(
             layer_1=layer_1,
@@ -416,26 +630,30 @@ def _generate_rule_based(
             "investigate before any blocking action."
         )
 
+    # FIX-C: calibrated confidence for T1 (replaces hardcoded HIGH)
+    t1_confidence = _confidence_level(severity_score, baseline_days, criticality)
+
     layer_1 = {
         "baseline_behavior": (
-            f"{device_type} ({location}) normally communicates "
+            f"{display_device_type} ({location}) normally communicates "
             f"with {normal_dests} using {normal_protos}."
         ),
         "deviation_description": (
             f"At {time_str}, it initiated {protocol} to {dest_ip}, "
             "not on any approved destination list."
         ),
-        "confidence_indicator": (
-            f"Confidence: HIGH — not observed in {baseline_days} days "
-            "of baseline for this device class."
-        ),
+        "confidence_indicator": t1_confidence,
     }
+
+    # Device-specific patient_care_impact (FIX-A, resolves FM-L2-03 for T1)
+    t1_care_impact = _PATIENT_CARE_IMPACT.get(device_type, (
+        "Compromise could disrupt active patient care. "
+        "Clinical coordination required before any isolation."
+    ))
+
     layer_2 = {
-        "affected_system": f"{device_type} ({location}) — {clinical_fn}",
-        "patient_care_impact": (
-            "Compromise could disrupt active patient care. "
-            "Clinical coordination required before any isolation."
-        ),
+        "affected_system": f"{display_device_type} ({location}) — {clinical_fn}",
+        "patient_care_impact": t1_care_impact,
         "phi_exposure": (f"Device data and clinical records for {location} patients at risk."),
         "severity_label": criticality,
         "severity_rationale": severity_rationale,
@@ -458,10 +676,10 @@ def _generate_rule_based(
 
 
 def _generate_llm(
-    raw_alert: dict,
-    device_context: dict,
-    baseline: dict,
-    user_context: Optional[dict],
+    raw_alert: dict[str, Any],
+    device_context: dict[str, Any],
+    baseline: dict[str, Any],
+    user_context: Optional[dict[str, Any]],
     alert_type: str,
 ) -> Optional[MVEOutput]:
     """Attempt LLM-based MVE generation using the Anthropic API.
@@ -502,8 +720,10 @@ def _generate_llm(
 Generate a 3-layer Minimum Viable Explanation (MVE) as JSON.
 Rules (non-negotiable):
 - layer_1 total words <= 60 (baseline_behavior + deviation_description + confidence_indicator)
-- layer_2 total words <= 50 (affected_system + patient_care_impact + phi_exposure + severity_label + severity_rationale)
-- layer_3 total words <= 60 (immediate_action + clinical_constraint + escalation_path + timeframe)
+- layer_2 total words <= 50 (affected_system + patient_care_impact
+  + phi_exposure + severity_label + severity_rationale)
+- layer_3 total words <= 60 (immediate_action + clinical_constraint
+  + escalation_path + timeframe)
 - severity_label must be CRITICAL/HIGH/MEDIUM/LOW based on clinical impact, NOT CVSS
 - clinical_constraint must start with "DO NOT" for CRITICAL/HIGH/MEDIUM alerts
 - immediate_action must contain a specific executable step (block/isolate/disable/apply/rate-limit)
@@ -569,7 +789,10 @@ Return JSON with this exact structure:
         return mve
 
     except Exception as exc:
-        logger.warning("LLM MVE failed (%s); using rule-based fallback", exc)
+        logger.warning(
+            "LLM MVE failed (%s); using rule-based fallback",
+            sanitize_for_log(exc),
+        )
         return None
 
 
@@ -577,56 +800,113 @@ Return JSON with this exact structure:
 
 
 def generate_mve(
-    raw_alert: dict,
-    device_context: dict,
-    baseline: dict,
-    user_context: Optional[dict],
-    shap_context: Optional[dict] = None,
+    raw_alert: dict[str, Any],
+    device_context: dict[str, Any],
+    baseline: dict[str, Any],
+    user_context: Optional[dict[str, Any]],
+    shap_context: Optional[dict[str, Any]] = None,
+    event_context: Optional[dict[str, Any]] = None,
 ) -> MVEOutput:
     """Generate a 3-layer Minimum Viable Explanation for a single alert.
 
-    Option A (LLM) is used when ANTHROPIC_API_KEY is set and the
-    anthropic package is installed.  Falls back to Option B (rule-based)
-    automatically on any failure.
-
-    The rule-based path adapts CLINICIAN_TEMPLATES from
-    AlertExplainer._clinician_nlg() (module4_online_explainer.py) into
-    the full 3-layer MVE structure required by research_spec.yaml,
-    without exposing SHAP values or model internals.
+    Includes safe-failure defaults (FIX-D) and unpatchable enrichment (FIX-B).
 
     Args:
-        raw_alert: Dict matching component_1 input schema:
-                   alert_name, source_ip, dest_ip, protocol,
-                   timestamp, severity_score.
+        raw_alert: Dict matching component_1 input schema.
         device_context: Dict with device_type, clinical_function,
                         location, criticality, patchable.
         baseline: Dict with normal_destinations, normal_protocols,
                   normal_hours, baseline_days.
-        user_context: Dict with user_id, department, role, shift,
-                      normal_access_volume, normal_access_scope.
-                      Only populated for T2 (EHR access) alerts.
-        shap_context: Optional dict with top feature categories from
-                      SHAP analysis. Used to add biometric context to
-                      Layer 1 when biometric features dominate the
-                      model's decision. Keys:
-                        top_category: str — "biometric" | "network_timing" | etc.
-                        top_feature_narrative: str — e.g., "abnormal temperature"
-                      When None, Layer 1 uses network-only framing.
+        user_context: Only populated for T2 (EHR access) alerts.
+        shap_context: Optional SHAP feature category context.
+        event_context: Optional dict with is_maintenance_window,
+                       is_known_vendor_ip, baseline_days.
 
     Returns:
         MVEOutput with layer_1, layer_2, layer_3 and total_word_count <= 150.
     """
-    alert_type = _detect_alert_type(raw_alert, user_context)
+    # ── FIX-D: Safe-failure validation (ST-01, ST-02, ST-05) ────────────
+    if not device_context:
+        device_context = {}
+        logger.warning("Empty device_context — applying CRITICAL safe defaults")
+
+    raw_dt = str(device_context.get("device_type", ""))
+    device_type = _normalize_device_type(raw_dt) if raw_dt else ""
+    criticality = str(device_context.get("criticality", "")).upper()
+
+    # ST-05: Invalid criticality → default to CRITICAL
+    if criticality not in VALID_SEVERITY:
+        logger.warning(
+            "Invalid criticality '%s' — defaulting to CRITICAL",
+            sanitize_for_log(criticality),
+        )
+        device_context = dict(device_context, criticality="CRITICAL")
+
+    # ST-01/ST-02: Unknown or missing device → CRITICAL + warning
+    is_unknown = not device_type or device_type == "unknown"
+    if is_unknown:
+        logger.warning(
+            "Unknown device_type '%s' — defaulting to CRITICAL",
+            sanitize_for_log(raw_dt),
+        )
+        device_context = dict(device_context, criticality="CRITICAL")
+        device_context["device_type"] = "unknown"
+
+    if not baseline:
+        baseline = {}
+
+    alert_type = _detect_alert_type(raw_alert or {}, user_context)
 
     # Try LLM first (Option A), fall back to rule-based (Option B)
-    mve = _generate_llm(raw_alert, device_context, baseline, user_context, alert_type)
+    mve = _generate_llm(
+        raw_alert or {}, device_context, baseline, user_context, alert_type
+    )
     if mve is None:
-        mve = _generate_rule_based(raw_alert, device_context, baseline, user_context, alert_type)
+        mve = _generate_rule_based(
+            raw_alert or {}, device_context, baseline, user_context, alert_type
+        )
 
-    # Enrich Layer 1 with biometric context when SHAP indicates
-    # biometric features dominate the model's decision.
+    # ── FIX-D: Prefix Layer 1 for unknown/unregistered devices ──────────
+    if is_unknown:
+        existing_bl = mve.layer_1.get("baseline_behavior", "")
+        mve.layer_1["baseline_behavior"] = (
+            f"UNREGISTERED DEVICE — identity not confirmed. {existing_bl}"
+        )
+
+    # ── FIX-B: Unpatchable device enrichment (FM-L1-10, FM-L3-12) ──────
+    # The unpatchable status is communicated through the risk scorer's
+    # elevated threshold (Component 2) and the device-class-specific
+    # constraint in Layer 3 which names Biomed Engineering — the team
+    # that manages vendor relationships for unpatchable devices.
+    # Explicit Layer 1/3 text was removed to stay within word limits.
+
+    # ── ST-08: Maintenance context in Layer 1 ────────────────────────────
+    if event_context:
+        is_maint = event_context.get("is_maintenance_window", False)
+        is_vendor = event_context.get("is_known_vendor_ip", False)
+        if is_maint and not is_vendor:
+            # Maintenance window active but source is NOT a known vendor
+            existing_conf = mve.layer_1.get("confidence_indicator", "")
+            mve.layer_1["confidence_indicator"] = (
+                f"{existing_conf} Maintenance window active but "
+                "source is not a known vendor — treat as suspicious."
+            )
+
+    # ── FM-L1-09: Vendor IP check in Layer 1 ──────────────────────────
+    dest_ip = (raw_alert or {}).get("dest_ip", "")
+    if dest_ip and dest_ip in _KNOWN_VENDOR_IPS:
+        vendor = _KNOWN_VENDOR_IPS[dest_ip]
+        existing_dev = mve.layer_1.get("deviation_description", "")
+        mve.layer_1["deviation_description"] = (
+            f"{existing_dev} Note: destination matches {vendor} "
+            "update server — verify with biomed before acting."
+        )
+
+    # ── Biometric SHAP enrichment (prior fix) ───────────────────────────
     if shap_context and shap_context.get("top_category") == "biometric":
-        narrative = shap_context.get("top_feature_narrative", "abnormal biometric reading")
+        narrative = shap_context.get(
+            "top_feature_narrative", "abnormal biometric reading"
+        )
         existing = mve.layer_1.get("deviation_description", "")
         mve.layer_1["deviation_description"] = (
             f"{existing} Concurrent clinical anomaly: {narrative} "

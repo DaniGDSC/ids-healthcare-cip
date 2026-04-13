@@ -1,0 +1,107 @@
+p6_summary:
+  assessment_date: "2026-04-13"
+  source: "adversarial_cases.yaml (EA-01–EA-05, TM-01–TM-04, slow_burn_test, OOD-01–OOD-05)"
+
+  evasion_attacks:
+    blind_spots:
+      - "EA-01: Application-layer payload encoding in HL7 (flow-based DAE cannot inspect message content)"
+      - "EA-02: Vendor maintenance window binary suppression (attacker matching vendor IP has guaranteed evasion window)"
+      - "EA-03: Gradual baseline poisoning — upgraded to EARLY DETECTION with drift detector (see slow_burn)"
+    partially_detected:
+      - "EA-04: Alert fatigue amplification (detection works, human operator is the target)"
+    correctly_detected_unenforceable:
+      - "EA-05: Protocol downgrade on active pump (clinical constraint shields attacker)"
+    highest_risk: >
+      EA-03 (baseline poisoning) — an attacker who slowly shifts a device's
+      behavioral profile over 60 days can render the DAE permanently blind
+      to their traffic. However, the slow-burn test demonstrated EARLY
+      DETECTION at day 9 when the KS drift detector is active. The residual
+      risk is that the drift detector is not yet integrated into the real-time
+      pipeline.
+
+  threshold_manipulation:
+    asset_inventory_single_point_of_failure: true
+    single_point_detail: >
+      device_context dict is the sole trust root for 5 safety mechanisms
+      (risk threshold, safety floor, severity floor, DO NOT constraint,
+      unpatchable enrichment). One database write defeats all five.
+      No integrity controls exist in the prototype.
+    most_feasible_attack: "TM-03 (stale criticality) — requires zero attacker action, occurs naturally when patients are discharged. 20-40 idle pumps retain CRITICAL labels in a 300-bed hospital."
+    all_attacks:
+      TM-01: {feasibility: MEDIUM, vulnerability: VULNERABLE}
+      TM-02: {feasibility: MEDIUM, vulnerability: VULNERABLE}
+      TM-03: {feasibility: HIGH, vulnerability: VULNERABLE}
+      TM-04: {feasibility: MEDIUM, vulnerability: PARTIALLY_MITIGATED}
+
+  slow_burn:
+    detection_verdict: "EARLY"
+    days_to_detect: 9
+    detection_mechanism: "KS drift detector (day 9) — 17 days before DAE threshold (day 26)"
+    recovery_days: 23
+    ea03_reassessment: "Upgraded from BLIND to EARLY DETECTION with drift detector"
+    deployment_caveat: "Drift detector exists in evaluation module, not integrated into real-time pipeline"
+
+  ood_detection:
+    overall_verdict: "PARTIAL"
+    safe_handling_rate: "3/5"
+    results:
+      OOD-01: {result: PARTIAL, issue: "no explicit OOD flag for novel device class"}
+      OOD-02: {result: FAIL, issue: "DAE normalizer masks protocol novelty — MQTT on pump produces LOWER error than normal"}
+      OOD-03: {result: PASS}
+      OOD-04: {result: PASS}
+      OOD-05: {result: PARTIAL, issue: "NaN features crash XGBoost — unhandled ValueError"}
+    critical_findings:
+      - "Winsorize+MinMax normalizer clips novel inputs back into training distribution, producing false familiarity (OOD-02)"
+      - "NaN input crashes entire detection pipeline without graceful degradation (OOD-05)"
+
+  paper_readiness: "READY_WITH_LIMITATIONS"
+  readiness_rationale: >
+    The adversarial analysis reveals real architectural boundaries but
+    no unfixable design flaws. The system correctly detects 3/5 evasion
+    scenarios, the drift detector catches baseline poisoning at day 9,
+    and safe-failure defaults handle most malformed inputs. The failures
+    (payload-level evasion, normalizer OOD masking, NaN crash, asset
+    inventory trust) are all documentable scope limitations with clear
+    countermeasure recommendations. The paper can present these honestly
+    as contributions — they define the boundary between what flow-level
+    IDS can and cannot do in IoMT environments.
+
+  limitations_to_document:
+    - section: "Limitations — Detection Scope"
+      content: "The DAE operates on network flow features (byte counts, port numbers, timing) and cannot inspect application-layer payloads. Attacks that encode malicious content within legitimate HL7 message fields are undetectable (EA-01). This is a fundamental boundary of flow-based anomaly detection, not a model deficiency."
+
+    - section: "Limitations — Baseline Integrity"
+      content: "Gradual baseline poisoning over 60 days can shift the DAE's normal profile to include attacker traffic. The KS drift detector catches this at day 9 (30% completion), but is not yet integrated into the real-time pipeline. Deployment requires drift detection as a mandatory companion to DAE threshold monitoring."
+
+    - section: "Limitations — Asset Inventory Trust"
+      content: "The risk-adaptive threshold, safety floor, severity floor, and clinical constraint selection all depend on the accuracy of the asset inventory (device_context). A single inventory database compromise — changing criticality from CRITICAL to LOW — defeats five safety mechanisms simultaneously. No integrity controls exist in the prototype."
+
+    - section: "Limitations — Clinical Constraint as Attacker Shield"
+      content: "The DO NOT constraint that prevents operator over-reaction on life-sustaining devices (a patient safety feature) simultaneously prevents remediation when the device is genuinely compromised (EA-05). Detection without enforcement capability is the fundamental tension in IoMT security."
+
+    - section: "Limitations — OOD Handling"
+      content: "The DAE normalizer's Winsorize clipping masks single-feature novelty: unknown protocols on known devices produce false familiarity rather than high reconstruction error (OOD-02). NaN feature values crash the XGBoost classifier without graceful degradation (OOD-05). Both require pre-model input validation for deployment."
+
+    - section: "Limitations — Maintenance Window Exploitation"
+      content: "The risk scorer's binary suppression during vendor maintenance windows (should_surface=False) creates a guaranteed evasion window for attackers who can match vendor IP ranges (EA-02). Production deployment should reduce confidence rather than suppress entirely."
+
+  discussion_points:
+    - topic: "Flow-level vs application-level detection boundary"
+      relevant_attacks: [EA-01]
+      discussion: "The paper should frame the flow-level detection scope as a design choice with explicit trade-offs — payload inspection would require DPI infrastructure that most 200-500 bed hospitals do not have, and would introduce latency and privacy concerns for clinical traffic."
+
+    - topic: "Detection vs enforcement gap in IoMT"
+      relevant_attacks: [EA-05, TM-03]
+      discussion: "The system can detect threats it cannot remediate due to clinical constraints. This is unique to life-sustaining device environments and represents a contribution to the IoMT security literature — the gap between detection capability and enforcement capability is the primary unsolved problem."
+
+    - topic: "Unsupervised baseline drift as an attack vector"
+      relevant_attacks: [EA-03]
+      discussion: "The slow-burn test provides empirical evidence that KS-based drift detection can catch baseline poisoning 17 days before DAE threshold breach. This is a positive finding — present as a defense-in-depth contribution."
+
+    - topic: "Asset inventory as trust boundary"
+      relevant_attacks: [TM-01, TM-02, TM-03]
+      discussion: "The system's safety guarantees are conditional on inventory integrity. This should be documented as an explicit trust assumption in the system architecture section, not hidden in limitations."
+
+    - topic: "Normalizer-induced false familiarity"
+      relevant_attacks: [OOD-02]
+      discussion: "The Winsorize+MinMax normalizer that makes the DAE robust to outliers also makes it blind to novelty. This is a fundamental tension in anomaly detection preprocessing — robustness to noise vs sensitivity to novelty. Worth a paragraph in the discussion section."

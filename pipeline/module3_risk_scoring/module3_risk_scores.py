@@ -168,6 +168,20 @@ def compute_c_detect(
     return np.clip(c_detect, 0.0, 1.0), c_track_b
 
 
+def _sanitise_features(X: np.ndarray) -> np.ndarray:
+    """Replace NaN/Inf with zeros to prevent model crashes (OOD-05 fix).
+
+    GradientBoostingClassifier raises ValueError on NaN input.
+    This guard ensures a malformed flow record degrades gracefully
+    (produces a zero-feature sample that the DAE will flag as anomalous)
+    rather than crashing the entire pipeline.
+    """
+    if np.isnan(X).any() or np.isinf(X).any():
+        logger.warning("NaN/Inf detected in features — replacing with zeros")
+        X = np.where(np.isfinite(X), X, 0.0)
+    return X
+
+
 def _load_track_a_probas_for_dae(X_test: np.ndarray) -> np.ndarray:
     """Load Track A model probabilities for DAE cascaded input.
 
@@ -176,11 +190,12 @@ def _load_track_a_probas_for_dae(X_test: np.ndarray) -> np.ndarray:
     """
     from pipeline.common import loads_signed
 
+    X_clean = _sanitise_features(X_test)
     probas = []
     for name in ("xgboost", "random_forest", "decision_tree"):
         pipeline_path = PROJECT_ROOT / f"results/models/{name}_final_pipeline.pkl"
         clf = loads_signed(pipeline_path)
-        p = clf.predict_proba(X_test)[:, 1]
+        p = clf.predict_proba(X_clean)[:, 1]
         probas.append(p)
     return np.column_stack(probas)
 
