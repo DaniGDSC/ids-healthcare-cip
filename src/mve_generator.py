@@ -15,6 +15,7 @@ AlertExplainer._clinician_nlg() into the full 3-layer MVE structure
 required by research_spec.yaml, without exposing SHAP values,
 feature importances, or model architecture.
 """
+
 from __future__ import annotations
 
 import json
@@ -33,16 +34,16 @@ VALID_SEVERITY = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
 
 _SEVERITY_RATIONALE = {
     "CRITICAL": "Life-sustaining system actively supporting patient care.",
-    "HIGH":     "Active clinical system with direct patient-care and PHI exposure risk.",
-    "MEDIUM":   "Clinical-support system not immediately affecting patient safety.",
-    "LOW":      "Administrative system with minimal PHI — monitoring sufficient.",
+    "HIGH": "Active clinical system with direct patient-care and PHI exposure risk.",
+    "MEDIUM": "Clinical-support system not immediately affecting patient safety.",
+    "LOW": "Administrative system with minimal PHI — monitoring sufficient.",
 }
 
 _SEVERITY_TIMEFRAME = {
     "CRITICAL": "Act within 15 minutes. Preserve network logs from the past 30 minutes.",
-    "HIGH":     "Act within 1 hour. Preserve logs from the past 4 hours.",
-    "MEDIUM":   "Act within 4 hours. Flag for next scheduled security review.",
-    "LOW":      "Review within 24 hours. Log for shift handover.",
+    "HIGH": "Act within 1 hour. Preserve logs from the past 4 hours.",
+    "MEDIUM": "Act within 4 hours. Flag for next scheduled security review.",
+    "LOW": "Review within 24 hours. Log for shift handover.",
 }
 
 # Maps criticality → whether the alert involves a clinical system
@@ -50,6 +51,7 @@ _IS_CLINICAL = {"CRITICAL": True, "HIGH": True, "MEDIUM": True, "LOW": False}
 
 
 # ── Alert type detection ────────────────────────────────────────────────
+
 
 def _detect_alert_type(raw_alert: dict, user_context: Optional[dict]) -> str:
     """Classify alert into one of 5 types from mve_specification.yaml.
@@ -79,18 +81,30 @@ def _detect_alert_type(raw_alert: dict, user_context: Optional[dict]) -> str:
     if any(k in protocol for k in ("smb", "rdp", "wmi")) and "445" in protocol:
         return "T3"
 
-    if any(k in name for k in ("dlp", "exfil", "large outbound", "large transfer",
-                                "data transfer", "exfiltration")):
+    if any(
+        k in name
+        for k in (
+            "dlp",
+            "exfil",
+            "large outbound",
+            "large transfer",
+            "data transfer",
+            "exfiltration",
+        )
+    ):
         return "T4"
 
-    if any(k in name for k in ("behavioral", "iomt", "iot", "deviation",
-                                "behavioral anomaly", "device anomaly")):
+    if any(
+        k in name
+        for k in ("behavioral", "iomt", "iot", "deviation", "behavioral anomaly", "device anomaly")
+    ):
         return "T5"
 
     return "T1"
 
 
 # ── Option B: Rule-based templates ─────────────────────────────────────
+
 
 def _fmt_dests(dests: list) -> str:
     """Format normal_destinations list into a readable string."""
@@ -225,8 +239,7 @@ def _generate_rule_based(
     if alert_type == "T3":
         layer_1 = {
             "baseline_behavior": (
-                f"Host {source_ip} is not authorized "
-                "to access the medical device subnet."
+                f"Host {source_ip} is not authorized " "to access the medical device subnet."
             ),
             "deviation_description": (
                 f"At {time_str}, it initiated {protocol} to {dest_ip} "
@@ -244,13 +257,11 @@ def _generate_rule_based(
                 "configurations and falsify patient readings."
             ),
             "phi_exposure": (
-                "Patient vitals, device configs, and clinical data "
-                "on the medical VLAN at risk."
+                "Patient vitals, device configs, and clinical data " "on the medical VLAN at risk."
             ),
             "severity_label": criticality,
             "severity_rationale": (
-                "Active boundary crossing into clinical infrastructure "
-                "from unauthorized host."
+                "Active boundary crossing into clinical infrastructure " "from unauthorized host."
             ),
         }
         layer_3 = {
@@ -277,8 +288,7 @@ def _generate_rule_based(
         confidence = "MEDIUM" if criticality in ("LOW", "MEDIUM") else "HIGH"
         layer_1 = {
             "baseline_behavior": (
-                f"{device_type} ({location}) normally transfers data "
-                f"only to {normal_dests}."
+                f"{device_type} ({location}) normally transfers data " f"only to {normal_dests}."
             ),
             "deviation_description": (
                 f"At {time_str}, it transferred via {protocol} to {dest_ip}, "
@@ -344,8 +354,7 @@ def _generate_rule_based(
                 "readings are possible. Isolation removes automated patient monitoring."
             ),
             "phi_exposure": (
-                f"Real-time patient vitals and identifiers for "
-                f"{location} census at risk."
+                f"Real-time patient vitals and identifiers for " f"{location} census at risk."
             ),
             "severity_label": criticality,
             "severity_rationale": severity_rationale,
@@ -360,9 +369,7 @@ def _generate_rule_based(
                 "vital sign reporting to nursing station must continue."
             ),
             "escalation_path": escalation,
-            "timeframe": (
-                "Verify within 1 hour. If unconfirmed: escalate and restrict traffic."
-            ),
+            "timeframe": ("Verify within 1 hour. If unconfirmed: escalate and restrict traffic."),
         }
         return MVEOutput(
             layer_1=layer_1,
@@ -429,9 +436,7 @@ def _generate_rule_based(
             "Compromise could disrupt active patient care. "
             "Clinical coordination required before any isolation."
         ),
-        "phi_exposure": (
-            f"Device data and clinical records for {location} patients at risk."
-        ),
+        "phi_exposure": (f"Device data and clinical records for {location} patients at risk."),
         "severity_label": criticality,
         "severity_rationale": severity_rationale,
     }
@@ -450,6 +455,7 @@ def _generate_rule_based(
 
 
 # ── Option A: LLM-based generation ─────────────────────────────────────
+
 
 def _generate_llm(
     raw_alert: dict,
@@ -569,11 +575,13 @@ Return JSON with this exact structure:
 
 # ── Public API ──────────────────────────────────────────────────────────
 
+
 def generate_mve(
     raw_alert: dict,
     device_context: dict,
     baseline: dict,
     user_context: Optional[dict],
+    shap_context: Optional[dict] = None,
 ) -> MVEOutput:
     """Generate a 3-layer Minimum Viable Explanation for a single alert.
 
@@ -597,6 +605,13 @@ def generate_mve(
         user_context: Dict with user_id, department, role, shift,
                       normal_access_volume, normal_access_scope.
                       Only populated for T2 (EHR access) alerts.
+        shap_context: Optional dict with top feature categories from
+                      SHAP analysis. Used to add biometric context to
+                      Layer 1 when biometric features dominate the
+                      model's decision. Keys:
+                        top_category: str — "biometric" | "network_timing" | etc.
+                        top_feature_narrative: str — e.g., "abnormal temperature"
+                      When None, Layer 1 uses network-only framing.
 
     Returns:
         MVEOutput with layer_1, layer_2, layer_3 and total_word_count <= 150.
@@ -607,5 +622,15 @@ def generate_mve(
     mve = _generate_llm(raw_alert, device_context, baseline, user_context, alert_type)
     if mve is None:
         mve = _generate_rule_based(raw_alert, device_context, baseline, user_context, alert_type)
+
+    # Enrich Layer 1 with biometric context when SHAP indicates
+    # biometric features dominate the model's decision.
+    if shap_context and shap_context.get("top_category") == "biometric":
+        narrative = shap_context.get("top_feature_narrative", "abnormal biometric reading")
+        existing = mve.layer_1.get("deviation_description", "")
+        mve.layer_1["deviation_description"] = (
+            f"{existing} Concurrent clinical anomaly: {narrative} "
+            "deviates from this device's baseline vital signs."
+        )
 
     return mve

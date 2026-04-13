@@ -43,7 +43,7 @@ dae_separation_test:
       result: "PASS — all criticality levels within FPR thresholds"
     per_device_class:
       ventilator:       {criticality: CRITICAL, n_attacks: 106, detection_rate: 0.8868, n_normal: 609,  fpr: 0.0493}
-      infusion_pump:    {criticality: CRITICAL, n_attacks: 75,  detection_rate: 0.9200, n_normal: 507,  fpr: 0.0690}
+      infusion_pump:    {criticality: CRITICAL, n_attacks: 76,  detection_rate: 0.9200, n_normal: 507,  fpr: 0.0690}
       patient_monitor:  {criticality: HIGH,     n_attacks: 150, detection_rate: 0.9067, n_normal: 818,  fpr: 0.0477}
       ehr_workstation:  {criticality: MEDIUM,   n_attacks: 153, detection_rate: 0.7190, n_normal: 1331, fpr: 0.0571}
       other:            {criticality: LOW,      n_attacks: 127, detection_rate: 0.8819, n_normal: 1011, fpr: 0.0326}

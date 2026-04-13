@@ -20,7 +20,7 @@ Full spec: research_spec.yaml (read before implementing any component)
 
 ### Component 1: MVE Generator
 File: src/mve_generator.py
-Function: generate_mve(raw_alert, device_context, baseline, user_context) → MVEOutput
+Function: generate_mve(raw_alert, device_context, baseline, user_context, shap_context=None) → MVEOutput
 
 Produces 3-layer Minimum Viable Explanation:
 - Layer 1 (WHY anomalous): baseline vs deviation, max 60 words
@@ -111,6 +111,52 @@ NEGATIVE TESTS (all must pass, 0 violations):
 FINAL OUTPUT:
 - alignment_report.yaml generated
 - recommendation: SHIP_TO_USER_STUDY / ITERATE / BLOCKED
+
+---
+
+## ML PIPELINE ARCHITECTURE (pipeline/)
+
+The prototype's 3 components (src/) are backed by a full ML pipeline
+that trains models, scores risk, and generates explanations.
+
+### Detection: Cascaded Track A → Track B
+
+```
+Raw Features ──→ Track A (XGB, RF, DT) ──→ P(attack) per model
+                      │                          │
+                      └──→ [Features ∥ P(attack)] ──→ Track B (DAE)
+                                                         ↓
+                                               reconstruction error
+```
+
+- Track A: 3 supervised tree models (SMOTE-balanced), trained first
+- Track B: DAE trained on [25 raw features || 3 Track A OOF probabilities]
+- Fusion: C_detect = max(Track_A, Track_B) — DAE elevates, never suppresses
+- Files: pipeline/module2_detection/module2_train_models.py
+         pipeline/module3_risk_scoring/module3_risk_scores.py
+
+### Explanations: Feature Group Narratives
+
+SHAP features are mapped to 7 clinically meaningful categories before
+the clinician summary is generated. This absorbs within-category
+feature swaps (e.g., DIntPkt↔Sport both map to "network_timing")
+and produces stable narratives (84.6% top-1 category agreement).
+
+When SHAP top feature is biometric, generate_mve() receives
+shap_context={"top_category": "biometric", "top_feature_narrative": ...}
+and enriches Layer 1 with biometric context.
+
+- Files: pipeline/module4_explanations/module4_online_explainer.py
+         pipeline/module4_explanations/module4_explanations.py
+         src/mve_generator.py (shap_context parameter)
+
+### ML Validation Results
+
+- DAE separation: PASS (AUROC 0.9374, cascaded architecture)
+- Risk monotonicity: PASS (M7 gap 0.401, zero overlap)
+- SHAP stability: FAIL cross-model / PASS narrative-level (0.846)
+- XAI faithfulness: PASS (perturbation 0.901, consistency 1.0, coverage 0.950)
+- Full results: ml_validation.yaml, xai_faithfulness.yaml
 
 ---
 

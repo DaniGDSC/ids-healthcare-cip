@@ -47,10 +47,9 @@ _SCALERS = {
 # a future sklearn version that adds an executable attribute cannot
 # silently smuggle data through the JSON sidecar.
 _SCALER_PARAMS: Dict[str, Tuple[str, ...]] = {
-    "robust":   ("center_", "scale_", "n_features_in_"),
-    "standard": ("mean_",   "scale_", "var_", "n_features_in_"),
-    "minmax":   ("min_",    "scale_", "data_min_", "data_max_",
-                 "data_range_", "n_features_in_"),
+    "robust": ("center_", "scale_", "n_features_in_"),
+    "standard": ("mean_", "scale_", "var_", "n_features_in_"),
+    "minmax": ("min_", "scale_", "data_min_", "data_max_", "data_range_", "n_features_in_"),
 }
 
 _SIDECAR_FORMAT_VERSION = 1
@@ -133,7 +132,8 @@ class RobustScalerTransformer(BaseTransformer):
         X_test_s = self.transform(X_test)
         logger.info(
             "RobustScalerTransformer: train %d×%d, test %d×%d",
-            *X_train_s.shape, *X_test_s.shape,
+            *X_train_s.shape,
+            *X_test_s.shape,
         )
         return X_train_s, X_test_s
 
@@ -168,21 +168,21 @@ class RobustScalerTransformer(BaseTransformer):
                     logger.warning(
                         "Removed legacy pickle scaler at %s; the JSON "
                         "sidecar at %s is now the canonical artefact.",
-                        legacy_pickle, path,
+                        legacy_pickle,
+                        path,
                     )
                 except OSError as exc:
                     logger.warning(
                         "Could not remove legacy pickle %s: %s "
                         "(downstream consumers must be updated to load "
                         "the JSON sidecar)",
-                        legacy_pickle, exc,
+                        legacy_pickle,
+                        exc,
                     )
 
         attrs = _SCALER_PARAMS.get(self._method)
         if attrs is None:
-            raise ValueError(
-                f"Refusing to serialise unknown scaler method '{self._method}'"
-            )
+            raise ValueError(f"Refusing to serialise unknown scaler method '{self._method}'")
 
         params: Dict[str, Any] = {}
         for attr in attrs:
@@ -200,10 +200,10 @@ class RobustScalerTransformer(BaseTransformer):
                 params[attr] = value
 
         body = {
-            "format":         "phase1.scaler.v1",
+            "format": "phase1.scaler.v1",
             "format_version": _SIDECAR_FORMAT_VERSION,
-            "method":         self._method,
-            "params":         params,
+            "method": self._method,
+            "params": params,
         }
 
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -241,8 +241,7 @@ class RobustScalerTransformer(BaseTransformer):
         body = json.loads(path.read_text())
         if body.get("format") != "phase1.scaler.v1":
             raise ValueError(
-                f"{path} is not a phase1.scaler.v1 sidecar "
-                f"(got format={body.get('format')!r})"
+                f"{path} is not a phase1.scaler.v1 sidecar " f"(got format={body.get('format')!r})"
             )
         method = body.get("method")
         if method not in _SCALERS:
@@ -259,8 +258,7 @@ class RobustScalerTransformer(BaseTransformer):
         for attr in attrs:
             if attr not in params:
                 raise ValueError(
-                    f"{path}: missing required parameter '{attr}' for "
-                    f"method '{method}'"
+                    f"{path}: missing required parameter '{attr}' for " f"method '{method}'"
                 )
             value = params[attr]
             if isinstance(value, list):
@@ -270,7 +268,9 @@ class RobustScalerTransformer(BaseTransformer):
         instance._fitted = True
         logger.info(
             "Scaler sidecar loaded: %s (method=%s, n_features=%s)",
-            path, method, params.get("n_features_in_"),
+            path,
+            method,
+            params.get("n_features_in_"),
         )
         return instance
 

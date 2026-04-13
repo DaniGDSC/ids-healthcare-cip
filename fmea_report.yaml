@@ -1,0 +1,390 @@
+layer_1_fmea:
+  scope: "Layer 1 — WHY anomalous output of MVE system"
+  analysis_date: "2026-04-13"
+  device_context: "IoMT environment — infusion pumps, ventilators, patient monitors"
+  methodology: "Each failure mode probed against actual src/mve_generator.py output. Ratings informed by empirical testing, not hypothetical risk."
+
+  failure_modes:
+
+    - id: "FM-L1-01"
+      description: "baseline_behavior field is missing or generic — produces 'device () normally communicates with approved internal hosts using .' when device_type, location, and baseline are empty or default."
+      failure_effect_technical: "Layer 1 provides no specific baseline for the operator to compare against. The narrative adds no information beyond 'something happened.'"
+      failure_effect_patient_safety: "Operator cannot distinguish a routine infusion pump communication from a genuine anomaly. May dismiss a real threat on a drug-delivery device because the explanation provides no anchor for judgment."
+      severity: 6
+      severity_rationale: "Operator receives an alert but has no basis for triage — likely to either ignore it (miss) or escalate everything (alert fatigue). Moderate safety impact because the alert itself still surfaces."
+      occurrence: 4
+      occurrence_rationale: "Occurs when asset inventory is incomplete. Empirically confirmed: empty device_context produces generic output. In 200-500 bed hospitals, 10-20% of IoMT devices may lack full inventory records."
+      detectability: 3
+      detectability_rationale: "Easily detected by automated acceptance test M1 (test_mve_completeness) which checks all Layer 1 fields are non-empty. The current test catches empty strings but not semantically vacuous ones like 'device ()'."
+      rpn: 72
+      risk_level: "MEDIUM (50-99)"
+      mitigation: "Add semantic validation: reject baseline_behavior containing 'device ()' or empty parentheses. Require device_type to be from a controlled vocabulary. Flag unknown devices for manual inventory before generating MVE."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L1-02"
+      description: "deviation_description misidentifies the device class — uses device_type verbatim from the input dict. If asset inventory labels an infusion pump as 'workstation', the MVE says 'workstation (ICU-2) normally communicates...' for a pump actively delivering medication."
+      failure_effect_technical: "Layer 1 narrative describes wrong device type. Operator sees a workstation alert for what is actually a critical infusion pump."
+      failure_effect_patient_safety: "Operator applies workstation remediation (isolate, reimage) to an active infusion pump, disrupting drug delivery to a patient. This is a direct patient harm pathway: isolation of an active pump interrupts medication infusion."
+      severity: 9
+      severity_rationale: "Misidentifying a CRITICAL life-sustaining device as a non-clinical workstation can lead to remediation actions that directly interrupt patient care. Infusion pump isolation during active drug delivery is a sentinel event."
+      occurrence: 3
+      occurrence_rationale: "Requires asset inventory error for a specific device. Empirically confirmed: the template uses device_type verbatim with no validation. Hospital asset databases have known accuracy issues (15-30% error rate per FDA MAUDE reports)."
+      detectability: 7
+      detectability_rationale: "Hard to detect automatically — the MVE output is syntactically valid. Would require cross-referencing device_type against MAC vendor OUI or network fingerprint, which the system explicitly does not do (CLAUDE.md DO NOT BUILD: device discovery)."
+      rpn: 189
+      risk_level: "HIGH (100-199)"
+      mitigation: "Add device_type validation against a controlled vocabulary of known IoMT classes. When device_type is not in the vocabulary, flag the alert with 'UNVERIFIED DEVICE CLASS — confirm device identity before remediation.' Add a Layer 3 clinical_constraint: 'DO NOT isolate until device class is confirmed with biomed engineering.'"
+      mitigation_type: "design_fix"
+      residual_risk: "MONITOR"
+
+    - id: "FM-L1-03"
+      description: "confidence_indicator is always HIGH regardless of evidence — the T1 (anomalous outbound) template hardcodes 'Confidence: HIGH' for all criticality levels. Anomaly score, baseline_days, and actual model confidence do not modulate the confidence level."
+      failure_effect_technical: "Every alert appears equally urgent. The operator cannot prioritize a ventilator alert with strong evidence over a guest WiFi anomaly with weak evidence."
+      failure_effect_patient_safety: "Alert fatigue. When everything is HIGH confidence, the operator stops trusting confidence indicators entirely. A genuine CRITICAL alert on a ventilator is treated with the same urgency as a routine network scan — real threats are missed through desensitization."
+      severity: 7
+      severity_rationale: "Alert fatigue is the primary mechanism by which IDS systems fail in clinical environments. Operator desensitization to always-HIGH confidence directly degrades detection of genuine threats on life-sustaining devices."
+      occurrence: 8
+      occurrence_rationale: "Empirically confirmed: T1 template outputs 'Confidence: HIGH' for every anomaly_score from 1.0 to 9.0 and every criticality from LOW to CRITICAL. Only T4 (exfiltration) and T5 (IoMT) templates vary confidence. T1 handles the majority of alerts."
+      detectability: 4
+      detectability_rationale: "Detectable by statistical analysis of confidence_indicator distribution across alerts. The current acceptance test suite does not check confidence calibration — only that the field is non-empty."
+      rpn: 224
+      risk_level: "CRITICAL (RPN≥200)"
+      mitigation: "Modulate T1 confidence based on: (1) anomaly_score — LOW when score < 4.0, MEDIUM when 4.0-7.0, HIGH when > 7.0; (2) baseline_days — reduce by one level when < 14 days; (3) patchability — note 'elevated concern' for unpatchable devices. Add acceptance test for confidence distribution: no more than 60% of alerts should be HIGH."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L1-04"
+      description: "confidence_indicator is always LOW — model underconfident, operator ignores all alerts."
+      failure_effect_technical: "Every alert appears low-priority. The operator deprioritizes all alerts, including genuine threats."
+      failure_effect_patient_safety: "A real intrusion on a ventilator is marked LOW confidence. The operator defers investigation. Attacker has extended dwell time on a life-sustaining device."
+      severity: 8
+      severity_rationale: "Worse than FM-L1-03 because LOW confidence actively tells the operator NOT to act. A missed ventilator compromise with extended dwell time has direct respiratory support impact."
+      occurrence: 2
+      occurrence_rationale: "Currently does not occur — the T1 template hardcodes HIGH (see FM-L1-03). T5 uses MEDIUM. No template produces LOW confidence. Would require a code change or model regression."
+      detectability: 3
+      detectability_rationale: "Easily detectable by monitoring confidence_indicator distribution. If >80% of alerts are LOW, the system is clearly miscalibrated."
+      rpn: 48
+      risk_level: "LOW (<50)"
+      mitigation: "Same as FM-L1-03: implement score-based confidence calibration. Add operational monitoring: alert if weekly confidence distribution shifts by >20% toward LOW."
+      mitigation_type: "monitoring"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L1-05"
+      description: "deviation_description missing timestamp — operator cannot determine if alert is current or stale."
+      failure_effect_technical: "Operator sees 'device initiated FTP to external IP' but cannot determine if this happened 5 minutes ago or 5 hours ago."
+      failure_effect_patient_safety: "Stale alert treated as current: operator isolates a device that has already been reconnected and is actively delivering care. Current alert treated as stale: operator defers investigation of an active intrusion."
+      severity: 5
+      severity_rationale: "Timing ambiguity causes wrong-urgency response but does not directly cause the wrong TYPE of response. The alert still surfaces the correct device and deviation."
+      occurrence: 2
+      occurrence_rationale: "Empirically confirmed: all templates include 'At {time_str}' in deviation_description. Timestamp is extracted from raw_alert['timestamp']. Would only be missing if the upstream alert source omits the timestamp field entirely."
+      detectability: 2
+      detectability_rationale: "Trivially detectable by checking if deviation_description contains a time pattern (HH:MM). Could be added to M1 completeness test."
+      rpn: 20
+      risk_level: "LOW (<50)"
+      mitigation: "Add timestamp validation in generate_mve(): if raw_alert['timestamp'] is empty or unparseable, inject 'at an unknown time — verify alert recency before acting' into deviation_description."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L1-06"
+      description: "baseline established from too few observations — device enrolled recently with baseline_days < 7. The confidence indicator says 'not observed in 3 days of baseline' which sounds authoritative but represents a statistically meaningless baseline."
+      failure_effect_technical: "Layer 1 presents a weak baseline as if it were strong evidence. The 3-day baseline may simply not have observed the device's full behavioral range (e.g., weekly backup cycles, weekend maintenance)."
+      failure_effect_patient_safety: "False positive on a new infusion pump: normal behavior is flagged because the baseline hasn't seen it yet. Operator isolates a functioning pump. False negative on a compromised pump: attacker behavior is IN the short baseline, so deviations from compromise are not flagged."
+      severity: 7
+      severity_rationale: "Both false positive (unnecessary isolation of clinical device) and false negative (missed compromise during short baseline window) have direct patient safety consequences."
+      occurrence: 5
+      occurrence_rationale: "Empirically confirmed: baseline_days=0 produces 'not observed in 0 days' with HIGH confidence — no warning that the baseline is unreliable. New device enrollments happen monthly in 200-500 bed hospitals (equipment rotation, loaners, new purchases)."
+      detectability: 5
+      detectability_rationale: "The confidence indicator includes the baseline_days number, so a careful operator would notice '3 days.' But the HIGH confidence label overrides this nuance — the operator sees HIGH and acts on it, not the small-print '3 days.'"
+      rpn: 175
+      risk_level: "HIGH (100-199)"
+      mitigation: "When baseline_days < 14: (1) downgrade confidence to LOW, (2) append 'Caution: baseline is only {N} days — behavioral profile may be incomplete' to confidence_indicator, (3) add Layer 3 note: 'Verify with biomed engineering before isolating — device may exhibit normal behaviors not yet in baseline.'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L1-07"
+      description: "Layer 1 generated for a device NOT in asset inventory — produces 'unknown (unknown) normally communicates with approved internal hosts using .' The narrative is syntactically complete but semantically empty."
+      failure_effect_technical: "Layer 1 provides no useful context. Every field is 'unknown' or generic. The operator has no basis for evaluating the alert."
+      failure_effect_patient_safety: "Two scenarios: (1) The unknown device IS a clinical device — the operator cannot determine patient impact and may under-react to a compromised infusion pump. (2) The unknown device is a rogue device — the operator cannot determine if it's clinical and may over-react by isolating it, or under-react by ignoring it."
+      severity: 7
+      severity_rationale: "Unknown devices in clinical networks are a known attack vector (rogue access points, unauthorized IoT). But an unknown device could also be a legitimate clinical device with inventory lag. Both misclassifications have patient safety impact."
+      occurrence: 4
+      occurrence_rationale: "Empirically confirmed: the template processes unknown device_type without error, producing generic output. Shadow IT and inventory gaps are endemic in hospital networks — 10-25% of connected devices may be unregistered."
+      detectability: 4
+      detectability_rationale: "Detectable by checking if device_type == 'unknown' or if baseline fields are all defaults. Not currently tested by acceptance suite."
+      rpn: 112
+      risk_level: "HIGH (100-199)"
+      mitigation: "When device_type is 'unknown' or not in controlled vocabulary: (1) prefix Layer 1 with 'UNREGISTERED DEVICE — identity not confirmed', (2) set confidence to 'MEDIUM — cannot establish baseline for unregistered device', (3) add Layer 3 escalation: 'Contact biomed engineering and IT asset management to identify this device before any network changes.'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L1-08"
+      description: "Layer 1 narrative uses jargon the IT generalist cannot understand — e.g., 'C2 beaconing via encrypted channel to a non-standard FQDN.'"
+      failure_effect_technical: "Operator does not understand the explanation. The MVE fails its primary purpose: translating detection into actionable clinical context."
+      failure_effect_patient_safety: "Operator either ignores the alert (doesn't understand the threat) or escalates everything they don't understand (alert fatigue for security team). Neither response is appropriate for the actual threat level."
+      severity: 5
+      severity_rationale: "The alert still surfaces. The operator can escalate even without understanding the explanation. The risk is delayed or inappropriate response, not complete failure."
+      occurrence: 1
+      occurrence_rationale: "Empirically confirmed: current templates produce NO jargon (tested against 14 common security terms). Templates use plain language: 'initiated FTP to external IP', 'not on any approved destination list.' The negative test test_no_model_internals_exposed also blocks SHAP/CVSS/model terms."
+      detectability: 2
+      detectability_rationale: "Highly detectable by readability scoring (Flesch-Kincaid) or jargon keyword list. The existing negative test suite already blocks technical terms."
+      rpn: 10
+      risk_level: "LOW (<50)"
+      mitigation: "Current design already mitigates: rule-based templates use controlled vocabulary, negative tests block jargon. For LLM-based generation (Option A), add post-generation jargon check that rejects outputs containing terms from the blocked list."
+      mitigation_type: "acceptance"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L1-09"
+      description: "IoMT-specific — Layer 1 does not distinguish between a KNOWN vendor maintenance communication pattern and a genuine anomaly. For infusion pump firmware updates (Baxter, BD Alaris), the update server communication looks identical to C2 traffic: outbound HTTPS to an external IP not in the baseline."
+      failure_effect_technical: "False positive that looks CRITICAL. Layer 1 says 'infusion_pump (ICU-2) initiated HTTPS to external IP, not on any approved destination list' when the destination is actually the vendor's legitimate update server."
+      failure_effect_patient_safety: "Operator isolates an infusion pump during a legitimate firmware update, interrupting the update process AND drug delivery. Partial firmware updates can brick the device, requiring biomedical engineering intervention and temporary loss of the pump from service."
+      severity: 8
+      severity_rationale: "Interrupting a firmware update on a life-sustaining device can brick it (unrecoverable without vendor service). Combined with drug delivery interruption, this is a dual patient safety and device availability impact."
+      occurrence: 5
+      occurrence_rationale: "Empirically confirmed: T1 template does not check destination against vendor IP lists. T5 template mentions 'may indicate firmware update, vendor maintenance, or behavioral compromise' in confidence_indicator — but only fires for T5-classified alerts. T1 alerts for vendor update traffic will not mention maintenance at all. Vendor updates occur monthly for most IoMT devices."
+      detectability: 6
+      detectability_rationale: "The risk scorer's maintenance window suppression (event_context.is_maintenance_window + is_known_vendor_ip) can suppress these alerts entirely, but this requires the upstream event_context to be populated correctly. Layer 1 itself has no vendor-IP awareness."
+      rpn: 240
+      risk_level: "CRITICAL (RPN≥200)"
+      mitigation: "Two-layer fix: (1) Ensure event_context maintenance suppression fires correctly for known vendor IPs (Baxter, BD, Philips update servers) — this prevents the alert from surfacing at all. (2) For alerts that DO surface despite maintenance window: add a Layer 1 note when dest_ip resolves to a known vendor domain: 'Note: destination matches [vendor] update server — verify with biomed if maintenance is scheduled before isolating.' Maintain a curated vendor IP/domain allowlist in the fixture data."
+      mitigation_type: "design_fix"
+      residual_risk: "MONITOR"
+
+    - id: "FM-L1-10"
+      description: "IoMT-specific — Layer 1 flags an unpatchable device as anomalous but provides NO indication the device cannot be patched. The patchable field from device_context is available but never referenced in any Layer 1 template."
+      failure_effect_technical: "Operator sees a vulnerability on an infusion pump and plans patch remediation. The patch will never arrive because the device is FDA-certified, vendor end-of-life, or cannot accept firmware updates."
+      failure_effect_patient_safety: "The device remains vulnerable indefinitely while the operator waits for a patch. The IDS alert was the ONLY compensating control (per CLAUDE.md: 'CRITICAL + unpatchable → threshold lowered ≥30%'), but the explanation fails to communicate that isolation or network segmentation is the ONLY viable remediation. The operator's planned remediation (patching) is a dead end."
+      severity: 8
+      severity_rationale: "For unpatchable devices, the IDS explanation IS the compensating control. If the explanation doesn't communicate unpatachability, the operator pursues the wrong remediation path, and the device remains exposed with no effective mitigation."
+      occurrence: 7
+      occurrence_rationale: "Empirically confirmed: patchable=False produces IDENTICAL Layer 1 output to patchable=True. The patchable flag is processed by the risk scorer (Component 2) for threshold adjustment but is never passed through to Layer 1 text. In 200-500 bed hospitals, 30-50% of IoMT devices are unpatchable (legacy pumps, older monitors)."
+      detectability: 8
+      detectability_rationale: "Very hard to detect from output alone — the Layer 1 text is syntactically valid. The omission is invisible unless you specifically check for patchability mentions. No current acceptance test checks for this."
+      rpn: 448
+      risk_level: "CRITICAL (RPN≥200)"
+      mitigation: "When device_context['patchable'] is False: (1) Add to Layer 1 confidence_indicator: 'This device CANNOT be patched — network controls are the only available mitigation.' (2) Add to Layer 3 immediate_action: 'Note: this device is unpatchable. Do not plan firmware remediation. Apply network segmentation and monitoring as permanent compensating controls.' (3) Add acceptance test: for unpatchable devices, Layer 1 or Layer 3 MUST contain 'cannot be patched' or 'unpatchable.'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+  summary:
+    critical_rpn_items:
+      - "FM-L1-10 (RPN 448): Unpatchable device status not communicated — operator pursues dead-end patch remediation"
+      - "FM-L1-09 (RPN 240): Vendor maintenance indistinguishable from threat — false positive on life-sustaining device"
+      - "FM-L1-03 (RPN 224): Confidence always HIGH — alert fatigue desensitizes operator to genuine threats"
+    highest_patient_safety_risk: "FM-L1-10 — An unpatchable infusion pump with an active vulnerability receives an explanation that implies patching is an option. The operator waits for a patch that will never arrive while the device remains exposed. The IDS was the ONLY compensating control, and its explanation failed to communicate the constraint that makes network isolation the only viable remediation."
+    iomt_specific_concerns:
+      - "FM-L1-09: Vendor maintenance false positives on infusion pumps"
+      - "FM-L1-10: Unpatchable device status omitted from explanation"
+      - "FM-L1-02: Device misidentification (pump labeled as workstation)"
+      - "FM-L1-06: Short baseline on newly enrolled IoMT devices"
+    gate_3_blocker: false
+    gate_3_rationale: >
+      No residual risk is UNACCEPTABLE. The two CRITICAL items (FM-L1-10, FM-L1-09)
+      have clear design fixes that can be implemented before Phase 3 deployment.
+      FM-L1-03 (confidence calibration) is also CRITICAL but has a straightforward
+      template modification. All three should be addressed in the next development
+      cycle. The prototype's SHIP_TO_USER_STUDY recommendation remains valid because
+      the user study uses curated alert scenarios with correct device context, not
+      live inventory data where these failure modes would manifest.
+
+layer_2_fmea:
+  scope: "Layer 2 — Clinical Severity classification of MVE system"
+  analysis_date: "2026-04-13"
+  device_context: "IoMT environment — infusion pumps, ventilators, patient monitors"
+  methodology: "Each failure mode probed against actual src/mve_generator.py Layer 2 output across device types, criticality levels, operational states, and timestamps. Ratings informed by empirical testing."
+
+  failure_modes:
+
+    - id: "FM-L2-01"
+      description: "Severity label is CRITICAL for a device not currently connected to a patient. Empirically confirmed: an infusion pump with location='storage_room' and clinical_function='medication_delivery' receives CRITICAL severity and patient_care_impact='Compromise could disrupt active patient care' — identical to an active ICU pump."
+      failure_effect_technical: "Alert for a stored, disconnected device is classified at the highest urgency tier. Operator response time target is 'immediately' for a device with no patient connection."
+      failure_effect_patient_safety: "Operator drops current tasks (potentially including active patient-connected alerts) to respond to a CRITICAL alert on a device in storage. This is a priority inversion: real CRITICAL alerts on active ventilators compete for attention with false CRITICALs on idle equipment."
+      severity: 6
+      severity_rationale: "Does not directly harm patients, but diverts operator attention from genuinely critical alerts. The priority inversion degrades response quality for the entire alert queue."
+      occurrence: 6
+      occurrence_rationale: "Empirically confirmed: severity_label comes directly from device_context['criticality'] with no operational-state modulation. All infusion pumps get CRITICAL regardless of location or clinical_function. In a 300-bed hospital, 20-40% of infusion pumps are idle at any time (charging, in storage, in transit)."
+      detectability: 5
+      detectability_rationale: "Detectable by correlating severity_label with device operational state, but this requires integration with biomed asset tracking (which devices are actively infusing). The current system has no access to real-time device state."
+      rpn: 180
+      risk_level: "HIGH (100-199)"
+      mitigation: "Add operational_state field to device_context: 'active_patient_connected' | 'idle' | 'maintenance' | 'storage'. When operational_state is not 'active_patient_connected', cap severity at HIGH for CRITICAL devices and MEDIUM for HIGH devices. When operational_state is unknown, maintain current criticality but append '(operational state unconfirmed)' to patient_care_impact."
+      mitigation_type: "design_fix"
+      residual_risk: "MONITOR"
+
+    - id: "FM-L2-02"
+      description: "Severity label is LOW for an infusion pump actively delivering medication to an ICU patient. Empirically confirmed: when device_context['criticality']='LOW' but device_type='infusion_pump' and location='ICU-2', the system produces severity_label='LOW' and a 24-hour response window."
+      failure_effect_technical: "Alert for an actively infusing pump is classified at the lowest urgency. The 24-hour response window means the alert may not be reviewed until the next shift."
+      failure_effect_patient_safety: "An active compromise of a drug-delivery device goes unaddressed for up to 24 hours. The attacker has extended dwell time on a device that controls medication dosage. Worst case: dosage manipulation during the response delay causes patient harm."
+      severity: 10
+      severity_rationale: "Maximum severity. An active infusion pump under attacker control with a 24-hour response window is a direct patient harm scenario — dosage manipulation, therapy interruption, or infusion cessation are all possible."
+      occurrence: 3
+      occurrence_rationale: "Requires asset inventory miscalibration: the pump's criticality is set to LOW instead of CRITICAL. This is an upstream data quality issue. The MVE generator uses criticality verbatim from device_context — it has no independent validation of device class vs criticality."
+      detectability: 6
+      detectability_rationale: "The alert is syntactically valid and the severity_label is a valid value. Detection requires cross-referencing device_type against severity_label — an infusion pump should never be LOW. No current validation enforces this."
+      rpn: 180
+      risk_level: "HIGH (100-199)"
+      mitigation: "Add a device-class minimum severity floor: infusion_pump and ventilator alerts must be ≥ HIGH regardless of device_context['criticality']. If criticality says LOW but device_type is life-sustaining, override to HIGH and append 'Severity elevated: device class requires minimum HIGH — verify criticality assignment with biomed.' to severity_rationale."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L2-03"
+      description: "patient_care_impact uses identical generic language for ALL device types and criticality levels. Empirically confirmed: ventilator (CRITICAL), patient_monitor (HIGH), ehr_workstation (MEDIUM), and administrative workstation (LOW) ALL receive 'Compromise could disrupt active patient care. Clinical coordination required before any isolation.' The T5 (IoMT) template is the only exception, producing specific text."
+      failure_effect_technical: "The patient_care_impact field adds no information beyond what the operator already knows from the severity_label. It fails to distinguish between a ventilator compromise (respiratory arrest risk) and a workstation compromise (documentation inconvenience)."
+      failure_effect_patient_safety: "Operator cannot use patient_care_impact to understand WHAT specifically could go wrong for the patient. For a ventilator, the impact is 'respiratory support failure' not generic 'disruption.' Without this context, the operator may not prioritize the ventilator correctly relative to other CRITICAL alerts."
+      severity: 5
+      severity_rationale: "The severity_label still provides the urgency signal. But the loss of specific clinical context reduces the operator's ability to take the RIGHT action (vs just acting quickly). Moderate impact because the operator still acts — just less precisely."
+      occurrence: 9
+      occurrence_rationale: "Empirically confirmed: the T1 template (which handles the majority of alerts) uses a single hardcoded patient_care_impact string for all alerts. Only T5 (IoMT behavioral deviation) produces device-specific impact text. This affects ~80% of all generated alerts."
+      detectability: 3
+      detectability_rationale: "Detectable by checking if patient_care_impact varies across device classes. A simple test — 'does the string change when device_type changes?' — would catch this immediately."
+      rpn: 135
+      risk_level: "HIGH (100-199)"
+      mitigation: "Create a patient_care_impact lookup by device class: ventilator → 'Compromise could alter respiratory parameters or disable ventilation for the connected patient. Respiratory arrest risk.' infusion_pump → 'Compromise could alter medication dosage or interrupt drug delivery. Active infusion therapy at risk.' patient_monitor → 'Compromise could produce false vital sign readings. Clinical staff may miss deterioration or respond to false alarms.' ehr_workstation → 'Clinical documentation access disrupted. No direct patient physiological risk.' Use this lookup in ALL templates, not just T5."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L2-04"
+      description: "affected_system_type misidentifies clinical function — the system uses clinical_function verbatim from device_context. When a pharmacy system is labeled 'administrative' instead of 'medication_dispensing', it gets LOW severity and the operator treats active drug-dispensing infrastructure as non-clinical."
+      failure_effect_technical: "The affected_system field correctly shows 'pharmacy_system (Pharmacy) — administrative' but the severity drops to LOW because clinical_function='administrative' implies no clinical impact."
+      failure_effect_patient_safety: "A compromised pharmacy dispensing system receiving LOW severity continues operating for up to 24 hours while potentially dispensing incorrect medications or quantities. Pharmacy automation errors are a known sentinel event category."
+      severity: 8
+      severity_rationale: "Pharmacy dispensing errors have direct patient harm potential — wrong drug, wrong dose, wrong patient. A 24-hour response window on a compromised dispensing system is a serious safety gap."
+      occurrence: 3
+      occurrence_rationale: "Requires asset inventory mislabeling of clinical function. Similar to FM-L2-02 — an upstream data quality issue. Pharmacy systems are less likely to be mislabeled than generic workstations but the consequence is severe."
+      detectability: 7
+      detectability_rationale: "Very difficult to detect from output alone — 'pharmacy_system — administrative' is syntactically plausible. Would require a lookup table: 'pharmacy_system' should never have clinical_function='administrative.'"
+      rpn: 168
+      risk_level: "HIGH (100-199)"
+      mitigation: "Add a device-type-to-minimum-clinical-function mapping: pharmacy_system → at least 'medication_management', pacs_server → at least 'diagnostic_imaging'. When clinical_function is 'administrative' or empty for a known clinical device type, override to the minimum and note the discrepancy."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L2-05"
+      description: "phi_exposure_potential omits real-time physiological data for T1-classified alerts. Empirically confirmed: the T5 (IoMT) template correctly says 'Real-time patient vitals and identifiers for ICU-1 census at risk' but the T1 template (which handles most alerts) says 'Device data and clinical records for [location] patients at risk' — omitting that a patient monitor streams live SpO2, HR, BP data."
+      failure_effect_technical: "PHI exposure assessment is incomplete. HIPAA breach scope estimation will undercount exposed data types."
+      failure_effect_patient_safety: "Indirect: if the operator doesn't realize real-time vitals are exposed, they may not consider the clinical consequence of falsified vital signs (which could cause clinical staff to miss a genuine patient deterioration or respond to false data)."
+      severity: 4
+      severity_rationale: "PHI exposure is a regulatory/compliance concern more than a direct patient safety issue in the immediate response. The clinical consequence (falsified vitals) is already covered by patient_care_impact for T5 alerts."
+      occurrence: 6
+      occurrence_rationale: "Empirically confirmed: all T1 alerts use generic phi_exposure regardless of device type. T1 handles patient monitors, infusion pumps, and workstations with the same PHI text. T5 is the only template with vitals-specific PHI language."
+      detectability: 4
+      detectability_rationale: "Detectable by checking if phi_exposure mentions 'vital' or 'real-time' when device_type is a clinical monitoring device. Not currently tested."
+      rpn: 96
+      risk_level: "MEDIUM (50-99)"
+      mitigation: "Add phi_exposure lookup by device class, similar to FM-L2-03 mitigation: patient_monitor → 'Real-time vital signs (SpO2, HR, BP, temperature) with patient identifiers continuously transmitted.' infusion_pump → 'Drug delivery parameters, dosing logs, and patient medication records.' ehr_workstation → 'Patient medical records, diagnoses, treatment plans, and insurance information.'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L2-06"
+      description: "Severity consistently CRITICAL for all infusion pump alerts regardless of operational state. Empirically confirmed: active_medication_delivery, idle, and under_repair pumps all receive CRITICAL severity with identical patient_care_impact text."
+      failure_effect_technical: "No ability to triage between a pump actively delivering chemotherapy and a pump sitting on a charger. Both generate the same urgency signal."
+      failure_effect_patient_safety: "Same as FM-L2-01: priority inversion. Additionally, if all pump alerts are CRITICAL, the operator's threshold for acting on pump alerts rises (alert fatigue), increasing the risk of delayed response on a genuinely active pump."
+      severity: 7
+      severity_rationale: "More severe than FM-L2-01 because this is systematic, not occasional. Every idle pump alert degrades the operator's confidence in pump-class severity, creating a 'boy who cried wolf' pattern specifically for the highest-risk device class."
+      occurrence: 7
+      occurrence_rationale: "Empirically confirmed: criticality is assigned at the device-class level, not the operational-instance level. Every alert for any infusion pump in any state gets CRITICAL. With 50-100 pumps in a 300-bed hospital and 20-40% idle, this generates multiple false-CRITICAL alerts daily."
+      detectability: 5
+      detectability_rationale: "Detectable by monitoring CRITICAL alert volume by device class. If >50% of infusion pump CRITICALs are for idle devices, the system is clearly over-classifying. Requires operational state integration to detect."
+      rpn: 245
+      risk_level: "CRITICAL (RPN≥200)"
+      mitigation: "Same as FM-L2-01 mitigation (operational_state field). Additionally: implement a CRITICAL alert rate cap — if >3 CRITICAL pump alerts per shift and no operational state data is available, batch alerts with note: 'Multiple infusion pump alerts — verify which pumps have active patient connections before isolating.'"
+      mitigation_type: "design_fix"
+      residual_risk: "MONITOR"
+
+    - id: "FM-L2-07"
+      description: "Layer 2 does not account for time-of-day clinical context. Empirically confirmed: PACS server anomaly receives HIGH severity at both 03:00 (no active radiology reads) and 14:00 (peak radiology workload). No temporal modulation."
+      failure_effect_technical: "After-hours alerts for batch-processing systems (PACS, lab systems) are classified at the same urgency as business-hours alerts, even though the clinical impact is lower when no clinicians are actively using the system."
+      failure_effect_patient_safety: "Operator isolates PACS at 3 AM in response to a HIGH alert, disrupting overnight batch processing (study routing, pre-fetch). When radiology opens at 7 AM, prior studies are unavailable, delaying diagnosis for early-morning patients."
+      severity: 4
+      severity_rationale: "PACS disruption during off-hours is an operational inconvenience, not a direct patient safety issue. Diagnostic delays are possible but studies can be re-fetched. Would be higher severity for ER radiology (24/7 need) but most PACS usage is scheduled."
+      occurrence: 5
+      occurrence_rationale: "Empirically confirmed: no time-of-day modulation in any template. Severity is purely criticality-driven. Off-hours alerts represent ~40% of total volume (16 hours of 24)."
+      detectability: 3
+      detectability_rationale: "Detectable by checking if severity varies between identical alerts at different timestamps. A simple regression test would catch this."
+      rpn: 60
+      risk_level: "MEDIUM (50-99)"
+      mitigation: "Add optional normal_hours field to device_context. When the alert timestamp falls outside normal_hours AND the device is not life-sustaining (not ventilator/infusion_pump): reduce severity by one level and append 'Alert occurred outside normal operating hours — reduced clinical urgency' to severity_rationale. Life-sustaining devices are exempt (24/7 criticality)."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L2-08"
+      description: "IoMT-specific — severity does not account for patient count. A single-patient infusion pump and a pharmacy system serving 200 patients receive the same severity classification based solely on device_criticality, not blast radius."
+      failure_effect_technical: "No way to prioritize between two HIGH alerts where one affects 1 patient and the other affects 200. The operator has no blast-radius signal."
+      failure_effect_patient_safety: "When two alerts compete for attention, the operator may choose based on order-of-arrival rather than patient count. A pharmacy system compromise affecting 200 patients may be addressed after a single workstation alert simply because it arrived second."
+      severity: 6
+      severity_rationale: "The severity_label itself is still correct (both may legitimately be HIGH). The issue is relative prioritization within the same severity tier — a refinement gap, not a misclassification."
+      occurrence: 4
+      occurrence_rationale: "Patient count is not available in the current device_context schema. The information exists in hospital ADT (admission-discharge-transfer) systems but is not integrated. Would require a new data source."
+      detectability: 7
+      detectability_rationale: "Not detectable from output alone — both alerts are syntactically valid HIGH alerts. Would require domain knowledge or an external patient census feed to identify the prioritization gap."
+      rpn: 168
+      risk_level: "HIGH (100-199)"
+      mitigation: "Add optional patient_count or blast_radius field to device_context. When available, include in patient_care_impact: 'This system currently serves approximately N patients.' When not available, include device-class default estimates: infusion_pump → '1 patient', patient_monitor → '1-4 patients (typical bedside)', pharmacy_system → 'all patients on automated dispensing (~200)', pacs_server → 'all radiology patients (~50/day).'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L2-09"
+      description: "IoMT-specific — no Layer 2 distinction between devices that CANNOT be isolated (active ventilator) vs. SAFE to isolate (idle pump). Empirically confirmed: Layer 2 patient_care_impact is identical for both. Layer 3 clinical_constraint does distinguish ('DO NOT power-cycle' for CRITICAL vs. generic constraint for LOW) but Layer 2 provides no pre-remediation safety signal."
+      failure_effect_technical: "Operator reads Layer 2 and concludes isolation is needed, then reads Layer 3 which says 'DO NOT isolate.' The safety information arrives too late in the cognitive flow — the operator has already formed an isolation intent."
+      failure_effect_patient_safety: "If the operator acts on Layer 2 without reading Layer 3 (plausible under time pressure on a CRITICAL alert), they may isolate an active ventilator. Even with Layer 3's 'DO NOT' constraint, the cognitive sequence matters — the isolation intent formed at Layer 2 is harder to override at Layer 3."
+      severity: 8
+      severity_rationale: "Isolating an active ventilator causes immediate respiratory support failure. Even though Layer 3 mitigates this, the failure mode is that the operator acts before reaching Layer 3. Under time pressure for CRITICAL alerts, truncated reading is expected behavior."
+      occurrence: 4
+      occurrence_rationale: "Empirically confirmed: Layer 2 does not mention isolation safety. The mitigation depends entirely on the operator reading Layer 3. Cognitive load research shows operators under time pressure read the first actionable section and may skip subsequent constraints."
+      detectability: 6
+      detectability_rationale: "Detectable by design review (checking if Layer 2 contains isolation safety language). Not detectable from operator behavior until an incident occurs."
+      rpn: 192
+      risk_level: "HIGH (100-199)"
+      mitigation: "Add isolation safety status to Layer 2 patient_care_impact for CRITICAL devices: 'WARNING: This device CANNOT be safely isolated — it is actively providing [respiratory support / drug delivery] to a patient. See Layer 3 for safe response options.' This front-loads the safety constraint before the operator forms an isolation intent."
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+    - id: "FM-L2-10"
+      description: "phi_exposure_potential field is present but semantically empty when device context is minimal. Empirically confirmed: empty device_type and location produce 'Device data and clinical records for patients at risk.' — a syntactically valid but informationally empty string."
+      failure_effect_technical: "HIPAA breach assessment cannot determine scope — the PHI exposure field provides no actionable information about what data types or how many patients are affected."
+      failure_effect_patient_safety: "Indirect: the operator cannot determine if the PHI exposure is 1 patient's vitals or 10,000 patients' medical records. This affects breach notification timelines and scope, not immediate patient care."
+      severity: 3
+      severity_rationale: "PHI exposure scope is a compliance/regulatory concern. The immediate clinical response (isolate, investigate) is driven by severity_label, not phi_exposure. Patient safety impact is indirect through delayed or misdirected breach response."
+      occurrence: 4
+      occurrence_rationale: "Empirically confirmed: occurs when device_context is incomplete. Same root cause as FM-L1-01 and FM-L1-07 — asset inventory gaps."
+      detectability: 3
+      detectability_rationale: "Easily detectable by checking if phi_exposure contains generic phrases without specific data types. Could be added to acceptance test M1."
+      rpn: 36
+      risk_level: "LOW (<50)"
+      mitigation: "When phi_exposure would be generic (no specific device type or data types): replace with 'PHI exposure scope UNKNOWN — asset inventory incomplete. Treat as potential bulk exposure until device is identified and data scope is assessed.'"
+      mitigation_type: "design_fix"
+      residual_risk: "ACCEPTABLE"
+
+  summary:
+    critical_rpn_items:
+      - "FM-L2-06 (RPN 245): All infusion pump alerts CRITICAL regardless of operational state — systematic alert fatigue for highest-risk device class"
+    high_rpn_items:
+      - "FM-L2-09 (RPN 192): No Layer 2 isolation safety signal — operator forms isolation intent before reading Layer 3 DO NOT constraint"
+      - "FM-L2-01 (RPN 180): Stored/idle devices receive CRITICAL severity"
+      - "FM-L2-02 (RPN 180): Active ICU pump can receive LOW severity from inventory error"
+      - "FM-L2-04 (RPN 168): Pharmacy system misclassified as administrative"
+      - "FM-L2-08 (RPN 168): No patient count — single-patient vs 200-patient alerts indistinguishable"
+      - "FM-L2-03 (RPN 135): Identical patient_care_impact for all device types"
+    highest_patient_safety_risk: "FM-L2-02 — An infusion pump actively delivering ICU medication receives LOW severity due to asset inventory error. The operator has a 24-hour response window on a device that controls drug dosage for a critically ill patient. Combined with FM-L2-03 (generic patient_care_impact), the operator has no signal that this LOW alert involves an active drug-delivery device."
+    iomt_specific_concerns:
+      - "FM-L2-06: Operational state blindness for infusion pumps"
+      - "FM-L2-09: Isolation safety not surfaced in Layer 2"
+      - "FM-L2-08: No patient count or blast radius"
+      - "FM-L2-01: Stored devices indistinguishable from active"
+    gate_3_blocker: false
+    gate_3_rationale: >
+      One CRITICAL item (FM-L2-06, RPN 245). The mitigation requires an operational_state
+      field that is not available in the current prototype but can be simulated in the user
+      study via curated alert scenarios. The user study should include both active and idle
+      pump scenarios to measure operator triage behavior. For Phase 3 deployment,
+      integration with biomed asset tracking (e.g., Nuvolo, TRIMEDX) is required to
+      populate operational_state in real time.
+    severity_miscalibration_risk: >
+      The worst-case scenario is a combined FM-L2-02 + FM-L2-03 failure: an infusion pump
+      actively delivering vasopressors to a septic ICU patient receives LOW severity with
+      generic patient_care_impact. The operator reviews the alert 18 hours later during the
+      next shift. During that window, the attacker modifies infusion rate parameters. The
+      patient receives an incorrect vasopressor dose, causing hemodynamic instability. This
+      scenario is clinically realistic — vasopressor dosing errors are a known cause of
+      cardiac arrest in ICU patients — and it is enabled entirely by severity miscalibration
+      in Layer 2 that the current template design does not prevent.
