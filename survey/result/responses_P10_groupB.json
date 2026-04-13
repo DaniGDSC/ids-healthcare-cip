@@ -41,19 +41,19 @@
   },
   {
     "alert_id": "A-02",
-    "chosen_severity": "MEDIUM",
+    "chosen_severity": "HIGH",
     "chosen_action": "investigate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "Patient monitor DNS spike could be glitch, but I'd check with biomed before dismissing."
+    "reasoning_note": "[v2 rescore] Still feel 20x warrants HIGH severity even with the baseline context."
   },
   {
     "alert_id": "A-06",
-    "chosen_severity": "LOW",
-    "chosen_action": "dismiss",
-    "confidence": 4,
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 2,
     "decision_time_sec": 0,
-    "reasoning_note": "Float pool nurse accessing multiple units overnight is expected workflow."
+    "reasoning_note": "[v2 rescore] Following up with nursing supervisor tomorrow; monitor for now."
   },
   {
     "alert_id": "A-12",
@@ -105,19 +105,19 @@
   },
   {
     "alert_id": "A-18",
-    "chosen_severity": "HIGH",
-    "chosen_action": "escalate",
-    "confidence": 5,
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
     "decision_time_sec": 0,
-    "reasoning_note": "ICU ventilator using Telnet is never normal and could impact life support function."
+    "reasoning_note": "[v2 rescore] Legacy Telnet might be diagnostic config; investigating."
   },
   {
     "alert_id": "A-15",
     "chosen_severity": "LOW",
-    "chosen_action": "monitor",
-    "confidence": 4,
+    "chosen_action": "investigate",
+    "confidence": 2,
     "decision_time_sec": 0,
-    "reasoning_note": "Daytime EHR backup to internal server after likely failed night job, no security concern."
+    "reasoning_note": "[v2 rescore] Being thorough \u2014 investigating even though severity is LOW."
   },
   {
     "alert_id": "A-04",
@@ -145,19 +145,19 @@
   },
   {
     "alert_id": "A-08",
-    "chosen_severity": "LOW",
-    "chosen_action": "monitor",
-    "confidence": 4,
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
     "decision_time_sec": 0,
-    "reasoning_note": "Physician VPN access to own patient panel after hours is routine charting."
+    "reasoning_note": "[v2 rescore] Bumping to medium because 22 records at 21:45 feels slightly elevated."
   },
   {
     "alert_id": "A-16",
     "chosen_severity": "HIGH",
-    "chosen_action": "isolate",
-    "confidence": 5,
+    "chosen_action": "investigate",
+    "confidence": 2,
     "decision_time_sec": 0,
-    "reasoning_note": "Nurse station workstation sending 1.1GB externally in minutes is clear data exfiltration or malware."
+    "reasoning_note": "[v2 rescore] Investigating before any blocking action."
   },
   {
     "alert_id": "PROXY",

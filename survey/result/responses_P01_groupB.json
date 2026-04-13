@@ -41,19 +41,19 @@
   },
   {
     "alert_id": "A-02",
-    "chosen_severity": "HIGH",
-    "chosen_action": "escalate",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
     "confidence": 3,
-    "decision_time_sec": 6,
-    "reasoning_note": "High DNS spike on monitor could be malware though unsure so escalating to be safe."
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Numeric baseline '300/min vs normal 10-15 (20x)' makes MEDIUM clear per updated MVE; biomed check before rate-limit."
   },
   {
     "alert_id": "A-06",
-    "chosen_severity": "LOW",
-    "chosen_action": "dismiss",
-    "confidence": 3,
-    "decision_time_sec": 7,
-    "reasoning_note": "Likely float nurse accessing multiple departments so seems normal enough."
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] MVE says 'Role authorization: UNCONFIRMED'; per hygiene note force reauth required within 4h."
   },
   {
     "alert_id": "A-12",
@@ -105,19 +105,19 @@
   },
   {
     "alert_id": "A-18",
-    "chosen_severity": "CRITICAL",
+    "chosen_severity": "HIGH",
     "chosen_action": "escalate",
     "confidence": 4,
-    "decision_time_sec": 5,
-    "reasoning_note": "Ventilator using Telnet is very unsafe but guidance says not isolate so escalating urgently."
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] IMP-03 action_level_clarification: block port 23 at switch (SAFE), do not power-off vent."
   },
   {
     "alert_id": "A-15",
-    "chosen_severity": "MEDIUM",
+    "chosen_severity": "LOW",
     "chosen_action": "monitor",
-    "confidence": 3,
-    "decision_time_sec": 7,
-    "reasoning_note": "Internal backup transfer at odd time might be rescheduled job so monitoring."
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] IMP-04 benign-first framing: pattern matches scheduled backup; flagged on off-hours only."
   },
   {
     "alert_id": "A-04",
@@ -146,18 +146,18 @@
   {
     "alert_id": "A-08",
     "chosen_severity": "LOW",
-    "chosen_action": "monitor",
-    "confidence": 3,
-    "decision_time_sec": 6,
-    "reasoning_note": "Physician VPN access seems normal so just monitoring."
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] IMP-01 hygiene note: LOW severity but force reauth still required within 24h."
   },
   {
     "alert_id": "A-16",
-    "chosen_severity": "CRITICAL",
-    "chosen_action": "isolate",
-    "confidence": 5,
-    "decision_time_sec": 4,
-    "reasoning_note": "Fast large outbound from nurse station strongly suggests exfiltration so isolating."
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] IMP-06 scope clause: block destination-only via EXFIL-BLOCK; preserve EHR/PACS."
   },
   {
     "alert_id": "PROXY",

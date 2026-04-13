@@ -1,169 +1,169 @@
 [
-    {
-        "alert_id": "A-01",
-        "chosen_severity": "HIGH",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "weird FTP but could be maintenance traffic so just check logs later"
-    },
-    {
-        "alert_id": "A-05",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "monitor",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "after-hours access looks odd but billing sometimes runs reports late"
-    },
-    {
-        "alert_id": "A-09",
-        "chosen_severity": "HIGH",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "cross VLAN SMB not normal but might be admin task misconfigured"
-    },
-    {
-        "alert_id": "A-13",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "SFTP unusual but labs sometimes add partners without notice"
-    },
-    {
-        "alert_id": "A-17",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "looks like normal device HTTPS call probably update check"
-    },
-    {
-        "alert_id": "A-02",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "DNS spike likely device glitch or update loop seen before"
-    },
-    {
-        "alert_id": "A-06",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "nurse accessing multiple departments is common on night shift"
-    },
-    {
-        "alert_id": "A-12",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "monitor",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "ICMP sweep could be asset scan tool so no rush"
-    },
-    {
-        "alert_id": "A-10",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "RDP on weekend likely maintenance window"
-    },
-    {
-        "alert_id": "A-14",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "large PACS transfer to known partner seems routine imaging"
-    },
-    {
-        "alert_id": "A-03",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "monitor",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "big transfer but PACS does that often so just watch"
-    },
-    {
-        "alert_id": "A-19",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "wireless device comms probably device pairing noise"
-    },
-    {
-        "alert_id": "A-07",
-        "chosen_severity": "HIGH",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "admin account high usage but could be reporting job off schedule"
-    },
-    {
-        "alert_id": "A-18",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "telnet odd but internal gateway so maybe legacy config"
-    },
-    {
-        "alert_id": "A-15",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "internal backup transfer even if timing off is normal ops"
-    },
-    {
-        "alert_id": "A-04",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "pharmacy sending data to approved cloud endpoint not concerning"
-    },
-    {
-        "alert_id": "A-20",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "monitor traffic spikes happen during diagnostics"
-    },
-    {
-        "alert_id": "A-11",
-        "chosen_severity": "HIGH",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "EHR scanning internal is strange but could be patching or monitoring tool"
-    },
-    {
-        "alert_id": "A-08",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "VPN access by doctor after hours is normal"
-    },
-    {
-        "alert_id": "A-16",
-        "chosen_severity": "HIGH",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "large outbound from workstation suspicious but maybe user upload or backup sync"
-    },
-    {
-        "alert_id": "PROXY",
-        "q21_clinical_clarity": "No",
-        "q21_note": "alerts are too technical for clinical staff to understand risk",
-        "q22_management_justification": "Partially",
-        "q22_note": "some alerts have enough detail but many decisions are based on assumptions"
-    }
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "weird FTP but could be maintenance traffic so just check logs later"
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "after-hours access looks odd but billing sometimes runs reports late"
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "cross VLAN SMB not normal but might be admin task misconfigured"
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "SFTP unusual but labs sometimes add partners without notice"
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "looks like normal device HTTPS call probably update check"
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] IMP-05 numeric comparison anchors this at MEDIUM not HIGH; calling biomed to verify firmware window."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] UNCONFIRMED from AD lookup reverses my float-nurse assumption; reauth now per IMP-01/IMP-02."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "ICMP sweep could be asset scan tool so no rush"
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "RDP on weekend likely maintenance window"
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "large PACS transfer to known partner seems routine imaging"
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "big transfer but PACS does that often so just watch"
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "wireless device comms probably device pairing noise"
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "admin account high usage but could be reporting job off schedule"
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Network-layer block per SAFE clause; biomed contacted before anything physical."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Pattern-match statement in MVE makes this clearly a rescheduled backup."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "pharmacy sending data to approved cloud endpoint not concerning"
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "monitor traffic spikes happen during diagnostics"
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "EHR scanning internal is strange but could be patching or monitoring tool"
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "investigate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Hygiene note decouples urgency from action \u2014 queuing reauth at next login."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] MVE explicit scope+preservation prevents full isolate; HIGH + targeted block."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "No",
+    "q21_note": "alerts are too technical for clinical staff to understand risk",
+    "q22_management_justification": "Partially",
+    "q22_note": "some alerts have enough detail but many decisions are based on assumptions"
+  }
 ]

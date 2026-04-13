@@ -43,17 +43,17 @@
     "alert_id": "A-02",
     "chosen_severity": "MEDIUM",
     "chosen_action": "investigate",
-    "confidence": 3,
+    "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "Patient monitor DNS spike could affect monitoring but may be benign update behavior."
+    "reasoning_note": "[v2 rescore] Explicit ratio in MVE prevents overreaction; MEDIUM + biomed verification fits response tier."
   },
   {
     "alert_id": "A-06",
-    "chosen_severity": "LOW",
-    "chosen_action": "dismiss",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "Nurse accessing multiple departments is likely normal workflow for float staff."
+    "reasoning_note": "[v2 rescore] UNCONFIRMED means hygiene note applies: MEDIUM urgency, reauth within 4h."
   },
   {
     "alert_id": "A-12",
@@ -105,19 +105,19 @@
   },
   {
     "alert_id": "A-18",
-    "chosen_severity": "CRITICAL",
+    "chosen_severity": "HIGH",
     "chosen_action": "escalate",
-    "confidence": 5,
+    "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "Ventilator using unexpected protocol could indicate compromise of life-support equipment."
+    "reasoning_note": "[v2 rescore] Biomed notified, ACL rule pushed, patient vent untouched."
   },
   {
     "alert_id": "A-15",
-    "chosen_severity": "MEDIUM",
+    "chosen_severity": "LOW",
     "chosen_action": "monitor",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "Internal EHR backup at unusual time may impact operations but likely benign."
+    "reasoning_note": "[v2 rescore] Benign framing works: LOW + monitor one cycle to confirm schedule."
   },
   {
     "alert_id": "A-04",
@@ -146,18 +146,18 @@
   {
     "alert_id": "A-08",
     "chosen_severity": "LOW",
-    "chosen_action": "monitor",
+    "chosen_action": "investigate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "Physician VPN access aligns with expected remote care workflow."
+    "reasoning_note": "[v2 rescore] Following v2 spec literally: LOW + investigate = queue force reauth within 24h."
   },
   {
     "alert_id": "A-16",
     "chosen_severity": "HIGH",
-    "chosen_action": "isolate",
-    "confidence": 5,
+    "chosen_action": "escalate",
+    "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "Large rapid data transfer from nurse station indicates possible malware or exfiltration."
+    "reasoning_note": "[v2 rescore] Scope limitation keeps me from over-reacting to the 1.1 GB figure."
   },
   {
     "alert_id": "PROXY",

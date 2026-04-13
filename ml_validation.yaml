@@ -1,0 +1,13 @@
+dae_separation_test:
+  n_normal: 4282
+  n_anomalous: 614
+  normal_error_mean: 0.0000
+  normal_error_std: 0.0001
+  anomalous_error_mean: 0.0001
+  anomalous_error_std: 0.0003
+  separation_ratio: 10.0193
+  auroc: 0.7143
+  threshold_95th_percentile: 0.0001
+  detection_rate_at_threshold: 0.3958
+  result: "FAIL"
+  notes: "Separation ratio is strong (10.02x) but AUROC (0.71) and detection rate at 95th-percentile threshold (0.40) both fall below their respective minimums of 0.75 and 0.55, indicating the score distribution overlaps too much for reliable threshold-based detection."

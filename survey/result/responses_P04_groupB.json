@@ -41,19 +41,19 @@
   },
   {
     "alert_id": "A-02",
-    "chosen_severity": "LOW",
-    "chosen_action": "monitor",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "DNS spike could easily be update loop rather than malware."
+    "reasoning_note": "[v2 rescore] Comparative number (20x) told me this is elevated but not yet urgent; biomed rate-limit if unconfirmed."
   },
   {
     "alert_id": "A-06",
-    "chosen_severity": "LOW",
-    "chosen_action": "dismiss",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
     "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "Float nurse explanation fits normal hospital operations."
+    "reasoning_note": "[v2 rescore] Authorization check unconfirmed \u2014 verify with nursing supervisor and force reauth."
   },
   {
     "alert_id": "A-12",
@@ -105,11 +105,11 @@
   },
   {
     "alert_id": "A-18",
-    "chosen_severity": "MEDIUM",
-    "chosen_action": "investigate",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "Telnet is outdated but legacy device behavior still exists."
+    "reasoning_note": "[v2 rescore] Telnet blocked at ACL; vent clinical traffic on 443 unaffected."
   },
   {
     "alert_id": "A-15",
@@ -117,7 +117,7 @@
     "chosen_action": "dismiss",
     "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "Backup reschedule is a common operational occurrence."
+    "reasoning_note": "[v2 rescore] Matches Tuesday backup pattern; verified with IT ops and dismissing."
   },
   {
     "alert_id": "A-04",
@@ -146,18 +146,18 @@
   {
     "alert_id": "A-08",
     "chosen_severity": "LOW",
-    "chosen_action": "dismiss",
+    "chosen_action": "investigate",
     "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "VPN access by physician aligns with expected workflow."
+    "reasoning_note": "[v2 rescore] Physician VPN pattern is routine but reauth required per hygiene note."
   },
   {
     "alert_id": "A-16",
-    "chosen_severity": "MEDIUM",
-    "chosen_action": "investigate",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "High outbound traffic is concerning but still could be software update or sync."
+    "reasoning_note": "[v2 rescore] Targeted block + preserve clinical function exactly as MVE recommends."
   },
   {
     "alert_id": "PROXY",

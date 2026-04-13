@@ -43,17 +43,17 @@
     "alert_id": "A-02",
     "chosen_severity": "MEDIUM",
     "chosen_action": "investigate",
-    "confidence": 3,
+    "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "High DNS volume from device could indicate anomaly or malware."
+    "reasoning_note": "[v2 rescore] 20x DNS baseline deviation documented in MVE; investigate via biomed before any network action."
   },
   {
     "alert_id": "A-06",
-    "chosen_severity": "LOW",
-    "chosen_action": "dismiss",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "Multi-department access may be normal for certain nursing roles."
+    "reasoning_note": "[v2 rescore] Role authorization UNCONFIRMED triggers mandatory reauth regardless of benign framing."
   },
   {
     "alert_id": "A-12",
@@ -109,15 +109,15 @@
     "chosen_action": "escalate",
     "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "Ventilator using Telnet is highly abnormal and insecure."
+    "reasoning_note": "[v2 rescore] Action split is clear \u2014 SAFE network action, prohibited physical action."
   },
   {
     "alert_id": "A-15",
-    "chosen_severity": "MEDIUM",
+    "chosen_severity": "LOW",
     "chosen_action": "monitor",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "Internal backup transfer at odd time may be benign but unusual."
+    "reasoning_note": "[v2 rescore] Internal BACKUP-SRV-01 destination is approved per benign framing."
   },
   {
     "alert_id": "A-04",
@@ -146,18 +146,18 @@
   {
     "alert_id": "A-08",
     "chosen_severity": "LOW",
-    "chosen_action": "monitor",
+    "chosen_action": "investigate",
     "confidence": 3,
     "decision_time_sec": 0,
-    "reasoning_note": "VPN access by physician appears legitimate usage."
+    "reasoning_note": "[v2 rescore] LOW severity confirmed but spec mandates reauth; queuing for next login."
   },
   {
     "alert_id": "A-16",
-    "chosen_severity": "CRITICAL",
-    "chosen_action": "isolate",
-    "confidence": 5,
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
     "decision_time_sec": 0,
-    "reasoning_note": "High-speed outbound transfer from workstation suggests data exfiltration."
+    "reasoning_note": "[v2 rescore] Firewall rule blocks only 198.51.100.42; active EHR sessions stay up."
   },
   {
     "alert_id": "PROXY",

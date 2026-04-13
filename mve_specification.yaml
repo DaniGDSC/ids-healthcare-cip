@@ -24,17 +24,86 @@ layer_specification:
         description: "What happened differently — the specific trigger."
         example: "At 02:47 AM, it initiated an outbound FTP connection to an external IP (203.0.113.42) not in any approved list."
         format: "1 sentence, includes timestamp, protocol, destination"
+        # ── IMP-05: numeric_baseline_comparison ─────────────────────────────
+        # Added 2026-04-12. Applies to iomt_behavioral_deviation alert type ONLY.
+        # Fixes alert_02 (DNS anomaly, GT=MEDIUM) 40% Group B accuracy.
+        # Participants could not distinguish "warrants monitoring" from
+        # "warrants immediate escalation" without a concrete numeric comparison.
+        # "300 DNS queries/min" is alarming in isolation; "300 vs normal
+        # 10–15 queries/min (20× above baseline)" is calibrated.
+        format_addition_iomt: >
+          For iomt_behavioral_deviation alerts, deviation_description MUST
+          include: "Normal: [X unit/timeframe]. Observed: [Y unit/timeframe]
+          ([N×] above/below baseline)."
+        example_iomt: >
+          "Starting 09:30, device sent 300+ DNS queries/min — 20× above the
+          normal 10–15 queries/min baseline observed over 90 days."
       - element: "confidence_indicator"
         description: "How certain the system is that this is truly anomalous."
         example: "Confidence: HIGH — never observed in 120 days of baseline for this device class."
         format: "'Confidence: HIGH/MEDIUM/LOW — [one-clause justification]'"
+      # ── IMP-02: role_authorization_check ──────────────────────────────────
+      # Added 2026-04-12. Applies to unauthorized_ehr_access alert type ONLY.
+      # Fixes regression where innocent-explanation framing (float nurse,
+      # night shift) caused 19/25 Group B participants to dismiss MEDIUM-
+      # severity EHR access alerts that required verify_force_reauth.
+      - element: "role_authorization_check"
+        applies_to: "unauthorized_ehr_access alert type only"
+        description: >
+          Explicit statement of whether the accessing user's role authorizes
+          the observed access scope, based on AD/HR directory data.
+        values: ["CONFIRMED", "UNCONFIRMED", "DENIED"]
+        format: >
+          "Role authorization: [CONFIRMED/UNCONFIRMED/DENIED] —
+          [one-clause reason from AD/HR lookup or 'not in directory']"
+        examples:
+          - "Role authorization: CONFIRMED — user is registered float nurse with multi-ward access in AD directory."
+          - "Role authorization: UNCONFIRMED — user's role (Billing Clerk) does not list Cardiology in authorized departments."
+          - "Role authorization: DENIED — Telemetry access not in role profile for this user class."
+        behavioral_rule: >
+          If role_authorization_check = UNCONFIRMED or DENIED, Layer 3
+          immediate_action MUST include verify_force_reauth regardless of
+          severity label. The ehr_access_hygiene_note (Layer 3) must also
+          be present.
+        placement: "After confidence_indicator in Layer 1"
+        data_dependency: >
+          Requires AD/HR directory integration. If directory data unavailable,
+          default to UNCONFIRMED and document as deployment dependency.
     max_length: "60 words"
     audience: "IT generalist with basic network knowledge"
+    # ── IMP-04: benign_first_framing ────────────────────────────────────────
+    # Added 2026-04-12. Applies to data_exfiltration and
+    # iomt_behavioral_deviation, LOW confidence + LOW severity + known-safe
+    # destination/source. Fixes alert_15 regression: Group B scored 52% vs
+    # Group A 72%. MVE's anomaly-first framing ("off-hours transfer") made a
+    # scheduled backup sound suspicious, elevating 8/25 Group B participants
+    # to MEDIUM. When benign evidence is available, lead with it.
+    benign_first_framing:
+      condition: >
+        confidence_indicator = LOW AND severity_label = LOW AND
+        destination/source is internal or on approved whitelist.
+      framing_rule: >
+        Lead Layer 1 with the benign hypothesis if evidence supports it.
+        Structure: "[Pattern match statement]. Flagged due to [specific
+        trigger only]."
+      example: >
+        "This transfer matches the scheduled backup pattern for this system
+        (internal destination BACKUP-SRV-01, SMB protocol, volume consistent
+        with prior Tuesday transfers). Flagged due to off-hours timing only."
+      contrast_with_default: >
+        Default anomaly-first: "EHR server transferred 28 GB via SMB at
+        02:15 AM — outside normal business hours. Baseline: transfers occur
+        9 AM–5 PM weekdays only."
+      behavioral_rule: >
+        If benign_first_framing applies, confidence_indicator MUST read:
+        "Confidence: LOW — pattern consistent with [benign explanation];
+        verify schedule before escalating."
     what_NOT_to_include:
       - "Raw SHAP values or feature importance scores"
       - "Model architecture details"
       - "Statistical measures (p-values, standard deviations)"
       - "Multiple competing hypotheses"
+      - "Anomaly-first framing when LOW confidence + LOW severity + known-safe destination — use benign_first_framing instead (IMP-04)"
 
   layer_2_clinical_severity:
     purpose: "Translate the technical anomaly into patient-care terms. Answer: 'Wake someone up at 3 AM, or wait until morning?'"
@@ -72,10 +141,77 @@ layer_specification:
         description: "Single most important step, phrased as imperative verb + specific technical step."
         example: "Isolate device via NAC policy ICU-QUARANTINE-01 (blocks outbound non-HTTPS while preserving EHR connectivity)."
         format: "Imperative verb + specific step + what it preserves"
+        # ── IMP-06: scope_and_preservation_statement ────────────────────────
+        # Added 2026-04-12. Applies to data_exfiltration alert type ONLY.
+        # Fixes alert_16 (nurse workstation exfil, GT=HIGH) 32% Group B
+        # accuracy. Most failures chose CRITICAL + full isolate — the "1.1 GB
+        # in 3 minutes" figure overrode MVE context because Layer 3 did not
+        # explicitly bound the action scope or explain why partial block
+        # is preferred over full isolation.
+        format_addition_exfil: >
+          For data_exfiltration alerts, immediate_action MUST include:
+          (a) Exact scope: "Block outbound from [source] to [destination IP] only"
+          (b) What is preserved: "Active connections to [approved partners/systems]
+              are unaffected"
+          (c) Why partial: "Full endpoint isolation would disrupt [clinical function]"
+        example_exfil: >
+          "Block outbound from NURSE-WS-07 to 198.51.100.42 only (firewall rule
+          EXFIL-BLOCK). Active EHR and PACS connections are unaffected.
+          DO NOT isolate full workstation — this would interrupt active
+          patient documentation for floor nurses."
+        full_isolation_exception: >
+          If full isolation IS required (e.g., confirmed ransomware beaconing),
+          clinical_constraint MUST state explicitly why the clinical continuity
+          exception applies.
+      # ── IMP-01: ehr_access_hygiene_note ───────────────────────────────────
+      # Added 2026-04-12. Applies to unauthorized_ehr_access alert type ONLY.
+      # Fixes pattern where 23/25 Group B participants (correctly) rated
+      # alert_08 as LOW severity but then chose 'monitor'/'dismiss' instead
+      # of 'verify_force_reauth'. Root cause: participants conflated LOW
+      # severity with "no action required." This note decouples urgency from
+      # the mandatory hygiene action for all EHR access events.
+      - element: "ehr_access_hygiene_note"
+        applies_to: "unauthorized_ehr_access alert type only"
+        placement: "After immediate_action, before clinical_constraint"
+        description: >
+          For EHR access alerts of ANY severity: explicit statement that
+          force re-authentication is a minimum required action, separate
+          from severity urgency level.
+        format: >
+          "Note: EHR access events require force re-authentication regardless
+          of severity — severity indicates urgency only, not whether action
+          is needed. [LOW = complete within 24h, MEDIUM = within 4h,
+          HIGH/CRITICAL = immediately]"
+        example: >
+          "Note: EHR access events require force re-authentication regardless
+          of severity — severity indicates urgency only, not whether action
+          is needed. [LOW = complete within 24h]"
       - element: "clinical_constraint"
         description: "What NOT to do to avoid disrupting patient care."
         example: "DO NOT power-cycle pumps during active infusions — coordinate with ICU charge nurse first."
         format: "'DO NOT [action] during/while [condition] — [who to coordinate with]'"
+        # ── IMP-03: action_level_clarification ──────────────────────────────
+        # Added 2026-04-12. Applies to iomt_behavioral_deviation where
+        # device_criticality = CRITICAL or HIGH ONLY.
+        # Fixes alert_18 (ventilator Telnet, GT=HIGH) failure split:
+        #   Camp 1 (11/25): read "DO NOT isolate" as "do nothing" → over-escalated
+        #   Camp 2 (3/25): "legacy Telnet, maybe config issue" → under-reacted
+        # Root cause: "DO NOT [action]" format does not distinguish physical/
+        # power action (prohibited) from network-layer action (safe). Participants
+        # could not tell that blocking a port at the switch is categorically
+        # different from disconnecting a device running on battery.
+        action_level_clarification:
+          applies_to: "iomt_behavioral_deviation where device_criticality = CRITICAL or HIGH"
+          replaces: "generic DO NOT format for this alert/severity combination"
+          format: >
+            "DO NOT [physical/power action] — this affects device operation.
+            SAFE: [network-layer action] — does not interrupt device function.
+            Contact [role] before any physical intervention."
+          example: >
+            "DO NOT power off or physically disconnect ventilator — this
+            interrupts patient breathing support. SAFE: Block port 23 at
+            switch ACL — ventilator clinical operation uses port 443 and is
+            unaffected. Contact Biomed Engineering before any physical action."
       - element: "escalation_path"
         description: "Who to notify and in what order."
         example: "Notify: (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse."

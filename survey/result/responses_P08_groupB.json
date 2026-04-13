@@ -41,19 +41,19 @@
   },
   {
     "alert_id": "A-02",
-    "chosen_severity": "MEDIUM",
-    "chosen_action": "monitor",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
     "confidence": 4,
-    "decision_time_sec": 6,
-    "reasoning_note": "MVE says MEDIUM and check with biomed within 1 hour, rate-limit if needed."
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] 20x above baseline is too much for MEDIUM \u2014 escalating despite MVE framing."
   },
   {
     "alert_id": "A-06",
     "chosen_severity": "LOW",
-    "chosen_action": "dismiss",
-    "confidence": 4,
-    "decision_time_sec": 4,
-    "reasoning_note": "MVE says LOW and expected float pool access, verify with nursing supervisor later."
+    "chosen_action": "monitor",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] MVE context still reads like legitimate night-shift pattern; monitoring."
   },
   {
     "alert_id": "A-12",
@@ -107,17 +107,17 @@
     "alert_id": "A-18",
     "chosen_severity": "HIGH",
     "chosen_action": "escalate",
-    "confidence": 5,
-    "decision_time_sec": 10,
-    "reasoning_note": "MVE says HIGH and block Telnet at VLAN ACL within 15 minutes, do not power cycle device."
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Port 23 blocked, clinical engineering paged; following SAFE/PROHIBITED split."
   },
   {
     "alert_id": "A-15",
-    "chosen_severity": "MEDIUM",
-    "chosen_action": "monitor",
-    "confidence": 3,
-    "decision_time_sec": 6,
-    "reasoning_note": "MVE says MEDIUM and likely rescheduled backup, verify with IT ops within 4 hours."
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Verified rescheduled backup with IT ops on call."
   },
   {
     "alert_id": "A-04",
@@ -148,16 +148,16 @@
     "chosen_severity": "LOW",
     "chosen_action": "monitor",
     "confidence": 4,
-    "decision_time_sec": 3,
-    "reasoning_note": "MVE says LOW and authorized telehealth access, monitor volume for next 2 hours."
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Routine after-hours charting; monitoring only."
   },
   {
     "alert_id": "A-16",
-    "chosen_severity": "HIGH",
+    "chosen_severity": "CRITICAL",
     "chosen_action": "isolate",
     "confidence": 5,
-    "decision_time_sec": 9,
-    "reasoning_note": "MVE says HIGH and isolate workstation via NAC within 10 minutes, provide replacement to nurse."
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] 1.1 GB in 3 min overrides the scope clause for me; full isolate."
   },
   {
     "alert_id": "PROXY",

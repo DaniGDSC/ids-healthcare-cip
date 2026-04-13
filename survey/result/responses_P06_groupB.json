@@ -41,19 +41,19 @@
   },
   {
     "alert_id": "A-02",
-    "chosen_severity": "HIGH",
-    "chosen_action": "escalate",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
     "confidence": 3,
-    "decision_time_sec": 5,
-    "reasoning_note": "Patient monitor DNS flood, could be malware beacon, escalate to biomed for firmware check."
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Baseline comparison grounds this clearly as MEDIUM \u2014 biomed first, rate-limit if no firmware match."
   },
   {
     "alert_id": "A-06",
     "chosen_severity": "HIGH",
     "chosen_action": "escalate",
-    "confidence": 2,
-    "decision_time_sec": 4,
-    "reasoning_note": "Nurse accessing three depts at 2:30am, maybe float pool but better escalate to supervisor."
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] UNCONFIRMED role + cross-department access \u2014 escalating to privacy officer."
   },
   {
     "alert_id": "A-12",
@@ -106,18 +106,18 @@
   {
     "alert_id": "A-18",
     "chosen_severity": "HIGH",
-    "chosen_action": "escalate",
+    "chosen_action": "isolate",
     "confidence": 4,
-    "decision_time_sec": 5,
-    "reasoning_note": "Ventilator using Telnet, never seen that, escalate to biomed and ICU immediately."
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Isolating Telnet at network layer only \u2014 confirmed SAFE by action_level_clarification."
   },
   {
     "alert_id": "A-15",
-    "chosen_severity": "MEDIUM",
-    "chosen_action": "monitor",
-    "confidence": 3,
-    "decision_time_sec": 6,
-    "reasoning_note": "EHR to backup server internal SMB, 28GB off-hours but internal, likely rescheduled backup, monitor."
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Scheduled backup exception already known; adding suppression rule."
   },
   {
     "alert_id": "A-04",
@@ -146,18 +146,18 @@
   {
     "alert_id": "A-08",
     "chosen_severity": "LOW",
-    "chosen_action": "monitor",
-    "confidence": 4,
-    "decision_time_sec": 4,
-    "reasoning_note": "Physician remote EHR access via VPN after hours, own panel, monitor routine."
+    "chosen_action": "escalate",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Doing reauth and also pinging privacy officer as precaution."
   },
   {
     "alert_id": "A-16",
-    "chosen_severity": "CRITICAL",
+    "chosen_severity": "HIGH",
     "chosen_action": "isolate",
-    "confidence": 5,
-    "decision_time_sec": 3,
-    "reasoning_note": "Nurse station 1.1GB encrypted outbound in 3 minutes, definite exfil, isolate workstation immediately."
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Isolating workstation via NAC \u2014 preservation clause for EHR understood."
   },
   {
     "alert_id": "PROXY",

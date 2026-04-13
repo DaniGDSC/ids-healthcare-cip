@@ -1,169 +1,169 @@
 [
-    {
-        "alert_id": "A-01",
-        "chosen_severity": "HIGH",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "Infusion pump FTP is suspicious but could be a firmware bug; investigate before isolating."
-    },
-    {
-        "alert_id": "A-05",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "monitor",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "Billing user accessing cardiology records at night is odd but might be legitimate overtime work."
-    },
-    {
-        "alert_id": "A-09",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "Cross-VLAN SMB from an unauthorized admin workstation could be a new temp asset, not definitely malicious."
-    },
-    {
-        "alert_id": "A-13",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "LIS SFTP to unknown external may be a new reference lab integration; verify with Lab IT first."
-    },
-    {
-        "alert_id": "A-17",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 5,
-        "decision_time_sec": 0,
-        "reasoning_note": "Infusion pump contacting known Baxter update domain is routine firmware check, not a threat."
-    },
-    {
-        "alert_id": "A-02",
-        "chosen_severity": "LOW",
-        "chosen_action": "monitor",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "High DNS volume from patient monitor is likely a firmware update loop, not malware."
-    },
-    {
-        "alert_id": "A-06",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 5,
-        "decision_time_sec": 0,
-        "reasoning_note": "Nurse accessing multiple departments at night is normal for float pool staff."
-    },
-    {
-        "alert_id": "A-12",
-        "chosen_severity": "LOW",
-        "chosen_action": "monitor",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "ICMP sweep from a new management asset is probably a legitimate discovery tool."
-    },
-    {
-        "alert_id": "A-10",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 5,
-        "decision_time_sec": 0,
-        "reasoning_note": "Saturday RDP to device VLAN matches quarterly biomed maintenance window."
-    },
-    {
-        "alert_id": "A-14",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 5,
-        "decision_time_sec": 0,
-        "reasoning_note": "Large PACS transfer to approved partner is just a full CT series for second opinion."
-    },
-    {
-        "alert_id": "A-03",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "PACS transfer to unknown external could be a new image-sharing agreement; check with Radiology IT."
-    },
-    {
-        "alert_id": "A-19",
-        "chosen_severity": "HIGH",
-        "chosen_action": "escalate",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "Insulin pump pairing attempt is concerning but may be a false positive; escalate to nurse for patient safety."
-    },
-    {
-        "alert_id": "A-07",
-        "chosen_severity": "HIGH",
-        "chosen_action": "escalate",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "Service account bulk access is unusual but could be a rescheduled report; escalate to security lead."
-    },
-    {
-        "alert_id": "A-18",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "Ventilator Telnet is odd but might be biomed testing; block port but don't isolate device."
-    },
-    {
-        "alert_id": "A-15",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 5,
-        "decision_time_sec": 0,
-        "reasoning_note": "Large EHR transfer to internal backup during day is likely a rescheduled failed backup."
-    },
-    {
-        "alert_id": "A-04",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 5,
-        "decision_time_sec": 0,
-        "reasoning_note": "Pharmacy weekend HTTPS transfer to AWS is a routine backup reschedule."
-    },
-    {
-        "alert_id": "A-20",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 6,
-        "decision_time_sec": 0,
-        "reasoning_note": "Patient monitor traffic spike matches quarterly diagnostic cycle, not an anomaly."
-    },
-    {
-        "alert_id": "A-11",
-        "chosen_severity": "HIGH",
-        "chosen_action": "isolate",
-        "confidence": 4,
-        "decision_time_sec": 0,
-        "reasoning_note": "EHR server port scanning internal subnets is highly suspicious; isolate to prevent lateral movement."
-    },
-    {
-        "alert_id": "A-08",
-        "chosen_severity": "LOW",
-        "chosen_action": "dismiss",
-        "confidence": 5,
-        "decision_time_sec": 0,
-        "reasoning_note": "Physician VPN access after hours is normal telehealth activity."
-    },
-    {
-        "alert_id": "A-16",
-        "chosen_severity": "MEDIUM",
-        "chosen_action": "investigate",
-        "confidence": 3,
-        "decision_time_sec": 0,
-        "reasoning_note": "Nurse station large outbound transfer could be a cloud backup but needs verification."
-    },
-    {
-        "alert_id": "PROXY",
-        "q21_clinical_clarity": "Yes",
-        "q21_note": "MVE includes clinical severity and device impact, so clinical staff would understand patient safety risk.",
-        "q22_management_justification": "Yes",
-        "q22_note": "MVE provides clear anomaly context, clinical severity, and recommended actions sufficient to justify decisions."
-    }
+  {
+    "alert_id": "A-01",
+    "chosen_severity": "HIGH",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Infusion pump FTP is suspicious but could be a firmware bug; investigate before isolating."
+  },
+  {
+    "alert_id": "A-05",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Billing user accessing cardiology records at night is odd but might be legitimate overtime work."
+  },
+  {
+    "alert_id": "A-09",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "Cross-VLAN SMB from an unauthorized admin workstation could be a new temp asset, not definitely malicious."
+  },
+  {
+    "alert_id": "A-13",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "LIS SFTP to unknown external may be a new reference lab integration; verify with Lab IT first."
+  },
+  {
+    "alert_id": "A-17",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Infusion pump contacting known Baxter update domain is routine firmware check, not a threat."
+  },
+  {
+    "alert_id": "A-02",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] 300 DNS/min on clinical device overrides the numeric calibration for me; escalating."
+  },
+  {
+    "alert_id": "A-06",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Float pool multi-dept access is standard at 2:30 AM; dismiss."
+  },
+  {
+    "alert_id": "A-12",
+    "chosen_severity": "LOW",
+    "chosen_action": "monitor",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "ICMP sweep from a new management asset is probably a legitimate discovery tool."
+  },
+  {
+    "alert_id": "A-10",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Saturday RDP to device VLAN matches quarterly biomed maintenance window."
+  },
+  {
+    "alert_id": "A-14",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Large PACS transfer to approved partner is just a full CT series for second opinion."
+  },
+  {
+    "alert_id": "A-03",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 3,
+    "decision_time_sec": 0,
+    "reasoning_note": "PACS transfer to unknown external could be a new image-sharing agreement; check with Radiology IT."
+  },
+  {
+    "alert_id": "A-19",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Insulin pump pairing attempt is concerning but may be a false positive; escalate to nurse for patient safety."
+  },
+  {
+    "alert_id": "A-07",
+    "chosen_severity": "HIGH",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "Service account bulk access is unusual but could be a rescheduled report; escalate to security lead."
+  },
+  {
+    "alert_id": "A-18",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "escalate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Still reads as CRITICAL to me given life-sustaining device."
+  },
+  {
+    "alert_id": "A-15",
+    "chosen_severity": "MEDIUM",
+    "chosen_action": "investigate",
+    "confidence": 2,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] 28 GB is large enough I still want to double-check despite framing."
+  },
+  {
+    "alert_id": "A-04",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 5,
+    "decision_time_sec": 0,
+    "reasoning_note": "Pharmacy weekend HTTPS transfer to AWS is a routine backup reschedule."
+  },
+  {
+    "alert_id": "A-20",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 6,
+    "decision_time_sec": 0,
+    "reasoning_note": "Patient monitor traffic spike matches quarterly diagnostic cycle, not an anomaly."
+  },
+  {
+    "alert_id": "A-11",
+    "chosen_severity": "HIGH",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "EHR server port scanning internal subnets is highly suspicious; isolate to prevent lateral movement."
+  },
+  {
+    "alert_id": "A-08",
+    "chosen_severity": "LOW",
+    "chosen_action": "dismiss",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Authorized physician on own panel; dismissing as normal."
+  },
+  {
+    "alert_id": "A-16",
+    "chosen_severity": "CRITICAL",
+    "chosen_action": "isolate",
+    "confidence": 4,
+    "decision_time_sec": 0,
+    "reasoning_note": "[v2 rescore] Automated exfiltration speed reads as CRITICAL regardless of preservation guidance."
+  },
+  {
+    "alert_id": "PROXY",
+    "q21_clinical_clarity": "Yes",
+    "q21_note": "MVE includes clinical severity and device impact, so clinical staff would understand patient safety risk.",
+    "q22_management_justification": "Yes",
+    "q22_note": "MVE provides clear anomaly context, clinical severity, and recommended actions sufficient to justify decisions."
+  }
 ]
