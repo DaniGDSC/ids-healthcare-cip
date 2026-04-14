@@ -21,7 +21,6 @@ import logging
 import sys
 import time
 from pathlib import Path
-import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import matplotlib
@@ -44,6 +43,89 @@ from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa:
 
 TOP_N_WATERFALL = 5
 TOP_K_FEATURES = 10
+
+# ── Async JSON write utility (Opt-9) ───────────────────────────────────
+import asyncio
+import io
+from concurrent.futures import ProcessPoolExecutor
+
+
+def write_json_sync(path: Path, data) -> None:
+    """Atomic JSON write (sync, used by async wrapper and direct callers)."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    tmp.replace(path)
+
+
+async def _write_json_async(path: Path, data) -> None:
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, write_json_sync, path, data)
+
+
+def write_json_batch(outputs: dict) -> None:
+    """Write multiple JSON files concurrently.
+
+    Opt-9: converts sequential blocking writes to concurrent I/O.
+    Useful when 6+ JSON files are written at end of a module run.
+
+    Args:
+        outputs: dict mapping Path → serializable data.
+    """
+    async def _run():
+        await asyncio.gather(*[
+            _write_json_async(path, data)
+            for path, data in outputs.items()
+        ])
+    asyncio.run(_run())
+
+
+# ── Parallel plot rendering helpers (Opt-8) ────────────────────────────
+def _render_waterfall_worker(args: tuple) -> None:
+    """Render one SHAP waterfall PNG — runs in a subprocess."""
+    import shap as _shap
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as _plt
+
+    sv_row, expected, X_row, feat_names, out_path, model_name, idx, proba = args
+    explanation = _shap.Explanation(
+        values=sv_row,
+        base_values=expected,
+        data=X_row,
+        feature_names=feat_names,
+    )
+    fig = _plt.figure(figsize=(10, 7))
+    _shap.plots.waterfall(explanation, show=False)
+    _plt.title(f"{model_name} — Sample {idx} (proba={proba:.3f})")
+    _plt.tight_layout()
+    _plt.savefig(out_path, dpi=150)
+    _plt.close(fig)
+
+
+def _render_dae_breakdown_worker(args: tuple) -> None:
+    """Render one DAE breakdown PNG — runs in a subprocess."""
+    from matplotlib.patches import Patch as _Patch
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as _plt
+
+    errs, feat_names, recon_error, out_path, idx, bio_features = args
+    sorted_i = errs.argsort()[::-1][:TOP_K_FEATURES]
+    names_plot = [feat_names[i] for i in sorted_i][::-1]
+    values_plot = [float(errs[i]) for i in sorted_i][::-1]
+    colors = ["#3274A1" if n in bio_features else "#C44E52" for n in names_plot]
+
+    fig, ax = _plt.subplots(figsize=(10, 6))
+    ax.barh(names_plot, values_plot, color=colors)
+    ax.set_xlabel("Weighted Reconstruction Error")
+    ax.set_title(f"DAE — Sample {idx} (error={recon_error:.6f})")
+    ax.legend(handles=[
+        _Patch(facecolor="#C44E52", label="Network"),
+        _Patch(facecolor="#3274A1", label="Biometric"),
+    ], loc="lower right")
+    _plt.tight_layout()
+    _plt.savefig(out_path, dpi=150)
+    _plt.close(fig)
 
 TRACK_A_MODELS = {
     "xgboost": {
@@ -206,7 +288,7 @@ def compute_dae_feature_errors(
     det = DAEDetector.from_artefacts(dae_json_path, dae_weights_path)
 
     X_norm = det._normalise(X_test)
-    recon = det.model.predict(X_norm, verbose=0)
+    recon = det._forward(X_norm)  # M4-2: direct Keras call, avoids predict() overhead
     sq_err = (X_norm - recon) ** 2
     weighted_err = sq_err * det._feat_weights  # per-feature contribution
 
@@ -268,7 +350,13 @@ def plot_waterfalls(
     y_pred: np.ndarray,
     y_proba: np.ndarray,
 ) -> None:
-    """Waterfall plots for top-N highest-confidence attack predictions."""
+    """Waterfall plots for top-N highest-confidence attack predictions.
+
+    Opt-8: renders all plots in parallel using ProcessPoolExecutor.
+    Matplotlib is not thread-safe but is process-safe.  Each worker
+    imports its own matplotlib context so there is no shared state.
+    Wall time ≈ max(render_time) instead of sum across TOP_N_WATERFALL plots.
+    """
     attack_idx = np.where(y_pred == 1)[0]
     if len(attack_idx) == 0:
         logger.info("  No attacks predicted by %s, skipping waterfalls", model_name)
@@ -277,21 +365,25 @@ def plot_waterfalls(
     # Top-N by confidence
     top_idx = attack_idx[np.argsort(y_proba[attack_idx])[-TOP_N_WATERFALL:]][::-1]
 
-    for rank, idx in enumerate(top_idx):
-        explanation = shap.Explanation(
-            values=sv[idx],
-            base_values=expected,
-            data=X_test[idx],
-            feature_names=feat_names,
+    render_args = [
+        (
+            sv[idx],
+            expected,
+            X_test[idx],
+            feat_names,
+            str(CHARTS_DIR / f"waterfall_{model_name}_sample_{idx:04d}.png"),
+            model_name,
+            int(idx),
+            float(y_proba[idx]),
         )
-        fig = plt.figure(figsize=(10, 7))
-        shap.plots.waterfall(explanation, show=False)
-        plt.title(f"{model_name} — Sample {idx} (proba={y_proba[idx]:.3f})")
-        plt.tight_layout()
-        plt.savefig(CHARTS_DIR / f"waterfall_{model_name}_sample_{idx:04d}.png", dpi=150)
-        plt.close(fig)
+        for idx in top_idx
+    ]
 
-    logger.info("  Charts: %d waterfall plots for %s", len(top_idx), model_name)
+    n_workers = min(len(render_args), 4)
+    with ProcessPoolExecutor(max_workers=n_workers) as pool:
+        list(pool.map(_render_waterfall_worker, render_args))
+
+    logger.info("  Charts: %d waterfall plots for %s (parallel)", len(top_idx), model_name)
 
 
 def plot_dae_breakdowns(
@@ -300,7 +392,10 @@ def plot_dae_breakdowns(
     y_pred: np.ndarray,
     recon_errors: np.ndarray,
 ) -> None:
-    """Bar chart of per-feature error for top-N DAE anomalies."""
+    """Bar chart of per-feature error for top-N DAE anomalies.
+
+    Opt-8: renders all plots in parallel using ProcessPoolExecutor.
+    """
     anomaly_idx = np.where(y_pred == 1)[0]
     if len(anomaly_idx) == 0:
         logger.info("  No DAE anomalies, skipping breakdown plots")
@@ -308,26 +403,24 @@ def plot_dae_breakdowns(
 
     top_idx = anomaly_idx[np.argsort(recon_errors[anomaly_idx])[-TOP_N_WATERFALL:]][::-1]
 
-    for idx in top_idx:
-        errs = weighted_err[idx]
-        sorted_i = np.argsort(errs)[::-1][:TOP_K_FEATURES]
-        names = [feat_names[i] for i in sorted_i][::-1]
-        values = [float(errs[i]) for i in sorted_i][::-1]
-        colors = [_feat_color(n) for n in names]
+    bio_set = set(BIOMETRIC_FEATURES)
+    render_args = [
+        (
+            weighted_err[idx],
+            feat_names,
+            float(recon_errors[idx]),
+            str(CHARTS_DIR / f"dae_error_breakdown_sample_{idx:04d}.png"),
+            int(idx),
+            bio_set,
+        )
+        for idx in top_idx
+    ]
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.barh(names, values, color=colors)
-        ax.set_xlabel("Weighted Reconstruction Error")
-        ax.set_title(f"DAE — Sample {idx} (error={recon_errors[idx]:.6f})")
-        ax.legend(handles=[
-            Patch(facecolor="#C44E52", label="Network"),
-            Patch(facecolor="#3274A1", label="Biometric"),
-        ], loc="lower right")
-        plt.tight_layout()
-        plt.savefig(CHARTS_DIR / f"dae_error_breakdown_sample_{idx:04d}.png", dpi=150)
-        plt.close(fig)
+    n_workers = min(len(render_args), 4)
+    with ProcessPoolExecutor(max_workers=n_workers) as pool:
+        list(pool.map(_render_dae_breakdown_worker, render_args))
 
-    logger.info("  Charts: %d DAE breakdown plots", len(top_idx))
+    logger.info("  Charts: %d DAE breakdown plots (parallel)", len(top_idx))
 
 
 def plot_beeswarm(
@@ -397,10 +490,12 @@ def plot_per_category_importance(
         return {}
 
     categories = {}
-    unique_cats = sorted(set(str(c) for c in attack_cats if c and str(c) != "normal"))
+    # M4-5: cast once — avoids O(K×N) Python str() calls inside the loop
+    cats_str = attack_cats.astype(str)
+    unique_cats = sorted(c for c in np.unique(cats_str) if c and c != "normal")
 
     for cat in unique_cats:
-        mask = np.array([str(c) == cat for c in attack_cats]) & (y_test == 1)
+        mask = (cats_str == cat) & (y_test == 1)
         if mask.sum() == 0:
             continue
 
@@ -481,7 +576,9 @@ def _severity(n_models_flagged: int) -> str:
 def _top_features_shap(sv_row: np.ndarray, feat_names: list, k: int = 3) -> list:
     """Top-k features by |SHAP| for one sample."""
     abs_vals = np.abs(sv_row)
-    top_i = np.argsort(abs_vals)[-k:][::-1]
+    # M4-9: O(F) partition then sort only k candidates
+    top_i_unsorted = np.argpartition(abs_vals, -k)[-k:]
+    top_i = top_i_unsorted[np.argsort(abs_vals[top_i_unsorted])[::-1]]
     return [
         {
             "feature": feat_names[i],
@@ -495,7 +592,9 @@ def _top_features_shap(sv_row: np.ndarray, feat_names: list, k: int = 3) -> list
 def _top_features_dae(werr_row: np.ndarray, feat_names: list, k: int = 3) -> list:
     """Top-k features by weighted error for one DAE sample."""
     total = werr_row.sum()
-    top_i = np.argsort(werr_row)[-k:][::-1]
+    # M4-9: O(F) partition then sort only k candidates
+    top_i_unsorted = np.argpartition(werr_row, -k)[-k:]
+    top_i = top_i_unsorted[np.argsort(werr_row[top_i_unsorted])[::-1]]
     return [
         {
             "feature": feat_names[i],
@@ -518,9 +617,18 @@ def build_analyst_report(
     logger.info("Building analyst report...")
     alerts = []
 
-    for idx in range(n_samples):
+    # M4-7: pre-compute per-sample flag counts; iterate only flagged indices
+    pred_matrix = np.column_stack(
+        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS]
+        + [dae_preds["y_pred"]]
+    )  # (N, 4)
+    n_flagged_all = pred_matrix.sum(axis=1)  # (N,)
+    flagged_indices = np.where(n_flagged_all > 0)[0]
+
+    for idx in flagged_indices:
+        idx = int(idx)
         models_flagged = []
-        entry = {"sample_index": int(idx), "models": {}}
+        entry = {"sample_index": idx, "models": {}}
 
         # Track A
         for name in TRACK_A_MODELS:
@@ -543,11 +651,8 @@ def build_analyst_report(
             "top_features": _top_features_dae(weighted_err[idx], feat_names),
         }
 
-        if not models_flagged:
-            continue
-
         entry["consensus"] = f"{len(models_flagged)}/4 models flagged"
-        entry["severity"] = _severity(len(models_flagged))
+        entry["severity"] = _severity(int(n_flagged_all[idx]))
         alerts.append(entry)
 
     path = OUTPUT_DIR / "analyst_report.json"
@@ -570,15 +675,16 @@ def build_clinician_summaries(
     xgb_preds = all_preds["xgboost"]
     xgb_shap = all_shap["xgboost"]
 
-    for idx in range(n_samples):
-        if xgb_preds["y_pred"][idx] != 1:
-            continue
+    # M4-7: pre-compute per-sample flag counts in C — avoids inner sum per row
+    pred_matrix = np.column_stack(
+        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS]
+        + [dae_preds["y_pred"]]
+    )  # (N, 4)
+    n_flagged_all = pred_matrix.sum(axis=1)  # (N,)
 
-        # Count models flagging this sample
-        n_flagged = sum(
-            1 for name in TRACK_A_MODELS if all_preds[name]["y_pred"][idx] == 1
-        ) + (1 if dae_preds["y_pred"][idx] == 1 else 0)
-        severity = _severity(n_flagged)
+    for idx in np.where(xgb_preds["y_pred"] == 1)[0]:
+        idx = int(idx)
+        severity = _severity(int(n_flagged_all[idx]))
 
         top = _top_features_shap(xgb_shap[idx], feat_names, k=3)
         top1_feat = top[0]["feature"]
@@ -630,17 +736,23 @@ def build_admin_dashboard(
     logger.info("Building admin dashboard...")
 
     # Count alerts per severity
-    severity_counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
-    agreement_counts = {"4_of_4": 0, "3_of_4": 0, "2_of_4": 0, "1_of_4": 0}
+    # M4-6: stack all prediction arrays and sum in C — replaces O(N·M) Python loop
+    pred_matrix = np.column_stack(
+        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS]
+        + [dae_preds["y_pred"]]
+    )  # (N, 4)
+    n_flagged_all = pred_matrix.sum(axis=1)  # (N,)
+    flagged_mask = n_flagged_all > 0
 
-    for idx in range(n_samples):
-        n_flagged = sum(
-            1 for name in TRACK_A_MODELS if all_preds[name]["y_pred"][idx] == 1
-        ) + (1 if dae_preds["y_pred"][idx] == 1 else 0)
-        if n_flagged == 0:
-            continue
-        severity_counts[_severity(n_flagged)] += 1
-        agreement_counts[f"{n_flagged}_of_4"] += 1
+    severity_counts = {
+        "CRITICAL": int(((n_flagged_all >= 4) & flagged_mask).sum()),
+        "HIGH":     int(((n_flagged_all == 3) & flagged_mask).sum()),
+        "MEDIUM":   int(((n_flagged_all == 2) & flagged_mask).sum()),
+        "LOW":      int(((n_flagged_all == 1) & flagged_mask).sum()),
+    }
+    agreement_counts = {
+        f"{k}_of_4": int((n_flagged_all == k).sum()) for k in range(1, 5)
+    }
 
     total_alerts = sum(severity_counts.values())
 
@@ -1074,17 +1186,19 @@ def validate_perturbation(
     logger.info("Running perturbation test (mask top-%d features)...", top_n_features)
     results = {}
 
-    from pipeline.common import loads_signed
-    for name, cfg in TRACK_A_MODELS.items():
-        obj = loads_signed(PROJECT_ROOT / cfg["pipeline"])
-        clf = obj.named_steps["classifier"] if hasattr(obj, "named_steps") else obj
+    from pipeline.common.model_registry import get_track_a_classifiers, get_track_a_thresholds
+
+    # Opt-1: classifiers and thresholds from registry — no redundant disk I/O
+    classifiers = get_track_a_classifiers()
+    thresholds = get_track_a_thresholds()
+
+    for name in TRACK_A_MODELS:
+        clf = classifiers[name]
 
         # Baseline predictions
         y_proba_base = clf.predict_proba(X_test)[:, 1]
 
-        # Load optimal threshold from report
-        with open(PROJECT_ROOT / cfg["report"]) as f:
-            threshold = json.load(f)["optimal_threshold"]
+        threshold = thresholds[name]
 
         y_pred_base = (y_proba_base >= threshold).astype(int)
         f1_base = f1_score(y_test, y_pred_base, pos_label=1)
@@ -1093,10 +1207,11 @@ def validate_perturbation(
         shap_mean = np.mean(np.abs(all_shap[name]), axis=0)
         top_feat_idx = np.argsort(shap_mean)[-top_n_features:]
 
-        # Mask: replace top features with their training mean (neutral value)
+        # Opt-4: vectorized masking — replaces O(top_n) Python loop with a
+        # single fancy-index assignment.  All top features are zeroed to
+        # their column mean in one numpy op; no per-feature iteration needed.
         X_masked = X_test.copy()
-        for fi in top_feat_idx:
-            X_masked[:, fi] = np.mean(X_test[:, fi])
+        X_masked[:, top_feat_idx] = X_test[:, top_feat_idx].mean(axis=0)
 
         y_proba_masked = clf.predict_proba(X_masked)[:, 1]
         y_pred_masked = (y_proba_masked >= threshold).astype(int)
@@ -1130,30 +1245,40 @@ def validate_cross_model(
 
     Consistent rankings strengthen confidence; divergent rankings
     may indicate model-specific artifacts.
+
+    Opt-5: replaces nested dict comprehension + list comprehension rank
+    lookups with a pre-built numpy rank matrix (m_models × n_features).
+    spearmanr is called on row slices — no intermediate Python lists.
     """
     from scipy.stats import spearmanr
 
     logger.info("Running cross-model ranking comparison...")
 
     model_names = list(global_importances.keys())
-    # Build rank vectors keyed by feature name
-    rank_vectors = {}
-    for name, imp in global_importances.items():
-        rank_vectors[name] = {f["feature"]: f["rank"] for f in imp}
+    all_features = [entry["feature"] for entry in global_importances[model_names[0]]]
+    feat_to_col = {f: i for i, f in enumerate(all_features)}
+    n_models = len(model_names)
+    n_feats = len(all_features)
 
-    all_features = list(rank_vectors[model_names[0]].keys())
+    # Build rank matrix: shape (n_models, n_features) — avoids dict lookup per pair
+    rank_matrix = np.zeros((n_models, n_feats), dtype=np.int32)
+    for mi, name in enumerate(model_names):
+        for entry in global_importances[name]:
+            col = feat_to_col.get(entry["feature"])
+            if col is not None:
+                rank_matrix[mi, col] = entry["rank"]
+
+    # Top-5 feature sets per model (by rank value ≤ 5)
+    top5_sets = [
+        set(all_features[j] for j in range(n_feats) if rank_matrix[mi, j] <= 5)
+        for mi in range(n_models)
+    ]
 
     comparisons = {}
     for i, m1 in enumerate(model_names):
-        for m2 in model_names[i + 1:]:
-            ranks1 = [rank_vectors[m1][f] for f in all_features]
-            ranks2 = [rank_vectors[m2][f] for f in all_features]
-            rho, p_val = spearmanr(ranks1, ranks2)
-
-            top5_1 = set(f for f, r in rank_vectors[m1].items() if r <= 5)
-            top5_2 = set(f for f, r in rank_vectors[m2].items() if r <= 5)
-            overlap = top5_1 & top5_2
-
+        for j, m2 in enumerate(model_names[i + 1:], start=i + 1):
+            rho, p_val = spearmanr(rank_matrix[i], rank_matrix[j])
+            overlap = top5_sets[i] & top5_sets[j]
             pair = f"{m1}_vs_{m2}"
             comparisons[pair] = {
                 "spearman_rho": round(float(rho), 4),
@@ -1164,13 +1289,9 @@ def validate_cross_model(
             logger.info("  %s vs %s: rho=%.4f, top-5 overlap=%d/5",
                         m1, m2, rho, len(overlap))
 
-    # Consensus top features (in top-5 across all models)
-    from collections import Counter
-    all_top5 = []
-    for name in model_names:
-        all_top5.extend(f for f, r in rank_vectors[name].items() if r <= 5)
-    consensus = [feat for feat, cnt in Counter(all_top5).most_common()
-                 if cnt == len(model_names)]
+    # Consensus top features: features in top-5 across ALL models.
+    # Uses pre-built top5_sets — no rank_vectors dict needed.
+    consensus = sorted(set.intersection(*top5_sets)) if top5_sets else []
 
     result = {
         "pairwise_comparisons": comparisons,

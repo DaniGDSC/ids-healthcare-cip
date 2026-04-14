@@ -534,19 +534,27 @@ class AuditLogger:
     # ── chain recovery ─────────────────────────────────────────────
 
     def _recover_prev_hash(self) -> str:
-        """Walk the existing file (if any) and return the last
-        integrity_hash so the new chain continues seamlessly.
+        """Read the last record's integrity_hash to continue the chain.
+
+        M5-6: reads only the last 4 KB of the file instead of streaming
+        the entire JSONL from the beginning — O(1) disk I/O regardless of
+        log size.
         """
         if not self.path.exists() or self.path.stat().st_size == 0:
             return "0" * 64
-        last_line = ""
-        with open(self.path, "rb") as f:
-            for raw in f:
-                line = raw.decode("utf-8", errors="ignore").strip()
-                if line:
-                    last_line = line
-        if not last_line:
+        try:
+            with open(self.path, "rb") as f:
+                f.seek(0, 2)
+                size = f.tell()
+                f.seek(max(0, size - 4096))
+                tail = f.read()
+        except OSError:
             return "0" * 64
+
+        lines = [ln for ln in tail.split(b"\n") if ln.strip()]
+        if not lines:
+            return "0" * 64
+        last_line = lines[-1].decode("utf-8", errors="ignore").strip()
         try:
             last_record = json.loads(last_line)
             recovered = last_record.get("integrity_hash")

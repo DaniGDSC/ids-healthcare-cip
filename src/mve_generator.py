@@ -18,6 +18,8 @@ feature importances, or model architecture.
 
 from __future__ import annotations
 
+import functools
+import itertools
 import json
 import logging
 import os
@@ -113,7 +115,8 @@ def _fmt_dests(dests: list[str]) -> str:
         return "approved internal hosts"
     if len(dests) == 1:
         return dests[0]
-    return ", ".join(dests[:3]) + ("" if len(dests) <= 3 else " and others")
+    # M-5: islice avoids allocating a dests[:3] copy
+    return ", ".join(itertools.islice(dests, 3)) + ("" if len(dests) <= 3 else " and others")
 
 
 # ── Known vendor IPs for maintenance FP reduction (FM-L1-09) ────────────
@@ -142,9 +145,14 @@ _IOMT_DEVICE_TYPES = frozenset({
 
 _LIFE_SUSTAINING = frozenset({"infusion_pump", "ventilator"})
 
+# M-4: pre-compiled fence-strip patterns — avoids per-call pattern cache lookup
+_RE_FENCE_OPEN  = re.compile(r"^```(?:json)?\s*")
+_RE_FENCE_CLOSE = re.compile(r"\s*```$")
+
 # Substrings used to recognize device_type from descriptive product names
 # (fixtures use "BD Alaris infusion pump", not "infusion_pump")
-_DEVICE_TYPE_KEYWORDS = [
+# M-1: tuple of tuples — immutable; signals the list is never mutated.
+_DEVICE_TYPE_KEYWORDS = (
     # IoMT devices
     ("infusion", "infusion_pump"),
     ("ventilator", "ventilator"),
@@ -169,7 +177,7 @@ _DEVICE_TYPE_KEYWORDS = [
     ("hvac", "other"),
     ("monitor", "patient_monitor"),
     ("system", "server"),
-]
+)
 
 
 def _normalize_device_type(raw: str) -> str:
@@ -254,12 +262,14 @@ def _confidence_level(
             f" (baseline only {days} days — behavioral profile may be incomplete)"
         )
 
-    justification = {
-        "HIGH": f"strong anomaly signal with {days}-day baseline{baseline_note}",
-        "MEDIUM": f"moderate anomaly signal — warrants investigation{baseline_note}",
-        "LOW": f"weak anomaly signal — may be benign{baseline_note}",
-    }
-    return f"Confidence: {level} — {justification[level]}"
+    # M-6: build only the needed string — avoids evaluating 2 unused f-strings
+    if level == "HIGH":
+        detail = f"strong anomaly signal with {days}-day baseline{baseline_note}"
+    elif level == "MEDIUM":
+        detail = f"moderate anomaly signal — warrants investigation{baseline_note}"
+    else:
+        detail = f"weak anomaly signal — may be benign{baseline_note}"
+    return f"Confidence: {level} — {detail}"
 
 
 def _escalation(
@@ -726,6 +736,12 @@ def _generate_llm(
         logger.debug("anthropic package not installed; using rule-based fallback")
         return None
 
+    # M-3: reuse a single client (and its HTTP connection pool) across all
+    # alerts in the process — avoids a new TLS handshake per surfaced alert.
+    @functools.lru_cache(maxsize=1)
+    def _client(key: str) -> "anthropic.Anthropic":
+        return anthropic.Anthropic(api_key=key)
+
     criticality = str(device_context.get("criticality", "LOW")).upper()
     is_clinical = _IS_CLINICAL.get(criticality, False)
 
@@ -774,7 +790,7 @@ Return JSON with this exact structure:
 }}"""
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
+        client = _client(api_key)
         response = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=512,
@@ -782,9 +798,9 @@ Return JSON with this exact structure:
             messages=[{"role": "user", "content": user_prompt}],
         )
         raw = response.content[0].text.strip()
-        # Strip markdown code fences if present
-        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-        raw = re.sub(r"\s*```$", "", raw)
+        # M-4: strip markdown fences with pre-compiled patterns
+        raw = _RE_FENCE_OPEN.sub("", raw)
+        raw = _RE_FENCE_CLOSE.sub("", raw)
         data = json.loads(raw)
 
         mve = MVEOutput(
@@ -838,6 +854,9 @@ def generate_mve(
     Returns:
         MVEOutput with layer_1, layer_2, layer_3 and total_word_count <= 150.
     """
+    # M-7: normalise once — raw_alert or {} evaluated 3× before this fix
+    raw_alert = raw_alert or {}
+
     # ── FIX-D: Safe-failure validation (ST-01, ST-02, ST-05) ────────────
     if not device_context:
         device_context = {}
@@ -848,12 +867,12 @@ def generate_mve(
     criticality = str(device_context.get("criticality", "")).upper()
 
     # ST-05: Invalid criticality → default to CRITICAL
-    if criticality not in VALID_SEVERITY:
+    invalid_criticality = criticality not in VALID_SEVERITY
+    if invalid_criticality:
         logger.warning(
             "Invalid criticality '%s' — defaulting to CRITICAL",
             sanitize_for_log(criticality),
         )
-        device_context = dict(device_context, criticality="CRITICAL")
 
     # ST-01/ST-02: Unknown or missing device → CRITICAL + warning
     is_unknown = not device_type or device_type == "unknown"
@@ -862,21 +881,28 @@ def generate_mve(
             "Unknown device_type '%s' — defaulting to CRITICAL",
             sanitize_for_log(raw_dt),
         )
-        device_context = dict(device_context, criticality="CRITICAL")
-        device_context["device_type"] = "unknown"
+
+    # M-2: single dict copy covers both invalid-criticality and unknown-device
+    # branches — was two separate dict() calls that each copied the full dict.
+    if invalid_criticality or is_unknown:
+        device_context = {
+            **device_context,
+            "criticality": "CRITICAL",
+            **({"device_type": "unknown"} if is_unknown else {}),
+        }
 
     if not baseline:
         baseline = {}
 
-    alert_type = _detect_alert_type(raw_alert or {}, user_context)
+    alert_type = _detect_alert_type(raw_alert, user_context)
 
     # Try LLM first (Option A), fall back to rule-based (Option B)
     mve = _generate_llm(
-        raw_alert or {}, device_context, baseline, user_context, alert_type
+        raw_alert, device_context, baseline, user_context, alert_type
     )
     if mve is None:
         mve = _generate_rule_based(
-            raw_alert or {}, device_context, baseline, user_context, alert_type
+            raw_alert, device_context, baseline, user_context, alert_type
         )
 
     # ── FIX-D: Prefix Layer 1 for unknown/unregistered devices ──────────
@@ -906,7 +932,7 @@ def generate_mve(
             )
 
     # ── FM-L1-09: Vendor IP check in Layer 1 ──────────────────────────
-    dest_ip = (raw_alert or {}).get("dest_ip", "")
+    dest_ip = raw_alert.get("dest_ip", "")
     if dest_ip and dest_ip in _KNOWN_VENDOR_IPS:
         vendor = _KNOWN_VENDOR_IPS[dest_ip]
         existing_dev = mve.layer_1.get("deviation_description", "")

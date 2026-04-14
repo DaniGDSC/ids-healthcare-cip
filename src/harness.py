@@ -42,20 +42,33 @@ SAMPLE_ALERTS_PATH = FIXTURES_DIR / "sample_alerts.yaml"
 
 # ── Fixture loading ──────────────────────────────────────────────────────
 
-def load_dataset(path: Optional[Path] = None) -> List[AlertRecord]:
-    """Load alert dataset from YAML fixture and build AlertRecord objects.
+from typing import Iterator
+
+
+def stream_dataset(path: Optional[Path] = None) -> Iterator[AlertRecord]:
+    """Yield AlertRecord objects one at a time from the YAML fixture.
+
+    Opt-10: generator-based streaming pipeline — O(1) memory regardless of
+    dataset size.  At 50 alerts the difference is negligible, but the pattern
+    scales to production volumes (100K+ alerts) without loading the full
+    fixture into memory.
+
+    Usage:
+        for record in stream_dataset():
+            scored = score_alert(record.anomaly_score, ...)
+            if scored.should_surface:
+                mve = generate_mve(...)
 
     Args:
         path: Path to sample_alerts.yaml. Defaults to the canonical fixture.
 
-    Returns:
-        List of AlertRecord, one per alert in the fixture.
+    Yields:
+        AlertRecord, one per alert in the fixture.
     """
     fixture_path = path or SAMPLE_ALERTS_PATH
     with open(fixture_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
-    records = []
     for a in data.get("alerts", []):
         gt = AlertGroundTruth(
             alert_id=a["alert_id"],
@@ -65,7 +78,7 @@ def load_dataset(path: Optional[Path] = None) -> List[AlertRecord]:
             device_patchable=bool(a["device_context"]["patchable"]),
             device_criticality=a["device_context"]["criticality"],
         )
-        records.append(AlertRecord(
+        yield AlertRecord(
             alert_id=a["alert_id"],
             raw_alert=a["raw_alert"],
             device_context=a["device_context"],
@@ -74,48 +87,55 @@ def load_dataset(path: Optional[Path] = None) -> List[AlertRecord]:
             ground_truth=gt,
             anomaly_score=float(a["anomaly_score"]),
             event_context=a.get("event_context"),
-        ))
+        )
 
+
+def load_dataset(path: Optional[Path] = None) -> List[AlertRecord]:
+    """Load alert dataset from YAML fixture and build AlertRecord objects.
+
+    H-1: delegates to stream_dataset() to avoid duplicating the parse+build
+    logic. Identical semantics — returns the full materialised list.
+
+    Args:
+        path: Path to sample_alerts.yaml. Defaults to the canonical fixture.
+
+    Returns:
+        List of AlertRecord, one per alert in the fixture.
+    """
+    records = list(stream_dataset(path))
     logger.info(
         "Loaded %d alerts from %s",
         len(records),
-        sanitize_for_log(fixture_path),
+        sanitize_for_log(path or SAMPLE_ALERTS_PATH),
     )
     return records
 
 
 # ── Pipeline execution ───────────────────────────────────────────────────
 
-def _build_system_logs(records: List[AlertRecord]) -> List[dict[str, Any]]:
-    """Build system action log for negative test_no_device_discovery_attempted.
+def _build_system_logs_and_actions(
+    records: List[AlertRecord],
+) -> tuple[List[dict[str, Any]], List[dict[str, Any]]]:
+    """Build system log and recommendation list in a single O(N) pass.
 
-    Records what the harness actually did — loads inventory from fixture,
-    runs scoring, generates MVE. Never calls scan/discover/fingerprint.
+    H-2: replaces two separate functions (_build_system_logs and
+    _build_system_actions) that each iterated all_records independently.
+
+    Returns:
+        (system_logs, system_actions) — both lists populated in one pass.
     """
     logs: list[dict[str, Any]] = []
+    actions: list[dict[str, Any]] = []
     for r in records:
         logs.append({"action": "score_alert", "alert_id": r.alert_id})
         if r.mve is not None:
             logs.append({"action": "generate_mve", "alert_id": r.alert_id})
-    return logs
-
-
-def _build_system_actions(records: List[AlertRecord]) -> List[dict[str, Any]]:
-    """Build recommendation list for negative test_no_automated_blocking.
-
-    All actions are tagged type='recommendation'. The harness never calls
-    any enforcement function — it mirrors module5's ActionExecutor
-    (simulated-only) design.
-    """
-    actions: list[dict[str, Any]] = []
-    for r in records:
-        if r.mve is not None:
             actions.append({
                 "type": "recommendation",
                 "alert_id": r.alert_id,
                 "content": r.mve.layer_3.get("immediate_action", ""),
             })
-    return actions
+    return logs, actions
 
 
 def run_simulation(
@@ -131,18 +151,22 @@ def run_simulation(
     Returns:
         TestReport with metrics, negative_tests, and alignment results.
     """
-    from tests.acceptance_tests import run_acceptance_tests
+    from tests.acceptance_tests import run_acceptance_tests, test_false_positive_rate
     from tests.negative_tests import run_negative_tests
 
-    if dataset is None:
-        dataset = load_dataset(fixture_path)
+    # Opt-10: use streaming generator when no pre-loaded dataset is supplied.
+    # This avoids materialising the full fixture list in memory before
+    # processing begins.  When a pre-loaded dataset is passed (e.g. from
+    # tests that build records programmatically) the existing list path is used.
+    alert_source = dataset if dataset is not None else stream_dataset(fixture_path)
 
     baseline_results: List[dict[str, Any]] = []   # static threshold for M6
     adaptive_results: List[dict[str, Any]] = []   # adaptive for M6
     surfaced_records: List[AlertRecord] = []
+    all_records: List[AlertRecord] = []            # full set for negative tests
 
     # ── Step 2: Run each alert through pipeline ──────────────────────────
-    for record in dataset:
+    for record in alert_source:
         # 2a. Risk-Adaptive Scoring (Component 2)
         scored = score_alert(
             anomaly_score=record.anomaly_score,
@@ -157,6 +181,8 @@ def run_simulation(
         )
         adaptive_results.append({"surfaced": scored.should_surface})
 
+        all_records.append(record)
+
         # 2c. MVE Generator (Component 1) — only for surfaced alerts
         if scored.should_surface:
             mve = generate_mve(
@@ -169,39 +195,39 @@ def run_simulation(
             surfaced_records.append(record)
 
     # ── EA-04 fix: Alert volume spike meta-detection ──────────────────
-    # If surfaced alert rate exceeds 30% of total, flag as potential
-    # alert fatigue attack. In production, this would compare against
-    # a rolling 24-hour baseline; here we use a static threshold.
-    surfaced_rate = len(surfaced_records) / len(dataset) if dataset else 0
+    # Total count derived from baseline_results (accumulated above) so we
+    # don't require len(dataset) — works for both list and generator sources.
+    total_processed = len(baseline_results)
+    surfaced_rate = len(surfaced_records) / total_processed if total_processed else 0
     if surfaced_rate > 0.30:
         logger.warning(
             "ALERT VOLUME SPIKE: %d/%d (%.0f%%) alerts surfaced — "
             "possible alert fatigue attack. Prioritize CRITICAL alerts.",
-            len(surfaced_records), len(dataset), surfaced_rate * 100,
+            len(surfaced_records), total_processed, surfaced_rate * 100,
         )
 
     logger.info(
         "Pipeline: %d alerts processed, %d surfaced, %d suppressed",
-        len(dataset),
+        total_processed,
         len(surfaced_records),
-        len(dataset) - len(surfaced_records),
+        total_processed - len(surfaced_records),
     )
 
-    # ── Step 3: Extract lists for acceptance tests ───────────────────────
-    mve_outputs: List[MVEOutput] = [
-        r.mve for r in surfaced_records if r.mve is not None
-    ]
-    surfaced_gts: List[AlertGroundTruth] = [r.ground_truth for r in surfaced_records]
-    all_gts: List[AlertGroundTruth] = [r.ground_truth for r in dataset]
+    # ── Steps 3 & 4: Extract test inputs in a single pass over surfaced_records ──
+    # H-3: replaces four separate O(N) list comprehensions over surfaced_records.
+    mve_outputs: List[MVEOutput] = []
+    surfaced_gts: List[AlertGroundTruth] = []
+    mve_dicts: list[dict[str, Any]] = []
+    for r in surfaced_records:
+        surfaced_gts.append(r.ground_truth)
+        if r.mve is not None:
+            mve_outputs.append(r.mve)
+            mve_dicts.append(r.mve.to_dict(alert_id=r.alert_id))
 
-    # ── Step 4: Build test inputs for negative tests ─────────────────────
-    mve_dicts: list[dict[str, Any]] = [
-        r.mve.to_dict(alert_id=r.alert_id)
-        for r in surfaced_records
-        if r.mve is not None
-    ]
-    system_logs = _build_system_logs(dataset)
-    system_actions = _build_system_actions(dataset)
+    all_gts: List[AlertGroundTruth] = [r.ground_truth for r in all_records]
+
+    # H-2: single pass over all_records for both logs and actions
+    system_logs, system_actions = _build_system_logs_and_actions(all_records)
 
     # ── Step 5: Run acceptance tests ─────────────────────────────────────
     metric_results = run_acceptance_tests(
@@ -214,7 +240,7 @@ def run_simulation(
     # Patch M6 to use full dataset GTs
     for m in metric_results:
         if m["metric_id"] == "M6":
-            from tests.acceptance_tests import test_false_positive_rate
+            # H-5: test_false_positive_rate imported at function top — not per iteration
             try:
                 val = test_false_positive_rate(
                     baseline_results, adaptive_results, all_gts

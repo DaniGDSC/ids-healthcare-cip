@@ -23,6 +23,18 @@ logger = logging.getLogger(__name__)
 
 _DP: int = 4  # decimal places for all formatted numbers
 
+# Opt-6: built once at import time — not rebuilt on every _correlation_interpretation() call.
+# Previously a local dict with 7 frozenset constructions per invocation.
+_CORRELATION_INTERPRETATIONS: Dict[frozenset, str] = {
+    frozenset({"SIntPktAct", "SrcJitter"}): "Timing jitter derives from inter-packet intervals",
+    frozenset({"Loss", "pLoss"}):           "Absolute and proportional loss are co-determined",
+    frozenset({"DstLoad", "Rate"}):         "Destination load is a rate-normalised throughput",
+    frozenset({"DIntPkt", "DstJitter"}):    "Destination jitter derives from inter-packet intervals",
+    frozenset({"SIntPktAct", "Loss"}):      "Packet timing correlates with loss under congestion",
+    frozenset({"SrcJitter", "Loss"}):       "Jitter and loss co-occur during network degradation",
+    frozenset({"DstBytes", "TotPkts"}):     "Byte volume scales linearly with packet count",
+}
+
 
 def render_quality_report(
     config: Phase0Config,
@@ -105,10 +117,14 @@ def _section_outliers(
     w("| Feature | Outlier Count | Outlier (%) | Lower Bound | Upper Bound |")
     w("|---------|-------------:|------------:|------------:|------------:|")
 
-    # Only show features that actually have outliers. Biometric rows omit
-    # lower_bound/upper_bound (PHI quasi-identifiers) — render as "—".
-    features_with_outliers = [r for r in outlier_report if r["outlier_count"] > 0]
-    for r in features_with_outliers:
+    # Opt-7: iterate once with inline counter — no throwaway filtered list.
+    # Previously built features_with_outliers list then len()'d it separately.
+    n_with = 0
+    n_total = len(outlier_report)
+    for r in outlier_report:
+        if not r["outlier_count"]:
+            continue
+        n_with += 1
         lb = r.get("lower_bound")
         ub = r.get("upper_bound")
         lb_cell = f"{lb:>11.{_DP}f}" if lb is not None else f"{'—':>11}"
@@ -122,9 +138,6 @@ def _section_outliers(
         )
 
     w("")
-
-    n_with = len(features_with_outliers)
-    n_total = len(outlier_report)
     w(
         f"**{n_with}** of {n_total} numeric features contain at least one "
         f"outlier. This confirms that network-traffic features exhibit "
@@ -293,18 +306,10 @@ def _correlation_interpretation(feature_a: str, feature_b: str) -> str:
 
     Returns:
         One-line interpretation string for the Markdown table.
-    """
-    pair = frozenset({feature_a, feature_b})
 
-    interpretations = {
-        frozenset({"SIntPktAct", "SrcJitter"}): "Timing jitter derives from inter-packet intervals",
-        frozenset({"Loss", "pLoss"}): "Absolute and proportional loss are co-determined",
-        frozenset({"DstLoad", "Rate"}): "Destination load is a rate-normalised throughput",
-        frozenset(
-            {"DIntPkt", "DstJitter"}
-        ): "Destination jitter derives from inter-packet intervals",
-        frozenset({"SIntPktAct", "Loss"}): "Packet timing correlates with loss under congestion",
-        frozenset({"SrcJitter", "Loss"}): "Jitter and loss co-occur during network degradation",
-        frozenset({"DstBytes", "TotPkts"}): "Byte volume scales linearly with packet count",
-    }
-    return interpretations.get(pair, "Linear dependency detected")
+    Opt-6: looks up the module-level ``_CORRELATION_INTERPRETATIONS`` constant
+    instead of rebuilding a 7-entry dict with 7 frozenset allocations on every call.
+    """
+    return _CORRELATION_INTERPRETATIONS.get(
+        frozenset({feature_a, feature_b}), "Linear dependency detected"
+    )

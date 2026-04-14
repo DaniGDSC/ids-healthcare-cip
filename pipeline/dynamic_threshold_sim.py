@@ -26,9 +26,11 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
 import time
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import matplotlib
@@ -117,9 +119,16 @@ def load_stream_data() -> dict:
 # ═══════════════════════════════════════════════════════════════════════
 
 def _median_mad(window: np.ndarray) -> tuple[float, float]:
-    """Return (median, MAD) of the values in window."""
-    med = float(np.median(window))
-    mad = float(np.median(np.abs(window - med)))
+    """Return (median, MAD) of the values in window.
+
+    DT-2: np.partition gives O(W) median without a full O(W log W) sort.
+    DT-7: single pre-allocated buffer for abs-deviation avoids two temporaries.
+    """
+    mid = len(window) // 2
+    med = float(np.partition(window, mid)[mid])
+    dev = np.empty_like(window)
+    np.abs(window - med, out=dev)
+    mad = float(np.partition(dev, mid)[mid])
     return med, mad
 
 
@@ -159,38 +168,67 @@ def run_stream(
     cum_fnr_static = np.zeros(n, dtype=float)
     cum_fnr_adaptive = np.zeros(n, dtype=float)
 
+    # DT-1: O(1) running confusion-matrix counters replace the O(t) slice +
+    # f1_score scan that made the loop O(N²).  F1/FPR/FNR derived each tick
+    # from four integers — no array allocation inside the hot path.
+    tp_s = fp_s = fn_s = tn_s = 0
+    tp_a = fp_a = fn_a = tn_a = 0
+
     for t in range(n):
         re = re_scores[t]
+        yt = int(y_true[t])
 
         # Static prediction
-        static_preds[t] = int(re > static_threshold)
+        sp = int(re > static_threshold)
+        static_preds[t] = sp
 
         # Adaptive threshold
         window_arr = np.array(benign_window)
         med, mad = _median_mad(window_arr)
         thresh_t = med + k * mad if mad > 0 else med * (1 + k * 0.1)
         adaptive_thresh[t] = thresh_t
-        adaptive_preds[t] = int(re > thresh_t)
+        ap = int(re > thresh_t)
+        adaptive_preds[t] = ap
 
         # Update benign window: add sample only if classified benign by
         # the *static* threshold (avoids feedback loop contamination)
         if re <= static_threshold:
             benign_window.append(re)
 
-        # Cumulative metrics (need at least 1 sample of each class)
-        sl = slice(0, t + 1)
-        yt = y_true[sl]
-        if len(np.unique(yt)) > 1:
-            cum_f1_static[t] = f1_score(yt, static_preds[sl], zero_division=0)
-            cum_f1_adaptive[t] = f1_score(yt, adaptive_preds[sl], zero_division=0)
+        # DT-1: update confusion matrix counters O(1)
+        if sp == 1 and yt == 1:
+            tp_s += 1
+        elif sp == 1 and yt == 0:
+            fp_s += 1
+        elif sp == 0 and yt == 1:
+            fn_s += 1
+        else:
+            tn_s += 1
 
+        if ap == 1 and yt == 1:
+            tp_a += 1
+        elif ap == 1 and yt == 0:
+            fp_a += 1
+        elif ap == 0 and yt == 1:
+            fn_a += 1
+        else:
+            tn_a += 1
+
+        # Cumulative metrics: need at least one positive and one negative seen
+        if tp_s + fn_s > 0 and tp_s + fp_s >= 0 and (tp_s > 0 or fp_s > 0 or fn_s > 0):
             n_seen = t + 1
-            fp_s = int(((static_preds[sl] == 1) & (yt == 0)).sum())
-            fn_s = int(((static_preds[sl] == 0) & (yt == 1)).sum())
-            fp_a = int(((adaptive_preds[sl] == 1) & (yt == 0)).sum())
-            fn_a = int(((adaptive_preds[sl] == 0) & (yt == 1)).sum())
-            cum_fpr_static[t] = fp_s / n_seen
-            cum_fnr_static[t] = fn_s / n_seen
+            # Static F1
+            prec_s = tp_s / (tp_s + fp_s) if (tp_s + fp_s) > 0 else 0.0
+            rec_s  = tp_s / (tp_s + fn_s) if (tp_s + fn_s) > 0 else 0.0
+            cum_f1_static[t] = (2 * prec_s * rec_s / (prec_s + rec_s)
+                                 if (prec_s + rec_s) > 0 else 0.0)
+            # Adaptive F1
+            prec_a = tp_a / (tp_a + fp_a) if (tp_a + fp_a) > 0 else 0.0
+            rec_a  = tp_a / (tp_a + fn_a) if (tp_a + fn_a) > 0 else 0.0
+            cum_f1_adaptive[t] = (2 * prec_a * rec_a / (prec_a + rec_a)
+                                   if (prec_a + rec_a) > 0 else 0.0)
+            cum_fpr_static[t]   = fp_s / n_seen
+            cum_fnr_static[t]   = fn_s / n_seen
             cum_fpr_adaptive[t] = fp_a / n_seen
             cum_fnr_adaptive[t] = fn_a / n_seen
 
@@ -231,22 +269,36 @@ def sensitivity_grid(
     static_threshold: float,
     train_benign_re: np.ndarray,
 ) -> pd.DataFrame:
-    """Grid search over W × k, returning final F1 and FPR for each."""
+    """Grid search over W × k, returning final F1 and FPR for each.
+
+    DT-6: 12 independent run_stream calls executed in parallel via
+    ThreadPoolExecutor — numpy releases the GIL for most array ops so
+    threads run concurrently.  max_workers capped at combo count so we
+    never spin up idle threads.
+    """
+    combos = [(W, k_val) for W in WINDOW_GRID for k_val in K_GRID]
+    n_workers = min(len(combos), os.cpu_count() or 4)
+
+    def _run_one(args: tuple) -> dict:
+        W, k_val = args
+        return run_stream(re_scores, y_true, static_threshold,
+                          train_benign_re, W=W, k=k_val)
+
+    with ThreadPoolExecutor(max_workers=n_workers) as ex:
+        results = list(ex.map(_run_one, combos))
+
     rows = []
-    for W in WINDOW_GRID:
-        for k_val in K_GRID:
-            result = run_stream(re_scores, y_true, static_threshold,
-                                train_benign_re, W=W, k=k_val)
-            fm = result["final_metrics"]
-            rows.append({
-                "W": W, "k": k_val,
-                "F1_static": fm["static"]["f1"],
-                "F1_adaptive": fm["adaptive"]["f1"],
-                "FPR_static": fm["static"]["fpr"],
-                "FPR_adaptive": fm["adaptive"]["fpr"],
-                "FNR_adaptive": fm["adaptive"]["fnr"],
-                "delta_F1": round(fm["adaptive"]["f1"] - fm["static"]["f1"], 6),
-            })
+    for (W, k_val), result in zip(combos, results):
+        fm = result["final_metrics"]
+        rows.append({
+            "W": W, "k": k_val,
+            "F1_static": fm["static"]["f1"],
+            "F1_adaptive": fm["adaptive"]["f1"],
+            "FPR_static": fm["static"]["fpr"],
+            "FPR_adaptive": fm["adaptive"]["fpr"],
+            "FNR_adaptive": fm["adaptive"]["fnr"],
+            "delta_F1": round(fm["adaptive"]["f1"] - fm["static"]["f1"], 6),
+        })
     return pd.DataFrame(rows)
 
 
@@ -356,10 +408,9 @@ def run_adaptive_tiers(
         score = R[t]
 
         # Compute adaptive thresholds from benign window
+        # DT-3: single np.percentile call — one sort instead of three
         warr = np.array(benign_window) if len(benign_window) >= 10 else R[:W]
-        t_med = float(np.percentile(warr, 75))
-        t_hi = float(np.percentile(warr, 90))
-        t_cr = float(np.percentile(warr, 95))
+        t_med, t_hi, t_cr = np.percentile(warr, [75, 90, 95])
         thresholds_t = {"CRITICAL": t_cr, "HIGH": t_hi, "MEDIUM": t_med}
 
         tier_history["MEDIUM"].append(t_med)
@@ -397,11 +448,12 @@ def run_adaptive_tiers(
         }
 
     # Alert distribution
-    def _tier_dist(levels):
-        dist = {}
-        for tier in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]:
-            dist[tier] = int((levels == tier).sum())
-        return dist
+    def _tier_dist(levels: np.ndarray) -> dict:
+        # DT-4: np.unique one-pass replaces 4 × O(N) (levels==tier).sum() calls
+        vals, cnts = np.unique(levels, return_counts=True)
+        base = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
+        base.update({str(v): int(c) for v, c in zip(vals, cnts)})
+        return base
 
     return {
         "static_metrics": _tier_metrics(static_levels, y_true),
@@ -436,13 +488,16 @@ def run_combined(
        adaptive percentile window.
     """
     # --- Feedback-only (Option C) ---
+    # DT-5: pre-compute label strings once with vectorised np.where —
+    # avoids N×n_feedback_iters Python-level ternary evaluations.
+    gt_labels = np.where(y_true == 1, "attack", "benign")
+
     thresholds = dict(DEFAULT_THRESHOLDS)
     for _ in range(n_feedback_iters):
         levels = assign_risk_levels(R, thresholds)
         fb = FeedbackLoop()
         for idx in range(len(R)):
-            gt = "attack" if y_true[idx] == 1 else "benign"
-            fb.record(f"A-{idx}", gt, str(levels[idx]), float(R[idx]), [])
+            fb.record(f"A-{idx}", gt_labels[idx], str(levels[idx]), float(R[idx]), [])
         adj = fb.compute_adjustments(current_thresholds=thresholds)
         thresholds = apply_feedback(thresholds, adj)
     feedback_thresholds = dict(thresholds)
@@ -499,8 +554,12 @@ def run_combined(
             "recall": round(float(recall_score(actual_pos, pred_pos, zero_division=0)), 6),
         }
 
-    def _dist(levels):
-        return {t: int((levels == t).sum()) for t in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]}
+    def _dist(levels: np.ndarray) -> dict:
+        # DT-4: np.unique one-pass replaces 4 × O(N) equality scans
+        vals, cnts = np.unique(levels, return_counts=True)
+        base = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
+        base.update({str(v): int(c) for v, c in zip(vals, cnts)})
+        return base
 
     static_levels = assign_risk_levels(R, DEFAULT_THRESHOLDS)
 

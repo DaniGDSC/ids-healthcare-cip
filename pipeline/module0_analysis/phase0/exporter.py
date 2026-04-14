@@ -95,7 +95,7 @@ class JsonExporter(BaseExporter):
             data: Serialisable Python dict.
             path: Destination ``.json`` file.
         """
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)  # safe for standalone use
         tmp = path.with_suffix(path.suffix + ".tmp")
         tmp.write_text(json.dumps(data, indent=self._indent))
         os.replace(tmp, path)
@@ -193,6 +193,9 @@ class ReportExporter:
         self._csv = csv_exporter or CsvExporter()
         self._parquet = parquet_exporter or ParquetExporter()
         self._markdown = markdown_exporter or MarkdownExporter()
+        # Opt-11: create output directory once here rather than in every
+        # export method — eliminates a redundant mkdir syscall per export.
+        config.output_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # Public API

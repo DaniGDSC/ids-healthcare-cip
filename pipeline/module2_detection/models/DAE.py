@@ -112,14 +112,21 @@ class DAEDetector:
         # Per-feature inverse-variance weights (fit after training)
         self._feat_weights: np.ndarray | None = None
 
+        # Cached predict_proba scaling params (set at fit time, avoids
+        # np.percentile recomputation on every predict_proba() call).
+        self._proba_e_min: float | None = None
+        self._proba_e_span: float | None = None
+
     # ------------------------------------------------------------------
     # Feature-wise normalisation (winsorize + MinMax to [0, 1])
     # ------------------------------------------------------------------
 
     def _fit_normaliser(self, X: np.ndarray) -> None:
         """Compute per-feature clip bounds and MinMax params from benign data."""
-        self._clip_lo = np.percentile(X, self._clip_pct, axis=0)
-        self._clip_hi = np.percentile(X, 100.0 - self._clip_pct, axis=0)
+        # Opt-2: one np.percentile call computes both bounds in a single sort
+        # pass instead of two separate O(B log B) sorts.
+        bounds = np.percentile(X, [self._clip_pct, 100.0 - self._clip_pct], axis=0)
+        self._clip_lo, self._clip_hi = bounds[0], bounds[1]
         X_clipped = np.clip(X, self._clip_lo, self._clip_hi)
         self._feat_min = X_clipped.min(axis=0)
         feat_max = X_clipped.max(axis=0)
@@ -295,12 +302,20 @@ class DAEDetector:
         # Compute inverse-variance feature weights from benign training portion
         self._fit_feature_weights(X_norm[:n_train] if n_val > 0 else X_norm)
 
-        # Compute weighted reconstruction errors on normalised training set
-        recon = self._model.predict(X_norm, verbose=0)
+        # Opt-3: use _forward() (direct model call, sub-ms latency) instead of
+        # model.predict() (Keras batch API with 20-50ms per-call setup overhead).
+        # _forward() is already used by all other inference paths for this reason.
+        recon = self._forward(X_norm)
         self._train_errors = self._weighted_mse(X_norm, recon)
 
         # Set threshold at configured percentile of benign errors
         self._threshold = float(np.percentile(self._train_errors, self._threshold_pct))
+
+        # Pre-compute predict_proba scaling params once to avoid
+        # np.percentile() recomputation on every inference call.
+        self._proba_e_min = float(self._train_errors.min())
+        e_max = float(np.percentile(self._train_errors, 99))
+        self._proba_e_span = e_max - self._proba_e_min if e_max > self._proba_e_min else 1.0
 
         elapsed = time.perf_counter() - t0
         actual_epochs = len(self._history.get("loss", []))
@@ -379,11 +394,16 @@ class DAEDetector:
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Anomaly score normalized to [0, 1] range.
 
-        Uses min-max scaling relative to benign training error
-        distribution.  Values > 1.0 are clipped.
+        Uses min-max scaling relative to benign training error distribution.
+        Scaling params (e_min, e_span) are pre-computed at fit() time to avoid
+        np.percentile recomputation on every inference call.  Values > 1.0
+        are clipped.
         """
         errors = self.reconstruction_error(X)
-        if self._train_errors is not None and len(self._train_errors) > 0:
+        if self._proba_e_min is not None:
+            scores = (errors - self._proba_e_min) / self._proba_e_span
+        elif self._train_errors is not None and len(self._train_errors) > 0:
+            # Fallback for artefacts loaded before this optimisation was applied
             e_min = float(self._train_errors.min())
             e_max = float(np.percentile(self._train_errors, 99))
             span = e_max - e_min if e_max > e_min else 1.0
@@ -417,8 +437,11 @@ class DAEDetector:
             roc_auc_score,
         )
 
-        y_pred = self.predict(X_test)
+        # Opt-4: one forward pass shared between prediction and error metrics.
+        # Previously predict() called reconstruction_error() internally, then
+        # evaluate() called reconstruction_error() again — two full DAE passes.
         errors = self.reconstruction_error(X_test)
+        y_pred = (errors > self._noisy_threshold()).astype(int)
 
         metrics = {
             "attack_f1": float(f1_score(y_test, y_pred, pos_label=1)),
@@ -558,6 +581,8 @@ class DAEDetector:
             },
             "feature_weights": self._feat_weights.tolist(),
             "threshold": float(self._threshold),
+            "proba_e_min": self._proba_e_min,
+            "proba_e_span": self._proba_e_span,
             "train_errors": self._train_errors.tolist() if self._train_errors is not None else None,
             "n_features": int(self._feat_weights.shape[0]),
             "test_metrics": dict(self._test_metrics),
@@ -659,6 +684,18 @@ class DAEDetector:
             )
         instance._test_metrics = dict(body.get("test_metrics", {}))
         instance._history = dict(body.get("history", {}))
+
+        # Restore pre-computed predict_proba scaling params.
+        # If absent (artefact pre-dates this optimisation), recompute from
+        # train_errors so the fallback path in predict_proba() is not needed.
+        if body.get("proba_e_min") is not None:
+            instance._proba_e_min = float(body["proba_e_min"])
+            instance._proba_e_span = float(body["proba_e_span"])
+        elif instance._train_errors is not None:
+            e_min = float(instance._train_errors.min())
+            e_max = float(np.percentile(instance._train_errors, 99))
+            instance._proba_e_min = e_min
+            instance._proba_e_span = e_max - e_min if e_max > e_min else 1.0
 
         # Build the Keras model with the right shape and load weights.
         n_features = int(body.get("n_features", instance._feat_weights.shape[0]))

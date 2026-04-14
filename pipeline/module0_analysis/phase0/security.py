@@ -37,6 +37,7 @@ import logging
 import os
 import stat
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
@@ -236,10 +237,10 @@ class IntegrityVerifier:
         from cryptography.exceptions import InvalidSignature
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import ec
-        from cryptography.hazmat.primitives import serialization
 
-        _, public_path, _ = _load_signing_key()
-        public_key = serialization.load_pem_public_key(public_path.read_bytes())
+        # Opt-9: load the public key once per process via lru_cache instead
+        # of re-reading the PEM file on every verify_and_read() call.
+        public_key = _load_phase0_public_key()
 
         signed_payload = _canonical_json({"version": meta.get("version"), "entries": entries})
         try:
@@ -299,6 +300,22 @@ class IntegrityVerifier:
             os.chmod(self._metadata_path, 0o640)
         except OSError:
             pass
+
+
+@lru_cache(maxsize=1)
+def _load_phase0_public_key():
+    """Load the Module 5 public key once and cache for the process lifetime.
+
+    Opt-9: ``_read_metadata_verified()`` previously called
+    ``serialization.load_pem_public_key(public_path.read_bytes())`` on every
+    invocation — one PEM disk read per dataset load. This function is called
+    instead; the result is cached so the PEM is read at most once per process.
+    """
+    from pipeline.module5_responses.module5_pipeline import _load_signing_key
+    from cryptography.hazmat.primitives import serialization
+
+    _, public_path, _ = _load_signing_key()
+    return serialization.load_pem_public_key(public_path.read_bytes())
 
 
 # ===================================================================
@@ -505,11 +522,11 @@ def log_phase0_event(
     applied to redact any keys whose names match a biometric column.
     """
     payload = dict(payload or {})
-    # Defensive: if a caller passes a biometric column name as a key,
-    # replace its value rather than letting it leak into the chain.
-    for k in list(payload.keys()):
-        if k in BIOMETRIC_COLUMNS:
-            payload[k] = "[REDACTED-PHI]"
+    # Opt-8: set intersection finds only the keys that need redacting in
+    # O(min(|payload|, |BIOMETRIC_COLUMNS|)) instead of iterating all keys.
+    # list(payload.keys()) allocation is also eliminated.
+    for k in BIOMETRIC_COLUMNS & payload.keys():
+        payload[k] = "[REDACTED-PHI]"
 
     ts = datetime.now(timezone.utc).isoformat()
     _get_phase0_logger().log(level, "[%s] %s: %s", ts, event, payload if payload else "")

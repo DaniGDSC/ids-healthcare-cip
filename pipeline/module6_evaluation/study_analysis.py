@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -44,7 +45,6 @@ def compute_participant_accuracy(
     Compute composite accuracy per participant for a condition.
     Returns: {participant_id: mean_composite_score}
     """
-    from collections import defaultdict
     scores: dict[str, list[float]] = defaultdict(list)
     for r in responses:
         if r["condition"] == condition:
@@ -130,24 +130,21 @@ def run_secondary_analyses(responses: list[dict]) -> dict:
         if not cond:
             continue
 
-        # Over-reaction: isolated/escalated a false positive
-        over_react = [
-            r for r in cond
-            if r["ground_truth_label"] == "false_positive"
-            and r["chosen_action"] in ("isolate", "escalate")
-        ]
+        # M6-S1: single pass over cond — replaces 3 separate O(N) list comps
+        over = under = catast = 0
+        for r in cond:
+            gt = r["ground_truth_label"]
+            action = r["chosen_action"]
+            if gt == "false_positive" and action in ("isolate", "escalate"):
+                over += 1
+            if (gt == "true_positive"
+                    and r["correct_severity"] == "CRITICAL"
+                    and action == "dismiss"):
+                under += 1
+            if r.get("catastrophic_miss", False):
+                catast += 1
 
-        # Under-reaction: dismissed a CRITICAL true positive
-        under_react = [
-            r for r in cond
-            if r["ground_truth_label"] == "true_positive"
-            and r["correct_severity"] == "CRITICAL"
-            and r["chosen_action"] == "dismiss"
-        ]
-
-        # Catastrophic miss: CRITICAL↔LOW mismatch
-        catastrophic = [r for r in cond if r.get("catastrophic_miss", False)]
-
+        n_cond = len(cond)
         results[condition] = {
             "severity_accuracy": round(
                 float(np.mean([r["severity_score"] for r in cond])), 4
@@ -155,9 +152,9 @@ def run_secondary_analyses(responses: list[dict]) -> dict:
             "action_accuracy": round(
                 float(np.mean([r["action_correct"] for r in cond])), 4
             ),
-            "over_reaction_rate": round(len(over_react) / len(cond), 4),
-            "under_reaction_rate": round(len(under_react) / len(cond), 4),
-            "catastrophic_miss_rate": round(len(catastrophic) / len(cond), 4),
+            "over_reaction_rate": round(over / n_cond, 4),
+            "under_reaction_rate": round(under / n_cond, 4),
+            "catastrophic_miss_rate": round(catast / n_cond, 4),
             "mean_decision_time_sec": round(
                 float(np.mean([r["decision_time_sec"] for r in cond])), 1
             ),
@@ -173,27 +170,22 @@ def run_secondary_analyses(responses: list[dict]) -> dict:
     ]
 
     if proxy_responses:
-        q21_counts: dict = {}
-        q22_counts: dict = {}
-        for r in proxy_responses:
-            q21 = r.get("q21_clinical_clarity", "")
-            q22 = r.get("q22_management_justification", "")
-            q21_counts[q21] = q21_counts.get(q21, 0) + 1
-            q22_counts[q22] = q22_counts.get(q22, 0) + 1
+        # M6-S2: Counter replaces manual get/+1 dict accumulation
+        q21_counts = Counter(r.get("q21_clinical_clarity", "") for r in proxy_responses)
+        q22_counts = Counter(r.get("q22_management_justification", "") for r in proxy_responses)
+        n_proxy = len(proxy_responses)
 
         results["proxy_stakeholder"] = {
-            "n_respondents": len(proxy_responses),
-            "q21_clinical_clarity": q21_counts,
+            "n_respondents": n_proxy,
+            "q21_clinical_clarity": dict(q21_counts),
             "q21_yes_rate": round(
-                sum(1 for r in proxy_responses
-                    if "Yes" in r.get("q21_clinical_clarity", ""))
-                / len(proxy_responses), 4
+                sum("Yes" in r.get("q21_clinical_clarity", "") for r in proxy_responses)
+                / n_proxy, 4
             ),
-            "q22_management_justification": q22_counts,
+            "q22_management_justification": dict(q22_counts),
             "q22_yes_rate": round(
-                sum(1 for r in proxy_responses
-                    if "Yes" in r.get("q22_management_justification", ""))
-                / len(proxy_responses), 4
+                sum("Yes" in r.get("q22_management_justification", "") for r in proxy_responses)
+                / n_proxy, 4
             ),
             "q21_notes": [r["q21_note"] for r in proxy_responses
                           if r.get("q21_note")],

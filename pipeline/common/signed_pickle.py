@@ -60,10 +60,12 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import io
 import json
 import logging
 import os
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -88,13 +90,18 @@ class SignedPickleError(Exception):
 # Internal: ECDSA key access via Module 5
 # ─────────────────────────────────────────────────────────────────────
 
+@lru_cache(maxsize=1)
 def _get_signing_key():
-    """Lazily load the Module 5 ECDSA private key.
+    """Lazily load the Module 5 ECDSA private key (cached for process lifetime).
 
     Returns ``(private_key, signing_key_id)``. Raises ``RuntimeError``
     if the ``cryptography`` package is missing or the key is not
     available — the caller MUST treat that as a fatal error rather
     than skipping the signature.
+
+    Opt-4: @lru_cache(maxsize=1) ensures the private key is loaded from
+    disk exactly once per process regardless of how many artefacts are
+    signed in a single run.
     """
     from pipeline.module5_responses.module5_pipeline import (
         _HAVE_CRYPTOGRAPHY,
@@ -109,12 +116,17 @@ def _get_signing_key():
     return private_key, signing_key_id
 
 
+@lru_cache(maxsize=1)
 def _get_verifying_key():
-    """Load the Module 5 public key for verification.
+    """Load the Module 5 public key for verification (cached for process lifetime).
 
     Returns ``(public_key, signing_key_id)``. Same lazy import pattern
     as ``_get_signing_key`` so callers that only need to verify don't
     pull cryptography until first use.
+
+    Opt-2: @lru_cache(maxsize=1) ensures the PEM file is read and the
+    public key object is constructed exactly once — not once per model
+    artefact loaded.
     """
     from pipeline.module5_responses.module5_pipeline import (
         _HAVE_CRYPTOGRAPHY,
@@ -164,12 +176,18 @@ def dumps_signed(obj: Any, path: Path) -> Path:
 
     private_key, signing_key_id = _get_signing_key()
 
-    # Step 1: serialise to a temp file, hash, then atomically rename.
-    tmp_pkl = path.with_suffix(path.suffix + ".tmp")
-    joblib.dump(obj, tmp_pkl)
-    raw = tmp_pkl.read_bytes()
+    # Step 1: serialise into an in-memory buffer, hash, then write once.
+    # Opt-3: joblib.dump accepts any file-like object, so we capture the
+    # serialised bytes directly into BytesIO — no temp-file read-back.
+    buf = io.BytesIO()
+    joblib.dump(obj, buf)
+    raw = buf.getvalue()
     digest = hashlib.sha256(raw).digest()
     digest_hex = digest.hex()
+
+    # Write the pickle bytes to a temp file for the atomic rename dance.
+    tmp_pkl = path.with_suffix(path.suffix + ".tmp")
+    tmp_pkl.write_bytes(raw)
 
     # Step 2: sign the digest (not the raw bytes — keeps the
     # signature step constant-time in pickle size).
@@ -249,6 +267,11 @@ def loads_signed(path: Path) -> Any:
             f"(got format={sidecar.get('format')!r})"
         )
 
+    # Opt-1: single read — bytes are used for hashing AND deserialisation.
+    # Previously path.read_bytes() hashed the file, then joblib.load(path)
+    # triggered a second full read from disk.  Now we read once, verify in
+    # memory, then pass an io.BytesIO to joblib.load — halving I/O for
+    # every model artefact load (e.g. 50 MB XGBoost → saves 50 MB per call).
     raw = path.read_bytes()
     actual_digest = hashlib.sha256(raw).hexdigest()
     expected_digest = sidecar.get("sha256", "")
@@ -289,8 +312,9 @@ def loads_signed(path: Path) -> Any:
             f"{path.name}: {exc}"
         ) from exc
 
-    # Only NOW do we touch joblib.load.
-    obj = joblib.load(path)
+    # Deserialise from the in-memory buffer — no second disk read.
+    obj = joblib.load(io.BytesIO(raw))
+    del raw  # release pickle bytes immediately; obj holds the live object
     logger.info(
         "signed_pickle: verified %s (sha256=%s, key=%s)",
         path.name, actual_digest[:16], sidecar_key_id,

@@ -18,12 +18,12 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import sys
 import time
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
-import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-import sys
 
 import matplotlib
 matplotlib.use("Agg")
@@ -336,11 +336,11 @@ def build_audit_record(
         sim_effective = True
         sim_tte_sec = None
 
-    record_data = json.dumps({
-        "idx": idx, "risk_score": risk_score, "risk_level": risk_level,
-        "actions": response["actions"], "outcome": sim_outcome,
-    }, sort_keys=True)
-    integrity_hash = hashlib.sha256(record_data.encode()).hexdigest()[:16]
+    # M5-2: f-string avoids dict construction + json.dumps + encode per record.
+    # 16 hex chars = 64 bits of collision resistance — same as before.
+    integrity_hash = hashlib.sha256(
+        f"{idx}:{risk_score:.4f}:{risk_level}:{sim_outcome}".encode()
+    ).hexdigest()[:16]
 
     return {
         "alert_id": f"ALERT-{idx:05d}",
@@ -367,22 +367,24 @@ def build_audit_record(
 
 def compute_effectiveness(audit_records: list) -> dict:
     """Compute action effectiveness metrics from simulated outcomes."""
-    action_stats = {}
-    outcome_counts = {}
+    # M5-4: defaultdict removes per-action guard; outcome_counts reused for
+    # over/under response so the record list is scanned only once.
+    action_stats: dict = defaultdict(lambda: {"true_attacks": 0, "false_positives": 0, "total": 0})
+    outcome_counts: dict = defaultdict(int)
 
     for rec in audit_records:
         outcome = rec["simulated_outcome"]["outcome"]
-        outcome_counts[outcome] = outcome_counts.get(outcome, 0) + 1
+        outcome_counts[outcome] += 1
         gt = rec["simulated_outcome"]["ground_truth"]
+        is_attack = gt == "attack"
 
         for action in rec["recommended_actions"]:
-            if action not in action_stats:
-                action_stats[action] = {"true_attacks": 0, "false_positives": 0, "total": 0}
-            action_stats[action]["total"] += 1
-            if gt == "attack":
-                action_stats[action]["true_attacks"] += 1
+            s = action_stats[action]
+            s["total"] += 1
+            if is_attack:
+                s["true_attacks"] += 1
             else:
-                action_stats[action]["false_positives"] += 1
+                s["false_positives"] += 1
 
     # Precision per action
     for action, stats in action_stats.items():
@@ -394,24 +396,23 @@ def compute_effectiveness(audit_records: list) -> dict:
     costly_actions = sorted(action_stats.keys(),
                             key=lambda a: MITIGATION_ACTIONS.get(a, {}).get("cost", 0),
                             reverse=True)
-    proportionality = []
-    for a in costly_actions:
-        proportionality.append({
+    proportionality = [
+        {
             "action": a,
             "cost": MITIGATION_ACTIONS.get(a, {}).get("cost", 0),
             "precision": action_stats[a]["precision"],
             "total": action_stats[a]["total"],
-        })
+        }
+        for a in costly_actions
+    ]
 
-    # Over/under response rates
-    over_response = sum(1 for r in audit_records
-                        if r["simulated_outcome"]["outcome"] == "false_positive_isolated")
-    under_response = sum(1 for r in audit_records
-                         if r["simulated_outcome"]["outcome"] == "threat_logged_not_mitigated")
+    # M5-4: reuse outcome_counts — no second scan of audit_records
+    over_response = outcome_counts["false_positive_isolated"]
+    under_response = outcome_counts["threat_logged_not_mitigated"]
 
     return {
-        "outcome_distribution": outcome_counts,
-        "per_action_stats": action_stats,
+        "outcome_distribution": dict(outcome_counts),
+        "per_action_stats": dict(action_stats),
         "proportionality_analysis": proportionality,
         "over_response_count": over_response,
         "under_response_count": under_response,
@@ -433,21 +434,30 @@ def build_all_records(
     levels = risk_data["risk_levels"]
     y_true = risk_data["y_true"]
 
+    # M5-3: pre-cast numpy string arrays to Python lists once — avoids per-row
+    # numpy-to-Python boxing; pre-filter NORMAL indices so the loop body only
+    # runs for actionable alerts.
+    levels_list = levels.tolist()
+    cats_list = attack_cats.tolist() if attack_cats is not None else None
+    active_indices = [i for i, lv in enumerate(levels_list) if lv != "NORMAL"]
+
     records = []
     audit_trail = []
 
-    for idx in range(len(R)):
-        level = str(levels[idx])
-        if level == "NORMAL":
-            continue
-
-        cat = str(attack_cats[idx]) if attack_cats is not None else "unknown"
+    for idx in active_indices:
+        level = levels_list[idx]
+        cat = str(cats_list[idx]) if cats_list is not None else "unknown"
         gt = "attack" if y_true[idx] == 1 else "benign"
 
         # Check if biometric features are in SHAP top-3
         bio_in_top = False
         if idx in analyst_by_idx:
-            xgb_top = analyst_by_idx[idx].get("models", {}).get("xgboost", {}).get("top_features", [])
+            xgb_top = (
+                analyst_by_idx[idx]
+                .get("models", {})
+                .get("xgboost", {})
+                .get("top_features", [])
+            )
             bio_in_top = any(f["feature"] in BIOMETRIC_FEATURES for f in xgb_top)
 
         # Adaptive response selection
@@ -499,22 +509,20 @@ def build_all_records(
 
 def compute_response_stats(records: list) -> dict:
     """Aggregate response statistics."""
-    level_counts = {}
-    action_counts = {}
-    tp_by_level = {}
-    fp_by_level = {}
+    # M5-5: Counter + .update() — C-level accumulation, no per-key guards
+    level_counts: Counter = Counter()
+    action_counts: Counter = Counter()
+    tp_by_level: Counter = Counter()
+    fp_by_level: Counter = Counter()
 
     for rec in records:
         level = rec["risk_level"]
-        level_counts[level] = level_counts.get(level, 0) + 1
-        is_attack = rec["ground_truth"] == "attack"
-        if is_attack:
-            tp_by_level[level] = tp_by_level.get(level, 0) + 1
+        level_counts[level] += 1
+        if rec["ground_truth"] == "attack":
+            tp_by_level[level] += 1
         else:
-            fp_by_level[level] = fp_by_level.get(level, 0) + 1
-
-        for a in rec["response"]["actions"]:
-            action_counts[a] = action_counts.get(a, 0) + 1
+            fp_by_level[level] += 1
+        action_counts.update(rec["response"]["actions"])
 
     precision_by_level = {}
     for level in level_counts:
@@ -524,10 +532,10 @@ def compute_response_stats(records: list) -> dict:
 
     return {
         "total_alerts": len(records),
-        "alerts_by_level": level_counts,
-        "actions_triggered": action_counts,
-        "true_positives_by_level": tp_by_level,
-        "false_positives_by_level": fp_by_level,
+        "alerts_by_level": dict(level_counts),
+        "actions_triggered": dict(action_counts),
+        "true_positives_by_level": dict(tp_by_level),
+        "false_positives_by_level": dict(fp_by_level),
         "precision_by_level": precision_by_level,
     }
 
@@ -647,7 +655,7 @@ def plot_effectiveness_by_action(effectiveness: dict) -> None:
 def plot_response_sankey(audit_records: list) -> None:
     """Simulated flow: risk level → primary action → outcome."""
     # Count flows
-    flows = {}
+    flows: dict = defaultdict(int)
     for rec in audit_records:
         level = rec["risk_level"]
         # Pick the highest-cost action as the "primary"
@@ -655,8 +663,13 @@ def plot_response_sankey(audit_records: list) -> None:
         costs = [(a, MITIGATION_ACTIONS.get(a, {}).get("cost", 0)) for a in actions]
         primary = max(costs, key=lambda x: x[1])[0] if costs else "log_event"
         outcome = rec["simulated_outcome"]["outcome"]
-        key = (level, primary, outcome)
-        flows[key] = flows.get(key, 0) + 1
+        flows[(level, primary, outcome)] += 1
+
+    # M5-7: pre-aggregate to (level, outcome) → count in one pass — O(|flows|).
+    # Replaces O(|flows| × L × O) nested scan inside the bar-chart loop.
+    level_outcome: dict = defaultdict(int)
+    for (lv, _a, oc), v in flows.items():
+        level_outcome[(lv, oc)] += v
 
     # Build a grouped bar chart as Sankey proxy (matplotlib has no native Sankey for categorical)
     outcomes = sorted(set(k[2] for k in flows))
@@ -673,10 +686,7 @@ def plot_response_sankey(audit_records: list) -> None:
     width = 0.8 / max(len(outcomes), 1)
 
     for i, outcome in enumerate(outcomes):
-        vals = []
-        for level in levels:
-            count = sum(v for (l, a, o), v in flows.items() if l == level and o == outcome)
-            vals.append(count)
+        vals = [level_outcome[(level, outcome)] for level in levels]
         ax.bar(x + i * width, vals, width,
                label=outcome.replace("_", " "),
                color=outcome_colors.get(outcome, "#999"),

@@ -24,6 +24,22 @@ from .config import Phase0Config
 
 logger = logging.getLogger(__name__)
 
+# Opt-10: module-level constant — not a local literal rebuilt on every call.
+_KEY_PACKAGES: List[str] = [
+    "tensorflow",
+    "keras",
+    "pandas",
+    "numpy",
+    "scikit-learn",
+    "scipy",
+    "imbalanced-learn",
+    "hdbscan",
+    "matplotlib",
+    "pyyaml",
+    "cryptography",
+    "pytest",
+]
+
 
 def render_reproducibility_report(
     config: Phase0Config,
@@ -93,26 +109,16 @@ def _section_environment(
     w(f"- **Architecture**: {platform.machine()}")
     w("")
 
-    # Key packages table
-    key_packages = [
-        "tensorflow",
-        "keras",
-        "pandas",
-        "numpy",
-        "scikit-learn",
-        "scipy",
-        "imbalanced-learn",
-        "hdbscan",
-        "matplotlib",
-        "pyyaml",
-        "cryptography",
-        "pytest",
-    ]
+    # Opt-10: precompute a normalised lookup dict once (hyphen ↔ underscore)
+    # so each package lookup is a single O(1) dict.get() instead of two
+    # sequential get() calls with a string allocation in between.
+    norm_packages: Dict[str, str] = {k.replace("-", "_"): v for k, v in packages.items()}
+    norm_packages.update(packages)  # original keys take precedence
 
     w("| Package | Version |")
     w("|---------|---------|")
-    for pkg in key_packages:
-        ver = packages.get(pkg, packages.get(pkg.replace("-", "_"), "—"))
+    for pkg in _KEY_PACKAGES:
+        ver = norm_packages.get(pkg, norm_packages.get(pkg.replace("-", "_"), "—"))
         w(f"| {pkg} | {ver} |")
     w("")
     w(

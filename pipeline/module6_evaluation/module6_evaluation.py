@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from collections import Counter
 from pathlib import Path
 
 import matplotlib
@@ -99,16 +100,24 @@ _DEVICE_TYPE_KEYWORDS = [
 ]
 
 
+_BIO_FEATS = ('Temp', 'SpO2', 'Pulse_Rate', 'Heart_rate', 'Resp_Rate', 'ST')
+
+
 def _derive_device_class(sample_index: int, test_df: pd.DataFrame) -> str:
-    """Derive device class from biometric feature patterns."""
+    """Derive device class from biometric feature patterns.
+
+    M6-E1: compute each biometric abs-threshold check once into a dict,
+    eliminating the double-extraction (loop + named booleans) from before.
+    """
     row = test_df.iloc[sample_index]
-    bio_feats = ['Temp', 'SpO2', 'Pulse_Rate', 'Heart_rate', 'Resp_Rate', 'ST']
-    bio_active = sum(1 for f in bio_feats if abs(float(row.get(f, 0))) > 0.5)
-    resp_a = abs(float(row.get('Resp_Rate', 0))) > 0.5
-    spo2_a = abs(float(row.get('SpO2', 0))) > 0.5
-    pulse_a = abs(float(row.get('Pulse_Rate', 0))) > 0.5
-    hr_a = abs(float(row.get('Heart_rate', 0))) > 0.5
-    temp_a = abs(float(row.get('Temp', 0))) > 0.5
+    # Single pass — each feature extracted exactly once
+    vals = {f: abs(float(row.get(f, 0))) > 0.5 for f in _BIO_FEATS}
+    bio_active = sum(vals.values())
+    resp_a  = vals['Resp_Rate']
+    spo2_a  = vals['SpO2']
+    pulse_a = vals['Pulse_Rate']
+    hr_a    = vals['Heart_rate']
+    temp_a  = vals['Temp']
 
     if resp_a and spo2_a and bio_active >= 4:
         return "ventilator"
@@ -153,7 +162,12 @@ def curate_evaluation_alerts() -> list:
         examples_by_idx = {}
 
     alerts = []
-    used_idx = set()
+    used_idx: set = set()
+
+    # M6-E2: pre-cast once — eliminates O(K×N) Python str() boxing in the loop
+    cats_str = attack_cats.astype(str)
+    # M6-E3: cache the index range so we don't reallocate np.arange per iteration
+    all_indices = np.arange(len(R))
 
     # Target: 4 per tier (CRITICAL, HIGH, MEDIUM, LOW) + 4 benign calibration
     tier_targets = {
@@ -166,7 +180,8 @@ def curate_evaluation_alerts() -> list:
     for tier, cfg in tier_targets.items():
         tier_mask = levels == tier
         for cat in cfg["attack_cats"]:
-            cat_mask = np.array([str(c) == cat for c in attack_cats])
+            # M6-E2: vectorised string comparison via pre-cast array
+            cat_mask = cats_str == cat
             combined = tier_mask & cat_mask & (y_true == 1)
             candidates = np.where(combined)[0]
             candidates = [c for c in candidates if c not in used_idx]
@@ -182,7 +197,8 @@ def curate_evaluation_alerts() -> list:
 
     # Benign calibration: 4 benign at various risk levels
     for target_r in [0.20, 0.30, 0.45, 0.55]:
-        benign_mask = (y_true == 0) & (~np.isin(np.arange(len(R)), list(used_idx)))
+        # M6-E3: pass set directly to np.isin (no list() copy); reuse all_indices
+        benign_mask = (y_true == 0) & (~np.isin(all_indices, used_idx))
         candidates = np.where(benign_mask)[0]
         if len(candidates) == 0:
             continue
@@ -196,7 +212,8 @@ def curate_evaluation_alerts() -> list:
 
     # Fill remaining to reach 20
     while len(alerts) < 20:
-        remaining = np.where(~np.isin(np.arange(len(R)), list(used_idx)))[0]
+        # M6-E3: reuse all_indices, pass set to np.isin
+        remaining = np.where(~np.isin(all_indices, used_idx))[0]
         if len(remaining) == 0:
             break
         idx = int(remaining[np.argmax(R[remaining])])
@@ -207,10 +224,9 @@ def curate_evaluation_alerts() -> list:
         ))
 
     logger.info("  Curated %d evaluation alerts", len(alerts))
-    tier_counts = {}
-    for a in alerts:
-        tier_counts[a["risk_level"]] = tier_counts.get(a["risk_level"], 0) + 1
-    logger.info("  By tier: %s", tier_counts)
+    # M6-E4: Counter replaces manual get/+1 dict accumulation
+    tier_counts = Counter(a["risk_level"] for a in alerts)
+    logger.info("  By tier: %s", dict(tier_counts))
 
     return alerts[:20]
 
@@ -455,17 +471,15 @@ def compute_inter_rater_reliability(responses: list) -> dict:
 
         Do = observed_disagree / valid_pairs
 
-        # Expected disagreement from marginal distribution
+        # M6-E6: vectorised expected disagreement — O(V×N + V) replacing O(V²×N).
+        # De = 1 - sum(p_v²) = 1 - ||p||²  (complement of Herfindahl index).
         vals = np.array(all_values)
-        unique_vals = np.unique(vals[~np.isnan(vals)])
-        n_total = len(vals[~np.isnan(vals)])
-        De = 0
-        for v1 in unique_vals:
-            for v2 in unique_vals:
-                if v1 != v2:
-                    p1 = np.sum(vals == v1) / n_total
-                    p2 = np.sum(vals == v2) / n_total
-                    De += p1 * p2
+        finite_vals = vals[~np.isnan(vals)]
+        unique_vals = np.unique(finite_vals)
+        n_total = len(finite_vals)
+        counts = np.array([(finite_vals == v).sum() for v in unique_vals])
+        probs = counts / n_total
+        De = float(1.0 - np.dot(probs, probs))
 
         alpha = 1 - (Do / De) if De > 0 else 1.0
 
@@ -734,7 +748,11 @@ def _plot_decision_time_by_tier(df: pd.DataFrame) -> None:
 
 
 def _plot_accuracy_by_tier(df: pd.DataFrame) -> None:
-    """Per-condition accuracy broken down by correct_action (proxy for tier)."""
+    """Per-condition accuracy broken down by correct_action (proxy for tier).
+
+    M6-E8: groupby computes all (condition × action) means in one pass,
+    replacing nested O(conditions × actions × N) double-filter.
+    """
     fig, ax = plt.subplots(figsize=(10, 6))
 
     action_order = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
@@ -743,16 +761,22 @@ def _plot_accuracy_by_tier(df: pd.DataFrame) -> None:
     x = np.arange(len(action_order))
     w = 0.35
 
+    # Single groupby pass — (condition, correct_action) → mean decision_correct
+    acc_table = (
+        df.groupby(["condition", "correct_action"])["decision_correct"]
+        .mean()
+        .unstack(level="correct_action", fill_value=0.0)
+    )
+
     for i, (cond, color, label) in enumerate([
         ("without_xai", "#95a5a6", "Without XAI"),
         ("with_xai", "#3274A1", "With XAI"),
     ]):
-        cdf = df[df["condition"] == cond]
-        accs = []
-        for action in action_order:
-            adf = cdf[cdf["correct_action"] == action]
-            acc = float(adf["decision_correct"].mean()) * 100 if len(adf) > 0 else 0
-            accs.append(acc)
+        cond_row = acc_table.loc[cond] if cond in acc_table.index else None
+        accs = [
+            float(cond_row[a]) * 100 if (cond_row is not None and a in cond_row) else 0.0
+            for a in action_order
+        ]
         offset = -w / 2 + i * w
         bars = ax.bar(x + offset, accs, w, label=label, color=color, alpha=0.8)
         for bar, val in zip(bars, accs):

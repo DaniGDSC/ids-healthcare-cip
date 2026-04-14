@@ -31,6 +31,8 @@ from sklearn.model_selection import (
     cross_val_predict,
 )
 
+from ._threshold import find_optimal_threshold as _find_optimal_threshold_shared
+
 logger = logging.getLogger(__name__)
 
 # ── Literature-backed hyperparameter search space ────────────────────────
@@ -268,19 +270,15 @@ class XGBoostDetector:
         y_true: np.ndarray,
         y_proba: np.ndarray,
         beta: float = 2.0,
-        n_thresholds: int = 200,
+        n_thresholds: int = 200,  # kept for API compatibility, unused
     ) -> float:
-        """Find threshold that maximizes F-beta on attack class."""
-        thresholds = np.linspace(0.05, 0.95, n_thresholds)
-        best_score = 0.0
-        best_t = 0.5
-        for t in thresholds:
-            y_pred = (y_proba >= t).astype(int)
-            score = fbeta_score(y_true, y_pred, beta=beta, pos_label=1)
-            if score > best_score:
-                best_score = score
-                best_t = float(t)
-        return best_t
+        """Find threshold that maximises F-beta on the attack class.
+
+        Opt-1: delegates to the shared ``_threshold.find_optimal_threshold``
+        which uses ``precision_recall_curve`` — O(N log N) one-shot sort
+        replacing the O(T×N) Python loop with 200 ``y_pred`` allocations.
+        """
+        return _find_optimal_threshold_shared(y_true, y_proba, beta=beta)
 
     # ------------------------------------------------------------------
     # Report

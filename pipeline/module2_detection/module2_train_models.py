@@ -19,6 +19,7 @@ import json
 import logging
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -41,6 +42,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from pipeline.common import dumps_signed
 from pipeline.module2_detection.models.DAE import DAEDetector
+from pipeline.module2_detection.models._threshold import find_optimal_threshold
 
 logger = logging.getLogger(__name__)
 
@@ -77,20 +79,8 @@ def load_data(label_col: str = "Label") -> tuple:
 
 # ── Threshold optimization ──────────────────────────────────────────────
 
-def find_optimal_threshold(
-    y_true: np.ndarray,
-    y_proba: np.ndarray,
-    beta: float = 2.0,
-    n_thresholds: int = 200,
-) -> float:
-    """Find threshold that maximizes F-beta on attack class."""
-    thresholds = np.linspace(0.05, 0.95, n_thresholds)
-    best_score, best_t = 0.0, 0.5
-    for t in thresholds:
-        score = fbeta_score(y_true, (y_proba >= t).astype(int), beta=beta, pos_label=1)
-        if score > best_score:
-            best_score, best_t = score, float(t)
-    return best_t
+# find_optimal_threshold is imported from models._threshold (shared utility).
+# Opt-1: precision_recall_curve replaces the O(T×N) Python loop — see _threshold.py.
 
 
 # ── Evaluate and log ────────────────────────────────────────────────────
@@ -281,11 +271,17 @@ def _load_oof_probas(output_dir: Path, benign_mask: np.ndarray) -> np.ndarray:
 
     Returns:
         Array of shape (n_benign, 3) — one column per Track A model.
+
+    Opt-5: three .npy files are loaded concurrently via ThreadPoolExecutor
+    (I/O bound, GIL released for numpy file reads) instead of sequentially.
     """
-    cols = []
-    for name in ("xgboost", "random_forest", "decision_tree"):
-        oof = np.load(output_dir / f"{name}_oof_proba.npy")
-        cols.append(oof[benign_mask])
+    _names = ("xgboost", "random_forest", "decision_tree")
+
+    def _load_one(name: str) -> np.ndarray:
+        return np.load(output_dir / f"{name}_oof_proba.npy")[benign_mask]
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        cols = list(pool.map(_load_one, _names))
     return np.column_stack(cols)
 
 

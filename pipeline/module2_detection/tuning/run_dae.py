@@ -37,16 +37,18 @@ import argparse
 import itertools
 import json
 import logging
+import os
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from pipeline.module2_detection.models.DAE import DAEDetector
+from pipeline.module2_detection.tuning._data import load_data_dae
 
 logger = logging.getLogger(__name__)
 
@@ -65,42 +67,6 @@ HP_GRID = {
     "learning_rate": [1e-4, 1e-3, 5e-3],
     "threshold_percentile": [90.0, 95.0, 99.0],
 }
-
-
-# ── Data loading ─────────────────────────────────────────────────────────
-
-def load_data(
-    train_path: Path,
-    test_path: Path,
-    label_col: str = "Label",
-) -> tuple:
-    """Load train/test parquets and extract the benign-only train subset.
-
-    Returns:
-        (X_benign, X_train, X_test, y_train, y_test, feat_names)
-    """
-    train_df = pd.read_parquet(train_path)
-    test_df = pd.read_parquet(test_path)
-
-    drop_cols = [c for c in [label_col, "Attack Category"] if c in train_df.columns]
-
-    y_train = train_df[label_col].values
-    y_test = test_df[label_col].values
-
-    X_train = train_df.drop(columns=drop_cols).values.astype(np.float32)
-    X_test = test_df.drop(columns=drop_cols).values.astype(np.float32)
-
-    feat_names = [c for c in train_df.columns if c not in drop_cols]
-
-    benign_mask = y_train == 0
-    X_benign = X_train[benign_mask]
-
-    logger.info(
-        "Data loaded: train=%d×%d (benign=%d, attack=%d), test=%d×%d",
-        *X_train.shape, benign_mask.sum(), (~benign_mask).sum(),
-        *X_test.shape,
-    )
-    return X_benign, X_train, X_test, y_train, y_test, feat_names
 
 
 def make_validation_split(
@@ -163,6 +129,31 @@ def make_validation_split(
 
 # ── HP search ────────────────────────────────────────────────────────────
 
+def _fit_one_candidate(args: tuple) -> tuple:
+    """Subprocess worker: fit one DAE candidate and return (hp, val_metrics).
+
+    Runs in a separate process (via ProcessPoolExecutor) so Keras graph
+    state is isolated and candidates can train in parallel.  TF is
+    imported inside the function to keep the module-level import clean
+    and avoid VRAM conflicts at fork time.
+    """
+    hp, X_benign_fit, X_val, y_val, epochs, batch_size, random_state = args
+    # Lazy import — each worker process initialises TF independently.
+    from pipeline.module2_detection.models.DAE import DAEDetector as _DAE  # noqa: PLC0415
+    det = _DAE(
+        encoding_dims=hp["encoding_dims"],
+        noise_rate=hp["noise_rate"],
+        learning_rate=hp["learning_rate"],
+        threshold_percentile=hp["threshold_percentile"],
+        epochs=epochs,
+        batch_size=batch_size,
+        random_state=random_state,
+    )
+    det.fit(X_benign_fit, validation_split=0.0)
+    val_metrics = det.evaluate(X_val, y_val)
+    return hp, val_metrics
+
+
 def grid_search(
     X_benign_fit: np.ndarray,
     X_val: np.ndarray,
@@ -171,7 +162,7 @@ def grid_search(
     batch_size: int,
     random_state: int,
 ) -> tuple:
-    """Exhaustive grid search over DAE hyperparameters.
+    """Exhaustive parallel grid search over DAE hyperparameters.
 
     Selects the configuration that maximises attack-class F2 on the
     **train-only validation slice** (not the held-out test set). Each
@@ -180,59 +171,60 @@ def grid_search(
     test set is NOT touched here — see finding #1 in the Phase 2
     security review.
 
-    The function returns the best HP dict, the per-candidate val
-    metrics, and the *unfitted* best HP for the caller to use as the
-    seed of a final fit on the full benign training set.
+    Candidates are evaluated in parallel via ``ProcessPoolExecutor``
+    (D-1). Each worker trains an independent DAE in its own process,
+    giving ~P× wall-time speedup where P = CPU core count (capped at
+    the number of candidates).
+
+    Returns:
+        ``(best_hp, all_results)`` — best HP dict and per-candidate
+        validation metrics.
     """
     keys = list(HP_GRID.keys())
-    combos = list(itertools.product(*HP_GRID.values()))
+    combos = [dict(zip(keys, vals)) for vals in itertools.product(*HP_GRID.values())]
+    n = len(combos)
+    max_workers = min(n, os.cpu_count() or 4)
     logger.info(
-        "DAE grid search: %d configurations (selection on train-only val slice)",
-        len(combos),
+        "DAE grid search: %d configurations, %d parallel workers "
+        "(selection on train-only val slice)",
+        n, max_workers,
     )
 
     best_f2 = -1.0
     best_hp: dict = {}
-    all_results = []
+    # Preserve insertion order for deterministic reporting.
+    results_by_idx: dict[int, dict] = {}
 
-    for i, vals in enumerate(combos, 1):
-        hp = dict(zip(keys, vals))
-        det = DAEDetector(
-            encoding_dims=hp["encoding_dims"],
-            noise_rate=hp["noise_rate"],
-            learning_rate=hp["learning_rate"],
-            threshold_percentile=hp["threshold_percentile"],
-            epochs=epochs,
-            batch_size=batch_size,
-            random_state=random_state,
-        )
-        det.fit(X_benign_fit, validation_split=0.0)
+    worker_args = [
+        (hp, X_benign_fit, X_val, y_val, epochs, batch_size, random_state)
+        for hp in combos
+    ]
 
-        # Score on the validation slice — NEVER on the test set.
-        val_metrics = det.evaluate(X_val, y_val)
+    with ProcessPoolExecutor(max_workers=max_workers) as pool:
+        future_to_idx = {
+            pool.submit(_fit_one_candidate, arg): i
+            for i, arg in enumerate(worker_args)
+        }
+        for future in as_completed(future_to_idx):
+            i = future_to_idx[future]
+            hp, val_metrics = future.result()
+            result = {**hp, **{f"val_{k}": v for k, v in val_metrics.items()}}
+            results_by_idx[i] = result
 
-        result = {**hp}
-        for k, v in val_metrics.items():
-            result[f"val_{k}"] = v
-        all_results.append(result)
+            f2 = val_metrics["attack_f2"]
+            logger.info(
+                "  [%d/%d] dims=%s noise=%.2f lr=%.4f pct=%.0f → val_F2=%.4f val_AUC=%.4f",
+                i + 1, n,
+                hp["encoding_dims"], hp["noise_rate"],
+                hp["learning_rate"], hp["threshold_percentile"],
+                f2, val_metrics["auc_roc"],
+            )
+            if f2 > best_f2:
+                best_f2 = f2
+                best_hp = hp
 
-        f2 = val_metrics["attack_f2"]
-        logger.info(
-            "  [%d/%d] dims=%s noise=%.2f lr=%.4f pct=%.0f → val_F2=%.4f val_AUC=%.4f",
-            i, len(combos),
-            hp["encoding_dims"], hp["noise_rate"],
-            hp["learning_rate"], hp["threshold_percentile"],
-            f2, val_metrics["auc_roc"],
-        )
-
-        if f2 > best_f2:
-            best_f2 = f2
-            best_hp = hp
-
-    logger.info(
-        "Best HP by val attack_f2 (=%.4f): %s",
-        best_f2, best_hp,
-    )
+    all_results = [results_by_idx[i] for i in range(n)]
+    logger.info("Best HP by val attack_f2 (=%.4f): %s", best_f2, best_hp)
     return best_hp, all_results
 
 
@@ -302,9 +294,13 @@ def main() -> None:
     # ── Load data ──
     train_path = PROJECT_ROOT / args.train_parquet
     test_path = PROJECT_ROOT / args.test_parquet
-    X_benign, X_train, X_test, y_train, y_test, feat_names = load_data(
+    X_benign, X_train, X_test, y_train, y_test, feat_names = load_data_dae(
         train_path, test_path,
     )
+
+    # Compute once — used in report and summary (D-2)
+    n_benign_train = int((y_train == 0).sum())
+    n_attack_train = int((y_train == 1).sum())
 
     # ── Train-only validation slice (closes finding #1 leakage) ──
     X_benign_fit, X_val, y_val = make_validation_split(
@@ -361,8 +357,8 @@ def main() -> None:
         "test_parquet": str(test_path),
         "n_features": len(feat_names),
         "feature_names": feat_names,
-        "benign_train_samples": int((y_train == 0).sum()),
-        "attack_train_samples": int((y_train == 1).sum()),
+        "benign_train_samples": n_benign_train,
+        "attack_train_samples": n_attack_train,
         "test_samples": int(len(y_test)),
     }
     report["elapsed_seconds"] = round(time.perf_counter() - t0, 1)
@@ -387,9 +383,9 @@ def main() -> None:
     )
     logger.info("Saved grid results: %s", grid_path)
 
-    # 5. Test predictions
-    y_pred = best_det.predict(X_test)
+    # 5. Test predictions — single forward pass (D-3)
     errors = best_det.reconstruction_error(X_test)
+    y_pred = (errors > best_det.threshold).astype(int)
     preds_path = output_dir / "test_predictions.npz"
     np.savez(
         preds_path,
@@ -405,7 +401,7 @@ def main() -> None:
     logger.info("DAE FINE-TUNING SUMMARY")
     logger.info(sep)
     logger.info("  Features        : %d", len(feat_names))
-    logger.info("  Benign train    : %d samples", (y_train == 0).sum())
+    logger.info("  Benign train    : %d samples", n_benign_train)
     logger.info("  Configs tested  : %d", len(all_results))
     logger.info("  Best arch       : %s", best_hp["encoding_dims"])
     logger.info("  Best noise      : %.2f", best_hp["noise_rate"])

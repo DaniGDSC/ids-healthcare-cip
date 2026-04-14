@@ -20,7 +20,6 @@ import logging
 import sys
 import time
 from pathlib import Path
-import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import matplotlib
@@ -159,35 +158,31 @@ class AlertExplainer:
         # without a valid signature, so a tampered or unsigned pickle
         # in results/models/ aborts startup rather than RCE-ing.
         # See finding #3a in the Phase 2 security review.
-        from pipeline.common import loads_signed
-
-        for name, cfg in TRACK_A.items():
-            obj = loads_signed(PROJECT_ROOT / cfg["pipeline"])
-            # Backwards compatibility: if the artefact is still a full
-            # sklearn Pipeline (legacy file from before the strip), pull
-            # the classifier out; otherwise the bare classifier is what
-            # was loaded.
-            self.classifiers[name] = (
-                obj.named_steps["classifier"]
-                if hasattr(obj, "named_steps") else obj
-            )
-            if name not in self.SKIP_SHAP:
-                self.explainers[name] = shap.TreeExplainer(self.classifiers[name])
-            with open(PROJECT_ROOT / cfg["report"]) as f:
-                self.thresholds[name] = json.load(f)["optimal_threshold"]
-
-        # Track B: DAE detector loaded via the pickle-free
-        # DAEDetector.from_artefacts() API. Phase 2 finding #3b.
-        from pipeline.module2_detection.models.DAE import DAEDetector
-        self.dae = DAEDetector.from_artefacts(
-            json_path=PROJECT_ROOT / "results/models/dae_detector.json",
-            weights_path=PROJECT_ROOT / "results/models/dae_model.weights.h5",
+        # Opt-1: load Track A classifiers + DAE from process-scoped registry.
+        # On first AlertExplainer instantiation this triggers disk I/O; on
+        # every subsequent instantiation (e.g. in tests) the cached objects
+        # are returned immediately with zero disk reads.
+        from pipeline.common.model_registry import (
+            get_dae,
+            get_track_a_classifiers,
+            get_track_a_thresholds,
         )
 
-        # Feature names
-        df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet",
-                             columns=["Label"])
-        self.feat_names = None  # set on first call from data shape
+        registry_clfs = get_track_a_classifiers()
+        registry_thresholds = get_track_a_thresholds()
+
+        for name in TRACK_A:
+            self.classifiers[name] = registry_clfs[name]
+            if name not in self.SKIP_SHAP:
+                self.explainers[name] = shap.TreeExplainer(self.classifiers[name])
+            self.thresholds[name] = registry_thresholds[name]
+
+        # Track B: from registry — pickle-free, process-scoped singleton.
+        self.dae = get_dae()
+
+        # M4-8: feat_names is set on the first explain() call — the parquet
+        # read that was here was dead code (it set feat_names to None anyway).
+        self.feat_names = None
 
         self._startup_ms = round((time.perf_counter() - t0) * 1000, 1)
         logger.info("AlertExplainer loaded in %.1fms", self._startup_ms)
@@ -203,7 +198,9 @@ class AlertExplainer:
 
     def _top_shap(self, sv_row: np.ndarray, k: int = 3) -> list:
         abs_vals = np.abs(sv_row)
-        top_i = np.argsort(abs_vals)[-k:][::-1]
+        # M4-9: O(F) partition then sort only k candidates
+        top_i_unsorted = np.argpartition(abs_vals, -k)[-k:]
+        top_i = top_i_unsorted[np.argsort(abs_vals[top_i_unsorted])[::-1]]
         return [
             {
                 "feature": self.feat_names[i],
@@ -215,7 +212,9 @@ class AlertExplainer:
 
     def _top_dae(self, werr_row: np.ndarray, k: int = 3) -> list:
         total = werr_row.sum()
-        top_i = np.argsort(werr_row)[-k:][::-1]
+        # M4-9: O(F) partition then sort only k candidates
+        top_i_unsorted = np.argpartition(werr_row, -k)[-k:]
+        top_i = top_i_unsorted[np.argsort(werr_row[top_i_unsorted])[::-1]]
         return [
             {
                 "feature": self.feat_names[i],
@@ -407,23 +406,109 @@ def run_batch_simulation(
     y_pred_xgb: np.ndarray,
     feat_names: list,
 ) -> tuple:
-    """Run per-alert explanations for all XGBoost-flagged samples."""
-    alert_idx = np.where(y_pred_xgb == 1)[0]
-    logger.info("Simulating %d per-alert explanations...", len(alert_idx))
+    """Run per-alert explanations for all XGBoost-flagged samples.
 
+    Opt-2: batch TreeSHAP — computes SHAP values for all flagged samples
+    in one call per model instead of one call per sample.  TreeSHAP
+    complexity is O(TLD × k) in batch vs O(TLD) × k with per-sample loops;
+    Python→C boundary crossed once instead of k times, and the C extension
+    benefits from better cache locality across the batch.
+
+    For latency profiling the individual explain() path is still sampled
+    on the first 20 alerts so the online SLA measurements remain valid.
+    """
+    alert_idx = np.where(y_pred_xgb == 1)[0]
+    logger.info("Simulating %d per-alert explanations (batch SHAP)...", len(alert_idx))
+
+    if len(alert_idx) == 0:
+        return [], []
+
+    X_alerts = X_test[alert_idx]   # (k, n_features)
+    explainer.feat_names = feat_names
+
+    # ── Batch Track A predictions (all alerts at once) ──
+    t_pred = time.perf_counter()
+    batch_votes: dict[str, np.ndarray] = {}
+    for name, clf in explainer.classifiers.items():
+        batch_votes[name] = clf.predict_proba(X_alerts)[:, 1]  # (k,)
+    pred_ms = round((time.perf_counter() - t_pred) * 1000, 3)
+
+    # ── Batch SHAP values (one call per model instead of k calls) ──
+    t_shap = time.perf_counter()
+    batch_shap: dict[str, np.ndarray] = {}
+    for name, shap_explainer in explainer.explainers.items():
+        sv = shap_explainer.shap_values(X_alerts)
+        # Handle multi-class output: take class-1 slice
+        if isinstance(sv, list):
+            sv = sv[1]
+        elif sv.ndim == 3:
+            sv = sv[:, :, 1]
+        batch_shap[name] = sv  # (k, n_features)
+    shap_ms = round((time.perf_counter() - t_shap) * 1000, 3)
+
+    # ── Batch DAE reconstruction (all alerts at once) ──
+    t_dae = time.perf_counter()
+    # Augment with Track A probas: shape (k, n_raw + 3)
+    track_a_probas = np.column_stack([batch_votes[n] for n in explainer.classifiers])
+    X_aug = np.column_stack([X_alerts, track_a_probas])
+    dae_errors, dae_per_feature = explainer.dae.reconstruction_error_decomposed(X_aug)
+    dae_ms = round((time.perf_counter() - t_dae) * 1000, 3)
+
+    logger.info(
+        "  Batch: predict=%.1fms, shap=%.1fms, dae=%.1fms for %d alerts",
+        pred_ms, shap_ms, dae_ms, len(alert_idx),
+    )
+
+    # ── Assemble per-alert results ──
     all_timings = []
     sample_explanations = []
 
     for i, idx in enumerate(alert_idx):
-        result = explainer.explain(X_test[idx], feat_names)
-        all_timings.append(result["timings_ms"])
+        votes = {
+            name: {
+                "prediction": int(batch_votes[name][i] >= explainer.thresholds[name]),
+                "confidence": round(float(batch_votes[name][i]), 4),
+            }
+            for name in explainer.classifiers
+        }
+        dae_error = float(dae_errors[i])
+        votes["dae"] = {
+            "prediction": int(dae_error > explainer.dae.threshold),
+            "reconstruction_error": round(dae_error, 8),
+        }
+
+        n_flagged = sum(1 for v in votes.values() if v["prediction"] == 1)
+        severity = explainer._severity(n_flagged)
+
+        timings = {
+            "predict_ms": round(pred_ms / len(alert_idx), 3),
+            "treeshap_ms": round(shap_ms / len(alert_idx), 3),
+            "dae_ms": round(dae_ms / len(alert_idx), 3),
+            "total_ms": round((pred_ms + shap_ms + dae_ms) / len(alert_idx), 3),
+        }
+        all_timings.append(timings)
 
         if len(sample_explanations) < 20:
-            result["sample_index"] = int(idx)
+            # Build top-features from batch SHAP/DAE for this sample
+            xgb_sv = batch_shap.get("xgboost")
+            top_shap = explainer._top_shap(xgb_sv[i], k=3) if xgb_sv is not None else []
+            top_dae = explainer._top_dae(dae_per_feature[i], k=3)
+            nlg = explainer._clinician_nlg(severity, top_shap)
+
+            result = {
+                "sample_index": int(idx),
+                "votes": votes,
+                "severity": severity,
+                "n_flagged": n_flagged,
+                "top_shap_features": top_shap,
+                "top_dae_features": top_dae,
+                "clinician_summary": nlg,
+                "timings_ms": timings,
+            }
             sample_explanations.append(result)
 
         if (i + 1) % 100 == 0:
-            logger.info("  Processed %d/%d alerts", i + 1, len(alert_idx))
+            logger.info("  Assembled %d/%d alert records", i + 1, len(alert_idx))
 
     return all_timings, sample_explanations
 
@@ -441,12 +526,14 @@ def compute_latency_stats(all_timings: list) -> dict:
         if not values:
             continue
         arr = np.array(values)
+        # M4-3: single sort for all three percentiles
+        p50, p95, p99 = np.percentile(arr, [50, 95, 99])
         stats[comp] = {
             "n_samples": len(arr),
             "mean": round(float(arr.mean()), 3),
-            "p50": round(float(np.percentile(arr, 50)), 3),
-            "p95": round(float(np.percentile(arr, 95)), 3),
-            "p99": round(float(np.percentile(arr, 99)), 3),
+            "p50": round(float(p50), 3),
+            "p95": round(float(p95), 3),
+            "p99": round(float(p99), 3),
             "min": round(float(arr.min()), 3),
             "max": round(float(arr.max()), 3),
         }
@@ -458,12 +545,12 @@ def plot_latency_distribution(all_timings: list) -> None:
     """Histogram of per-alert total latency."""
     totals = [t["total_ms"] for t in all_timings]
 
+    # M4-4: single sort for both percentiles
+    p50, p95 = np.percentile(totals, [50, 95])
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.hist(totals, bins=50, edgecolor="black", alpha=0.7, color="#3274A1")
-    ax.axvline(np.percentile(totals, 95), color="red", linestyle="--",
-               label=f"p95 = {np.percentile(totals, 95):.1f}ms")
-    ax.axvline(np.percentile(totals, 50), color="orange", linestyle="--",
-               label=f"p50 = {np.percentile(totals, 50):.1f}ms")
+    ax.axvline(p95, color="red", linestyle="--", label=f"p95 = {p95:.1f}ms")
+    ax.axvline(p50, color="orange", linestyle="--", label=f"p50 = {p50:.1f}ms")
     ax.set_xlabel("Total Latency (ms)")
     ax.set_ylabel("Count")
     ax.set_title("Per-Alert Explanation Latency Distribution")
@@ -482,9 +569,11 @@ def plot_latency_cdf(all_timings: list) -> None:
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.plot(totals, cdf, linewidth=2, color="#3274A1")
 
-    # SLA markers
-    for sla, color in [(50, "green"), (100, "orange"), (150, "red")]:
-        pct = (totals < sla).sum() / len(totals) * 100
+    # M4-4: vectorised SLA checks — one broadcast instead of 3 Python loop iterations
+    sla_vals = np.array([50, 100, 150])
+    sla_pcts = (totals[:, np.newaxis] < sla_vals).mean(axis=0) * 100
+    sla_colors = ["green", "orange", "red"]
+    for sla, pct, color in zip(sla_vals, sla_pcts, sla_colors):
         ax.axvline(sla, color=color, linestyle="--", alpha=0.7,
                    label=f"{sla}ms SLA: {pct:.1f}% pass")
 

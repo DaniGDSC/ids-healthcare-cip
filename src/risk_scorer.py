@@ -103,6 +103,9 @@ def score_alert(
         ScoredAlert with adjusted_score, threshold, should_surface,
         risk_multiplier, and optional suppression_reason.
     """
+    # RS-1/RS-2/RS-4: normalise all inputs once at entry — eliminates 3
+    # separate float(anomaly_score) casts and scattered str/bool coercions.
+    score = float(anomaly_score)
     criticality = str(device_context.get("criticality", "LOW")).upper()
     patchable = bool(device_context.get("patchable", True))
 
@@ -114,18 +117,20 @@ def score_alert(
     if event_context:
         if (event_context.get("is_maintenance_window", False)
                 and event_context.get("is_known_vendor_ip", False)):
+            reduced = score * 0.5
             return ScoredAlert(
-                adjusted_score=round(float(anomaly_score) * 0.5, 4),
+                adjusted_score=round(reduced, 4),
                 threshold=DEFAULT_THRESHOLD,
-                should_surface=float(anomaly_score) * 0.5 > DEFAULT_THRESHOLD,
+                should_surface=reduced > DEFAULT_THRESHOLD,
                 risk_multiplier=0.5,
                 suppression_reason="maintenance window — reduced confidence, verify with biomed",
             )
 
-    # Base multiplier and threshold from criticality + patchability
+    # RS-3: build key once and use it for both lookups — get_threshold()
+    # would rebuild the same (criticality, patchable) tuple internally.
     key = (criticality, patchable)
     risk_multiplier: float = _RISK_MULT.get(key, 1.0)
-    threshold = get_threshold(criticality, patchable)
+    threshold = round(DEFAULT_THRESHOLD * _THRESHOLD_MULT.get(key, 1.0), 4)
 
     # Adaptive rule: reduce multiplier for frequently-seen patterns
     if event_context:
@@ -140,7 +145,7 @@ def score_alert(
         if baseline_days < 14:
             threshold = threshold * 0.70
 
-    adjusted_score = min(1.0, float(anomaly_score) * risk_multiplier)
+    adjusted_score = min(1.0, score * risk_multiplier)
     should_surface = adjusted_score > threshold
 
     # Safety floor: CRITICAL + unpatchable devices must ALWAYS surface.

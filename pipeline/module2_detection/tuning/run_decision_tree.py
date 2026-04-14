@@ -20,45 +20,16 @@ import time
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from pipeline.common import dumps_signed
 from pipeline.module2_detection.models.DecisionTree import DecisionTreeDetector
+from pipeline.module2_detection.tuning._data import load_data
 
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-
-
-# ── Data loading ─────────────────────────────────────────────────────────
-
-def load_data(
-    train_path: Path,
-    test_path: Path,
-    label_col: str = "Label",
-) -> tuple:
-    """Load train/test parquet and split into X, y."""
-    train_df = pd.read_parquet(train_path)
-    test_df = pd.read_parquet(test_path)
-
-    drop_cols = [c for c in [label_col, "Attack Category"] if c in train_df.columns]
-
-    y_train = train_df[label_col].values
-    y_test = test_df[label_col].values
-
-    X_train = train_df.drop(columns=drop_cols).values.astype(np.float32)
-    X_test = test_df.drop(columns=drop_cols).values.astype(np.float32)
-
-    feat_names = [c for c in train_df.columns if c not in drop_cols]
-
-    logger.info(
-        "Data loaded: train=%d×%d (attack=%.1f%%), test=%d×%d (attack=%.1f%%)",
-        *X_train.shape, y_train.mean() * 100,
-        *X_test.shape, y_test.mean() * 100,
-    )
-    return X_train, X_test, y_train, y_test, feat_names
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
@@ -158,8 +129,9 @@ def main() -> None:
     )
     logger.info("Saved best params: %s", params_path)
 
-    y_pred = detector.predict(X_test)
+    # Single forward pass (T-2)
     y_proba = detector.predict_proba(X_test)
+    y_pred = (y_proba >= detector.optimal_threshold).astype(int)
     preds_path = output_dir / "test_predictions.npz"
     np.savez(preds_path, y_true=y_test, y_pred=y_pred, y_proba=y_proba)
     logger.info("Saved predictions: %s", preds_path)

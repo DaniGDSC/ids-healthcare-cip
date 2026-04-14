@@ -1,0 +1,57 @@
+name: Prototype — MVE · Risk Scorer · Harness
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prototype-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: pip install ruff black
+
+      - name: Ruff check
+        run: ruff check src/ tests/ run_tests.py
+
+      - name: Black format check
+        run: black --check src/ tests/ run_tests.py
+
+  acceptance-tests:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run prototype test suite
+        run: python run_tests.py --report alignment_report.yaml
+
+      - name: Upload alignment report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alignment-report
+          path: alignment_report.yaml
+          if-no-files-found: error

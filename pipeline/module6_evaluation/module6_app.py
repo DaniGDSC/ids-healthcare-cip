@@ -17,7 +17,7 @@ import hashlib
 import json
 import random
 import time
-from collections import Counter, deque
+from collections import ChainMap, Counter, deque
 from datetime import datetime
 from pathlib import Path
 
@@ -58,6 +58,11 @@ TIER_COLORS = {"CRITICAL": "#8e44ad", "HIGH": "#e74c3c", "MEDIUM": "#e67e22", "L
 
 from pipeline.common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
+# Wires the dashboard's per-alert processing to the research prototype's
+# Risk-Adaptive Scoring Engine (research_spec.yaml component_2) so tier
+# assignment uses the same logic the prototype tests enforce (M7, M6).
+from pipeline.module6_evaluation._src_adapter import scored_from_eval_alert  # noqa: E402
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # MVE Display Helpers (Gap 1, Gap 2, Gap 3 fixes)
@@ -89,6 +94,36 @@ _ACTION_DISPLAY = {
 _CRIT_COLOR_HEX = {
     "CRITICAL": "#d32f2f", "HIGH": "#f57c00",
     "MEDIUM": "#1976d2", "LOW": "#388e3c",
+}
+
+# Module-level policy action label map — avoids rebuilding this dict on every
+# render_mve_layers() call (issue 4 / render_mve_layers locality fix).
+_PA_MAP = {
+    "isolate_device":     "Isolate device",
+    "escalate_incident":  "Escalate to security lead",
+    "escalate_clinical":  "Escalate to clinical engineering",
+    "restrict_traffic":   "Restrict suspicious traffic",
+    "re_authenticate":    "Force re-authentication",
+    "enhanced_monitoring": "Enhanced monitoring",
+    "forensic_snapshot":  "Capture forensic snapshot",
+    "log_event":          "Log and monitor",
+}
+
+# Module-level sentinel for _ACTION_DISPLAY misses — avoids {} allocation
+# per sort-key lambda invocation (issue 9).
+_ACTION_DISPLAY_MISS = (99, "\u26aa", "")
+
+# M6-A1: hoist _ACTION_PRIORITY to module level — was rebuilt as a dict
+# literal on every process_alert() call (one call per alert per simulation tick).
+_ACTION_PRIORITY = {
+    "isolate_device":    "isolate",
+    "escalate_incident": "escalate",
+    "escalate_clinical": "escalate",
+    "restrict_traffic":  "investigate",
+    "forensic_snapshot": "investigate",
+    "re_authenticate":   "investigate",
+    "enhanced_monitoring": "monitor",
+    "log_event":         "monitor",
 }
 
 
@@ -139,16 +174,25 @@ def infer_device_class(alert: dict) -> tuple[str, bool]:
 
 
 def render_prioritized_actions(actions: list) -> None:
-    """FIX C: Render response actions in priority order with icons."""
+    """FIX C: Render response actions in priority order with icons.
+
+    Issue 9 fix: sort key uses _ACTION_DISPLAY_MISS sentinel (module-level
+    constant) instead of creating a throwaway (99, "", a) tuple on every
+    miss. The label fallback uses the action string directly from `act`.
+    """
     if not actions:
         return
     sorted_actions = sorted(
         actions,
-        key=lambda a: _ACTION_DISPLAY.get(a, (99, "", a))[0],
+        key=lambda a: _ACTION_DISPLAY.get(a, _ACTION_DISPLAY_MISS)[0],
     )
     st.markdown("**Response (in priority order):**")
     for act in sorted_actions:
-        priority, icon, label = _ACTION_DISPLAY.get(act, (99, "\u26aa", act))
+        entry = _ACTION_DISPLAY.get(act)
+        if entry:
+            priority, icon, label = entry
+        else:
+            priority, icon, label = 99, "\u26aa", act
         if priority == 1:
             st.error(f"{icon} **Primary: {label}**")
         elif priority <= 3:
@@ -190,20 +234,30 @@ def render_mve_layers(alert: dict) -> None:
     Searches alert top-level, nested xai_explanation, and nested
     explanation dicts. Falls back to clinician summary, response
     policy fields, and device-class-based DO NOT fallbacks.
-    """
-    xai = alert.get("xai_explanation", {})
-    expl = alert.get("explanation", {})
-    resp = alert.get("response", {})
 
-    def _get(*keys):
-        """First non-empty string across alert, xai, explanation, response."""
+    Issue 4 fix: replaced nested _get() loop (O(sources × keys) per field
+    lookup) with a single ChainMap merge at entry. ChainMap holds views of
+    the 4 source dicts with no copy; lookups are O(1) average against the
+    merged namespace. All _get() calls become simple dict.get() on _cm.
+    """
+    xai  = alert.get("xai_explanation") or {}
+    expl = alert.get("explanation") or {}
+    resp = alert.get("response") or {}
+
+    # Merge once — O(1) view construction, O(1) per key lookup thereafter.
+    _cm = ChainMap(
+        alert,
+        xai  if isinstance(xai,  dict) else {},
+        expl if isinstance(expl, dict) else {},
+        resp if isinstance(resp, dict) else {},
+    )
+
+    def _get(*keys) -> str:
+        """First non-empty string value for any key across the merged view."""
         for k in keys:
-            for source in (alert, xai, expl, resp):
-                if not isinstance(source, dict):
-                    continue
-                v = source.get(k)
-                if v and isinstance(v, str) and v.strip():
-                    return v
+            v = _cm.get(k)
+            if v and isinstance(v, str) and v.strip():
+                return v
         return ""
 
     # ── Layer 1: Why Anomalous ──
@@ -252,15 +306,6 @@ def render_mve_layers(alert: dict) -> None:
     # If no explicit action field, derive from response.actions policy list
     if not action and isinstance(resp, dict):
         policy_actions = resp.get("actions", [])
-        _PA_MAP = {
-            "isolate_device": "Isolate device", "escalate_incident": "Escalate to security lead",
-            "escalate_clinical": "Escalate to clinical engineering",
-            "restrict_traffic": "Restrict suspicious traffic",
-            "re_authenticate": "Force re-authentication",
-            "enhanced_monitoring": "Enhanced monitoring",
-            "forensic_snapshot": "Capture forensic snapshot",
-            "log_event": "Log and monitor",
-        }
         for pa in reversed(policy_actions):
             if pa in _PA_MAP:
                 action = _PA_MAP[pa]
@@ -306,11 +351,25 @@ def render_mve_layers(alert: dict) -> None:
 
 
 class AuditTrailWriter:
-    """Append-only JSONL audit log for every user interaction."""
+    """Append-only JSONL audit log for every user interaction.
+
+    Issue 11 fix: write buffer defers disk I/O so that high-frequency
+    callers (simulation auto-advance at 4× speed = 0.5 s tick) do not
+    open+write+close the file on every event.  The buffer flushes
+    automatically when it reaches _FLUSH_AFTER records or when flush()
+    is called explicitly (e.g. on study completion).
+
+    The hash chain is computed eagerly on every .log() call (so the
+    in-memory chain stays consistent) but the bytes hit disk only on flush.
+    This preserves integrity while eliminating the per-event file open.
+    """
+
+    _FLUSH_AFTER = 10  # records buffered before an automatic disk write
 
     def __init__(self, path: Path | None = None):
         self.path = path or (EVAL_DIR / "audit_trail.jsonl")
         self.prev_hash = "0" * 64
+        self._buffer: list[str] = []
 
     def log(self, event_type: str, **kwargs) -> None:
         record = {
@@ -322,12 +381,26 @@ class AuditTrailWriter:
         payload = json.dumps(record, sort_keys=True)
         record["integrity_hash"] = hashlib.sha256(payload.encode()).hexdigest()
         self.prev_hash = record["integrity_hash"]
-        with open(self.path, "a") as f:
-            f.write(json.dumps(record) + "\n")
+        self._buffer.append(json.dumps(record) + "\n")
+        if len(self._buffer) >= self._FLUSH_AFTER:
+            self.flush()
+
+    def flush(self) -> None:
+        """Write all buffered records to disk in a single open/write/close."""
+        if not self._buffer:
+            return
+        with open(self.path, "a", encoding="utf-8") as f:
+            f.writelines(self._buffer)
+        self._buffer.clear()
 
 
 # Singleton audit writer for the Streamlit session
 _audit_writer = AuditTrailWriter()
+
+# M6-A4: Buffered writer for online_interactions.jsonl — amortises the
+# open+write+close that fired on every Confirm/Reject/Note button click.
+# Shares the same _FLUSH_AFTER=10 policy as AuditTrailWriter.
+_online_writer = AuditTrailWriter(EVAL_DIR / "online_interactions.jsonl")
 
 
 def audit_log(event_type: str, **kwargs) -> None:
@@ -450,10 +523,14 @@ def capture_online_interaction(
     """Log confirm/reject, reclassifications, feedback with timestamps.
 
     Writes to three sinks:
-      1. online_interactions.jsonl  — flat per-interaction log
+      1. online_interactions.jsonl  — flat per-interaction log (buffered)
       2. AuditTrailWriter           — local hash-chained eval-app trail
       3. HardenedAuditLogger        — signed, reviewer-attributed entry
                                        in the Module 5 audit_log.jsonl
+
+    M6-A4: sink 1 uses _online_writer (AuditTrailWriter buffer) instead of
+    open+write+close on every button click — I/O is amortised over
+    _FLUSH_AFTER=10 events.
     """
     record = {
         "timestamp": datetime.now().isoformat(),
@@ -462,9 +539,8 @@ def capture_online_interaction(
         "action_type": action_type,
         "details": details or {},
     }
-    path = EVAL_DIR / "online_interactions.jsonl"
-    with open(path, "a") as f:
-        f.write(json.dumps(record) + "\n")
+    # M6-A4: buffered write — no per-event file open
+    _online_writer.log(action_type, **record)
     # Local eval-app audit trail
     audit_log("online_interaction", **record)
     # Signed Module 5 audit chain with reviewer attribution
@@ -485,7 +561,10 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
     """Take a raw alert record and produce a fully structured alert object.
 
     In production, this would run Modules 2-5 live. Here it assembles
-    from pre-computed artifacts (risk scores, SHAP, NLG, responses).
+    from pre-computed artifacts (risk scores, SHAP, NLG, responses) and
+    runs the scoring step through the research prototype's Risk-Adaptive
+    Scoring Engine (src.risk_scorer.score_alert) so the dashboard's
+    should-surface decision matches the logic M7/M6 enforce.
     """
     xai = alert_data.get("xai_explanation", {})
     expl = alert_data.get("explanation", {})
@@ -498,14 +577,9 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
     resp = alert_data.get("response", {})
     action = alert_data.get("correct_action", "")
     if not action and isinstance(resp, dict):
-        # Use the highest-priority policy action (last in list = most severe)
+        # Use the highest-priority policy action (last in list = most severe).
+        # M6-A1: _ACTION_PRIORITY is now a module-level constant — no per-call alloc.
         policy_actions = resp.get("actions", [])
-        _ACTION_PRIORITY = {
-            "isolate_device": "isolate", "escalate_incident": "escalate",
-            "escalate_clinical": "escalate", "restrict_traffic": "investigate",
-            "forensic_snapshot": "investigate", "re_authenticate": "investigate",
-            "enhanced_monitoring": "monitor", "log_event": "monitor",
-        }
         for pa in reversed(policy_actions):
             mapped = _ACTION_PRIORITY.get(pa)
             if mapped:
@@ -517,11 +591,19 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
         action = {"CRITICAL": "isolate", "HIGH": "escalate",
                   "MEDIUM": "investigate", "LOW": "monitor"}.get(level, "monitor")
 
+    # Risk-adaptive scoring via the prototype's Component 2. Any mismatch
+    # between dashboard and test-harness outputs is now a bug in one place.
+    scored = scored_from_eval_alert(alert_data)
+
     return {
         "sample_index": sample_index,
-        "prediction": 1 if alert_data.get("risk_score", 0) >= 0.4 else 0,
-        "confidence": alert_data.get("risk_score", 0),
-        "risk_score": alert_data.get("risk_score", 0),
+        "prediction": 1 if scored.should_surface else 0,
+        "confidence": scored.adjusted_score,
+        "risk_score": scored.adjusted_score,
+        "raw_risk_score": alert_data.get("risk_score", 0),
+        "threshold": scored.threshold,
+        "risk_multiplier": scored.risk_multiplier,
+        "suppression_reason": scored.suppression_reason,
         "tier": alert_data.get("risk_level", "LOW"),
         "attack_category": alert_data.get("attack_category", "unknown"),
         "ground_truth": alert_data.get("ground_truth", "unknown"),
@@ -688,6 +770,8 @@ def load_all_responses() -> list:
         )
         for r in responses:
             ea = eval_alerts.get(r.get("sample_index"))
+            # Issue 5 fix: guard with `if ea` before iterating — avoids
+            # creating a throwaway {} on every miss via .get(key, {}).
             if ea:
                 for k in _ENRICH_KEYS:
                     if k in ea and k not in r:
@@ -759,12 +843,66 @@ def load_audit_trail() -> dict:
     for rec in records:
         aid = rec.get("alert_id", "")
         # alert_id format: "ALERT-00042"
+        # Issue 7 fix: rsplit("-", 1) allocates a 2-element list instead of
+        # splitting the full string into all "-"-delimited segments.
         try:
-            idx = int(aid.split("-")[-1])
+            idx = int(aid.rsplit("-", 1)[-1])
             out[idx] = rec
         except (ValueError, IndexError):
             continue
     return out
+
+
+@st.cache_data
+def _compute_tier_counts(responses_tuple: tuple) -> dict:
+    """Pre-aggregate risk-level counts from the full response list.
+
+    Issue 1 fix: Counter(r["risk_level"] for r in responses) ran on every
+    Streamlit render (every widget click, sidebar toggle, expander open).
+    Wrapping in @st.cache_data with a hashable tuple arg means the O(n)
+    scan runs once per data load, not once per render.
+
+    Args:
+        responses_tuple: tuple of (sample_index, risk_level) pairs — the
+            minimal hashable slice of responses needed for hashing.
+    Returns:
+        dict with keys CRITICAL / HIGH / MEDIUM / LOW → int count.
+    """
+    counts: dict[str, int] = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+    for _, level in responses_tuple:
+        if level in counts:
+            counts[level] += 1
+    return counts
+
+
+@st.cache_data
+def _build_feed_dataframe(responses_head: tuple) -> pd.DataFrame:
+    """Build the alert-feed DataFrame once per data load.
+
+    Issue 6 fix: the list-of-dicts → pd.DataFrame construction ran on
+    every render inside dashboard_mode(). Pre-computing it with a hashable
+    key (tuple of the first 15 records' key fields) means the O(15) dict
+    construction + DataFrame ctor run once per cache key, not per render.
+
+    Args:
+        responses_head: tuple of (sample_index, risk_level, risk_score,
+            device_class, attack_category, correct_action) for the first
+            15 responses — fully hashable for st.cache_data.
+    Returns:
+        pd.DataFrame ready for st.dataframe().
+    """
+    rows = [
+        {
+            "Sample":   item[0],
+            "Level":    item[1],
+            "Score":    round(item[2], 3),
+            "Device":   item[3] or "\u2014",
+            "Category": item[4] or "",
+            "Action":   item[5] or "\u2014",
+        }
+        for item in responses_head
+    ]
+    return pd.DataFrame(rows)
 
 
 @st.cache_data
@@ -796,7 +934,12 @@ def load_live_stream_source() -> pd.DataFrame | None:
     # so timestamps stay stable when Streamlit reruns the script.
     base = datetime(2026, 4, 9, 8, 0, 0)
     df = df.reset_index(drop=True)
-    df["arrived_at"] = [(base + pd.Timedelta(seconds=i)).isoformat() for i in range(len(df))]
+    # Issue 8 fix: pd.date_range() generates n timestamps in one C-level call
+    # instead of n Python timedelta + datetime additions in a list comprehension.
+    df["arrived_at"] = (
+        pd.date_range(start=base, periods=len(df), freq="1s")
+        .strftime("%Y-%m-%dT%H:%M:%S")
+    )
     df["sample_index"] = df.index
     return df
 
@@ -968,7 +1111,9 @@ def dashboard_mode():
     st.markdown("### System Overview")
     c1, c2, c3, c4, c5 = st.columns(5)
 
-    tier_counts = Counter(r["risk_level"] for r in responses)
+    # Issue 1 fix: O(n) Counter pre-computed once per data load via cache.
+    _resp_key = tuple((r.get("sample_index"), r.get("risk_level")) for r in responses)
+    tier_counts = _compute_tier_counts(_resp_key)
     total = len(responses)
     c1.metric("Total Alerts", total)
     c2.metric("CRITICAL", tier_counts.get("CRITICAL", 0), delta_color="inverse")
@@ -1030,19 +1175,14 @@ def dashboard_mode():
 
     with col_feed:
         st.markdown("#### Alert Feed (latest 15)")
-        feed_data = []
-        for r in responses[:15]:
-            feed_data.append(
-                {
-                    "Sample": r["sample_index"],
-                    "Level": r["risk_level"],
-                    "Score": round(r["risk_score"], 3),
-                    "Device": r.get("device_class", "\u2014"),
-                    "Category": r.get("attack_category", ""),
-                    "Action": r.get("correct_action", "\u2014"),
-                }
-            )
-        st.dataframe(pd.DataFrame(feed_data), width="stretch", hide_index=True)
+        # Issue 6 fix: DataFrame built once per data load via cache;
+        # not rebuilt on every render triggered by widget interactions.
+        _feed_key = tuple(
+            (r.get("sample_index"), r.get("risk_level"), r.get("risk_score", 0.0),
+             r.get("device_class"), r.get("attack_category"), r.get("correct_action"))
+            for r in responses[:15]
+        )
+        st.dataframe(_build_feed_dataframe(_feed_key), width="stretch", hide_index=True)
 
     # ── Row 4: SHAP waterfall + NLG clinician alert ──
     st.markdown("---")
@@ -1378,9 +1518,44 @@ def simulation_mode():
             push_latency_sample(latency_profile)
 
         idx_local = st.session_state.sim_index
-        history_local = responses[: idx_local + 1]
+        # Issue 3 fix: avoid O(n) history_local slice — use direct index
+        # access throughout. history_local is only needed for the tier
+        # distribution chart which uses the incremental _tier_history state.
+        # current_batch_local is a bounded O(3) slice — kept as-is.
         window_size = 3
         current_batch_local = responses[max(0, idx_local - window_size + 1) : idx_local + 1]
+
+        # ── Issues 2 & 3: incremental accumulators ──────────────────────
+        # Replace O(n) Counter + sum(1 for ...) on growing history_local
+        # with O(1) session-state accumulators updated on each tick delta.
+        # On a playhead jump backward, rebuild is O(k) where k = new_idx.
+        _acc = st.session_state.setdefault("_sim_acc", {
+            "idx": -1,
+            "tier": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
+            "attacks": 0,
+        })
+        if idx_local < _acc["idx"]:
+            # Jumped backward — rebuild from scratch up to idx_local
+            _acc["tier"] = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+            _acc["attacks"] = 0
+            for _r in responses[:idx_local + 1]:
+                _lv = _r.get("risk_level", "LOW")
+                if _lv in _acc["tier"]:
+                    _acc["tier"][_lv] += 1
+                if _r.get("ground_truth") == "attack":
+                    _acc["attacks"] += 1
+            _acc["idx"] = idx_local
+        elif idx_local > _acc["idx"]:
+            # Advanced forward — only process new records (delta)
+            for _i in range(_acc["idx"] + 1, idx_local + 1):
+                _r = responses[_i]
+                _lv = _r.get("risk_level", "LOW")
+                if _lv in _acc["tier"]:
+                    _acc["tier"][_lv] += 1
+                if _r.get("ground_truth") == "attack":
+                    _acc["attacks"] += 1
+            _acc["idx"] = idx_local
+        # _acc is always consistent with idx_local at this point
 
         # Status + progress
         status_col, prog_col = st.columns([1, 4])
@@ -1422,17 +1597,14 @@ def simulation_mode():
                     width="stretch",
                 )
 
-        # Summary metrics
+        # Summary metrics — O(1) reads from incremental accumulators
         st.markdown("---")
         mc1, mc2, mc3, mc4, mc5 = st.columns(5)
         mc1.metric("Samples Processed", idx_local + 1)
-        tier_counts = Counter(r["risk_level"] for r in history_local)
-        mc2.metric("CRITICAL", tier_counts.get("CRITICAL", 0))
-        mc3.metric("HIGH", tier_counts.get("HIGH", 0))
-        attacks = sum(1 for r in history_local if r.get("ground_truth") == "attack")
-        mc4.metric("True Attacks Seen", attacks)
-        if history_local:
-            mc5.metric("Latest Risk Score", f"{history_local[-1]['risk_score']:.3f}")
+        mc2.metric("CRITICAL", _acc["tier"].get("CRITICAL", 0))
+        mc3.metric("HIGH", _acc["tier"].get("HIGH", 0))
+        mc4.metric("True Attacks Seen", _acc["attacks"])
+        mc5.metric("Latest Risk Score", f"{responses[idx_local]['risk_score']:.3f}")
 
         # Risk gauge + 4-component breakdown
         if current_batch_local:
@@ -1472,7 +1644,13 @@ def simulation_mode():
                 "**Rolling per-sample latency** "
                 "(synthetic draws consistent with the recorded p50/p95)"
             )
-            roll_df = pd.DataFrame(list(history_deque))
+            # Issue 3 fix: only reconstruct DataFrame when deque length changes.
+            # pd.DataFrame(list(deque)) ran every tick even when nothing changed.
+            _lat_cache = st.session_state.setdefault("_latency_df_cache", {"n": 0, "df": None})
+            if len(history_deque) != _lat_cache["n"]:
+                _lat_cache["df"] = pd.DataFrame(list(history_deque))
+                _lat_cache["n"] = len(history_deque)
+            roll_df = _lat_cache["df"]
             chart_cols = [c for c in roll_df.columns if c != "arrival_idx"]
             st.line_chart(roll_df[chart_cols])
             if "total_ms" in roll_df.columns:
@@ -1586,20 +1764,23 @@ def simulation_mode():
                         )
 
         # Cumulative tier distribution (incremental, O(1) per advance)
+        # Issue 3 fix: target_len uses idx_local+1 directly — no history_local.
+        # The while-loop body accesses responses[i] directly instead of
+        # history_local[i], eliminating the O(n) slice dependency.
         st.markdown("### Alert Tier Distribution (cumulative)")
         TIERS = ("LOW", "MEDIUM", "HIGH", "CRITICAL")
         tier_state = st.session_state.setdefault(
             "_tier_history",
             {"len": 0, "data": {t: [] for t in TIERS}},
         )
-        target_len = len(history_local)
+        target_len = idx_local + 1
         if target_len < tier_state["len"]:
-            # Jumped backwards or reset → rebuild from scratch (O(N) once)
+            # Jumped backwards or reset → rebuild from scratch (O(k) once)
             tier_state["data"] = {t: [] for t in TIERS}
             tier_state["len"] = 0
         while tier_state["len"] < target_len:
             i = tier_state["len"]
-            new_level = history_local[i]["risk_level"]
+            new_level = responses[i]["risk_level"]   # O(1) direct access
             for t in TIERS:
                 prev = tier_state["data"][t][-1] if tier_state["data"][t] else 0
                 tier_state["data"][t].append(prev + (1 if new_level == t else 0))
@@ -1871,9 +2052,22 @@ _SEV_COLORS = {
     "MEDIUM": "#1976d2", "LOW": "#388e3c",
 }
 
+# Issue 10 fix: compile patterns once at module load instead of running
+# repeated `in` substring scans on every line of every Group B render.
+import re as _re
+_DO_NOT_RE = _re.compile(r"DO NOT", _re.IGNORECASE)
+# Matches "SEVERITY: CRITICAL", "► HIGH", "SEVERITY HIGH" etc.
+_SEV_LINE_RE = _re.compile(
+    r"(?:SEVERITY[:\s]+|►\s*)(CRITICAL|HIGH|MEDIUM|LOW)", _re.IGNORECASE
+)
+
 
 def _render_group_b_highlighted(display_text: str) -> None:
-    """FIX 8: Render Group B display with severity color + DO NOT highlight."""
+    """FIX 8: Render Group B display with severity color + DO NOT highlight.
+
+    Issue 10 fix: module-level compiled regexes replace 3–5 per-line
+    `in upper` substring scans with a single regex match per line per check.
+    """
     lines = display_text.split("\n")
     regular: list[str] = []
 
@@ -1883,23 +2077,17 @@ def _render_group_b_highlighted(display_text: str) -> None:
             regular.clear()
 
     for line in lines:
-        upper = line.upper()
-
         # DO NOT constraint → warning box
-        if "DO NOT" in upper:
+        if _DO_NOT_RE.search(line):
             _flush_regular()
             clean = line.strip().lstrip("\u2502").strip()
             st.warning(f"\u26a0\ufe0f {clean}")
             continue
 
         # Severity label line → colored banner
-        detected_sev = next(
-            (s for s in ("CRITICAL", "HIGH", "MEDIUM", "LOW")
-             if f"SEVERITY: {s}" in upper or f"\u25ba {s}" in upper
-             or f"SEVERITY {s}" in upper),
-            None,
-        )
-        if detected_sev:
+        m = _SEV_LINE_RE.search(line)
+        if m:
+            detected_sev = m.group(1).upper()
             _flush_regular()
             hex_c = _SEV_COLORS.get(detected_sev, "#757575")
             st.markdown(
