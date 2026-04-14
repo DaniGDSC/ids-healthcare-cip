@@ -26,5 +26,5 @@ exclude_dirs = ["tests"]
 # they exist. The legacy src/phase*/.../tests/ paths were removed
 # because none of them ever existed on disk — pytest now collects
 # from any tests/ directory under pipeline/.
-testpaths = ["tests", "pipeline"]
+testpaths = ["tests", "module0_analysis", "module1_preprocessing", "module2_detection", "module3_risk_scoring", "module4_explanations", "module5_responses", "module6_evaluation", "common"]
 addopts = "-v --tb=short"

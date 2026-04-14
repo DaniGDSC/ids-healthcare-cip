@@ -1,7 +1,7 @@
 """Component 2: Risk-Adaptive Scoring Engine.
 
 Wraps the composite risk scoring logic from
-pipeline/module3_risk_scoring/module3_risk_scores.py and adds the
+module3_risk_scoring/module3_risk_scores.py and adds the
 patchability-aware threshold adjustment required by research_spec.yaml.
 
 Key additions over module3:

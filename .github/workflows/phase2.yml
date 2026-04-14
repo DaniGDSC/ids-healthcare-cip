@@ -2,7 +2,7 @@ name: Phase 2 — Lint · Test · Security · Integration · Build
 
 # Phase 2 trains the supervised detectors (XGBoost / RF / DT) and the
 # Track B DAE novelty detector. The CI workflow exercises the actual
-# pipeline at pipeline/module2_detection/, NOT the legacy fictional
+# pipeline at module2_detection/, NOT the legacy fictional
 # CNN+BiLSTM design that the old workflow imported from a non-existent
 # src/phase2_detection_engine/phase2/ subpackage.
 
@@ -43,10 +43,10 @@ jobs:
         run: pip install ruff black
 
       - name: Ruff — Phase 2
-        run: ruff check pipeline/module2_detection/
+        run: ruff check module2_detection/
 
       - name: Black — Phase 2
-        run: black --check pipeline/module2_detection/
+        run: black --check module2_detection/
 
   # ─────────────────────────────────────────────────────────────────
   # 2. Unit tests for Phase 2 (coverage ≥ 80%)
@@ -70,9 +70,9 @@ jobs:
           TF_DETERMINISTIC_OPS: "1"
         run: >
           python -m pytest
-          pipeline/module2_detection/tests/
+          module2_detection/tests/
           -v
-          --cov=pipeline.module2_detection
+          --cov=module2_detection
           --cov-report=xml:coverage-phase2.xml
           --cov-report=term-missing
           --cov-fail-under=80
@@ -103,7 +103,7 @@ jobs:
           pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — Phase 2 static analysis
-        run: bandit -r pipeline/module2_detection/ -c pyproject.toml -ll
+        run: bandit -r module2_detection/ -c pyproject.toml -ll
 
       - name: pip-audit — dependency vulnerabilities (fail on CVSS > 7.0)
         run: pip-audit --strict --desc
@@ -183,7 +183,7 @@ jobs:
             correlation_matrix_file: "correlation_matrix.parquet"
           ''')
           PY
-          python -m pipeline.module0_analysis.phase0.bootstrap_integrity \
+          python -m module0_analysis.phase0.bootstrap_integrity \
             --config config/ci_test_phase0.yaml
 
       - name: Generate Phase 0 artefacts for the subset
@@ -284,9 +284,9 @@ jobs:
           logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
           from pathlib import Path
-          from pipeline.module1_preprocessing.phase1.config import Phase1Config
-          from pipeline.module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-          from pipeline.module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+          from module1_preprocessing.phase1.config import Phase1Config
+          from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
+          from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
 
           PROJECT_ROOT = Path.cwd()
           config = Phase1Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase1.yaml')
@@ -338,7 +338,7 @@ jobs:
 
       - name: Run Phase 2 final-training pipeline on subset
         run: |
-          python -m pipeline.module2_detection.module2_train_models
+          python -m module2_detection.module2_train_models
 
       - name: Integration assertions — Phase 2
         run: |
@@ -426,12 +426,12 @@ jobs:
         run: >
           docker run --rm analyst/phase0-phase2:${{ github.sha }}
           -c "
-          from pipeline.module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
-          from pipeline.module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
-          from pipeline.module2_detection.models.DAE import DAEDetector;
-          from pipeline.module2_detection.models.XGBoost import XGBoostDetector;
-          from pipeline.module2_detection.models.RandomForest import RandomForestDetector;
-          from pipeline.module2_detection.models.DecisionTree import DecisionTreeDetector;
+          from module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
+          from module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
+          from module2_detection.models.DAE import DAEDetector;
+          from module2_detection.models.XGBoost import XGBoostDetector;
+          from module2_detection.models.RandomForest import RandomForestDetector;
+          from module2_detection.models.DecisionTree import DecisionTreeDetector;
           print('Phase 0 + Phase 1 + Phase 2: OK')
           "
 

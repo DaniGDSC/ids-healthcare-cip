@@ -4,7 +4,7 @@ Produces a 3-layer Minimum Viable Explanation from a raw alert,
 device context, behavioral baseline, and optional user context.
 
 Design mirrors the two-track approach in
-pipeline/module4_explanations/module4_online_explainer.py:
+module4_explanations/module4_online_explainer.py:
   Option A (LLM) — Anthropic API with a structured JSON prompt if
                    ANTHROPIC_API_KEY is set in the environment.
   Option B (rule-based) — deterministic templates per alert type,

@@ -111,13 +111,13 @@ def _print_report(report, recommendation: str) -> None:
 
 
 def _run_study_analysis() -> dict | None:
-    """Run pipeline.module6_evaluation.study_analysis if responses exist.
+    """Run module6_evaluation.study_analysis if responses exist.
 
     Returns the result dict (C4 Phase-2 analysis) or None if study
     response files are missing or the import fails.
     """
     try:
-        from pipeline.module6_evaluation.study_analysis import (
+        from module6_evaluation.study_analysis import (
             load_all_responses,
             run_m5_analysis,
             run_secondary_analyses,

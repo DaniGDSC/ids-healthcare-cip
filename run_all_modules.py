@@ -31,37 +31,37 @@ MODULES = [
     {
         "id": 2,
         "name": "Train Final Models",
-        "script": "pipeline/module2_detection/module2_train_models.py",
+        "script": "module2_detection/module2_train_models.py",
         "description": "Retrain XGBoost/RF/DT/DAE with best hyperparameters",
     },
     {
         "id": 3,
         "name": "Composite Risk Scores",
-        "script": "pipeline/module3_risk_scoring/module3_risk_scores.py",
+        "script": "module3_risk_scoring/module3_risk_scores.py",
         "description": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
     },
     {
         "id": 4,
         "name": "Explanations (Batch)",
-        "script": "pipeline/module4_explanations/module4_explanations.py",
+        "script": "module4_explanations/module4_explanations.py",
         "description": "TreeSHAP + DAE decomposition + stakeholder outputs + validation",
     },
     {
         "id": 5,
         "name": "Response Recommendations",
-        "script": "pipeline/module5_responses/module5_responses.py",
+        "script": "module5_responses/module5_responses.py",
         "description": "Adaptive mitigation + audit trail + effectiveness analysis",
     },
     {
         "id": "5b",
         "name": "Response Pipeline Integration",
-        "script": "pipeline/module5_responses/module5_pipeline.py",
+        "script": "module5_responses/module5_pipeline.py",
         "description": "PolicyEngine + clinical safety + feedback loop",
     },
     {
         "id": 6,
         "name": "Evaluation Artifacts",
-        "script": "pipeline/module6_evaluation/module6_evaluation.py",
+        "script": "module6_evaluation/module6_evaluation.py",
         "description": "Curate alerts, simulated responses, statistical analysis, thesis figures",
     },
 ]

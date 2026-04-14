@@ -39,10 +39,10 @@ jobs:
         run: pip install ruff black
 
       - name: Ruff — Phase 1
-        run: ruff check pipeline/module1_preprocessing/
+        run: ruff check module1_preprocessing/
 
       - name: Black — Phase 1
-        run: black --check pipeline/module1_preprocessing/
+        run: black --check module1_preprocessing/
 
   # ─────────────────────────────────────────────────────────────────
   # 2. Unit tests for Phase 1 (coverage ≥ 80%)
@@ -63,9 +63,9 @@ jobs:
       - name: Run Phase 1 unit tests with coverage
         run: >
           python -m pytest
-          pipeline/module1_preprocessing/phase1/tests/
+          module1_preprocessing/phase1/tests/
           -v
-          --cov=pipeline.module1_preprocessing.phase1
+          --cov=module1_preprocessing.phase1
           --cov-report=xml:coverage-phase1.xml
           --cov-report=term-missing
           --cov-fail-under=80
@@ -96,7 +96,7 @@ jobs:
           pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — Phase 1 static analysis
-        run: bandit -r pipeline/module1_preprocessing/ -c pyproject.toml -ll
+        run: bandit -r module1_preprocessing/ -c pyproject.toml -ll
 
       - name: pip-audit — dependency vulnerabilities
         run: pip-audit --strict --desc
@@ -185,7 +185,7 @@ jobs:
             correlation_matrix_file: "correlation_matrix.parquet"
           ''')
           PY
-          python -m pipeline.module0_analysis.phase0.bootstrap_integrity \
+          python -m module0_analysis.phase0.bootstrap_integrity \
             --config config/ci_test_phase0.yaml
 
       - name: Generate Phase 0 artifacts for subset
@@ -252,7 +252,7 @@ jobs:
           cleaning:
             # Patient-safe defaults: median imputation cannot leak
             # across patients, dropna cannot conflate missing-flow
-            # with zero-flow. See pipeline/module1_preprocessing/
+            # with zero-flow. See module1_preprocessing/
             # phase1/missing.py for the threat model.
             biometric_strategy: "median"
             biometric_columns:
@@ -308,9 +308,9 @@ jobs:
           logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
           from pathlib import Path
-          from pipeline.module1_preprocessing.phase1.config import Phase1Config
-          from pipeline.module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-          from pipeline.module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+          from module1_preprocessing.phase1.config import Phase1Config
+          from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
+          from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
 
           PROJECT_ROOT = Path.cwd()
           config = Phase1Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase1.yaml')
@@ -342,7 +342,7 @@ jobs:
         run: |
           python -c "
           import pandas as pd, numpy as np, json, sys
-          from pipeline.module1_preprocessing.phase1.scaler import RobustScalerTransformer
+          from module1_preprocessing.phase1.scaler import RobustScalerTransformer
 
           errors = []
 
@@ -469,9 +469,9 @@ jobs:
         run: >
           docker run --rm analyst/phase0-phase1:${{ github.sha }}
           -c "
-          from pipeline.module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
-          from pipeline.module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
-          from pipeline.module1_preprocessing.phase1.scaler import RobustScalerTransformer;
+          from module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
+          from module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
+          from module1_preprocessing.phase1.scaler import RobustScalerTransformer;
           print('Phase 0 + Phase 1: OK')
           "
 

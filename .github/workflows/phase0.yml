@@ -26,10 +26,10 @@ jobs:
         run: pip install ruff black
 
       - name: Ruff check
-        run: ruff check pipeline/module0_analysis/ pipeline/common/
+        run: ruff check module0_analysis/ common/
 
       - name: Black format check
-        run: black --check pipeline/module0_analysis/ pipeline/common/
+        run: black --check module0_analysis/ common/
 
   # ─────────────────────────────────────────────────────────────────
   # 2. Security scan (bandit + pip-audit + SBOM)
@@ -48,10 +48,10 @@ jobs:
         run: pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — static security analysis
-        run: bandit -r pipeline/module0_analysis/ pipeline/common/ -c pyproject.toml -f json -o bandit-report.json || true
+        run: bandit -r module0_analysis/ common/ -c pyproject.toml -f json -o bandit-report.json || true
 
       - name: Bandit — fail on high/critical
-        run: bandit -r pipeline/module0_analysis/ pipeline/common/ -c pyproject.toml -ll
+        run: bandit -r module0_analysis/ common/ -c pyproject.toml -ll
 
       - name: pip-audit — dependency vulnerabilities
         run: pip install -r requirements.txt && pip-audit --strict --desc
@@ -91,10 +91,10 @@ jobs:
       - name: Run Phase 0 tests with coverage
         run: >
           python -m pytest
-          pipeline/module0_analysis/phase0/tests/
+          module0_analysis/phase0/tests/
           -v
-          --cov=pipeline.module0_analysis
-          --cov=pipeline.common
+          --cov=module0_analysis
+          --cov=common
           --cov-report=xml:coverage.xml
           --cov-report=term-missing
           --cov-fail-under=80
@@ -157,4 +157,4 @@ jobs:
       - name: Verify Phase 0 imports
         run: >
           docker run --rm analyst/phase0:${{ github.sha }}
-          -c "from pipeline.module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator; print('OK')"
+          -c "from module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator; print('OK')"
