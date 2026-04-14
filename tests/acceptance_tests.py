@@ -343,6 +343,100 @@ def test_risk_adaptive_threshold() -> bool:
     return True
 
 
+# ── M5: SHAP Narrative Alignment ────────────────────────────────────────
+
+# Maps alert_id prefix (T1..T5) to the stub key in shap_stubs.yaml.
+_SHAP_STUB_KEY_BY_TYPE = {
+    "T1": "type_1_outbound_clinical_device",
+    "T2": "type_2_unauthorized_ehr_access",
+    "T3": "type_3_lateral_movement",
+    "T4": "type_4_data_exfiltration",
+    "T5": "type_5_iomt_behavioral_deviation",
+}
+
+
+def _load_shap_stubs() -> dict[str, dict[str, Any]]:
+    """Load tests/fixtures/shap_stubs.yaml → dict[stub_key, stub_dict]."""
+    import yaml
+    from pathlib import Path
+    path = Path(__file__).resolve().parent / "fixtures" / "shap_stubs.yaml"
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f).get("stubs", {})
+
+
+def test_shap_narrative_alignment(
+    mve_outputs: List[MVEOutput],
+    ground_truths: List[AlertGroundTruth],
+) -> float:
+    """Claim C1 (v2.0): when shap_context is provided, Layer 1 MUST mention
+    either shap_context.top_category (label) OR at least 1 top_feature.
+
+    Generates a fresh MVE per alert with its type-matched shap stub and
+    verifies the alignment. Independent of the live SHAP pipeline so the
+    test is deterministic and runs without a trained model.
+
+    Pass:  >= 75% (minimum), target 85%.
+    """
+    from src.mve_generator import generate_mve
+
+    stubs = _load_shap_stubs()
+    if not stubs:
+        return 0.0
+
+    # Rebuild per-alert inputs from ground_truths + original alert records
+    # via the harness fixture. We only need raw_alert/device/baseline, so
+    # re-load sample_alerts here to avoid coupling to harness internals.
+    import yaml
+    from pathlib import Path
+    sample_path = (
+        Path(__file__).resolve().parent / "fixtures" / "sample_alerts.yaml"
+    )
+    with open(sample_path, encoding="utf-8") as f:
+        alerts_by_id = {a["alert_id"]: a for a in yaml.safe_load(f)["alerts"]}
+
+    aligned = 0
+    checked = 0
+    for gt in ground_truths:
+        prefix = gt.alert_id.split("-")[0]
+        stub_key = _SHAP_STUB_KEY_BY_TYPE.get(prefix)
+        stub = stubs.get(stub_key) if stub_key else None
+        alert = alerts_by_id.get(gt.alert_id)
+        if not stub or not alert:
+            continue
+
+        mve = generate_mve(
+            raw_alert=alert.get("raw_alert", {}),
+            device_context=alert.get("device_context", {}),
+            baseline=alert.get("behavioral_baseline", {}),
+            user_context=alert.get("user_context"),
+            shap_context=stub,
+            event_context=alert.get("event_context"),
+        )
+
+        layer1_text = " ".join(
+            mve.layer_1.get(f, "") for f in L1_REQUIRED
+        ).lower()
+        category = str(stub.get("top_category", "")).lower()
+        features = [str(f).lower() for f in stub.get("top_features", [])]
+
+        hit = bool(category and category in layer1_text) or any(
+            feat and feat in layer1_text for feat in features
+        )
+        aligned += int(hit)
+        checked += 1
+
+    if checked == 0:
+        return 0.0
+    rate = aligned / checked
+    assert rate >= 0.75, (
+        f"M5 SHAP narrative alignment {rate:.1%} below minimum 75% "
+        f"({aligned}/{checked} outputs mention top_category or top_features)"
+    )
+    if rate < 0.85:
+        print(f"  WARN M5: SHAP alignment {rate:.1%} below target 85%")
+    return rate
+
+
 # ── M6: False Positive Rate Reduction ───────────────────────────────────
 
 def test_false_positive_rate(
@@ -423,6 +517,7 @@ def run_acceptance_tests(
         ("M4",  "test_clinical_constraint_awareness",0.90, 0.80),
         ("M8",  "test_severity_label_accuracy",      0.80, 0.70),
         ("M1b", "test_layer1_length_constraint",     0.95, 0.90),
+        ("M5",  "test_shap_narrative_alignment",     0.85, 0.75),
         ("M7",  "test_risk_adaptive_threshold",      1.00, 1.00),
         ("M6",  "test_false_positive_rate",          0.40, 0.20),
     ]
@@ -443,6 +538,10 @@ def run_acceptance_tests(
                 val = float(test_severity_label_accuracy(mve_outputs, ground_truths))
             elif metric_id == "M1b":
                 val = float(test_layer1_length_constraint(mve_outputs))
+            elif metric_id == "M5":
+                val = float(test_shap_narrative_alignment(
+                    mve_outputs, ground_truths,
+                ))
             elif metric_id == "M7":
                 test_risk_adaptive_threshold()
                 val = 1.0

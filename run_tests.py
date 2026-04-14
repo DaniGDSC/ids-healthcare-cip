@@ -110,7 +110,64 @@ def _print_report(report, recommendation: str) -> None:
     print()
 
 
-def _write_alignment_report(report, recommendation: str, out_path: Path) -> None:
+def _run_study_analysis() -> dict | None:
+    """Run pipeline.module6_evaluation.study_analysis if responses exist.
+
+    Returns the result dict (C4 Phase-2 analysis) or None if study
+    response files are missing or the import fails.
+    """
+    try:
+        from pipeline.module6_evaluation.study_analysis import (
+            load_all_responses,
+            run_m5_analysis,
+            run_secondary_analyses,
+        )
+    except Exception as exc:
+        logger.info("study_analysis unavailable (%s); skipping C4", exc)
+        return None
+
+    try:
+        responses = load_all_responses()
+    except Exception as exc:
+        logger.info("study responses could not load (%s); skipping C4", exc)
+        return None
+
+    if not responses:
+        logger.info("no study responses found; skipping C4")
+        return None
+
+    m5 = run_m5_analysis(responses)
+    secondary = run_secondary_analyses(responses)
+    return {
+        "claim": "C4 — enabling correct triage from non-specialist operators",
+        "metric": "M5 — Triage Decision Accuracy (user study)",
+        "m5_primary": m5,
+        "secondary_metrics": secondary,
+    }
+
+
+def _apply_study_to_alignment(report, study_result: dict) -> None:
+    """Upgrade C4 verdict in-place based on m5_primary study verdict."""
+    verdict = (study_result.get("m5_primary") or {}).get("verdict", "")
+    c4_verdict = {
+        "PASS": "SUPPORTED",
+        "WARN": "PARTIAL",
+        "FAIL": "NOT_SUPPORTED",
+    }.get(verdict, "NOT_TESTED")
+
+    for a in report.alignment:
+        if a.get("claim_id") == "C4":
+            a["verdict"] = c4_verdict
+            a["supported_by"] = ["m5_result.yaml (user study)"]
+            break
+
+
+def _write_alignment_report(
+    report,
+    recommendation: str,
+    out_path: Path,
+    study_result: dict | None = None,
+) -> None:
     """Write alignment_report.yaml per research_spec.yaml section 6."""
     doc = {
         "test_results": report.metrics,
@@ -129,6 +186,8 @@ def _write_alignment_report(report, recommendation: str, out_path: Path) -> None
         ],
         "recommendation": recommendation,
     }
+    if study_result is not None:
+        doc["study_analysis"] = study_result
     out_path.write_text(
         yaml.dump(doc, default_flow_style=False, allow_unicode=True, sort_keys=False),
         encoding="utf-8",
@@ -160,10 +219,16 @@ def main() -> int:
     from src.harness import run_simulation
 
     report = run_simulation(fixture_path=args.fixture)
+
+    # Run Phase-2 user-study analysis (C4) if study responses are present.
+    study_result = _run_study_analysis()
+    if study_result is not None:
+        _apply_study_to_alignment(report, study_result)
+
     recommendation = _recommendation(report)
 
     _print_report(report, recommendation)
-    _write_alignment_report(report, recommendation, args.report)
+    _write_alignment_report(report, recommendation, args.report, study_result)
 
     # Exit 1 if any FAIL
     any_fail = (

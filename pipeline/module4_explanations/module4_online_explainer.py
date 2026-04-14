@@ -196,6 +196,50 @@ class AlertExplainer:
             return "MEDIUM"
         return "LOW"
 
+    @staticmethod
+    def build_shap_context(top_features: list) -> dict:
+        """Assemble a spec-shaped shap_context dict from TreeSHAP output.
+
+        Maps ranked top_features to v2.0 SHAPContext fields per
+        research_spec.yaml §2.module_4_shap_explainer.output:
+          - top_category: feature group with highest |SHAP| sum
+          - top_features: feature names (preserving rank)
+          - shap_direction: 'elevated' if top-1 SHAP > 0 else 'suppressed'
+          - confidence_from_shap: HIGH (>0.3), MEDIUM (0.1-0.3), LOW (<0.1)
+
+        Args:
+            top_features: list of dicts with keys 'feature', 'shap_value'
+                (as produced by _top_shap); already sorted by |SHAP| desc.
+
+        Returns:
+            Dict ready to pass as shap_context to src.mve_generator.generate_mve.
+            Empty dict if top_features is empty.
+        """
+        if not top_features:
+            return {}
+
+        category_abs = {}
+        for tf in top_features:
+            _, cat = _feature_to_narrative(tf["feature"])
+            category_abs[cat] = category_abs.get(cat, 0.0) + abs(tf["shap_value"])
+        top_category = max(category_abs, key=category_abs.get)
+
+        top1 = top_features[0]
+        top1_abs = abs(top1["shap_value"])
+        if top1_abs > 0.3:
+            confidence = "HIGH"
+        elif top1_abs >= 0.1:
+            confidence = "MEDIUM"
+        else:
+            confidence = "LOW"
+
+        return {
+            "top_category": top_category,
+            "top_features": [tf["feature"] for tf in top_features],
+            "shap_direction": "elevated" if top1["shap_value"] > 0 else "suppressed",
+            "confidence_from_shap": confidence,
+        }
+
     def _top_shap(self, sv_row: np.ndarray, k: int = 3) -> list:
         abs_vals = np.abs(sv_row)
         # M4-9: O(F) partition then sort only k candidates
@@ -364,6 +408,7 @@ class AlertExplainer:
         # Use XGBoost SHAP as primary for clinician summary
         primary_top = shap_explanations["xgboost"]["top_features"]
         clinician_summary = self._clinician_nlg(severity, primary_top)
+        shap_context = self.build_shap_context(primary_top)
         timings["nlg_ms"] = round((time.perf_counter() - t0) * 1000, 3)
 
         # ── Step 6: Risk decomposition ──
@@ -393,6 +438,7 @@ class AlertExplainer:
                 "track_b": dae_explanation,
             },
             "clinician_summary": clinician_summary,
+            "shap_context": shap_context,
             "risk_decomposition": risk_decomposition,
             "timings_ms": timings,
         }
@@ -494,6 +540,7 @@ def run_batch_simulation(
             top_shap = explainer._top_shap(xgb_sv[i], k=3) if xgb_sv is not None else []
             top_dae = explainer._top_dae(dae_per_feature[i], k=3)
             nlg = explainer._clinician_nlg(severity, top_shap)
+            shap_context = explainer.build_shap_context(top_shap)
 
             result = {
                 "sample_index": int(idx),
@@ -503,6 +550,7 @@ def run_batch_simulation(
                 "top_shap_features": top_shap,
                 "top_dae_features": top_dae,
                 "clinician_summary": nlg,
+                "shap_context": shap_context,
                 "timings_ms": timings,
             }
             sample_explanations.append(result)

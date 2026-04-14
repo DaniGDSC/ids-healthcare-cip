@@ -1,47 +1,166 @@
-# CLAUDE.md
-# XAI-IDS-Healthcare Prototype
-# Read this file completely before writing any code.
+# XAI-IDS-Healthcare Full Pipeline
+# Read this file COMPLETELY before writing any code.
+# Last updated: 2026-04-14
+
+---
 
 ## WHAT THIS PROJECT IS
 
 Research prototype for:
-"Human-centric Explainable + Risk-Adaptive IDS for mid-sized
-healthcare organizations (200-500 beds)."
+"Human-in-loop Explainable + Risk-Adaptive IDS for mid-sized
+healthcare organizations (200–500 beds)."
 
 Target user: IT security generalist (NOT SOC specialist).
-Processes 10-50 alerts/day alongside EHR support and network admin.
+Processes 10–50 alerts/day alongside EHR support and network admin.
 Needs clinically contextualized explanations, not raw anomaly scores.
 
-Full spec: research_spec.yaml (read before implementing any component)
+Full spec: research_spec.yaml (read before touching any module)
 
 ---
 
-## BUILD EXACTLY 3 COMPONENTS — NO MORE
+## ARCHITECTURE — 6 MODULES + 3 CROSS-CUTTING FILES
 
-### Component 1: MVE Generator
-File: src/mve_generator.py
-Function: generate_mve(raw_alert, device_context, baseline, user_context, shap_context=None) → MVEOutput
+```
+OFFLINE TRAINING (run once)
+  Module 0  phase0/                   Dataset audit
+  Module 1  phase1/                   Preprocessing + SMOTE
+  Module 2  module2_train_models.py   XGB/RF/DT + DAE → models/
 
-Produces 3-layer Minimum Viable Explanation:
-- Layer 1 (WHY anomalous): baseline vs deviation, max 60 words
-- Layer 2 (CLINICAL SEVERITY): patient-care impact, CRITICAL/HIGH/MEDIUM/LOW
-- Layer 3 (RECOMMENDED ACTION): specific step + DO NOT constraint + escalation
+ONLINE INFERENCE (per alert)
+  Module 3  module3_risk_scores.py    Risk-adaptive gate
+  Module 4  module4_online_explainer.py  SHAP → shap_context
+            src/mve_generator.py      3-layer MVE (≤150 words)
+  Module 5  module5_responses.py      Output to IT Generalist
 
-Total output: ≤150 words. No jargon. No SHAP values. No CVSS.
+EVALUATION
+  Module 6  module6_evaluation.py     M1–M8 + study_analysis
+            src/harness.py            Thin wrapper (backward-compat)
 
-### Component 2: Risk-Adaptive Scoring Engine
-File: src/risk_scorer.py
-Function: score_alert(anomaly_score, device_context, event_context) → ScoredAlert
+CROSS-CUTTING
+  drift_detection.py
+  dynamic_threshold_sim.py
+  feedback_loop_demo.py
+```
+
+Key invariant: Track B (DAE) only elevates anomaly_score, never suppresses.
+Suppression happens at Module 3 only. mve_generator.py is NEVER called
+on suppressed alerts.
+
+---
+
+## MODULE CONTRACTS
+
+### Module 2 — Train Models
+File: `module2_train_models.py`
+
+Track A (supervised, SMOTE-balanced):
+- XGBoost   → P_xgb(attack)
+- RandomForest → P_rf(attack)
+- DecisionTree → P_dt(attack)
+- Input: 25 raw network features
+- OOF probabilities fed into DAE
+
+Track B (unsupervised):
+- DAE input: concat([25 raw features, P_xgb, P_rf, P_dt])  # 28-dim
+- DAE output: reconstruction_error → normalized [0, 1]
+- Trained on benign-only traffic
+
+Fusion: `anomaly_score = max(Track_A_score, Track_B_score)`
+
+Serialize to: `models/xgb.pkl, rf.pkl, dt.pkl, dae.pkl, scaler.pkl`
+
+---
+
+### Module 3 — Risk-Adaptive Scoring
+File: `module3_risk_scores.py`
+(Replaces v1.0 `src/risk_scorer.py` — same logic, still exists as alias)
+
+Function: `score_alert(anomaly_score, device_context, event_context) → ScoredAlert`
 
 Rules (non-negotiable):
-- CRITICAL + unpatchable → threshold lowered ≥30%, risk_multiplier ≥1.5
+- CRITICAL + unpatchable  → threshold lowered ≥30%, risk_multiplier ≥1.5
 - Maintenance window + known vendor IP → suppress (should_surface=False)
-- LOW + patchable → default threshold, risk_multiplier=1.0
+- LOW + patchable         → default threshold, risk_multiplier=1.0
+- similar_events > 5 in 30d → reduce risk_multiplier by 0.2
 
-### Component 3: Alert Simulation Harness
-File: src/harness.py
-Function: run_simulation(dataset) → TestReport
-Purpose: testing only, not production.
+---
+
+### Module 4 — SHAP Explainer
+File: `module4_online_explainer.py`
+
+Function: `explain_alert(feature_vector, model) → SHAPContext`
+
+- Compute SHAP values against XGBoost model
+- Map features to 7 clinical feature groups (see research_spec.yaml)
+- Output: top_category, top_features (top 3), shap_direction, confidence_from_shap
+- Called ONLY when should_surface=True
+
+---
+
+### MVE Generator — UPDATED SIGNATURE
+File: `src/mve_generator.py`
+
+```python
+def generate_mve(
+    raw_alert: dict,
+    device_context: dict,
+    behavioral_baseline: dict,
+    user_context: dict | None = None,
+    shap_context: dict | None = None,   # NEW in v2.0
+) -> MVEOutput:
+```
+
+Layer 1 rules:
+- If shap_context provided: deviation_description MUST mention
+  shap_context.top_category AND at least 1 shap_context.top_feature
+- If shap_context is None: fall back to rule-based deviation (v1.0 behavior)
+
+Layer 3 rules (updated from mve_improvement_analysis.yaml):
+- ALL EHR access alerts: always include force-reauth instruction,
+  regardless of severity. Severity = urgency, NOT whether action is needed.
+- IoMT CRITICAL/HIGH: clinical_constraint MUST distinguish between
+  network isolation (safe) and device power-off/physical disconnect (prohibited).
+  Example: "DO NOT power off ventilator. Blocking port 23 at switch is SAFE."
+- Layer 3 immediate_action for data_exfiltration: specify exact scope
+  (destination IP only), what is preserved, and why partial > full isolation.
+- LOW-severity alerts with benign hypothesis: lead Layer 1 with benign
+  explanation if destination is internal and matches known pattern.
+
+Layer 1 rules (updated):
+- For IoMT behavioral deviation: deviation_description MUST include
+  numeric baseline comparison when available.
+  Example: "Normal: 12 DNS queries/min. Observed: 310 queries/min."
+- Add role_authorization_check to Layer 1 for unauthorized_ehr_access alerts:
+  "Role authorization: CONFIRMED / UNCONFIRMED / DENIED"
+  If UNCONFIRMED → Layer 3 must recommend force-reauth regardless of severity.
+
+Output constraints (unchanged):
+- Total ≤150 words. Layer 1 ≤60. Layer 2 ≤50. Layer 3 ≤60.
+- No raw SHAP values in output text
+- No CVSS scores — use clinical CRITICAL/HIGH/MEDIUM/LOW only
+- No vague actions ("investigate further", "monitor closely")
+
+Mode A (LLM): Use if ANTHROPIC_API_KEY in environment.
+Mode B (rules): Always implement. Must pass all tests offline.
+
+---
+
+### Module 5 — Recommendation Output
+File: `module5_responses.py`
+
+- Format MVEOutput for IT Generalist display
+- NEVER auto-execute any action
+- Output: structured dict (CLI / API / Streamlit-ready)
+
+---
+
+### Module 6 — Evaluation
+Files: `module6_evaluation.py`, `module6_app.py`, `src/harness.py`
+
+Runs:
+1. Acceptance tests M1–M8 on 50-alert fixture set
+2. Negative tests (0 violations required)
+3. study_analysis on study_responses_A/B.json → m5_result.yaml
 
 ---
 
@@ -49,22 +168,46 @@ Purpose: testing only, not production.
 
 ```
 xai-ids-healthcare/
+├── phase0/
+│   └── dataset_audit.yaml
+├── phase1/
+│   ├── preprocess.py
+│   └── splits/
+├── models/
+│   ├── xgb.pkl
+│   ├── rf.pkl
+│   ├── dt.pkl
+│   ├── dae.pkl
+│   └── scaler.pkl
 ├── src/
 │   ├── __init__.py
-│   ├── data_models.py
-│   ├── mve_generator.py
-│   ├── risk_scorer.py
-│   └── harness.py
+│   ├── data_models.py          # MVEOutput, ScoredAlert, SHAPContext, ...
+│   ├── mve_generator.py        # v2.0: +shap_context param
+│   ├── risk_scorer.py          # alias → module3_risk_scores.py
+│   └── harness.py              # thin wrapper → module6_evaluation.py
+├── module2_train_models.py
+├── module3_risk_scores.py
+├── module4_online_explainer.py
+├── module5_responses.py
+├── module6_evaluation.py
+├── module6_app.py
+├── drift_detection.py
+├── dynamic_threshold_sim.py
+├── feedback_loop_demo.py
 ├── tests/
 │   ├── __init__.py
-│   ├── acceptance_tests.py
+│   ├── acceptance_tests.py     # M1–M8 (includes M5 SHAP alignment)
 │   ├── negative_tests.py
 │   └── fixtures/
 │       ├── sample_alerts.yaml
 │       ├── device_inventory.yaml
-│       └── behavioral_baselines.yaml
+│       ├── behavioral_baselines.yaml
+│       └── shap_stubs.yaml     # stub SHAPContext for offline tests
 ├── run_tests.py
-├── alignment_report.yaml  ← generated after tests pass
+├── alignment_report.yaml       # generated
+├── m5_result.yaml              # generated
+├── study_responses_A.json
+├── study_responses_B.json
 ├── research_spec.yaml
 └── CLAUDE.md
 ```
@@ -75,12 +218,11 @@ xai-ids-healthcare/
 
 - Device discovery / network scanning
 - Automated enforcement / blocking (recommend only, never execute)
-- RF protocol detection (non-IP IoMT)
+- RF / proprietary wireless protocol detection (non-IP IoMT)
 - Ransomware early-detection claims
-- UI / frontend
-- Database / persistence (use in-memory + YAML fixtures)
+- UI / frontend (Streamlit in module6_app.py is evaluation-only)
+- Database / persistence (in-memory + YAML fixtures only)
 - Authentication / authorization
-- ML model training (assume anomaly scores given as input)
 
 If asked to build any of the above: refuse and cite this file.
 
@@ -88,166 +230,97 @@ If asked to build any of the above: refuse and cite this file.
 
 ## DONE CONDITION
 
-Prototype is COMPLETE when run_tests.py produces:
+Prototype is COMPLETE when `run_tests.py` produces:
 
-AUTOMATED TESTS (all must pass at ≥minimum):
-- test_mve_completeness          ≥85% (target 95%)
-- test_clinical_relevance        ≥75% (target 90%)
-- test_actionability             ≥70% (target 85%)
-- test_clinical_constraint       ≥80% (target 90%)
-- test_severity_label_accuracy   ≥70%, 0 CRITICAL↔LOW mismatches
-- test_layer1_length_constraint  ≥90% (target 95%)
-- test_risk_adaptive_threshold   100% (binary)
-- test_false_positive_rate       ≥20% FP reduction (target 40%)
+### Automated Tests (all must pass at ≥minimum)
 
-NEGATIVE TESTS (all must pass, 0 violations):
+| Test | Minimum | Target |
+|---|---|---|
+| test_mve_completeness (M1) | 85% | 95% |
+| test_layer1_length_constraint (M1b) | 90% | 95% |
+| test_clinical_relevance (M2) | 75% | 90% |
+| test_actionability (M3) | 70% | 85% |
+| test_clinical_constraint_awareness (M4) | 80% | 90% |
+| test_shap_narrative_alignment (M5) | 75% | 85% |
+| test_false_positive_rate (M6) | 20% FP reduction | 40% |
+| test_risk_adaptive_threshold (M7) | 100% | 100% |
+| test_severity_label_accuracy (M8) | 70%, 0 CRITICAL↔LOW | 80% |
+
+M8 hard fail: any CRITICAL↔LOW mismatch = immediate BLOCKED.
+
+### Negative Tests (all must pass, 0 violations)
+
 - test_no_device_discovery_attempted
 - test_no_automated_blocking
 - test_no_rf_protocol_claims
 - test_no_ransomware_dwell_time_claims
 - test_severity_uses_clinical_not_cvss
-- test_no_model_internals_exposed
+- test_no_model_internals_exposed       ← SHAP values must NOT appear in MVE text
 
-FINAL OUTPUT:
-- alignment_report.yaml generated
-- recommendation: SHIP_TO_USER_STUDY / ITERATE / BLOCKED
+### Study Analysis
+
+- m5_result.yaml generated from study_responses_A/B.json
+- group_b_composite_accuracy ≥ 0.55
+- relative_improvement ≥ 0.40
+
+### Final Outputs
+
+- alignment_report.yaml: recommendation = SHIP_TO_USER_STUDY / ITERATE / BLOCKED
+- m5_result.yaml: verdict = PASS / WARN / FAIL
 
 ---
 
-## ML PIPELINE ARCHITECTURE (pipeline/)
+## BUILD ORDER
 
-The prototype's 3 components (src/) are backed by a full ML pipeline
-that trains models, scores risk, and generates explanations.
-
-### Detection: Cascaded Track A → Track B
+Do not skip steps. Tests define what "correct" means.
+Implementation serves the tests, not the other way around.
 
 ```
-Raw Features ──→ Track A (XGB, RF, DT) ──→ P(attack) per model
-                      │                          │
-                      └──→ [Features ∥ P(attack)] ──→ Track B (DAE)
-                                                         ↓
-                                               reconstruction error
+1.  data_models.py          — add SHAPContext dataclass
+2.  fixtures/shap_stubs.yaml — stub SHAPContext for each of 5 alert types
+3.  tests/acceptance_tests.py — add M5 (shap_narrative_alignment)
+4.  tests/negative_tests.py — verify test_no_model_internals_exposed covers SHAP
+5.  module2_train_models.py — train + serialize to models/
+6.  module3_risk_scores.py  — risk-adaptive scoring (verify = risk_scorer.py)
+7.  module4_online_explainer.py — SHAP → SHAPContext
+8.  mve_generator.py        — add shap_context param, update Layer 1 + Layer 3
+9.  module5_responses.py    — format output
+10. module6_evaluation.py   — wire M1–M8 + study_analysis
+11. run_tests.py            — entry point
+12. Run → fix until all pass
+13. Generate alignment_report.yaml + m5_result.yaml
 ```
-
-- Track A: 3 supervised tree models (SMOTE-balanced), trained first
-- Track B: DAE trained on [25 raw features || 3 Track A OOF probabilities]
-- Fusion: C_detect = max(Track_A, Track_B) — DAE elevates, never suppresses
-- Files: pipeline/module2_detection/module2_train_models.py
-         pipeline/module3_risk_scoring/module3_risk_scores.py
-
-### Explanations: Feature Group Narratives
-
-SHAP features are mapped to 7 clinically meaningful categories before
-the clinician summary is generated. This absorbs within-category
-feature swaps (e.g., DIntPkt↔Sport both map to "network_timing")
-and produces stable narratives (84.6% top-1 category agreement).
-
-When SHAP top feature is biometric, generate_mve() receives
-shap_context={"top_category": "biometric", "top_feature_narrative": ...}
-and enriches Layer 1 with biometric context.
-
-- Files: pipeline/module4_explanations/module4_online_explainer.py
-         pipeline/module4_explanations/module4_explanations.py
-         src/mve_generator.py (shap_context parameter)
-
-### ML Validation Results
-
-- DAE separation: PASS (AUROC 0.9374, cascaded architecture)
-- Risk monotonicity: PASS (M7 gap 0.401, zero overlap)
-- SHAP stability: FAIL cross-model / PASS narrative-level (0.846)
-- XAI faithfulness: PASS (perturbation 0.901, consistency 1.0, coverage 0.950)
-- Full results: ml_validation.yaml, xai_faithfulness.yaml
 
 ---
 
 ## STACK
 
 Python 3.11+
-Required: pyyaml, dataclasses, re, typing (all stdlib or pip)
-Optional: anthropic (for LLM-based MVE generation)
-MUST have offline/mock fallback if no API key.
+
+Required: pyyaml, numpy, scikit-learn, xgboost, shap, dataclasses, typing
+Optional: anthropic (Mode A MVE generation), imbalanced-learn (SMOTE), streamlit
+Removed from v1.0: re (no longer needed)
 
 Style:
-- snake_case
+- snake_case everywhere
 - Type hints on all function signatures
 - Docstrings on all public functions
-- Functions over classes unless state needed
-
----
-
-## BUILD ORDER
-
-1. data_models.py — all dataclasses first
-2. fixtures/ — generate 50 labeled alerts (10 per type × 5 types)
-3. tests/acceptance_tests.py — write tests BEFORE implementation
-4. tests/negative_tests.py — write tests BEFORE implementation
-5. src/risk_scorer.py — Component 2 (simpler, no LLM)
-6. src/mve_generator.py — Component 1 (LLM or rule-based)
-7. src/harness.py — Component 3 (wires everything together)
-8. run_tests.py — entry point
-9. Run tests → fix until all pass
-10. Generate alignment_report.yaml
-
-DO NOT skip step 3 and 4.
-Tests define what "correct" means.
-Implementation serves the tests, not the other way around.
-
----
-
-## SYNTHETIC DATASET (generate in fixtures/)
-
-50 alerts total, 10 per type:
-- T1: Anomalous outbound from clinical device subnet
-- T2: Unauthorized EHR/EMR access outside normal patterns
-- T3: Lateral movement between network segments
-- T4: Data exfiltration indicator from clinical system
-- T5: IoMT device behavioral deviation
-
-Label distribution:
-- true_positive: ~50% (25/50)
-- false_positive: ~30% (15/50)
-- legitimate_rare: ~20% (10/50)
-
-Severity distribution:
-- CRITICAL: ~15% (7-8 alerts) — active infusion pumps, ventilators
-- HIGH: ~35% (17-18 alerts) — EHR violations, active PACS, lateral movement
-- MEDIUM: ~30% (15 alerts) — archived systems, IoMT firmware patterns
-- LOW: ~20% (10 alerts) — admin/guest network anomalies
-
-Reference examples: see mve_specification.yaml (5 concrete examples).
-Vary IPs, timestamps, device types, locations, user names.
-
----
-
-## MVE GENERATION APPROACH
-
-Option A — LLM-based (preferred if API key available):
-  Call Anthropic API with structured prompt.
-  System prompt enforces 3-layer format, word limits, clinical framing.
-  Parse response into MVEOutput dataclass.
-
-Option B — Rule-based (fallback, always implement):
-  Template strings per alert type.
-  Fill device_context and baseline fields into templates.
-  Deterministic, testable offline.
-
-Implement BOTH. Use Option A if ANTHROPIC_API_KEY in environment,
-else fall back to Option B automatically.
+- Functions over classes unless state management is needed
+- MUST have offline/rule-based fallback for mve_generator.py (Mode B)
+- All M1–M8 tests must pass without ANTHROPIC_API_KEY
 
 ---
 
 ## SEVERITY MAPPING (use this, not CVSS)
 
-CRITICAL: Life-sustaining (active infusion, ventilator, surgical) → respond immediately
-HIGH: Active clinical care (EHR, active PACS, pharmacy, monitors) → within 1 hour
-MEDIUM: Clinical-support not immediate (scheduling, archived imaging) → within 4 hours
-LOW: Administrative, minimal PHI (guest Wi-Fi, marketing) → within 24 hours
+CRITICAL: Life-sustaining (active infusion, ventilator, surgical) → immediately
+HIGH:     Active clinical care (EHR, active PACS, pharmacy, monitors) → within 1h
+MEDIUM:   Clinical-support not immediate (scheduling, archived imaging) → within 4h
+LOW:      Administrative, minimal PHI (guest Wi-Fi, marketing) → within 24h
 
 ---
 
-## ALIGNMENT REPORT FORMAT
-
-After all tests pass, write alignment_report.yaml:
+## ALIGNMENT REPORT FORMAT (unchanged from v1.0)
 
 ```yaml
 test_results:
@@ -255,23 +328,38 @@ test_results:
     result_value: 0.0
     target: 0.95
     minimum: 0.85
-    pass_fail: PASS/WARN/FAIL
+    pass_fail: PASS / WARN / FAIL
 
 claims_supported:
   - claim_id: C1
-    supported_by: [M2, M8]
-    verdict: SUPPORTED/PARTIAL/NOT_SUPPORTED
+    supported_by: [M2, M8, M5]
+    verdict: SUPPORTED / PARTIAL / NOT_SUPPORTED
 
 claims_not_tested:
   - claim_id: C4
-    reason: "Requires A/B user study Phase 2"
+    reason: "A/B user study Phase 2"
   - claim_id: C5
-    reason: "Requires field deployment Phase 3"
+    reason: "Field deployment Phase 3"
 
 recommendation: SHIP_TO_USER_STUDY / ITERATE / BLOCKED
 ```
 
 Recommendation logic:
-- SHIP_TO_USER_STUDY: all tests PASS, ≥4/5 claims SUPPORTED
-- ITERATE: any test WARN or 1-2 claims PARTIAL
-- BLOCKED: any test FAIL or any negative test violation
+- SHIP_TO_USER_STUDY: all M1–M8 PASS, all negative tests PASS,
+                      ≥4/5 claims SUPPORTED, m5 PASS
+- ITERATE:            any test WARN OR 1–2 claims PARTIAL OR m5 WARN
+- BLOCKED:            any test FAIL OR negative test violation OR M8 hard_fail
+
+---
+
+## KNOWN DESIGN GAPS (from mve_improvement_analysis.yaml)
+
+These must be addressed in mve_generator.py before paper submission:
+
+IMP-01: EHR access alerts — severity ≠ action-required. Always force-reauth.
+IMP-02: unauthorized_ehr_access — add role_authorization_check to Layer 1.
+IMP-03: IoMT clinical constraint — distinguish network isolation vs device power-off.
+IMP-04: LOW-severity benign alerts — lead with benign hypothesis, not anomaly framing.
+IMP-05: IoMT behavioral deviation — include numeric baseline in deviation_description.
+IMP-06: Data exfiltration — specify exact block scope in Layer 3 immediate_action.
+IMP-07 and IMP-08 are paper limitations, not code fixes.

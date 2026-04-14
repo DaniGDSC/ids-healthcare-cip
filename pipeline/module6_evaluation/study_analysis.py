@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Compute M5 metric from user study responses.
-Input:  results/reports/study_responses_*.json
-Output: results/reports/m5_result.yaml
+Input:  survey/study_responses_*.json
+Output: survey/m5_result.yaml
 """
 from __future__ import annotations
 
@@ -18,22 +18,72 @@ from scipy.stats import mannwhitneyu
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-REPORTS_DIR = PROJECT_ROOT / "results" / "reports"
+REPORTS_DIR = PROJECT_ROOT / "survey"
 
 TARGET_IMPROVEMENT = 0.30   # 30% relative improvement
 MINIMUM_IMPROVEMENT = 0.15  # 15% minimum
 P_VALUE_THRESHOLD = 0.05
 
 
+SCENARIOS_PATH = (
+    PROJECT_ROOT / "tests" / "fixtures" / "user_study_alert_scenarios.yaml"
+)
+
+_CATASTROPHIC_PAIRS = {("CRITICAL", "LOW"), ("LOW", "CRITICAL")}
+
+
+def _load_order_to_label() -> dict[int, str]:
+    """Map JSON alert_id (presentation order 1..20) → ground_truth_label."""
+    with open(SCENARIOS_PATH) as f:
+        scen = yaml.safe_load(f)
+    return {
+        int(a["order"]): a["ground_truth"]["label"] for a in scen["alerts"]
+    }
+
+
+def _normalize(raw: dict, order_to_label: dict[int, str]) -> dict:
+    """Adapt raw JSON response to the schema the analysis code consumes."""
+    resp = raw["response"]
+    score = raw["scoring"]
+    gt_sev = raw["ground_truth_severity"]
+    sev_chosen = resp["severity_chosen"]
+    return {
+        "participant_id": raw["response_id"],
+        "condition": "with_mve" if raw["group"] == "B" else "without_mve",
+        "alert_id": raw["alert_id"],
+        "composite_score": float(bool(score["composite_correct"])),
+        "severity_score": float(bool(score["severity_correct"])),
+        "action_correct": float(bool(score["action_correct"])),
+        "chosen_action": resp["action_chosen"],
+        "correct_severity": gt_sev,
+        "chosen_severity": sev_chosen,
+        "ground_truth_label": order_to_label.get(raw["alert_id"], "unknown"),
+        "decision_time_sec": (
+            float(resp["time_to_decision_seconds"])
+            if resp.get("time_to_decision_seconds") is not None else None
+        ),
+        "confidence": (
+            float(resp["confidence_rating"])
+            if resp.get("confidence_rating") is not None else None
+        ),
+        "catastrophic_miss": (gt_sev, sev_chosen) in _CATASTROPHIC_PAIRS,
+    }
+
+
 def load_all_responses() -> list[dict]:
-    """Load all participant response files."""
-    responses = []
-    for path in REPORTS_DIR.glob("study_responses_*.json"):
+    """Load all participant response files and normalize their schema."""
+    order_to_label = _load_order_to_label()
+    files = list(REPORTS_DIR.glob("study_responses_*.json"))
+    responses: list[dict] = []
+    for path in files:
         with open(path) as f:
-            responses.extend(json.load(f))
-    logger.info("Loaded %d responses from %d participants",
-                len(responses),
-                len(list(REPORTS_DIR.glob("study_responses_*.json"))))
+            raw_list = json.load(f)
+        responses.extend(_normalize(r, order_to_label) for r in raw_list)
+    logger.info(
+        "Loaded %d responses from %d participants",
+        len(responses),
+        len({r["participant_id"] for r in responses}),
+    )
     return responses
 
 
@@ -156,11 +206,17 @@ def run_secondary_analyses(responses: list[dict]) -> dict:
             "under_reaction_rate": round(under / n_cond, 4),
             "catastrophic_miss_rate": round(catast / n_cond, 4),
             "mean_decision_time_sec": round(
-                float(np.mean([r["decision_time_sec"] for r in cond])), 1
-            ),
+                float(np.mean(
+                    [r["decision_time_sec"] for r in cond
+                     if r["decision_time_sec"] is not None]
+                )), 1
+            ) if any(r["decision_time_sec"] is not None for r in cond) else None,
             "mean_confidence": round(
-                float(np.mean([r["confidence"] for r in cond])), 2
-            ),
+                float(np.mean(
+                    [r["confidence"] for r in cond
+                     if r["confidence"] is not None]
+                )), 2
+            ) if any(r["confidence"] is not None for r in cond) else None,
         }
 
     # Q21 + Q22 proxy analysis

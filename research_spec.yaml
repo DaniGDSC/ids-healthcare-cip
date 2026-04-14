@@ -1,15 +1,28 @@
 # ================================================================
-# research_spec.yaml
-# Single source of truth for Claude Code (Tầng 4)
-# Self-contained — Claude Code needs NO other files to begin work.
-# Generated: 2026-04-11
+# research_spec.yaml  — VERSION 2.0
+# Unified specification: XAI-IDS-Healthcare Full Pipeline
+#
+# CHANGE LOG vs v1.0:
+#   - Added offline training pipeline (Module 0–2)
+#   - Added SHAP explainer layer (Module 4)
+#   - Added recommendation output layer (Module 5)
+#   - Module 6 replaces Component 3 (harness) as evaluation layer
+#   - mve_generator.py gains shap_context parameter (backward-compatible)
+#   - risk_scorer.py promoted to module3_risk_scores.py (same logic)
+#   - src/harness.py retained as thin wrapper around Module 6
+#   - Stack updated: numpy, scikit-learn, xgboost, shap now required
+#   - File structure updated to reflect 6-module layout
+#   - Sections 1–3 (components) rewritten; Sections 4–6 updated
+#
+# All v1.0 research claims (C1–C8) and metrics (M1–M8) UNCHANGED.
+# Generated: 2026-04-14
 # ================================================================
 
 project:
   name: "XAI-IDS-Healthcare"
-  version: "0.1.0-prototype"
+  version: "0.2.0-full-pipeline"
   research_claim: >
-    Mid-sized healthcare organizations (200-500 beds) face a mean
+    Mid-sized healthcare organizations (200–500 beds) face a mean
     279-day detection delay despite deploying IDS/SIEM, because a
     systemic expertise gap leaves detection output unactionable for
     IT generalists — confirmed as the #1 unmet need across 5
@@ -18,470 +31,581 @@ project:
     narratives, risk-adaptive thresholds, and clinical-aware response
     recommendations, targeting the 82% of non-ransomware intrusions
     currently missed by monitoring.
-  target_user: "IT Security Generalist at 200-500 bed hospital — 2-4 years experience, handles cybersecurity alongside EHR support and network admin, processes 10-50 alerts/day, NOT a SOC specialist."
+  target_user: >
+    IT Security Generalist at 200–500 bed hospital — 2–4 years
+    experience, handles cybersecurity alongside EHR support and
+    network admin, processes 10–50 alerts/day, NOT a SOC specialist.
 
 
 # ================================================================
-# SECTION 1: WHAT TO BUILD
-# 3 components, không hơn không kém
+# ARCHITECTURE OVERVIEW
+# ================================================================
+#
+# ┌──────────────────────────────────────────────────────────────┐
+# │                  OFFLINE TRAINING PIPELINE                   │
+# └──────────────────────────────────────────────────────────────┘
+#  Module 0 → Module 1 → Module 2 → models/
+#  (dataset)  (preprocess) (train XGB/RF/DT + DAE)
+#
+# ┌──────────────────────────────────────────────────────────────┐
+# │                     ONLINE INFERENCE                         │
+# └──────────────────────────────────────────────────────────────┘
+#  Raw Alert
+#    → Module 2 inference  →  anomaly_score, P(attack)
+#    → Module 3            →  risk-adaptive gate (should_surface?)
+#    → Module 4            →  SHAP → shap_context (7 feature groups)
+#    → mve_generator.py    →  3-layer MVE (≤150 words)
+#    → Module 5            →  recommendation to IT Generalist
+#
+# ┌──────────────────────────────────────────────────────────────┐
+# │                   EVALUATION & HARNESS                       │
+# └──────────────────────────────────────────────────────────────┘
+#  Module 6 → acceptance tests (M1–M8) + study_analysis
+#           → alignment_report.yaml + m5_result.yaml
+#
+# Key invariant: Track B (DAE) only elevates anomaly_score.
+# Suppression happens at Module 3 risk gate, NOT at the detector.
+# mve_generator.py is NEVER called on suppressed alerts.
 # ================================================================
 
-components:
 
-  component_1:
-    name: "MVE Generator"
-    responsibility: "Produce a 3-layer Minimum Viable Explanation from a raw alert + device context + behavioral baseline."
-    inputs:
-      - name: "raw_alert"
-        type: "dict"
-        fields:
-          alert_name: "str — IDS alert identifier (e.g., 'IDS-2847: Outbound FTP from Clinical Subnet')"
-          source_ip: "str — source IP address"
-          dest_ip: "str — destination IP address"
-          protocol: "str — protocol and port (e.g., 'FTP (port 21)')"
-          timestamp: "str — ISO 8601 timestamp"
-          severity_score: "float — raw IDS severity 0.0-10.0"
-      - name: "device_context"
-        type: "dict"
-        fields:
-          device_type: "str — e.g., 'BD Alaris infusion pump', 'GE CARESCAPE patient monitor', 'PACS archive server'"
-          clinical_function: "str — e.g., 'active drug delivery to 8 patients', 'vital signs for 24 beds'"
-          location: "str — e.g., 'ICU wing 3', 'MedSurg 2nd floor'"
-          criticality: "str — CRITICAL / HIGH / MEDIUM / LOW (based on clinical function)"
-          patchable: "bool — whether device firmware can be updated"
-      - name: "behavioral_baseline"
-        type: "dict"
-        fields:
-          normal_destinations: "list[str] — approved IPs/hosts this device communicates with"
-          normal_protocols: "list[str] — protocols normally used"
-          normal_hours: "str — e.g., '08:00-18:00' or '24/7'"
-          baseline_days: "int — days of baseline observation (default 90)"
-      - name: "user_context"
-        type: "dict | None"
-        fields:
-          user_id: "str — username"
-          department: "str — e.g., 'Billing', 'Cardiology', 'IT'"
-          role: "str — e.g., 'billing clerk', 'nurse', 'admin'"
-          shift: "str — e.g., 'day 08-17', 'night 19-07'"
-          normal_access_volume: "int — typical records accessed per day"
-          normal_access_scope: "str — e.g., 'Billing module only', 'Cardiology department'"
-        note: "Only populated for user-access alerts (type 2). None for device alerts."
-    output:
-      type: "MVEOutput"
-      structure:
-        layer_1_why_anomalous:
-          baseline_behavior: "str — 1 sentence: what this device/user normally does"
-          deviation_description: "str — 1 sentence: what happened differently (timestamp, protocol, destination)"
-          confidence_indicator: "str — 'Confidence: HIGH/MEDIUM/LOW — [one-clause justification]'"
-          max_words: 60
-        layer_2_clinical_severity:
-          affected_system: "str — '[system] ([location]) — [clinical function]'"
-          patient_care_impact: "str — 1-2 sentences: what could go wrong for patients"
-          phi_exposure: "str — 1 sentence: data types and scope at risk"
-          severity_label: "str — CRITICAL / HIGH / MEDIUM / LOW"
-          severity_rationale: "str — 1 sentence justifying the label"
-          max_words: 50
-        layer_3_recommended_action:
-          immediate_action: "str — imperative verb + specific technical step + what it preserves"
-          clinical_constraint: "str — 'DO NOT [action] during/while [condition] — [who to coordinate with]'"
-          escalation_path: "str — numbered role list"
-          timeframe: "str — 'Act within [time]. [preservation instruction]'"
-          max_words: 60
-        total_max_words: 150
-    severity_criteria: |
-      CRITICAL: Life-sustaining systems (ventilators, active infusion, surgical). Respond immediately.
-      HIGH: Clinical systems affecting current care (EHR, active PACS, pharmacy). Respond within 1 hour.
-      MEDIUM: Clinical-support not immediately affecting safety (scheduling, archived imaging). Respond within 4 hours.
-      LOW: Administrative with minimal PHI (guest Wi-Fi, marketing). Review within 24 hours.
-    acceptance_tests:
-      - test_mve_completeness
-      - test_clinical_relevance
-      - test_actionability
-      - test_clinical_constraint_awareness
-      - test_severity_label_accuracy
-      - test_layer1_length_constraint
-    must_not:
-      - "Include SHAP values, feature importances, or model architecture details in output"
-      - "Use CVSS scores as severity labels — must use clinical-impact-based CRITICAL/HIGH/MEDIUM/LOW"
-      - "Produce vague recommendations ('investigate further', 'monitor closely', 'consider isolating')"
-      - "Claim detection of RF/proprietary wireless protocol attacks"
-      - "Omit clinical constraint (DO NOT statement) when alert involves clinical systems"
+# ================================================================
+# SECTION 1: OFFLINE TRAINING PIPELINE
+# Modules 0–2 — run once, serialize models
+# ================================================================
 
-  component_2:
-    name: "Risk-Adaptive Scoring Engine"
-    responsibility: "Adjust alert thresholds based on device criticality, patchability, and learned baselines to reduce false positive surfacing."
+offline_pipeline:
+
+  module_0_dataset_analysis:
+    path: "phase0/"
+    responsibility: "Dataset audit before any training."
+    tasks:
+      - "Class balance check — attack vs benign ratio"
+      - "Feature audit — identify the 25 raw network features"
+      - "Missing value / outlier report"
+      - "Output: phase0/dataset_audit.yaml"
+
+  module_1_preprocessing:
+    path: "phase1/"
+    responsibility: "Clean, encode, split, apply SMOTE."
+    outputs:
+      - "train / val / test splits (stratified)"
+      - "Out-of-fold (OOF) fold indices for Track A"
+      - "Fitted scaler serialized to models/scaler.pkl"
+    smote_note: "Apply SMOTE to training set only. Never to val or test."
+
+  module_2_train_models:
+    path: "module2_train_models.py"
+    responsibility: "Train Track A + Track B, compute max-fusion score."
+
+    track_a_supervised:
+      models:
+        - name: "XGBoost"
+          output: "P_xgb(attack)"   # probability of attack class
+        - name: "RandomForest"
+          output: "P_rf(attack)"
+        - name: "DecisionTree"
+          output: "P_dt(attack)"
+      training: "SMOTE-balanced training set, OOF probabilities for DAE input"
+      serialized_to: "models/xgb.pkl, models/rf.pkl, models/dt.pkl"
+
+    track_b_unsupervised:
+      model: "Denoising Autoencoder (DAE)"
+      input: "concat([25 raw features, P_xgb, P_rf, P_dt])  # 28-dim vector"
+      output: "reconstruction_error  →  normalized to [0, 1]"
+      rationale: >
+        DAE trained on benign-only traffic learns normal patterns.
+        High reconstruction error on attack samples elevates the
+        fused score without requiring attack labels.
+      serialized_to: "models/dae.pkl"
+
+    fusion:
+      formula: "anomaly_score = max(Track_A_score, Track_B_score)"
+      track_a_score: "max(P_xgb, P_rf, P_dt)"
+      track_b_score: "normalized DAE reconstruction error"
+      rationale: >
+        max-fusion: Track B can only elevate, never suppress.
+        A high supervised score is never diluted by a low DAE score.
+      output_range: "[0.0, 1.0]"
+
+    serialization:
+      directory: "models/"
+      files:
+        - "xgb.pkl"
+        - "rf.pkl"
+        - "dt.pkl"
+        - "dae.pkl"
+        - "scaler.pkl"
+
+
+# ================================================================
+# SECTION 2: ONLINE INFERENCE PIPELINE
+# Modules 3–5 — called per alert at runtime
+# ================================================================
+
+online_pipeline:
+
+  module_3_risk_scoring:
+    path: "module3_risk_scores.py"
+    replaces: "src/risk_scorer.py (v1.0 Component 2)"
+    responsibility: "Risk-adaptive threshold gate. Same logic as v1.0, extended with event_context."
     inputs:
-      - name: "anomaly_score"
-        type: "float"
-        range: [0.0, 1.0]
-        description: "Raw anomaly score from detection layer (normalized)"
-      - name: "device_context"
+      anomaly_score:
+        type: "float [0.0, 1.0]"
+        source: "Module 2 fusion output"
+      device_context:
         type: "dict"
         fields:
           criticality: "str — CRITICAL / HIGH / MEDIUM / LOW"
           patchable: "bool"
           clinical_function: "str"
-      - name: "event_context"
+      event_context:
         type: "dict | None"
         fields:
-          is_maintenance_window: "bool — whether current time matches known vendor/maintenance schedule"
-          is_known_vendor_ip: "bool — whether dest IP matches known vendor access list"
-          similar_events_past_30d: "int — how many similar events in past 30 days for this device class"
+          is_maintenance_window: "bool"
+          is_known_vendor_ip: "bool"
+          similar_events_past_30d: "int"
     output:
       type: "ScoredAlert"
       fields:
-        adjusted_score: "float — anomaly score after risk multiplier"
-        threshold: "float — surfacing threshold for this device context"
-        should_surface: "bool — adjusted_score > threshold"
-        risk_multiplier: "float — multiplier applied (>1.0 for elevated risk, <1.0 for suppressed)"
-        suppression_reason: "str | None — if suppressed, why (e.g., 'known maintenance window')"
+        adjusted_score: "float"
+        threshold: "float"
+        should_surface: "bool"
+        risk_multiplier: "float"
+        suppression_reason: "str | None"
     behavior_rules:
-      - rule: "CRITICAL + unpatchable → risk_multiplier ≥ 1.5, threshold lowered by ≥30%"
-        rationale: "Unpatchable critical devices need maximum detection sensitivity as compensating control."
-      - rule: "LOW + patchable → risk_multiplier = 1.0, threshold at default"
-        rationale: "Standard monitoring for low-risk patchable systems."
-      - rule: "is_maintenance_window=True AND is_known_vendor_ip=True → suppress (should_surface=False)"
-        rationale: "Suppress legitimate-but-rare events that cause alert fatigue (B3: Asimily/Ordr complaint)."
-      - rule: "similar_events_past_30d > 5 for same device class → reduce risk_multiplier by 0.2 (learned normal)"
-        rationale: "Adapt to recurring patterns that are confirmed benign."
-    acceptance_tests:
-      - test_risk_adaptive_threshold
-      - test_false_positive_rate
+      - "CRITICAL + unpatchable → risk_multiplier ≥ 1.5, threshold lowered ≥30%"
+      - "LOW + patchable → risk_multiplier = 1.0, default threshold"
+      - "maintenance_window=True AND known_vendor_ip=True → suppress"
+      - "similar_events_past_30d > 5 → reduce risk_multiplier by 0.2"
+    gate: >
+      If should_surface=False → alert is suppressed here.
+      Modules 4, MVE Generator, and Module 5 are NEVER called.
 
-  component_3:
-    name: "Alert Simulation Harness"
-    responsibility: "Replay labeled alert dataset through Component 1 + 2 and produce test reports."
-    purpose: "Testing infrastructure only — not part of the production system."
+  module_4_shap_explainer:
+    path: "module4_online_explainer.py"
+    responsibility: "Compute SHAP values, map to 7 clinical feature groups, output shap_context."
+    called_when: "should_surface=True only"
     inputs:
-      - name: "alert_dataset"
-        type: "list[dict]"
-        per_item_fields:
-          alert_id: "str"
-          raw_alert: "dict (same schema as component_1 input)"
-          device_context: "dict"
-          behavioral_baseline: "dict"
-          user_context: "dict | None"
-          ground_truth_severity: "str — CRITICAL / HIGH / MEDIUM / LOW"
-          ground_truth_label: "str — true_positive / false_positive / legitimate_rare"
+      - "alert feature vector (25 raw features)"
+      - "models/xgb.pkl (primary SHAP target)"
+    feature_groups:
+      # 7 clinical groupings — replace with actual feature names from dataset
+      - group_id: 1
+        label: "network_destination"
+        features: ["dest_ip", "dest_port", "protocol"]
+      - group_id: 2
+        label: "timing_pattern"
+        features: ["hour_of_day", "day_of_week", "is_after_hours"]
+      - group_id: 3
+        label: "data_volume"
+        features: ["bytes_sent", "bytes_received", "packet_count"]
+      - group_id: 4
+        label: "device_behavior"
+        features: ["new_connection", "connection_frequency", "protocol_deviation"]
+      - group_id: 5
+        label: "user_access_pattern"
+        features: ["records_accessed", "department_scope", "access_velocity"]
+      - group_id: 6
+        label: "lateral_movement"
+        features: ["vlan_crossing", "smb_activity", "new_internal_dest"]
+      - group_id: 7
+        label: "exfiltration_signal"
+        features: ["external_dest", "large_transfer", "compression_detected"]
     output:
-      type: "TestReport"
+      type: "shap_context"
       fields:
-        metrics: "list[dict] — each metric: {metric_id, metric_name, result_value, target, minimum, pass_fail}"
-        negative_tests: "list[dict] — each: {test_name, violations_found, pass_fail}"
-        alignment: "list[dict] — each: {claim_id, supported_by_tests, verdict}"
-    workflow: |
-      1. Load alert_dataset from fixtures/sample_alerts.yaml
-      2. For each alert:
-         a. Run through Risk-Adaptive Scoring Engine (Component 2)
-         b. If should_surface=True: run through MVE Generator (Component 1)
-         c. Store MVEOutput + ScoredAlert
-      3. Run all acceptance_tests against collected outputs
-      4. Run all negative_tests against collected outputs
-      5. Generate alignment_report.yaml
-      6. Print summary to stdout
+        top_category: "str — label of feature group with highest |SHAP| sum"
+        top_features: "list[str] — top 3 feature names by |SHAP| value"
+        shap_direction: "str — 'elevated' | 'suppressed' (for each top feature)"
+        confidence_from_shap: "str — HIGH if top feature SHAP > 0.3, MEDIUM if 0.1–0.3, LOW if < 0.1"
+      note: >
+        shap_context is passed to mve_generator.py as an optional input.
+        MVE Layer 1 WHY narrative MUST anchor to top_category and top_features
+        when shap_context is provided. This replaces rule-based anomaly description.
+
+  mve_generator:
+    path: "src/mve_generator.py"
+    version: "2.0 — backward-compatible with v1.0"
+    responsibility: "Produce 3-layer MVE from alert data + optional SHAP context."
+    signature_change_from_v1: >
+      Added shap_context parameter (default None).
+      When None: falls back to rule-based Layer 1 (v1.0 behavior).
+      When provided: Layer 1 uses SHAP top_features for deviation description.
+    signature: >
+      generate_mve(
+          raw_alert: dict,
+          device_context: dict,
+          behavioral_baseline: dict,
+          user_context: dict | None = None,
+          shap_context: dict | None = None,   # NEW in v2.0
+      ) -> MVEOutput
+    output:
+      type: "MVEOutput"
+      structure:
+        layer_1_why_anomalous:
+          baseline_behavior: "str — 1 sentence: what this device/user normally does"
+          deviation_description: >
+            str — 1 sentence: what happened differently.
+            If shap_context provided: MUST mention shap_context.top_category
+            and at least 1 of shap_context.top_features.
+          confidence_indicator: "str — 'Confidence: HIGH/MEDIUM/LOW — [justification]'"
+          max_words: 60
+        layer_2_clinical_severity:
+          affected_system: "str — '[system] ([location]) — [clinical function]'"
+          patient_care_impact: "str — 1–2 sentences"
+          phi_exposure: "str — 1 sentence"
+          severity_label: "str — CRITICAL / HIGH / MEDIUM / LOW"
+          severity_rationale: "str — 1 sentence"
+          max_words: 50
+        layer_3_recommended_action:
+          immediate_action: "str — imperative verb + specific step + what it preserves"
+          clinical_constraint: "str — 'DO NOT [action] during/while [condition] — [who]'"
+          escalation_path: "str — numbered role list"
+          timeframe: "str — 'Act within [time]. [preservation instruction]'"
+          max_words: 60
+        total_max_words: 150
+    generation_modes:
+      mode_a_llm:
+        condition: "ANTHROPIC_API_KEY in environment"
+        approach: "Call Anthropic API with structured prompt including shap_context"
+        fallback: "Always implement Mode B as fallback"
+      mode_b_rules:
+        condition: "No API key, or LLM call fails"
+        approach: "Template strings per alert type, filled from device_context + shap_context"
+        guarantee: "Must produce valid MVEOutput for all 5 alert types offline"
+    severity_criteria:
+      CRITICAL: "Life-sustaining systems (ventilators, active infusion, surgical). Respond immediately."
+      HIGH: "Clinical systems affecting current care (EHR, active PACS, pharmacy). Within 1 hour."
+      MEDIUM: "Clinical-support not immediately affecting safety (scheduling, archived imaging). Within 4 hours."
+      LOW: "Administrative with minimal PHI (guest Wi-Fi, marketing). Within 24 hours."
+    must_not:
+      - "Include raw SHAP values, feature importances, or model internals in output text"
+      - "Use CVSS scores as severity labels"
+      - "Produce vague recommendations ('investigate further', 'monitor closely')"
+      - "Omit DO NOT statement when alert involves clinical systems"
+      - "Claim detection of RF/proprietary wireless protocol attacks"
+
+  module_5_recommendation:
+    path: "module5_responses.py"
+    responsibility: "Format and deliver MVEOutput to IT Generalist interface."
+    constraints:
+      - "Recommendation ONLY — never auto-execute any action"
+      - "No automated blocking, isolation, or enforcement"
+      - "Human-in-the-loop is mandatory for all actions"
+    output_format: "Structured dict ready for CLI, API response, or Streamlit display"
 
 
 # ================================================================
-# SECTION 2: WHAT NOT TO BUILD
-# Hard boundaries — Claude Code must refuse if asked to exceed
+# SECTION 3: EVALUATION & HARNESS
+# Module 6 — replaces v1.0 Component 3
+# ================================================================
+
+evaluation:
+
+  module_6_evaluation:
+    paths:
+      - "module6_evaluation.py"   # core test runner
+      - "module6_app.py"          # optional Streamlit interface
+      - "src/harness.py"          # thin wrapper (backward-compat with v1.0)
+    responsibility: "Run M1–M8 acceptance tests, negative tests, study_analysis."
+
+    acceptance_tests:
+      - test_id: "M1"
+        test_name: "test_mve_completeness"
+        claim: "C7"
+        target: 0.95
+        minimum: 0.85
+        description: "% outputs with all 3 layers and required elements present"
+      - test_id: "M1b"
+        test_name: "test_layer1_length_constraint"
+        claim: "C7"
+        target: 0.95
+        minimum: 0.90
+        description: "% outputs within word limits (L1≤60, L2≤50, L3≤60, total≤150)"
+      - test_id: "M2"
+        test_name: "test_clinical_relevance"
+        claim: "C1"
+        target: 0.90
+        minimum: 0.75
+        description: "% Layer 2 outputs correctly identifying clinical system AND patient-care impact"
+      - test_id: "M3"
+        test_name: "test_actionability"
+        claim: "C3"
+        target: 0.85
+        minimum: 0.70
+        description: "% Layer 3 outputs with specific executable action (not vague)"
+      - test_id: "M4"
+        test_name: "test_clinical_constraint_awareness"
+        claim: "C3"
+        target: 0.90
+        minimum: 0.80
+        description: "% clinical-system alerts with explicit DO NOT statement in Layer 3"
+      - test_id: "M5"
+        test_name: "test_shap_narrative_alignment"
+        claim: "C1"
+        target: 0.85
+        minimum: 0.75
+        description: >
+          NEW in v2.0. When shap_context provided, % of Layer 1 outputs that
+          mention shap_context.top_category or at least 1 top_feature.
+          Verifies SHAP-to-narrative pipeline is functioning.
+      - test_id: "M6"
+        test_name: "test_false_positive_rate"
+        claim: "C8"
+        target: 0.40
+        minimum: 0.20
+        description: "% FP reduction vs static-threshold baseline (Module 3 suppression)"
+      - test_id: "M7"
+        test_name: "test_risk_adaptive_threshold"
+        claim: "C2"
+        target: 1.0
+        minimum: 1.0
+        description: "100%: CRITICAL-unpatchable threshold < LOW-patchable threshold"
+      - test_id: "M8"
+        test_name: "test_severity_label_accuracy"
+        claim: "C1"
+        target: 0.80
+        minimum: 0.70
+        hard_fail: "Any CRITICAL↔LOW mismatch = immediate BLOCKED"
+        description: "% exact severity label match with ground truth"
+
+    negative_tests:
+      - test_no_device_discovery_attempted
+      - test_no_automated_blocking
+      - test_no_rf_protocol_claims
+      - test_no_ransomware_dwell_time_claims
+      - test_severity_uses_clinical_not_cvss
+      - test_no_model_internals_exposed         # SHAP values must NOT appear in MVE text
+
+    study_analysis:
+      inputs:
+        - "study_responses_A.json   # Group A — raw IDS only (control)"
+        - "study_responses_B.json   # Group B — raw IDS + MVE (treatment)"
+      output: "m5_result.yaml"
+      metrics:
+        - "composite_accuracy per group (severity_correct AND action_correct)"
+        - "relative improvement: (B_accuracy - A_accuracy) / A_accuracy"
+        - "accuracy by alert_type (5 types)"
+        - "accuracy by ground_truth_severity (CRITICAL/HIGH/MEDIUM/LOW)"
+        - "mean decision time per group"
+        - "mean confidence_rating per group"
+      pass_threshold:
+        composite_accuracy_B: ">= 0.55"
+        relative_improvement: ">= 0.40"
+      verdict_values: ["PASS", "WARN", "FAIL"]
+
+    done_condition: >
+      Prototype is COMPLETE when:
+      (1) ALL M1–M8 automated tests pass at ≥minimum,
+      (2) ALL negative tests pass with 0 violations,
+      (3) alignment_report.yaml generated,
+      (4) m5_result.yaml generated with verdict = PASS.
+
+  alignment_report_format:
+    file: "alignment_report.yaml"
+    generated_by: "module6_evaluation.py after all tests complete"
+    sections:
+      test_results:
+        format_per_metric:
+          metric_id: "str"
+          metric_name: "str"
+          result_value: "float"
+          target: "float"
+          minimum: "float"
+          pass_fail: "PASS / WARN / FAIL"
+          detail: "str"
+      negative_test_results:
+        format_per_test:
+          test_name: "str"
+          violations_found: "int"
+          pass_fail: "PASS / FAIL"
+          violations: "list[str]"
+      claims_supported:
+        format_per_claim:
+          claim_id: "str"
+          claim_text: "str"
+          supported_by: "list[str] — metric IDs"
+          all_tests_pass: "bool"
+          verdict: "SUPPORTED / PARTIAL / NOT_SUPPORTED"
+      claims_not_tested:
+        items:
+          - claim_id: "C4"
+            reason: "Requires A/B user study with n≥20 IT generalists (Phase 2)"
+          - claim_id: "C5"
+            reason: "Requires longitudinal field deployment measuring dwell time (Phase 3)"
+          - claim_id: "C6"
+            reason: "DBIR aggregate figure; requires operational log access to validate"
+      recommendation:
+        values: ["SHIP_TO_USER_STUDY", "ITERATE", "BLOCKED"]
+        criteria:
+          SHIP_TO_USER_STUDY: "All M1–M8 PASS at ≥minimum, all negative tests PASS, ≥4/5 claims SUPPORTED, m5 PASS"
+          ITERATE: "Any test WARN OR 1–2 claims PARTIAL OR m5 WARN"
+          BLOCKED: "Any test FAIL OR any negative test violation OR M8 hard_fail triggered"
+
+
+# ================================================================
+# SECTION 4: OUT OF SCOPE
+# Hard boundaries — unchanged from v1.0
 # ================================================================
 
 out_of_scope:
   - item: "Device discovery / network scanning"
     reason: "Solved by Claroty/Armis/Medigate. System consumes existing inventory."
     negative_test: "test_no_device_discovery_attempted"
-
   - item: "Automated enforcement / blocking"
-    reason: "Clinical systems require human-in-loop. System recommends, never executes."
+    reason: "Clinical systems require human-in-loop. Recommend only, never execute."
     negative_test: "test_no_automated_blocking"
-
   - item: "RF / proprietary wireless protocol detection"
-    reason: "Non-IP IoMT attacks (CVE-2019-10964, CVE-2022-32537) outside standard network IDS scope."
+    reason: "Non-IP IoMT attacks outside standard network IDS scope."
     negative_test: "test_no_rf_protocol_claims"
-
   - item: "Ransomware early-detection claims"
-    reason: "96% of ransomware discovered via actor disclosure (DBIR 2025). Dwell time ≈ 0."
+    reason: "96% discovered via actor disclosure (DBIR 2025). Dwell time ≈ 0."
     negative_test: "test_no_ransomware_dwell_time_claims"
-
   - item: "UI / frontend / dashboard"
     reason: "Prototype only — CLI or programmatic API sufficient."
-
   - item: "Database / persistence layer"
-    reason: "Use in-memory structures and YAML fixtures for prototype."
-
+    reason: "In-memory + YAML fixtures for prototype."
   - item: "Authentication / authorization"
     reason: "Out of scope for research prototype."
 
-  - item: "Raw anomaly detection / ML model training"
-    reason: "Prototype assumes anomaly scores are provided as input. Detection layer is not the contribution — explanation layer is."
-
 
 # ================================================================
-# SECTION 3: SUCCESS CRITERIA
-# Claude Code declares "done" when ALL pass
-# ================================================================
-
-success_criteria:
-
-  automated_tests:
-    - test_id: "M1"
-      test_name: "test_mve_completeness"
-      claim: "C7 — MVE structural completeness"
-      target: 0.95
-      minimum: 0.85
-      description: "% of outputs with all 3 layers and all required elements present"
-
-    - test_id: "M2"
-      test_name: "test_clinical_relevance"
-      claim: "C1 — clinically contextualized alerts"
-      target: 0.90
-      minimum: 0.75
-      description: "% of Layer 2 outputs correctly identifying clinical system AND mentioning patient-care impact"
-
-    - test_id: "M3"
-      test_name: "test_actionability"
-      claim: "C3 — clinical-constraint-aware recommendations"
-      target: 0.85
-      minimum: 0.70
-      description: "% of Layer 3 outputs with specific executable action (not vague)"
-
-    - test_id: "M4"
-      test_name: "test_clinical_constraint_awareness"
-      claim: "C3 — clinical-constraint-aware recommendations"
-      target: 0.90
-      minimum: 0.80
-      description: "% of clinical-system alerts with explicit DO NOT statement in Layer 3"
-
-    - test_id: "M8"
-      test_name: "test_severity_label_accuracy"
-      claim: "C1 — clinically contextualized alerts"
-      target: 0.80
-      minimum: 0.70
-      hard_fail: "Any CRITICAL↔LOW mismatch = immediate fail"
-      description: "% exact severity label match with ground truth"
-
-    - test_id: "M1b"
-      test_name: "test_layer1_length_constraint"
-      claim: "C7 — MVE structural completeness"
-      target: 0.95
-      minimum: 0.90
-      description: "% of outputs within word limits (L1≤60, L2≤50, L3≤60, total≤150)"
-
-    - test_id: "M7"
-      test_name: "test_risk_adaptive_threshold"
-      claim: "C2 — risk-adaptive thresholds"
-      target: 1.0
-      minimum: 1.0
-      description: "100% correct: CRITICAL-unpatchable threshold < LOW-patchable threshold"
-
-    - test_id: "M6"
-      test_name: "test_false_positive_rate"
-      claim: "C8 — alert fatigue reduction"
-      target: 0.40
-      minimum: 0.20
-      description: "% reduction in false positive surfacing rate vs. static-threshold baseline"
-
-  negative_tests:
-    - test_no_device_discovery_attempted
-    - test_no_automated_blocking
-    - test_no_rf_protocol_claims
-    - test_no_ransomware_dwell_time_claims
-    - test_severity_uses_clinical_not_cvss
-    - test_no_model_internals_exposed
-
-  done_condition: >
-    Prototype is COMPLETE when:
-    (1) ALL automated tests pass at ≥minimum threshold,
-    (2) ALL negative tests pass with 0 violations,
-    (3) alignment_report.yaml is generated showing claim-to-test mapping.
-    "Done" does NOT require user study (M5) — that is Phase 2.
-
-  alignment_check:
-    description: "After all tests pass, generate alignment_report.yaml"
-    format:
-      - claim_id: "C1"
-        claim_text: "explainable anomaly narratives that translate network detections into clinically contextualized alerts"
-        supported_by: ["M2", "M8"]
-        verdict: "SUPPORTED / PARTIAL / NOT_SUPPORTED"
-      - claim_id: "C2"
-        claim_text: "risk-adaptive thresholds that auto-adjust detection sensitivity"
-        supported_by: ["M7", "M6"]
-        verdict: "..."
-      - claim_id: "C3"
-        claim_text: "clinical-constraint-aware response recommendations"
-        supported_by: ["M3", "M4"]
-        verdict: "..."
-      - claim_id: "C7"
-        claim_text: "MVE structural completeness"
-        supported_by: ["M1", "M1b"]
-        verdict: "..."
-      - claim_id: "C8"
-        claim_text: "alert fatigue reduction"
-        supported_by: ["M6"]
-        verdict: "..."
-      - claim_id: "C4"
-        claim_text: "enabling correct triage from non-specialist operators"
-        supported_by: []
-        verdict: "NOT_TESTED — requires user study (Phase 2)"
-      - claim_id: "C5"
-        claim_text: "reducing dwell time"
-        supported_by: []
-        verdict: "NOT_TESTED — requires field deployment (Phase 3)"
-
-
-# ================================================================
-# SECTION 4: TECH STACK
+# SECTION 5: TECH STACK
+# Updated from v1.0 — ML dependencies now required
 # ================================================================
 
 stack:
   language: "Python 3.11+"
   dependencies:
     required:
-      - "pyyaml"       # YAML fixture loading
-      - "dataclasses"  # built-in, data models
-      - "re"           # built-in, pattern matching for tests
-      - "typing"       # built-in, type hints
+      - "pyyaml"          # YAML fixture loading
+      - "numpy"           # feature vectors, DAE input
+      - "scikit-learn"    # RandomForest, DecisionTree, SMOTE, scaler
+      - "xgboost"         # XGBoost classifier
+      - "shap"            # SHAP values for Module 4
+      - "dataclasses"     # built-in, data models
+      - "typing"          # built-in, type hints
     optional:
-      - "anthropic"    # LLM calls for MVE text generation (Component 1)
+      - "anthropic"       # LLM calls for MVE generation (Mode A)
+      - "imbalanced-learn" # SMOTE (can use sklearn alternative)
+      - "streamlit"       # module6_app.py UI (not required for tests)
+    removed_from_v1:
+      - "re"              # no longer needed — SHAP replaces regex-based tests
     note: >
-      If LLM API is used for MVE generation, provide a mock/template
-      fallback so tests can run without API key. The prototype must be
-      testable offline.
+      mve_generator.py MUST have offline/rule-based fallback (Mode B).
+      All M1–M8 tests must pass without ANTHROPIC_API_KEY.
+      ML models must be loadable from models/ without retraining.
   style:
     - "snake_case for all variables and functions"
     - "Type hints required on all function signatures"
     - "Docstrings required on all public functions"
     - "Prefer functions over classes unless state management is needed"
-    - "No external ML frameworks for prototype — rule-based + LLM sufficient"
+
   file_structure: |
     xai-ids-healthcare/
+    ├── phase0/                          # Module 0: dataset analysis
+    │   └── dataset_audit.yaml
+    ├── phase1/                          # Module 1: preprocessing
+    │   ├── preprocess.py
+    │   └── splits/  (train/val/test npz)
+    ├── models/                          # Serialized artifacts from Module 2
+    │   ├── xgb.pkl
+    │   ├── rf.pkl
+    │   ├── dt.pkl
+    │   ├── dae.pkl
+    │   └── scaler.pkl
     ├── src/
     │   ├── __init__.py
-    │   ├── data_models.py          # MVEOutput, ScoredAlert, AlertGroundTruth, RawAlert, DeviceContext, etc.
-    │   ├── mve_generator.py        # Component 1: generate_mve(raw_alert, device_context, baseline, user_context) → MVEOutput
-    │   ├── risk_scorer.py          # Component 2: score_alert(anomaly_score, device_context, event_context) → ScoredAlert
-    │   └── harness.py              # Component 3: run_simulation(dataset) → TestReport
+    │   ├── data_models.py               # MVEOutput, ScoredAlert, SHAPContext, etc.
+    │   ├── mve_generator.py             # v2.0: generate_mve(..., shap_context=None)
+    │   ├── risk_scorer.py               # thin alias → module3_risk_scores.py
+    │   └── harness.py                   # thin wrapper → module6_evaluation.py
+    ├── module2_train_models.py          # Train XGB/RF/DT + DAE, serialize to models/
+    ├── module3_risk_scores.py           # Risk-adaptive scoring (was Component 2)
+    ├── module4_online_explainer.py      # SHAP → shap_context
+    ├── module5_responses.py             # Format MVE for IT Generalist output
+    ├── module6_evaluation.py            # Acceptance + negative tests + study_analysis
+    ├── module6_app.py                   # Optional Streamlit interface
+    ├── drift_detection.py               # Cross-cutting: baseline drift monitor
+    ├── dynamic_threshold_sim.py         # Cross-cutting: threshold simulation
+    ├── feedback_loop_demo.py            # Cross-cutting: feedback loop demo
     ├── tests/
     │   ├── __init__.py
-    │   ├── acceptance_tests.py     # M1-M8 positive tests
-    │   ├── negative_tests.py       # Scope boundary tests
+    │   ├── acceptance_tests.py          # M1–M8 (now includes M5 SHAP alignment)
+    │   ├── negative_tests.py            # Scope boundary tests
     │   └── fixtures/
-    │       ├── sample_alerts.yaml  # 50 labeled alerts (10 per type)
+    │       ├── sample_alerts.yaml       # 50 labeled alerts (10 per type × 5 types)
     │       ├── device_inventory.yaml
-    │       └── behavioral_baselines.yaml
-    ├── run_tests.py                # Entry point: load fixtures → run harness → print report
-    ├── alignment_report.yaml       # Generated output after tests pass
-    ├── research_spec.yaml          # THIS FILE
-    └── README.md                   # Setup + run instructions
+    │       ├── behavioral_baselines.yaml
+    │       └── shap_stubs.yaml          # Stub shap_context for offline tests
+    ├── run_tests.py                     # Entry point → module6_evaluation.py
+    ├── alignment_report.yaml            # Generated after all tests pass
+    ├── m5_result.yaml                   # Generated by study_analysis
+    ├── study_responses_A.json           # Group A simulation data
+    ├── study_responses_B.json           # Group B simulation data
+    ├── research_spec.yaml               # THIS FILE
+    └── README.md
 
 
 # ================================================================
-# SECTION 5: SYNTHETIC DATASET SPECIFICATION
-# Claude Code must generate this before running tests
+# SECTION 6: BUILD ORDER
+# For Claude Code — do not skip steps
 # ================================================================
 
-synthetic_dataset:
-  alert_count: 50
-  distribution:
-    type_1_outbound_clinical_device: 10
-    type_2_unauthorized_ehr_access: 10
-    type_3_lateral_movement: 10
-    type_4_data_exfiltration: 10
-    type_5_iomt_behavioral_deviation: 10
-  per_alert_fields:
-    alert_id: "str — unique identifier (e.g., 'T1-001' through 'T5-010')"
-    raw_alert:
-      alert_name: "str"
-      source_ip: "str — use 10.x.x.x private ranges"
-      dest_ip: "str"
-      protocol: "str"
-      timestamp: "str — ISO 8601, vary across shifts (day/night/weekend)"
-      severity_score: "float — 0.0-10.0 (raw IDS score)"
-    device_context:
-      device_type: "str"
-      clinical_function: "str"
-      location: "str — use realistic hospital locations (ICU, MedSurg, Radiology, Pharmacy, Admin)"
-      criticality: "str — CRITICAL / HIGH / MEDIUM / LOW"
-      patchable: "bool"
-    behavioral_baseline:
-      normal_destinations: "list[str] — 1-5 approved IPs"
-      normal_protocols: "list[str]"
-      normal_hours: "str"
-      baseline_days: "int — 90 for all"
-    user_context: "dict | None — populated only for type 2 alerts"
-    ground_truth_severity: "str — CRITICAL / HIGH / MEDIUM / LOW"
-    ground_truth_label: "str — true_positive / false_positive / legitimate_rare"
-
-  label_distribution_guidance:
-    true_positive: "~50% of alerts (25/50)"
-    false_positive: "~30% (15/50)"
-    legitimate_rare: "~20% (10/50) — vendor maintenance, firmware updates, scheduled data exports"
-    note: "Distribute labels across all 5 types. Ensure each type has ≥1 of each label."
-
-  ground_truth_severity_guidance:
-    CRITICAL: "~15% (7-8 alerts) — infusion pumps during active delivery, ventilator systems"
-    HIGH: "~35% (17-18 alerts) — EHR access violations, PACS during active reads, lateral movement to clinical subnet"
-    MEDIUM: "~30% (15 alerts) — archived imaging access, scheduling system anomaly, IoMT firmware update patterns"
-    LOW: "~20% (10 alerts) — guest Wi-Fi anomaly, admin workstation policy violation, marketing system"
-
-  reference_examples: >
-    Use the 5 concrete examples from mve_specification.yaml as templates.
-    Vary: IP addresses, timestamps, device types, locations, user names,
-    severity levels, and ground truth labels. Ensure realistic variation
-    in clinical context (different hospital units, different device types,
-    different times of day).
+build_order:
+  note: "Complete each step before starting the next. Tests define correctness."
+  steps:
+    - step: 1
+      action: "data_models.py — add SHAPContext dataclass alongside existing models"
+    - step: 2
+      action: "fixtures/shap_stubs.yaml — stub shap_context for each of 5 alert types"
+    - step: 3
+      action: "tests/acceptance_tests.py — add M5 (shap_narrative_alignment) test"
+    - step: 4
+      action: "module4_online_explainer.py — SHAP computation + feature group mapping"
+    - step: 5
+      action: "mve_generator.py — add shap_context parameter, update Layer 1 logic"
+    - step: 6
+      action: "module3_risk_scores.py — verify identical to risk_scorer.py (extend if needed)"
+    - step: 7
+      action: "module2_train_models.py — train XGB/RF/DT + DAE, serialize to models/"
+    - step: 8
+      action: "module5_responses.py — format MVEOutput for output"
+    - step: 9
+      action: "module6_evaluation.py — wire acceptance + negative + study_analysis"
+    - step: 10
+      action: "run_tests.py — run all, fix until all pass, generate alignment_report.yaml + m5_result.yaml"
 
 
 # ================================================================
-# SECTION 6: ALIGNMENT REPORT FORMAT
+# SECTION 7: RESEARCH CLAIMS MAPPING
+# Unchanged from v1.0 — all claims still valid
 # ================================================================
 
-alignment_report_format:
-  file: "alignment_report.yaml"
-  generated_by: "run_tests.py after all tests complete"
-  sections:
-
-    test_results:
-      description: "All metric results with actual values"
-      format_per_metric:
-        metric_id: "str"
-        metric_name: "str"
-        result_value: "float"
-        target: "float"
-        minimum: "float"
-        pass_fail: "PASS / WARN / FAIL"
-        detail: "str — any additional context"
-
-    negative_test_results:
-      description: "All scope boundary tests"
-      format_per_test:
-        test_name: "str"
-        violations_found: "int"
-        pass_fail: "PASS / FAIL"
-        violations: "list[str] — empty if PASS"
-
-    claims_supported:
-      description: "Which research claims are evidenced by test results"
-      format_per_claim:
-        claim_id: "str"
-        claim_text: "str"
-        supported_by: "list[str] — metric IDs"
-        all_tests_pass: "bool"
-        verdict: "SUPPORTED / PARTIAL / NOT_SUPPORTED"
-
-    claims_not_tested:
-      description: "Claims requiring user study or field deployment"
-      items:
-        - claim_id: "C4"
-          reason: "Requires A/B user study with n≥20 IT generalists (Phase 2)"
-        - claim_id: "C5"
-          reason: "Requires longitudinal field deployment measuring dwell time (Phase 3)"
-        - claim_id: "C6"
-          reason: "DBIR aggregate figure; requires operational log access to validate"
-
-    recommendation:
-      values: ["SHIP_TO_USER_STUDY", "ITERATE", "BLOCKED"]
-      criteria:
-        SHIP_TO_USER_STUDY: "All automated tests PASS at ≥minimum, all negative tests PASS, ≥4/5 claims verdict=SUPPORTED"
-        ITERATE: "Any automated test WARN (between minimum and target) OR 1-2 claims PARTIAL"
-        BLOCKED: "Any automated test FAIL (below minimum) OR any negative test FAIL"
+claims:
+  - claim_id: "C1"
+    text: "Explainable anomaly narratives translate network detections into clinically contextualized alerts"
+    tested_by: ["M2", "M8", "M5"]
+    note: "M5 (SHAP alignment) now added as supporting metric in v2.0"
+  - claim_id: "C2"
+    text: "Risk-adaptive thresholds auto-adjust detection sensitivity based on device patchability and clinical criticality"
+    tested_by: ["M7", "M6"]
+  - claim_id: "C3"
+    text: "Clinical-constraint-aware response recommendations"
+    tested_by: ["M3", "M4"]
+  - claim_id: "C4"
+    text: "Enabling correct triage from non-specialist operators"
+    tested_by: ["m5_result.yaml — study_analysis"]
+    phase: "Phase 2 — A/B simulation study (study_responses_A/B.json)"
+  - claim_id: "C5"
+    text: "Reducing dwell time for non-ransomware intrusions"
+    tested_by: []
+    phase: "Phase 3 — requires field deployment"
+    not_testable_reason: "Requires longitudinal live deployment measuring MTTI before/after"
+  - claim_id: "C7"
+    text: "MVE structural completeness"
+    tested_by: ["M1", "M1b"]
+  - claim_id: "C8"
+    text: "Alert fatigue reduction"
+    tested_by: ["M6"]

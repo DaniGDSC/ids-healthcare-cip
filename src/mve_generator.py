@@ -941,15 +941,27 @@ def generate_mve(
             "update server — verify with biomed before acting."
         )
 
-    # ── Biometric SHAP enrichment (prior fix) ───────────────────────────
-    if shap_context and shap_context.get("top_category") == "biometric":
-        narrative = shap_context.get(
-            "top_feature_narrative", "abnormal biometric reading"
-        )
-        existing = mve.layer_1.get("deviation_description", "")
-        mve.layer_1["deviation_description"] = (
-            f"{existing} Concurrent clinical anomaly: {narrative} "
-            "deviates from this device's baseline vital signs."
-        )
+    # ── SHAP-context enrichment (v2.0 M5: shap_narrative_alignment) ─────
+    # Layer 1 MUST mention top_category and at least one top_feature
+    # when shap_context is provided (research_spec §2.module_4).
+    if shap_context:
+        top_category = str(shap_context.get("top_category", "")).strip()
+        top_features = shap_context.get("top_features") or []
+        if top_category == "biometric":
+            narrative = shap_context.get(
+                "top_feature_narrative", "abnormal biometric reading"
+            )
+            existing = mve.layer_1.get("deviation_description", "")
+            mve.layer_1["deviation_description"] = (
+                f"{existing} Concurrent clinical anomaly: {narrative} "
+                "deviates from this device's baseline vital signs."
+            )
+        elif top_category and top_features:
+            feat = str(top_features[0])
+            existing = mve.layer_1.get("deviation_description", "")
+            readable = top_category.replace("_", " ")
+            mve.layer_1["deviation_description"] = (
+                f"{existing} Primary signal: {readable} ({feat})."
+            ).strip()
 
     return mve

@@ -277,7 +277,7 @@ _CLAIM_MAP: list[dict[str, Any]] = [
         "claim_id": "C1",
         "claim_text": "explainable anomaly narratives that translate network "
                       "detections into clinically contextualized alerts",
-        "supported_by": ["M2", "M8"],
+        "supported_by": ["M2", "M8", "M5"],
     },
     {
         "claim_id": "C2",

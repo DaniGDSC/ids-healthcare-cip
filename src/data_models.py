@@ -33,6 +33,30 @@ class ScoredAlert:
     """If suppressed, the human-readable reason."""
 
 
+# ── Module 4 output (SHAP explanations) ─────────────────────────────────
+
+@dataclass
+class SHAPContext:
+    """SHAP-derived context passed to the MVE Generator (Module 4 output).
+
+    Fields match research_spec.yaml module_4_shap_explainer.output exactly.
+    Produced per alert after should_surface=True; consumed by generate_mve()
+    to anchor Layer 1 narrative on the top clinical feature group.
+    """
+
+    top_category: str
+    """Label of feature group with highest |SHAP| sum (1 of 7 clinical groups)."""
+
+    top_features: List[str]
+    """Top 3 feature names ranked by |SHAP| value."""
+
+    shap_direction: str
+    """'elevated' or 'suppressed' — direction of the top feature's contribution."""
+
+    confidence_from_shap: str
+    """HIGH (top |SHAP| > 0.3), MEDIUM (0.1–0.3), LOW (< 0.1)."""
+
+
 # ── Component 1 output ──────────────────────────────────────────────────
 
 @dataclass
