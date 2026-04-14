@@ -37,24 +37,24 @@ class ScoredAlert:
 
 @dataclass
 class SHAPContext:
-    """SHAP-derived context passed to the MVE Generator (Module 4 output).
-
-    Fields match research_spec.yaml module_4_shap_explainer.output exactly.
-    Produced per alert after should_surface=True; consumed by generate_mve()
-    to anchor Layer 1 narrative on the top clinical feature group.
-    """
+    """SHAP context passed from module4_online_explainer to mve_generator."""
 
     top_category: str
-    """Label of feature group with highest |SHAP| sum (1 of 7 clinical groups)."""
+    """Label of the feature group with highest |SHAP| sum.
+    One of the 8 clinical groupings in research_spec.yaml §2.module_4:
+    timing_pattern, network_destination, data_volume, device_behavior,
+    biometric, user_access_pattern, lateral_movement, exfiltration_signal."""
 
     top_features: List[str]
-    """Top 3 feature names ranked by |SHAP| value."""
+    """Top 3 feature names by |SHAP| value (from the winning group)."""
 
     shap_direction: str
-    """'elevated' or 'suppressed' — direction of the top feature's contribution."""
+    """'elevated' if SHAP pushed score toward attack class,
+    'suppressed' if SHAP pushed toward benign."""
 
     confidence_from_shap: str
-    """HIGH (top |SHAP| > 0.3), MEDIUM (0.1–0.3), LOW (< 0.1)."""
+    """HIGH if top feature |SHAP| > 0.3, MEDIUM if |SHAP| in [0.1, 0.3],
+    LOW if |SHAP| < 0.1."""
 
 
 # ── Component 1 output ──────────────────────────────────────────────────

@@ -39,33 +39,45 @@ OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 from common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
 # ── Feature group mapping (Fix 3: SHAP stability) ─────────────────────
-# Map individual SHAP features to clinically meaningful narrative
-# categories. This absorbs within-category feature swaps (e.g.,
-# DIntPkt↔Sport) that account for most SHAP instability, producing
-# stable narratives even when the exact top-1 feature changes.
+# Map each SHAP feature to one of the 8 spec categories consumed by
+# src.mve_generator.generate_mve. Labels are the 7 categories listed in
+# research_spec.yaml §2.module_4_shap_explainer plus 'biometric' for
+# IoMT vitals.
+#
+# Narrative phrases are preserved unchanged — they describe *what*
+# changed (input to clinician NLG); the category label says *where* in
+# the clinical framing the signal falls (input to MVE Layer 1).
+#
+# Spec categories that DO appear from real SHAP on the 25-feature
+# WUSTL-EHMS schema:
+#   timing_pattern, network_destination, data_volume, device_behavior,
+#   biometric
+# Spec categories reserved for scenario stubs only (no matching feature
+# in this dataset):
+#   user_access_pattern, lateral_movement, exfiltration_signal
 _FEATURE_GROUPS = {
-    # Network timing anomalies
-    "DIntPkt":    ("unusual network packet timing",     "network_timing"),
-    "SIntPkt":    ("unusual network packet timing",     "network_timing"),
-    "SIntPktAct": ("unusual network packet timing",     "network_timing"),
-    "Dur":        ("abnormal connection duration",      "network_timing"),
-    # Network protocol anomalies
-    "Sport":      ("unexpected network port activity",  "network_protocol"),
-    "Flgs":       ("abnormal protocol flags",           "network_protocol"),
-    # Transfer volume anomalies
-    "SrcBytes":   ("unusual data transfer volume",      "network_volume"),
-    "DstBytes":   ("unusual data transfer volume",      "network_volume"),
-    "TotBytes":   ("unusual data transfer volume",      "network_volume"),
-    "SrcLoad":    ("abnormal network load",             "network_volume"),
-    "DstLoad":    ("abnormal network load",             "network_volume"),
-    "Load":       ("abnormal network load",             "network_volume"),
-    # Packet structure anomalies
-    "sMaxPktSz":  ("unusual packet structure",          "network_packet"),
-    "dMaxPktSz":  ("unusual packet structure",          "network_packet"),
-    "sMinPktSz":  ("unusual packet structure",          "network_packet"),
-    "pSrcLoss":   ("abnormal packet loss",              "network_loss"),
-    "pDstLoss":   ("abnormal packet loss",              "network_loss"),
-    # Biometric anomalies
+    # Timing-pattern features (inter-packet intervals, duration)
+    "DIntPkt":    ("unusual network packet timing",     "timing_pattern"),
+    "SIntPkt":    ("unusual network packet timing",     "timing_pattern"),
+    "SIntPktAct": ("unusual network packet timing",     "timing_pattern"),
+    "Dur":        ("abnormal connection duration",      "timing_pattern"),
+    # Network-destination features (ports, protocol flags)
+    "Sport":      ("unexpected network port activity",  "network_destination"),
+    "Flgs":       ("abnormal protocol flags",           "network_destination"),
+    # Data-volume features (byte counts, load, packet sizes)
+    "SrcBytes":   ("unusual data transfer volume",      "data_volume"),
+    "DstBytes":   ("unusual data transfer volume",      "data_volume"),
+    "TotBytes":   ("unusual data transfer volume",      "data_volume"),
+    "SrcLoad":    ("abnormal network load",             "data_volume"),
+    "DstLoad":    ("abnormal network load",             "data_volume"),
+    "Load":       ("abnormal network load",             "data_volume"),
+    "sMaxPktSz":  ("unusual packet structure",          "data_volume"),
+    "dMaxPktSz":  ("unusual packet structure",          "data_volume"),
+    "sMinPktSz":  ("unusual packet structure",          "data_volume"),
+    # Device-behavior features (packet loss = device-level behavioral signal)
+    "pSrcLoss":   ("abnormal packet loss",              "device_behavior"),
+    "pDstLoss":   ("abnormal packet loss",              "device_behavior"),
+    # Biometric (IoMT vitals — 8th category beyond the 7 spec labels)
     "Temp":       ("abnormal temperature reading",      "biometric"),
     "SpO2":       ("abnormal oxygen saturation",        "biometric"),
     "Pulse_Rate": ("abnormal pulse rate",               "biometric"),
@@ -81,7 +93,7 @@ def _feature_to_narrative(feature_name: str) -> tuple:
     """Map a SHAP feature name to (narrative_phrase, category).
 
     Returns:
-        (narrative_phrase, category) — e.g., ("unusual network packet timing", "network_timing")
+        (narrative_phrase, category) — e.g., ("unusual network packet timing", "timing_pattern")
     """
     return _FEATURE_GROUPS.get(feature_name, (feature_name, "unknown"))
 

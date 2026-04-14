@@ -228,9 +228,13 @@ class TestGenerateMveEdgeCases:
         desc = mve.layer_1["deviation_description"].lower()
         assert "biometric" in desc or "heart rate" in desc
 
-    def test_shap_context_non_biometric_ignored(self) -> None:
+    def test_shap_context_non_biometric_without_features_noop(self) -> None:
+        # When top_category is non-biometric and top_features is absent,
+        # Layer 1 is NOT enriched (the biometric-only narrative field is
+        # ignored). Enrichment requires shap_context.top_features per
+        # research_spec.yaml §2.module_4.
         shap: dict[str, Any] = {
-            "top_category": "network_timing",
+            "top_category": "timing_pattern",
             "top_feature_narrative": "packet interval anomaly",
         }
         mve = generate_mve(

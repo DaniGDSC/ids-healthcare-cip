@@ -184,34 +184,46 @@ online_pipeline:
 
   module_4_shap_explainer:
     path: "module4_online_explainer.py"
-    responsibility: "Compute SHAP values, map to 7 clinical feature groups, output shap_context."
+    responsibility: "Compute SHAP values, map to 8 clinical feature groups, output shap_context."
     called_when: "should_surface=True only"
     inputs:
-      - "alert feature vector (25 raw features)"
+      - "alert feature vector (25 raw features from WUSTL-EHMS)"
       - "models/xgb.pkl (primary SHAP target)"
     feature_groups:
-      # 7 clinical groupings — replace with actual feature names from dataset
+      # 8 clinical groupings. Groups 1-5 map to real features in the 25-column
+      # WUSTL-EHMS schema. Groups 6-8 are scenario labels used by
+      # tests/fixtures/shap_stubs.yaml for alerts whose modalities (user
+      # access, lateral movement, exfiltration) are not represented in the
+      # network-flow feature set but appear in synthetic alert fixtures.
       - group_id: 1
-        label: "network_destination"
-        features: ["dest_ip", "dest_port", "protocol"]
-      - group_id: 2
         label: "timing_pattern"
-        features: ["hour_of_day", "day_of_week", "is_after_hours"]
+        features: ["DIntPkt", "SIntPkt", "SIntPktAct", "Dur"]
+      - group_id: 2
+        label: "network_destination"
+        features: ["Sport", "Flgs"]
       - group_id: 3
         label: "data_volume"
-        features: ["bytes_sent", "bytes_received", "packet_count"]
+        features: ["SrcBytes", "DstBytes", "TotBytes", "SrcLoad", "DstLoad",
+                   "Load", "sMaxPktSz", "dMaxPktSz", "sMinPktSz"]
       - group_id: 4
         label: "device_behavior"
-        features: ["new_connection", "connection_frequency", "protocol_deviation"]
+        features: ["pSrcLoss", "pDstLoss"]
       - group_id: 5
+        label: "biometric"
+        features: ["Temp", "SpO2", "Pulse_Rate", "SYS", "DIA", "Heart_rate",
+                   "Resp_Rate", "ST"]
+      - group_id: 6
         label: "user_access_pattern"
         features: ["records_accessed", "department_scope", "access_velocity"]
-      - group_id: 6
+        note: "scenario-only; no direct feature in 25-column schema"
+      - group_id: 7
         label: "lateral_movement"
         features: ["vlan_crossing", "smb_activity", "new_internal_dest"]
-      - group_id: 7
+        note: "scenario-only; no direct feature in 25-column schema"
+      - group_id: 8
         label: "exfiltration_signal"
         features: ["external_dest", "large_transfer", "compression_detected"]
+        note: "scenario-only; no direct feature in 25-column schema"
     output:
       type: "shap_context"
       fields:
