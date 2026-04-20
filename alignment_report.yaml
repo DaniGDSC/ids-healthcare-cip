@@ -36,7 +36,7 @@ test_results:
   detail: ''
 - metric_id: M1b
   metric_name: test_layer1_length_constraint
-  result_value: 0.9655
+  result_value: 1.0
   target: 0.95
   minimum: 0.9
   pass_fail: PASS

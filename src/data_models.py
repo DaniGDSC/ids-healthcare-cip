@@ -91,7 +91,10 @@ class MVEOutput:
     False for LOW (administrative/guest network). Controls DO NOT test."""
 
     # Field lists for word-count helpers
-    _L1 = ["baseline_behavior", "deviation_description", "confidence_indicator"]
+    # role_authorization_check is optional (T2/EHR-access only — IMP-02);
+    # counted toward L1 budget when present, absent keys count as zero words.
+    _L1 = ["baseline_behavior", "deviation_description", "confidence_indicator",
+           "role_authorization_check"]
     _L2 = ["affected_system", "patient_care_impact", "phi_exposure",
             "severity_label", "severity_rationale"]
     _L3 = ["immediate_action", "clinical_constraint", "escalation_path", "timeframe"]

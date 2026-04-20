@@ -27,7 +27,7 @@ import re
 from typing import Any, Optional
 
 from src import sanitize_for_log
-from src.data_models import MVEOutput
+from src.data_models import MVEOutput, SHAPContext  # noqa: F401  (SHAPContext re-exported for type hints/callers)
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +117,48 @@ def _fmt_dests(dests: list[str]) -> str:
         return dests[0]
     # M-5: islice avoids allocating a dests[:3] copy
     return ", ".join(itertools.islice(dests, 3)) + ("" if len(dests) <= 3 else " and others")
+
+
+# IMP-05 helper: paired (baseline_key, observed_key, unit) entries. If BOTH
+# keys are present in their respective dicts AND both parse to positive
+# floats, we emit "Normal: X unit. Observed: Y unit (Nx above baseline)."
+# Any missing/non-numeric field → no sentence (do not fabricate).
+_T5_RATE_PAIRS: list[tuple[str, str, str]] = [
+    ("normal_query_rate",     "observed_query_rate",     "queries/min"),
+    ("normal_bytes_per_min",  "observed_bytes_per_min",  "bytes/min"),
+    ("normal_packets_per_min","observed_packets_per_min","packets/min"),
+    ("normal_connections_per_hour", "observed_connections_per_hour", "connections/hour"),
+]
+
+
+def _rate_deviation_sentence(
+    baseline: dict[str, Any], raw_alert: dict[str, Any]
+) -> str:
+    """Return a 'Normal: X. Observed: Y (Nx above baseline).' sentence, or ''.
+
+    Only emits when a known baseline/observed pair is present and both values
+    parse to strictly positive floats. Protects against divide-by-zero.
+    """
+    for base_key, obs_key, unit in _T5_RATE_PAIRS:
+        raw_base = baseline.get(base_key)
+        raw_obs = raw_alert.get(obs_key)
+        if raw_base is None or raw_obs is None:
+            continue
+        try:
+            base_val = float(raw_base)
+            obs_val = float(raw_obs)
+        except (TypeError, ValueError):
+            continue
+        if base_val <= 0 or obs_val <= 0:
+            continue
+        ratio = obs_val / base_val
+        if ratio < 1.5:
+            continue
+        return (
+            f"Normal: {base_val:g} {unit}. Observed: {obs_val:g} {unit} "
+            f"({ratio:.1f}x above baseline)."
+        )
+    return ""
 
 
 # ── Known vendor IPs for maintenance FP reduction (FM-L1-09) ────────────
@@ -382,14 +424,20 @@ def _generate_rule_based(
                 f"User {uid} ({role}, {dept}) normally accesses {scope} during {shift}."
             ),
             "deviation_description": (
-                f"At {time_str}, accessed records outside normal department scope, "
-                f"exceeding typical volume of {vol} records/day."
+                f"At {time_str}, accessed records outside normal scope, "
+                f"exceeding typical volume of {vol}/day."
             ),
             "confidence_indicator": (
                 f"Confidence: HIGH — after-hours cross-department access "
                 f"not observed in {baseline_days} days."
             ),
         }
+        # IMP-02: role authorization check — only if user_context carries a role.
+        if user_context.get("role"):
+            layer_1["role_authorization_check"] = (
+                "Role authorization: UNCONFIRMED — verify against HR/AD directory "
+                "before assuming access is legitimate."
+            )
         layer_2 = {
             "affected_system": f"EHR system ({location}) — {clinical_fn}",
             "patient_care_impact": (
@@ -407,16 +455,15 @@ def _generate_rule_based(
             ),
         }
         layer_3 = {
+            # IMP-01: MFA re-auth is mandatory at any severity — do not skip.
             "immediate_action": (
-                f"Disable {uid}'s active EHR sessions and force MFA re-authentication. "
-                "Preserve account — do not delete."
+                f"Disable {uid}'s EHR sessions. Force MFA re-auth — required at any severity."
             ),
             "clinical_constraint": (
-                "DO NOT lock shared workstations — isolate user session only, "
-                "preserve active clinical staff access."
+                "DO NOT lock shared workstations — isolate user session only."
             ),
             "escalation_path": escalation,
-            "timeframe": "Act within 30 minutes. Preserve EHR audit logs for past 72 hours.",
+            "timeframe": "Act within 30 minutes. Preserve EHR audit logs (72 hours).",
         }
         return MVEOutput(
             layer_1=layer_1,
@@ -504,13 +551,15 @@ def _generate_rule_based(
             "severity_rationale": severity_rationale,
         }
         layer_3 = {
+            # IMP-06: block destination IP only, preserve approved partner +
+            # EHR sessions, name care continuity as the reason.
             "immediate_action": (
-                f"Block outbound {protocol} from {source_ip} to {dest_ip}. "
-                "Verify with department IT if transfer was authorized."
+                f"Block outbound traffic from {source_ip} to {dest_ip} only. "
+                f"DO NOT isolate {display_device_type} — approved partner "
+                "connections and EHR sessions must remain operational."
             ),
             "clinical_constraint": (
-                "DO NOT block all outbound from this system — "
-                "approved clinical partners require continued data exchange."
+                "DO NOT block all outbound — clinical partners need continued exchange."
             ),
             "escalation_path": escalation,
             "timeframe": timeframe,
@@ -524,14 +573,22 @@ def _generate_rule_based(
 
     # ── T5: IoMT behavioral deviation (FIX-A: device-class-specific) ───
     if alert_type == "T5":
+        # IMP-05: if baseline carries a rate/volume field AND raw_alert carries
+        # the corresponding observed value, emit a numeric "Normal vs Observed"
+        # sentence. No fabrication — omit entirely if data is missing.
+        t5_rate_sentence = _rate_deviation_sentence(baseline, raw_alert)
+        base_deviation = (
+            f"Starting {time_str}, device initiated {protocol} to {dest_ip} "
+            "at abnormal frequency, outside established baseline."
+        )
         layer_1 = {
             "baseline_behavior": (
                 f"{display_device_type} ({location}) normally communicates "
                 f"with {normal_dests} using {normal_protos}."
             ),
             "deviation_description": (
-                f"Starting {time_str}, device initiated {protocol} to {dest_ip} "
-                "at abnormal frequency, outside established baseline."
+                f"{base_deviation} {t5_rate_sentence}".strip()
+                if t5_rate_sentence else base_deviation
             ),
             "confidence_indicator": _confidence_level(
                 severity_score, baseline_days, criticality
@@ -555,9 +612,18 @@ def _generate_rule_based(
             "severity_rationale": severity_rationale,
         }
 
-        # Device-class-specific Layer 3 (IMP-03 format)
-        # DO NOT [physical] — SAFE: [network] — Contact [role]
-        if device_type == "ventilator":
+        # IMP-03: for CRITICAL/HIGH, explicitly distinguish physical from
+        # network-layer isolation and route to Biomed Engineering. Wording
+        # kept tight to preserve the 150-word total budget.
+        if criticality in ("CRITICAL", "HIGH"):
+            constraint = (
+                f"DO NOT power off or physically disconnect {device_type}. "
+                "Switch-port block is SAFE. Contact Biomed Engineering first."
+            )
+            immediate = (
+                f"If no maintenance: block anomalous port at switch for {source_ip}."
+            )
+        elif device_type == "ventilator":
             constraint = (
                 "DO NOT power off or disconnect ventilator. "
                 "SAFE: block port at switch — clinical traffic on 443 unaffected."
@@ -656,15 +722,28 @@ def _generate_rule_based(
     # FIX-C: calibrated confidence for T1 (replaces hardcoded HIGH)
     t1_confidence = _confidence_level(severity_score, baseline_days, criticality)
 
+    # IMP-04: benign-first framing when LOW severity and destination is a
+    # known-internal endpoint. Anomaly-first phrasing remains the default for
+    # external/unknown destinations, which is where the real risk sits.
+    raw_normal_dests = baseline.get("normal_destinations", []) or []
+    is_known_internal = dest_ip in raw_normal_dests
+    if criticality == "LOW" and is_known_internal:
+        deviation = (
+            f"Transfer matches known pattern ({protocol} to internal destination). "
+            "Flagged due to off-hours timing only."
+        )
+    else:
+        deviation = (
+            f"At {time_str}, it initiated {protocol} to {dest_ip}, "
+            "not on any approved destination list."
+        )
+
     layer_1 = {
         "baseline_behavior": (
             f"{display_device_type} ({location}) normally communicates "
             f"with {normal_dests} using {normal_protos}."
         ),
-        "deviation_description": (
-            f"At {time_str}, it initiated {protocol} to {dest_ip}, "
-            "not on any approved destination list."
-        ),
+        "deviation_description": deviation,
         "confidence_indicator": t1_confidence,
     }
 
@@ -847,7 +926,9 @@ def generate_mve(
         baseline: Dict with normal_destinations, normal_protocols,
                   normal_hours, baseline_days.
         user_context: Only populated for T2 (EHR access) alerts.
-        shap_context: Optional SHAP feature category context.
+        shap_context: optional SHAP evidence from module4_online_explainer.
+            When provided, Layer 1 deviation_description must reference
+            top_category and top_features.
         event_context: Optional dict with is_maintenance_window,
                        is_known_vendor_ip, baseline_days.
 
