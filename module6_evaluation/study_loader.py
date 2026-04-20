@@ -22,31 +22,32 @@ class AlertScenario:
     ground_truth_label: str
 
 
-def load_study_alerts() -> list[AlertScenario]:
-    """Load 20 alert scenarios from fixture file."""
-    path = PROJECT_ROOT / "tests/fixtures/user_study_alert_scenarios.yaml"
-    with open(path) as f:
-        data = yaml.safe_load(f)
+import json
+import random
 
-    scoring = data["scoring_key"]["correct_answers"]
+def load_study_alerts(participant_id: str = "default_seed") -> list[AlertScenario]:
+    """Load 20 alert scenarios from JSON evaluation pipeline output."""
+    path = PROJECT_ROOT / "results/reports/evaluation_alerts.json"
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
     scenarios = []
-
-    for alert in data["alerts"]:
-        aid = alert["alert_id"]
+    for alert in data:
         scenarios.append(AlertScenario(
-            alert_id=aid,
-            alert_type=alert["type"],
-            group_a_display=alert["group_a"]["display"],
-            group_b_display=alert["group_b"]["display"],
-            correct_severity=scoring[aid]["severity"],
-            correct_action=scoring[aid]["action"],
-            ground_truth_label=alert["ground_truth"]["label"],
+            alert_id=alert["alert_id"],
+            alert_type=alert.get("attack_category", "unknown"),
+            group_a_display=alert["group_a_display"],
+            group_b_display=alert["group_b_display"],
+            correct_severity=alert["risk_level"],
+            correct_action=alert.get("correct_action", ""),
+            ground_truth_label=alert["ground_truth"],
         ))
 
-    # Sort by presentation order
-    order = data["scoring_key"]["presentation_order"]["order"]
-    order_map = {aid: i for i, aid in enumerate(order)}
-    scenarios.sort(key=lambda s: order_map.get(s.alert_id, 99))
+    # Sort dynamically using participant ID as a seed to ensure exact presentation
+    # reproduction per user while distributing biases evenly across population.
+    pid_seed = int(hashlib.md5(participant_id.encode()).hexdigest(), 16)
+    rng = random.Random(pid_seed)
+    rng.shuffle(scenarios)
 
     return scenarios
 

@@ -1,7 +1,7 @@
 {
   "metrics": {
     "n_participants": 15,
-    "n_alerts": 20,
+    "n_alerts": 10,
     "n_responses": 300,
     "with_xai": {
       "decision_accuracy": 0.92,
@@ -110,33 +110,33 @@
   },
   "inter_rater_reliability": {
     "chosen_action": {
-      "alpha": 0.6159,
+      "alpha": 0.8422,
       "n_coders": 15,
-      "n_items": 20,
-      "interpretation": "moderate"
+      "n_items": 10,
+      "interpretation": "good"
     },
     "likert_trust": {
-      "alpha": 0.168,
+      "alpha": -0.0211,
       "n_coders": 15,
-      "n_items": 20,
+      "n_items": 10,
       "interpretation": "poor"
     },
     "likert_usefulness": {
-      "alpha": 0.1617,
+      "alpha": 0.0145,
       "n_coders": 15,
-      "n_items": 20,
+      "n_items": 10,
       "interpretation": "poor"
     },
     "likert_comprehensibility": {
-      "alpha": 0.0486,
+      "alpha": -0.0183,
       "n_coders": 15,
-      "n_items": 20,
+      "n_items": 10,
       "interpretation": "poor"
     },
     "likert_actionability": {
-      "alpha": 0.1049,
+      "alpha": -0.0296,
       "n_coders": 15,
-      "n_items": 20,
+      "n_items": 10,
       "interpretation": "poor"
     }
   },

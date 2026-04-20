@@ -61,7 +61,7 @@ from common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 # Wires the dashboard's per-alert processing to the research prototype's
 # Risk-Adaptive Scoring Engine (research_spec.yaml component_2) so tier
 # assignment uses the same logic the prototype tests enforce (M7, M6).
-from module6_evaluation._src_adapter import scored_from_eval_alert  # noqa: E402
+from module6_evaluation.study_loader import assign_ab_condition, load_study_alerts  # noqa: E402
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -81,32 +81,34 @@ _CATEGORY_TO_DEVICE = {
 
 # FIX C: Action priority ordering for consensus display
 _ACTION_DISPLAY = {
-    "isolate_device":        (1, "\U0001f534", "Isolate device"),
-    "escalate_incident":     (2, "\U0001f7e0", "Escalate to security lead"),
-    "escalate_clinical":     (2, "\U0001f7e0", "Escalate to clinical engineering"),
-    "restrict_traffic":      (3, "\U0001f7e1", "Restrict suspicious traffic"),
-    "re_authenticate":       (3, "\U0001f7e1", "Force re-authentication"),
-    "forensic_snapshot":     (4, "\U0001f535", "Capture forensic snapshot"),
-    "enhanced_monitoring":   (5, "\U0001f7e2", "Enable enhanced monitoring"),
-    "log_event":             (6, "\u26aa", "Log event"),
+    "isolate_device": (1, "\U0001f534", "Isolate device"),
+    "escalate_incident": (2, "\U0001f7e0", "Escalate to security lead"),
+    "escalate_clinical": (2, "\U0001f7e0", "Escalate to clinical engineering"),
+    "restrict_traffic": (3, "\U0001f7e1", "Restrict suspicious traffic"),
+    "re_authenticate": (3, "\U0001f7e1", "Force re-authentication"),
+    "forensic_snapshot": (4, "\U0001f535", "Capture forensic snapshot"),
+    "enhanced_monitoring": (5, "\U0001f7e2", "Enable enhanced monitoring"),
+    "log_event": (6, "\u26aa", "Log event"),
 }
 
 _CRIT_COLOR_HEX = {
-    "CRITICAL": "#d32f2f", "HIGH": "#f57c00",
-    "MEDIUM": "#1976d2", "LOW": "#388e3c",
+    "CRITICAL": "#d32f2f",
+    "HIGH": "#f57c00",
+    "MEDIUM": "#1976d2",
+    "LOW": "#388e3c",
 }
 
 # Module-level policy action label map — avoids rebuilding this dict on every
 # render_mve_layers() call (issue 4 / render_mve_layers locality fix).
 _PA_MAP = {
-    "isolate_device":     "Isolate device",
-    "escalate_incident":  "Escalate to security lead",
-    "escalate_clinical":  "Escalate to clinical engineering",
-    "restrict_traffic":   "Restrict suspicious traffic",
-    "re_authenticate":    "Force re-authentication",
+    "isolate_device": "Isolate device",
+    "escalate_incident": "Escalate to security lead",
+    "escalate_clinical": "Escalate to clinical engineering",
+    "restrict_traffic": "Restrict suspicious traffic",
+    "re_authenticate": "Force re-authentication",
     "enhanced_monitoring": "Enhanced monitoring",
-    "forensic_snapshot":  "Capture forensic snapshot",
-    "log_event":          "Log and monitor",
+    "forensic_snapshot": "Capture forensic snapshot",
+    "log_event": "Log and monitor",
 }
 
 # Module-level sentinel for _ACTION_DISPLAY misses — avoids {} allocation
@@ -116,14 +118,14 @@ _ACTION_DISPLAY_MISS = (99, "\u26aa", "")
 # M6-A1: hoist _ACTION_PRIORITY to module level — was rebuilt as a dict
 # literal on every process_alert() call (one call per alert per simulation tick).
 _ACTION_PRIORITY = {
-    "isolate_device":    "isolate",
+    "isolate_device": "isolate",
     "escalate_incident": "escalate",
     "escalate_clinical": "escalate",
-    "restrict_traffic":  "investigate",
+    "restrict_traffic": "investigate",
     "forensic_snapshot": "investigate",
-    "re_authenticate":   "investigate",
+    "re_authenticate": "investigate",
     "enhanced_monitoring": "monitor",
-    "log_event":         "monitor",
+    "log_event": "monitor",
 }
 
 
@@ -141,7 +143,7 @@ def render_device_criticality(alert: dict) -> None:
     st.markdown(
         f'<span style="background:{hex_c};color:white;'
         f'padding:3px 10px;border-radius:4px;font-weight:bold;">'
-        f'Device: {criticality}</span>',
+        f"Device: {criticality}</span>",
         unsafe_allow_html=True,
     )
     if device_cls or affected:
@@ -240,14 +242,14 @@ def render_mve_layers(alert: dict) -> None:
     the 4 source dicts with no copy; lookups are O(1) average against the
     merged namespace. All _get() calls become simple dict.get() on _cm.
     """
-    xai  = alert.get("xai_explanation") or {}
+    xai = alert.get("xai_explanation") or {}
     expl = alert.get("explanation") or {}
     resp = alert.get("response") or {}
 
     # Merge once — O(1) view construction, O(1) per key lookup thereafter.
     _cm = ChainMap(
         alert,
-        xai  if isinstance(xai,  dict) else {},
+        xai if isinstance(xai, dict) else {},
         expl if isinstance(expl, dict) else {},
         resp if isinstance(resp, dict) else {},
     )
@@ -261,9 +263,15 @@ def render_mve_layers(alert: dict) -> None:
         return ""
 
     # ── Layer 1: Why Anomalous ──
-    l1 = _get("why_anomalous", "layer_1", "baseline_behavior",
-              "deviation_description", "confidence_indicator",
-              "clinician_summary", "nlg_text")
+    l1 = _get(
+        "why_anomalous",
+        "layer_1",
+        "baseline_behavior",
+        "deviation_description",
+        "confidence_indicator",
+        "clinician_summary",
+        "nlg_text",
+    )
     consensus = _get("consensus")
 
     with st.expander("\U0001f50d Layer 1 \u2014 Why Anomalous", expanded=True):
@@ -284,8 +292,7 @@ def render_mve_layers(alert: dict) -> None:
         if severity:
             color = TIER_COLORS.get(severity.upper(), "#999")
             st.markdown(
-                f"**Severity:** <span style='color:{color}'>"
-                f"{severity}</span>",
+                f"**Severity:** <span style='color:{color}'>" f"{severity}</span>",
                 unsafe_allow_html=True,
             )
         if affected:
@@ -298,8 +305,9 @@ def render_mve_layers(alert: dict) -> None:
             st.caption("Layer 2 data not available for this alert.")
 
     # ── Layer 3: Recommended Action ──
-    action = _get("recommended_action", "layer_3", "immediate_action",
-                  "response_action", "correct_action")
+    action = _get(
+        "recommended_action", "layer_3", "immediate_action", "response_action", "correct_action"
+    )
     constraint = _get("clinical_constraint")
     rationale = _get("rationale")
 
@@ -458,43 +466,6 @@ def likert_form(alert_id: str, form_key: str) -> dict | None:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 6B.3  A/B condition assignment (counterbalanced)
-# ═══════════════════════════════════════════════════════════════════════
-
-
-def assign_ab_conditions(n_alerts: int, participant_id: str) -> list[bool]:
-    """Counterbalanced A/B assignment: half with XAI, half without.
-
-    Uses participant_id as seed so the same participant always gets
-    the same assignment, but different participants get different
-    orderings.  Latin-square style: even PIDs get XAI-first,
-    odd PIDs get no-XAI-first.
-    """
-    seed = int(hashlib.md5(participant_id.encode()).hexdigest(), 16) % (2**31)
-    rng = random.Random(seed)
-
-    # Build balanced list: exactly half True, half False
-    half = n_alerts // 2
-    conditions = [True] * half + [False] * (n_alerts - half)
-
-    # Determine block order from PID parity
-    pid_num = sum(ord(c) for c in participant_id)
-    if pid_num % 2 == 0:
-        # XAI-first block
-        pass
-    else:
-        # Reverse: no-XAI first
-        conditions = conditions[::-1]
-
-    # Shuffle within each block to avoid position effects
-    block1 = conditions[:half]
-    block2 = conditions[half:]
-    rng.shuffle(block1)
-    rng.shuffle(block2)
-    return block1 + block2
-
-
-# ═══════════════════════════════════════════════════════════════════════
 # 6C.1  Streaming data simulator
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -558,27 +529,22 @@ def capture_online_interaction(
 
 
 def process_alert(sample_index: int, alert_data: dict) -> dict:
-    """Take a raw alert record and produce a fully structured alert object.
+    """Takes a pre-computed JSON alert record and prepares it for UI components.
 
-    In production, this would run Modules 2-5 live. Here it assembles
-    from pre-computed artifacts (risk scores, SHAP, NLG, responses) and
-    runs the scoring step through the research prototype's Risk-Adaptive
-    Scoring Engine (src.risk_scorer.score_alert) so the dashboard's
-    should-surface decision matches the logic M7/M6 enforce.
+    Under Hướng B, this no longer calls src.risk_scorer.score_alert live.
+    It simply maps the nested JSON properties (e.g. should_surface, adjusted_score)
+    into the flattened flat-dict format that render_analyst / render_clinician expect.
     """
     xai = alert_data.get("xai_explanation", {})
     expl = alert_data.get("explanation", {})
-    clinician_summary = (
-        xai.get("clinician_summary", "")
-        or (expl.get("clinician_summary", "") if isinstance(expl, dict) else "")
+    clinician_summary = xai.get("clinician_summary", "") or (
+        expl.get("clinician_summary", "") if isinstance(expl, dict) else ""
     )
 
-    # Derive recommended action: correct_action > response.actions > risk-level default
+    # Derive recommended action
     resp = alert_data.get("response", {})
     action = alert_data.get("correct_action", "")
     if not action and isinstance(resp, dict):
-        # Use the highest-priority policy action (last in list = most severe).
-        # M6-A1: _ACTION_PRIORITY is now a module-level constant — no per-call alloc.
         policy_actions = resp.get("actions", [])
         for pa in reversed(policy_actions):
             mapped = _ACTION_PRIORITY.get(pa)
@@ -586,31 +552,31 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
                 action = mapped
                 break
     if not action:
-        # Last resort: derive from risk_level
         level = alert_data.get("risk_level", "LOW")
-        action = {"CRITICAL": "isolate", "HIGH": "escalate",
-                  "MEDIUM": "investigate", "LOW": "monitor"}.get(level, "monitor")
-
-    # Risk-adaptive scoring via the prototype's Component 2. Any mismatch
-    # between dashboard and test-harness outputs is now a bug in one place.
-    scored = scored_from_eval_alert(alert_data)
+        action = {
+            "CRITICAL": "isolate",
+            "HIGH": "escalate",
+            "MEDIUM": "investigate",
+            "LOW": "monitor",
+        }.get(level, "monitor")
 
     return {
         "sample_index": sample_index,
-        "prediction": 1 if scored.should_surface else 0,
-        "confidence": scored.adjusted_score,
-        "risk_score": scored.adjusted_score,
+        "prediction": 1 if alert_data.get("should_surface", True) else 0,
+        "confidence": alert_data.get("adjusted_score", alert_data.get("risk_score", 0)),
+        "risk_score": alert_data.get("adjusted_score", alert_data.get("risk_score", 0)),
         "raw_risk_score": alert_data.get("risk_score", 0),
-        "threshold": scored.threshold,
-        "risk_multiplier": scored.risk_multiplier,
-        "suppression_reason": scored.suppression_reason,
+        "threshold": alert_data.get("threshold", 0.5),
+        "risk_multiplier": alert_data.get("risk_multiplier", 1.0),
+        "suppression_reason": alert_data.get("suppression_reason", ""),
         "tier": alert_data.get("risk_level", "LOW"),
         "attack_category": alert_data.get("attack_category", "unknown"),
         "ground_truth": alert_data.get("ground_truth", "unknown"),
         "shap_top_features": xai.get("xgboost_top_features", []),
         "dae_top_features": xai.get("dae_top_features", []),
         "nlg_text": clinician_summary,
-        "consensus": xai.get("consensus", "") or (expl.get("consensus", "") if isinstance(expl, dict) else ""),
+        "consensus": xai.get("consensus", "")
+        or (expl.get("consensus", "") if isinstance(expl, dict) else ""),
         "response_action": action,
         "response": resp,
         # Device context
@@ -622,6 +588,9 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
         # MVE layer content
         "clinician_summary": clinician_summary,
         "severity_label": alert_data.get("risk_level", ""),
+        "group_a_display": alert_data.get("group_a_display", ""),
+        "group_b_display": alert_data.get("group_b_display", ""),
+        "mve_structured": alert_data.get("mve_structured", {})
     }
 
 
@@ -765,8 +734,12 @@ def load_all_responses() -> list:
         with open(eval_path) as f:
             eval_alerts = {a["sample_index"]: a for a in json.load(f)}
         _ENRICH_KEYS = (
-            "device_class", "device_criticality", "affected_system",
-            "patient_care_impact", "active_device", "correct_action",
+            "device_class",
+            "device_criticality",
+            "affected_system",
+            "patient_care_impact",
+            "active_device",
+            "correct_action",
         )
         for r in responses:
             ea = eval_alerts.get(r.get("sample_index"))
@@ -893,12 +866,12 @@ def _build_feed_dataframe(responses_head: tuple) -> pd.DataFrame:
     """
     rows = [
         {
-            "Sample":   item[0],
-            "Level":    item[1],
-            "Score":    round(item[2], 3),
-            "Device":   item[3] or "\u2014",
+            "Sample": item[0],
+            "Level": item[1],
+            "Score": round(item[2], 3),
+            "Device": item[3] or "\u2014",
             "Category": item[4] or "",
-            "Action":   item[5] or "\u2014",
+            "Action": item[5] or "\u2014",
         }
         for item in responses_head
     ]
@@ -936,9 +909,8 @@ def load_live_stream_source() -> pd.DataFrame | None:
     df = df.reset_index(drop=True)
     # Issue 8 fix: pd.date_range() generates n timestamps in one C-level call
     # instead of n Python timedelta + datetime additions in a list comprehension.
-    df["arrived_at"] = (
-        pd.date_range(start=base, periods=len(df), freq="1s")
-        .strftime("%Y-%m-%dT%H:%M:%S")
+    df["arrived_at"] = pd.date_range(start=base, periods=len(df), freq="1s").strftime(
+        "%Y-%m-%dT%H:%M:%S"
     )
     df["sample_index"] = df.index
     return df
@@ -1009,8 +981,6 @@ def init_session():
         "study_started": False,
         "study_complete": False,
         "study_alerts": [],
-        "ab_conditions": [],
-        "app_mode": "dashboard",
         "sim_index": 0,
         "sim_running": True,
         "sim_history": [],
@@ -1178,8 +1148,14 @@ def dashboard_mode():
         # Issue 6 fix: DataFrame built once per data load via cache;
         # not rebuilt on every render triggered by widget interactions.
         _feed_key = tuple(
-            (r.get("sample_index"), r.get("risk_level"), r.get("risk_score", 0.0),
-             r.get("device_class"), r.get("attack_category"), r.get("correct_action"))
+            (
+                r.get("sample_index"),
+                r.get("risk_level"),
+                r.get("risk_score", 0.0),
+                r.get("device_class"),
+                r.get("attack_category"),
+                r.get("correct_action"),
+            )
             for r in responses[:15]
         )
         st.dataframe(_build_feed_dataframe(_feed_key), width="stretch", hide_index=True)
@@ -1347,9 +1323,11 @@ def simulation_mode():
         speed_label = st.selectbox(
             "Speed",
             ["0.5x", "1x", "2x", "4x"],
-            index=["0.5x", "1x", "2x", "4x"].index(f"{st.session_state.sim_speed:g}x")
-            if f"{st.session_state.sim_speed:g}x" in ["0.5x", "1x", "2x", "4x"]
-            else 1,
+            index=(
+                ["0.5x", "1x", "2x", "4x"].index(f"{st.session_state.sim_speed:g}x")
+                if f"{st.session_state.sim_speed:g}x" in ["0.5x", "1x", "2x", "4x"]
+                else 1
+            ),
             help="Playback speed multiplier for the auto-advance loop.",
         )
         st.session_state.sim_speed = float(speed_label.rstrip("x"))
@@ -1470,7 +1448,9 @@ def simulation_mode():
                     thc2.metric("Adaptive F1", f"{fm.get('adaptive', {}).get('f1', 0):.4f}")
                 thresh_bytes = _cached_png_bytes(str(CHARTS_DIR / "threshold_over_time.png"))
                 if thresh_bytes:
-                    st.image(thresh_bytes, width="stretch", caption="DAE threshold: static vs adaptive")
+                    st.image(
+                        thresh_bytes, width="stretch", caption="DAE threshold: static vs adaptive"
+                    )
             else:
                 st.info("Run `dynamic_threshold_sim.py` to enable adaptive threshold monitoring")
 
@@ -1529,16 +1509,19 @@ def simulation_mode():
         # Replace O(n) Counter + sum(1 for ...) on growing history_local
         # with O(1) session-state accumulators updated on each tick delta.
         # On a playhead jump backward, rebuild is O(k) where k = new_idx.
-        _acc = st.session_state.setdefault("_sim_acc", {
-            "idx": -1,
-            "tier": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
-            "attacks": 0,
-        })
+        _acc = st.session_state.setdefault(
+            "_sim_acc",
+            {
+                "idx": -1,
+                "tier": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
+                "attacks": 0,
+            },
+        )
         if idx_local < _acc["idx"]:
             # Jumped backward — rebuild from scratch up to idx_local
             _acc["tier"] = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
             _acc["attacks"] = 0
-            for _r in responses[:idx_local + 1]:
+            for _r in responses[: idx_local + 1]:
                 _lv = _r.get("risk_level", "LOW")
                 if _lv in _acc["tier"]:
                     _acc["tier"][_lv] += 1
@@ -1678,27 +1661,7 @@ def simulation_mode():
                 expanded=(level in ("CRITICAL", "HIGH")),
             ):
                 if sample_idx not in alerts_cache:
-                    clin = clin_summaries.get(sample_idx, {})
-                    alerts_cache[sample_idx] = process_alert(
-                        sample_idx,
-                        {
-                            "risk_score": score,
-                            "risk_level": level,
-                            "attack_category": r.get("attack_category", "unknown"),
-                            "xai_explanation": {
-                                "xgboost_top_features": r.get("explanation", {})
-                                .get("analyst", {})
-                                .get("xgboost_top_features", []),
-                                "dae_top_features": r.get("explanation", {})
-                                .get("analyst", {})
-                                .get("dae_top_features", []),
-                                "clinician_summary": clin.get("summary", ""),
-                                "consensus": r.get("explanation", {})
-                                .get("analyst", {})
-                                .get("consensus", ""),
-                            },
-                        },
-                    )
+                    alerts_cache[sample_idx] = st.session_state.alerts_dict.get(sample_idx, r)
                 alert_obj = alerts_cache[sample_idx]
 
                 if sim_role == "Security Analyst":
@@ -1780,7 +1743,7 @@ def simulation_mode():
             tier_state["len"] = 0
         while tier_state["len"] < target_len:
             i = tier_state["len"]
-            new_level = responses[i]["risk_level"]   # O(1) direct access
+            new_level = responses[i]["risk_level"]  # O(1) direct access
             for t in TIERS:
                 prev = tier_state["data"][t][-1] if tier_state["data"][t] else 0
                 tier_state["data"][t].append(prev + (1 if new_level == t else 0))
@@ -1962,21 +1925,30 @@ def browse_mode():
     st.subheader("\u26a1 Recommended Action")
     correct_action = alert.get("correct_action", "")
     _ACTION_GUIDANCE = {
-        "isolate": ("\U0001f534 Isolate device from network",
-                    "Block all non-essential connections while preserving clinical paths."),
-        "escalate": ("\U0001f7e0 Escalate immediately",
-                     "Notify security lead and clinical engineering on-call."),
-        "investigate": ("\U0001f7e1 Investigate before acting",
-                        "Gather more information. Check with Biomed for scheduled maintenance."),
-        "monitor": ("\U0001f7e2 Monitor — no immediate action",
-                    "Watch for escalation. Set alert for threshold change."),
-        "dismiss": ("\u26aa Dismiss — expected behavior",
-                    "Verify with asset owner. Document reason for dismissal."),
+        "isolate": (
+            "\U0001f534 Isolate device from network",
+            "Block all non-essential connections while preserving clinical paths.",
+        ),
+        "escalate": (
+            "\U0001f7e0 Escalate immediately",
+            "Notify security lead and clinical engineering on-call.",
+        ),
+        "investigate": (
+            "\U0001f7e1 Investigate before acting",
+            "Gather more information. Check with Biomed for scheduled maintenance.",
+        ),
+        "monitor": (
+            "\U0001f7e2 Monitor — no immediate action",
+            "Watch for escalation. Set alert for threshold change.",
+        ),
+        "dismiss": (
+            "\u26aa Dismiss — expected behavior",
+            "Verify with asset owner. Document reason for dismissal.",
+        ),
     }
     label, guidance = _ACTION_GUIDANCE.get(
         correct_action,
-        ("\u2139\ufe0f Review recommended",
-         "Check response policy for this alert type."),
+        ("\u2139\ufe0f Review recommended", "Check response policy for this alert type."),
     )
     st.markdown(f"**{label}**")
     st.caption(guidance)
@@ -1989,10 +1961,7 @@ def _render_proxy_questions():
     Shown once after all 20 alerts are completed.
     """
     st.title("Two Final Questions")
-    st.markdown(
-        "Based on the alerts you reviewed, "
-        "please answer these two questions."
-    )
+    st.markdown("Based on the alerts you reviewed, " "please answer these two questions.")
 
     with st.form("proxy_questions"):
 
@@ -2001,14 +1970,16 @@ def _render_proxy_questions():
             "If you forwarded one of these alerts to a nurse "
             "or physician, would they have enough information "
             "to understand the patient safety risk?",
-            ["Yes — the information is clear for clinical staff",
-             "Partially — some alerts were clear, others were not",
-             "No — clinical staff would need more explanation"],
-            index=1
+            [
+                "Yes — the information is clear for clinical staff",
+                "Partially — some alerts were clear, others were not",
+                "No — clinical staff would need more explanation",
+            ],
+            index=1,
         )
         q21_note = st.text_input(
             "What was missing for clinical staff? (optional)",
-            placeholder="e.g. patient impact was unclear, too technical..."
+            placeholder="e.g. patient impact was unclear, too technical...",
         )
 
         st.markdown("---")
@@ -2017,19 +1988,21 @@ def _render_proxy_questions():
             "If you reported these alerts to your manager "
             "or security lead, would the information be "
             "sufficient to justify your recommended action?",
-            ["Yes — the explanation justifies the action clearly",
-             "Partially — for some alerts yes, others no",
-             "No — I would need to add more context myself"],
-            index=1
+            [
+                "Yes — the explanation justifies the action clearly",
+                "Partially — for some alerts yes, others no",
+                "No — I would need to add more context myself",
+            ],
+            index=1,
         )
         q22_note = st.text_input(
             "What additional context would management need? (optional)",
-            placeholder="e.g. business impact unclear, risk level hard to explain..."
+            placeholder="e.g. business impact unclear, risk level hard to explain...",
         )
 
-        if st.form_submit_button("Submit & Complete Study",
-                                 type="primary",
-                                 use_container_width=True):
+        if st.form_submit_button(
+            "Submit & Complete Study", type="primary", use_container_width=True
+        ):
             proxy = {
                 "participant_id": st.session_state.participant_id,
                 "q21_clinical_clarity": q21,
@@ -2041,25 +2014,29 @@ def _render_proxy_questions():
             # Append to existing responses
             st.session_state.responses.append(proxy)
             st.session_state.proxy_done = True
-            audit_log("proxy_questions_submitted",
-                     participant_id=st.session_state.participant_id,
-                     q21=q21, q22=q22)
+            audit_log(
+                "proxy_questions_submitted",
+                participant_id=st.session_state.participant_id,
+                q21=q21,
+                q22=q22,
+            )
             st.rerun()
 
 
 _SEV_COLORS = {
-    "CRITICAL": "#d32f2f", "HIGH": "#f57c00",
-    "MEDIUM": "#1976d2", "LOW": "#388e3c",
+    "CRITICAL": "#d32f2f",
+    "HIGH": "#f57c00",
+    "MEDIUM": "#1976d2",
+    "LOW": "#388e3c",
 }
 
 # Issue 10 fix: compile patterns once at module load instead of running
 # repeated `in` substring scans on every line of every Group B render.
 import re as _re
+
 _DO_NOT_RE = _re.compile(r"DO NOT", _re.IGNORECASE)
 # Matches "SEVERITY: CRITICAL", "► HIGH", "SEVERITY HIGH" etc.
-_SEV_LINE_RE = _re.compile(
-    r"(?:SEVERITY[:\s]+|►\s*)(CRITICAL|HIGH|MEDIUM|LOW)", _re.IGNORECASE
-)
+_SEV_LINE_RE = _re.compile(r"(?:SEVERITY[:\s]+|►\s*)(CRITICAL|HIGH|MEDIUM|LOW)", _re.IGNORECASE)
 
 
 def _render_group_b_highlighted(display_text: str) -> None:
@@ -2092,9 +2069,9 @@ def _render_group_b_highlighted(display_text: str) -> None:
             hex_c = _SEV_COLORS.get(detected_sev, "#757575")
             st.markdown(
                 f'<div style="background:{hex_c};color:white;'
-                f'padding:4px 10px;border-radius:4px;'
+                f"padding:4px 10px;border-radius:4px;"
                 f'font-family:monospace;margin:2px 0;">'
-                f'{line.strip()}</div>',
+                f"{line.strip()}</div>",
                 unsafe_allow_html=True,
             )
             continue
@@ -2111,14 +2088,69 @@ def study_mode():
     Group A: raw IDS output only
     Group B: raw IDS + MVE (3-layer explanation)
     """
-    from module6_evaluation.study_loader import (
-        load_study_alerts, assign_ab_condition
-    )
+    from module6_evaluation.study_loader import load_study_alerts, assign_ab_condition
 
     # ── Registration ──────────────────────────────────────────
     if not st.session_state.study_started:
+        if st.session_state.get("pid_conflict_check"):
+            st.warning(
+                f"Participant ID '{st.session_state.conflict_pid}' already has saved progress."
+            )
+            col1, col2, col3 = st.columns(3)
+
+            if col1.button("Resume saved progress"):
+                st.session_state.participant_id = st.session_state.conflict_pid
+                pid = st.session_state.conflict_pid
+                checkpoint_file = EVAL_DIR / f"study_checkpoint_{pid}.json"
+                final_file = EVAL_DIR / f"study_responses_{pid}.json"
+
+                saved = []
+                if checkpoint_file.exists():
+                    try:
+                        with open(checkpoint_file, "r", encoding="utf-8") as f:
+                            saved = json.load(f)
+                    except Exception:
+                        pass
+                elif final_file.exists():
+                    try:
+                        with open(final_file, "r", encoding="utf-8") as f:
+                            saved = json.load(f)
+                    except Exception:
+                        pass
+
+                st.session_state.responses = saved
+                st.session_state.current_alert = len(saved)
+                st.session_state.study_started = True
+                st.session_state.alert_start_time = time.time()
+                st.session_state.study_alerts = load_study_alerts(pid)
+                st.session_state.pid_conflict_check = False
+                st.rerun()
+
+            if col2.button("Start fresh (overwrite)"):
+                st.session_state.participant_id = st.session_state.conflict_pid
+                st.session_state.responses = []
+                st.session_state.current_alert = 0
+                st.session_state.study_started = True
+                st.session_state.alert_start_time = time.time()
+                st.session_state.study_alerts = load_study_alerts(st.session_state.participant_id)
+                st.session_state.pid_conflict_check = False
+                audit_log(
+                    "study_start",
+                    participant_id=st.session_state.conflict_pid,
+                    role=st.session_state.participant_role,
+                    years=st.session_state.participant_years,
+                    ids_exp=st.session_state.participant_ids_exp,
+                )
+                st.rerun()
+
+            if col3.button("Cancel & use different PID"):
+                st.session_state.pid_conflict_check = False
+                st.rerun()
+            return
+
         st.title("Healthcare IDS Alert Evaluation Study")
-        st.markdown("""
+        st.markdown(
+            """
         **Purpose:** Evaluate how security alert information helps
         IT staff make response decisions.
 
@@ -2126,48 +2158,54 @@ def study_mode():
 
         **What you will do:** Review 20 security alerts and decide
         how to respond to each one.
-        """)
+        """
+        )
 
         with st.form("registration"):
             pid = st.text_input(
-                "Participant ID",
-                placeholder="e.g. P01, P02 ...",
-                help="Assigned by researcher"
+                "Participant ID", placeholder="e.g. P01, P02 ...", help="Assigned by researcher"
             )
             role = st.selectbox(
                 "Your current role",
-                ["IT Security Generalist",
-                 "Network/System Administrator",
-                 "Healthcare IT Support",
-                 "Other IT Role"]
+                [
+                    "IT Security Generalist",
+                    "Network/System Administrator",
+                    "Healthcare IT Support",
+                    "Other IT Role",
+                ],
             )
-            years_exp = st.slider(
-                "Years in current role", 1, 15, 3
-            )
-            has_ids_exp = st.radio(
-                "Have you worked with IDS/SIEM alerts before?",
-                ["Yes", "No"]
-            )
+            years_exp = st.slider("Years in current role", 1, 15, 3)
+            has_ids_exp = st.radio("Have you worked with IDS/SIEM alerts before?", ["Yes", "No"])
             consent = st.checkbox(
                 "I agree to participate in this research study "
                 "and understand my responses will be anonymized."
             )
 
             if st.form_submit_button("Begin Study") and pid and consent:
-                st.session_state.participant_id = pid
                 st.session_state.participant_role = role
                 st.session_state.participant_years = years_exp
                 st.session_state.participant_ids_exp = has_ids_exp
-                st.session_state.study_started = True
-                st.session_state.current_alert = 0
-                st.session_state.responses = []
-                st.session_state.alert_start_time = time.time()
-                st.session_state.study_alerts = load_study_alerts()
-                audit_log("study_start",
-                         participant_id=pid,
-                         role=role,
-                         years=years_exp,
-                         ids_exp=has_ids_exp)
+
+                checkpoint_file = EVAL_DIR / f"study_checkpoint_{pid}.json"
+                final_file = EVAL_DIR / f"study_responses_{pid}.json"
+
+                if checkpoint_file.exists() or final_file.exists():
+                    st.session_state.pid_conflict_check = True
+                    st.session_state.conflict_pid = pid
+                else:
+                    st.session_state.participant_id = pid
+                    st.session_state.study_started = True
+                    st.session_state.responses = []
+                    st.session_state.current_alert = 0
+                    st.session_state.alert_start_time = time.time()
+                    st.session_state.study_alerts = load_study_alerts(pid)
+                    audit_log(
+                        "study_start",
+                        participant_id=pid,
+                        role=role,
+                        years=years_exp,
+                        ids_exp=has_ids_exp,
+                    )
                 st.rerun()
         return
 
@@ -2181,21 +2219,24 @@ def study_mode():
 
         # Save responses
         save_path = (
-            PROJECT_ROOT / "results" / "reports" /
-            f"study_responses_{st.session_state.participant_id}.json"
+            PROJECT_ROOT
+            / "results"
+            / "reports"
+            / f"study_responses_{st.session_state.participant_id}.json"
         )
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        save_path.write_text(
-            json.dumps(responses, indent=2), encoding="utf-8"
-        )
+        save_path.write_text(json.dumps(responses, indent=2), encoding="utf-8")
+
+        checkpoint_file = EVAL_DIR / f"study_checkpoint_{st.session_state.participant_id}.json"
+        if checkpoint_file.exists():
+            checkpoint_file.unlink()
 
         st.metric("Alerts Reviewed", n)
-        st.info(f"Your responses have been saved. "
-                f"Results will be shared after the study concludes.")
+        st.info(
+            f"Your responses have been saved. " f"Results will be shared after the study concludes."
+        )
 
-        audit_log("study_complete",
-                 participant_id=st.session_state.participant_id,
-                 n_responses=n)
+        audit_log("study_complete", participant_id=st.session_state.participant_id, n_responses=n)
         return
 
     # ── Main study loop ────────────────────────────────────────
@@ -2218,8 +2259,7 @@ def study_mode():
 
     # Progress bar
     progress = current_idx / n_total
-    st.progress(progress,
-                text=f"Alert {current_idx + 1} of {n_total}")
+    st.progress(progress, text=f"Alert {current_idx + 1} of {n_total}")
 
     # ── Alert display ──────────────────────────────────────────
     st.markdown("---")
@@ -2243,20 +2283,24 @@ def study_mode():
 
         severity = st.radio(
             "1. How severe is this alert? *(select one)*",
-            ["CRITICAL — Respond immediately",
-             "HIGH — Respond within 1 hour",
-             "MEDIUM — Respond within 4 hours",
-             "LOW — Review within 24 hours"],
+            [
+                "CRITICAL — Respond immediately",
+                "HIGH — Respond within 1 hour",
+                "MEDIUM — Respond within 4 hours",
+                "LOW — Review within 24 hours",
+            ],
             index=None,
         )
 
         action = st.radio(
             "2. What action would you take? *(select one)*",
-            ["Isolate the device/system from the network",
-             "Escalate to clinical staff / senior management",
-             "Investigate further before taking action",
-             "Monitor closely but no immediate action",
-             "Dismiss — this is likely a false alarm"],
+            [
+                "Isolate the device/system from the network",
+                "Escalate to clinical staff / senior management",
+                "Investigate further before taking action",
+                "Monitor closely but no immediate action",
+                "Dismiss — this is likely a false alarm",
+            ],
             index=None,
         )
 
@@ -2269,14 +2313,12 @@ def study_mode():
                 2: "2 — Uncertain",
                 3: "3 — Somewhat confident",
                 4: "4 — Confident",
-                5: "5 — Very confident"
-            }[x]
+                5: "5 — Very confident",
+            }[x],
         )
 
         submitted = st.form_submit_button(
-            "Submit & Next Alert →",
-            type="primary",
-            use_container_width=True
+            "Submit & Next Alert →", type="primary", use_container_width=True
         )
 
         if submitted:
@@ -2309,19 +2351,14 @@ def study_mode():
             chosen_action = action_map[action]
 
             # Score response
-            severity_correct = (chosen_severity == alert.correct_severity)
-            action_correct = (chosen_action == alert.correct_action)
+            severity_correct = chosen_severity == alert.correct_severity
+            action_correct = chosen_action == alert.correct_action
 
             # Partial credit for severity
             LEVEL = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "LOW": 0}
-            sev_diff = abs(
-                LEVEL.get(chosen_severity, -1) -
-                LEVEL.get(alert.correct_severity, -1)
-            )
-            severity_score = 1.0 if sev_diff == 0 else (
-                0.5 if sev_diff == 1 else 0.0
-            )
-            catastrophic = (sev_diff == 3)  # CRITICAL↔LOW mismatch
+            sev_diff = abs(LEVEL.get(chosen_severity, -1) - LEVEL.get(alert.correct_severity, -1))
+            severity_score = 1.0 if sev_diff == 0 else (0.5 if sev_diff == 1 else 0.0)
+            catastrophic = sev_diff == 3  # CRITICAL↔LOW mismatch
 
             composite_score = (severity_score + (1.0 if action_correct else 0.0)) / 2
 
@@ -2349,14 +2386,22 @@ def study_mode():
 
             st.session_state.responses.append(response)
             st.session_state.current_alert += 1
+
+            if st.session_state.current_alert % 5 == 0:
+                checkpoint_file = EVAL_DIR / f"study_checkpoint_{pid}.json"
+                with open(checkpoint_file, "w", encoding="utf-8") as f:
+                    json.dump(st.session_state.responses, f, indent=2)
+
             st.session_state.alert_start_time = time.time()
 
-            audit_log("alert_response",
-                     participant_id=pid,
-                     alert_id=alert.alert_id,
-                     condition=response["condition"],
-                     composite_score=composite_score,
-                     decision_time=elapsed)
+            audit_log(
+                "alert_response",
+                participant_id=pid,
+                alert_id=alert.alert_id,
+                condition=response["condition"],
+                composite_score=composite_score,
+                decision_time=elapsed,
+            )
             st.rerun()
 
 
@@ -2417,3 +2462,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

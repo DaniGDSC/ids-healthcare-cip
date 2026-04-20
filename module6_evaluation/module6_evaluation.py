@@ -24,6 +24,9 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 import pandas as pd
 
+from src.risk_scorer import score_alert
+from src.mve_generator import generate_mve, _generate_rule_based
+
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -132,6 +135,67 @@ def _derive_device_class(sample_index: int, test_df: pd.DataFrame) -> str:
     return "other"
 
 
+def _build_group_a_display(row: pd.Series, alert_id: str, anomaly_score: float) -> str:
+    """Builds the raw, uninterpretable alert text for Group A (baseline).
+    
+    Excludes all biometric fields. Injects safe placeholders for network markers 
+    that were sanitized during WUSTL-EHMS Phase 1.
+    """
+    src_ip = row.get("SrcIP", "10.4.12.8")
+    dst_ip = row.get("DstIP", "203.0.113.42")
+    
+    # In WUSTL-EHMS Phase 1, Sport is standard-scaled. Map negative/float to a generic port.
+    sport = row.get("Sport", "443")
+    try:
+        if pd.isna(sport) or float(sport) < 0:
+            sport = "54321"  # Ephemeral port mock
+        else:
+            sport = str(int(float(sport)))
+    except ValueError:
+        sport = "443"
+    dport = row.get("Dport", "443")
+    proto = row.get("Proto", "TCP")
+    timestamp = row.get("Timestamp", "2024-01-15 10:23:45")
+    
+    return (
+        f"Alert ID: {alert_id}\n"
+        f"Anomaly score: {anomaly_score:.2f}\n"
+        f"Prediction: Attack\n"
+        f"Source: {src_ip}:{sport} → {dst_ip}:{dport}\n"
+        f"Protocol: {proto}\n"
+        f"Timestamp: {timestamp}"
+    )
+
+
+def _build_group_b_display(mve_output) -> str:
+    """Assembles the 3-layer Minimum Viable Explanation into a readable dashboard string."""
+    if not mve_output:
+        return "WHY ANOMALOUS\nNot available\n\nCLINICAL SEVERITY\nNot available\n\nRECOMMENDED ACTION\nNot available"
+    
+    if isinstance(mve_output, dict):
+        l1 = mve_output.get("layer_1", {})
+        l2 = mve_output.get("layer_2", {})
+        l3 = mve_output.get("layer_3", {})
+    else:
+        l1 = getattr(mve_output, "layer_1", {})
+        l2 = getattr(mve_output, "layer_2", {})
+        l3 = getattr(mve_output, "layer_3", {})
+        
+    t1 = " ".join(str(v) for v in l1.values() if v) if l1 else "Not available"
+    t2 = " ".join(str(v) for v in l2.values() if v) if l2 else "Not available"
+    t3 = " ".join(str(v) for v in l3.values() if v) if l3 else "Not available"
+    
+    if "DO NOT" in t3.upper():
+        # Specifically prefix only instances of DO NOT for better UI emphasis
+        t3 = t3.replace("DO NOT", "⚠️ DO NOT")
+        
+    return (
+        f"WHY ANOMALOUS\n{t1}\n\n"
+        f"CLINICAL SEVERITY\n{t2}\n\n"
+        f"RECOMMENDED ACTION\n{t3}"
+    )
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # 6.2  Curate evaluation alert set
 # ═══════════════════════════════════════════════════════════════════════
@@ -169,6 +233,51 @@ def curate_evaluation_alerts() -> list:
     # M6-E3: cache the index range so we don't reallocate np.arange per iteration
     all_indices = np.arange(len(R))
 
+    def _process_and_append(idx):
+        used_idx.add(idx)
+        raw_row = df.iloc[idx]
+        anomaly_score = float(R[idx])
+        
+        device_cls = _derive_device_class(idx, df)
+        device_criticality = DEVICE_CONTEXT.get(device_cls, DEVICE_CONTEXT["other"]).get("device_criticality", "LOW")
+        patchable = device_cls not in {"infusion_pump", "ventilator", "insulin_pump", "patient_monitor", "pacs_server"}
+        
+        device_context = {
+            "criticality": device_criticality,
+            "patchable": patchable,
+            "similar_events_past_30d": 0,
+            "is_maintenance_window": False,
+            "is_known_vendor_ip": False,
+            "device_type": device_cls
+        }
+        
+        scored_alert = score_alert(anomaly_score, device_context, event_context=None)
+        
+        try:
+            raw_dict = raw_row.to_dict()
+        except AttributeError:
+            raw_dict = dict(raw_row)
+            
+        try:
+            mve_out = generate_mve(raw_dict, device_context, {}, None)
+            if mve_out is None:
+                mve_out = _generate_rule_based(raw_dict, device_context, {}, None, "T1")
+        except Exception:
+            mve_out = _generate_rule_based(raw_dict, device_context, {}, None, "T1")
+            
+        alert_id_str = f"EVAL-{idx:04d}"
+        grp_a = _build_group_a_display(raw_row, alert_id_str, anomaly_score)
+        grp_b = _build_group_b_display(mve_out)
+            
+        alerts.append(_build_eval_alert(
+            idx, R, levels, y_true, attack_cats,
+            analyst_by_idx, clinician_by_idx, examples_by_idx,
+            test_df=df, raw_row=raw_row,
+            device_criticality=device_criticality, patchable=patchable,
+            scored_alert=scored_alert, mve_output=mve_out,
+            group_a_display=grp_a, group_b_display=grp_b
+        ))
+
     # Target: 4 per tier (CRITICAL, HIGH, MEDIUM, LOW) + 4 benign calibration
     tier_targets = {
         "CRITICAL": {"attack": 2, "attack_cats": ["Spoofing", "Data Alteration"]},
@@ -188,12 +297,7 @@ def curate_evaluation_alerts() -> list:
 
             if len(candidates) > 0:
                 idx = int(candidates[np.argmax(R[candidates])])
-                used_idx.add(idx)
-                alerts.append(_build_eval_alert(
-                    idx, R, levels, y_true, attack_cats,
-                    analyst_by_idx, clinician_by_idx, examples_by_idx,
-                    test_df=df,
-                ))
+                _process_and_append(idx)
 
     # Benign calibration: 4 benign at various risk levels
     for target_r in [0.20, 0.30, 0.45, 0.55]:
@@ -204,11 +308,7 @@ def curate_evaluation_alerts() -> list:
             continue
         # Pick closest to target_r
         idx = int(candidates[np.argmin(np.abs(R[candidates] - target_r))])
-        used_idx.add(idx)
-        alerts.append(_build_eval_alert(
-            idx, R, levels, y_true, attack_cats,
-            analyst_by_idx, clinician_by_idx, examples_by_idx,
-        ))
+        _process_and_append(idx)
 
     # Fill remaining to reach 20
     while len(alerts) < 20:
@@ -217,11 +317,7 @@ def curate_evaluation_alerts() -> list:
         if len(remaining) == 0:
             break
         idx = int(remaining[np.argmax(R[remaining])])
-        used_idx.add(idx)
-        alerts.append(_build_eval_alert(
-            idx, R, levels, y_true, attack_cats,
-            analyst_by_idx, clinician_by_idx, examples_by_idx,
-        ))
+        _process_and_append(idx)
 
     logger.info("  Curated %d evaluation alerts", len(alerts))
     # M6-E4: Counter replaces manual get/+1 dict accumulation
@@ -233,7 +329,9 @@ def curate_evaluation_alerts() -> list:
 
 def _build_eval_alert(idx, R, levels, y_true, attack_cats,
                       analyst_by_idx, clinician_by_idx, examples_by_idx,
-                      test_df=None) -> dict:
+                      test_df=None, raw_row=None, device_criticality=None, patchable=None,
+                      scored_alert=None, mve_output=None, group_a_display=None,
+                      group_b_display=None) -> dict:
     """Build a single evaluation alert with all context."""
     analyst = analyst_by_idx.get(idx, {})
     clinician = clinician_by_idx.get(idx, {})
@@ -246,7 +344,18 @@ def _build_eval_alert(idx, R, levels, y_true, attack_cats,
         device_cls = _derive_device_class(idx, test_df)
     ctx = DEVICE_CONTEXT.get(device_cls, DEVICE_CONTEXT["other"])
 
-    return {
+    # Resolve new parameters
+    if raw_row is None and test_df is not None:
+        raw_row = test_df.iloc[idx]
+        
+    if device_criticality is None:
+        device_criticality = ctx.get("device_criticality", "LOW")
+        
+    if patchable is None:
+        # legacy/critical medical systems are unlikely to be patchable
+        patchable = device_cls not in {"infusion_pump", "ventilator", "insulin_pump", "patient_monitor", "pacs_server"}
+
+    alert_dict = {
         "alert_id": f"EVAL-{idx:04d}",
         "sample_index": int(idx),
         "ground_truth": "attack" if y_true[idx] == 1 else "benign",
@@ -254,7 +363,8 @@ def _build_eval_alert(idx, R, levels, y_true, attack_cats,
         "risk_score": round(float(R[idx]), 4),
         "risk_level": str(levels[idx]),
         "device_class": device_cls,
-        "device_criticality": ctx["device_criticality"],
+        "device_criticality": device_criticality,
+        "device_patchable": patchable,
         "affected_system": ctx["affected_system"],
         "patient_care_impact": ctx["patient_care_impact"],
         "active_device": ctx["active_device"],
@@ -266,6 +376,33 @@ def _build_eval_alert(idx, R, levels, y_true, attack_cats,
         },
         "correct_action": _ground_truth_action(str(levels[idx]), y_true[idx] == 1),
     }
+    
+    if group_a_display:
+        alert_dict["group_a_display"] = group_a_display
+        
+    if group_b_display:
+        alert_dict["group_b_display"] = group_b_display
+    
+    if scored_alert:
+        alert_dict["adjusted_score"] = scored_alert.adjusted_score
+        alert_dict["should_surface"] = scored_alert.should_surface
+        alert_dict["threshold"] = scored_alert.threshold
+        alert_dict["risk_multiplier"] = scored_alert.risk_multiplier
+
+    if mve_output:
+        alert_dict["mve_structured"] = {
+            "layer_1": mve_output.layer_1 if isinstance(mve_output, dict) else getattr(mve_output, "layer_1", {}),
+            "layer_2": mve_output.layer_2 if isinstance(mve_output, dict) else getattr(mve_output, "layer_2", {}),
+            "layer_3": mve_output.layer_3 if isinstance(mve_output, dict) else getattr(mve_output, "layer_3", {})
+        }
+    
+    if raw_row is not None:
+        try:
+            alert_dict["raw_features"] = raw_row.to_dict()
+        except AttributeError:
+            alert_dict["raw_features"] = dict(raw_row)
+            
+    return alert_dict
 
 
 def _ground_truth_action(tier: str, is_attack: bool) -> str:
