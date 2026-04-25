@@ -1,0 +1,181 @@
+{
+  "group_stats": [
+    {
+      "condition": "with_mve",
+      "n_responses": 500,
+      "n_participants": 25,
+      "accuracy": 0.36,
+      "severity_accuracy": 0.668,
+      "action_accuracy": 0.36,
+      "mean_composite_score": 0.5775,
+      "over_reaction_rate": 0.026,
+      "under_reaction_rate": 0.04,
+      "catastrophic_miss_rate": 0.012,
+      "mean_confidence": 3.816,
+      "mean_response_time": 7.648
+    },
+    {
+      "condition": "without_mve",
+      "n_responses": 500,
+      "n_participants": 25,
+      "accuracy": 0.246,
+      "severity_accuracy": 0.444,
+      "action_accuracy": 0.246,
+      "mean_composite_score": 0.429,
+      "over_reaction_rate": 0.098,
+      "under_reaction_rate": 0.084,
+      "catastrophic_miss_rate": 0.034,
+      "mean_confidence": 3.284,
+      "mean_response_time": 9.914
+    }
+  ],
+  "statistical_tests": {
+    "accuracy": {
+      "n_pairs": 25,
+      "p_value": 0.0009397262441868596,
+      "statistic": 20.5,
+      "mean_with_mve": 0.36,
+      "mean_without_mve": 0.24600000000000002,
+      "mean_difference": 0.114,
+      "cohens_dz": 0.8347673095695622
+    },
+    "severity_accuracy": {
+      "n_pairs": 25,
+      "p_value": 0.00010371867888023961,
+      "statistic": 10.5,
+      "mean_with_mve": 0.6679999999999999,
+      "mean_without_mve": 0.44400000000000006,
+      "mean_difference": 0.22399999999999998,
+      "cohens_dz": 1.186364796584522
+    },
+    "action_accuracy": {
+      "n_pairs": 25,
+      "p_value": 0.0009397262441868596,
+      "statistic": 20.5,
+      "mean_with_mve": 0.36,
+      "mean_without_mve": 0.24600000000000002,
+      "mean_difference": 0.114,
+      "cohens_dz": 0.8347673095695622
+    },
+    "mean_composite_score": {
+      "n_pairs": 25,
+      "p_value": 2.056522402428585e-05,
+      "statistic": 1.0,
+      "mean_with_mve": 0.5775,
+      "mean_without_mve": 0.429,
+      "mean_difference": 0.14850000000000002,
+      "cohens_dz": 1.5344261663968877
+    },
+    "over_reaction": {
+      "n_pairs": 25,
+      "p_value": 0.0035711902249467567,
+      "statistic": 2.0,
+      "mean_with_mve": 0.025999999999999995,
+      "mean_without_mve": 0.098,
+      "mean_difference": -0.07200000000000001,
+      "cohens_dz": -0.6979553986104635
+    },
+    "under_reaction": {
+      "n_pairs": 25,
+      "p_value": 0.006371904155454383,
+      "statistic": 2.5,
+      "mean_with_mve": 0.04,
+      "mean_without_mve": 0.084,
+      "mean_difference": -0.044000000000000004,
+      "cohens_dz": -0.5281056316905638
+    },
+    "catastrophic_miss": {
+      "n_pairs": 25,
+      "p_value": 0.021631248602727696,
+      "statistic": 5.5,
+      "mean_with_mve": 0.012000000000000002,
+      "mean_without_mve": 0.034,
+      "mean_difference": -0.022000000000000002,
+      "cohens_dz": -0.42144356549730666
+    },
+    "confidence": {
+      "n_pairs": 25,
+      "p_value": 0.0006571272224162605,
+      "statistic": 26.0,
+      "mean_with_mve": 3.816,
+      "mean_without_mve": 3.284,
+      "mean_difference": 0.532,
+      "cohens_dz": 0.8944967246537486
+    },
+    "response_time": {
+      "n_pairs": 25,
+      "p_value": 0.034170472692229406,
+      "statistic": 12.0,
+      "mean_with_mve": 7.648,
+      "mean_without_mve": 9.914,
+      "mean_difference": -2.266,
+      "cohens_dz": -0.29015301508945784
+    }
+  },
+  "proxy_summary": {
+    "n_respondents": 25,
+    "q21_counts": {
+      "Yes": 20,
+      "Partially": 4,
+      "No": 1
+    },
+    "q21_notes": [
+      "Clinical severity sections clearly explain patient impact so staff can understand risk.",
+      "alerts are too technical for clinical staff to understand risk",
+      "Clinical context clearly explains patient impact and risks.",
+      "Clinical context provided clearly links alerts to patient safety scenarios.",
+      "Alerts clearly describe affected devices and patient safety implications in clinical terms.",
+      "MVE adds clinical impact, but nurses still wouldn't understand IPs or why 'block Telnet' matters without translation.",
+      "MVE adds clinical context but nurses still need translation from IPs to actual patient risk.",
+      "MVE clinical notes explain the risk but I still don't know what a ventilator or insulin pump does beyond 'critical drug delivery'.",
+      "MVE includes clinical severity and device impact, so clinical staff would understand patient safety risk.",
+      "MVE context explicitly states patient safety impact and immediate actions needed, so nurse or physician would understand risk.",
+      "This new version has clear descriptions of how the tech stuff actually affects the patients and the wards.",
+      "The clinical severity sections explicitly describe the safety impact, such as drug delivery alteration or life-support disruption.",
+      "The inclusion of the MVE provides the specific patient safety impacts that clinicians need to see.",
+      "The inclusion of specific clinical context like potential drug delivery disruption makes the risks obvious to medical staff.",
+      "The clinical context provided makes the risks to patient care and workflows very easy for medical staff to understand.",
+      "The MVE sections now clearly spell out CLINICAL SEVERITY and patient safety risks like active infusions or ventilator compromise so a nurse or physician would understand the impact.",
+      "Alerts now detail specific devices and patient impacts like active infusions or monitors at risk",
+      "MVE includes explicit clinical severity, patient impact descriptions, and safety risks making alerts understandable to nurses or physicians.",
+      "MVE now includes explicit clinical severity and patient impact but still buried in technical IDS/SIEM details that nurses and physicians rarely understand.",
+      "Full alerts now include explicit CLINICAL SEVERITY sections spelling out patient risks like active infusions or ventilator impact so nurses and physicians can understand.",
+      "The MVE enrichment explains patient safety risks in clinical terms like active drug delivery, bed counts, and specific device types so a nurse or physician would understand the impact.",
+      "The MVE enrichment explicitly names the device type, ward location, patient count affected, and specific clinical risks in plain language a nurse or physician can act on.",
+      "The MVE enrichment explains patient safety risks in clinical terms like active drug delivery and life-sustaining devices so a nurse or physician would clearly understand the urgency.",
+      "The MVE sections explicitly name device types, patient counts, wards, and care disruption risks in language a clinician can act on without needing to understand network protocols.",
+      "The MVE enrichment identifies specific devices, wards, patient counts, and concrete safety risks so a nurse or physician would clearly understand what's at stake."
+    ],
+    "q22_counts": {
+      "Yes": 23,
+      "Partially": 2
+    },
+    "q22_notes": [
+      "Detailed anomaly and recommended actions provide enough justification for escalation decisions.",
+      "some alerts have enough detail but many decisions are based on assumptions",
+      "Detailed context and actions support decisions for management.",
+      "Detailed anomaly explanations and actions are sufficient for decision making.",
+      "Detailed anomaly context and recommended actions support escalation decisions.",
+      "MVE provides clear business and patient safety justification, management can act on these details.",
+      "MVE provides clear justification for actions, management can understand urgency.",
+      "I followed MVE recommended actions exactly, so the justification is the MVE text itself.",
+      "MVE provides clear anomaly context, clinical severity, and recommended actions sufficient to justify decisions.",
+      "MVE includes detailed justification for each action including baseline deviations and clinical impact, sufficient for management approval.",
+      "Having the baseline and the specific PHI risk makes it much easier to justify taking the systems offline.",
+      "The additional context provided in the Why Anomalous section gives a clear baseline comparison to justify any isolation action.",
+      "The MVE clearly connects technical anomalies to clinical risks, providing solid justification for the recommended actions.",
+      "The medical value enhancement data provides the clear baseline and safety justifications needed for management to approve actions.",
+      "I can explain the clinical impact is clear, but I don't have the deep security expertise to explain the technical details of the protocols.",
+      "The added WHY ANOMALOUS details plus clinical severity and recommended actions give me everything needed to justify isolating or escalating to the security lead.",
+      "Recommended actions and clinical severity provide clear justification for my calls",
+      "MVE supplies recommended actions, escalation paths, and full context sufficient to justify decisions to manager or security lead.",
+      "Full MVE with recommended actions, escalation paths, and baselines now gives enough to justify my cautious recommendations to leadership.",
+      "Detailed WHY ANOMALOUS plus RECOMMENDED ACTION with specific escalation paths and DO NOTs give clear justification for my choices.",
+      "The MVE provides baselines, confidence levels, specific recommended actions with timelines, and clear escalation paths which gives my manager everything needed to back my decisions.",
+      "Each alert includes baseline context, confidence level, specific recommended actions with safeguards, and escalation paths that give management everything needed to approve the response.",
+      "The MVE provides baseline data confidence levels and specific recommended actions with escalation paths which gives my manager everything needed to justify the response.",
+      "Each alert includes baseline behavior, confidence levels, specific recommended actions with safeguards, and escalation paths that give management everything they need to approve or challenge my call.",
+      "The alerts include baseline comparisons, confidence levels, specific recommended actions with safeguards, and escalation paths that fully justify each recommended action to a security lead."
+    ]
+  }
+}

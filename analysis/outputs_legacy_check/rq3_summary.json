@@ -1,0 +1,117 @@
+{
+  "group_stats": [
+    {
+      "condition": "with_mve",
+      "n_responses": 20,
+      "n_participants": 2,
+      "accuracy": 0.0,
+      "severity_accuracy": 0.0,
+      "action_accuracy": 0.0,
+      "mean_composite_score": NaN,
+      "over_reaction_rate": 0.0,
+      "under_reaction_rate": 0.35,
+      "catastrophic_miss_rate": 0.0,
+      "mean_confidence": 3.0,
+      "mean_response_time": 14.15
+    },
+    {
+      "condition": "without_mve",
+      "n_responses": 20,
+      "n_participants": 2,
+      "accuracy": 0.0,
+      "severity_accuracy": 0.0,
+      "action_accuracy": 0.0,
+      "mean_composite_score": NaN,
+      "over_reaction_rate": 0.0,
+      "under_reaction_rate": 1.0,
+      "catastrophic_miss_rate": 0.0,
+      "mean_confidence": 3.0,
+      "mean_response_time": 3.62
+    }
+  ],
+  "statistical_tests": {
+    "accuracy": {
+      "n_pairs": 2,
+      "p_value": 1.0,
+      "statistic": 0.0,
+      "mean_with_mve": 0.0,
+      "mean_without_mve": 0.0,
+      "mean_difference": 0.0,
+      "cohens_dz": null
+    },
+    "severity_accuracy": {
+      "n_pairs": 2,
+      "p_value": 1.0,
+      "statistic": 0.0,
+      "mean_with_mve": 0.0,
+      "mean_without_mve": 0.0,
+      "mean_difference": 0.0,
+      "cohens_dz": null
+    },
+    "action_accuracy": {
+      "n_pairs": 2,
+      "p_value": 1.0,
+      "statistic": 0.0,
+      "mean_with_mve": 0.0,
+      "mean_without_mve": 0.0,
+      "mean_difference": 0.0,
+      "cohens_dz": null
+    },
+    "mean_composite_score": {
+      "n_pairs": 0,
+      "p_value": null,
+      "statistic": null,
+      "mean_with_mve": null,
+      "mean_without_mve": null,
+      "mean_difference": null,
+      "cohens_dz": null,
+      "note": "Need at least 2 paired participants for Wilcoxon."
+    },
+    "over_reaction": {
+      "n_pairs": 2,
+      "p_value": 1.0,
+      "statistic": 0.0,
+      "mean_with_mve": 0.0,
+      "mean_without_mve": 0.0,
+      "mean_difference": 0.0,
+      "cohens_dz": null
+    },
+    "under_reaction": {
+      "n_pairs": 2,
+      "p_value": 0.5,
+      "statistic": 0.0,
+      "mean_with_mve": 0.35,
+      "mean_without_mve": 1.0,
+      "mean_difference": -0.6499999999999999,
+      "cohens_dz": -9.19238815542512
+    },
+    "catastrophic_miss": {
+      "n_pairs": 2,
+      "p_value": 1.0,
+      "statistic": 0.0,
+      "mean_with_mve": 0.0,
+      "mean_without_mve": 0.0,
+      "mean_difference": 0.0,
+      "cohens_dz": null
+    },
+    "confidence": {
+      "n_pairs": 2,
+      "p_value": 1.0,
+      "statistic": 0.0,
+      "mean_with_mve": 3.0,
+      "mean_without_mve": 3.0,
+      "mean_difference": 0.0,
+      "cohens_dz": null
+    },
+    "response_time": {
+      "n_pairs": 2,
+      "p_value": 0.5,
+      "statistic": 0.0,
+      "mean_with_mve": 14.149999999999999,
+      "mean_without_mve": 3.62,
+      "mean_difference": 10.53,
+      "cohens_dz": 1.3943510123397653
+    }
+  },
+  "proxy_summary": {}
+}
