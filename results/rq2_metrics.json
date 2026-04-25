@@ -1,0 +1,15 @@
+{
+  "critical_alert_rate": 0.6667,
+  "fnr_critical": 0.0,
+  "total_surfaced_alerts": 18,
+  "true_critical_count": 15,
+  "false_negative_critical": 0,
+  "confusion_matrix": {
+    "TP": 16,
+    "FN": 0,
+    "FP": 2,
+    "TN": 2
+  },
+  "sensitivity": 1.0,
+  "specificity": 0.5
+}

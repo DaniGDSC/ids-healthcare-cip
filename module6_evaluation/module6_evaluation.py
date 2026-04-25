@@ -327,6 +327,21 @@ def curate_evaluation_alerts() -> list:
     return alerts[:20]
 
 
+def map_true_severity(attack_category: str, device_class: str) -> str:
+    """Map attack category + device class to clinical severity (ground truth)."""
+    if attack_category == "normal":
+        return "LOW"
+    if device_class in ["ventilator", "patient_monitor", "infusion_pump"]:
+        if attack_category in ["Data Alteration", "Spoofing"]:
+            return "CRITICAL"
+        return "HIGH"
+    if attack_category == "Data Alteration":
+        return "HIGH"
+    elif attack_category == "Spoofing":
+        return "MEDIUM"
+    return "MEDIUM"
+
+
 def _build_eval_alert(idx, R, levels, y_true, attack_cats,
                       analyst_by_idx, clinician_by_idx, examples_by_idx,
                       test_df=None, raw_row=None, device_criticality=None, patchable=None,
@@ -355,14 +370,17 @@ def _build_eval_alert(idx, R, levels, y_true, attack_cats,
         # legacy/critical medical systems are unlikely to be patchable
         patchable = device_cls not in {"infusion_pump", "ventilator", "insulin_pump", "patient_monitor", "pacs_server"}
 
+    attack_category = str(attack_cats[idx])
+
     alert_dict = {
         "alert_id": f"EVAL-{idx:04d}",
         "sample_index": int(idx),
         "ground_truth": "attack" if y_true[idx] == 1 else "benign",
-        "attack_category": str(attack_cats[idx]),
+        "attack_category": attack_category,
         "risk_score": round(float(R[idx]), 4),
         "risk_level": str(levels[idx]),
         "device_class": device_cls,
+        "true_severity": map_true_severity(attack_category, device_cls),
         "device_criticality": device_criticality,
         "device_patchable": patchable,
         "affected_system": ctx["affected_system"],
