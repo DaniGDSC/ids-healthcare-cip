@@ -26,7 +26,13 @@ import sys
 import numpy as np
 import pandas as pd
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
+
+try:
+    from streamlit_autorefresh import st_autorefresh
+except ImportError:  # pragma: no cover - optional dependency
+
+    def st_autorefresh(*args, **kwargs) -> int:
+        return 0
 
 
 # When invoked via `streamlit run module6_evaluation/module6_app.py`
@@ -292,7 +298,7 @@ def render_mve_layers(alert: dict) -> None:
         if severity:
             color = TIER_COLORS.get(severity.upper(), "#999")
             st.markdown(
-                f"**Severity:** <span style='color:{color}'>" f"{severity}</span>",
+                f"**Severity:** <span style='color:{color}'>{severity}</span>",
                 unsafe_allow_html=True,
             )
         if affected:
@@ -590,7 +596,7 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
         "severity_label": alert_data.get("risk_level", ""),
         "group_a_display": alert_data.get("group_a_display", ""),
         "group_b_display": alert_data.get("group_b_display", ""),
-        "mve_structured": alert_data.get("mve_structured", {})
+        "mve_structured": alert_data.get("mve_structured", {}),
     }
 
 
@@ -717,6 +723,20 @@ def load_alerts() -> list:
         st.stop()
     with open(path) as f:
         return json.load(f)
+
+
+@st.cache_data
+def load_alerts_dict() -> dict:
+    """Return evaluation alerts keyed by sample_index, enriched for UI renderers."""
+    alerts = load_alerts()
+    return {
+        int(alert["sample_index"]): {
+            **alert,
+            **process_alert(int(alert["sample_index"]), alert),
+        }
+        for alert in alerts
+        if "sample_index" in alert
+    }
 
 
 @st.cache_data
@@ -987,6 +1007,7 @@ def init_session():
         "sim_speed": 1.0,  # 0.5x / 1x / 2x / 4x
         "sim_source": "alerts",  # "alerts" or "live_parquet"
         "latency_history": deque(maxlen=120),
+        "alerts_dict": {},
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -1265,6 +1286,8 @@ def simulation_mode():
     audit_trail = load_audit_trail()
     latency_profile = load_latency_profile()
     live_df = load_live_stream_source()
+    if not st.session_state.alerts_dict:
+        st.session_state.alerts_dict = load_alerts_dict()
 
     if not responses:
         st.warning("No alert data. Run Modules 3-5 first.")
@@ -1961,10 +1984,9 @@ def _render_proxy_questions():
     Shown once after all 20 alerts are completed.
     """
     st.title("Two Final Questions")
-    st.markdown("Based on the alerts you reviewed, " "please answer these two questions.")
+    st.markdown("Based on the alerts you reviewed, please answer these two questions.")
 
     with st.form("proxy_questions"):
-
         st.markdown("#### Q21 — Clinical Staff")
         q21 = st.radio(
             "If you forwarded one of these alerts to a nurse "
@@ -2233,7 +2255,7 @@ def study_mode():
 
         st.metric("Alerts Reviewed", n)
         st.info(
-            f"Your responses have been saved. " f"Results will be shared after the study concludes."
+            f"Your responses have been saved. Results will be shared after the study concludes."
         )
 
         audit_log("study_complete", participant_id=st.session_state.participant_id, n_responses=n)
@@ -2280,7 +2302,6 @@ def study_mode():
     st.markdown("#### Your Decision")
 
     with st.form(f"alert_form_{current_idx}"):
-
         severity = st.radio(
             "1. How severe is this alert? *(select one)*",
             [
@@ -2462,4 +2483,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
