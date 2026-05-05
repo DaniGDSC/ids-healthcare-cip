@@ -73,7 +73,7 @@ Serialize to: `models/xgb.pkl, rf.pkl, dt.pkl, dae.pkl, scaler.pkl`
 
 ### Module 3 — Risk-Adaptive Scoring
 File: `module3_risk_scores.py`
-(Replaces v1.0 `src/risk_scorer.py` — same logic, still exists as alias)
+(`src/risk_scorer.py` is the primary per-alert implementation; it wraps and extends batch logic from `module3_risk_scores.py` with a per-alert dict interface, patchability-aware thresholds, and a safety floor for CRITICAL+unpatchable devices. It is not a thin alias.)
 
 Function: `score_alert(anomaly_score, device_context, event_context) → ScoredAlert`
 
@@ -155,59 +155,95 @@ File: `module5_responses.py`
 ---
 
 ### Module 6 — Evaluation
-Files: `module6_evaluation.py`, `module6_app.py`, `src/harness.py`
 
-Runs:
-1. Acceptance tests M1–M8 on 50-alert fixture set
-2. Negative tests (0 violations required)
-3. study_analysis on study_responses_A/B.json → m5_result.yaml
+Files: `module6_evaluation/module6_evaluation.py`, `module6_evaluation/module6_app.py`,
+       `module6_evaluation/_src_adapter.py`, `module6_evaluation/compute_rq2_metrics.py`,
+       `module6_evaluation/study_loader.py`, `module6_evaluation/study_analysis.py`,
+       `src/harness.py`
+
+Submodule contracts:
+
+#### _src_adapter.py — `scored_from_eval_alert(alert_data: dict) -> ScoredAlert`
+
+- Bridges one `evaluation_alerts.json` record into `src.risk_scorer.score_alert()`
+- Safe defaults: `patchable=True` (unknown device), `event_context=None`
+
+#### compute_rq2_metrics.py (standalone script)
+
+- Input: `results/reports/evaluation_alerts.json`
+- Output: `results/rq2_metrics.json`
+- Computes: `critical_alert_rate`, `fnr_critical`, `{TP,FN,FP,TN}`, `sensitivity`, `specificity`
+
+#### study_loader.py
+
+- `load_study_alerts(participant_id) -> list[AlertScenario]`
+- Deterministic shuffle: `random.Random(int(md5(participant_id).hexdigest(), 16))`
+- A/B assignment: counterbalanced by `pid_seed % 2`
+
+#### study_analysis.py (standalone script)
+
+- Input: `survey/study_responses_*.json`
+- Output: `survey/m5_result.yaml`
+- Primary test: Mann-Whitney U (one-tailed B > A); thresholds: target=0.30, minimum=0.15
+- Verdict: PASS / WARN / FAIL
 
 ---
 
 ## FILE STRUCTURE
 
-```
-xai-ids-healthcare/
-├── phase0/
-│   └── dataset_audit.yaml
-├── phase1/
-│   ├── preprocess.py
-│   └── splits/
-├── models/
-│   ├── xgb.pkl
-│   ├── rf.pkl
-│   ├── dt.pkl
-│   ├── dae.pkl
-│   └── scaler.pkl
+```text
+ids-healthcare-cip/
+├── module0_analysis/
+│   └── phase0/                   # dataset audit
+├── module1_preprocessing/
+│   └── phase1/                   # preprocessing + SMOTE
+├── module2_detection/
+│   └── module2_train_models.py   # XGB/RF/DT/DAE → results/models/
+├── module3_risk_scoring/
+│   └── module3_risk_scores.py    # batch composite risk scoring
+├── module4_explanations/
+│   ├── module4_explanations.py   # batch SHAP + stakeholder outputs
+│   └── module4_online_explainer.py
+├── module5_responses/
+│   ├── module5_responses.py      # recommendation output
+│   └── module5_pipeline.py       # PolicyEngine + feedback loop
+├── module6_evaluation/
+│   ├── module6_evaluation.py     # build evaluation artifacts
+│   ├── module6_app.py            # Streamlit dashboard (browse + study mode)
+│   ├── _src_adapter.py           # bridges eval artifacts → src.risk_scorer
+│   ├── compute_rq2_metrics.py    # RQ2 metrics → results/rq2_metrics.json
+│   ├── study_loader.py           # A/B scenario loader (MD5 shuffle)
+│   └── study_analysis.py         # M5 Mann-Whitney → survey/m5_result.yaml
 ├── src/
 │   ├── __init__.py
-│   ├── data_models.py          # MVEOutput, ScoredAlert, SHAPContext, ...
-│   ├── mve_generator.py        # v2.0: +shap_context param
-│   ├── risk_scorer.py          # alias → module3_risk_scores.py
-│   └── harness.py              # thin wrapper → module6_evaluation.py
-├── module2_train_models.py
-├── module3_risk_scores.py
-├── module4_online_explainer.py
-├── module5_responses.py
-├── module6_evaluation.py
-├── module6_app.py
-├── drift_detection.py
-├── dynamic_threshold_sim.py
-├── feedback_loop_demo.py
+│   ├── data_models.py            # MVEOutput, ScoredAlert, SHAPContext, ...
+│   ├── mve_generator.py          # v2.0: +shap_context param
+│   ├── risk_scorer.py            # per-alert scoring + patchability + safety floor
+│   └── harness.py                # thin wrapper → module6_evaluation.py
+├── common/
+│   ├── model_registry.py
+│   ├── phi.py
+│   └── signed_pickle.py
+├── analysis/
+│   └── analyze_rq3.py            # final A/B study analysis
+├── utils/
+│   └── convert_legacy_survey.py  # legacy survey format conversion
 ├── tests/
 │   ├── __init__.py
-│   ├── acceptance_tests.py     # M1–M8 (includes M5 SHAP alignment)
+│   ├── acceptance_tests.py       # M1–M8 (includes M5 SHAP alignment)
 │   ├── negative_tests.py
+│   ├── test_safe_failure.py      # 5 failure-mode tests (added post-spec)
+│   ├── test_coverage_mve.py      # MVE branch coverage (added post-spec)
 │   └── fixtures/
 │       ├── sample_alerts.yaml
 │       ├── device_inventory.yaml
 │       ├── behavioral_baselines.yaml
-│       └── shap_stubs.yaml     # stub SHAPContext for offline tests
+│       └── shap_stubs.yaml       # stub SHAPContext for offline tests
 ├── run_tests.py
-├── alignment_report.yaml       # generated
-├── m5_result.yaml              # generated
-├── study_responses_A.json
-├── study_responses_B.json
+├── run_all_modules.py
+├── alignment_report.yaml         # generated
+├── survey/m5_result.yaml         # generated
+├── results/rq2_metrics.json      # generated
 ├── research_spec.yaml
 └── CLAUDE.md
 ```

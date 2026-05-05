@@ -32,6 +32,15 @@ The codebase is organized as a 7-stage flow:
 7. **Module 6 - Evaluation and UI** (`module6_evaluation/`)
    Curates evaluation alerts, assembles dashboard-ready artifacts, runs evaluation metrics, and provides the Streamlit interface. The key output is `results/reports/evaluation_alerts.json`, which powers the dashboard's browse and study experiences.
 
+   Submodules:
+
+   - `module6_evaluation.py` — builds evaluation artifacts; routes alerts through `_src_adapter`
+   - `_src_adapter.py` — bridges `evaluation_alerts.json` records into `src.risk_scorer.score_alert()` with safe defaults (`patchable=True`, `event_context=None`)
+   - `compute_rq2_metrics.py` — reads `evaluation_alerts.json`, outputs `results/rq2_metrics.json` (FNR_critical, sensitivity, specificity, confusion matrix)
+   - `study_loader.py` — loads 20 `AlertScenario` objects per participant; MD5-seeded deterministic shuffle; counterbalanced A/B assignment
+   - `study_analysis.py` — reads `survey/study_responses_*.json`, computes M5 via Mann-Whitney U, outputs `survey/m5_result.yaml`
+   - `module6_app.py` — Streamlit dashboard; browse mode, study mode, and response collection
+
 ## End-to-End Data Flow
 
 The main data flow is:
@@ -51,6 +60,26 @@ The main data flow is:
 - `group_a_display`: raw/baseline alert view
 - `group_b_display`: explanation-enhanced alert view
 
+## RQ2 Analysis Flow
+
+```text
+results/reports/evaluation_alerts.json
+-> module6_evaluation/compute_rq2_metrics.py
+-> results/rq2_metrics.json
+   (critical_alert_rate, fnr_critical, TP/FN/FP/TN, sensitivity, specificity)
+```
+
+## RQ3 / A/B User Study Flow
+
+```text
+results/reports/evaluation_alerts.json
+-> module6_evaluation/study_loader.py    (MD5-seeded per-participant shuffle + A/B assignment)
+-> module6_evaluation/module6_app.py     (Streamlit; collects survey/study_responses_<PID>.json)
+-> survey/study_responses_*.json
+-> module6_evaluation/study_analysis.py  (M5 Mann-Whitney -> survey/m5_result.yaml)
+-> analysis/analyze_rq3.py              (final A/B analysis -> analysis/outputs/)
+```
+
 ## Design Invariants
 
 - **Track B only elevates detection confidence**: fusion uses `max(Track_A, Track_B)`, so the DAE cannot suppress a stronger Track A signal.
@@ -59,6 +88,9 @@ The main data flow is:
   - `src/risk_scorer.py` decides `should_surface` using adaptive thresholds, patchability, and event context
 - **Offline-first explanations**: the MVE generator works without API keys through deterministic rule-based fallback logic.
 - **Recommendation only, no enforcement**: Module 5 produces response guidance and audit outputs, not live containment actions.
+- **_src_adapter safe defaults**: `scored_from_eval_alert()` uses `patchable=True` and `event_context=None` when fields are absent in evaluation artifacts. Unknown devices are treated as low-risk for threshold purposes only.
+- **study_loader determinism**: shuffle seed = `int(hashlib.md5(participant_id.encode()).hexdigest(), 16)`; A/B assignment counterbalanced by `seed % 2`.
+- **KNOWN ISSUE — Safety floor bypass** (`src/risk_scorer.py` lines 117–127): The maintenance-window early-return can produce `should_surface=False` for a CRITICAL+unpatchable device when `is_maintenance_window=True`, `is_known_vendor_ip=True`, and `anomaly_score ≤ 1.0`. The safety floor at line 155 is unreachable from that path. Pending fix: add `or (criticality == "CRITICAL" and not patchable)` to the `should_surface` assignment at line 124, and add a covering test.
 
 ## Directory Guide
 
@@ -67,6 +99,17 @@ The main data flow is:
 - `common/`: shared utilities such as model registry, signing, and PHI feature definitions
 - `tests/`: acceptance, negative, and safety tests
 - `results/`: generated models, reports, JSON artifacts, and charts
+- `analysis/`: post-collection RQ3 analysis scripts
+- `utils/`: one-off data conversion helpers
+
+## Test Suite
+
+| File | Purpose |
+| --- | --- |
+| `tests/acceptance_tests.py` | M1–M8 acceptance metrics on 50-alert fixture set |
+| `tests/negative_tests.py` | 6 negative constraint tests (no discovery, no blocking, no CVSS, etc.) |
+| `tests/test_safe_failure.py` | 5 failure-mode tests: missing context, timeout, unknown attack, extreme scores, unpatchable priority |
+| `tests/test_coverage_mve.py` | MVE generator branch coverage: all 5 alert types, LLM path (mock), SHAP enrichment |
 
 ## Operational Model
 
