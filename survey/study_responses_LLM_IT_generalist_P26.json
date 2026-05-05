@@ -1,0 +1,236 @@
+{
+  "persona_id": "IT_generalist_P26",
+  "n_alerts": 20,
+  "rows": [
+    {
+      "alert_id": "EVAL-3407",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Device is critical for patient care; need to confirm its status before any isolation or action."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "condition": "B",
+      "correct_action": "investigate",
+      "response": {
+        "action": "restrict",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1185",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "restrict",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "restrict",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The infusion pump poses a critical risk to patient care; isolating it prevents potential harm while further investigation is coordinated."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "restrict",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3301",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "restrict",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and network logs."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 408. Please try again in 122ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "condition": "B",
+      "correct_action": "monitor",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "isolate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety."
+      },
+      "error": null
+    }
+  ]
+}

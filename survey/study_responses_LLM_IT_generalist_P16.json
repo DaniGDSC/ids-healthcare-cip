@@ -1,0 +1,236 @@
+{
+  "persona_id": "IT_generalist_P16",
+  "n_alerts": 20,
+  "rows": [
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "condition": "A",
+      "correct_action": "monitor",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates potential attack; further investigation is needed to assess the threat level."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1185",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, warranting further investigation to assess the threat level."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3301",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, warranting further investigation to assess the threat level."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates potential attack; further investigation is needed to assess the threat level."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3407",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, warranting further investigation to assess the threat level."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates potential attack activity; further investigation is needed to assess the threat level."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates potential attack activity; further investigation is needed to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "condition": "A",
+      "correct_action": "investigate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates a potential attack; further investigation is needed to assess the threat level."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "Anomaly score of 0.85 indicates a high likelihood of an attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    }
+  ]
+}

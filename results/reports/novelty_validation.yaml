@@ -317,7 +317,39 @@ acceptance_criteria:
     evidence: "§5 — quadrant counts from risk_report.dual_track_fusion.quadrants."
   - check: "Honest novelty value statement"
     status: PASS
-    evidence: "§6.honest_position — 4-bullet statement explicitly acknowledging zero recall gain on in-distribution data, partial LOO validation, deferred adversarial evaluation, and zero-day deployment caveat."
+    evidence: |
+      §6.honest_position — 4-bullet statement: (1) post-A10 the DAE adds
+      +0.33pp recall vs Track A (was 0); (2) cross-category novelty
+      validated (Data Alteration 100%, Spoofing 51%); (3) zero-day eval
+      requires multi-dataset pooling; (4) 94 standalone false positives
+      remain a real operational cost.
+
+# ── 7b. Verification runs ───────────────────────────────────────────────
+
+verification_runs:
+  - run_date: "2026-05-05"
+    purpose: "Round-3 verification: confirm all numbers still match current artifacts."
+    cross_checks_performed:
+      - "Threshold value vs results/models/dae_final_report.json::threshold"
+      - "AUC + F1 vs dae_final_report.test_metrics"
+      - "Fusion quadrant counts vs results/reports/risk_report.json::dual_track_fusion.quadrants"
+      - "LOO catch rates recomputed from results/models/dae_test_predictions.npz with p=95 threshold"
+    results:
+      threshold:
+        yaml: 1.852e-05
+        artifact: 1.852031362478723e-05
+        match: true
+      auc_roc:
+        artifact: 0.9128
+        yaml_referenced: true
+      fusion_quadrants:
+        both_flag:    {yaml: [406, 400, 6],  artifact: [406, 400, 6],  match: true}
+        only_xgboost: {yaml: [272, 177, 95], artifact: [272, 177, 95], match: true}
+        only_dae:     {yaml: [96, 2, 94],    artifact: [96, 2, 94],    match: true}
+      loo_catch_rates:
+        spoofing:        {yaml: 0.5104, current: 0.5104, match: true}
+        data_alteration: {yaml: 1.0000, current: 1.0000, match: true}
+    result_summary: "All YAML numbers fresh; no drift detected since GAP-A10 retraining (2026-05-05)."
 
 # ── 8. Reproducibility ──────────────────────────────────────────────────
 

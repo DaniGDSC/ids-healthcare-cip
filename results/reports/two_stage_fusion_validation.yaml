@@ -1,0 +1,326 @@
+# two_stage_fusion_validation.yaml
+# Step [7] Two-stage fusion logic + threshold calibration + holdout eval.
+# Covers ARCHITECTURE.md workflow Step [7] in depth.
+#
+# All numerical values were extracted from the JSON / NPZ / parquet
+# artifacts named under `source_artifacts`. No values were hand-typed.
+#
+# Generated: 2026-05-05  Branch: fix/shap-category-vocab
+
+source_artifacts:
+  - results/models/xgboost_test_predictions.npz   # P_xgb per row
+  - results/models/dae_test_predictions.npz       # reconstruction error per row
+  - results/models/dae_final_report.json          # DAE threshold artifact
+  - results/reports/risk_scores.npz               # per-row severity tier
+  - results/reports/stratified_calibration.parquet # 70% calibration split
+  - results/reports/stratified_holdout.parquet     # 30% holdout split
+  - data/processed/test_phase1.parquet            # row_id, attack_category
+
+deliverable_metadata:
+  workflow_step: "[7] Two-stage fusion"
+  closure_run: "GAP-A2/A11/A10/A7 prerequisites all closed before this run"
+  computation_seed: 42
+
+# ── 1. Fusion logic specification ────────────────────────────────────────
+
+fusion_logic_specification:
+  implementation: "module3_risk_scoring/module3_risk_scores.py::classify_fusion"
+  signature: |
+    classify_fusion(c_track_a, c_track_b,
+                    a_high=P_XGB_HIGH_CONF, a_low=0.40, b=0.70)
+  stages:
+    stage_1_known_attack:
+      condition: "P_xgb >= a_high"
+      output:
+        alert_type: KNOWN_ATTACK
+        confidence: HIGH
+        mve_template: known_pattern
+        tier_recommendation: L1
+    stage_2_novel_anomaly:
+      condition: "P_xgb < a_low AND DAE_score >= b"
+      output:
+        alert_type: NOVEL_ANOMALY
+        confidence: MEDIUM
+        mve_template: novel_pattern
+        tier_recommendation: L2_specialist
+    stage_3_confirmed_anomaly:
+      condition: "a_low <= P_xgb < a_high AND DAE_score >= b"
+      output:
+        alert_type: CONFIRMED_ANOMALY
+        confidence: HIGH
+        mve_template: multi_signal
+        tier_recommendation: L1_with_senior
+    stage_4_benign:
+      condition: "otherwise"
+      output:
+        alert_type: BENIGN
+        should_surface: false
+        logged: true   # audit-only
+
+# ── 2. Threshold calibration ─────────────────────────────────────────────
+
+threshold_calibration:
+  calibration_set: results/reports/stratified_calibration.parquet
+  holdout_set: results/reports/stratified_holdout.parquet
+  calibration_n_rows: 3427
+  holdout_n_rows: 1469
+  method: "grid search over (a_high, a_low, b) with FPR-constraint filter"
+  objective: "minimise FNR_CRITICAL subject to FPR < 0.05"
+  grid_size: "6 × 6 × 6 = 216 combinations (minus invalid a_low >= a_high)"
+
+  selected_thresholds:
+    a_high: 0.95
+    a_low:  0.05
+    b:      0.80
+    note: |
+      Grid-optimum thresholds DIFFER from the spec defaults
+      (a_high=0.85, a_low=0.40, b=0.70). The selected values reflect what
+      actually minimises FNR_CRITICAL on this dataset — see §3 holdout
+      metrics for the cost. Reasons for divergence:
+        - a_high jumped to 0.95 because the post-A10 XGBoost emits very
+          confident scores (≥0.95) on most attacks; pushing a_high up
+          shrinks the KNOWN_ATTACK band to its high-confidence core
+          and lets borderline cases route to CONFIRMED_ANOMALY.
+        - a_low dropped to 0.05 because the F2-tuned XGBoost surfacing
+          threshold IS 0.05; classifying anything below that as NOVEL
+          (rather than CONFIRMED) matches Track A's intent.
+        - b raised to 0.80 trims DAE-driven false positives — the
+          post-A10 DAE has 91% AUC, so a tighter threshold still catches
+          true anomalies.
+      The spec defaults are also tested in tests/test_two_stage_fusion.py
+      (the 6 boundary-condition tests pin behaviour at the contract).
+
+  calibration_metrics:
+    tp: 368
+    fn: 61
+    fp: 106
+    tn: 2892
+    fnr: 0.1422
+    fpr: 0.0354
+    fnr_critical: 0.0000
+    critical_alert_rate: 0.0759
+    n_crit_attacks: 36
+    n_crit_caught: 36
+
+  final_metrics_on_holdout:
+    cumulative:
+      tp: 163
+      fn: 22
+      fp: 52
+      tn: 1232
+      fnr: 0.1189
+      fpr: 0.0405
+      fnr_critical: 0.0000
+      critical_alert_rate: 0.0744
+      n_crit_attacks: 16
+      n_crit_caught: 16
+    per_alert_type:
+      KNOWN_ATTACK:
+        count: 161
+        pct_holdout: 10.96
+        precision: 0.9814           # 158/161 are real attacks
+        recall_share_of_all_attacks: 0.8541
+        n_attacks_in_class: 158
+      NOVEL_ANOMALY:
+        count: 48
+        pct_holdout: 3.27
+        precision: 0.0208           # 1/48 — Track-A-disagrees-with-DAE band is mostly FPs
+        recall_share_of_all_attacks: 0.0054
+        n_attacks_in_class: 1
+      CONFIRMED_ANOMALY:
+        count: 6
+        pct_holdout: 0.41
+        precision: 0.6667
+        recall_share_of_all_attacks: 0.0216
+        n_attacks_in_class: 4
+      BENIGN:
+        count: 1254
+        pct_holdout: 85.36
+        precision: 0.0175           # of suppressed alerts, 22/1254 were missed attacks
+        recall_share_of_all_attacks: 0.1189
+        n_attacks_in_class: 22
+
+# ── 3. Comparison: max-fusion vs two-stage on the same holdout ──────────
+
+comparison_max_vs_two_stage:
+  on_same_holdout_set: results/reports/stratified_holdout.parquet
+  holdout_n: 1469
+  comparison_threshold_max: 0.50  # legacy DAE midpoint on predict_proba scale
+
+  max_fusion:
+    formula: "surface iff max(P_xgb, DAE_score) >= 0.50"
+    tp: 168
+    fn: 17
+    fp: 81
+    tn: 1203
+    fnr: 0.0919
+    fpr: 0.0631
+    fnr_critical: 0.0000
+    critical_alert_rate: 0.0643
+
+  two_stage_fusion:
+    formula: "stage classifier (a_high=0.95, a_low=0.05, b=0.80); surface iff != BENIGN"
+    tp: 163
+    fn: 22
+    fp: 52
+    tn: 1232
+    fnr: 0.1189
+    fpr: 0.0405
+    fnr_critical: 0.0000
+    critical_alert_rate: 0.0744
+
+  improvement_analysis:
+    when_two_stage_beats_max:
+      - "FPR: two-stage 0.0405 vs max 0.0631 — 36% fewer false positives."
+      - "Critical alert rate: two-stage 0.0744 vs max 0.0643 — surfaced alerts are denser in CRITICAL severity (better triage signal for the operator)."
+      - "Per-stage routing: KNOWN_ATTACK band has 0.98 precision (vs 0.68 for the union of all max-flagged), enabling tier-routing differentiation that max cannot express."
+    when_max_beats_two_stage:
+      - "Recall: max 0.908 vs two-stage 0.881 — two-stage misses 5 additional attacks (22 vs 17 FN)."
+      - "Single-threshold simplicity: max has one tunable; two-stage has three."
+    trade_off:
+      cumulative_recall: {two_stage: 0.8811, max: 0.9081, delta: -0.0270}
+      precision: {two_stage: 0.7581, max: 0.6747}    # tp/(tp+fp)
+      fpr_reduction: 0.0226    # absolute reduction
+      conclusion: |
+        On this holdout, two-stage trades 2.7 pp cumulative recall for
+        2.3 pp lower FPR and richer per-stage classification. Both
+        achieve FNR_CRITICAL = 0.000 — the safety-critical metric is
+        unchanged. Two-stage is the right choice for this deployment
+        because (a) FPR reduction is the operator-fatigue dial named
+        in M5, (b) the per-stage classes drive Step [13] stakeholder
+        routing, and (c) the lost recall is on lower-severity tiers
+        (CRITICAL recall is unchanged).
+
+# ── 4. Alert-type distribution on holdout ────────────────────────────────
+
+alert_type_distribution:
+  on_holdout: 1469
+  KNOWN_ATTACK:      {count: 161,  pct: 10.96}
+  NOVEL_ANOMALY:     {count:  48,  pct:  3.27}
+  CONFIRMED_ANOMALY: {count:   6,  pct:  0.41}
+  BENIGN:            {count: 1254, pct: 85.36}
+  observation: |
+    14.64% of holdout rows surface (any non-BENIGN class). 85.36%
+    suppressed and audit-logged. KNOWN_ATTACK dominates the surfaced
+    population at 10.96% — Track A's high-confidence regime is doing
+    most of the detection work; the cascaded DAE adds the remaining
+    3.7% (NOVEL + CONFIRMED) of routed alerts.
+
+# ── 5. Test cases ───────────────────────────────────────────────────────
+
+test_cases:
+  test_runner: tests/test_two_stage_fusion.py
+  thresholds_under_test: "spec defaults (a_high=0.85, a_low=0.40, b=0.70)"
+  named_cases:
+    test_1_known_attack_high_prob:
+      input: {P_xgb: 0.95, DAE: 0.20}
+      expected: {alert_type: KNOWN_ATTACK}
+      status: PASS
+    test_2_novel_anomaly:
+      input: {P_xgb: 0.20, DAE: 0.85}
+      expected: {alert_type: NOVEL_ANOMALY}
+      status: PASS
+    test_3_multi_signal:
+      input: {P_xgb: 0.60, DAE: 0.75}
+      expected: {alert_type: CONFIRMED_ANOMALY}
+      status: PASS
+    test_4_benign:
+      input: {P_xgb: 0.30, DAE: 0.50}
+      expected: {alert_type: BENIGN, should_surface: false}
+      status: PASS
+    test_5_boundary_known:
+      input: {P_xgb: 0.85, DAE: 0.30}
+      expected: {alert_type: KNOWN_ATTACK}
+      status: PASS
+      note: "Boundary inclusive (>=) on a_high — 0.85 admits to Stage 1."
+    test_6_boundary_novel:
+      input: {P_xgb: 0.39, DAE: 0.70}
+      expected: {alert_type: NOVEL_ANOMALY}
+      status: PASS
+      note: "P_xgb<a_low (0.39<0.40) AND DAE>=b (0.70==0.70 inclusive)."
+  additional_invariant_tests:
+    - "test_known_attack_overrides_dae — KNOWN_ATTACK ignores DAE (high P_xgb wins regardless)"
+    - "test_dae_flag_required_for_novel_and_confirmed — DAE<b → BENIGN, never NOVEL/CONFIRMED"
+    - "test_back_compat_with_old_kwargs — old (xgb_threshold, dae_threshold) calls still work"
+  total_tests: 9   # 6 named + 3 invariant
+  total_passed: 9
+
+# ── 6. Acceptance-criteria checklist ────────────────────────────────────
+
+acceptance_criteria:
+  - check: "Fusion logic implemented"
+    status: PASS
+    evidence: "module3_risk_scoring/module3_risk_scores.py::classify_fusion accepts (a_high, a_low, b) per spec; back-compat aliases preserve existing call sites."
+  - check: "All 6 test cases PASS"
+    status: PASS
+    evidence: "tests/test_two_stage_fusion.py — 6 named + 3 invariant = 9/9 passed."
+  - check: "Calibration done on stratified set"
+    status: PASS
+    evidence: "Grid search on results/reports/stratified_calibration.parquet (3427 rows, seed=42, GAP-A7-closure schema with row_id and severity_tier columns)."
+  - check: "Holdout metrics reported"
+    status: PASS
+    evidence: "§2.final_metrics_on_holdout — cumulative + per-alert-type breakdown on results/reports/stratified_holdout.parquet (1469 rows)."
+  - check: "Max vs two-stage comparison documented"
+    status: PASS
+    evidence: "§3.improvement_analysis — quantitative comparison + trade-off statement."
+  - check: "Alert type distribution logged"
+    status: PASS
+    evidence: "§4.alert_type_distribution — KNOWN 10.96% / NOVEL 3.27% / CONFIRMED 0.41% / BENIGN 85.36%."
+
+# ── 6b. Verification runs ──────────────────────────────────────────────
+
+verification_runs:
+  - run_date: "2026-05-05"
+    purpose: "Re-deliverable verification — confirm every YAML number still matches current artifacts."
+    cross_checks_performed:
+      - "Stratified split sizes (calibration=3427, holdout=1469)"
+      - "Cumulative holdout metrics (TP/FN/FP/TN, FPR, FNR, FNR_CRITICAL, n_crit_*)"
+      - "Per-stage holdout breakdown (count + n_attacks_in_class) for all 4 stages"
+      - "Max-fusion comparison metrics (8 fields)"
+      - "Alert-type distribution (count + pct for all 4 stages)"
+      - "Test-suite execution: tests/test_two_stage_fusion.py"
+    results:
+      total_numerical_checks: 35
+      drift_detected: false
+      test_results:
+        suite: tests/test_two_stage_fusion.py
+        passed: 9
+        failed: 0
+    result_summary: |
+      Zero drift across 35 numerical cross-checks; all 9 fusion test cases
+      pass at spec-default thresholds (a_high=0.85, a_low=0.40, b=0.70).
+      Calibration-selected thresholds (a_high=0.95, a_low=0.05, b=0.80)
+      remain divergent from spec — this is GAP-TS-2 and was already
+      surfaced in the open-gaps section.
+
+# ── 7. Reproducibility ──────────────────────────────────────────────────
+
+reproducibility:
+  prerequisites:
+    - "GAP-A7 closure: row_id + severity_tier columns on test_phase1.parquet"
+    - "GAP-A10 closure: DAE retrained at seed=42"
+    - "Stratified split materialised: python module6_evaluation/build_stratified_eval_set.py"
+  recompute: |
+    1. python module2_detection/module2_train_models.py --seed 42
+    2. python module3_risk_scoring/module3_risk_scores.py
+    3. python module6_evaluation/build_stratified_eval_set.py
+    4. (re-run the calibration block embedded in this commit's compute cache)
+  test_runner: "python -m pytest tests/test_two_stage_fusion.py -v"
+
+# ── 8. Open follow-ups ──────────────────────────────────────────────────
+
+open_gaps:
+  GAP-TS-1: |
+    NOVEL_ANOMALY precision 0.0208 on this holdout — by design (Track A
+    disagrees with DAE), but this means 47/48 NOVEL alerts are FPs that
+    waste L2 specialist time. Consider raising `b` further (DAE >= 0.90)
+    or requiring corroborating signal before tier-routing to L2.
+  GAP-TS-2: |
+    Calibration selected divergent thresholds (0.95/0.05/0.80 vs spec
+    0.85/0.40/0.70). Decide whether to update ARCHITECTURE.md spec to
+    match the calibrated values OR pin code to spec values and document
+    the cost (higher FPR, fewer KNOWN routes).
+  GAP-TS-3: |
+    Per-attack-category breakdown of two-stage vs max (which fusion
+    catches Spoofing better? Data Alteration?) — extend §3 with
+    per-category Wilson CIs after GAP-PB-5 augments the test set.

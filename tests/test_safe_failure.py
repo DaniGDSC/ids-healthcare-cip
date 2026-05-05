@@ -411,6 +411,118 @@ def test_device_class_helper_returns_one_of_five_classes() -> None:
     assert derive_device_class_row(row3) in valid
 
 
+# ── GAP-A2: per-stakeholder MVE views ────────────────────────────────────
+
+def _stub_mve():
+    """Build a minimal MVEOutput for view-derivation tests."""
+    from src.data_models import MVEOutput
+    return MVEOutput(
+        layer_1={
+            "baseline_behavior": "device behaves normally",
+            "deviation_description": "outbound bytes 3x baseline",
+            "confidence_indicator": "confidence: HIGH",
+        },
+        layer_2={
+            "affected_system": "infusion pump",
+            "patient_care_impact": "drug delivery may be affected",
+            "phi_exposure": "no PHI",
+            "severity_label": "CRITICAL",
+            "severity_rationale": "life-sustaining device under attack",
+        },
+        layer_3={
+            "immediate_action": "Block outbound traffic at switch port for 10.4.12.0/24",
+            "clinical_constraint": "DO NOT power off device. Switch-port block is SAFE.",
+            "escalation_path": "Biomed Engineering on-call",
+            "timeframe": "Act within 15 minutes",
+        },
+    )
+
+
+def test_role_view_it_generalist_is_passthrough() -> None:
+    """IT generalist sees the default wording — no transformation."""
+    from src.mve_generator import derive_role_view
+    base = _stub_mve()
+    view = derive_role_view(base, role="IT_generalist", alert_type="T1")
+    assert view.layer_1 == base.layer_1
+    assert view.layer_3 == base.layer_3
+
+
+def test_role_view_layer_2_is_invariant_across_roles() -> None:
+    """INVARIANT 6 cross-role consistency: severity unchanged by view choice."""
+    from src.mve_generator import derive_role_view
+    base = _stub_mve()
+    for role in ("IT_generalist", "biomed_engineer", "nurse_manager"):
+        v = derive_role_view(base, role=role, alert_type="T5")
+        assert v.layer_2 == base.layer_2, f"layer_2 drifted for role={role}"
+        assert v.layer_2["severity_label"] == "CRITICAL"
+
+
+def test_role_view_biomed_uses_biomed_verbs() -> None:
+    """Biomed view rewrites immediate_action to verify/document/coordinate."""
+    from src.mve_generator import derive_role_view
+    base = _stub_mve()
+    view = derive_role_view(base, role="biomed_engineer", alert_type="T5")
+    action = view.layer_3["immediate_action"].lower()
+    assert "verify" in action or "document" in action
+    # And it must NOT instruct biomed to push network policy.
+    assert "block port at switch" not in action
+    assert "firewall rule" not in action
+
+
+def test_role_view_nurse_uses_clinical_verbs() -> None:
+    """Nurse-manager view stays in clinical-impact framing."""
+    from src.mve_generator import derive_role_view
+    base = _stub_mve()
+    view = derive_role_view(base, role="nurse_manager", alert_type="T5")
+    action = view.layer_3["immediate_action"].lower()
+    assert "monitor" in action or "verify" in action or "document" in action
+    # Nurse role MUST NOT see infrastructure or device-power instructions.
+    assert "block port at switch" not in action
+    assert "firewall rule" not in action
+    assert "power-cycle" not in action
+
+
+def test_role_view_clinical_constraint_preserved_across_roles() -> None:
+    """INVARIANT 7: DO NOT wording must survive role transformation."""
+    from src.mve_generator import derive_role_view
+    base = _stub_mve()
+    for role in ("IT_generalist", "biomed_engineer", "nurse_manager"):
+        v = derive_role_view(base, role=role, alert_type="T5")
+        assert "DO NOT" in v.layer_3["clinical_constraint"], (
+            f"DO NOT lost in {role} view"
+        )
+
+
+def test_role_view_unknown_role_falls_back_to_it_generalist() -> None:
+    """Unknown role → safe default (IT generalist)."""
+    from src.mve_generator import derive_role_view
+    base = _stub_mve()
+    view = derive_role_view(base, role="janitor", alert_type="T1")
+    assert view.layer_3 == base.layer_3   # fell back to passthrough
+
+
+def test_operator_role_enum_values() -> None:
+    """The three values are stable strings consumers can match against."""
+    from src.data_models import OperatorRole
+    assert OperatorRole.IT_GENERALIST.value == "IT_generalist"
+    assert OperatorRole.BIOMED_ENGINEER.value == "biomed_engineer"
+    assert OperatorRole.NURSE_MANAGER.value == "nurse_manager"
+
+
+def test_module5_render_views_returns_three_keyed_views() -> None:
+    """Module 5's render_views_for_alert wraps derive_role_view for all 3 roles."""
+    from module5_responses.module5_pipeline import render_views_for_alert
+    base = _stub_mve()
+    views = render_views_for_alert(base, alert_type="T5")
+    assert set(views) == {"IT_generalist", "biomed_engineer", "nurse_manager"}
+    # Each view shares layer_2 (cross-role consistency).
+    sev = {v.layer_2["severity_label"] for v in views.values()}
+    assert sev == {"CRITICAL"}
+    # Each view preserves DO NOT.
+    for role, v in views.items():
+        assert "DO NOT" in v.layer_3["clinical_constraint"], role
+
+
 def test_test_phase1_parquet_carries_device_class_after_a7_closure() -> None:
     """The on-disk test parquet must expose the GAP-A7 schema upgrade."""
     from pathlib import Path

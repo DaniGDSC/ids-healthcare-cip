@@ -33,6 +33,33 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+
+# ── Per-stakeholder views (closes GAP-A2) ────────────────────────────────
+
+def render_views_for_alert(mve, alert_type: str = "T1") -> dict:
+    """Return all three role-scoped MVEOutput views for one alert.
+
+    Wraps src.mve_generator.derive_role_view so Module 6 (dashboard) can
+    fetch every authorised view in one call. INVARIANT 6 (cross-role
+    consistency on layer_2) and INVARIANT 7 (DO NOT preserved) are tested
+    on the underlying helper, not duplicated here.
+
+    Args:
+        mve: Default MVEOutput from src.mve_generator.generate_mve.
+        alert_type: T1..T5 for ATT&CK grounding (passed through today).
+
+    Returns:
+        {"IT_generalist": MVEOutput, "biomed_engineer": MVEOutput,
+         "nurse_manager": MVEOutput} — same layer_2 across all three.
+    """
+    from src.mve_generator import derive_role_view
+    from src.data_models import OperatorRole
+
+    return {
+        role.value: derive_role_view(mve, role.value, alert_type=alert_type)
+        for role in OperatorRole
+    }
+
 # `cryptography` is used for ECDSA P-256 signing of audit records.
 # Imported lazily so that the rest of the module is still importable in
 # environments where the package is not installed (e.g. unit tests that

@@ -1,0 +1,246 @@
+{
+  "persona_id": "biomed_engineer_P08",
+  "n_alerts": 20,
+  "rows": [
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 4,
+        "rationale": "Anomaly score indicates potential attack; further investigation is needed to assess impact on medical devices."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "condition": "A",
+      "correct_action": "investigate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring immediate investigation to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3407",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack, requiring immediate investigation to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "Anomaly score is high and indicates a potential attack; further investigation is necessary to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1185",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack, requiring immediate investigation to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "condition": "A",
+      "correct_action": "monitor",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 4,
+        "rationale": "Anomaly score indicates potential attack; further investigation is needed to assess impact on medical devices."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, warranting further investigation to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack; further investigation is needed to assess the impact on medical devices."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "MEDIUM",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack; further investigation is needed to assess impact on medical devices."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3301",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score is high and indicates a potential attack, requiring immediate investigation to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "Anomaly score is high and indicates a potential attack; further investigation is necessary to ensure device safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+      },
+      "error": null
+    }
+  ]
+}

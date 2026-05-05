@@ -1,0 +1,221 @@
+{
+  "persona_id": "nurse_manager_P05",
+  "n_alerts": 20,
+  "rows": [
+    {
+      "alert_id": "EVAL-1185",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "condition": "A",
+      "correct_action": "investigate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "Anomaly score indicates potential attack; monitoring is necessary to ensure patient safety and assess impact."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates a potential attack; monitoring is essential to ensure patient safety and system integrity."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "condition": "A",
+      "correct_action": "monitor",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "Anomaly score indicates potential risk; monitoring is essential to ensure patient safety and assess impact."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates a potential attack; monitoring is essential to ensure patient safety and assess impact."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates a potential attack; monitoring is necessary to ensure patient safety and system integrity."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "condition": "A",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "MEDIUM",
+        "confidence": 3,
+        "rationale": "The anomaly score indicates a potential attack; monitoring is necessary to ensure patient safety and assess impact."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3301",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3407",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "MEDIUM",
+        "confidence": 4,
+        "rationale": "The anomaly score indicates a potential attack; monitoring is essential to ensure patient safety and system integrity."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "A",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    }
+  ]
+}

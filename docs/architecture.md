@@ -160,7 +160,7 @@ def classify_fusion(c_track_a, c_track_b, xgb_threshold, dae_threshold=0.5):
 
 `c_detect = max(c_track_a, c_track_b)` is the scalar fed into the **Step 9** risk formula:
 
-```
+```text
 R = 0.40·C_detect + 0.25·D_crit + 0.15·S_data + 0.20·D_clinical_tier
 ```
 
@@ -214,9 +214,9 @@ Seven named invariants are documented here. Each row lists how it is **enforced*
 | Field | Value |
 | --- | --- |
 | **Description** | Every operator decision and every system alert (including suppressed ones) is recorded |
-| **Enforcement** | Append-only file writes via Module 6: `survey/study_responses_*.json` (study mode) and `results/reports/alert_responses.json` (browse mode). Files are opened in append mode and never overwritten |
-| **Tests** | Indirect — covered by Module 6 study-mode integration; no dedicated tampering-detection regression yet |
-| **Verdict** | PARTIAL — append-only by construction; dedicated test = GAP-IV-1 (open) |
+| **Enforcement** | Append-only file writes via Module 6: `survey/study_responses_*.json` (study mode) and `results/reports/alert_responses.json` (browse mode). Files are opened in append mode and never overwritten. `OperatorDecision` dataclass with `.validate()` provides schema enforcement (closed by GAP-A5). |
+| **Tests** | `tests/test_audit_append_only.py` (3 tests: append preserves history, tampering produces hash mismatch, log grows monotonically) — closes GAP-A15. Plus 4 OperatorDecision schema-validation tests in `tests/test_safe_failure.py`. |
+| **Verdict** | PASS — closed by GAP-A5 (schema) + GAP-A15 (append-only enforcement) on 2026-05-05 |
 
 ### Invariant 5 — Explanation faithfulness
 
@@ -232,9 +232,9 @@ Seven named invariants are documented here. Each row lists how it is **enforced*
 | Field | Value |
 | --- | --- |
 | **Description** | Each stakeholder role only sees and authorises actions appropriate to that role (IT generalist → network actions; biomed → device actions; nurse manager → clinical actions) |
-| **Enforcement** | [`module5_responses/module5_pipeline.py`](../module5_responses/module5_pipeline.py) routes `primary_notify` / `secondary_notify` per attack category; per-role view rendering is documented as PARTIAL in ARCHITECTURE.md Step [13] |
-| **Tests** | None dedicated today |
-| **Verdict** | PARTIAL — routing implemented; view differentiation = GAP-IV-2 |
+| **Enforcement** | [`src/mve_generator.py::derive_role_view`](../src/mve_generator.py) rewrites `immediate_action` per role; layer_2 (severity) is preserved across roles for cross-role consistency; layer_3 `clinical_constraint` (DO NOT wording) is preserved across roles. Notification routing in [`module5_responses/module5_pipeline.py`](../module5_responses/module5_pipeline.py) handles delivery channels. |
+| **Tests** | `tests/test_role_authority.py` (39 parametrised tests across role × alert-type × device-class — closes GAP-A16) + `tests/test_safe_failure.py::test_role_view_*` (8 smoke tests added during GAP-A2). Both files import `src.mve_generator.role_authority_violations` for the same enforcement check. |
+| **Verdict** | PASS — closed by GAP-A2 (mechanism) + GAP-A16 (enforcement coverage) on 2026-05-05 |
 
 ### Invariant 7 — DO NOT constraints required
 
@@ -252,9 +252,9 @@ Seven named invariants are documented here. Each row lists how it is **enforced*
 | 1 | DAE only elevates | PASS |
 | 2 | Safety floor (CRITICAL+unpatchable) | PASS |
 | 3 | No auto-execution | PASS |
-| 4 | Audit trail complete | PARTIAL |
+| 4 | Audit trail complete | PASS |
 | 5 | Explanation faithfulness | PASS |
-| 6 | Role authority | PARTIAL |
+| 6 | Role authority | PASS |
 | 7 | DO NOT constraints | PASS |
 
 Full evidence in [`results/reports/invariant_verification.log`](../results/reports/invariant_verification.log).
@@ -272,7 +272,7 @@ The full verification log is at [`results/reports/invariant_verification.log`](.
 
 Top-level results:
 
-```
+```text
 CMD A — subprocess in module5/                     EXPECTED: empty   ACTUAL: empty   PASS
 CMD B — iptables/firewall mutators in pipeline     EXPECTED: empty   ACTUAL: empty   PASS
 CMD C — auto-execution sentinels                   EXPECTED: empty   ACTUAL: 6 hits  PASS-with-doc-gap

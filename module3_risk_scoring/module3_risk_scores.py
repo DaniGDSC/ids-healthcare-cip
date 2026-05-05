@@ -182,33 +182,54 @@ def load_xgboost_proba() -> tuple:
 def classify_fusion(
     c_track_a: np.ndarray,
     c_track_b: np.ndarray,
-    xgb_threshold: float,
-    dae_threshold: float = 0.5,
+    xgb_threshold: float | None = None,    # back-compat alias for a_low
+    dae_threshold: float | None = None,    # back-compat alias for b
+    a_high: float | None = None,
+    a_low: float | None = None,
+    b: float | None = None,
 ) -> np.ndarray:
     """Per-sample two-stage fusion class (vectorised).
 
-    Promotes the quadrant taxonomy from ``dual_track_fusion_analysis``
-    (which runs post-hoc over the full test array) to a first-class
-    per-alert label that callers can route on.
+    Implements the four-stage decision logic per ARCHITECTURE.md Step [7]:
 
-    Classes:
-      - KNOWN_ATTACK      P_xgb >= P_XGB_HIGH_CONF (0.85) — trust Track A alone
-      - CONFIRMED_ANOMALY both flag below high-confidence
-      - NOVEL_ANOMALY     only Track B flags
-      - BENIGN            neither flags
+      Stage 1 KNOWN_ATTACK      P_xgb >= a_high
+      Stage 2 NOVEL_ANOMALY     P_xgb <  a_low  AND DAE_score >= b
+      Stage 3 CONFIRMED_ANOMALY a_low <= P_xgb < a_high AND DAE_score >= b
+      Stage 4 BENIGN            otherwise
+
+    Args:
+        c_track_a: per-sample XGBoost P(attack), shape (n,).
+        c_track_b: per-sample DAE score (predict_proba scale), shape (n,).
+        xgb_threshold: Back-compat alias for `a_low`. If both are passed,
+            the explicit `a_low` wins.
+        dae_threshold: Back-compat alias for `b`. If both are passed,
+            the explicit `b` wins.
+        a_high: KNOWN_ATTACK boundary (default P_XGB_HIGH_CONF = 0.85).
+        a_low:  NOVEL/CONFIRMED boundary (default 0.40 per spec).
+        b:      DAE flag threshold (default 0.70 per spec).
 
     Returns:
         np.ndarray of FusionClass string values, shape (n,).
     """
     from src.data_models import FusionClass, P_XGB_HIGH_CONF
 
-    xgb_flags = c_track_a >= xgb_threshold
-    dae_flags = c_track_b >= dae_threshold
-    high_conf = c_track_a >= P_XGB_HIGH_CONF
+    a_high_v = float(a_high if a_high is not None else P_XGB_HIGH_CONF)
+    a_low_v = float(a_low if a_low is not None else
+                    (xgb_threshold if xgb_threshold is not None else 0.40))
+    b_v = float(b if b is not None else
+                (dae_threshold if dae_threshold is not None else 0.70))
+
+    high_conf = c_track_a >= a_high_v
+    in_confirm_band = (c_track_a >= a_low_v) & (c_track_a < a_high_v)
+    below_low = c_track_a < a_low_v
+    dae_flags = c_track_b >= b_v
 
     out = np.full(len(c_track_a), FusionClass.BENIGN.value, dtype=object)
-    out[xgb_flags & dae_flags] = FusionClass.CONFIRMED_ANOMALY.value
-    out[~xgb_flags & dae_flags] = FusionClass.NOVEL_ANOMALY.value
+    # Order matters: KNOWN_ATTACK overrides everything; CONFIRMED depends
+    # on dae_flags AND being in [a_low, a_high); NOVEL depends on
+    # dae_flags AND being below a_low.
+    out[in_confirm_band & dae_flags] = FusionClass.CONFIRMED_ANOMALY.value
+    out[below_low & dae_flags] = FusionClass.NOVEL_ANOMALY.value
     out[high_conf] = FusionClass.KNOWN_ATTACK.value
     return out
 

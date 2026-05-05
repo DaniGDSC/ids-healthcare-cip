@@ -85,17 +85,65 @@ def attck_for_alert_type(alert_type: str) -> tuple[str, str]:
 # constant across views — INVARIANT 6's cross-role consistency check.
 # Layers 1 and 3 are re-framed in role-appropriate language.
 
-# Forbidden-action terms per role. These are conservative lists that
-# describe categories of action a role MUST NOT see in its layer_3 —
-# verified by tests/test_safe_failure.py role-authority assertions.
-_ROLE_FORBIDDEN_ACTIONS: dict[str, tuple[str, ...]] = {
-    "IT_generalist":   (),  # IT has the broadest action authority — no restriction here
-    "biomed_engineer": ("isolate vlan", "block port at switch", "firewall rule",
-                        "update acl", "push nac"),
-    "nurse_manager":   ("isolate vlan", "block port at switch", "firewall rule",
-                        "update acl", "push nac",
-                        "power-cycle device", "restart device firmware"),
+# Forbidden-action terms per role (closes INVARIANT 6 / GAP-A16).
+#
+# A regex-style allowlist of substring patterns that MUST NOT appear in a
+# role's layer_3.immediate_action text. Each role's authority is bounded:
+#
+#   IT_generalist   — broadest authority; only forbids clinical mutations
+#                     that belong to medical staff
+#   biomed_engineer — owns device-side actions; MUST NOT push network
+#                     policy or alter firewalls
+#   nurse_manager   — owns clinical workflow only; MUST NOT touch network
+#                     OR device firmware
+#
+# Public API (no leading underscore) so tests/test_role_authority.py and
+# external auditors can introspect the policy. Lowercased before match.
+ROLE_FORBIDDEN_ACTION_TERMS: dict[str, tuple[str, ...]] = {
+    "IT_generalist": (
+        # IT is broad but cannot administer medication or change clinical
+        # device parameters — those are clinician-only actions.
+        "administer", "titrate dose", "adjust ventilator setting",
+    ),
+    "biomed_engineer": (
+        # Biomed must NOT push network-side mutations.
+        "isolate vlan", "block port at switch", "firewall rule",
+        "update acl", "push nac", "block outbound traffic",
+        "block port", "switch-port block", "isolate at switch",
+    ),
+    "nurse_manager": (
+        # Nurse manager must not touch network OR device firmware.
+        "isolate vlan", "block port at switch", "firewall rule",
+        "update acl", "push nac", "block outbound traffic",
+        "block port", "switch-port block", "isolate at switch",
+        "power-cycle device", "restart device firmware",
+        "reflash firmware", "wipe device",
+    ),
 }
+
+# Back-compat alias for any existing internal callers.
+_ROLE_FORBIDDEN_ACTIONS = ROLE_FORBIDDEN_ACTION_TERMS
+
+
+def role_authority_violations(view, role: str) -> list[str]:
+    """Return the list of forbidden-action terms found in a role-scoped view.
+
+    INVARIANT 6 enforcement helper. An empty list means the view obeys the
+    role's authority bounds; a non-empty list is a violation that should be
+    surfaced as a test failure.
+
+    Args:
+        view: An MVEOutput whose layer_3.immediate_action will be checked.
+        role: One of OperatorRole values.
+
+    Returns:
+        Sorted list of forbidden terms that appear (substring match,
+        case-insensitive) in the role's immediate_action. Empty == ok.
+    """
+    forbidden = ROLE_FORBIDDEN_ACTION_TERMS.get(role, ())
+    text = view.layer_3.get("immediate_action", "").lower()
+    hits = sorted({term for term in forbidden if term in text})
+    return hits
 
 
 def _role_lens_layer_1(role: str, layer_1: dict, alert_type: str) -> dict:

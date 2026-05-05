@@ -1,0 +1,246 @@
+{
+  "persona_id": "biomed_engineer_P19",
+  "n_alerts": 20,
+  "rows": [
+    {
+      "alert_id": "EVAL-3407",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Device is life-sustaining; immediate coordination with ICU charge nurse and security is essential to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1185",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "The anomaly could compromise patient safety; further investigation is needed to assess the risk and ensure device integrity."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "The anomaly could compromise patient safety; further investigation is needed to assess the risk and determine appropriate actions."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3301",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "condition": "B",
+      "correct_action": "monitor",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient care; immediate coordination with ICU charge nurse and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient safety."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "escalate",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "condition": "B",
+      "correct_action": "investigate",
+      "response": {
+        "action": "investigate",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation."
+      },
+      "error": null
+    }
+  ]
+}

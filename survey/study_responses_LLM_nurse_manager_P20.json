@@ -1,0 +1,231 @@
+{
+  "persona_id": "nurse_manager_P20",
+  "n_alerts": 20,
+  "rows": [
+    {
+      "alert_id": "EVAL-3301",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3407",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor vitals and coordinate with the ICU charge nurse before any action."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Patient data access is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1185",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "condition": "B",
+      "correct_action": "investigate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the ventilator and patient vitals while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the ventilator and patient vitals while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "condition": "B",
+      "correct_action": "monitor",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 439. Please try again in 131ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "condition": "B",
+      "correct_action": "dismiss",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "HIGH",
+        "confidence": 2,
+        "rationale": "Patient data access is at risk; monitoring is essential to ensure patient safety while awaiting further action."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": {
+        "action": "monitor",
+        "severity_assessment": "CRITICAL",
+        "confidence": 2,
+        "rationale": "Patient safety is at risk; I will monitor the ventilator and patient vitals while coordinating with the ICU charge nurse."
+      },
+      "error": null
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "condition": "B",
+      "correct_action": "isolate",
+      "response": null,
+      "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    }
+  ]
+}
