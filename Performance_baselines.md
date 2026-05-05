@@ -58,35 +58,36 @@ Spoofing is the residual blind spot for Track A; Data Alteration is fully covere
 
 Track B alone is a weak attack detector by design: it is trained on benign-only traffic and is meant to *elevate* Track A on cascaded fusion, not to flag attacks on its own. The numbers below show why running Track B as a standalone gate would underperform.
 
-### Track B — Overall Metrics
+### Track B — Overall Metrics (post GAP-A10 retraining, seed 42)
 
 | Metric | Value |
 | --- | --- |
-| Threshold | 6.42 × 10⁻⁵ (95th percentile of benign reconstruction error) |
-| Accuracy | 0.8770 |
-| Precision (attack) | 0.5120 |
-| Recall (attack) | 0.4186 |
-| F1 (attack) | 0.4606 |
-| F2 (attack) | 0.4344 |
-| F1 macro | 0.6956 |
-| F1 weighted | 0.8717 |
-| ROC AUC | **0.7143** |
+| Threshold | 1.852 × 10⁻⁵ (95th percentile of benign reconstruction error) |
+| Accuracy | 0.9218 |
+| Precision (attack) | 0.6732 |
+| Recall (attack) | 0.7313 |
+| F1 (attack) | 0.7018 |
+| F2 (attack) | 0.7295 |
+| F1 macro | 0.8278 |
+| F1 weighted | 0.9223 |
+| ROC AUC | **0.9128** |
 
 ### Track B — Confusion Matrix
 
 | TP | FN | FP | TN | FNR | FPR |
 | --- | --- | --- | --- | --- | --- |
-| 257 | 357 | 245 | 4,037 | **0.5814** | 0.0572 |
+| 449 | 165 | 218 | 4,064 | **0.2687** | 0.0509 |
 
 ### Track B — Reconstruction-Error Distribution
 
 | Class | Mean reconstruction error |
 | --- | --- |
-| Benign | 1.470 × 10⁻⁵ |
-| Attack | 1.473 × 10⁻⁴ |
-| Separation ratio | ≈ 10× |
+| Benign | 1.306 × 10² (heavily right-skewed by long-tail outliers; median 5.51 × 10⁻⁷) |
+| Attack | 2.702 × 10³ (median 6.41 × 10⁻³) |
+| Separation ratio (means) | ≈ 21× |
+| Separation ratio (medians) | ≈ 1.16 × 10⁴ |
 
-The means differ by an order of magnitude, but the distributions overlap enough that the 95th-percentile threshold yields FNR=58%. This is the expected behaviour for a benign-only autoencoder on the WUSTL test set; the real value of Track B comes from the **cascaded fusion** with Track A, not from running it alone.
+GAP-A10 retraining substantially improved the standalone DAE: AUC 0.71 → 0.91, F1 0.46 → 0.70, FNR 0.58 → 0.27. The cascade is still the design's primary value path (fusion gain +0.0033 over Track A alone), but the standalone DAE is no longer a "weak detector" — its AUC is now competitive with Random Forest.
 
 ### Track B — Threshold-Dependency Curve
 
@@ -94,12 +95,12 @@ The means differ by an order of magnitude, but the distributions overlap enough 
 
 ### Track B — Per Attack-Category and Per Device-Class FNR
 
-**Not directly computed in current artifacts.** From the fusion quadrant table:
+From the post-A10 fusion quadrant table:
 
-- `only_dae` quadrant: 96 samples, **all benign** — DAE alone produced zero true-positive flags that XGBoost missed.
-- `both_flag` quadrant: 144 samples, all attacks (142 Data Alteration + 2 Spoofing).
+- `only_dae` quadrant: 96 samples — **2 attacks** + 94 benign (was 0/96 pre-A10).
+- `both_flag` quadrant: 406 samples — 400 attacks + 6 benign (was 144/0 pre-A10; substantially larger now because the post-A10 DAE flags more attacks at p=95).
 
-This means Track B's standalone attack detection on the test set is captured entirely inside the `both_flag` quadrant, contributing 144/614 = 23.5% recall — matching the `recall.dae_alone = 0.2345` field in `risk_report.json`. Per-device-class FNR is blocked on the same `device_class` join described in GAP-PB-1.
+DAE-alone recall on the test set is 0.6547 (was 0.2345 pre-A10). Per-device-class FNR is now unblocked by GAP-A7 (device_class column at the row level); recompute via `module6_evaluation/compute_per_device_metrics.py` with the DAE prediction file.
 
 ---
 
@@ -107,29 +108,29 @@ This means Track B's standalone attack detection on the test set is captured ent
 
 Fusion rule: `c_detect = max(c_track_a, c_track_b)` — DAE elevates, never suppresses.
 
-### Fusion Quadrant (XGBoost vs DAE)
+### Fusion Quadrant (XGBoost vs DAE) — post-A10
 
 | Quadrant | Samples | True attacks | True benign |
 | --- | --- | --- | --- |
-| Both flag (TP for both) | 144 | 144 | 0 |
-| Only XGBoost flags | 533 | 432 | 101 |
-| Only DAE flags | 96 | 0 | 96 |
-| Neither flags | 4,123 | 38 | 4,085 |
+| Both flag (TP for both) | 406 | 400 | 6 |
+| Only XGBoost flags | 272 | 177 | 95 |
+| Only DAE flags | 96 | 2 | 94 |
+| Neither flags | 4,122 | 35 | 4,087 |
 
 ### Fusion Recall Comparison
 
 | Strategy | Recall |
 | --- | --- |
-| XGBoost alone | 0.9381 |
-| DAE alone | 0.2345 |
-| **Union fusion (max)** | **0.9381** |
-| Fusion gain | 0.0000 |
+| XGBoost alone | 0.9397 |
+| DAE alone | 0.6547 |
+| **Union fusion (max)** | **0.9430** |
+| Fusion gain | **+0.0033** (post-A10; was 0.0000 pre-A10) |
 
-**On this test set, Track B contributes no recall gain over Track A** because every attack the DAE catches (the 144 in `both_flag`) is also caught by XGBoost. The DAE's value remains the spoofing-defence rationale (cascaded input includes `[raw || P_xgb, P_rf, P_dt]` so a classifier-aware spoofing attack still triggers high reconstruction error), but on the WUSTL static test split the cascade does not improve recall numerically. Tracked as **GAP-PB-3** — re-evaluate fusion gain after a spoofing-augmented test set is produced.
+**Post-A10 Track B contributes 0.33 pp recall gain over Track A** (2 unique attack catches at the cost of 94 standalone false positives). The pre-A10 "no recall gain" claim is OBSOLETE. The DAE's value remains primarily the spoofing-defence rationale (cascaded input `[raw || P_xgb, P_rf, P_dt]` is sensitive to classifier-aware perturbations), but the cascade now also adds small but non-zero in-distribution recall.
 
 ---
 
-## Module 3 Risk Score (`R = 0.40·C_detect + 0.25·D_crit + 0.15·S_data + 0.20·A_patient`)
+## Module 3 Risk Score (`R = 0.40·C_detect + 0.25·D_crit + 0.15·S_data + 0.20·D_clinical_tier`)
 
 ### Risk Distribution Across Test Set
 

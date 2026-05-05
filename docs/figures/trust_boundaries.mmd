@@ -1,0 +1,79 @@
+%% Trust boundaries — XAI-IDS-Healthcare
+%% Render: mmdc -i trust_boundaries.mmd -o trust_boundaries.png
+
+flowchart LR
+
+  subgraph EXT["EXTERNAL — Untrusted"]
+    direction TB
+    INET[/"Internet / Vendor cloud<br/>(supply-chain feed)"/]
+    PARTNER[/"Partner clinics<br/>(B2B integrations)"/]
+  end
+
+  subgraph CLIN["CLINICAL NETWORK — Trusted-Sensitive (out of scope)"]
+    direction TB
+    EHR[("EHR / EMR<br/>system of record")]
+    PACS[("PACS<br/>imaging archive")]
+    SWITCH{{"VLAN / firewall<br/>(infra, out of scope)"}}
+  end
+
+  subgraph IOMT["IoMT FLEET — Trusted-Vulnerable"]
+    direction TB
+    PUMP["Infusion pump<br/>(unpatchable)"]
+    VENT["Ventilator<br/>(unpatchable)"]
+    MON["Patient monitor"]
+    EHRWS["EHR workstation"]
+  end
+
+  subgraph IDS["IDS — In scope (this system)"]
+    direction TB
+    SAN["[5] Sanitize<br/>BENIGN_MEDIANS<br/>EA-06 mitigation"]
+    TRACK["[6/7] Track A + Track B<br/>+ two-stage fusion"]
+    RISK["[8/9/10] Context + R-score<br/>risk-adaptive gate"]
+    XAI["[11/12] SHAP + MVE<br/>3-layer ≤150 words"]
+    ROLE["[13/14] Stakeholder views<br/>+ tier recommendation"]
+    REC["[15] Response recommendation<br/>(NO AUTO-EXECUTION)"]
+    AUDIT[("[16] Audit log<br/>append-only")]
+  end
+
+  subgraph OPS["OPERATORS — Trusted (HITL boundary)"]
+    direction TB
+    ITGEN["IT generalist"]
+    BIOMED["Biomed engineer"]
+    NURSE["Nurse manager"]
+  end
+
+  INET -.->|"TB-1: ingress<br/>(out of scope)"| SWITCH
+  PARTNER -.->|"TB-1"| SWITCH
+  SWITCH ==>|"TB-2: passive<br/>flow mirror"| SAN
+  PUMP   --->|"flow telemetry"| SAN
+  VENT   --->|"flow telemetry"| SAN
+  MON    --->|"flow telemetry"| SAN
+  EHRWS  --->|"flow telemetry"| SAN
+  EHR    -.->|"out of scope"| SWITCH
+  PACS   -.->|"out of scope"| SWITCH
+
+  SAN  --> TRACK
+  TRACK --> RISK
+  RISK --> XAI
+  XAI  --> ROLE
+  ROLE --> REC
+  REC  --> AUDIT
+
+  REC ==>|"TB-3: rendered alert<br/>(read-only)"| ITGEN
+  REC ==>|"TB-3"| BIOMED
+  REC ==>|"TB-3"| NURSE
+  ITGEN ==>|"TB-4: operator<br/>decision (HITL)"| AUDIT
+  BIOMED ==> AUDIT
+  NURSE  ==> AUDIT
+
+  classDef ext fill:#fde2e1,stroke:#c0392b,stroke-width:2px,color:#000
+  classDef clin fill:#fef3c7,stroke:#b7791f,stroke-width:2px,color:#000
+  classDef iomt fill:#fef9c3,stroke:#a16207,stroke-width:2px,color:#000
+  classDef ids fill:#dbeafe,stroke:#1e40af,stroke-width:2px,color:#000
+  classDef ops fill:#dcfce7,stroke:#166534,stroke-width:2px,color:#000
+
+  class INET,PARTNER ext
+  class EHR,PACS,SWITCH clin
+  class PUMP,VENT,MON,EHRWS iomt
+  class SAN,TRACK,RISK,XAI,ROLE,REC,AUDIT ids
+  class ITGEN,BIOMED,NURSE ops

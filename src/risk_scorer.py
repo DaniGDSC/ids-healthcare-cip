@@ -15,14 +15,14 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from src.data_models import ScoredAlert
+from src.data_models import DataQuality, FusionClass, ScoredAlert
 
 # ── Constants ───────────────────────────────────────────────────────────
 
 DEFAULT_THRESHOLD: float = 0.50
 """Baseline surfacing threshold (static, for comparison baseline)."""
 
-# Threshold multipliers per (criticality, patchable).
+# Threshold multipliers per (criticality, patchable). Default policy.
 # CRITICAL + unpatchable: 0.70 → threshold = 0.50 * 0.70 = 0.35 (30% reduction).
 # LOW + patchable: 1.00 → threshold = 0.50 (default, per spec).
 _THRESHOLD_MULT: dict[tuple[str, bool], float] = {
@@ -35,6 +35,28 @@ _THRESHOLD_MULT: dict[tuple[str, bool], float] = {
     ("LOW",      False): 1.00,
     ("LOW",      True):  1.00,   # default threshold per spec
 }
+
+# Per-device-class threshold overrides (closes GAP-A1).
+# Keys are (device_class, patchable). When a device's class is present here,
+# the override is preferred over the (criticality, patchable) lookup. Values
+# come from ARCHITECTURE.md Step [10] multiplier_table.
+#
+# Rationale: a vent and an EHR workstation can share criticality but have
+# different operational sensitivity profiles. Per-class overrides let
+# operators tune the gate without changing the criticality taxonomy.
+_THRESHOLD_MULT_BY_DEVICE: dict[tuple[str, bool], float] = {
+    ("infusion_pump",   False): 0.70,
+    ("infusion_pump",   True):  0.85,
+    ("ventilator",      False): 0.70,
+    ("ventilator",      True):  0.85,
+    ("patient_monitor", False): 0.75,
+    ("patient_monitor", True):  0.90,
+    ("monitor",         False): 0.75,
+    ("monitor",         True):  0.90,
+    ("ehr_workstation", False): 0.80,
+    ("ehr_workstation", True):  0.95,
+}
+_UNKNOWN_DEVICE_FALLBACK_MULT: float = 0.80   # conservative; matches spec
 
 # Risk multipliers per (criticality, patchable).
 # CRITICAL + unpatchable: ≥1.5 required by spec.
@@ -76,6 +98,8 @@ def score_alert(
     anomaly_score: float,
     device_context: dict[str, Any],
     event_context: Optional[dict[str, Any]],
+    fusion_class: FusionClass | str | None = None,
+    data_quality: DataQuality | str | None = None,
 ) -> ScoredAlert:
     """Adjust alert threshold and multiplier based on device context.
 
@@ -108,6 +132,20 @@ def score_alert(
     score = float(anomaly_score)
     criticality = str(device_context.get("criticality", "LOW")).upper()
     patchable = bool(device_context.get("patchable", True))
+    # GAP-A1: device_class overrides the (criticality, patchable) threshold
+    # when present. Empty / unrecognised classes fall back to the criticality
+    # table below.
+    device_class = str(device_context.get("device_class", "")).lower()
+    fc = FusionClass(fusion_class) if fusion_class else FusionClass.BENIGN
+    dq = DataQuality(data_quality) if data_quality else DataQuality.OK
+    # EA-06 mitigation: NaN-injection attempts must not let an attacker
+    # mask an anomaly. DEGRADED inputs nudge the score up (×1.20); FAILED
+    # inputs force an upper-bound score so the alert always surfaces for
+    # the operator to verify, even if the imputed features look benign.
+    if dq == DataQuality.FAILED:
+        score = max(score, 0.95)
+    elif dq == DataQuality.DEGRADED:
+        score = min(1.0, score * 1.20)
 
     # Rule: maintenance window + known vendor IP → reduced confidence
     # EA-02 fix: binary suppression created a guaranteed evasion window.
@@ -118,19 +156,40 @@ def score_alert(
         if (event_context.get("is_maintenance_window", False)
                 and event_context.get("is_known_vendor_ip", False)):
             reduced = score * 0.5
+            # ST-03 safety floor must hold even on the maintenance-window
+            # path: CRITICAL+unpatchable devices always surface because the
+            # IDS is the only compensating control for them.
+            should_surface = (
+                reduced > DEFAULT_THRESHOLD
+                or (criticality == "CRITICAL" and not patchable)
+            )
             return ScoredAlert(
                 adjusted_score=round(reduced, 4),
                 threshold=DEFAULT_THRESHOLD,
-                should_surface=reduced > DEFAULT_THRESHOLD,
+                should_surface=should_surface,
                 risk_multiplier=0.5,
                 suppression_reason="maintenance window — reduced confidence, verify with biomed",
+                fusion_class=fc,
+                data_quality=dq,
             )
 
     # RS-3: build key once and use it for both lookups — get_threshold()
     # would rebuild the same (criticality, patchable) tuple internally.
     key = (criticality, patchable)
     risk_multiplier: float = _RISK_MULT.get(key, 1.0)
-    threshold = round(DEFAULT_THRESHOLD * _THRESHOLD_MULT.get(key, 1.0), 4)
+
+    # GAP-A1: prefer per-device-class threshold override when device_class
+    # is supplied. Falls back to (criticality, patchable). For an
+    # unrecognised non-empty device_class we use the conservative
+    # _UNKNOWN_DEVICE_FALLBACK_MULT (0.80) per spec.
+    if device_class:
+        if (device_class, patchable) in _THRESHOLD_MULT_BY_DEVICE:
+            mult = _THRESHOLD_MULT_BY_DEVICE[(device_class, patchable)]
+        else:
+            mult = _UNKNOWN_DEVICE_FALLBACK_MULT
+    else:
+        mult = _THRESHOLD_MULT.get(key, 1.0)
+    threshold = round(DEFAULT_THRESHOLD * mult, 4)
 
     # Adaptive rule: reduce multiplier for frequently-seen patterns
     if event_context:
@@ -161,6 +220,8 @@ def score_alert(
         should_surface=should_surface,
         risk_multiplier=round(risk_multiplier, 4),
         suppression_reason=None,
+        fusion_class=fc,
+        data_quality=dq,
     )
 
 

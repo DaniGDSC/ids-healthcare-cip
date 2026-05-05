@@ -106,22 +106,22 @@ RESPONSE_POLICY = {
         "CRITICAL": {
             "default_actions": ["log_event", "isolate_device", "forensic_snapshot", "escalate_incident", "escalate_clinical"],
             "max_response_min": 5,
-            "auto_execute": True,
+            "recommended_for_auto_execution": True,
         },
         "HIGH": {
             "default_actions": ["log_event", "isolate_device", "forensic_snapshot", "enhanced_monitoring"],
             "max_response_min": 15,
-            "auto_execute": True,
+            "recommended_for_auto_execution": True,
         },
         "MEDIUM": {
             "default_actions": ["log_event", "restrict_traffic", "enhanced_monitoring"],
             "max_response_min": 60,
-            "auto_execute": False,
+            "recommended_for_auto_execution": False,
         },
         "LOW": {
             "default_actions": ["log_event", "enhanced_monitoring"],
             "max_response_min": 480,
-            "auto_execute": False,
+            "recommended_for_auto_execution": False,
         },
     },
     "device_constraints": {
@@ -197,7 +197,7 @@ class PolicyEngine:
         return {
             "actions": actions,
             "max_response_min": tier_policy["max_response_min"],
-            "auto_execute": tier_policy["auto_execute"],
+            "recommended_for_auto_execution": tier_policy["recommended_for_auto_execution"],
             "primary_notify": routing.get("primary_notify", "IT Security"),
             "secondary_notify": routing.get("secondary_notify"),
             "clinical_override": override,
@@ -294,7 +294,7 @@ class ActionExecutor:
             "sample_index": sample_index,
             "timestamp": timestamp.isoformat(),
             "actions_executed": actions,
-            "auto_executed": recommendation.get("auto_execute", False),
+            "recommended_for_auto_execution": recommendation.get("recommended_for_auto_execution", False),
             "clinical_override": recommendation.get("clinical_override", {}).get("triggered", False),
             "requires_approval": recommendation.get("requires_approval", False),
             "outcome": outcome,
@@ -1096,7 +1096,7 @@ def run_worked_examples(
         idx = int(np.where(mask)[0][np.argmax(R[mask])])
         cat = str(attack_cats[idx])
         gt = "attack" if y_true[idx] == 1 else "benign"
-        a_pat = float(risk_data["a_patient"][idx])
+        a_pat = float(risk_data["d_clinical_tier"][idx])
 
         # Step 1: Policy recommendation
         rec = engine.recommend(
@@ -1133,7 +1133,7 @@ def run_worked_examples(
                 "C_detect": round(float(risk_data["c_detect"][idx]), 4),
                 "D_crit": round(float(risk_data["d_crit"][idx]), 4),
                 "S_data": round(float(risk_data["s_data"][idx]), 4),
-                "A_patient": round(float(risk_data["a_patient"][idx]), 4),
+                "D_clinical_tier": round(float(risk_data["d_clinical_tier"][idx]), 4),
             },
             "policy_recommendation": rec,
             "execution_result": exec_result,
@@ -1213,7 +1213,7 @@ def main() -> None:
 
         cat = str(attack_cats[idx])
         gt = "attack" if y_true[idx] == 1 else "benign"
-        a_pat = float(risk_data["a_patient"][idx])
+        a_pat = float(risk_data["d_clinical_tier"][idx])
 
         rec = engine.recommend(tier, "vital_monitoring", cat, a_pat)
         ts = datetime(2026, 4, 3, 12, 0, 0) + timedelta(seconds=idx)

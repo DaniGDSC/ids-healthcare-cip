@@ -27,7 +27,7 @@ import re
 from typing import Any, Optional
 
 from src import sanitize_for_log
-from src.data_models import MVEOutput, SHAPContext  # noqa: F401  (SHAPContext re-exported for type hints/callers)
+from src.data_models import MVEOutput, OperatorRole, SHAPContext  # noqa: F401  (SHAPContext re-exported for type hints/callers)
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,126 @@ _SEVERITY_TIMEFRAME = {
 
 # Maps criticality → whether the alert involves a clinical system
 _IS_CLINICAL = {"CRITICAL": True, "HIGH": True, "MEDIUM": True, "LOW": False}
+
+
+# ── ATT&CK technique mapping (closes GAP-A6) ────────────────────────────
+# Deterministic alert-type → MITRE ATT&CK technique lookup so Mode B
+# (rule-based) MVEs always emit the technique ID. The mapping mirrors
+# docs/threat_model.md §5.
+
+_ATTACK_TECHNIQUES: dict[str, tuple[str, str]] = {
+    # alert_type → (technique_id, short_label)
+    "T1": ("T1071", "Application Layer Protocol"),
+    "T2": ("T1078", "Valid Accounts"),
+    "T3": ("T1021", "Remote Services"),
+    "T4": ("T1041", "Exfiltration over C2"),
+    "T5": ("T1565", "Data Manipulation"),
+}
+
+
+def attck_for_alert_type(alert_type: str) -> tuple[str, str]:
+    """Return (technique_id, short_label) for an alert_type, deterministically.
+
+    Empty (``""``, ``""``) for unknown types — callers should treat the empty
+    return as "no ATT&CK grounding for this alert" and fall back to whatever
+    Layer 1 wording does not need a technique ID.
+    """
+    return _ATTACK_TECHNIQUES.get(alert_type, ("", ""))
+
+
+# ── Per-stakeholder view rendering (closes GAP-A2) ──────────────────────
+#
+# Architecture Step [13] mandates three views: IT generalist (default),
+# biomed engineer, nurse manager. Layer 2 (clinical severity) stays
+# constant across views — INVARIANT 6's cross-role consistency check.
+# Layers 1 and 3 are re-framed in role-appropriate language.
+
+# Forbidden-action terms per role. These are conservative lists that
+# describe categories of action a role MUST NOT see in its layer_3 —
+# verified by tests/test_safe_failure.py role-authority assertions.
+_ROLE_FORBIDDEN_ACTIONS: dict[str, tuple[str, ...]] = {
+    "IT_generalist":   (),  # IT has the broadest action authority — no restriction here
+    "biomed_engineer": ("isolate vlan", "block port at switch", "firewall rule",
+                        "update acl", "push nac"),
+    "nurse_manager":   ("isolate vlan", "block port at switch", "firewall rule",
+                        "update acl", "push nac",
+                        "power-cycle device", "restart device firmware"),
+}
+
+
+def _role_lens_layer_1(role: str, layer_1: dict, alert_type: str) -> dict:
+    """Re-frame layer 1 for a stakeholder role without losing SHAP grounding."""
+    if role == OperatorRole.IT_GENERALIST.value:
+        return dict(layer_1)  # default — no transform
+    out = dict(layer_1)
+    base_dev = out.get("deviation_description", "")
+    if role == OperatorRole.BIOMED_ENGINEER.value:
+        out["deviation_description"] = (
+            f"Device behaviour unusual: {base_dev}".strip()
+        )
+    elif role == OperatorRole.NURSE_MANAGER.value:
+        out["deviation_description"] = (
+            f"Equipment may be compromised. Patient safety priority. {base_dev}".strip()
+        )
+    return out
+
+
+def _role_lens_layer_3(role: str, layer_3: dict) -> dict:
+    """Re-frame layer 3 actions for a stakeholder role.
+
+    Each role keeps `clinical_constraint` (DO NOT wording — INVARIANT 7)
+    and `escalation_path` unchanged. `immediate_action` is rewritten to
+    name role-appropriate verbs:
+      IT_generalist  — network-side actions (default wording)
+      biomed_engineer — verify, document, coordinate with IT
+      nurse_manager  — verify backup, monitor, document; no infrastructure
+    """
+    if role == OperatorRole.IT_GENERALIST.value:
+        return dict(layer_3)
+
+    out = dict(layer_3)
+    if role == OperatorRole.BIOMED_ENGINEER.value:
+        out["immediate_action"] = (
+            "Verify device firmware version and recent service history. "
+            "Document anomalous behaviour in CMMS. Coordinate with IT "
+            "Security before any device action."
+        )
+    elif role == OperatorRole.NURSE_MANAGER.value:
+        out["immediate_action"] = (
+            "Verify clinical backup is in place for the affected device. "
+            "Continue monitoring patient vitals. Document the alert and "
+            "any clinical impact in the unit log."
+        )
+    return out
+
+
+def derive_role_view(mve, role: str, alert_type: str = "T1"):
+    """Return a role-scoped MVEOutput.
+
+    Args:
+        mve: The default MVEOutput (IT-generalist primary view).
+        role: One of OperatorRole values ("IT_generalist", "biomed_engineer",
+              "nurse_manager"). Strings accepted for back-compat.
+        alert_type: T1..T5 for ATT&CK grounding (used by future
+                    layer-1 enrichment; passed through today).
+
+    Returns:
+        New MVEOutput. Same layer_2 (cross-role consistency).
+    """
+    from src.data_models import MVEOutput, OperatorRole as _OR
+
+    if isinstance(role, _OR):
+        role = role.value
+    if role not in _ROLE_FORBIDDEN_ACTIONS:
+        # Unknown role → fall back to IT-generalist default view.
+        role = _OR.IT_GENERALIST.value
+
+    return MVEOutput(
+        layer_1=_role_lens_layer_1(role, mve.layer_1, alert_type),
+        layer_2=dict(mve.layer_2),  # unchanged — cross-role severity invariant
+        layer_3=_role_lens_layer_3(role, mve.layer_3),
+        alert_involves_clinical_system=mve.alert_involves_clinical_system,
+    )
 
 
 # ── Alert type detection ────────────────────────────────────────────────

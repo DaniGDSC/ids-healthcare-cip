@@ -486,7 +486,7 @@ def build_all_records(
                 "C_track_b": round(float(risk_data["c_track_b"][idx]), 4),
                 "D_crit": round(float(risk_data["d_crit"][idx]), 4),
                 "S_data": round(float(risk_data["s_data"][idx]), 4),
-                "A_patient": round(float(risk_data["a_patient"][idx]), 4),
+                "D_clinical_tier": round(float(risk_data["d_clinical_tier"][idx]), 4),
             },
             "response": response,
             "explanation": {

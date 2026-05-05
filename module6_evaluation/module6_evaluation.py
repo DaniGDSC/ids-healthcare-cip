@@ -107,32 +107,18 @@ _BIO_FEATS = ('Temp', 'SpO2', 'Pulse_Rate', 'Heart_rate', 'Resp_Rate', 'ST')
 
 
 def _derive_device_class(sample_index: int, test_df: pd.DataFrame) -> str:
-    """Derive device class from biometric feature patterns.
+    """Derive device class for one row.
 
-    M6-E1: compute each biometric abs-threshold check once into a dict,
-    eliminating the double-extraction (loop + named booleans) from before.
+    GAP-A7: prefers the parquet's `device_class` column (authoritative,
+    written by Module 1) when present; falls back to the shared biometric
+    heuristic in common.device_class otherwise. Both paths return the same
+    five-class taxonomy (ventilator / patient_monitor / infusion_pump /
+    ehr_workstation / other).
     """
-    row = test_df.iloc[sample_index]
-    # Single pass — each feature extracted exactly once
-    vals = {f: abs(float(row.get(f, 0))) > 0.5 for f in _BIO_FEATS}
-    bio_active = sum(vals.values())
-    resp_a  = vals['Resp_Rate']
-    spo2_a  = vals['SpO2']
-    pulse_a = vals['Pulse_Rate']
-    hr_a    = vals['Heart_rate']
-    temp_a  = vals['Temp']
-
-    if resp_a and spo2_a and bio_active >= 4:
-        return "ventilator"
-    if pulse_a and hr_a and bio_active >= 3:
-        return "patient_monitor"
-    if temp_a and bio_active >= 2:
-        return "infusion_pump"
-    sport = abs(float(row.get('Sport', 0)))
-    src = abs(float(row.get('SrcBytes', 0)))
-    if bio_active <= 1 and (sport > 0.1 or src > 0.1):
-        return "ehr_workstation"
-    return "other"
+    if "device_class" in test_df.columns:
+        return str(test_df.iloc[sample_index]["device_class"])
+    from common.device_class import derive_device_class_row
+    return derive_device_class_row(test_df.iloc[sample_index])
 
 
 def _build_group_a_display(row: pd.Series, alert_id: str, anomaly_score: float) -> str:
@@ -406,6 +392,8 @@ def _build_eval_alert(idx, R, levels, y_true, attack_cats,
         alert_dict["should_surface"] = scored_alert.should_surface
         alert_dict["threshold"] = scored_alert.threshold
         alert_dict["risk_multiplier"] = scored_alert.risk_multiplier
+        alert_dict["fusion_class"] = scored_alert.fusion_class.value
+        alert_dict["data_quality"] = scored_alert.data_quality.value
 
     if mve_output:
         alert_dict["mve_structured"] = {

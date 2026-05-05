@@ -1,6 +1,6 @@
 {
-  "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
-  "fusion": "C_detect = max(Track_A_proba, Track_B_normalized_RE)",
+  "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
+  "fusion": "C_detect = cascaded(Track_A \u2192 Track_B): DAE input = [raw_features || Track_A_probas]",
   "weights": {
     "w1": 0.4,
     "w2": 0.25,
@@ -19,14 +19,14 @@
     "LOW"
   ],
   "biometric_features": [
-    "Temp",
-    "SpO2",
-    "Pulse_Rate",
-    "SYS",
     "DIA",
     "Heart_rate",
+    "Pulse_Rate",
     "Resp_Rate",
-    "ST"
+    "ST",
+    "SYS",
+    "SpO2",
+    "Temp"
   ],
   "sigma_threshold": 1.5,
   "device_tiers": {

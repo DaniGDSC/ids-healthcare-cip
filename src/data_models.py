@@ -6,7 +6,60 @@ Build order step 1: all shared dataclasses used by Components 1, 2, and 3.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, List, Optional
+
+
+class FusionClass(str, Enum):
+    """Two-stage fusion outcome per ARCHITECTURE.md Step [7]."""
+
+    KNOWN_ATTACK = "KNOWN_ATTACK"
+    CONFIRMED_ANOMALY = "CONFIRMED_ANOMALY"
+    NOVEL_ANOMALY = "NOVEL_ANOMALY"
+    BENIGN = "BENIGN"
+
+
+class DataQuality(str, Enum):
+    """Per-alert sanitization outcome per ARCHITECTURE.md Step [5].
+
+    Severity ladder:
+      OK          — input clean OR nan_rate <= 5% (rare, isolated NaN/Inf).
+      IMPUTED_NAN — row-level marker used by Module-3 batch path; equivalent
+                    to OK at alert-severity level (kept for back-compat).
+      DEGRADED    — nan_rate > 5%; likely sensor/capture issue or
+                    NaN-injection attempt (EA-06). Operator should treat the
+                    explanation as fragile.
+      FAILED      — nan_rate >= 50%; input is essentially garbage; route to
+                    biomed for device check.
+    """
+
+    OK = "OK"
+    IMPUTED_NAN = "IMPUTED_NAN"
+    DEGRADED = "DEGRADED"
+    FAILED = "FAILED"
+
+
+class OperatorRole(str, Enum):
+    """Per ARCHITECTURE.md Step [13] — role-scoped view rendering.
+
+    Each role sees an MVE tailored to its authority and decision space:
+      IT_GENERALIST — primary audience; default MVE wording (network actions)
+      BIOMED_ENGINEER — device-facing wording (verify/document/coordinate)
+      NURSE_MANAGER — clinical-impact wording (verify backup/monitor/document)
+
+    Closes GAP-A2. Routing primary/secondary already exists in
+    module5_pipeline.py; the per-role *view rendering* lands here.
+    """
+
+    IT_GENERALIST = "IT_generalist"
+    BIOMED_ENGINEER = "biomed_engineer"
+    NURSE_MANAGER = "nurse_manager"
+
+
+P_XGB_HIGH_CONF: float = 0.85
+"""Track A high-confidence boundary above which we classify as KNOWN_ATTACK
+without requiring DAE confirmation."""
+
 
 # ── Component 2 output ──────────────────────────────────────────────────
 
@@ -32,6 +85,12 @@ class ScoredAlert:
     suppression_reason: Optional[str] = None
     """If suppressed, the human-readable reason."""
 
+    fusion_class: FusionClass = FusionClass.BENIGN
+    """Two-stage fusion outcome from Track A + Track B."""
+
+    data_quality: DataQuality = DataQuality.OK
+    """Per-row sanitization outcome: OK or IMPUTED_NAN (NaN/Inf replaced)."""
+
 
 # ── Module 4 output (SHAP explanations) ─────────────────────────────────
 
@@ -55,6 +114,12 @@ class SHAPContext:
     confidence_from_shap: str
     """HIGH if top feature |SHAP| > 0.3, MEDIUM if |SHAP| in [0.1, 0.3],
     LOW if |SHAP| < 0.1."""
+
+    stability_score: float = 1.0
+    """Mean pairwise Jaccard similarity of top-k SHAP features across N
+    bootstrap perturbations of the input. 1.0 = perfectly stable; 0.0 =
+    every perturbation flips the ranking. Values < STABILITY_LOW (0.5)
+    should be surfaced to the operator as a fragility warning."""
 
 
 # ── Component 1 output ──────────────────────────────────────────────────
@@ -186,3 +251,40 @@ class TestReport:
     alignment: List[dict[str, Any]]
     """Claim-to-test mapping:
     {claim_id, claim_text, supported_by, all_tests_pass, verdict}."""
+
+
+# ── Operator-decision audit (Step [16], closes GAP-A5) ──────────────────
+
+
+@dataclass
+class OperatorDecision:
+    """Schema for one row of the operator-decision audit log (Step [16]).
+
+    Promoted from the loose dict in module6_evaluation/module6_app.py to a
+    formal dataclass so audit-log consumers can rely on a fixed shape.
+    Required fields are positional; optional fields default sensibly.
+    """
+
+    alert_id: str
+    operator_role: str            # "IT_generalist" | "biomed_engineer" | "nurse_manager"
+    operator_action_taken: str    # free-form action label
+    decision_time_seconds: float
+    timestamp: str                # ISO 8601
+
+    alert_type: str = ""
+    recommended_action: str = ""
+    operator_confidence: Optional[int] = None     # 1-5 Likert
+    operator_rationale: str = ""
+
+    def validate(self) -> None:
+        """Raise ValueError on schema violations."""
+        for field in ("alert_id", "operator_role", "operator_action_taken",
+                      "timestamp"):
+            if not getattr(self, field):
+                raise ValueError(f"OperatorDecision.{field} must be non-empty")
+        if self.decision_time_seconds < 0:
+            raise ValueError("decision_time_seconds must be non-negative")
+        if self.operator_confidence is not None and not (
+            1 <= self.operator_confidence <= 5
+        ):
+            raise ValueError("operator_confidence must be in [1, 5] when present")

@@ -874,7 +874,7 @@ NLG_TEMPLATES = {
         "Components — detection confidence: {c_detect:.2f}, "
         "device criticality: {d_crit:.2f}, "
         "data sensitivity: {s_data:.2f}, "
-        "patient acuity: {a_patient:.2f}."
+        "patient acuity: {d_clinical_tier:.2f}."
     ),
     "acuity_note_normal": "Patient vitals are within normal ranges.",
     "acuity_note_abnormal": (
@@ -908,7 +908,7 @@ def generate_clinician_alert(
     consensus: str,
     risk_score: float = 0.0,
     risk_components: dict | None = None,
-    a_patient_val: float = 0.0,
+    d_clinical_tier_val: float = 0.0,
 ) -> str:
     """6-step NLG assembly for clinician-facing alert."""
     parts = []
@@ -945,8 +945,8 @@ def generate_clinician_alert(
         ))
 
     # Step 5: Patient acuity note
-    if a_patient_val > 0:
-        n_abnormal = int(round(a_patient_val * 8))
+    if d_clinical_tier_val > 0:
+        n_abnormal = int(round(d_clinical_tier_val * 8))
         parts.append(NLG_TEMPLATES["acuity_note_abnormal"].format(n_abnormal=n_abnormal))
     else:
         parts.append(NLG_TEMPLATES["acuity_note_normal"])
@@ -969,7 +969,7 @@ def route_explanation(
     consensus: str,
     risk_score: float,
     risk_components: dict,
-    a_patient_val: float,
+    d_clinical_tier_val: float,
     dae_top_features: list,
 ) -> dict:
     """Route alert to correct stakeholder view."""
@@ -979,7 +979,7 @@ def route_explanation(
             "format": "text",
             "content": generate_clinician_alert(
                 idx, sv_row, feat_names, severity, confidence, consensus,
-                risk_score, risk_components, a_patient_val,
+                risk_score, risk_components, d_clinical_tier_val,
             ),
         }
     elif stakeholder_role == "analyst":
@@ -1085,9 +1085,9 @@ def generate_example_explanations(
                 "c_detect": float(risk_data["c_detect"][idx]),
                 "d_crit": float(risk_data["d_crit"][idx]),
                 "s_data": float(risk_data["s_data"][idx]),
-                "a_patient": float(risk_data["a_patient"][idx]),
+                "d_clinical_tier": float(risk_data["d_clinical_tier"][idx]),
             }
-        a_pat = float(risk_data["a_patient"][idx]) if "a_patient" in risk_data else 0.0
+        a_pat = float(risk_data["d_clinical_tier"][idx]) if "d_clinical_tier" in risk_data else 0.0
 
         example = {
             "sample_index": int(idx),

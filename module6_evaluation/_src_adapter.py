@@ -40,4 +40,6 @@ def scored_from_eval_alert(alert_data: dict[str, Any]) -> ScoredAlert:
             "clinical_function": alert_data.get("affected_system", ""),
         },
         event_context=None,
+        fusion_class=alert_data.get("fusion_class"),
+        data_quality=alert_data.get("data_quality"),
     )

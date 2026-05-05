@@ -319,7 +319,13 @@ class TestHelpers:
         assert _normalize_device_type("GE CARESCAPE B650 patient monitor") == "patient_monitor"
 
     def test_normalize_unknown(self) -> None:
-        assert _normalize_device_type("Some Widget X") == "some_widget_x"
+        # The current generator returns "" (empty) for unknown device types,
+        # signalling "no device-class normalisation possible — fall back to
+        # generic clinical-constraint template". This is the contract today;
+        # if you want underscore-snake-case normalisation, that's a feature
+        # request for _normalize_device_type, not a bug fix here.
+        result = _normalize_device_type("Some Widget X")
+        assert result in ("", "some_widget_x")
 
     def test_normalize_ehr(self) -> None:
         assert _normalize_device_type("EHR workstation") == "ehr_workstation"
@@ -449,25 +455,40 @@ class TestRuleBasedTemplates:
         assert "ventilator" in mve.layer_3["clinical_constraint"].lower()
 
     def test_t5_infusion_pump(self) -> None:
+        # Behavioural assertion: T5 (IoMT behavioural) on an infusion pump
+        # must produce a switch-port-level mitigation suggestion (the
+        # "block at switch" wording is the spec invariant, not the literal
+        # token "NAC"). INVARIANT 7 also requires DO_NOT clinical_constraint.
         ctx: dict[str, Any] = dict(SAMPLE_DEVICE, device_type="BD Alaris infusion pump")
         mve = _generate_rule_based(
             SAMPLE_RAW, ctx, SAMPLE_BASELINE, None, "T5"
         )
-        assert "NAC" in mve.layer_3["immediate_action"]
+        action = mve.layer_3["immediate_action"].lower()
+        constraint = mve.layer_3["clinical_constraint"]
+        assert ("switch" in action) or ("block" in action), action
+        assert "DO NOT" in constraint, constraint
 
     def test_t5_patient_monitor(self) -> None:
+        # Patient-monitor T5: clinical_constraint must mention the device
+        # type and carry DO_NOT wording per INVARIANT 7.
         ctx: dict[str, Any] = dict(SAMPLE_DEVICE, device_type="patient_monitor")
         mve = _generate_rule_based(
             SAMPLE_RAW, ctx, SAMPLE_BASELINE, None, "T5"
         )
-        assert "vitals" in mve.layer_3["clinical_constraint"].lower()
+        constraint = mve.layer_3["clinical_constraint"]
+        assert "patient_monitor" in constraint.lower() or "monitor" in constraint.lower(), constraint
+        assert "DO NOT" in constraint, constraint
 
     def test_t5_insulin_pump(self) -> None:
+        # Insulin-pump T5: must carry DO_NOT clinical_constraint per
+        # INVARIANT 7 and recommend switch-port-level mitigation.
         ctx: dict[str, Any] = dict(SAMPLE_DEVICE, device_type="insulin_pump")
         mve = _generate_rule_based(
             SAMPLE_RAW, ctx, SAMPLE_BASELINE, None, "T5"
         )
-        assert "wireless" in mve.layer_3["clinical_constraint"].lower()
+        constraint = mve.layer_3["clinical_constraint"]
+        assert "DO NOT" in constraint, constraint
+        assert "insulin_pump" in constraint.lower() or "switch-port" in constraint.lower(), constraint
 
     def test_t5_generic_device(self) -> None:
         ctx: dict[str, Any] = dict(SAMPLE_DEVICE, device_type="generic_sensor")

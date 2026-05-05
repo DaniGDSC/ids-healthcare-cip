@@ -98,6 +98,79 @@ def _feature_to_narrative(feature_name: str) -> tuple:
     return _FEATURE_GROUPS.get(feature_name, (feature_name, "unknown"))
 
 
+# ── SHAP stability check (closes GAP-A3) ─────────────────────────────────
+
+# Bootstrap stability constants. Tuned to keep per-alert overhead within the
+# 150 ms latency budget when called only on MEDIUM+ severity alerts.
+STABILITY_N_SAMPLES: int = 10
+STABILITY_NOISE_SIGMA: float = 0.01
+STABILITY_K_TOP: int = 3
+STABILITY_LOW: float = 0.5  # operator-facing fragility threshold
+
+
+def compute_shap_stability(
+    explainer,
+    x,
+    n_samples: int = STABILITY_N_SAMPLES,
+    noise_sigma: float = STABILITY_NOISE_SIGMA,
+    k: int = STABILITY_K_TOP,
+    rng=None,
+) -> float:
+    """Bootstrap mean pairwise Jaccard similarity of top-k SHAP features.
+
+    For each of `n_samples` Gaussian-perturbed copies of the input vector
+    (σ = `noise_sigma`), recompute SHAP and take the top-`k` feature index
+    set. Return the mean pairwise Jaccard similarity across the original
+    plus all perturbed copies.
+
+    Args:
+        explainer: Object with a ``shap_values(X)`` method that returns
+            either an ndarray of shape (n_rows, n_features) or a list of
+            two such arrays (binary classifier; we use index 1).
+        x: 1-D feature vector of shape (n_features,) or (1, n_features).
+        n_samples: Number of perturbed copies (default 10 → 11 total).
+        noise_sigma: Std of Gaussian perturbation noise.
+        k: Top-k feature set size for the Jaccard metric.
+        rng: Optional ``numpy.random.Generator`` for determinism.
+
+    Returns:
+        Float in [0.0, 1.0]; 1.0 = top-k identical across all runs.
+    """
+    import numpy as _np
+
+    if rng is None:
+        rng = _np.random.default_rng(seed=42)
+
+    x_flat = _np.asarray(x, dtype=_np.float32).reshape(1, -1)
+    n_features = x_flat.shape[1]
+    perturbed = x_flat + rng.normal(
+        0.0, noise_sigma, size=(n_samples, n_features),
+    ).astype(_np.float32)
+    batch = _np.vstack([x_flat, perturbed])
+
+    sv = explainer.shap_values(batch)
+    if isinstance(sv, list):
+        sv = sv[1] if len(sv) > 1 else sv[0]
+    sv = _np.asarray(sv)
+
+    # Handle 3D (n_classes, n_rows, n_features) by picking class 1.
+    if sv.ndim == 3:
+        sv = sv[1] if sv.shape[0] > 1 else sv[0]
+
+    top_idx = _np.argsort(-_np.abs(sv), axis=1)[:, :k]
+    sets = [frozenset(row.tolist()) for row in top_idx]
+
+    n_pairs = 0
+    total = 0.0
+    for i in range(len(sets)):
+        for j in range(i + 1, len(sets)):
+            inter = len(sets[i] & sets[j])
+            union = len(sets[i] | sets[j])
+            total += (inter / union) if union else 1.0
+            n_pairs += 1
+    return round(total / n_pairs if n_pairs else 1.0, 4)
+
+
 CLINICIAN_TEMPLATES = {
     "CRITICAL": (
         "CRITICAL ALERT: The system detected a likely intrusion "

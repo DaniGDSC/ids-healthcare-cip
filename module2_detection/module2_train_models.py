@@ -15,6 +15,7 @@ Usage:
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
@@ -61,7 +62,15 @@ def load_data(label_col: str = "Label") -> tuple:
     train_df = pd.read_parquet(train_path)
     test_df = pd.read_parquet(test_path)
 
-    drop_cols = [c for c in [label_col, "Attack Category"] if c in train_df.columns]
+    # Non-feature columns introduced by GAP-PB-1 (row_id, device_class,
+    # attack_category) must be dropped from the feature matrix but preserved
+    # for downstream join. We drop them here; the predictions writer reads
+    # row_id back from the test parquet directly.
+    drop_cols = [
+        c for c in [label_col, "Attack Category", "row_id",
+                    "device_class", "attack_category"]
+        if c in train_df.columns
+    ]
 
     y_train = train_df[label_col].values
     y_test = test_df[label_col].values
@@ -243,17 +252,27 @@ def train_track_a(
             "train_samples": int(len(y_train)),
             "test_samples": int(len(y_test)),
             "train_attack_rate": round(float(y_train.mean()), 4),
+            "random_seed": int(RANDOM_STATE),
         },
         "elapsed_seconds": elapsed,
     }
     report_path = output_dir / f"{name}_final_report.json"
     report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
 
-    # Test predictions
-    np.savez(
-        output_dir / f"{name}_test_predictions.npz",
-        y_true=y_test, y_pred=y_pred_test, y_proba=y_proba_test,
-    )
+    # Test predictions — include row_id when available so downstream
+    # joins (per-device-class metrics, stratified-split materialiser) can
+    # match predictions back to test_phase1.parquet rows. row_id falls back
+    # to the positional index if the parquet schema doesn't yet carry it
+    # (graceful degradation; closes GAP-PB-1 once Module 1 emits row_id).
+    pred_kwargs = dict(y_true=y_test, y_pred=y_pred_test, y_proba=y_proba_test)
+    test_parquet_path = PROJECT_ROOT / "data/processed/test_phase1.parquet"
+    if test_parquet_path.exists():
+        try:
+            test_df = pd.read_parquet(test_parquet_path, columns=["row_id"])
+            pred_kwargs["row_id"] = test_df["row_id"].values
+        except (KeyError, ValueError):
+            pred_kwargs["row_id"] = np.arange(len(y_test), dtype=np.int64)
+    np.savez(output_dir / f"{name}_test_predictions.npz", **pred_kwargs)
 
     # OOF probabilities for cascaded DAE input
     oof_path = output_dir / f"{name}_oof_proba.npy"
@@ -400,6 +419,7 @@ def train_track_b_dae(
         "feature_names": aug_feat_names,
         "benign_train_samples": int(benign_mask.sum()),
         "test_samples": int(len(y_test)),
+        "random_seed": int(RANDOM_STATE),
     }
     report["elapsed_seconds"] = elapsed
 
@@ -426,9 +446,23 @@ def main() -> None:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    parser = argparse.ArgumentParser(
+        description="Train final Track A + Track B models with fixed best hyperparameters."
+    )
+    parser.add_argument(
+        "--seed", type=int, default=42,
+        help="Random seed for SMOTE, KFold, classifiers, and DAE init "
+             "(default: 42; persisted into every *_final_report.json)",
+    )
+    args = parser.parse_args()
+
+    global RANDOM_STATE
+    RANDOM_STATE = args.seed
+
     sep = "=" * 72
     logger.info(sep)
-    logger.info("FINAL MODEL TRAINING — FIXED BEST HYPERPARAMETERS")
+    logger.info("FINAL MODEL TRAINING — FIXED BEST HYPERPARAMETERS  (seed=%d)",
+                RANDOM_STATE)
     logger.info(sep)
 
     t0 = time.perf_counter()
