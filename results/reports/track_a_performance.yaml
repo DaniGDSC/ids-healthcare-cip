@@ -354,6 +354,40 @@ verification_runs:
       - "FNR_CRITICAL recomputed directly on materialised holdout (was projected; now measured)"
     result: "All XGBoost values fresh; all per-device values fresh; FNR_CRITICAL upgraded from projection (0.0619, n=14 rows) to direct measurement (0.0625, 16 attacks, 1 miss); CI tightened from [0.0099, 0.3025] to [0.0111, 0.2833]."
 
+  - run_date: "2026-05-06"
+    purpose: "GAP-L1-1 / GAP-L1-2 closure refresh — Module 1 re-run from raw with val_ratio=0.20, Track A retrained on the smaller train slice and val-set probas persisted for the cascaded DAE."
+    config_changes:
+      - "module1_preprocessing/phase1_config.yaml: splitting.val_ratio added (0.20 within trainval)"
+      - "module2_detection/module2_train_models.py::train_track_a now writes results/models/{xgboost,random_forest,decision_tree}_val_proba.npy"
+    split_sizes:
+      train: 9137
+      val: 2285
+      test: 4896
+      attack_rate_train: 0.1254
+      attack_rate_val: 0.1252
+      attack_rate_test: 0.1254
+    refreshed_metrics_on_test:
+      xgboost:       {attack_f1: 0.8810, attack_f2: 0.9227, auc_roc: 0.9923}
+      random_forest: {attack_f1: 0.7084, attack_f2: 0.7812, auc_roc: 0.9488}
+      decision_tree: {attack_f1: 0.7192, attack_f2: 0.7591, auc_roc: 0.8783}
+    artifacts_written:
+      - results/models/xgboost_val_proba.npy
+      - results/models/random_forest_val_proba.npy
+      - results/models/decision_tree_val_proba.npy
+      - data/processed/val_phase1.parquet         # n=2285
+      - data/processed/val_benign_phase1.parquet  # n=1999
+    test_results:
+      suite: tests/test_split_consistency.py
+      passed: 7
+      failed: 0
+    note: |
+      Track A point-in-time metrics in §1–§5 were authored on the
+      pre-L1-2 11422-row training set; the post-refresh test metrics are
+      within ~1 pp of the prior values (XGB F1 0.8977→0.8810, AUC
+      0.9924→0.9923) — the small drop reflects training on a 9137-row
+      slice instead of 11422 rows. Stratified-holdout numerics in §6
+      were not re-derived in this run.
+
 closure_runs:
   - fix_id: GAP-RP-1
     timestamp: "2026-05-05"

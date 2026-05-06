@@ -14315,12 +14315,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.204,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P26",
@@ -14382,12 +14387,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.142,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P26",
@@ -14467,12 +14477,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.238,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P24",
@@ -14480,12 +14495,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.228,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P25",
@@ -15069,12 +15089,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.057,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P18",
@@ -15208,12 +15233,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.19,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P18",
@@ -15635,12 +15665,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.081,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P28",
@@ -15702,12 +15737,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.253,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P20",
@@ -16111,12 +16151,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.071,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P28",
@@ -16142,12 +16187,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.093,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P27",
@@ -16155,12 +16205,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.292,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P21",
@@ -16744,12 +16799,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.175,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P29",
@@ -16775,12 +16835,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.068,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P20",
@@ -16788,12 +16853,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.037,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P22",
@@ -16837,12 +16907,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.089,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P29",
@@ -16940,12 +17015,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.014,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P21",
@@ -17097,12 +17177,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.158,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P30",
@@ -17380,12 +17465,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.132,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P21",
@@ -17393,12 +17483,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.005,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P30",
@@ -17424,12 +17519,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 0.913,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P21",
@@ -17473,12 +17573,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.133,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P21",
@@ -17486,12 +17591,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 0.982,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P29",
@@ -17499,12 +17609,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.109,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 199560, Requested 447. Please try again in 2ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P30",
@@ -17530,12 +17645,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.109,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P21",
@@ -17543,12 +17663,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.06,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P22",
@@ -17736,12 +17861,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.115,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P23",
@@ -18109,12 +18239,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.239,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 447. Please try again in 134ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P23",
@@ -18176,12 +18311,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
     "latency_s": 1.381,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P22",
@@ -18279,12 +18419,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.36,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P02",
@@ -18400,12 +18545,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.109,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P23",
@@ -18503,12 +18653,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.095,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P01",
@@ -18750,12 +18905,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.065,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P23",
@@ -18763,12 +18923,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 0.94,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P24",
@@ -18830,12 +18995,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.054,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P02",
@@ -18969,12 +19139,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.999,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P24",
@@ -19054,12 +19229,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.978,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P02",
@@ -19301,12 +19481,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 0.95,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P03",
@@ -19354,9 +19539,9 @@
       "action": "monitor",
       "severity_assessment": "HIGH",
       "confidence": 4,
-      "rationale": "The anomaly score indicates a significant potential threat; monitoring is essential for patient safety."
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
     },
-    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a significant potential threat; monitoring is essential for patient safety.\"\n}",
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.729,
     "prompt_tokens": 260,
     "completion_tokens": 47,
@@ -19368,12 +19553,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 0.997,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 214. Please try again in 64ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P25",
@@ -19687,12 +19877,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.062,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P26",
@@ -19772,12 +19967,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.991,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P24",
@@ -20199,12 +20399,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.012,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P04",
@@ -20248,12 +20453,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score is high and indicates a potential attack; further investigation is necessary to assess the threat.\"\n}",
     "latency_s": 1.009,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 251,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P26",
@@ -20297,12 +20507,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.046,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P04",
@@ -20328,12 +20543,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.034,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P25",
@@ -21011,9 +21231,9 @@
       "action": "isolate",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
     },
-    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.677,
     "prompt_tokens": 383,
     "completion_tokens": 52,
@@ -21097,12 +21317,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.082,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P05",
@@ -21146,12 +21371,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.998,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P06",
@@ -21231,12 +21461,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 0.998,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P27",
@@ -21550,12 +21785,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.108,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P05",
@@ -21563,12 +21803,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.019,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P28",
@@ -21594,12 +21839,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.108,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P06",
@@ -21715,12 +21965,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.09,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P27",
@@ -21782,12 +22037,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.971,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P06",
@@ -22173,12 +22433,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.982,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P06",
@@ -22186,12 +22451,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.936,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P07",
@@ -22253,12 +22523,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.094,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P06",
@@ -22266,12 +22541,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.015,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P29",
@@ -22513,12 +22793,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.108,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 199843, Requested 422. Please try again in 79ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P08",
@@ -22850,12 +23135,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 0.973,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P08",
@@ -23061,12 +23351,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and network logs."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and network logs.\"\n}",
     "latency_s": 1.054,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 50,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P30",
@@ -23092,12 +23387,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
     "latency_s": 1.055,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P07",
@@ -23105,12 +23405,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.043,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P07",
@@ -23118,12 +23423,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.025,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P09",
@@ -23239,12 +23549,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.113,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P30",
@@ -23702,12 +24017,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 0.984,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P31",
@@ -23751,12 +24071,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.06,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P31",
@@ -23890,12 +24215,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.095,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P32",
@@ -23921,12 +24251,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety.\"\n}",
     "latency_s": 1.172,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 50,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P08",
@@ -24402,12 +24737,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.076,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P32",
@@ -24487,12 +24827,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.015,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P10",
@@ -24684,12 +25029,12 @@
       "action": "isolate",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
     },
-    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
     "latency_s": 2.172,
     "prompt_tokens": 383,
-    "completion_tokens": 52,
+    "completion_tokens": 51,
     "error": null
   },
   {
@@ -25094,12 +25439,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The anomaly score indicates a potential attack, requiring close monitoring to ensure patient safety.\"\n}",
     "latency_s": 1.035,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 233. Please try again in 69ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 260,
+    "completion_tokens": 47,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P32",
@@ -25107,12 +25457,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.078,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P33",
@@ -25538,12 +25893,12 @@
       "action": "monitor",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals and ensure clinical backup while escalating to the ICU charge nurse."
     },
-    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and ensure clinical backup while escalating to the ICU charge nurse.\"\n}",
     "latency_s": 3.629,
     "prompt_tokens": 392,
-    "completion_tokens": 54,
+    "completion_tokens": 57,
     "error": null
   },
   {
@@ -25768,12 +26123,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.114,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P34",
@@ -25817,12 +26177,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.143,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P11",
@@ -25830,12 +26195,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.46,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P12",
@@ -26279,12 +26649,12 @@
       "action": "monitor",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
     },
-    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.607,
     "prompt_tokens": 392,
-    "completion_tokens": 52,
+    "completion_tokens": 54,
     "error": null
   },
   {
@@ -26545,12 +26915,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.087,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P35",
@@ -26576,12 +26951,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.054,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P34",
@@ -26679,12 +27059,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
     "latency_s": 1.165,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P35",
@@ -26732,12 +27117,12 @@
       "action": "monitor",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians."
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
     },
-    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.957,
     "prompt_tokens": 392,
-    "completion_tokens": 54,
+    "completion_tokens": 52,
     "error": null
   },
   {
@@ -27016,12 +27401,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
     "latency_s": 1.058,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 199693, Requested 422. Please try again in 34ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P36",
@@ -27065,12 +27455,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.141,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P36",
@@ -27204,12 +27599,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.886,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P14",
@@ -27289,12 +27689,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.067,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P13",
@@ -27302,12 +27707,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.089,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P13",
@@ -27369,12 +27779,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.122,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P36",
@@ -27940,12 +28355,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.098,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P36",
@@ -27953,12 +28373,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.07,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P15",
@@ -28002,12 +28427,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
     "latency_s": 1.092,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P16",
@@ -28289,12 +28719,12 @@
       "action": "isolate",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety."
     },
-    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety.\"\n}",
     "latency_s": 1.096,
     "prompt_tokens": 383,
-    "completion_tokens": 52,
+    "completion_tokens": 50,
     "error": null
   },
   {
@@ -28361,9 +28791,9 @@
       "action": "monitor",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians."
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
     },
-    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.678,
     "prompt_tokens": 392,
     "completion_tokens": 52,
@@ -28393,12 +28823,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.068,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P38",
@@ -28586,12 +29021,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.102,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P38",
@@ -28617,12 +29057,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.06,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P16",
@@ -28684,12 +29129,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.048,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P38",
@@ -29007,9 +29457,9 @@
       "action": "isolate",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
     },
-    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.418,
     "prompt_tokens": 383,
     "completion_tokens": 52,
@@ -29151,9 +29601,9 @@
       "action": "monitor",
       "severity_assessment": "CRITICAL",
       "confidence": 2,
-      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
     },
-    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.597,
     "prompt_tokens": 392,
     "completion_tokens": 52,
@@ -29201,12 +29651,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and data integrity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and data integrity.\"\n}",
     "latency_s": 1.448,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 50,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P16",
@@ -29214,12 +29669,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.069,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P16",
@@ -29587,12 +30047,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.138,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P17",
@@ -30014,12 +30479,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.139,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P40",
@@ -30063,12 +30533,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.204,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P39",
@@ -30076,12 +30551,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and network logs."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and network logs.\"\n}",
     "latency_s": 1.098,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 50,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P40",
@@ -30107,12 +30587,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.075,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 199609, Requested 422. Please try again in 9ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P39",
@@ -30120,12 +30605,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.104,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P17",
@@ -30133,12 +30623,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to the ICU charge nurse.\"\n}",
     "latency_s": 1.143,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 55,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P18",
@@ -30164,12 +30659,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.166,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P17",
@@ -30285,12 +30785,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.316,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P18",
@@ -30712,12 +31217,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.168,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P41",
@@ -30779,12 +31289,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.273,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P41",
@@ -30846,12 +31361,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.234,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P40",
@@ -30859,12 +31379,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.248,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P41",
@@ -30926,12 +31451,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.231,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P41",
@@ -31245,12 +31775,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.096,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P20",
@@ -31438,12 +31973,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.234,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P19",
@@ -31451,12 +31991,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.211,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P20",
@@ -31482,12 +32027,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
     "latency_s": 1.117,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 440. Please try again in 132ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "nurse_manager_P20",
@@ -32017,12 +32567,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.11,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P43",
@@ -32210,12 +32765,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians.\"\n}",
     "latency_s": 1.187,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P44",
@@ -32493,12 +33053,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.082,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P43",
@@ -32506,12 +33071,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.315,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P43",
@@ -32519,12 +33089,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.103,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P45",
@@ -32568,12 +33143,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.078,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P46",
@@ -32851,12 +33431,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety.\"\n}",
     "latency_s": 1.072,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 50,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P45",
@@ -32882,12 +33467,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and ensuring safety.\"\n}",
     "latency_s": 1.064,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 50,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P44",
@@ -32895,12 +33485,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.039,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P46",
@@ -33448,12 +34043,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
     "latency_s": 1.124,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P46",
@@ -33497,12 +34097,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
     "latency_s": 1.187,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P46",
@@ -33546,12 +34151,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.038,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P47",
@@ -33667,12 +34277,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.221,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P48",
@@ -33896,12 +34511,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.121,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P49",
@@ -33945,12 +34565,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.088,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P49",
@@ -34210,12 +34835,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.082,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P48",
@@ -34241,12 +34871,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.071,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P50",
@@ -34614,12 +35249,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.166,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P49",
@@ -34627,12 +35267,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.13,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P01",
@@ -34676,12 +35321,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.134,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P49",
@@ -34689,12 +35339,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.2,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P49",
@@ -34702,12 +35357,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.142,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P01",
@@ -34949,12 +35609,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.092,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P50",
@@ -34962,12 +35627,17 @@
     "condition": "B",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
     "latency_s": 1.062,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 422. Please try again in 126ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P49",
@@ -35029,12 +35699,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety.\"\n}",
     "latency_s": 1.009,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on tokens per min (TPM): Limit 200000, Used 200000, Requested 239. Please try again in 71ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 263,
+    "completion_tokens": 49,
+    "error": null
   },
   {
     "persona_id": "IT_generalist_P50",
@@ -35150,12 +35825,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety.\"\n}",
     "latency_s": 0.97,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 263,
+    "completion_tokens": 49,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P01",
@@ -35163,12 +35843,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety.\"\n}",
     "latency_s": 1.234,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 263,
+    "completion_tokens": 49,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P01",
@@ -35176,12 +35861,17 @@
     "condition": "A",
     "alert_id": "EVAL-3544",
     "correct_action": "isolate",
-    "response": null,
-    "raw_text": "",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 4,
+      "rationale": "The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 4,\n  \"rationale\": \"The high anomaly score and prediction of an attack warrant immediate investigation to ensure patient safety.\"\n}",
     "latency_s": 1.145,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "error": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for gpt-4o-mini in organization org-sDVnJ4gKmQ3N1dXu7GpZ2NXL on requests per min (RPM): Limit 500, Used 500, Requested 1. Please try again in 120ms. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'requests', 'param': None, 'code': 'rate_limit_exceeded'}}"
+    "prompt_tokens": 263,
+    "completion_tokens": 49,
+    "error": null
   },
   {
     "persona_id": "biomed_engineer_P01",

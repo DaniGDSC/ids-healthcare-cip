@@ -169,12 +169,39 @@ def load_test_data() -> tuple:
     return X_test, y_test, attack_cats, feat_names
 
 
-def load_xgboost_proba() -> tuple:
-    """Load XGBoost predict_proba and optimal threshold."""
-    preds = np.load(PROJECT_ROOT / "results/models/xgboost_test_predictions.npz")
-    with open(PROJECT_ROOT / "results/models/xgboost_final_report.json") as f:
+def load_xgboost_proba(*, prefer_calibrated: bool = True) -> tuple:
+    """Load XGBoost predict_proba and optimal threshold.
+
+    Pre-redesign Task 1: when ``prefer_calibrated`` is True (default) and
+    ``results/models/xgboost_test_proba_calibrated.npy`` exists (produced
+    by ``module2_detection/calibrate.py``), the calibrated probability
+    array is used in place of the raw one. The threshold value is
+    re-loaded from the same report — calibration corrects probabilities,
+    not the F2-tuned operating point. Falls back transparently to raw
+    when the calibrated file is absent.
+
+    Returns:
+        ``(y_proba, threshold)`` — both shapes match the original API.
+    """
+    models_dir = PROJECT_ROOT / "results/models"
+    cal_path = models_dir / "xgboost_test_proba_calibrated.npy"
+    raw_path = models_dir / "xgboost_test_predictions.npz"
+
+    if prefer_calibrated and cal_path.exists():
+        y_proba = np.load(cal_path)
+        source = "calibrated"
+    else:
+        y_proba = np.load(raw_path)["y_proba"]
+        source = "raw"
+
+    with open(models_dir / "xgboost_final_report.json") as f:
         threshold = json.load(f)["optimal_threshold"]
-    return preds["y_proba"], threshold
+
+    logging.getLogger(__name__).info(
+        "load_xgboost_proba: source=%s (n=%d, mean=%.4f)",
+        source, len(y_proba), float(y_proba.mean()),
+    )
+    return y_proba, threshold
 
 
 # ── Component computation ──────────────────────────────────────────────

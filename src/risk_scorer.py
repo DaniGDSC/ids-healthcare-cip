@@ -58,6 +58,54 @@ _THRESHOLD_MULT_BY_DEVICE: dict[tuple[str, bool], float] = {
 }
 _UNKNOWN_DEVICE_FALLBACK_MULT: float = 0.80   # conservative; matches spec
 
+
+# ── Enhancement 2: per-device Track A surfacing thresholds ──────────────
+# Applied at the Track A gate (P(attack) >= threshold → surface). These
+# are *absolute* values on the F2-tuned P(attack) scale where the global
+# baseline is 0.05. They are SEPARATE from _THRESHOLD_MULT_BY_DEVICE
+# (Module 3 risk-gate multipliers) because the two operate at different
+# stages and on different scales:
+#   - _THRESHOLD_MULT_BY_DEVICE  → Module 3 composite-risk gate
+#                                  (multiplier on DEFAULT_THRESHOLD = 0.50)
+#   - _TRACK_A_SURFACING_BY_DEVICE → Module 2 binary surfacing decision
+#                                  (absolute on P(attack) scale,
+#                                   baseline 0.05 from F2-tuning)
+#
+# Rationale: life-critical devices need lower P(attack) thresholds so
+# even mildly anomalous traffic surfaces; admin endpoints can tolerate
+# higher noise floors before triggering alert fatigue.
+_TRACK_A_SURFACING_BY_DEVICE: dict[str, float] = {
+    "infusion_pump":   0.03,   # life-sustaining, more sensitive
+    "ventilator":      0.03,   # life-sustaining
+    "patient_monitor": 0.05,   # F2-tuned baseline
+    "monitor":         0.05,
+    "imaging":         0.07,   # clinical-support, less time-critical
+    "ehr_workstation": 0.10,   # PHI but not life-critical → noise floor
+}
+_TRACK_A_SURFACING_DEFAULT: float = 0.05   # global F2-tuned baseline
+
+
+def get_track_a_surfacing_threshold(device_class: str | None) -> float:
+    """Return the Track A P(attack) surfacing threshold for a device class.
+
+    Used by Module 2's per-alert path to decide whether a row's
+    Track A probability is high enough to enter the cascade. Falls back
+    to ``_TRACK_A_SURFACING_DEFAULT`` (0.05 — the F2-tuned global
+    baseline) when ``device_class`` is None or not in the table.
+
+    Args:
+        device_class: e.g. "infusion_pump", "ventilator",
+            "patient_monitor", "imaging", "ehr_workstation". Case-sensitive.
+
+    Returns:
+        Float threshold in (0.0, 1.0).
+    """
+    if device_class is None:
+        return _TRACK_A_SURFACING_DEFAULT
+    return _TRACK_A_SURFACING_BY_DEVICE.get(
+        device_class, _TRACK_A_SURFACING_DEFAULT
+    )
+
 # Risk multipliers per (criticality, patchable).
 # CRITICAL + unpatchable: ≥1.5 required by spec.
 # LOW + patchable: 1.0 required by spec.

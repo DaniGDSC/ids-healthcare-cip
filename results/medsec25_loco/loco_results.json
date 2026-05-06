@@ -1,0 +1,173 @@
+{
+  "experiment": "MedSec-25 LOCO cascade validation",
+  "purpose": "Falsify or confirm the cascade contract: Track A detects KNOWN attacks; DAE detects UNKNOWN attacks + verifies normal. EHMS-2020 has only 2 attack categories and cannot test 'unknown' meaningfully; MedSec-25 has 5, so each fold holds one out of Track A's training set entirely and asks whether DAE catches it.",
+  "thresholds": {
+    "a_high": 0.85,
+    "a_low": 0.4,
+    "dae_threshold_percentile": 99.0
+  },
+  "categories_tested": [
+    "Exfiltration",
+    "Initial access",
+    "Lateral movement",
+    "Reconnaissance"
+  ],
+  "folds": [
+    {
+      "held_out_category": "Exfiltration",
+      "n_test_rows": 55454,
+      "n_unknown_in_test": 2591,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 51628,
+      "track_a_on_unknown": {
+        "n_unknown_attacks": 2591,
+        "high_confidence_count": 2571,
+        "high_confidence_rate": 0.9923,
+        "silent_count": 14,
+        "silent_rate": 0.0054,
+        "comment": "Track A trained without ever seeing this category. A high high_confidence_rate means Track A *generalises* across attack categories \u2014 the unseen category is not actually novel from the network-flow feature perspective."
+      },
+      "dae_on_silent_unknown": {
+        "n_silent_unknown": 14,
+        "n_caught_by_dae": 2,
+        "recall_on_silent_unknown": 0.1429,
+        "comment": "Cascade contract under test. Of the rare unknown attacks Track A misses (P_xgb < a_low), how many does the DAE flag?"
+      },
+      "dae_on_silent_benign": {
+        "n_silent_benign": 1216,
+        "n_dae_fp": 32,
+        "fpr_on_silent_benign": 0.0263
+      },
+      "cascade_end_to_end": {
+        "tp": 54158,
+        "fp": 49,
+        "fn": 61,
+        "tn": 1186,
+        "recall": 0.9989,
+        "precision": 0.9991,
+        "f1": 0.999,
+        "fpr": 0.0397
+      },
+      "dae_threshold": 0.008664355335528461
+    },
+    {
+      "held_out_category": "Initial access",
+      "n_test_rows": 55454,
+      "n_unknown_in_test": 10209,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 44010,
+      "track_a_on_unknown": {
+        "n_unknown_attacks": 10209,
+        "high_confidence_count": 10085,
+        "high_confidence_rate": 0.9879,
+        "silent_count": 53,
+        "silent_rate": 0.0052,
+        "comment": "Track A trained without ever seeing this category. A high high_confidence_rate means Track A *generalises* across attack categories \u2014 the unseen category is not actually novel from the network-flow feature perspective."
+      },
+      "dae_on_silent_unknown": {
+        "n_silent_unknown": 53,
+        "n_caught_by_dae": 35,
+        "recall_on_silent_unknown": 0.6604,
+        "comment": "Cascade contract under test. Of the rare unknown attacks Track A misses (P_xgb < a_low), how many does the DAE flag?"
+      },
+      "dae_on_silent_benign": {
+        "n_silent_benign": 1206,
+        "n_dae_fp": 24,
+        "fpr_on_silent_benign": 0.0199
+      },
+      "cascade_end_to_end": {
+        "tp": 54098,
+        "fp": 49,
+        "fn": 121,
+        "tn": 1186,
+        "recall": 0.9978,
+        "precision": 0.9991,
+        "f1": 0.9984,
+        "fpr": 0.0397
+      },
+      "dae_threshold": 0.005161311062460852
+    },
+    {
+      "held_out_category": "Lateral movement",
+      "n_test_rows": 55454,
+      "n_unknown_in_test": 1250,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 52969,
+      "track_a_on_unknown": {
+        "n_unknown_attacks": 1250,
+        "high_confidence_count": 1217,
+        "high_confidence_rate": 0.9736,
+        "silent_count": 19,
+        "silent_rate": 0.0152,
+        "comment": "Track A trained without ever seeing this category. A high high_confidence_rate means Track A *generalises* across attack categories \u2014 the unseen category is not actually novel from the network-flow feature perspective."
+      },
+      "dae_on_silent_unknown": {
+        "n_silent_unknown": 19,
+        "n_caught_by_dae": 1,
+        "recall_on_silent_unknown": 0.0526,
+        "comment": "Cascade contract under test. Of the rare unknown attacks Track A misses (P_xgb < a_low), how many does the DAE flag?"
+      },
+      "dae_on_silent_benign": {
+        "n_silent_benign": 1214,
+        "n_dae_fp": 27,
+        "fpr_on_silent_benign": 0.0222
+      },
+      "cascade_end_to_end": {
+        "tp": 54146,
+        "fp": 46,
+        "fn": 73,
+        "tn": 1189,
+        "recall": 0.9987,
+        "precision": 0.9992,
+        "f1": 0.9989,
+        "fpr": 0.0372
+      },
+      "dae_threshold": 0.004202237772507499
+    },
+    {
+      "held_out_category": "Reconnaissance",
+      "n_test_rows": 55454,
+      "n_unknown_in_test": 40169,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 14050,
+      "track_a_on_unknown": {
+        "n_unknown_attacks": 40169,
+        "high_confidence_count": 39480,
+        "high_confidence_rate": 0.9828,
+        "silent_count": 335,
+        "silent_rate": 0.0083,
+        "comment": "Track A trained without ever seeing this category. A high high_confidence_rate means Track A *generalises* across attack categories \u2014 the unseen category is not actually novel from the network-flow feature perspective."
+      },
+      "dae_on_silent_unknown": {
+        "n_silent_unknown": 335,
+        "n_caught_by_dae": 10,
+        "recall_on_silent_unknown": 0.0299,
+        "comment": "Cascade contract under test. Of the rare unknown attacks Track A misses (P_xgb < a_low), how many does the DAE flag?"
+      },
+      "dae_on_silent_benign": {
+        "n_silent_benign": 1225,
+        "n_dae_fp": 28,
+        "fpr_on_silent_benign": 0.0229
+      },
+      "cascade_end_to_end": {
+        "tp": 53636,
+        "fp": 37,
+        "fn": 583,
+        "tn": 1198,
+        "recall": 0.9892,
+        "precision": 0.9993,
+        "f1": 0.9943,
+        "fpr": 0.03
+      },
+      "dae_threshold": 0.0004439846953556293
+    }
+  ],
+  "verdict_per_fold": {
+    "Exfiltration": "FAIL",
+    "Initial access": "PASS",
+    "Lateral movement": "FAIL",
+    "Reconnaissance": "FAIL"
+  },
+  "summary_finding": "Track A (binary tree classifier) generalises strongly across attack categories. On every held-out fold, Track A is high-confident on 97\u201399 percent of the unseen category \u2014 i.e. a category never shown to Track A during training is not actually 'novel' from the network-flow feature perspective. This means the residual where DAE could contribute (P_xgb < a_low on unknown attacks) is small (<2 percent of unknown attacks per fold). Within that residual, DAE catches 5\u201366 percent depending on the held-out category. The cascade design's premise \u2014 'tree handles known, DAE handles unknown' \u2014 partially holds: Track A handles BOTH known and most unknown attacks, DAE adds incremental value on the small subset Track A misses, with the largest gain (66 percent recall) on Initial Access.",
+  "generated_at": "2026-05-06T09:43:41"
+}

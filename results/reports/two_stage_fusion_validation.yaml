@@ -293,6 +293,27 @@ verification_runs:
       remain divergent from spec — this is GAP-TS-2 and was already
       surfaced in the open-gaps section.
 
+  - run_date: "2026-05-06"
+    purpose: "GAP-L1-1 / GAP-L1-2 closure — full Module 1→2→3 cascade re-run with held-out validation slice and val-set probas feeding the DAE."
+    cascade_steps_executed:
+      - "python -m module1_preprocessing.phase1     # val_ratio=0.20"
+      - "python module2_detection/module2_train_models.py"
+      - "python module3_risk_scoring/module3_risk_scores.py"
+    cascade_status: PASS
+    test_results:
+      suite: tests/test_two_stage_fusion.py
+      passed: 9
+      failed: 0
+    note: |
+      Two-stage fusion contract is unchanged — the 9 named/invariant tests
+      validate the staging logic, not absolute thresholds, so they pass
+      regardless of the L1-1 input shift. Embedded calibration / holdout
+      / max-vs-two-stage numerics in §2–§5 were authored on the OOF-path
+      DAE; the current DAE is val-path (AUC 0.6835 vs 0.9128 OOF). A
+      re-derivation of those numerics on the post-L1-1 artifacts is open
+      and deferred — none of the fusion-logic acceptance criteria depend
+      on those numerics.
+
 # ── 7. Reproducibility ──────────────────────────────────────────────────
 
 reproducibility:

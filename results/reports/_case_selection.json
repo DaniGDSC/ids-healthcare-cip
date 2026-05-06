@@ -1,0 +1,82 @@
+[
+  {
+    "label": "CRITICAL_Spoofing",
+    "alert_id": "EVAL-3301",
+    "category": "Spoofing",
+    "risk_level": "CRITICAL",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "ground_truth": "attack",
+    "correct_action": "isolate"
+  },
+  {
+    "label": "CRITICAL_DataAlt",
+    "alert_id": "EVAL-3544",
+    "category": "Data Alteration",
+    "risk_level": "CRITICAL",
+    "device_class": "ventilator",
+    "device_criticality": "CRITICAL",
+    "ground_truth": "attack",
+    "correct_action": "isolate"
+  },
+  {
+    "label": "HIGH_Spoofing",
+    "alert_id": "EVAL-3407",
+    "category": "Spoofing",
+    "risk_level": "HIGH",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "ground_truth": "attack",
+    "correct_action": "isolate"
+  },
+  {
+    "label": "HIGH_DataAlt",
+    "alert_id": "EVAL-1185",
+    "category": "Data Alteration",
+    "risk_level": "HIGH",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "ground_truth": "attack",
+    "correct_action": "isolate"
+  },
+  {
+    "label": "MEDIUM_Mixed",
+    "alert_id": "EVAL-0227",
+    "category": "Spoofing",
+    "risk_level": "MEDIUM",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "ground_truth": "attack",
+    "correct_action": "investigate"
+  },
+  {
+    "label": "LOW_1",
+    "alert_id": "EVAL-4737",
+    "category": "Spoofing",
+    "risk_level": "LOW",
+    "device_class": "ventilator",
+    "device_criticality": "CRITICAL",
+    "ground_truth": "attack",
+    "correct_action": "monitor"
+  },
+  {
+    "label": "LOW_2_diff_device",
+    "alert_id": "EVAL-3171",
+    "category": "normal",
+    "risk_level": "LOW",
+    "device_class": "ehr_workstation",
+    "device_criticality": "HIGH",
+    "ground_truth": "benign",
+    "correct_action": "dismiss"
+  },
+  {
+    "label": "normal_TN",
+    "alert_id": "EVAL-1615",
+    "category": "normal",
+    "risk_level": "LOW",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "ground_truth": "benign",
+    "correct_action": "dismiss"
+  }
+]

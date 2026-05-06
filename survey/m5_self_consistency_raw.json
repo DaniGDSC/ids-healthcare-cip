@@ -1,0 +1,2702 @@
+[
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The infusion pump poses a critical risk to patient care; isolating it prevents potential harm while further investigation is coordinated."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The infusion pump poses a critical risk to patient care; isolating it prevents potential harm while further investigation is coordinated.\"\n}",
+    "prompt_tokens": 386,
+    "completion_tokens": 56,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could compromise patient safety; further investigation is needed to assess the risk and determine appropriate actions."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could compromise patient safety; further investigation is needed to assess the risk and determine appropriate actions.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Device is life-sustaining; immediate coordination with ICU charge nurse and security is essential to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Device is life-sustaining; immediate coordination with ICU charge nurse and security is essential to ensure patient safety.\"\n}",
+    "prompt_tokens": 399,
+    "completion_tokens": 56,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while escalating to the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while escalating to the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 365,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Anomalous communication could compromise patient safety; further investigation is needed to assess risk."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Anomalous communication could compromise patient safety; further investigation is needed to assess risk.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 49,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving EHR connectivity and ensuring patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving EHR connectivity and ensuring patient safety.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient safety.\"\n}",
+    "prompt_tokens": 377,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could compromise patient safety; further investigation is needed to assess the risk and ensure device integrity."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could compromise patient safety; further investigation is needed to assess the risk and ensure device integrity.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient care; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient care; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 398,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety.\"\n}",
+    "prompt_tokens": 377,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and coordinate with the ICU charge nurse before any action."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and coordinate with the ICU charge nurse before any action.\"\n}",
+    "prompt_tokens": 396,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient data access is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient data access is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams.\"\n}",
+    "prompt_tokens": 374,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the ventilator and patient vitals while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the ventilator and patient vitals while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 56,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Device is critical for patient care; need to confirm its status before any isolation or action."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Device is critical for patient care; need to confirm its status before any isolation or action.\"\n}",
+    "prompt_tokens": 387,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential medication dosage alteration; monitoring is essential while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential medication dosage alteration; monitoring is essential while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 55,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 49,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P17",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient care is at risk due to disrupted clinical documentation; monitoring is essential while awaiting further action."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient care is at risk due to disrupted clinical documentation; monitoring is essential while awaiting further action.\"\n}",
+    "prompt_tokens": 374,
+    "completion_tokens": 50,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Anomalous communication could compromise patient safety; further investigation is needed to assess risk."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Anomalous communication could compromise patient safety; further investigation is needed to assess risk.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 49,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 365,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The infusion pump poses a critical risk to patient care; isolating it prevents potential harm while further investigation is coordinated."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The infusion pump poses a critical risk to patient care; isolating it prevents potential harm while further investigation is coordinated.\"\n}",
+    "prompt_tokens": 386,
+    "completion_tokens": 56,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 365,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Device is life-sustaining; immediate coordination with ICU charge nurse and security is essential to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Device is life-sustaining; immediate coordination with ICU charge nurse and security is essential to ensure patient safety.\"\n}",
+    "prompt_tokens": 399,
+    "completion_tokens": 56,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Anomalous communication could lead to false readings; need to verify device integrity and ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Anomalous communication could lead to false readings; need to verify device integrity and ensure patient safety.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and EHR connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety.\"\n}",
+    "prompt_tokens": 377,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could compromise patient safety; further investigation is needed to assess the risk and determine appropriate actions."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could compromise patient safety; further investigation is needed to assess the risk and determine appropriate actions.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient care; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient care; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 398,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P13",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety.\"\n}",
+    "prompt_tokens": 377,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P27",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving EHR connectivity and ensuring patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving EHR connectivity and ensuring patient safety.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical traffic while mitigating potential risks to patient data."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical traffic while mitigating potential risks to patient data.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 49,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Device is critical for patient care; need to confirm its status before any isolation or action."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Device is critical for patient care; need to confirm its status before any isolation or action.\"\n}",
+    "prompt_tokens": 387,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 365,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P18",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The infusion pump poses a critical risk to patient care; isolating it prevents potential harm while further investigation is coordinated."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The infusion pump poses a critical risk to patient care; isolating it prevents potential harm while further investigation is coordinated.\"\n}",
+    "prompt_tokens": 386,
+    "completion_tokens": 56,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 365,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; monitoring is essential while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; monitoring is essential while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 396,
+    "completion_tokens": 49,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient data access is at risk; monitoring is essential to ensure patient safety while awaiting further action."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient data access is at risk; monitoring is essential to ensure patient safety while awaiting further action.\"\n}",
+    "prompt_tokens": 374,
+    "completion_tokens": 50,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential medication dosage alteration; monitoring is essential while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential medication dosage alteration; monitoring is essential while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 55,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient data access is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient data access is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams.\"\n}",
+    "prompt_tokens": 374,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P28",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Isolating the device prevents potential compromise while preserving critical patient care and coordinating with clinical staff.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could lead to false readings, risking patient safety. Immediate investigation is necessary to assess the situation.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Device is life-sustaining; immediate coordination with ICU charge nurse and security is essential to ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Device is life-sustaining; immediate coordination with ICU charge nurse and security is essential to ensure patient safety.\"\n}",
+    "prompt_tokens": 399,
+    "completion_tokens": 56,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Anomalous communication could compromise patient safety; further investigation is needed to assess risk and ensure device integrity."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Anomalous communication could compromise patient safety; further investigation is needed to assess risk and ensure device integrity.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Anomalous communication could lead to false readings; need to verify device integrity and ensure patient safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Anomalous communication could lead to false readings; need to verify device integrity and ensure patient safety.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P11",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety.\"\n}",
+    "prompt_tokens": 377,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Anomalous communication could compromise patient safety; further investigation is needed to assess the risk."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Anomalous communication could compromise patient safety; further investigation is needed to assess the risk.\"\n}",
+    "prompt_tokens": 385,
+    "completion_tokens": 50,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly could disrupt clinical operations and expose PHI, requiring immediate assessment to ensure patient data safety.\"\n}",
+    "prompt_tokens": 377,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and coordinate with the ICU charge nurse before any action."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and coordinate with the ICU charge nurse before any action.\"\n}",
+    "prompt_tokens": 396,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient care; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient care; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 398,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3301",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient vitals closely while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 54,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3407",
+    "response": {
+      "action": "investigate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Device is critical for patient care; need to confirm its status before any isolation or action."
+    },
+    "raw_text": "{\n  \"action\": \"investigate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Device is critical for patient care; need to confirm its status before any isolation or action.\"\n}",
+    "prompt_tokens": 387,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient data access is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient data access is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams.\"\n}",
+    "prompt_tokens": 374,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1615",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential false readings; monitoring is essential while escalating to clinical staff.\"\n}",
+    "prompt_tokens": 382,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-1185",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-0227",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 373,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-0415",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk due to potential medication dosage alteration; monitoring is essential while coordinating with the ICU charge nurse."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk due to potential medication dosage alteration; monitoring is essential while coordinating with the ICU charge nurse.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 55,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-3171",
+    "response": {
+      "action": "restrict",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks."
+    },
+    "raw_text": "{\n  \"action\": \"restrict\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Restricting the unknown outbound protocol preserves clinical operations while mitigating potential risks.\"\n}",
+    "prompt_tokens": 365,
+    "completion_tokens": 46,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-1168",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "HIGH",
+      "confidence": 2,
+      "rationale": "Patient care is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"HIGH\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient care is at risk; monitoring ensures patient safety while awaiting further action from IT and clinical teams.\"\n}",
+    "prompt_tokens": 374,
+    "completion_tokens": 51,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor the patient and verify clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "IT_generalist_P26",
+    "role": "IT_generalist",
+    "alert_id": "EVAL-4737",
+    "response": {
+      "action": "isolate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity."
+    },
+    "raw_text": "{\n  \"action\": \"isolate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The ventilator is critical for patient care; isolating it prevents potential compromise while preserving connectivity.\"\n}",
+    "prompt_tokens": 383,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "nurse_manager_P12",
+    "role": "nurse_manager",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "monitor",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians."
+    },
+    "raw_text": "{\n  \"action\": \"monitor\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"Patient safety is at risk; I will monitor vitals and ensure clinical backup while escalating to clinicians.\"\n}",
+    "prompt_tokens": 392,
+    "completion_tokens": 52,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  },
+  {
+    "persona_id": "biomed_engineer_P16",
+    "role": "biomed_engineer",
+    "alert_id": "EVAL-3544",
+    "response": {
+      "action": "escalate",
+      "severity_assessment": "CRITICAL",
+      "confidence": 2,
+      "rationale": "The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential."
+    },
+    "raw_text": "{\n  \"action\": \"escalate\",\n  \"severity_assessment\": \"CRITICAL\",\n  \"confidence\": 2,\n  \"rationale\": \"The anomaly poses a critical risk to patient safety; immediate coordination with ICU and security is essential.\"\n}",
+    "prompt_tokens": 395,
+    "completion_tokens": 53,
+    "error": null
+  }
+]

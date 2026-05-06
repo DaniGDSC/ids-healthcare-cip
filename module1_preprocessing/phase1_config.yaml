@@ -85,10 +85,12 @@ correlation_removal:
 
 # ══════════════════ LEAKAGE BARRIER ══════════════════════════════════════
 
-# ── Step 5a: Train–Test Split ────────────────────────────────────────────
+# ── Step 5a: Train–Val–Test Split ────────────────────────────────────────
 splitting:
   train_ratio: 0.70
   test_ratio: 0.30
+  val_ratio: 0.20         # GAP-L1-2: carve held-out val off train (~14% global)
+                          # Closes train-inference skew in DAE cascade input.
   stratify: true          # stratified on Attack Category
   random_state: 42
 

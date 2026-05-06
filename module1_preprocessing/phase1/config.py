@@ -94,6 +94,8 @@ class Phase1Config(BaseModel):
     # Step 5a: Split
     train_ratio: float = 0.70
     test_ratio: float = 0.30
+    val_ratio: float = 0.0  # >0 carves a held-out validation slice off train
+                            # (closes GAP-L1-2; required for val-set probas)
     random_state: int = 42
     stratify: bool = True
 
@@ -115,7 +117,9 @@ class Phase1Config(BaseModel):
     # Output filenames
     train_parquet: str = "train_phase1.parquet"
     test_parquet: str = "test_phase1.parquet"
+    val_parquet: str = "val_phase1.parquet"  # written when val_ratio > 0
     train_benign_parquet: str = "train_benign_phase1.parquet"
+    val_benign_parquet: str = "val_benign_phase1.parquet"  # written when val_ratio > 0
     scaler_file: str = "robust_scaler.json"
     encoder_file: str = "categorical_encoder.json"
     report_file: str = "preprocessing_report.json"
@@ -273,6 +277,7 @@ class Phase1Config(BaseModel):
             variance_max_unique=var.get("max_unique", 1),
             train_ratio=split.get("train_ratio", 0.70),
             test_ratio=split.get("test_ratio", 0.30),
+            val_ratio=split.get("val_ratio", 0.0),
             random_state=split.get("random_state", 42),
             stratify=split.get("stratify", True),
             scaling_method=norm.get("method", "robust"),
@@ -282,7 +287,9 @@ class Phase1Config(BaseModel):
             track_b_enabled=track_b.get("enabled", True),
             train_parquet=output.get("train_parquet", "train_phase1.parquet"),
             test_parquet=output.get("test_parquet", "test_phase1.parquet"),
+            val_parquet=output.get("val_parquet", "val_phase1.parquet"),
             train_benign_parquet=output.get("train_benign_parquet", "train_benign_phase1.parquet"),
+            val_benign_parquet=output.get("val_benign_parquet", "val_benign_phase1.parquet"),
             scaler_file=output.get("scaler_file", "robust_scaler.json"),
             encoder_file=output.get("encoder_file", "categorical_encoder.json"),
             report_file=output.get("report_file", "preprocessing_report.json"),

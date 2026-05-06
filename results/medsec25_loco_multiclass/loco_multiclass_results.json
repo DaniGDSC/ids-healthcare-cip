@@ -1,0 +1,239 @@
+{
+  "experiment": "MedSec-25 LOCO cascade validation (MULTI-CLASS Track A)",
+  "purpose": "Verify the cascade contract \u2014 trees are specific-pattern matchers; novel-category attacks produce spread softmax \u2192 DAE checks. Compares directly to the binary LOCO experiment (results/medsec25_loco/loco_results.yaml).",
+  "thresholds": {
+    "a_high": 0.85,
+    "dae_threshold_percentile": 99.0
+  },
+  "categories_tested": [
+    "Exfiltration",
+    "Initial access",
+    "Lateral movement",
+    "Reconnaissance"
+  ],
+  "folds": [
+    {
+      "held_out_category": "Exfiltration",
+      "label_order_in_fold": [
+        "Benign",
+        "Initial access",
+        "Lateral movement",
+        "Reconnaissance"
+      ],
+      "n_train_rows_used": 380605,
+      "n_unknown_in_test": 2591,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 51628,
+      "track_a_on_unknown": {
+        "high_confidence_count": 1813,
+        "high_confidence_rate": 0.6997,
+        "uncertain_count": 778,
+        "uncertain_rate": 0.3003,
+        "high_conf_top_class_distribution": {
+          "Lateral movement": 1542,
+          "Reconnaissance": 261,
+          "Benign": 9,
+          "Initial access": 1
+        },
+        "comment": "Multi-class Track A is supposed to be UNCERTAIN on the held-out category (since it's a class never seen). Higher uncertain_rate = better cascade-contract behaviour. Compare to the BINARY LOCO baseline: <2% uncertain_rate."
+      },
+      "dae_on_uncertain_unknown": {
+        "n_uncertain_unknown": 778,
+        "n_caught_by_dae": 775,
+        "recall_on_uncertain_unknown": 0.9961,
+        "comment": "Of the unknown attacks Track A correctly flagged as uncertain, how many does DAE recover? This is the cascade-contract completion metric \u2014 Track A passed the buck, DAE either catches them or doesn't."
+      },
+      "dae_on_uncertain_benign": {
+        "n_uncertain_benign": 12,
+        "n_dae_fp": 4,
+        "fpr_on_uncertain_benign": 0.3333
+      },
+      "cascade_end_to_end": {
+        "tp": 54164,
+        "fp": 39,
+        "fn": 55,
+        "tn": 1196,
+        "recall": 0.999,
+        "precision": 0.9993,
+        "f1": 0.9991,
+        "fpr": 0.0316
+      },
+      "fusion_class_distribution": {
+        "KNOWN_ATTACK": 52679,
+        "CONFIRMED_ANOMALY": 1470,
+        "BENIGN": 1251,
+        "NOVEL_ANOMALY": 54
+      },
+      "dae_threshold": 0.0063465620184581795
+    },
+    {
+      "held_out_category": "Initial access",
+      "label_order_in_fold": [
+        "Benign",
+        "Exfiltration",
+        "Lateral movement",
+        "Reconnaissance"
+      ],
+      "n_train_rows_used": 325759,
+      "n_unknown_in_test": 10209,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 44010,
+      "track_a_on_unknown": {
+        "high_confidence_count": 1996,
+        "high_confidence_rate": 0.1955,
+        "uncertain_count": 8213,
+        "uncertain_rate": 0.8045,
+        "high_conf_top_class_distribution": {
+          "Lateral movement": 1833,
+          "Exfiltration": 153,
+          "Benign": 9,
+          "Reconnaissance": 1
+        },
+        "comment": "Multi-class Track A is supposed to be UNCERTAIN on the held-out category (since it's a class never seen). Higher uncertain_rate = better cascade-contract behaviour. Compare to the BINARY LOCO baseline: <2% uncertain_rate."
+      },
+      "dae_on_uncertain_unknown": {
+        "n_uncertain_unknown": 8213,
+        "n_caught_by_dae": 7798,
+        "recall_on_uncertain_unknown": 0.9495,
+        "comment": "Of the unknown attacks Track A correctly flagged as uncertain, how many does DAE recover? This is the cascade-contract completion metric \u2014 Track A passed the buck, DAE either catches them or doesn't."
+      },
+      "dae_on_uncertain_benign": {
+        "n_uncertain_benign": 21,
+        "n_dae_fp": 0,
+        "fpr_on_uncertain_benign": 0.0
+      },
+      "cascade_end_to_end": {
+        "tp": 53702,
+        "fp": 25,
+        "fn": 517,
+        "tn": 1210,
+        "recall": 0.9905,
+        "precision": 0.9995,
+        "f1": 0.995,
+        "fpr": 0.0202
+      },
+      "fusion_class_distribution": {
+        "KNOWN_ATTACK": 44888,
+        "CONFIRMED_ANOMALY": 8306,
+        "BENIGN": 1727,
+        "NOVEL_ANOMALY": 533
+      },
+      "dae_threshold": 0.004478555959505689
+    },
+    {
+      "held_out_category": "Lateral movement",
+      "label_order_in_fold": [
+        "Benign",
+        "Exfiltration",
+        "Initial access",
+        "Reconnaissance"
+      ],
+      "n_train_rows_used": 390265,
+      "n_unknown_in_test": 1250,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 52969,
+      "track_a_on_unknown": {
+        "high_confidence_count": 936,
+        "high_confidence_rate": 0.7488,
+        "uncertain_count": 314,
+        "uncertain_rate": 0.2512,
+        "high_conf_top_class_distribution": {
+          "Reconnaissance": 583,
+          "Exfiltration": 342,
+          "Benign": 7,
+          "Initial access": 4
+        },
+        "comment": "Multi-class Track A is supposed to be UNCERTAIN on the held-out category (since it's a class never seen). Higher uncertain_rate = better cascade-contract behaviour. Compare to the BINARY LOCO baseline: <2% uncertain_rate."
+      },
+      "dae_on_uncertain_unknown": {
+        "n_uncertain_unknown": 314,
+        "n_caught_by_dae": 304,
+        "recall_on_uncertain_unknown": 0.9682,
+        "comment": "Of the unknown attacks Track A correctly flagged as uncertain, how many does DAE recover? This is the cascade-contract completion metric \u2014 Track A passed the buck, DAE either catches them or doesn't."
+      },
+      "dae_on_uncertain_benign": {
+        "n_uncertain_benign": 14,
+        "n_dae_fp": 6,
+        "fpr_on_uncertain_benign": 0.4286
+      },
+      "cascade_end_to_end": {
+        "tp": 54160,
+        "fp": 35,
+        "fn": 59,
+        "tn": 1200,
+        "recall": 0.9989,
+        "precision": 0.9994,
+        "f1": 0.9991,
+        "fpr": 0.0283
+      },
+      "fusion_class_distribution": {
+        "KNOWN_ATTACK": 53421,
+        "BENIGN": 1259,
+        "CONFIRMED_ANOMALY": 717,
+        "NOVEL_ANOMALY": 57
+      },
+      "dae_threshold": 0.010953808212884495
+    },
+    {
+      "held_out_category": "Reconnaissance",
+      "label_order_in_fold": [
+        "Benign",
+        "Exfiltration",
+        "Initial access",
+        "Lateral movement"
+      ],
+      "n_train_rows_used": 110053,
+      "n_unknown_in_test": 40169,
+      "n_benign_in_test": 1235,
+      "n_known_attack_in_test": 14050,
+      "track_a_on_unknown": {
+        "high_confidence_count": 28710,
+        "high_confidence_rate": 0.7147,
+        "uncertain_count": 11459,
+        "uncertain_rate": 0.2853,
+        "high_conf_top_class_distribution": {
+          "Initial access": 25629,
+          "Lateral movement": 2739,
+          "Exfiltration": 288,
+          "Benign": 54
+        },
+        "comment": "Multi-class Track A is supposed to be UNCERTAIN on the held-out category (since it's a class never seen). Higher uncertain_rate = better cascade-contract behaviour. Compare to the BINARY LOCO baseline: <2% uncertain_rate."
+      },
+      "dae_on_uncertain_unknown": {
+        "n_uncertain_unknown": 11459,
+        "n_caught_by_dae": 11219,
+        "recall_on_uncertain_unknown": 0.9791,
+        "comment": "Of the unknown attacks Track A correctly flagged as uncertain, how many does DAE recover? This is the cascade-contract completion metric \u2014 Track A passed the buck, DAE either catches them or doesn't."
+      },
+      "dae_on_uncertain_benign": {
+        "n_uncertain_benign": 19,
+        "n_dae_fp": 5,
+        "fpr_on_uncertain_benign": 0.2632
+      },
+      "cascade_end_to_end": {
+        "tp": 53920,
+        "fp": 39,
+        "fn": 299,
+        "tn": 1196,
+        "recall": 0.9945,
+        "precision": 0.9993,
+        "f1": 0.9969,
+        "fpr": 0.0316
+      },
+      "fusion_class_distribution": {
+        "KNOWN_ATTACK": 42337,
+        "CONFIRMED_ANOMALY": 11281,
+        "BENIGN": 1495,
+        "NOVEL_ANOMALY": 341
+      },
+      "dae_threshold": 0.0071665574841615785
+    }
+  ],
+  "verdict_per_fold": {
+    "Exfiltration": "FAIL",
+    "Initial access": "PASS",
+    "Lateral movement": "FAIL",
+    "Reconnaissance": "FAIL"
+  },
+  "elapsed_seconds": 1379.4
+}

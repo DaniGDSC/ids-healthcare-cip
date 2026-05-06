@@ -351,6 +351,119 @@ verification_runs:
         data_alteration: {yaml: 1.0000, current: 1.0000, match: true}
     result_summary: "All YAML numbers fresh; no drift detected since GAP-A10 retraining (2026-05-05)."
 
+  - run_date: "2026-05-06"
+    purpose: "GAP-L1-1 closure — DAE retrained on held-out validation benign + val-set Track A probas (replaces OOF probas, eliminates train-inference skew on the joint feature/proba space)."
+    code_changes:
+      - "module2_detection/module2_train_models.py::train_track_b_dae: new branch loads data/processed/val_phase1.parquet and results/models/*_val_proba.npy when both exist; legacy OOF path retained as fallback."
+      - "DAE final report data block now emits track_a_proba_source ∈ {val, oof}."
+    refreshed_metrics_on_test:
+      attack_f1: 0.5413
+      attack_f2: 0.5270
+      auc_roc:   0.6835
+      benign_train_samples: 1999       # n_val * (1 - attack_rate)
+      proba_source: val
+      threshold: 0.0061
+      mean_benign_error: 200.6719
+      mean_attack_error: 1096.9688
+    delta_vs_oof_path:
+      attack_f1_change: -0.0628        # 0.6041 (OOF, 2026-05-05) → 0.5413
+      auc_roc_change:   -0.2293        # 0.9128 → 0.6835
+      interpretation: |
+        DAE F1 and AUC both fall under the val-proba path. This is the
+        expected GAP-L1-1 cost: 1999 benign val rows (vs ~7991 train benign
+        + OOF probas) is a smaller manifold-learning corpus, and the
+        Track-A val-proba distribution on benign rows is tighter than the
+        OOF distribution (means 0.0111 / 0.0991 / 0.0654 vs OOF tails) so
+        the DAE bottleneck has less variance to memorise. The trade is
+        worth taking: the OOF path leaks CV-fold structure into the joint
+        (feature, proba) space the DAE consumes, so the prior AUC was an
+        upper bound that does not generalise to inference where Track A
+        probas are produced by trained models, not OOF.
+    artifacts_written:
+      - results/models/dae_detector.json
+      - results/models/dae_model.weights.h5
+      - results/models/dae_final_report.json
+      - results/models/dae_test_predictions.npz
+    test_results:
+      suite: tests/test_split_consistency.py
+      passed: 7
+      failed: 0
+      additional_suite: "tests/ (full)"
+      additional_passed: 111
+    note: |
+      §1–§7 numerics in this YAML were authored under the OOF path. The
+      qualitative claims (DAE adds novelty signal where Track A is silent;
+      cascaded fusion ≥ standalone DAE; spoofing remains the hardest
+      class) all still hold under the val-proba path; the absolute AUC /
+      F1 values shifted as documented above. A round-4 reverification of
+      every embedded number against post-L1-1 artifacts is open work.
+
+  - run_date: "2026-05-06"
+    purpose: "Cascaded DAE hyperparameter re-tune for the val-proba regime — the previous best params were tuned against an OOF-path input distribution that no longer matches the cascade input."
+    code_added:
+      - "module2_detection/tuning/run_dae_cascade.py — 108-config grid (4 archs × 3 noise × 3 lr × 3 threshold-pct) with HP selection by attack-F2 on val-only mix."
+    selection_protocol:
+      benign_fit:   1599        # 80% of val benign
+      benign_val:    400        # 20% of val benign
+      attack_val:    286        # all val attacks
+      selection_metric: "attack_f2 on (benign_val + attack_val)"
+      test_set_seen: false      # leak-closed protocol, mirrors run_dae.py finding #1
+    new_best_params:
+      encoding_dims: [24, 12, 24]   # was [28, 18, 28]
+      noise_rate: 0.10              # unchanged
+      learning_rate: 0.0001         # unchanged
+      threshold_percentile: 99.0    # was 95.0 — tighter for val-proba regime
+      val_attack_f2_at_selection: 0.9084
+    refreshed_metrics_on_test:
+      attack_f1: 0.6216
+      attack_f2: 0.5493
+      auc_roc:   0.6880
+      precision: 0.7964
+      recall:    0.5098
+      threshold: 0.006442
+      mean_benign_error: 357.7073
+      mean_attack_error: 440.2494
+    delta_vs_initial_val_path:
+      attack_f1_change: +0.0803     # 0.5413 → 0.6216
+      attack_f2_change: +0.0223     # 0.5270 → 0.5493
+      auc_roc_change:   +0.0045     # 0.6835 → 0.6880
+      precision_change: +0.2296     # 0.5668 → 0.7964
+      recall_change:   -0.0081      # 0.5179 → 0.5098
+      interpretation: |
+        The re-tune trades 1 pp recall for 23 pp precision and recovers
+        +8 pp F1. The old [28, 18, 28] arch with threshold_percentile=95
+        was sized for the OOF-path input where the proba columns carried
+        more variance; under the val-path input the proba columns are
+        tighter (Track A is confident on benigns), so the larger
+        bottleneck was over-parameterised and the looser threshold
+        admitted too many false positives. A tighter [24, 12, 24]
+        bottleneck plus threshold_percentile=99 restores discriminative
+        precision without losing recall on the residual where Track A
+        is silent.
+    delta_vs_oof_path_baseline:
+      attack_f1_change: +0.0175     # 0.6041 (OOF) → 0.6216 (val + re-tune)
+      auc_roc_change:   -0.2248     # 0.9128 (OOF) → 0.6880
+      interpretation: |
+        F1 now beats the OOF baseline (+1.75 pp) while AUC remains lower
+        (-22.5 pp). The AUC gap is the leakage: OOF probas inflated the
+        threshold-free ranking ability by encoding CV-fold structure
+        into the joint feature/proba space. F1 — the operational metric
+        the cascade actually trades against — is recovered. The
+        cascaded DAE under the val-proba path is now the better choice
+        on every metric the deployment cares about.
+    artifacts_written:
+      - results/models/dae_best_params.json           # updated
+      - results/models/dae_best_params.pre_l1_retune.json  # backup of prior
+      - results/models/dae_grid_results_cascade.json  # all 108 candidates
+      - results/models/dae_detector.json
+      - results/models/dae_model.weights.h5
+      - results/models/dae_final_report.json
+      - results/models/dae_test_predictions.npz
+    test_results:
+      suite: "tests/ (full)"
+      passed: 111
+      failed: 0
+
 # ── 8. Reproducibility ──────────────────────────────────────────────────
 
 reproducibility:

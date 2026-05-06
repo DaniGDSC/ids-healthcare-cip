@@ -343,6 +343,32 @@ reproducibility:
   test_runner: "python -m pytest tests/test_safe_failure.py -v"
   expected_safety_floor_tests_pass: 7
 
+# ── 8b. Verification runs ───────────────────────────────────────────────
+
+verification_runs:
+  - run_date: "2026-05-06"
+    purpose: "GAP-L1-1 / GAP-L1-2 closure — full Module 1→2→3 cascade re-run with val_ratio=0.20."
+    cascade_steps_executed:
+      - "python scripts/run_phase0.py                # produces results/phase0_analysis/"
+      - "python -m module1_preprocessing.phase1     # 16318 → train=9137 / val=2285 / test=4896"
+      - "python module2_detection/module2_train_models.py  # GAP-L1-1 path active (proba_source=val)"
+      - "python module3_risk_scoring/module3_risk_scores.py  # results/reports/risk_*"
+    cascade_status: PASS
+    test_results:
+      suite: tests/test_safe_failure.py
+      passed: 7
+      failed: 0
+      additional_suite: "tests/ (full)"
+      additional_passed: 111
+    note: |
+      Adaptive-gate logic is unchanged. The point-in-time numerics in
+      §1–§6 were authored on the pre-L1-2 artifact set; the gate
+      thresholds, per-device multipliers, and safety-floor invariants
+      are identical post-refresh. A redrive of the embedded numerics on
+      post-L1-1 artifacts (e.g. updated per-device FNR table from
+      results/reports/per_device_metrics.json) is open work — none of
+      the safety-floor acceptance criteria depend on it.
+
 # ── 9. Open follow-ups ──────────────────────────────────────────────────
 
 open_gaps:

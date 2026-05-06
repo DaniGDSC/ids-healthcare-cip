@@ -102,9 +102,15 @@ class PreprocessingPipeline:
         feat_names = df.columns.tolist()
         X = df.values.astype(np.float32)
 
-        # ── Step 5: Train–test split ──
+        # ── Step 5: Train / val / test split ──
+        # When cfg.val_ratio > 0 (closes GAP-L1-2), the splitter carves a
+        # held-out validation slice off the training side. The DAE
+        # cascade in Module 2 trains on this validation slice's
+        # benign-only rows + Track-A val-set probas (closes GAP-L1-1,
+        # replacing OOF probas).
         splitter = DataSplitter(
             test_ratio=cfg.test_ratio,
+            val_ratio=cfg.val_ratio,
             random_state=cfg.random_state,
             label_column=cfg.label_column,
             multi_label_column=cfg.multi_label_column,
@@ -115,14 +121,20 @@ class PreprocessingPipeline:
         if y_multi is not None:
             split_df[cfg.multi_label_column] = y_multi
 
-        X_train, X_test, y_train, y_test, feat_names, y_multi_train, y_multi_test = (
-            splitter.split(split_df)
-        )
+        sout = splitter.split(split_df)
+        X_train, X_val, X_test = sout.X_train, sout.X_val, sout.X_test
+        y_train, y_val, y_test = sout.y_train, sout.y_val, sout.y_test
+        y_multi_train = sout.y_multi_train
+        y_multi_val = sout.y_multi_val
+        y_multi_test = sout.y_multi_test
+        feat_names = sout.feature_names
         self._report["split"] = splitter.get_report()
 
-        # ── Step 6: Scaling (fit on TRAIN, transform TEST) ──
+        # ── Step 6: Scaling (fit on TRAIN, transform VAL + TEST) ──
         scaler = RobustScalerTransformer(method=cfg.scaling_method)
         X_train, X_test = scaler.scale_both(X_train, X_test)
+        if X_val.size > 0:
+            X_val = scaler.transform(X_val)
         self._report["scaling"] = scaler.get_report()
 
         # ── Dual-track branch & export ──
@@ -133,6 +145,7 @@ class PreprocessingPipeline:
             X_train, X_test, y_train, y_test,
             y_multi_train, y_multi_test,
             feat_names, scaler, cfg,
+            X_val=X_val, y_val=y_val, y_multi_val=y_multi_val,
         )
 
         self._log_summary()
@@ -265,6 +278,9 @@ class PreprocessingPipeline:
         feat_names: List[str],
         scaler: RobustScalerTransformer,
         cfg: Phase1Config,
+        X_val: "np.ndarray | None" = None,
+        y_val: "np.ndarray | None" = None,
+        y_multi_val: "np.ndarray | None" = None,
     ) -> None:
         """Write all pipeline artifacts to disk."""
         output_dir = self._root / cfg.output_dir
@@ -281,6 +297,14 @@ class PreprocessingPipeline:
             X_test_s, y_test, feat_names, cfg.test_parquet,
             y_multi=y_multi_test,
         )
+        # GAP-L1-2: held-out validation parquet (when val_ratio > 0).
+        # Empty arrays bypass the write — preserves backward compatibility.
+        has_val = X_val is not None and X_val.size > 0
+        if has_val:
+            exporter.export_parquet(
+                X_val, y_val, feat_names, cfg.val_parquet,
+                y_multi=y_multi_val,
+            )
         if cfg.track_b_enabled:
             benign_mask = y_train == 0
             exporter.export_parquet(
@@ -289,6 +313,16 @@ class PreprocessingPipeline:
                 feat_names,
                 cfg.train_benign_parquet,
             )
+            # Also emit benign-only validation parquet — the DAE
+            # cascade trains on this slice (closes GAP-L1-1).
+            if has_val:
+                val_benign_mask = y_val == 0
+                exporter.export_parquet(
+                    X_val[val_benign_mask],
+                    np.zeros(int(val_benign_mask.sum()), dtype=int),
+                    feat_names,
+                    cfg.val_benign_parquet,
+                )
 
         exporter.export_scaler(scaler, cfg.scaler_file)
 
@@ -475,7 +509,7 @@ class PreprocessingPipeline:
 # Entry Point
 # ======================================================================
 
-PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent
+PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 
 
 def main() -> None:

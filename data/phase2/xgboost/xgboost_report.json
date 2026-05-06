@@ -1,0 +1,65 @@
+{
+  "model_type": "GradientBoostingClassifier (XGBoost equivalent)",
+  "best_params": {
+    "classifier__subsample": 0.9,
+    "classifier__n_estimators": 700,
+    "classifier__min_samples_split": 10,
+    "classifier__min_samples_leaf": 3,
+    "classifier__max_features": null,
+    "classifier__max_depth": 7,
+    "classifier__learning_rate": 0.2
+  },
+  "cv_results": {
+    "best_score": 0.9752482982411778,
+    "best_rank": 32,
+    "n_candidates": 50,
+    "n_folds": 5,
+    "elapsed_seconds": 289.7
+  },
+  "optimal_threshold": 0.5272602939410143,
+  "test_metrics": {
+    "attack_f1": 0.9063794531897266,
+    "attack_f2": 0.8970154148901279,
+    "weighted_f1": 0.976747383666677,
+    "macro_f1": 0.9466084802349332,
+    "auc_roc": 0.9923347791756113,
+    "optimal_threshold": 0.5272602939410143
+  },
+  "data": {
+    "train_parquet": "/home/un1/project/ids-healthcare-cip/data/processed/train_phase1.parquet",
+    "test_parquet": "/home/un1/project/ids-healthcare-cip/data/processed/test_phase1.parquet",
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "train_samples": 9137,
+    "test_samples": 4896,
+    "train_attack_rate": 0.1254,
+    "test_attack_rate": 0.1254
+  },
+  "elapsed_seconds": 289.9
+}

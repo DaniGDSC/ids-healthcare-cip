@@ -15,7 +15,18 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-_DROP_CANDIDATES = ("Label", "Attack Category")
+_DROP_CANDIDATES = (
+    "Label",
+    "Attack Category",
+    # Non-feature columns added by GAP-PB-1 (row_id) and GAP-A7
+    # (device_class, attack_category). They are preserved on the parquet
+    # for downstream join keys but must NOT enter the feature matrix —
+    # row_id is a unique index and device_class is post-feature
+    # categorical. Mirrors module2_detection/module2_train_models.py::load_data.
+    "row_id",
+    "device_class",
+    "attack_category",
+)
 
 
 def load_data(

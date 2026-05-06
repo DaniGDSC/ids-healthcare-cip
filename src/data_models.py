@@ -11,11 +11,20 @@ from typing import Any, List, Optional
 
 
 class FusionClass(str, Enum):
-    """Two-stage fusion outcome per ARCHITECTURE.md Step [7]."""
+    """Two-stage fusion outcome per ARCHITECTURE.md Step [7].
+
+    DISAGREEMENT_ANOMALY (Enhancement 4) is a special case appended at
+    fusion time when the three Track A models disagree above a tunable
+    threshold (``diversity_score`` >= ``b_diversity``). It overrides
+    KNOWN_ATTACK only — uncertain ensembles never confidently fire — but
+    leaves NOVEL_ANOMALY / CONFIRMED_ANOMALY routing untouched (DAE has
+    already had its say there).
+    """
 
     KNOWN_ATTACK = "KNOWN_ATTACK"
     CONFIRMED_ANOMALY = "CONFIRMED_ANOMALY"
     NOVEL_ANOMALY = "NOVEL_ANOMALY"
+    DISAGREEMENT_ANOMALY = "DISAGREEMENT_ANOMALY"  # Enhancement 4
     BENIGN = "BENIGN"
 
 
@@ -59,6 +68,45 @@ class OperatorRole(str, Enum):
 P_XGB_HIGH_CONF: float = 0.85
 """Track A high-confidence boundary above which we classify as KNOWN_ATTACK
 without requiring DAE confirmation."""
+
+
+# ── Multi-class Track A (cascade-contract refactor) ─────────────────────
+
+# EHMS-2020 attack categories ordered with "normal" pinned to index 0 so
+# every multi-class consumer can derive P(attack) = 1 - softmax[:, 0].
+# Order of attack classes is lex-sorted for determinism. Update this
+# constant if the dataset's Attack Category vocabulary changes.
+MULTICLASS_LABEL_ORDER_EHMS: tuple[str, ...] = (
+    "normal",
+    "Data Alteration",
+    "Spoofing",
+)
+
+# MedSec-25 categories — used by the LOCO experiment, not the EHMS pipeline.
+MULTICLASS_LABEL_ORDER_MEDSEC: tuple[str, ...] = (
+    "Benign",
+    "Exfiltration",
+    "Initial access",
+    "Lateral movement",
+    "Reconnaissance",
+)
+
+
+def normal_index(label_order: tuple[str, ...]) -> int:
+    """Return the index of the benign class in ``label_order``.
+
+    Convention: "normal" (EHMS) and "Benign" (MedSec) both denote the
+    benign class and must sit at index 0 — but we look it up by name
+    rather than hard-coding 0 so a future label-order change does not
+    silently invert the cascade contract.
+    """
+    for cand in ("normal", "Benign"):
+        if cand in label_order:
+            return label_order.index(cand)
+    raise ValueError(
+        f"label_order {label_order!r} contains no recognised benign class "
+        f"(expected 'normal' or 'Benign')"
+    )
 
 
 # ── Component 2 output ──────────────────────────────────────────────────

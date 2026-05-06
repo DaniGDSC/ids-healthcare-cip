@@ -274,10 +274,32 @@ def train_track_a(
             pred_kwargs["row_id"] = np.arange(len(y_test), dtype=np.int64)
     np.savez(output_dir / f"{name}_test_predictions.npz", **pred_kwargs)
 
-    # OOF probabilities for cascaded DAE input
+    # OOF probabilities — kept as a fallback for the cascaded DAE input
+    # when no held-out validation parquet is available (legacy path).
     oof_path = output_dir / f"{name}_oof_proba.npy"
     np.save(oof_path, oof_proba)
     logger.info("Saved OOF probas: %s", oof_path)
+
+    # ── GAP-L1-1: validation-set probas for cascaded DAE input ──
+    # When a held-out validation parquet exists (emitted by Module 1
+    # when val_ratio>0), generate val-set probas and persist them. The
+    # DAE cascade in train_track_b_dae prefers these over OOF probas
+    # because they avoid leaking CV-fold structure into the joint
+    # feature-prediction space the DAE learns.
+    val_parquet_path = PROJECT_ROOT / "data/processed/val_phase1.parquet"
+    if val_parquet_path.exists():
+        val_df = pd.read_parquet(val_parquet_path)
+        drop_cols = [
+            c for c in ["Label", "Attack Category", "row_id",
+                        "device_class", "attack_category"]
+            if c in val_df.columns
+        ]
+        X_val = val_df.drop(columns=drop_cols).values.astype(np.float32)
+        val_proba = pipeline.predict_proba(X_val)[:, 1]
+        val_path = output_dir / f"{name}_val_proba.npy"
+        np.save(val_path, val_proba)
+        logger.info("Saved validation-set probas (n=%d): %s",
+                    len(val_proba), val_path)
 
     logger.info("Saved: %s (%.1fs)", output_dir, elapsed)
     return metrics
@@ -304,6 +326,31 @@ def _load_oof_probas(output_dir: Path, benign_mask: np.ndarray) -> np.ndarray:
     return np.column_stack(cols)
 
 
+def _load_val_probas(output_dir: Path, benign_mask: np.ndarray) -> np.ndarray:
+    """Load Track A validation-set probabilities and select benign rows.
+
+    Closes GAP-L1-1: replaces OOF probas with held-out val-set probas
+    in the cascaded DAE input space. Falls back to OOF (callers check
+    file existence before invoking).
+    """
+    _names = ("xgboost", "random_forest", "decision_tree")
+
+    def _load_one(name: str) -> np.ndarray:
+        return np.load(output_dir / f"{name}_val_proba.npy")[benign_mask]
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        cols = list(pool.map(_load_one, _names))
+    return np.column_stack(cols)
+
+
+def _val_probas_available(output_dir: Path) -> bool:
+    """True iff all 3 Track A val-proba files exist."""
+    return all(
+        (output_dir / f"{n}_val_proba.npy").exists()
+        for n in ("xgboost", "random_forest", "decision_tree")
+    )
+
+
 def _track_a_test_probas(X_test: np.ndarray, output_dir: Path) -> np.ndarray:
     """Run Track A models on test set, return stacked probabilities.
 
@@ -326,12 +373,17 @@ def train_track_b_dae(
     y_test: np.ndarray,
     feat_names: list,
 ) -> dict:
-    """Train cascaded DAE: input = [raw features || Track A OOF probas].
+    """Train cascaded DAE: input = [raw features || Track A probas].
 
     Track A must be trained first. The DAE learns to reconstruct benign
     samples in the joint (features + Track-A-prediction) space. Spoofing
     attacks that look normal in raw features but trigger Track A become
     visible as high reconstruction error.
+
+    GAP-L1-1: when held-out validation artifacts exist (``val_phase1.parquet``
+    + ``*_val_proba.npy`` for all three Track A models), train on val benign
+    samples augmented with val-set probas. Otherwise fall back to the legacy
+    OOF path (train benign + OOF probas).
     """
     t0 = time.perf_counter()
     sep = "-" * 60
@@ -348,24 +400,57 @@ def train_track_b_dae(
         best_hp = json.load(f)
     logger.info("Best params: %s", best_hp)
 
-    # Benign-only mask
-    benign_mask = y_train == 0
-    X_benign = X_train[benign_mask]
+    val_parquet_path = PROJECT_ROOT / "data/processed/val_phase1.parquet"
+    use_val_path = val_parquet_path.exists() and _val_probas_available(output_dir)
 
-    # Load Track A OOF probabilities for benign training rows
-    oof_probas = _load_oof_probas(output_dir, benign_mask)
+    if use_val_path:
+        # ── GAP-L1-1: held-out validation-set probas ──
+        # The DAE trains on benign val samples + val-set Track A probas
+        # (predict_proba on rows the supervised models never saw during
+        # CV). This eliminates the train-inference skew that arose from
+        # using OOF probas, which encode CV-fold structure into the
+        # joint (features, Track-A-prediction) space.
+        val_df = pd.read_parquet(val_parquet_path)
+        drop_cols = [
+            c for c in ["Label", "Attack Category", "row_id",
+                        "device_class", "attack_category"]
+            if c in val_df.columns
+        ]
+        y_val = val_df["Label"].values.astype(int)
+        X_val = val_df.drop(columns=drop_cols).values.astype(np.float32)
+        benign_mask = y_val == 0
+        X_benign = X_val[benign_mask]
+        probas = _load_val_probas(output_dir, benign_mask)
+        proba_source = "val"
+        logger.info(
+            "GAP-L1-1: using held-out val set for DAE training "
+            "(n_val=%d, n_benign=%d)",
+            len(y_val), int(benign_mask.sum()),
+        )
+    else:
+        # Legacy OOF path (no val artifacts available)
+        benign_mask = y_train == 0
+        X_benign = X_train[benign_mask]
+        probas = _load_oof_probas(output_dir, benign_mask)
+        proba_source = "oof"
+        logger.info(
+            "Val artifacts unavailable; falling back to OOF probas "
+            "(legacy path; benign train n=%d)",
+            int(benign_mask.sum()),
+        )
+
     logger.info(
-        "Track A OOF probas (benign): shape=%s, means=%s",
-        oof_probas.shape,
-        np.round(oof_probas.mean(axis=0), 4),
+        "Track A %s probas (benign): shape=%s, means=%s",
+        proba_source, probas.shape,
+        np.round(probas.mean(axis=0), 4),
     )
 
     # Augmented input: [25 raw features || 3 Track A probas] = 28 features
-    X_benign_aug = np.column_stack([X_benign, oof_probas])
+    X_benign_aug = np.column_stack([X_benign, probas])
     aug_feat_names = feat_names + ["track_a_xgb", "track_a_rf", "track_a_dt"]
     logger.info(
         "Cascaded DAE input: %d features (%d raw + %d Track A)",
-        X_benign_aug.shape[1], len(feat_names), oof_probas.shape[1],
+        X_benign_aug.shape[1], len(feat_names), probas.shape[1],
     )
 
     # Adjust architecture for 28 features
@@ -420,6 +505,7 @@ def train_track_b_dae(
         "benign_train_samples": int(benign_mask.sum()),
         "test_samples": int(len(y_test)),
         "random_seed": int(RANDOM_STATE),
+        "track_a_proba_source": proba_source,  # "val" closes GAP-L1-1; "oof" = legacy
     }
     report["elapsed_seconds"] = elapsed
 
