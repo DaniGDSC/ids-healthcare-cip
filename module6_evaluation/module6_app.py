@@ -2431,34 +2431,6 @@ def study_mode():
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def pcap_replay_stub():
-    """6C.10 — PCAP replay placeholder (optional, future work)."""
-    st.title("\U0001f4e6 PCAP Replay")
-
-    st.info(
-        "**Phase 3 Feature \u2014 Not yet implemented**\n\n"
-        "This module will allow upload of raw .pcap / .pcapng "
-        "network capture files for offline replay through the "
-        "full IoMT IDS pipeline (DAE anomaly detection \u2192 "
-        "risk scoring \u2192 MVE explanation generation).\n\n"
-        "**Planned for:** Phase 3 (hospital pilot deployment)"
-    )
-
-    st.markdown("#### Planned capabilities:")
-    st.markdown(
-        "- Upload PCAP files from network taps or span ports\n"
-        "- Replay packet-by-packet through the detection pipeline\n"
-        "- Generate MVE explanations for each detected anomaly\n"
-        "- Export audit trail in FDA-compatible format\n"
-        "- Compare replay results against known attack signatures"
-    )
-
-    st.caption(
-        "For live demo: use the **Online Simulation** page which "
-        "replays pre-processed test data through the same pipeline."
-    )
-
-
 def main():
     st.set_page_config(page_title="IoMT IDS Dashboard", layout="wide")
     init_session()
@@ -2466,7 +2438,7 @@ def main():
     st.sidebar.title("IoMT IDS")
     mode = st.sidebar.radio(
         "Mode:",
-        ["Dashboard", "Online Simulation", "Browse Alerts", "Study (A/B)", "PCAP Replay"],
+        ["Dashboard", "Online Simulation", "Browse Alerts", "Study (A/B)"],
     )
 
     if mode == "Dashboard":
@@ -2477,8 +2449,6 @@ def main():
         browse_mode()
     elif mode == "Study (A/B)":
         study_mode()
-    elif mode == "PCAP Replay":
-        pcap_replay_stub()
 
 
 if __name__ == "__main__":

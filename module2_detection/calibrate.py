@@ -71,18 +71,13 @@ logger = logging.getLogger(__name__)
 _ISOTONIC_MIN_SAMPLES = 1000
 
 
-def _drop_non_feature_cols(df: pd.DataFrame) -> pd.DataFrame:
-    drop = [c for c in (
-        "Label", "Attack Category", "row_id",
-        "device_class", "attack_category",
-    ) if c in df.columns]
-    return df.drop(columns=drop)
+from module2_detection._features import drop_non_feature_cols
 
 
 def _load_split(name: str, label_col: str = "Label") -> tuple:
     df = pd.read_parquet(PROJECT_ROOT / "data/processed" / f"{name}.parquet")
     y = df[label_col].values
-    X = _drop_non_feature_cols(df).values.astype(np.float32)
+    X = drop_non_feature_cols(df).values.astype(np.float32)
     return X, y
 
 
@@ -180,7 +175,7 @@ def _load_multiclass_split(
     label_to_id = {s: i for i, s in enumerate(label_order)}
     y = np.array([label_to_id[s] for s in df[label_col].astype(str).values],
                  dtype=np.int64)
-    X = _drop_non_feature_cols(df).values.astype(np.float32)
+    X = drop_non_feature_cols(df).values.astype(np.float32)
     return X, y
 
 

@@ -376,6 +376,52 @@ class DAEDetector:
         per_sample = per_feature_weighted.sum(axis=1) + ood # (n_samples,)
         return per_sample, per_feature_weighted
 
+    def anomalous_dims_z(
+        self,
+        X: np.ndarray,
+        z_threshold: float = 2.0,
+    ) -> tuple[np.ndarray, list[list[int]]]:
+        """Layer 1 v4.0 (R5): per-dimension reconstruction errors plus
+        the indices of the dimensions whose per-feature weighted
+        reconstruction error exceeds ``z_threshold`` standard deviations
+        within the supplied batch.
+
+        Useful for batch explainability: given a set of alerts, identify
+        which features made each one anomalous relative to its peers in
+        the batch.
+
+        For online (n=1) use, callers should rank the per-feature
+        weighted errors directly — z-score across a single sample is
+        undefined and this method returns ``[]`` for such inputs.
+
+        Args:
+            X: Raw (un-normalised) feature matrix, shape (n_samples,
+                n_features).
+            z_threshold: Z-score threshold above which a dimension is
+                considered anomalous. Default 2.0 (~5% tail under
+                normality).
+
+        Returns:
+            per_feature_weighted: shape (n_samples, n_features) — same
+                as the second return of ``reconstruction_error_decomposed``.
+            anomalous_dims_per_sample: length n_samples; each entry is a
+                list of feature indices with z-score above the threshold
+                in that row. Empty list for n=1 batches.
+        """
+        if X.shape[0] < 2:
+            _, per_feature_weighted = self.reconstruction_error_decomposed(X)
+            return per_feature_weighted, [[] for _ in range(X.shape[0])]
+
+        _, per_feature_weighted = self.reconstruction_error_decomposed(X)
+        mu = per_feature_weighted.mean(axis=0)
+        sigma = per_feature_weighted.std(axis=0)
+        z = (per_feature_weighted - mu) / (sigma + 1e-8)
+        anomalous = [
+            np.where(z[i] > z_threshold)[0].tolist()
+            for i in range(z.shape[0])
+        ]
+        return per_feature_weighted, anomalous
+
     def _noisy_threshold(self) -> float:
         """Return threshold with ±10% random noise (TM-04 fix).
 

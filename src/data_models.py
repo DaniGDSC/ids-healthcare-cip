@@ -70,6 +70,47 @@ P_XGB_HIGH_CONF: float = 0.85
 without requiring DAE confirmation."""
 
 
+# ── Layer 3 v4.0 enriched triage typology ───────────────────────────────
+#
+# ``AlertType`` is the v4.0 enriched 9-class triage typology, computed
+# from Layer 2 outputs (p_xgb, diversity_score, dae_score,
+# threshold_level). It refines but does NOT replace ``FusionClass`` — the
+# cascade-fusion outcome above remains the canonical multi-class
+# routing primitive used by ``module3_risk_scoring``. The two
+# vocabularies overlap on KNOWN_ATTACK / CONFIRMED_ANOMALY /
+# NOVEL_ANOMALY / DISAGREEMENT_ANOMALY / BENIGN; the four extra v4
+# types (``KNOWN_ATTACK_UNCERTAIN``, ``STRONG_NOVEL_ANOMALY``,
+# ``SUSPICIOUS_PATTERN``, ``BENIGN_WATCH``) provide finer routing for
+# the operator-facing triage tier.
+
+class AlertType(str, Enum):
+    """Layer 3 v4.0 — 9-class enriched triage typology.
+
+    Computed by ``module3_risk_scoring.triage_v4.classify_alert_v4`` from
+    the (p_xgb, p_rf, p_dt, diversity_score, dae_score, threshold_level)
+    tuple emitted by Layer 2.
+    """
+
+    KNOWN_ATTACK = "KNOWN_ATTACK"
+    KNOWN_ATTACK_UNCERTAIN = "KNOWN_ATTACK_UNCERTAIN"
+    DISAGREEMENT_ANOMALY = "DISAGREEMENT_ANOMALY"
+    STRONG_NOVEL_ANOMALY = "STRONG_NOVEL_ANOMALY"
+    NOVEL_ANOMALY = "NOVEL_ANOMALY"
+    CONFIRMED_ANOMALY = "CONFIRMED_ANOMALY"
+    SUSPICIOUS_PATTERN = "SUSPICIOUS_PATTERN"
+    BENIGN_WATCH = "BENIGN_WATCH"
+    BENIGN = "BENIGN"
+
+
+class Confidence(str, Enum):
+    """Layer 3 v4.0 — operator-facing confidence indicator."""
+
+    VERY_HIGH = "VERY_HIGH"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
 # ── Multi-class Track A (cascade-contract refactor) ─────────────────────
 
 # EHMS-2020 attack categories ordered with "normal" pinned to index 0 so

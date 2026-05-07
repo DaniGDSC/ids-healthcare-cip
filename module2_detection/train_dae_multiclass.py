@@ -39,11 +39,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 logger = logging.getLogger(__name__)
 
 
-def _drop_non_feature_cols(df: pd.DataFrame) -> pd.DataFrame:
-    drop = [c for c in (
-        "Label", "Attack Category", "row_id", "device_class", "attack_category",
-    ) if c in df.columns]
-    return df.drop(columns=drop)
+from module2_detection._features import drop_non_feature_cols
 
 
 def _p_attack(softmax: np.ndarray, normal_idx: int) -> np.ndarray:
@@ -89,8 +85,8 @@ def main() -> int:
     test_df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
     y_val = val_df["Label"].values.astype(int)
     y_test = test_df["Label"].values.astype(int)
-    X_val = _drop_non_feature_cols(val_df).values.astype(np.float32)
-    X_test = _drop_non_feature_cols(test_df).values.astype(np.float32)
+    X_val = drop_non_feature_cols(val_df).values.astype(np.float32)
+    X_test = drop_non_feature_cols(test_df).values.astype(np.float32)
     logger.info("val=%d  test=%d  features=%d", len(X_val), len(X_test), X_val.shape[1])
 
     # ── Load multi-class softmax → P(attack) per model ──

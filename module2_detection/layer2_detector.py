@@ -119,6 +119,17 @@ class Layer2Output:
     anomalous_dim_names: list[str] = field(default_factory=list)
     per_dim_errors: np.ndarray | None = None
 
+    # INVARIANT 1: ``c_detect = max(c_track_a, c_track_b)`` and is
+    # therefore guaranteed >= p_xgb (DAE only elevates, never reduces).
+    # Populated by ``Layer2Detector.score_alert``; default 0.0 keeps the
+    # dataclass constructible without it.
+    c_detect: float = 0.0
+    # Source of the ``dae_score`` used for c_detect:
+    #   "percentile_rank" — calibrated against benign training distribution
+    #                       via ``results/models/dae_calibration.json``
+    #   "linear_threshold" — fallback used when calibration JSON is absent
+    dae_score_calibration: str = "linear_threshold"
+
     def as_dict(self) -> dict[str, Any]:
         d = {
             "p_xgb": float(self.p_xgb),
@@ -129,6 +140,8 @@ class Layer2Output:
             "dae_score": float(self.dae_score),
             "dae_score_raw_error": float(self.dae_score_raw_error),
             "c_track_b": float(self.c_track_b),
+            "c_detect": float(self.c_detect),
+            "dae_score_calibration": self.dae_score_calibration,
             "device_class_threshold": float(self.device_class_threshold),
             "data_quality_flag": self.data_quality_flag,
             "nan_rate": float(self.nan_rate),
@@ -211,16 +224,55 @@ class Layer2Detector:
         )
         logger.info("Track B: loaded DAE (threshold=%.6f)", self._dae.threshold)
 
-        # ── Multi-threshold (Task 4): compute p80/p95/p99 from DAE's
-        # persisted benign training-error distribution. Cheap (one np call). ──
-        train_errs = self._load_train_errors()
-        self._mt_p80, self._mt_p95, self._mt_p99 = (
-            float(np.percentile(train_errs, p)) for p in THRESHOLD_PERCENTILES
-        )
-        logger.info(
-            "Multi-threshold: p80=%.6f, p95=%.6f, p99=%.6f",
-            self._mt_p80, self._mt_p95, self._mt_p99,
-        )
+        # ── Multi-threshold (Task 4): prefer the canonical Layer 1 v4
+        # artifact ``dae_thresholds.json`` if present (consistent values
+        # across detector + calibration + tooling). Fall back to
+        # recomputing from the DAE's persisted train_errors when the
+        # JSON is missing — both paths land on the same percentiles. ──
+        thresholds_json = self._models_dir / "dae_thresholds.json"
+        if thresholds_json.exists():
+            body = json.loads(thresholds_json.read_text(encoding="utf-8"))
+            t = body["thresholds"]
+            self._mt_p80 = float(t["screening_threshold"])
+            self._mt_p95 = float(t["confirmation_threshold"])
+            self._mt_p99 = float(t["high_confidence_threshold"])
+            logger.info(
+                "Multi-threshold: loaded from %s (p80=%.6f, p95=%.6f, p99=%.6f)",
+                thresholds_json.name, self._mt_p80, self._mt_p95, self._mt_p99,
+            )
+        else:
+            train_errs = self._load_train_errors()
+            self._mt_p80, self._mt_p95, self._mt_p99 = (
+                float(np.percentile(train_errs, p)) for p in THRESHOLD_PERCENTILES
+            )
+            logger.info(
+                "Multi-threshold: derived from train_errors (p80=%.6f, p95=%.6f, p99=%.6f)",
+                self._mt_p80, self._mt_p95, self._mt_p99,
+            )
+
+        # ── DAE score calibration (R4): load percentile-rank lookup
+        # if present — maps raw reconstruction error → [0, 1] rank
+        # against the benign training distribution. When absent we fall
+        # back to the legacy linear scaling around the single threshold. ──
+        calibration_json = self._models_dir / "dae_calibration.json"
+        self._dae_calibration_lookup: np.ndarray | None = None
+        if calibration_json.exists():
+            cal_body = json.loads(calibration_json.read_text(encoding="utf-8"))
+            lookup = np.asarray(cal_body["percentile_lookup"], dtype=np.float64)
+            if lookup.size > 1 and (np.diff(lookup) >= 0).all():
+                self._dae_calibration_lookup = lookup
+                logger.info(
+                    "DAE score calibration: loaded percentile-rank lookup "
+                    "(%d points) from %s",
+                    lookup.size, calibration_json.name,
+                )
+            else:
+                logger.warning(
+                    "DAE score calibration JSON at %s is malformed "
+                    "(non-monotone or empty lookup); falling back to "
+                    "linear-threshold scaling.",
+                    calibration_json,
+                )
 
         # ── Per-dim percentiles (Task 5): one DAE pass over a benign
         # reference set to derive per-feature p95 cutoffs. Reference
@@ -357,14 +409,25 @@ class Layer2Detector:
         recon_err = float(per_sample_err[0])
         per_dim_errors = per_feat_err[0].astype(np.float64)
 
-        dae_threshold = float(self._dae.threshold)
-        if recon_err <= dae_threshold:
-            dae_score = 0.5 * (recon_err / max(dae_threshold, 1e-12))
+        # R4: percentile-rank calibration when the canonical Layer 1 v4
+        # artifact is available. Score = position of recon_err in the
+        # benign training error distribution (in [0, 1]). Falls back to
+        # the legacy linear-threshold scaling for older artefact sets.
+        if self._dae_calibration_lookup is not None:
+            lookup = self._dae_calibration_lookup
+            rank = float(np.searchsorted(lookup, recon_err))
+            dae_score = rank / float(lookup.size)
+            dae_calibration_used = "percentile_rank"
         else:
-            # Saturate above threshold so the score grows but never exceeds 1.
-            dae_score = 0.5 + 0.5 * min(
-                (recon_err - dae_threshold) / max(dae_threshold, 1e-12), 1.0
-            )
+            dae_threshold = float(self._dae.threshold)
+            if recon_err <= dae_threshold:
+                dae_score = 0.5 * (recon_err / max(dae_threshold, 1e-12))
+            else:
+                # Saturate above threshold so the score grows but never exceeds 1.
+                dae_score = 0.5 + 0.5 * min(
+                    (recon_err - dae_threshold) / max(dae_threshold, 1e-12), 1.0
+                )
+            dae_calibration_used = "linear_threshold"
 
         # ── Task 4: multi-threshold bucket (below_threshold/weak/moderate/strong) ──
         threshold_level = self._bucket_threshold_level(recon_err)
@@ -376,15 +439,25 @@ class Layer2Detector:
 
         any_calibrated = any(self._calibration_used.values())
 
+        dae_score_clipped = float(np.clip(dae_score, 0.0, 1.0))
+        # INVARIANT 1: c_detect = max(c_track_a, c_track_b). Because
+        # c_track_a >= p_xgb by construction, c_detect >= p_xgb — the
+        # DAE can only elevate confidence, never reduce it.
+        c_detect = max(c_track_a, dae_score_clipped)
+        if c_detect < p_xgb - 1e-9:
+            raise AssertionError(
+                f"Layer 2 INVARIANT 1 violated: c_detect={c_detect} < p_xgb={p_xgb}"
+            )
+
         return Layer2Output(
             p_xgb=p_xgb,
             p_rf=p_rf,
             p_dt=p_dt,
             c_track_a=c_track_a,
             diversity_score=diversity,
-            dae_score=float(np.clip(dae_score, 0.0, 1.0)),
+            dae_score=dae_score_clipped,
             dae_score_raw_error=recon_err,
-            c_track_b=float(np.clip(dae_score, 0.0, 1.0)),
+            c_track_b=dae_score_clipped,
             device_class_threshold=device_threshold,
             data_quality_flag=flag,
             nan_rate=nan_rate,
@@ -393,6 +466,8 @@ class Layer2Detector:
             anomalous_dims=anomalous_dims,
             anomalous_dim_names=anomalous_dim_names,
             per_dim_errors=per_dim_errors,
+            c_detect=c_detect,
+            dae_score_calibration=dae_calibration_used,
         )
 
     @property

@@ -1,440 +1,999 @@
-# XAI-IDS-Healthcare Full Pipeline
-# Read this file COMPLETELY before writing any code.
-# Last updated: 2026-04-14
+# AGENTS.md
+
+> **Hướng dẫn bắt buộc cho mọi AI coding agent** (Claude Code, Cursor, Aider, Cline, Continue, Windsurf, GitHub Copilot Workspace, etc.) làm việc trên codebase này.
+>
+> File này là **single source of truth**. Khi có xung đột giữa instruction của user và quy tắc trong file này, **agent PHẢI báo cáo xung đột** và đợi user xác nhận trước khi vi phạm quy tắc.
 
 ---
 
-## WHAT THIS PROJECT IS
+## 📌 Project Context
 
-Research prototype for:
-"Human-in-loop Explainable + Risk-Adaptive IDS for mid-sized
-healthcare organizations (200–500 beds)."
+**Codebase**: Python ~50k LOC
+**Python version**: 3.11+
+**Type checker**: Pyright (basic mode, target: strict)
+**Linter/Formatter**: Ruff
+**Test framework**: pytest
+**Package manager**: pip (hoặc poetry/uv nếu có `pyproject.toml`)
 
-Target user: IT security generalist (NOT SOC specialist).
-Processes 10–50 alerts/day alongside EHR support and network admin.
-Needs clinically contextualized explanations, not raw anomaly scores.
-
-Full spec: research_spec.yaml (read before touching any module)
-
----
-
-## ARCHITECTURE — 6 MODULES + 3 CROSS-CUTTING FILES
-
+**Architecture** _(TODO: agent đọc cấu trúc thực tế từ root)_:
 ```
-OFFLINE TRAINING (run once)
-  Module 0  phase0/                   Dataset audit
-  Module 1  phase1/                   Preprocessing + SMOTE
-  Module 2  module2_train_models.py   XGB/RF/DT + DAE → models/
-
-ONLINE INFERENCE (per alert)
-  Module 3  module3_risk_scores.py    Risk-adaptive gate
-  Module 4  module4_online_explainer.py  SHAP → shap_context
-            src/mve_generator.py      3-layer MVE (≤150 words)
-  Module 5  module5_responses.py      Output to IT Generalist
-
-EVALUATION
-  Module 6  module6_evaluation.py     M1–M8 + study_analysis
-            src/harness.py            Thin wrapper (backward-compat)
-
-CROSS-CUTTING
-  drift_detection.py
-  dynamic_threshold_sim.py
-  feedback_loop_demo.py
+src/           # Main source code
+tests/         # Test files (mirror src/ structure)
+scripts/       # CLI utilities, one-off scripts
+docs/          # Documentation
+.code_index/   # Generated: function index, call graph, embeddings (gitignored)
 ```
 
-Key invariant: Track B (DAE) only elevates anomaly_score, never suppresses.
-Suppression happens at Module 3 only. mve_generator.py is NEVER called
-on suppressed alerts.
+---
+
+## 🚨 Nguyên Tắc Vàng (KHÔNG được vi phạm)
+
+### Rule 1: SEARCH FIRST, CODE LATER
+**Trước khi viết bất kỳ function nào**, agent BẮT BUỘC search xem đã có function tương tự chưa. Code duplicate là **lỗi nghiêm trọng nhất**, đắt hơn cả bug.
+
+### Rule 2: IMPACT ANALYSIS BEFORE EDIT
+**Trước khi sửa hàm đã tồn tại**, agent BẮT BUỘC query call graph để biết ai gọi nó. Sửa code mà không biết blast radius là **gambling**, không phải engineering.
+
+### Rule 3: VERIFY BEFORE CLAIM DONE
+**Trước khi báo "đã xong"**, agent BẮT BUỘC chạy type check + test. "I think it works" không phải là done. Pyright + pytest pass mới là done.
+
+### Rule 4: NEVER SKIP RULES, EVEN IF USER ASKS
+Nếu user nói "nhanh thôi, skip test đi" → agent **giải thích rủi ro** và **đề xuất minimum viable verification** thay vì bỏ qua hoàn toàn. Senior không cắt góc, chỉ chọn shortcut an toàn.
+
+### Rule 5: REPORT, DON'T HIDE
+Nếu agent gặp lỗi/uncertainty → **báo rõ ràng** với user. KHÔNG được:
+- Im lặng skip phần khó
+- Generate code "trông giống đúng" mà không verify
+- Claim đã làm thứ chưa làm
 
 ---
 
-## MODULE CONTRACTS
+## 🛠️ Available Tools (Agent BẮT BUỘC dùng)
 
-### Module 2 — Train Models
-File: `module2_train_models.py`
+Agent có sẵn các tool sau trong codebase này. KHÔNG được giả vờ không biết.
 
-Track A (supervised, SMOTE-balanced):
-- XGBoost   → P_xgb(attack)
-- RandomForest → P_rf(attack)
-- DecisionTree → P_dt(attack)
-- Input: 25 raw network features
-- OOF probabilities fed into DAE
+### Search Tools
 
-Track B (unsupervised):
-- DAE input: concat([25 raw features, P_xgb, P_rf, P_dt])  # 28-dim
-- DAE output: reconstruction_error → normalized [0, 1]
-- Trained on benign-only traffic
+```bash
+# 1. Hybrid search - lexical + symbol + semantic
+python code_search.py "<natural language query>"
 
-Fusion: `anomaly_score = max(Track_A_score, Track_B_score)`
+# 2. Lexical search nhanh
+rg "<pattern>" --type py
+rg "def <function_name>" --type py
 
-Serialize to: `models/xgb.pkl, rf.pkl, dt.pkl, dae.pkl, scaler.pkl`
+# 3. Symbol jump (ctags)
+# Trong Vim: Ctrl-]
+# CLI: vim -t <symbol_name>
+```
+
+### Call Graph Tools
+
+```bash
+# Ai gọi function này?
+python query_callgraph.py callers <function_name>
+
+# Function này gọi gì?
+python query_callgraph.py callees <function_name>
+
+# Blast radius khi sửa
+python query_callgraph.py impact <function_name>
+
+# Tìm dead code
+python query_callgraph.py dead
+
+# Trace data flow
+python query_callgraph.py trace <from_func> <to_func>
+```
+
+### Quality Tools
+
+```bash
+# Type check (oracle)
+pyright <file_or_directory>
+
+# Lint + format
+ruff check --fix <file>
+ruff format <file>
+
+# Test
+pytest <test_file> -v
+pytest --cov=<module> --cov-report=term-missing
+
+# Duplicate detection
+python find_duplicates.py
+```
+
+### Index Maintenance
+
+```bash
+# Rebuild sau khi codebase thay đổi nhiều
+python build_function_index.py .
+python build_call_graph.py .
+python build_embeddings.py
+```
 
 ---
 
-### Module 3 — Risk-Adaptive Scoring
-File: `module3_risk_scores.py`
-(`src/risk_scorer.py` is the primary per-alert implementation; it wraps and extends batch logic from `module3_risk_scores.py` with a per-alert dict interface, patchability-aware thresholds, and a safety floor for CRITICAL+unpatchable devices. It is not a thin alias.)
+## 📋 Mandatory Workflows
 
-Function: `score_alert(anomaly_score, device_context, event_context) → ScoredAlert`
+### 🟢 Workflow ADD: Thêm function/feature mới
 
-Rules (non-negotiable):
-- CRITICAL + unpatchable  → threshold lowered ≥30%, risk_multiplier ≥1.5
-- Maintenance window + known vendor IP → suppress (should_surface=False)
-- LOW + patchable         → default threshold, risk_multiplier=1.0
-- similar_events > 5 in 30d → reduce risk_multiplier by 0.2
+Agent BẮT BUỘC follow đúng thứ tự, KHÔNG skip step:
 
----
+#### Step 1: SEARCH (báo cáo cho user)
 
-### Module 4 — SHAP Explainer
-File: `module4_online_explainer.py`
+```
+ACTION:
+- Run: python code_search.py "<feature description>"
+- Run: rg "def.*<keyword>" --type py
+- Đọc top 5 function tương tự nhất
 
-Function: `explain_alert(feature_vector, model) → SHAPContext`
+REPORT TO USER:
+"Đã search codebase, tìm thấy N function tương tự:
+1. <name1> ở <file>:<line> - <signature>
+2. <name2> ở <file>:<line> - <signature>
+...
 
-- Compute SHAP values against XGBoost model
-- Map features to 7 clinical feature groups (see research_spec.yaml)
-- Output: top_category, top_features (top 3), shap_direction, confidence_from_shap
-- Called ONLY when should_surface=True
+Đề xuất: [reuse X / extend Y / viết mới với reasoning]"
+```
 
----
+#### Step 2: PLAN (đợi user confirm)
 
-### MVE Generator — UPDATED SIGNATURE
-File: `src/mve_generator.py`
+```
+REPORT TO USER:
+"Plan implementation:
+- File: <path>
+- Function name: <name>
+- Signature: def foo(x: int, y: str) -> Result
+- Behavior: <description>
+- Dependencies: <list>
+- Test plan: <test cases>
+
+Confirm để tôi bắt đầu code?"
+```
+
+⚠️ **KHÔNG code trước khi user confirm**, trừ khi task quá đơn giản (typo, format, comment).
+
+#### Step 3: IMPLEMENT
+
+Quy tắc viết code:
 
 ```python
-def generate_mve(
-    raw_alert: dict,
-    device_context: dict,
-    behavioral_baseline: dict,
-    user_context: dict | None = None,
-    shap_context: dict | None = None,   # NEW in v2.0
-) -> MVEOutput:
+# ✅ ĐÚNG: Type hint đầy đủ + docstring
+def calculate_tax(amount: Decimal, region: str) -> Decimal:
+    """Calculate tax for a transaction.
+
+    Args:
+        amount: Pre-tax amount
+        region: ISO region code (e.g., 'VN', 'US-CA')
+
+    Returns:
+        Tax amount
+
+    Raises:
+        UnknownRegionError: If region not in DB
+    """
+    ...
+
+# ❌ SAI: Thiếu type hint, không docstring
+def calculate_tax(amount, region=None):
+    ...
 ```
 
-Layer 1 rules:
-- If shap_context provided: deviation_description MUST mention
-  shap_context.top_category AND at least 1 shap_context.top_feature
-- If shap_context is None: fall back to rule-based deviation (v1.0 behavior)
+**Quy tắc bắt buộc:**
+- [ ] Type hint cho mọi argument và return value
+- [ ] Docstring cho public function (Google/NumPy style)
+- [ ] Single Responsibility - 1 function = 1 việc
+- [ ] Function > 30 dòng → suy nghĩ lại, có nên tách không
+- [ ] Reuse utility có sẵn, KHÔNG copy-paste logic
+- [ ] Error handling rõ ràng (raise specific exception, không bare `except`)
 
-Layer 3 rules (updated from mve_improvement_analysis.yaml):
-- ALL EHR access alerts: always include force-reauth instruction,
-  regardless of severity. Severity = urgency, NOT whether action is needed.
-- IoMT CRITICAL/HIGH: clinical_constraint MUST distinguish between
-  network isolation (safe) and device power-off/physical disconnect (prohibited).
-  Example: "DO NOT power off ventilator. Blocking port 23 at switch is SAFE."
-- Layer 3 immediate_action for data_exfiltration: specify exact scope
-  (destination IP only), what is preserved, and why partial > full isolation.
-- LOW-severity alerts with benign hypothesis: lead Layer 1 with benign
-  explanation if destination is internal and matches known pattern.
+#### Step 4: TEST (viết song song, không sau cùng)
 
-Layer 1 rules (updated):
-- For IoMT behavioral deviation: deviation_description MUST include
-  numeric baseline comparison when available.
-  Example: "Normal: 12 DNS queries/min. Observed: 310 queries/min."
-- Add role_authorization_check to Layer 1 for unauthorized_ehr_access alerts:
-  "Role authorization: CONFIRMED / UNCONFIRMED / DENIED"
-  If UNCONFIRMED → Layer 3 must recommend force-reauth regardless of severity.
+```python
+# tests/<module>/test_<file>.py
+def test_calculate_tax_valid_region():
+    assert calculate_tax(Decimal("100"), "VN") == Decimal("10")
 
-Output constraints (unchanged):
-- Total ≤150 words. Layer 1 ≤60. Layer 2 ≤50. Layer 3 ≤60.
-- No raw SHAP values in output text
-- No CVSS scores — use clinical CRITICAL/HIGH/MEDIUM/LOW only
-- No vague actions ("investigate further", "monitor closely")
+def test_calculate_tax_unknown_region_raises():
+    with pytest.raises(UnknownRegionError):
+        calculate_tax(Decimal("100"), "XX")
 
-Mode A (LLM): Use if ANTHROPIC_API_KEY in environment.
-Mode B (rules): Always implement. Must pass all tests offline.
+def test_calculate_tax_zero_amount():
+    assert calculate_tax(Decimal("0"), "VN") == Decimal("0")
+```
 
----
+**Coverage tối thiểu:**
+- Happy path: ≥ 1 test
+- Edge cases: ≥ 2 test (zero, negative, max value)
+- Error cases: ≥ 1 test cho mỗi exception
+- **Total coverage cho function mới: ≥ 80%**
 
-### Module 5 — Recommendation Output
-File: `module5_responses.py`
+#### Step 5: VERIFY (chạy theo thứ tự, dừng nếu fail)
 
-- Format MVEOutput for IT Generalist display
-- NEVER auto-execute any action
-- Output: structured dict (CLI / API / Streamlit-ready)
+```bash
+# 5.1. Format
+ruff format <file>
 
----
+# 5.2. Lint
+ruff check --fix <file>
 
-### Module 6 — Evaluation
+# 5.3. Type check
+pyright <file>
 
-Files: `module6_evaluation/module6_evaluation.py`, `module6_evaluation/module6_app.py`,
-       `module6_evaluation/_src_adapter.py`, `module6_evaluation/compute_rq2_metrics.py`,
-       `module6_evaluation/study_loader.py`, `module6_evaluation/study_analysis.py`,
-       `src/harness.py`
+# 5.4. Test
+pytest <test_file> -v
 
-Submodule contracts:
+# 5.5. Coverage
+pytest --cov=<module> --cov-report=term-missing
 
-#### _src_adapter.py — `scored_from_eval_alert(alert_data: dict) -> ScoredAlert`
+# 5.6. Duplicate check
+python build_function_index.py .
+python find_duplicates.py | grep <new_function_name>
+# Phải KHÔNG có match
+```
 
-- Bridges one `evaluation_alerts.json` record into `src.risk_scorer.score_alert()`
-- Safe defaults: `patchable=True` (unknown device), `event_context=None`
+#### Step 6: REPORT
 
-#### compute_rq2_metrics.py (standalone script)
+```
+DEFINITION OF DONE:
+✓ Pyright: 0 error
+✓ Ruff: 0 warning
+✓ Tests: <N> passed, 0 failed
+✓ Coverage: <X>%
+✓ No duplicate detected
+✓ Docstring + type hints complete
 
-- Input: `results/reports/evaluation_alerts.json`
-- Output: `results/rq2_metrics.json`
-- Computes: `critical_alert_rate`, `fnr_critical`, `{TP,FN,FP,TN}`, `sensitivity`, `specificity`
+FILES CHANGED:
+- src/<module>/<file>.py (+<N> lines)
+- tests/<module>/test_<file>.py (+<M> lines)
 
-#### study_loader.py
-
-- `load_study_alerts(participant_id) -> list[AlertScenario]`
-- Deterministic shuffle: `random.Random(int(md5(participant_id).hexdigest(), 16))`
-- A/B assignment: counterbalanced by `pid_seed % 2`
-
-#### study_analysis.py (standalone script)
-
-- Input: `survey/study_responses_*.json`
-- Output: `survey/m5_result.yaml`
-- Primary test: Mann-Whitney U (one-tailed B > A); thresholds: target=0.30, minimum=0.15
-- Verdict: PASS / WARN / FAIL
-
----
-
-## FILE STRUCTURE
-
-```text
-ids-healthcare-cip/
-├── module0_analysis/
-│   └── phase0/                   # dataset audit
-├── module1_preprocessing/
-│   └── phase1/                   # preprocessing + SMOTE
-├── module2_detection/
-│   └── module2_train_models.py   # XGB/RF/DT/DAE → results/models/
-├── module3_risk_scoring/
-│   └── module3_risk_scores.py    # batch composite risk scoring
-├── module4_explanations/
-│   ├── module4_explanations.py   # batch SHAP + stakeholder outputs
-│   └── module4_online_explainer.py
-├── module5_responses/
-│   ├── module5_responses.py      # recommendation output
-│   └── module5_pipeline.py       # PolicyEngine + feedback loop
-├── module6_evaluation/
-│   ├── module6_evaluation.py     # build evaluation artifacts
-│   ├── module6_app.py            # Streamlit dashboard (browse + study mode)
-│   ├── _src_adapter.py           # bridges eval artifacts → src.risk_scorer
-│   ├── compute_rq2_metrics.py    # RQ2 metrics → results/rq2_metrics.json
-│   ├── study_loader.py           # A/B scenario loader (MD5 shuffle)
-│   └── study_analysis.py         # M5 Mann-Whitney → survey/m5_result.yaml
-├── src/
-│   ├── __init__.py
-│   ├── data_models.py            # MVEOutput, ScoredAlert, SHAPContext, ...
-│   ├── mve_generator.py          # v2.0: +shap_context param
-│   ├── risk_scorer.py            # per-alert scoring + patchability + safety floor
-│   └── harness.py                # thin wrapper → module6_evaluation.py
-├── common/
-│   ├── model_registry.py
-│   ├── phi.py
-│   └── signed_pickle.py
-├── analysis/
-│   └── analyze_rq3.py            # final A/B study analysis
-├── utils/
-│   └── convert_legacy_survey.py  # legacy survey format conversion
-├── tests/
-│   ├── __init__.py
-│   ├── acceptance_tests.py       # M1–M8 (includes M5 SHAP alignment)
-│   ├── negative_tests.py
-│   ├── test_safe_failure.py      # 5 failure-mode tests (added post-spec)
-│   ├── test_coverage_mve.py      # MVE branch coverage (added post-spec)
-│   └── fixtures/
-│       ├── sample_alerts.yaml
-│       ├── device_inventory.yaml
-│       ├── behavioral_baselines.yaml
-│       └── shap_stubs.yaml       # stub SHAPContext for offline tests
-├── run_tests.py
-├── run_all_modules.py
-├── alignment_report.yaml         # generated
-├── survey/m5_result.yaml         # generated
-├── results/rq2_metrics.json      # generated
-├── research_spec.yaml
-└── CLAUDE.md
+READY TO COMMIT.
 ```
 
 ---
 
-## DO NOT BUILD
+### 🟡 Workflow EDIT: Sửa function đã tồn tại
 
-- Device discovery / network scanning
-- Automated enforcement / blocking (recommend only, never execute)
-- RF / proprietary wireless protocol detection (non-IP IoMT)
-- Ransomware early-detection claims
-- UI / frontend (Streamlit in module6_app.py is evaluation-only)
-- Database / persistence (in-memory + YAML fixtures only)
-- Authentication / authorization
+#### Step 1: IMPACT ANALYSIS (BẮT BUỘC)
 
-If asked to build any of the above: refuse and cite this file.
+```bash
+# Run TẤT CẢ các lệnh sau:
+python query_callgraph.py callers <function_name>
+python query_callgraph.py impact <function_name>
+python query_callgraph.py callees <function_name>
+rg -l "<function_name>" --type py | grep -i test
+```
 
----
+```
+REPORT TO USER:
+"Impact analysis cho '<function_name>':
+- Direct callers: N nơi (list)
+- Blast radius (3 levels): M functions
+- Test files liên quan: K files (list)
+- Risk level: [LOW/MEDIUM/HIGH/CRITICAL]
 
-## DONE CONDITION
+Loại thay đổi: [Internal refactor / Signature change / Behavior change]
+"
+```
 
-Prototype is COMPLETE when `run_tests.py` produces:
+**Phân loại risk:**
 
-### Automated Tests (all must pass at ≥minimum)
-
-| Test | Minimum | Target |
+| Callers | Level | Approach |
 |---|---|---|
-| test_mve_completeness (M1) | 85% | 95% |
-| test_layer1_length_constraint (M1b) | 90% | 95% |
-| test_clinical_relevance (M2) | 75% | 90% |
-| test_actionability (M3) | 70% | 85% |
-| test_clinical_constraint_awareness (M4) | 80% | 90% |
-| test_shap_narrative_alignment (M5) | 75% | 85% |
-| test_false_positive_rate (M6) | 20% FP reduction | 40% |
-| test_risk_adaptive_threshold (M7) | 100% | 100% |
-| test_severity_label_accuracy (M8) | 70%, 0 CRITICAL↔LOW | 80% |
+| 0 | 🟢 LOW | Sửa thoải mái, có thể là dead code |
+| 1-3 | 🟡 MEDIUM | Sửa + update caller + test |
+| 4-10 | 🟠 HIGH | Comprehensive test, cân nhắc deprecation |
+| 10+ | 🔴 CRITICAL | RFC, deprecation plan, migration guide |
 
-M8 hard fail: any CRITICAL↔LOW mismatch = immediate BLOCKED.
+#### Step 2: PHÂN LOẠI THAY ĐỔI
 
-### Negative Tests (all must pass, 0 violations)
+**Type A: Internal Refactor (an toàn nhất)**
+- Đổi tên biến local, tách helper, optimize
+- KHÔNG đổi signature, KHÔNG đổi behavior
+- Test cũ phải pass nguyên si
 
-- test_no_device_discovery_attempted
-- test_no_automated_blocking
-- test_no_rf_protocol_claims
-- test_no_ransomware_dwell_time_claims
-- test_severity_uses_clinical_not_cvss
-- test_no_model_internals_exposed       ← SHAP values must NOT appear in MVE text
+**Type B: Signature Change (BREAKING)**
+- Đổi tên hàm, thêm/bớt arg, đổi return type
+- BẮT BUỘC update tất cả caller trong cùng PR
+- Cân nhắc deprecation thay vì breaking thẳng:
 
-### Study Analysis
+```python
+def calculate_tax_v2(amount: Decimal, region: str, currency: str = "VND") -> Decimal:
+    """New version with multi-currency support."""
+    ...
 
-- m5_result.yaml generated from study_responses_A/B.json
-- group_b_composite_accuracy ≥ 0.55
-- relative_improvement ≥ 0.40
+def calculate_tax(amount: Decimal, region: str) -> Decimal:
+    """DEPRECATED: Use calculate_tax_v2.
 
-### Final Outputs
-
-- alignment_report.yaml: recommendation = SHIP_TO_USER_STUDY / ITERATE / BLOCKED
-- m5_result.yaml: verdict = PASS / WARN / FAIL
-
----
-
-## BUILD ORDER
-
-Do not skip steps. Tests define what "correct" means.
-Implementation serves the tests, not the other way around.
-
-```
-1.  data_models.py          — add SHAPContext dataclass
-2.  fixtures/shap_stubs.yaml — stub SHAPContext for each of 5 alert types
-3.  tests/acceptance_tests.py — add M5 (shap_narrative_alignment)
-4.  tests/negative_tests.py — verify test_no_model_internals_exposed covers SHAP
-5.  module2_train_models.py — train + serialize to models/
-6.  module3_risk_scores.py  — risk-adaptive scoring (verify = risk_scorer.py)
-7.  module4_online_explainer.py — SHAP → SHAPContext
-8.  mve_generator.py        — add shap_context param, update Layer 1 + Layer 3
-9.  module5_responses.py    — format output
-10. module6_evaluation.py   — wire M1–M8 + study_analysis
-11. run_tests.py            — entry point
-12. Run → fix until all pass
-13. Generate alignment_report.yaml + m5_result.yaml
+    .. deprecated:: 2.5.0
+        Will be removed in 3.0.0
+    """
+    import warnings
+    warnings.warn("Use calculate_tax_v2", DeprecationWarning, stacklevel=2)
+    return calculate_tax_v2(amount, region)
 ```
 
----
+**Type C: Behavior Change (NGUY HIỂM NHẤT)**
+- Cùng signature, logic khác
+- Caller không biết → silent breakage
+- BẮT BUỘC: changelog rõ ràng + migration test + announce
 
-## STACK
+#### Step 3: PLAN (đợi user confirm với HIGH/CRITICAL risk)
 
-Python 3.11+
+```
+REPORT TO USER:
+"Plan edit cho '<function_name>':
+- Change type: [A/B/C]
+- Files cần sửa: <list>
+- Callers cần update: <list>
+- Tests cần update/thêm: <list>
+- Migration strategy (nếu B/C): <plan>
 
-Required: pyyaml, numpy, scikit-learn, xgboost, shap, dataclasses, typing
-Optional: anthropic (Mode A MVE generation), imbalanced-learn (SMOTE), streamlit
-Removed from v1.0: re (no longer needed)
-
-Style:
-- snake_case everywhere
-- Type hints on all function signatures
-- Docstrings on all public functions
-- Functions over classes unless state management is needed
-- MUST have offline/rule-based fallback for mve_generator.py (Mode B)
-- All M1–M8 tests must pass without ANTHROPIC_API_KEY
-
----
-
-## SEVERITY MAPPING (use this, not CVSS)
-
-CRITICAL: Life-sustaining (active infusion, ventilator, surgical) → immediately
-HIGH:     Active clinical care (EHR, active PACS, pharmacy, monitors) → within 1h
-MEDIUM:   Clinical-support not immediate (scheduling, archived imaging) → within 4h
-LOW:      Administrative, minimal PHI (guest Wi-Fi, marketing) → within 24h
-
----
-
-## ALIGNMENT REPORT FORMAT (unchanged from v1.0)
-
-```yaml
-test_results:
-  - metric_id: M1
-    result_value: 0.0
-    target: 0.95
-    minimum: 0.85
-    pass_fail: PASS / WARN / FAIL
-
-claims_supported:
-  - claim_id: C1
-    supported_by: [M2, M8, M5]
-    verdict: SUPPORTED / PARTIAL / NOT_SUPPORTED
-
-claims_not_tested:
-  - claim_id: C4
-    reason: "A/B user study Phase 2"
-  - claim_id: C5
-    reason: "Field deployment Phase 3"
-
-recommendation: SHIP_TO_USER_STUDY / ITERATE / BLOCKED
+Confirm để tiến hành?"
 ```
 
-Recommendation logic:
-- SHIP_TO_USER_STUDY: all M1–M8 PASS, all negative tests PASS,
-                      ≥4/5 claims SUPPORTED, m5 PASS
-- ITERATE:            any test WARN OR 1–2 claims PARTIAL OR m5 WARN
-- BLOCKED:            any test FAIL OR negative test violation OR M8 hard_fail
+#### Step 4: IMPLEMENT
+
+**Quy tắc sửa:**
+- Atomic commits: 1 commit = 1 logical change
+- KHÔNG mix refactor với feature change
+- Update caller song song với function chính
+- Backward compat khi có thể (optional param > breaking)
+
+#### Step 5: VERIFY
+
+```bash
+# 5.1. Baseline test trước khi sửa
+pytest > /tmp/before.txt
+
+# 5.2. Sau khi sửa
+pytest > /tmp/after.txt
+diff /tmp/before.txt /tmp/after.txt
+
+# 5.3. Type check toàn module
+pyright src/<module>/
+
+# 5.4. Integration test
+pytest tests/integration/ -v
+
+# 5.5. Coverage không giảm
+pytest --cov=<module> --cov-fail-under=<previous>
+```
+
+#### Step 6: REPORT
+
+```
+DEFINITION OF DONE:
+✓ All callers updated (verified via callgraph)
+✓ Old tests pass + new tests for new behavior
+✓ Pyright pass
+✓ Coverage: <before>% → <after>% (≥ before)
+✓ Docstring updated
+✓ Migration path clear (if B/C)
+
+CALLERS UPDATED: <N> files
+- file1.py: <description>
+- file2.py: <description>
+
+READY TO COMMIT.
+```
 
 ---
 
-## KNOWN DESIGN GAPS (from mve_improvement_analysis.yaml)
+### 🔴 Workflow DELETE: Xóa function/feature
 
-These must be addressed in mve_generator.py before paper submission:
+> **Triết lý**: Xóa code là **tài sản**, không phải mất mát. Nhưng phải xóa đúng cách, không thì là **sabotage**.
 
-IMP-01: EHR access alerts — severity ≠ action-required. Always force-reauth.
-IMP-02: unauthorized_ehr_access — add role_authorization_check to Layer 1.
-IMP-03: IoMT clinical constraint — distinguish network isolation vs device power-off.
-IMP-04: LOW-severity benign alerts — lead with benign hypothesis, not anomaly framing.
-IMP-05: IoMT behavioral deviation — include numeric baseline in deviation_description.
-IMP-06: Data exfiltration — specify exact block scope in Layer 3 immediate_action.
-IMP-07 and IMP-08 are paper limitations, not code fixes.
+#### Step 1: VERIFY THỰC SỰ KHÔNG DÙNG
 
-<!-- code-review-graph MCP tools -->
-## MCP Tools: code-review-graph
+Agent BẮT BUỘC chạy 5 check sau, **TẤT CẢ phải clean**:
 
-**IMPORTANT: This project has a knowledge graph. ALWAYS use the
-code-review-graph MCP tools BEFORE using Grep/Glob/Read to explore
-the codebase.** The graph is faster, cheaper (fewer tokens), and gives
-you structural context (callers, dependents, test coverage) that file
-scanning cannot.
+```bash
+# 1.1. Static call graph
+python query_callgraph.py callers <function_name>
 
-### When to use graph tools FIRST
+# 1.2. Lexical search trong code
+rg "<function_name>" --type py
 
-- **Exploring code**: `semantic_search_nodes` or `query_graph` instead of Grep
-- **Understanding impact**: `get_impact_radius` instead of manually tracing imports
-- **Code review**: `detect_changes` + `get_review_context` instead of reading entire files
-- **Finding relationships**: `query_graph` with callers_of/callees_of/imports_of/tests_for
-- **Architecture questions**: `get_architecture_overview` + `list_communities`
+# 1.3. Search trong config files
+rg "<function_name>" --type yaml --type json --type toml --type ini
 
-Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
+# 1.4. Dynamic reference (getattr, string lookup)
+rg "getattr.*<function_name>" --type py
+rg "['\"]<function_name>['\"]" --type py
 
-### Key Tools
+# 1.5. Entry points & build configs
+grep -r "<function_name>" pyproject.toml setup.py setup.cfg \
+  Makefile .github/ scripts/ 2>/dev/null
+```
 
-| Tool | Use when |
-|------|----------|
-| `detect_changes` | Reviewing code changes — gives risk-scored analysis |
-| `get_review_context` | Need source snippets for review — token-efficient |
-| `get_impact_radius` | Understanding blast radius of a change |
-| `get_affected_flows` | Finding which execution paths are impacted |
-| `query_graph` | Tracing callers, callees, imports, tests, dependencies |
-| `semantic_search_nodes` | Finding functions/classes by name or keyword |
-| `get_architecture_overview` | Understanding high-level codebase structure |
-| `refactor_tool` | Planning renames, finding dead code |
+#### Step 2: CHECK FALSE POSITIVES
 
-### Workflow
+⚠️ **KHÔNG xóa nếu function match một trong các pattern sau** (dù callgraph báo 0 callers):
 
-1. The graph auto-updates on file changes (via hooks).
-2. Use `detect_changes` for code review.
-3. Use `get_affected_flows` to understand impact.
-4. Use `query_graph` pattern="tests_for" to check coverage.
+| Pattern | Lý do |
+|---|---|
+| `@app.route(...)`, `@router.get(...)` | Flask/FastAPI route handler |
+| `class Meta:` trong Django model | Django ORM dùng |
+| `def __init_subclass__`, `def __init__` | Python magic methods |
+| `def setUp`, `def tearDown`, `def test_*` | Test framework gọi |
+| Có trong `entry_points` của setup.py | CLI command |
+| Có trong YAML/JSON config | Plugin/handler system |
+| Inherit từ ABC/Protocol | Subclass dùng implicit |
+| Có decorator `@register`, `@command`, etc. | Registry pattern |
+| Function được pass as callback | Higher-order usage |
+
+```
+REPORT TO USER:
+"Verify dead code cho '<function_name>':
+✓ Callgraph: 0 callers
+✓ Lexical: 0 references in .py
+✓ Config: 0 references
+✓ Dynamic: 0 getattr/string matches
+✓ Entry points: clean
+
+False positive checks:
+- Decorator: <pass/fail>
+- Magic method: <pass/fail>
+- Registry: <pass/fail>
+
+Risk level: [SAFE / NEEDS DEPRECATION / DO NOT DELETE]
+Recommendation: <action>"
+```
+
+#### Step 3: DEPRECATION (nếu là public API hoặc > 5 callers)
+
+```python
+# Release N: Mark deprecated
+def old_function(x: int) -> int:
+    """DEPRECATED: Use new_function instead.
+
+    .. deprecated:: 2.5.0
+        Will be removed in 3.0.0
+    """
+    warnings.warn(
+        "old_function is deprecated, use new_function",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return new_function(x)
+
+# Release N+1: Bump warning level
+# Release N+2: Xóa thật
+```
+
+KHÔNG xóa thẳng nếu:
+- Là public API (export trong `__init__.py`)
+- Có > 5 caller
+- Module được external package import
+- Có tài liệu reference
+
+#### Step 4: SAFE DELETE
+
+```bash
+# 4.1. Tạo branch riêng (KHÔNG xóa trên main)
+git checkout -b chore/remove-<function_name>
+
+# 4.2. Xóa function + test + import liên quan
+
+# 4.3. Verify không vỡ gì
+pyright src/
+pytest
+ruff check
+
+# 4.4. Rebuild index
+python build_function_index.py .
+python build_call_graph.py .
+
+# 4.5. Confirm thật sự dead
+python query_callgraph.py callers <function_name>
+# → "0 callers" or "not found"
+
+# 4.6. Final search
+rg "<function_name>" --type py
+# → empty
+```
+
+#### Step 5: COMMIT & DOCUMENT
+
+```bash
+git commit -m "refactor: remove unused function <function_name>
+
+- Confirmed 0 callers via static analysis
+- No dynamic references (getattr/string lookups)
+- No config references
+- Deprecated since v<X.Y.Z> (if applicable)
+- Removed associated tests and imports
+
+BREAKING CHANGE: <function_name> was deprecated since <version>
+Migration: use <new_function> instead"
+```
+
+Update `CHANGELOG.md`:
+```markdown
+## [Unreleased]
+
+### Removed
+- `module.old_function` (deprecated since 2.5.0). Use `new_function` instead.
+```
+
+---
+
+## 🎯 Code Quality Standards
+
+### Type Hints (BẮT BUỘC)
+
+```python
+# ✅ ĐÚNG
+def process(data: dict[str, Any], config: Config | None = None) -> Result:
+    ...
+
+def fetch_users(ids: list[int]) -> list[User]:
+    ...
+
+async def get_user(user_id: int) -> User | None:
+    ...
+
+# ❌ SAI - không có type hint
+def process(data, config=None):
+    ...
+
+# ❌ SAI - dùng Any vô tội vạ
+def process(data: Any) -> Any:
+    ...
+```
+
+**Quy tắc:**
+- Mọi public function: type hint đầy đủ
+- Internal helper: ít nhất return type
+- Tránh `Any` - dùng `object` hoặc generic nếu cần
+- Dùng `| None` thay vì `Optional[X]` (Python 3.10+)
+- Dùng `list[X]` thay vì `List[X]` (Python 3.9+)
+
+### Docstring Style
+
+```python
+def calculate_discount(
+    price: Decimal,
+    user_tier: str,
+    promo_code: str | None = None,
+) -> Decimal:
+    """Calculate final price after applying discounts.
+
+    Discounts are stacked in order: tier discount first, then promo code.
+    Maximum total discount is capped at 50%.
+
+    Args:
+        price: Original price (must be positive)
+        user_tier: User membership tier ('free', 'pro', 'enterprise')
+        promo_code: Optional promo code from active campaign
+
+    Returns:
+        Final price after all discounts, never negative
+
+    Raises:
+        InvalidTierError: If user_tier not in allowed values
+        InvalidPromoCodeError: If promo_code expired or invalid
+
+    Example:
+        >>> calculate_discount(Decimal("100"), "pro", "SUMMER20")
+        Decimal('72.00')
+    """
+```
+
+### Error Handling
+
+```python
+# ✅ ĐÚNG: Specific exception
+def get_user(user_id: int) -> User:
+    user = db.query(User).get(user_id)
+    if user is None:
+        raise UserNotFoundError(f"User {user_id} not found")
+    return user
+
+# ❌ SAI: Bare except
+try:
+    do_something()
+except:  # KHÔNG bao giờ bare except
+    pass
+
+# ❌ SAI: Catch quá rộng
+try:
+    do_something()
+except Exception:  # Quá generic
+    pass
+
+# ✅ ĐÚNG: Catch specific, re-raise nếu cần
+try:
+    do_something()
+except (ValueError, KeyError) as e:
+    logger.error(f"Failed: {e}")
+    raise ProcessingError("Could not process") from e
+```
+
+### Naming Conventions
+
+```python
+# Functions: snake_case, verb-based
+def calculate_tax(): ...
+def get_user_by_id(): ...
+def is_valid_email(): ...  # Bool returns: is_/has_/can_
+
+# Classes: PascalCase, noun-based
+class UserRepository: ...
+class TaxCalculator: ...
+
+# Constants: SCREAMING_SNAKE_CASE
+MAX_RETRY_COUNT = 3
+DEFAULT_TIMEOUT_SECONDS = 30
+
+# Private: leading underscore
+def _internal_helper(): ...
+class _PrivateClass: ...
+
+# Avoid:
+def data(): ...           # Quá generic
+def do_stuff(): ...       # Vô nghĩa
+def func1(): ...          # Không descriptive
+```
+
+---
+
+## 🚫 Anti-Patterns (Agent KHÔNG được làm)
+
+### ❌ Anti-pattern 1: Code mà không search
+
+```
+USER: "Thêm function validate email"
+
+❌ AI XẤU:
+def validate_email(email: str) -> bool:
+    # Viết luôn không search
+    ...
+
+✅ AI TỐT:
+"Để tôi check codebase trước..."
+[runs: python code_search.py "validate email"]
+"Tôi tìm thấy 3 function tương tự:
+1. is_valid_email() trong utils/validation.py
+2. check_email_format() trong auth/helpers.py
+3. EmailValidator class trong validators/
+
+Bạn muốn:
+A. Reuse is_valid_email() (recommended)
+B. Generalize EmailValidator
+C. Viết mới với reason cụ thể?"
+```
+
+### ❌ Anti-pattern 2: Sửa mà không impact analysis
+
+```
+USER: "Đổi calculate_tax để support multi-currency"
+
+❌ AI XẤU:
+[Sửa luôn signature]
+
+✅ AI TỐT:
+"Trước khi sửa, để tôi check impact..."
+[runs: python query_callgraph.py callers calculate_tax]
+"Function này được gọi ở 23 nơi trong 8 files.
+Đề xuất 2 approaches:
+A. Backward compat: thêm currency param với default='VND'
+B. Breaking change: tạo calculate_tax_v2, deprecate v1
+
+A an toàn hơn, B sạch hơn. Chọn approach nào?"
+```
+
+### ❌ Anti-pattern 3: Xóa "dead code" mà không verify
+
+```
+USER: "Xóa function unused này"
+
+❌ AI XẤU:
+[Xóa luôn]
+
+✅ AI TỐT:
+"Check trước khi xóa..."
+[runs 5 verification commands]
+"Function này có decorator @app.route('/api/legacy/...').
+Mặc dù callgraph báo 0 callers, nó vẫn được Flask gọi qua HTTP route.
+NOT SAFE TO DELETE. Bạn có chắc đã deprecate route này không?"
+```
+
+### ❌ Anti-pattern 4: Skip verification
+
+```
+❌ AI XẤU:
+"Đã xong! Code chạy ổn rồi."
+[không chạy pytest, không chạy pyright]
+
+✅ AI TỐT:
+"Đã implement xong. Verifying...
+- Pyright: 0 errors ✓
+- Pytest: 12 passed, 0 failed ✓
+- Coverage: 87% ✓
+- No duplicates detected ✓
+
+DONE. Ready to commit."
+```
+
+### ❌ Anti-pattern 5: Generate test sau cùng
+
+```
+❌ AI XẤU:
+[Viết function 100 dòng]
+[Sau đó mới viết test cho function đó - test mù theo code]
+
+✅ AI TỐT:
+[Viết test case từ spec trước]
+[Implement function]
+[Verify test pass]
+```
+
+### ❌ Anti-pattern 6: Mix concerns trong 1 commit
+
+```
+❌ AI XẤU:
+git commit -m "Add tax calculation, fix login bug, refactor utils, update deps"
+
+✅ AI TỐT:
+git commit -m "feat(tax): add multi-currency tax calculation"
+git commit -m "fix(auth): handle expired token correctly"
+git commit -m "refactor(utils): extract date helpers to dedicated module"
+git commit -m "chore(deps): bump pyright to 1.1.350"
+```
+
+---
+
+## 📦 Commit & PR Standards
+
+### Conventional Commits (BẮT BUỘC)
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:**
+- `feat`: Tính năng mới
+- `fix`: Bug fix
+- `refactor`: Refactor không đổi behavior
+- `perf`: Optimize performance
+- `test`: Thêm/sửa test
+- `docs`: Tài liệu
+- `chore`: Maintenance (deps, config)
+- `style`: Format, không ảnh hưởng code
+- `revert`: Revert commit trước
+
+**Examples:**
+```
+feat(tax): add multi-currency tax calculation
+
+Adds support for USD, EUR, JPY in addition to VND.
+Tax rates are fetched from external API with 1h cache.
+
+Closes #123
+```
+
+```
+refactor(auth): extract token validation to separate module
+
+No behavior change. Improves testability and prepares for
+multi-provider OAuth integration.
+```
+
+```
+fix(payment): handle decimal rounding edge case
+
+Previously: amounts like 99.999 would round to 100.00 then to 100
+Now: properly uses ROUND_HALF_EVEN for financial accuracy
+
+BREAKING CHANGE: Tax calculations now return Decimal with
+exactly 2 decimal places. Callers passing Float will see
+TypeError instead of silent conversion.
+
+Fixes #456
+```
+
+### PR Description Template
+
+```markdown
+## What
+<Mô tả ngắn gọn thay đổi>
+
+## Why
+<Lý do/context. Link issue nếu có>
+
+## How
+<Approach kỹ thuật. Trade-offs nếu có>
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] Manual testing scenarios: <list>
+
+## Impact Analysis
+- Callers affected: <N>
+- Breaking changes: <Y/N>
+- Migration required: <Y/N>
+
+## Checklist
+- [ ] Pyright: 0 errors
+- [ ] Ruff: 0 warnings
+- [ ] Coverage: ≥ previous
+- [ ] No new duplicates
+- [ ] Docs updated
+- [ ] CHANGELOG.md updated (if user-facing)
+```
+
+---
+
+## 🤝 Communication Protocol
+
+### Khi nào agent PHẢI hỏi user
+
+1. **Ambiguous requirement**: Spec không rõ, có > 1 cách interpret
+2. **HIGH/CRITICAL risk change**: > 4 callers bị ảnh hưởng
+3. **Breaking change**: Đổi public API
+4. **Trade-off decisions**: Performance vs readability, etc.
+5. **Discovery của duplicate**: Tìm thấy code tương tự, hỏi reuse hay refactor
+6. **Scope creep**: Task ban đầu nhỏ, agent thấy cần làm thêm thứ khác
+
+### Format câu hỏi
+
+```
+❌ MƠ HỒ:
+"Bạn muốn làm gì?"
+
+✅ RÕ RÀNG:
+"Tôi tìm thấy 3 cách approach cho task này:
+
+A. <option A>
+   - Pros: <list>
+   - Cons: <list>
+   - Effort: 30 min
+
+B. <option B>
+   - Pros: <list>
+   - Cons: <list>
+   - Effort: 2 hours
+
+C. <option C>
+   - Pros: <list>
+   - Cons: <list>
+   - Effort: 1 day
+
+Recommendation: A nếu cần ship nhanh, B nếu codebase này còn phát triển dài.
+
+Bạn chọn approach nào?"
+```
+
+### Khi nào agent CHỦ ĐỘNG báo cáo
+
+- Sau mỗi major step (search done, plan ready, implementation done, tests pass)
+- Khi gặp blocker không tự giải quyết được
+- Khi phát hiện vấn đề ngoài scope (vd: tìm thấy security bug khi đang refactor)
+- Khi quyết định khác plan ban đầu
+
+---
+
+## 🔧 Maintenance Tasks
+
+Agent có thể chủ động đề xuất các task này khi thấy phù hợp:
+
+### Weekly
+- [ ] Run `python query_callgraph.py dead` → propose cleanup
+- [ ] Run `python find_duplicates.py` → propose dedup
+- [ ] Check `pyright` errors trend
+
+### Monthly
+- [ ] Rebuild full index
+- [ ] Review god functions: `python query_callgraph.py god`
+- [ ] Check circular deps: `python module_deps.py`
+- [ ] Update embeddings nếu codebase thay đổi nhiều
+
+### Per-PR
+- [ ] Update index sau merge
+- [ ] Verify coverage không giảm
+- [ ] Check no new duplicates introduced
+
+---
+
+## 🆘 Escalation: Khi nào STOP và hỏi user
+
+Agent BẮT BUỘC dừng và hỏi user trong các trường hợp sau:
+
+1. **Verification failed** sau 3 lần thử fix
+2. **Breaking change** ngoài scope ban đầu
+3. **Security concern** (auth, crypto, PII handling)
+4. **Performance regression** > 20% trong benchmark
+5. **Database schema change** (migration cần plan)
+6. **External API change** (cần coordinate với team khác)
+7. **License/legal issue** (dependency mới, code copy từ đâu đó)
+
+Format escalation:
+
+```
+⚠️ ESCALATION REQUIRED
+
+Issue: <mô tả>
+Severity: <LOW/MEDIUM/HIGH/CRITICAL>
+Why I'm stopping: <lý do không tự quyết được>
+
+Options:
+A. <option>
+B. <option>
+C. <option>
+
+Recommendation: <if any>
+
+Cần guidance từ bạn để tiếp tục.
+```
+
+---
+
+## 📚 References & Project-Specific Notes
+
+_(TODO: User điền các thông tin specific của project)_
+
+### Domain knowledge
+- <Link đến domain docs, business rules>
+
+### External dependencies
+- <Database schema docs>
+- <API contracts>
+- <Third-party services>
+
+### Convention exceptions
+- <Nếu có chỗ codebase không follow rule chuẩn, document ở đây>
+
+### Known tech debt
+- <List các phần code cần cải thiện nhưng chưa có thời gian>
+
+---
+
+## 🎓 Triết Lý Cuối
+
+> **Senior không phải là người viết code nhanh nhất.**
+> **Senior là người ngần ngại nhất trước mỗi thay đổi**, vì họ hiểu blast radius.
+
+3 câu thần chú khi muốn skip quy tắc:
+
+1. *"Code này sẽ tồn tại lâu hơn tôi nghĩ."*
+2. *"Người sửa nó sau này có thể là tôi của 6 tháng sau, đã quên hết context."*
+3. *"Test không có không có nghĩa là không cần test."*
+
+**Nguyên tắc cuối:**
+
+> Khi không chắc chắn → **hỏi user**, đừng đoán.
+> Khi đoán → **báo rõ là đang đoán**, đừng giả vờ chắc chắn.
+> Khi sai → **thừa nhận và sửa**, đừng cover up.
+
+---
+
+## ✅ Pre-Action Checklist (Agent print ra trước mỗi action)
+
+```
+[ ] Đã hiểu requirement chưa?
+[ ] Đã search codebase chưa?
+[ ] Đã impact analysis chưa? (nếu sửa/xóa)
+[ ] Đã có plan rõ ràng chưa?
+[ ] User đã confirm chưa? (nếu HIGH risk)
+[ ] Có available tool nào support task này?
+[ ] Verification strategy là gì?
+```
+
+Nếu BẤT KỲ ô nào chưa check → **DỪNG** và xử lý ô đó trước.
+
+---
+
+**END OF AGENTS.md**
+
+> File này được maintain bởi tech lead. Đề xuất thay đổi qua PR với label `agents-md`.
+> Last updated: 2026-05-07
+> Version: 1.0

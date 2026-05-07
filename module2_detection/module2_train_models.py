@@ -307,39 +307,34 @@ def train_track_a(
 
 # ── Track B: DAE ────────────────────────────────────────────────────────
 
-def _load_oof_probas(output_dir: Path, benign_mask: np.ndarray) -> np.ndarray:
-    """Load Track A out-of-fold probabilities and select benign rows.
+_TRACK_A_MODELS = ("xgboost", "random_forest", "decision_tree")
+
+
+def _load_track_a_probas(
+    output_dir: Path,
+    benign_mask: np.ndarray,
+    *,
+    suffix: str,
+) -> np.ndarray:
+    """Load Track A probabilities for all 3 models and stack benign rows.
+
+    Args:
+        output_dir: Directory containing ``{model}_{suffix}.npy`` files.
+        benign_mask: Boolean mask selecting benign rows.
+        suffix: Either ``"oof_proba"`` (out-of-fold, used as fallback) or
+            ``"val_proba"`` (held-out validation set — closes GAP-L1-1).
 
     Returns:
-        Array of shape (n_benign, 3) — one column per Track A model.
+        Array of shape ``(n_benign, 3)`` — one column per Track A model.
 
     Opt-5: three .npy files are loaded concurrently via ThreadPoolExecutor
-    (I/O bound, GIL released for numpy file reads) instead of sequentially.
+    (I/O bound, GIL released for numpy file reads).
     """
-    _names = ("xgboost", "random_forest", "decision_tree")
-
     def _load_one(name: str) -> np.ndarray:
-        return np.load(output_dir / f"{name}_oof_proba.npy")[benign_mask]
+        return np.load(output_dir / f"{name}_{suffix}.npy")[benign_mask]
 
     with ThreadPoolExecutor(max_workers=3) as pool:
-        cols = list(pool.map(_load_one, _names))
-    return np.column_stack(cols)
-
-
-def _load_val_probas(output_dir: Path, benign_mask: np.ndarray) -> np.ndarray:
-    """Load Track A validation-set probabilities and select benign rows.
-
-    Closes GAP-L1-1: replaces OOF probas with held-out val-set probas
-    in the cascaded DAE input space. Falls back to OOF (callers check
-    file existence before invoking).
-    """
-    _names = ("xgboost", "random_forest", "decision_tree")
-
-    def _load_one(name: str) -> np.ndarray:
-        return np.load(output_dir / f"{name}_val_proba.npy")[benign_mask]
-
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        cols = list(pool.map(_load_one, _names))
+        cols = list(pool.map(_load_one, _TRACK_A_MODELS))
     return np.column_stack(cols)
 
 
@@ -347,7 +342,7 @@ def _val_probas_available(output_dir: Path) -> bool:
     """True iff all 3 Track A val-proba files exist."""
     return all(
         (output_dir / f"{n}_val_proba.npy").exists()
-        for n in ("xgboost", "random_forest", "decision_tree")
+        for n in _TRACK_A_MODELS
     )
 
 
@@ -420,7 +415,7 @@ def train_track_b_dae(
         X_val = val_df.drop(columns=drop_cols).values.astype(np.float32)
         benign_mask = y_val == 0
         X_benign = X_val[benign_mask]
-        probas = _load_val_probas(output_dir, benign_mask)
+        probas = _load_track_a_probas(output_dir, benign_mask, suffix="val_proba")
         proba_source = "val"
         logger.info(
             "GAP-L1-1: using held-out val set for DAE training "
@@ -431,7 +426,7 @@ def train_track_b_dae(
         # Legacy OOF path (no val artifacts available)
         benign_mask = y_train == 0
         X_benign = X_train[benign_mask]
-        probas = _load_oof_probas(output_dir, benign_mask)
+        probas = _load_track_a_probas(output_dir, benign_mask, suffix="oof_proba")
         proba_source = "oof"
         logger.info(
             "Val artifacts unavailable; falling back to OOF probas "

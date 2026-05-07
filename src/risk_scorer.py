@@ -245,6 +245,15 @@ def score_alert(
         if similar > 5:
             risk_multiplier = max(0.5, risk_multiplier - 0.20)
 
+        # Layer 3 v4.0: clinical_active adjustment. When the patient is
+        # under active care (procedure / ICU monitoring / surgery), drop
+        # the threshold by tightening the device multiplier — we'd
+        # rather catch a soft signal during a procedure than miss it.
+        # Floor at 0.40 so we never make the gate trivially loose.
+        if event_context.get("clinical_active", False):
+            mult = max(0.40, mult - 0.10)
+            threshold = round(DEFAULT_THRESHOLD * mult, 4)
+
         # TM-02 fix: baseline quarantine for newly enrolled devices.
         # Devices with < 14 days of baseline data get a lower threshold
         # (30% reduction) to compensate for the DAE's unreliable baseline.
