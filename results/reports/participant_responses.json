@@ -2,7 +2,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -19,7 +19,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -36,7 +36,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -53,7 +53,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -70,7 +70,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -87,7 +87,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -104,7 +104,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -121,7 +121,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -138,7 +138,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -155,7 +155,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -172,7 +172,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "investigate",
     "correct_action": "isolate",
@@ -189,7 +189,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -206,7 +206,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -223,7 +223,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -240,7 +240,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -257,7 +257,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -274,7 +274,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -291,7 +291,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -308,7 +308,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -325,7 +325,7 @@
   {
     "participant_id": "P01",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -342,7 +342,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -359,7 +359,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -376,7 +376,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -393,7 +393,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -410,7 +410,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -427,7 +427,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -444,7 +444,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -461,7 +461,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -478,7 +478,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -495,7 +495,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -512,7 +512,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -529,7 +529,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -546,7 +546,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -563,7 +563,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -580,7 +580,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -597,7 +597,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -614,7 +614,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -631,7 +631,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -648,7 +648,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -665,7 +665,7 @@
   {
     "participant_id": "P02",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -682,7 +682,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -699,7 +699,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -716,7 +716,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -733,7 +733,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "isolate",
@@ -750,7 +750,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -767,7 +767,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -784,7 +784,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -801,7 +801,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -818,7 +818,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -835,7 +835,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "dismiss",
@@ -852,7 +852,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -869,7 +869,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "investigate",
     "correct_action": "isolate",
@@ -886,7 +886,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -903,7 +903,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -920,7 +920,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -937,7 +937,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -954,7 +954,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -971,7 +971,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -988,7 +988,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1005,7 +1005,7 @@
   {
     "participant_id": "P03",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1022,7 +1022,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1039,7 +1039,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1056,7 +1056,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1073,7 +1073,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1090,7 +1090,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -1107,7 +1107,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -1124,7 +1124,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1141,7 +1141,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1158,7 +1158,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1175,7 +1175,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1192,7 +1192,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -1209,7 +1209,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "investigate",
     "correct_action": "isolate",
@@ -1226,7 +1226,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1243,7 +1243,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1260,7 +1260,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1277,7 +1277,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1294,7 +1294,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1311,7 +1311,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1328,7 +1328,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1345,7 +1345,7 @@
   {
     "participant_id": "P04",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1362,7 +1362,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1379,7 +1379,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1396,7 +1396,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1413,7 +1413,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1430,7 +1430,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -1447,7 +1447,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -1464,7 +1464,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1481,7 +1481,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1498,7 +1498,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1515,7 +1515,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1532,7 +1532,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1549,7 +1549,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1566,7 +1566,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1583,7 +1583,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1600,7 +1600,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1617,7 +1617,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1634,7 +1634,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "monitor",
     "correct_action": "isolate",
@@ -1651,7 +1651,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1668,7 +1668,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1685,7 +1685,7 @@
   {
     "participant_id": "P05",
     "participant_role": "analyst",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1702,7 +1702,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1719,7 +1719,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1736,7 +1736,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1753,7 +1753,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1770,7 +1770,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -1787,7 +1787,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -1804,7 +1804,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1821,7 +1821,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1838,7 +1838,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1855,7 +1855,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -1872,7 +1872,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1889,7 +1889,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1906,7 +1906,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1923,7 +1923,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -1940,7 +1940,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1957,7 +1957,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -1974,7 +1974,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "investigate",
     "correct_action": "isolate",
@@ -1991,7 +1991,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2008,7 +2008,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "monitor",
     "correct_action": "isolate",
@@ -2025,7 +2025,7 @@
   {
     "participant_id": "P06",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2042,7 +2042,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2059,7 +2059,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2076,7 +2076,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2093,7 +2093,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2110,7 +2110,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "investigate",
@@ -2127,7 +2127,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "monitor",
@@ -2144,7 +2144,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "dismiss",
@@ -2161,7 +2161,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2178,7 +2178,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2195,7 +2195,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2212,7 +2212,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2229,7 +2229,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -2246,7 +2246,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -2263,7 +2263,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2280,7 +2280,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2297,7 +2297,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2314,7 +2314,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2331,7 +2331,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2348,7 +2348,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2365,7 +2365,7 @@
   {
     "participant_id": "P07",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2382,7 +2382,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2399,7 +2399,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2416,7 +2416,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2433,7 +2433,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2450,7 +2450,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -2467,7 +2467,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -2484,7 +2484,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2501,7 +2501,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2518,7 +2518,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2535,7 +2535,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2552,7 +2552,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2569,7 +2569,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2586,7 +2586,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -2603,7 +2603,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2620,7 +2620,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2637,7 +2637,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "investigate",
     "correct_action": "isolate",
@@ -2654,7 +2654,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2671,7 +2671,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2688,7 +2688,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2705,7 +2705,7 @@
   {
     "participant_id": "P08",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -2722,7 +2722,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2739,7 +2739,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -2756,7 +2756,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2773,7 +2773,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2790,7 +2790,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -2807,7 +2807,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -2824,7 +2824,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2841,7 +2841,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2858,7 +2858,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2875,7 +2875,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -2892,7 +2892,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2909,7 +2909,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2926,7 +2926,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2943,7 +2943,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2960,7 +2960,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2977,7 +2977,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -2994,7 +2994,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3011,7 +3011,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3028,7 +3028,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3045,7 +3045,7 @@
   {
     "participant_id": "P09",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3062,7 +3062,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3079,7 +3079,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3096,7 +3096,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3113,7 +3113,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3130,7 +3130,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -3147,7 +3147,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -3164,7 +3164,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3181,7 +3181,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3198,7 +3198,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3215,7 +3215,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3232,7 +3232,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3249,7 +3249,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3266,7 +3266,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3283,7 +3283,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "investigate",
     "correct_action": "isolate",
@@ -3300,7 +3300,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3317,7 +3317,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -3334,7 +3334,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3351,7 +3351,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -3368,7 +3368,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3385,7 +3385,7 @@
   {
     "participant_id": "P10",
     "participant_role": "clinician",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3402,7 +3402,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3419,7 +3419,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3436,7 +3436,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3453,7 +3453,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3470,7 +3470,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -3487,7 +3487,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -3504,7 +3504,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3521,7 +3521,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3538,7 +3538,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3555,7 +3555,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3572,7 +3572,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3589,7 +3589,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3606,7 +3606,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3623,7 +3623,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3640,7 +3640,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3657,7 +3657,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3674,7 +3674,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3691,7 +3691,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3708,7 +3708,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3725,7 +3725,7 @@
   {
     "participant_id": "P11",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3742,7 +3742,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3759,7 +3759,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3776,7 +3776,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3793,7 +3793,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3810,7 +3810,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -3827,7 +3827,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -3844,7 +3844,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3861,7 +3861,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3878,7 +3878,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3895,7 +3895,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -3912,7 +3912,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -3929,7 +3929,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3946,7 +3946,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3963,7 +3963,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "monitor",
     "correct_action": "isolate",
@@ -3980,7 +3980,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -3997,7 +3997,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4014,7 +4014,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4031,7 +4031,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4048,7 +4048,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4065,7 +4065,7 @@
   {
     "participant_id": "P12",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -4082,7 +4082,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4099,7 +4099,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4116,7 +4116,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4133,7 +4133,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4150,7 +4150,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -4167,7 +4167,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -4184,7 +4184,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "dismiss",
@@ -4201,7 +4201,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4218,7 +4218,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4235,7 +4235,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4252,7 +4252,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4269,7 +4269,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4286,7 +4286,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4303,7 +4303,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4320,7 +4320,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4337,7 +4337,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -4354,7 +4354,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4371,7 +4371,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "monitor",
     "correct_action": "isolate",
@@ -4388,7 +4388,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4405,7 +4405,7 @@
   {
     "participant_id": "P13",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4422,7 +4422,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4439,7 +4439,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4456,7 +4456,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4473,7 +4473,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4490,7 +4490,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -4507,7 +4507,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "monitor",
     "correct_action": "monitor",
@@ -4524,7 +4524,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4541,7 +4541,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4558,7 +4558,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4575,7 +4575,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4592,7 +4592,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4609,7 +4609,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4626,7 +4626,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4643,7 +4643,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4660,7 +4660,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4677,7 +4677,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4694,7 +4694,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4711,7 +4711,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -4728,7 +4728,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4745,7 +4745,7 @@
   {
     "participant_id": "P14",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "dismiss",
     "correct_action": "isolate",
@@ -4762,7 +4762,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2314",
+    "alert_id": "EVAL-0059",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4779,7 +4779,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4796,7 +4796,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0554",
+    "alert_id": "EVAL-0301",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4813,7 +4813,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-0517",
+    "alert_id": "EVAL-0325",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4830,7 +4830,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-2294",
+    "alert_id": "EVAL-0895",
     "condition": "with_xai",
     "chosen_action": "investigate",
     "correct_action": "investigate",
@@ -4847,7 +4847,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3727",
+    "alert_id": "EVAL-0998",
     "condition": "with_xai",
     "chosen_action": "isolate",
     "correct_action": "monitor",
@@ -4864,7 +4864,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3235",
+    "alert_id": "EVAL-0516",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4881,7 +4881,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4732",
+    "alert_id": "EVAL-0006",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4898,7 +4898,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3125",
+    "alert_id": "EVAL-0904",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4915,7 +4915,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-4846",
+    "alert_id": "EVAL-0607",
     "condition": "with_xai",
     "chosen_action": "dismiss",
     "correct_action": "dismiss",
@@ -4932,7 +4932,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -4949,7 +4949,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "monitor",
     "correct_action": "isolate",
@@ -4966,7 +4966,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "monitor",
     "correct_action": "isolate",
@@ -4983,7 +4983,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -5000,7 +5000,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -5017,7 +5017,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -5034,7 +5034,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -5051,7 +5051,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",
@@ -5068,7 +5068,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "investigate",
     "correct_action": "isolate",
@@ -5085,7 +5085,7 @@
   {
     "participant_id": "P15",
     "participant_role": "administrator",
-    "alert_id": "EVAL-3058",
+    "alert_id": "EVAL-0976",
     "condition": "without_xai",
     "chosen_action": "isolate",
     "correct_action": "isolate",

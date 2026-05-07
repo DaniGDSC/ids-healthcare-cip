@@ -149,24 +149,38 @@ RESPONSE_MAPPING = {
 
 # ── Data loading ────────────────────────────────────────────────────────
 
-def load_test_data() -> tuple:
-    """Load test parquet → X_test, y_test, attack_cats, feat_names.
+def load_split_data(split: str = "test") -> tuple:
+    """Load a frozen split parquet → X, y, attack_cats, feat_names.
+
+    Args:
+        split: One of ``"test"`` (paper metrics) or ``"demo"`` (dashboard /
+            user-study). Per ARCHITECTURE.md Strategy 1, these two splits
+            are disjoint and frozen — never seen by any model in training.
 
     Drops non-feature columns introduced by GAP-PB-1 (row_id, device_class,
     attack_category) so the feature matrix stays at 25 columns. Joinable
     metadata is read separately by per-device-class consumers.
     """
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
+    if split not in ("test", "demo"):
+        raise ValueError(f"split must be 'test' or 'demo', got {split!r}")
+    df = pd.read_parquet(
+        PROJECT_ROOT / "data/processed" / f"{split}_phase1.parquet"
+    )
     drop_cols = [
         c for c in ["Label", "Attack Category", "row_id",
                     "device_class", "attack_category"]
         if c in df.columns
     ]
     feat_names = [c for c in df.columns if c not in drop_cols]
-    X_test = df[feat_names].values.astype(np.float32)
-    y_test = df["Label"].values
+    X = df[feat_names].values.astype(np.float32)
+    y = df["Label"].values
     attack_cats = df["Attack Category"].values if "Attack Category" in df.columns else None
-    return X_test, y_test, attack_cats, feat_names
+    return X, y, attack_cats, feat_names
+
+
+def load_test_data() -> tuple:
+    """Backward-compat shim: load the test split via ``load_split_data``."""
+    return load_split_data("test")
 
 
 def load_xgboost_proba(*, prefer_calibrated: bool = True) -> tuple:

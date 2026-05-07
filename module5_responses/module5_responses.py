@@ -191,14 +191,18 @@ BASE_PROTOCOL = {
 # ── Data loading ────────────────────────────────────────────────────────
 
 def load_risk_scores() -> dict:
-    """Load Module 3 risk scores."""
-    data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
+    """Load Module 3 demo-pool risk scores (Strategy 1).
+
+    Per ARCHITECTURE.md: M5 response recommendations feed the dashboard,
+    so they must be aligned with the demo pool — not the test split.
+    """
+    data = np.load(PROJECT_ROOT / "results/reports/demo_scores.npz",
                    allow_pickle=True)
     return {k: data[k] for k in data.files}
 
 
 def load_explanations() -> tuple:
-    """Load Module 4 analyst reports and clinician summaries."""
+    """Load Module 4 analyst reports and clinician summaries (demo)."""
     with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
         analyst = {a["sample_index"]: a for a in json.load(f)}
     with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
@@ -207,7 +211,7 @@ def load_explanations() -> tuple:
 
 
 def load_attack_categories() -> np.ndarray:
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet",
+    df = pd.read_parquet(PROJECT_ROOT / "data/processed/demo_phase1.parquet",
                          columns=["Attack Category"])
     return df["Attack Category"].values
 

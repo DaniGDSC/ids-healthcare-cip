@@ -1,26 +1,26 @@
 {
-  "total_evaluated": 3737,
-  "true_positives": 572,
-  "false_positives": 862,
-  "false_negatives": 42,
-  "fpr": 0.2307,
-  "fnr": 0.0112,
-  "mean_fp_risk_score": 0.4908,
-  "mean_tp_risk_score": 0.7115,
+  "total_evaluated": 1267,
+  "true_positives": 197,
+  "false_positives": 277,
+  "false_negatives": 8,
+  "fpr": 0.2186,
+  "fnr": 0.0063,
+  "mean_fp_risk_score": 0.491,
+  "mean_tp_risk_score": 0.7231,
   "current_thresholds": {
     "CRITICAL": 0.8,
     "HIGH": 0.6,
     "MEDIUM": 0.4
   },
   "suggested_threshold_change": {
-    "CRITICAL": 0.8196,
-    "HIGH": 0.6392,
-    "MEDIUM": 0.4653
+    "CRITICAL": 0.8178,
+    "HIGH": 0.6356,
+    "MEDIUM": 0.4593
   },
   "adjustments": [
     {
       "metric": "fpr",
-      "current_value": 0.2307,
+      "current_value": 0.2186,
       "target": 0.1,
       "direction": "raise"
     }

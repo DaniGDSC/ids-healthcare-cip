@@ -519,6 +519,84 @@ def train_track_b_dae(
     return test_metrics
 
 
+# ── Demo-pool prediction (post-training) ────────────────────────────────
+
+
+def predict_demo() -> None:
+    """Emit ``{model}_demo_predictions.npz`` for all 3 Track A models + DAE.
+
+    Loads the frozen pipelines from ``results/models/`` and runs them on
+    ``data/processed/demo_phase1.parquet`` (the 10% frozen demo pool).
+    Outputs match the test-prediction schema so M3 can score demo rows
+    via the same path. Per ARCHITECTURE.md: demo never touches the
+    paper-metrics path; M6's ``evaluation_alerts.json`` is sourced from
+    these demo predictions, NOT from test predictions.
+    """
+    from common import loads_signed
+    from module2_detection.models.DAE import DAEDetector
+
+    output_dir = PROJECT_ROOT / "results/models"
+    demo_path = PROJECT_ROOT / "data/processed/demo_phase1.parquet"
+    if not demo_path.exists():
+        logger.warning(
+            "demo_phase1.parquet not found — skipping demo-pool predictions. "
+            "Re-run module1_preprocessing.phase1 to materialise the demo split."
+        )
+        return
+
+    demo_df = pd.read_parquet(demo_path)
+    drop_cols = [
+        c for c in ["Label", "Attack Category", "row_id",
+                    "device_class", "attack_category"]
+        if c in demo_df.columns
+    ]
+    y_demo = demo_df["Label"].values.astype(int)
+    X_demo = demo_df.drop(columns=drop_cols).values.astype(np.float32)
+    row_ids = (
+        demo_df["row_id"].values
+        if "row_id" in demo_df.columns
+        else np.arange(len(demo_df), dtype=np.int64)
+    )
+
+    logger.info(
+        "Demo-pool predictions: n=%d, attack_rate=%.4f",
+        len(y_demo), float(y_demo.mean()),
+    )
+
+    # Track A: 3 supervised pipelines
+    for name in ("xgboost", "random_forest", "decision_tree"):
+        clf = loads_signed(output_dir / f"{name}_final_pipeline.pkl")
+        with open(output_dir / f"{name}_final_report.json") as f:
+            threshold = json.load(f)["optimal_threshold"]
+        y_proba = clf.predict_proba(X_demo)[:, 1]
+        y_pred = (y_proba >= threshold).astype(int)
+        np.savez(
+            output_dir / f"{name}_demo_predictions.npz",
+            y_true=y_demo, y_pred=y_pred, y_proba=y_proba, row_id=row_ids,
+        )
+        logger.info("  %s_demo_predictions.npz written (n=%d)", name, len(y_demo))
+
+    # Track B: DAE on cascaded input [raw 25 || P_xgb, P_rf, P_dt] = 28 dims
+    track_a_demo = np.column_stack([
+        np.load(output_dir / f"{n}_demo_predictions.npz")["y_proba"]
+        for n in ("xgboost", "random_forest", "decision_tree")
+    ])
+    X_demo_aug = np.column_stack([X_demo, track_a_demo])
+
+    det = DAEDetector.from_artefacts(
+        output_dir / "dae_detector.json",
+        output_dir / "dae_model.weights.h5",
+    )
+    y_pred_dae = det.predict(X_demo_aug)
+    errors = det.reconstruction_error(X_demo_aug)
+    np.savez(
+        output_dir / "dae_demo_predictions.npz",
+        y_true=y_demo, y_pred=y_pred_dae, reconstruction_error=errors,
+        row_id=row_ids,
+    )
+    logger.info("  dae_demo_predictions.npz written (n=%d)", len(y_demo))
+
+
 # ── Main ────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -559,6 +637,13 @@ def main() -> None:
     # Track B: DAE
     dae_metrics = train_track_b_dae(X_train, y_train, X_test, y_test, feat_names)
     all_metrics["dae"] = dae_metrics
+
+    # ── Demo-pool predictions (Strategy 1 — frozen demo split) ──
+    # Loads the just-trained models + demo_phase1.parquet and emits a
+    # parallel set of {model}_demo_predictions.npz files. M3 then scores
+    # the demo rows separately to produce demo_scores.npz; M6 sources
+    # evaluation_alerts.json from those (NEVER from test).
+    predict_demo()
 
     # Final summary
     total = round(time.perf_counter() - t0, 1)

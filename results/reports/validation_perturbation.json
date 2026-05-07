@@ -1,30 +1,30 @@
 {
   "xgboost": {
     "top_features_masked": [
-      "Dur",
+      "SIntPkt",
       "Sport",
       "DIntPkt",
       "Temp",
       "Flgs"
     ],
-    "f1_baseline": 0.8923,
-    "f1_after_masking": 0.2229,
-    "f1_drop": 0.6695,
-    "f1_drop_pct": 75.0,
+    "f1_baseline": 0.8924,
+    "f1_after_masking": 0.2285,
+    "f1_drop": 0.6639,
+    "f1_drop_pct": 74.4,
     "faithful": true
   },
   "random_forest": {
     "top_features_masked": [
-      "Pulse_Rate",
+      "SrcLoad",
       "Temp",
       "Sport",
       "DIntPkt",
       "Flgs"
     ],
-    "f1_baseline": 0.8003,
-    "f1_after_masking": 0.2677,
-    "f1_drop": 0.5326,
-    "f1_drop_pct": 66.5,
+    "f1_baseline": 0.7574,
+    "f1_after_masking": 0.2234,
+    "f1_drop": 0.534,
+    "f1_drop_pct": 70.5,
     "faithful": true
   },
   "decision_tree": {
@@ -35,10 +35,10 @@
       "DIntPkt",
       "Flgs"
     ],
-    "f1_baseline": 0.6977,
-    "f1_after_masking": 0.2231,
-    "f1_drop": 0.4746,
-    "f1_drop_pct": 68.0,
+    "f1_baseline": 0.7597,
+    "f1_after_masking": 0.2233,
+    "f1_drop": 0.5364,
+    "f1_drop_pct": 70.6,
     "faithful": true
   }
 }

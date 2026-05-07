@@ -1,225 +1,225 @@
 {
-  "total_samples": 4896,
-  "total_alerts": 1211,
+  "total_samples": 1632,
+  "total_alerts": 351,
   "alerts_by_severity": {
-    "CRITICAL": 262,
-    "HIGH": 243,
-    "MEDIUM": 147,
-    "LOW": 559
+    "CRITICAL": 108,
+    "HIGH": 68,
+    "MEDIUM": 51,
+    "LOW": 124
   },
   "model_agreement": {
-    "4_of_4": 262,
-    "3_of_4": 243,
-    "2_of_4": 147,
-    "1_of_4": 559
+    "1_of_4": 124,
+    "2_of_4": 51,
+    "3_of_4": 68,
+    "4_of_4": 108
   },
   "feature_importance_rankings": {
     "xgboost": [
       {
         "rank": 1,
         "feature": "Flgs",
-        "mean_abs_shap": 3.441955
+        "mean_abs_shap": 3.425377
       },
       {
         "rank": 2,
         "feature": "Temp",
-        "mean_abs_shap": 2.761486
+        "mean_abs_shap": 2.966664
       },
       {
         "rank": 3,
         "feature": "DIntPkt",
-        "mean_abs_shap": 2.445803
+        "mean_abs_shap": 2.533838
       },
       {
         "rank": 4,
         "feature": "Sport",
-        "mean_abs_shap": 2.279271
+        "mean_abs_shap": 2.309801
       },
       {
         "rank": 5,
-        "feature": "Dur",
-        "mean_abs_shap": 2.090244
+        "feature": "SIntPkt",
+        "mean_abs_shap": 1.591577
       },
       {
         "rank": 6,
-        "feature": "SIntPkt",
-        "mean_abs_shap": 1.643327
+        "feature": "Dur",
+        "mean_abs_shap": 1.244935
       },
       {
         "rank": 7,
-        "feature": "SrcLoad",
-        "mean_abs_shap": 0.991004
+        "feature": "Pulse_Rate",
+        "mean_abs_shap": 0.969195
       },
       {
         "rank": 8,
-        "feature": "Pulse_Rate",
-        "mean_abs_shap": 0.989224
+        "feature": "SrcLoad",
+        "mean_abs_shap": 0.920339
       },
       {
         "rank": 9,
         "feature": "Resp_Rate",
-        "mean_abs_shap": 0.671218
+        "mean_abs_shap": 0.681893
       },
       {
         "rank": 10,
         "feature": "DstLoad",
-        "mean_abs_shap": 0.65308
+        "mean_abs_shap": 0.601371
       }
     ],
     "random_forest": [
       {
         "rank": 1,
         "feature": "Flgs",
-        "mean_abs_shap": 0.154641
+        "mean_abs_shap": 0.146092
       },
       {
         "rank": 2,
         "feature": "DIntPkt",
-        "mean_abs_shap": 0.098718
+        "mean_abs_shap": 0.098207
       },
       {
         "rank": 3,
         "feature": "Sport",
-        "mean_abs_shap": 0.04724
+        "mean_abs_shap": 0.045105
       },
       {
         "rank": 4,
         "feature": "Temp",
-        "mean_abs_shap": 0.030984
+        "mean_abs_shap": 0.031812
       },
       {
         "rank": 5,
-        "feature": "Pulse_Rate",
-        "mean_abs_shap": 0.02052
+        "feature": "SrcLoad",
+        "mean_abs_shap": 0.026819
       },
       {
         "rank": 6,
-        "feature": "SrcLoad",
-        "mean_abs_shap": 0.019609
+        "feature": "Pulse_Rate",
+        "mean_abs_shap": 0.023117
       },
       {
         "rank": 7,
         "feature": "SIntPkt",
-        "mean_abs_shap": 0.019398
+        "mean_abs_shap": 0.017752
       },
       {
         "rank": 8,
-        "feature": "Dur",
-        "mean_abs_shap": 0.016231
+        "feature": "Resp_Rate",
+        "mean_abs_shap": 0.014999
       },
       {
         "rank": 9,
-        "feature": "Resp_Rate",
-        "mean_abs_shap": 0.015068
+        "feature": "SYS",
+        "mean_abs_shap": 0.014847
       },
       {
         "rank": 10,
-        "feature": "Heart_rate",
-        "mean_abs_shap": 0.013624
+        "feature": "Dur",
+        "mean_abs_shap": 0.01411
       }
     ],
     "decision_tree": [
       {
         "rank": 1,
         "feature": "Flgs",
-        "mean_abs_shap": 0.188852
+        "mean_abs_shap": 0.189053
       },
       {
         "rank": 2,
         "feature": "DIntPkt",
-        "mean_abs_shap": 0.108152
+        "mean_abs_shap": 0.104912
       },
       {
         "rank": 3,
         "feature": "Sport",
-        "mean_abs_shap": 0.071261
+        "mean_abs_shap": 0.071737
       },
       {
         "rank": 4,
         "feature": "Temp",
-        "mean_abs_shap": 0.044395
+        "mean_abs_shap": 0.057451
       },
       {
         "rank": 5,
         "feature": "Pulse_Rate",
-        "mean_abs_shap": 0.035074
+        "mean_abs_shap": 0.026872
       },
       {
         "rank": 6,
-        "feature": "SpO2",
-        "mean_abs_shap": 0.023644
+        "feature": "Heart_rate",
+        "mean_abs_shap": 0.023131
       },
       {
         "rank": 7,
-        "feature": "SrcLoad",
-        "mean_abs_shap": 0.021035
+        "feature": "DIA",
+        "mean_abs_shap": 0.020814
       },
       {
         "rank": 8,
-        "feature": "SIntPkt",
-        "mean_abs_shap": 0.020418
+        "feature": "ST",
+        "mean_abs_shap": 0.019874
       },
       {
         "rank": 9,
-        "feature": "Heart_rate",
-        "mean_abs_shap": 0.019131
+        "feature": "DstLoad",
+        "mean_abs_shap": 0.01791
       },
       {
         "rank": 10,
-        "feature": "ST",
-        "mean_abs_shap": 0.018974
+        "feature": "Resp_Rate",
+        "mean_abs_shap": 0.017779
       }
     ],
     "dae": [
       {
         "rank": 1,
-        "feature": "pSrcLoss",
-        "weight": 0.34153
+        "feature": "sMaxPktSz",
+        "weight": 0.33922
       },
       {
         "rank": 2,
         "feature": "SIntPktAct",
-        "weight": 0.305704
+        "weight": 0.207534
       },
       {
         "rank": 3,
-        "feature": "sMaxPktSz",
-        "weight": 0.230546
+        "feature": "DstBytes",
+        "weight": 0.105649
       },
       {
         "rank": 4,
-        "feature": "pDstLoss",
-        "weight": 0.052865
+        "feature": "SrcBytes",
+        "weight": 0.084018
       },
       {
         "rank": 5,
-        "feature": "SrcBytes",
-        "weight": 0.027305
+        "feature": "Flgs",
+        "weight": 0.083006
       },
       {
         "rank": 6,
         "feature": "TotBytes",
-        "weight": 0.020764
+        "weight": 0.064193
       },
       {
         "rank": 7,
         "feature": "sMinPktSz",
-        "weight": 0.016564
+        "weight": 0.031533
       },
       {
         "rank": 8,
-        "feature": "Flgs",
-        "weight": 0.003188
+        "feature": "dMaxPktSz",
+        "weight": 0.030207
       },
       {
         "rank": 9,
-        "feature": "DstBytes",
-        "weight": 0.000768
+        "feature": "pDstLoss",
+        "weight": 0.026421
       },
       {
         "rank": 10,
-        "feature": "dMaxPktSz",
-        "weight": 0.000681
+        "feature": "pSrcLoss",
+        "weight": 0.020956
       }
     ]
   },
@@ -229,8 +229,8 @@
       "network_in_top5": 4
     },
     "random_forest": {
-      "biometric_in_top5": 2,
-      "network_in_top5": 3
+      "biometric_in_top5": 1,
+      "network_in_top5": 4
     },
     "decision_tree": {
       "biometric_in_top5": 2,
@@ -242,8 +242,8 @@
     }
   },
   "alerts_by_attack_category": {
-    "Spoofing": 299,
-    "normal": 101,
-    "Data Alteration": 277
+    "Spoofing": 103,
+    "normal": 37,
+    "Data Alteration": 92
   }
 }

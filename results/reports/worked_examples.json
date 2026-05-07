@@ -1,7 +1,7 @@
 [
   {
     "scenario": "CRITICAL alert \u2014 Data Alteration on vital_monitoring device",
-    "sample_index": 3058,
+    "sample_index": 976,
     "ground_truth": "attack",
     "attack_category": "Data Alteration",
     "risk_score": 0.85,
@@ -37,9 +37,9 @@
       "requires_approval": false
     },
     "execution_result": {
-      "alert_id": "ALERT-03058",
-      "sample_index": 3058,
-      "timestamp": "2026-04-03T12:50:58",
+      "alert_id": "ALERT-00976",
+      "sample_index": 976,
+      "timestamp": "2026-04-03T12:16:16",
       "actions_executed": [
         "log_event",
         "forensic_snapshot",
@@ -58,19 +58,19 @@
         "recipient": "IT Security",
         "channel": "SIEM + Dashboard",
         "priority": "CRITICAL",
-        "message": "[CRITICAL] Alert #3058: Risk=0.85. Actions: log_event, forensic_snapshot, restrict_traffic, escalate_clinical. Top features: Flgs, Temp, DIntPkt."
+        "message": "[CRITICAL] Alert #976: Risk=0.85. Actions: log_event, forensic_snapshot, restrict_traffic, escalate_clinical. Top features: Flgs, Temp, DIntPkt."
       },
       {
         "recipient": "Clinical Staff",
         "channel": "Page / Dashboard",
         "priority": "CRITICAL",
-        "message": "CRITICAL ALERT (Sample 3058): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal Flgs (network metric). Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+        "message": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
       },
       {
         "recipient": "Charge Nurse",
         "channel": "Email / Ticket",
         "priority": "CRITICAL",
-        "message": "[CRITICAL] Sample #3058: log_event, forensic_snapshot, restrict_traffic, escalate_clinical"
+        "message": "[CRITICAL] Sample #976: log_event, forensic_snapshot, restrict_traffic, escalate_clinical"
       }
     ],
     "clinical_override": {
@@ -86,22 +86,23 @@
     }
   },
   {
-    "scenario": "HIGH alert \u2014 Data Alteration on vital_monitoring device",
-    "sample_index": 517,
+    "scenario": "HIGH alert \u2014 Spoofing on vital_monitoring device",
+    "sample_index": 301,
     "ground_truth": "attack",
-    "attack_category": "Data Alteration",
-    "risk_score": 0.7982,
+    "attack_category": "Spoofing",
+    "risk_score": 0.7916,
     "risk_level": "HIGH",
     "components": {
       "C_detect": 1.0,
-      "D_crit": 0.8,
-      "S_data": 0.8214,
+      "D_crit": 0.72,
+      "S_data": 0.9107,
       "D_clinical_tier": 0.375
     },
     "policy_recommendation": {
       "actions": [
         "log_event",
         "enhanced_monitoring",
+        "re_authenticate",
         "forensic_snapshot",
         "restrict_traffic",
         "escalate_clinical"
@@ -109,7 +110,7 @@
       "max_response_min": 15,
       "recommended_for_auto_execution": true,
       "primary_notify": "IT Security",
-      "secondary_notify": "Charge Nurse",
+      "secondary_notify": "Biomedical Engineering",
       "clinical_override": {
         "triggered": true,
         "reason": "Device tier 'vital_monitoring' with elevated patient acuity (0.38) \u2014 isolation downgraded to restrict_traffic. Clinical confirmation required before any disruptive action.",
@@ -118,19 +119,20 @@
           "isolate_device",
           "forensic_snapshot",
           "enhanced_monitoring",
-          "escalate_clinical"
+          "re_authenticate"
         ],
         "clinical_confirmation_required": true
       },
       "requires_approval": false
     },
     "execution_result": {
-      "alert_id": "ALERT-00517",
-      "sample_index": 517,
-      "timestamp": "2026-04-03T12:08:37",
+      "alert_id": "ALERT-00301",
+      "sample_index": 301,
+      "timestamp": "2026-04-03T12:05:01",
       "actions_executed": [
         "log_event",
         "enhanced_monitoring",
+        "re_authenticate",
         "forensic_snapshot",
         "restrict_traffic",
         "escalate_clinical"
@@ -147,19 +149,19 @@
         "recipient": "IT Security",
         "channel": "SIEM + Dashboard",
         "priority": "HIGH",
-        "message": "[HIGH] Alert #517: Risk=0.80. Actions: log_event, enhanced_monitoring, forensic_snapshot, restrict_traffic, escalate_clinical. Top features: Flgs, DIntPkt, Pulse_Rate."
+        "message": "[HIGH] Alert #301: Risk=0.79. Actions: log_event, enhanced_monitoring, re_authenticate, forensic_snapshot, restrict_traffic, escalate_clinical. Top features: Flgs, Resp_Rate, SrcLoad."
       },
       {
         "recipient": "Clinical Staff",
         "channel": "Page / Dashboard",
         "priority": "HIGH",
-        "message": "CRITICAL ALERT (Sample 517): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal Flgs (network metric). Note: Biometric data (Pulse_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+        "message": "CRITICAL ALERT (Sample 301): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
       },
       {
-        "recipient": "Charge Nurse",
+        "recipient": "Biomedical Engineering",
         "channel": "Email / Ticket",
         "priority": "HIGH",
-        "message": "[HIGH] Sample #517: log_event, enhanced_monitoring, forensic_snapshot, restrict_traffic, escalate_clinical"
+        "message": "[HIGH] Sample #301: log_event, enhanced_monitoring, re_authenticate, forensic_snapshot, restrict_traffic, escalate_clinical"
       }
     ],
     "clinical_override": {
@@ -170,59 +172,57 @@
         "isolate_device",
         "forensic_snapshot",
         "enhanced_monitoring",
-        "escalate_clinical"
+        "re_authenticate"
       ],
       "clinical_confirmation_required": true
     }
   },
   {
     "scenario": "LOW alert \u2014 Spoofing on vital_monitoring device",
-    "sample_index": 3727,
+    "sample_index": 998,
     "ground_truth": "attack",
     "attack_category": "Spoofing",
-    "risk_score": 0.3987,
+    "risk_score": 0.3817,
     "risk_level": "LOW",
     "components": {
-      "C_detect": 0.0802,
+      "C_detect": 0.2967,
       "D_crit": 0.72,
-      "S_data": 0.9107,
-      "D_clinical_tier": 0.25
+      "S_data": 0.5536,
+      "D_clinical_tier": 0.0
     },
     "policy_recommendation": {
       "actions": [
         "log_event",
         "enhanced_monitoring",
-        "re_authenticate",
-        "escalate_clinical"
+        "re_authenticate"
       ],
       "max_response_min": 480,
       "recommended_for_auto_execution": false,
       "primary_notify": "IT Security",
       "secondary_notify": "Biomedical Engineering",
       "clinical_override": {
-        "triggered": true,
-        "reason": "Device tier 'vital_monitoring' with elevated acuity (0.25) \u2014 clinical confirmation required.",
+        "triggered": false,
+        "reason": null,
         "original_actions": [
           "log_event",
           "enhanced_monitoring",
           "re_authenticate"
         ],
-        "clinical_confirmation_required": true
+        "clinical_confirmation_required": false
       },
       "requires_approval": false
     },
     "execution_result": {
-      "alert_id": "ALERT-03727",
-      "sample_index": 3727,
-      "timestamp": "2026-04-03T13:02:07",
+      "alert_id": "ALERT-00998",
+      "sample_index": 998,
+      "timestamp": "2026-04-03T12:16:38",
       "actions_executed": [
         "log_event",
         "enhanced_monitoring",
-        "re_authenticate",
-        "escalate_clinical"
+        "re_authenticate"
       ],
       "recommended_for_auto_execution": false,
-      "clinical_override": true,
+      "clinical_override": false,
       "requires_approval": false,
       "outcome": "threat_contained",
       "effective": true,
@@ -233,30 +233,24 @@
         "recipient": "IT Security",
         "channel": "SIEM + Dashboard",
         "priority": "LOW",
-        "message": "[LOW] Alert #3727: Risk=0.40. Actions: log_event, enhanced_monitoring, re_authenticate, escalate_clinical. Top features: ."
-      },
-      {
-        "recipient": "Clinical Staff",
-        "channel": "Page / Dashboard",
-        "priority": "LOW",
-        "message": "Clinical review requested."
+        "message": "[LOW] Alert #998: Risk=0.38. Actions: log_event, enhanced_monitoring, re_authenticate. Top features: Flgs, SIntPkt, SrcLoad."
       },
       {
         "recipient": "Biomedical Engineering",
         "channel": "Email / Ticket",
         "priority": "LOW",
-        "message": "[LOW] Sample #3727: log_event, enhanced_monitoring, re_authenticate, escalate_clinical"
+        "message": "[LOW] Sample #998: log_event, enhanced_monitoring, re_authenticate"
       }
     ],
     "clinical_override": {
-      "triggered": true,
-      "reason": "Device tier 'vital_monitoring' with elevated acuity (0.25) \u2014 clinical confirmation required.",
+      "triggered": false,
+      "reason": null,
       "original_actions": [
         "log_event",
         "enhanced_monitoring",
         "re_authenticate"
       ],
-      "clinical_confirmation_required": true
+      "clinical_confirmation_required": false
     }
   }
 ]

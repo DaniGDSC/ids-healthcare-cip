@@ -30,6 +30,13 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+# Ensure the project root is importable when this script is invoked
+# directly (e.g. via run_all_modules.py); the absolute imports below
+# (``from common.phi import ...``) need it.
+_PROJECT_ROOT = str(Path(__file__).resolve().parents[1])
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
 import numpy as np
 import pandas as pd
 
@@ -1192,15 +1199,16 @@ def main() -> None:
     logger.info(sep)
 
     # Load data
+    # Strategy 1: demo path is the dashboard data source.
     risk_data = {k: v for k, v in
-                 np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
+                 np.load(PROJECT_ROOT / "results/reports/demo_scores.npz",
                          allow_pickle=True).items()}
     with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
         analyst_by_idx = {a["sample_index"]: a for a in json.load(f)}
     with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
         clinician_by_idx = {s["sample_index"]: s for s in json.load(f)}
     attack_cats = pd.read_parquet(
-        PROJECT_ROOT / "data/processed/test_phase1.parquet",
+        PROJECT_ROOT / "data/processed/demo_phase1.parquet",
         columns=["Attack Category"],
     )["Attack Category"].values
 

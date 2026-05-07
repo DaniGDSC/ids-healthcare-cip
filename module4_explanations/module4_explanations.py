@@ -130,17 +130,17 @@ def _render_dae_breakdown_worker(args: tuple) -> None:
 TRACK_A_MODELS = {
     "xgboost": {
         "pipeline": "results/models/xgboost_final_pipeline.pkl",
-        "predictions": "results/models/xgboost_test_predictions.npz",
+        "predictions": "results/models/xgboost_demo_predictions.npz",
         "report": "results/models/xgboost_final_report.json",
     },
     "random_forest": {
         "pipeline": "results/models/random_forest_final_pipeline.pkl",
-        "predictions": "results/models/random_forest_test_predictions.npz",
+        "predictions": "results/models/random_forest_demo_predictions.npz",
         "report": "results/models/random_forest_final_report.json",
     },
     "decision_tree": {
         "pipeline": "results/models/decision_tree_final_pipeline.pkl",
-        "predictions": "results/models/decision_tree_test_predictions.npz",
+        "predictions": "results/models/decision_tree_demo_predictions.npz",
         "report": "results/models/decision_tree_final_report.json",
     },
 }
@@ -180,8 +180,17 @@ from module4_explanations.module4_online_explainer import (
 # ── Data loading ────────────────────────────────────────────────────────
 
 def load_test_data() -> tuple:
-    """Load test parquet and return X, y, attack categories, feature names."""
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
+    """Load demo-pool parquet (Strategy 1) and return X, y, attack
+    categories, feature names.
+
+    Per ARCHITECTURE.md: M4's analyst_report.json + clinician_summaries.json
+    feed the **dashboard** (not paper metrics), so they must be sourced
+    from the frozen demo pool — never from the frozen test split. The
+    function name remains ``load_test_data`` for backward compatibility
+    but reads ``demo_phase1.parquet`` (the dashboard data source under
+    Strategy 1's Frozen Test + Demo Pool design).
+    """
+    df = pd.read_parquet(PROJECT_ROOT / "data/processed/demo_phase1.parquet")
     drop_cols = [
         c for c in ["Label", "Attack Category", "row_id",
                     "device_class", "attack_category"]
@@ -1362,8 +1371,12 @@ def main() -> None:
     # DAE was trained on cascaded input [raw 25 || P_xgb, P_rf, P_dt] = 28 dims.
     # Augment with calibrated Track A test probas, then slice the per-feature
     # error decomposition back to the 25 raw features for downstream display.
+    # Demo-pool cascaded input: stack raw demo probas (no calibrator
+    # exists for the demo split — calibrate.py only produces test/val
+    # calibrated probas; raw is fine here since this feeds DAE, not the
+    # paper-metrics calibration layer).
     track_a_test = np.column_stack([
-        np.load(PROJECT_ROOT / "results/models" / f"{n}_test_proba_calibrated.npy")
+        np.load(PROJECT_ROOT / "results/models" / f"{n}_demo_predictions.npz")["y_proba"]
         for n in ("xgboost", "random_forest", "decision_tree")
     ])
     X_test_aug = np.column_stack([X_test, track_a_test])
@@ -1379,7 +1392,7 @@ def main() -> None:
     plot_dae_global_weights(feat_weights, feat_names)
 
     dae_preds = load_predictions(
-        PROJECT_ROOT / "results/models/dae_test_predictions.npz"
+        PROJECT_ROOT / "results/models/dae_demo_predictions.npz"
     )
     plot_dae_breakdowns(weighted_err, feat_names,
                         dae_preds["y_pred"], dae_preds["reconstruction_error"])

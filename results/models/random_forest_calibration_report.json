@@ -1,22 +1,22 @@
 {
   "method": "isotonic",
-  "n_val": 2285,
+  "n_val": 2448,
   "raw": {
-    "val_brier": 0.04308200521133998,
-    "val_log_loss": 0.15834031407835453,
-    "test_brier": 0.04686314612779723,
-    "test_auc_roc": 0.9487860706205965,
-    "test_auprc": 0.8574883324241027
+    "val_brier": 0.038433586429772466,
+    "val_log_loss": 0.14316045214889273,
+    "test_brier": 0.03971503215976297,
+    "test_auc_roc": 0.9658771586841061,
+    "test_auprc": 0.8939424914534602
   },
   "calibrated": {
-    "val_brier": 0.03481476747770445,
-    "val_log_loss": 0.12221999298806083,
-    "test_brier": 0.03997101238340493,
-    "test_auc_roc": 0.9472764560990862,
-    "test_auprc": 0.8405420838247329
+    "val_brier": 0.03328605260813708,
+    "val_log_loss": 0.11663832333823589,
+    "test_brier": 0.0353868377282206,
+    "test_auc_roc": 0.9635844007260146,
+    "test_auprc": 0.8618089973196474
   },
   "improvements": {
-    "delta_val_brier": 0.008267237733635531,
-    "delta_test_brier": 0.0068921337443922995
+    "delta_val_brier": 0.0051475338216353875,
+    "delta_test_brier": 0.004328194431542372
   }
 }

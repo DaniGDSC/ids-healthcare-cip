@@ -13,19 +13,26 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 import time
 from collections import Counter
 from pathlib import Path
+
+# Project root on sys.path so absolute imports below resolve when this
+# script is invoked directly (e.g. by run_all_modules.py via subprocess).
+_PROJECT_ROOT = str(Path(__file__).resolve().parents[1])
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-import numpy as np
-import pandas as pd
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 
-from src.risk_scorer import score_alert
-from src.mve_generator import generate_mve, _generate_rule_based
+from src.risk_scorer import score_alert  # noqa: E402
+from src.mve_generator import generate_mve, _generate_rule_based  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -190,13 +197,17 @@ def curate_evaluation_alerts() -> list:
     """Select 20 diverse alerts spanning all tiers and attack types."""
     logger.info("Curating evaluation alert set...")
 
-    risk_data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
+    # Per ARCHITECTURE.md Strategy 1: dashboard alerts come from the
+    # frozen demo pool, NEVER from the test split. demo_scores.npz is
+    # produced by module3_risk_scoring.module3_demo_scores; it shares
+    # schema with risk_scores.npz but is sourced from demo_phase1.parquet.
+    risk_data = np.load(PROJECT_ROOT / "results/reports/demo_scores.npz",
                         allow_pickle=True)
     R = risk_data["R"]
     levels = risk_data["risk_levels"]
     y_true = risk_data["y_true"]
 
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
+    df = pd.read_parquet(PROJECT_ROOT / "data/processed/demo_phase1.parquet")
     attack_cats = df["Attack Category"].values
 
     with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
