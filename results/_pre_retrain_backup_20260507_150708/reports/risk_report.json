@@ -1,0 +1,631 @@
+{
+  "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
+  "fusion": "C_detect = cascaded(Track_A \u2192 Track_B): DAE input = [raw_features || Track_A_probas]",
+  "weights": {
+    "w1": 0.4,
+    "w2": 0.25,
+    "w3": 0.15,
+    "w4": 0.2
+  },
+  "risk_thresholds": {
+    "CRITICAL": 0.8,
+    "HIGH": 0.6,
+    "MEDIUM": 0.4
+  },
+  "total_samples": 4896,
+  "risk_level_distribution": {
+    "LOW": {
+      "count": 3179,
+      "pct": 64.9,
+      "mean_R": 0.2961
+    },
+    "MEDIUM": {
+      "count": 1051,
+      "pct": 21.5,
+      "mean_R": 0.4689
+    },
+    "HIGH": {
+      "count": 611,
+      "pct": 12.5,
+      "mean_R": 0.7143
+    },
+    "CRITICAL": {
+      "count": 55,
+      "pct": 1.1,
+      "mean_R": 0.8119
+    }
+  },
+  "response_mapping": {
+    "CRITICAL": {
+      "action": "Immediate network isolation + page physician + escalate to CISO",
+      "max_response_min": 5,
+      "auto_actions": [
+        "isolate_device",
+        "page_oncall",
+        "snapshot_forensics"
+      ]
+    },
+    "HIGH": {
+      "action": "Active investigation + isolate segment + notify biomedical engineering",
+      "max_response_min": 15,
+      "auto_actions": [
+        "isolate_segment",
+        "notify_biomed",
+        "create_ticket"
+      ]
+    },
+    "MEDIUM": {
+      "action": "Flag for review + enhanced monitoring + notify security team",
+      "max_response_min": 60,
+      "auto_actions": [
+        "enhanced_logging",
+        "notify_soc"
+      ]
+    },
+    "LOW": {
+      "action": "Log for audit + review at next shift",
+      "max_response_min": 480,
+      "auto_actions": [
+        "log_event"
+      ]
+    },
+    "NORMAL": {
+      "action": "No action \u2014 routine logging",
+      "max_response_min": 0,
+      "auto_actions": []
+    }
+  },
+  "overall_stats": {
+    "mean_R": 0.3912,
+    "std_R": 0.1598,
+    "median_R": 0.3518
+  },
+  "per_category_stats": {
+    "normal": {
+      "count": 4282,
+      "mean_R": 0.3476,
+      "median_R": 0.336,
+      "std_R": 0.1089
+    },
+    "Spoofing": {
+      "count": 337,
+      "mean_R": 0.6501,
+      "median_R": 0.703,
+      "std_R": 0.1478
+    },
+    "Data Alteration": {
+      "count": 277,
+      "mean_R": 0.7503,
+      "median_R": 0.75,
+      "std_R": 0.0393
+    }
+  },
+  "dual_track_fusion": {
+    "quadrants": {
+      "both_flag": {
+        "total": 332,
+        "true_attacks": 328,
+        "true_benign": 4,
+        "attack_categories": {
+          "Data Alteration": 277,
+          "Spoofing": 51
+        }
+      },
+      "only_xgboost": {
+        "total": 382,
+        "true_attacks": 257,
+        "true_benign": 125,
+        "attack_categories": {
+          "Spoofing": 257
+        }
+      },
+      "only_dae": {
+        "total": 514,
+        "true_attacks": 1,
+        "true_benign": 513,
+        "attack_categories": {
+          "Spoofing": 1
+        }
+      },
+      "neither": {
+        "total": 3668,
+        "true_attacks": 28,
+        "true_benign": 3640,
+        "attack_categories": {
+          "Spoofing": 28
+        }
+      }
+    },
+    "xgb_threshold": 0.020435856643934283,
+    "dae_threshold": 0.5,
+    "recall": {
+      "xgboost_alone": 0.9528,
+      "dae_alone": 0.5358,
+      "union_fusion": 0.9544,
+      "best_single_track": 0.9528,
+      "fusion_gain": 0.0016
+    },
+    "total_attacks": 614
+  },
+  "component_contributions": {
+    "per_level": {
+      "LOW": {
+        "count": 3179,
+        "mean_contributions": {
+          "C_detect": 0.067534,
+          "D_crit": 0.100956,
+          "S_data": 0.113318,
+          "D_clinical_tier": 0.014305
+        },
+        "dominant_component_counts": {
+          "C_detect": 248,
+          "D_crit": 1277,
+          "S_data": 1654,
+          "D_clinical_tier": 0
+        }
+      },
+      "MEDIUM": {
+        "count": 1051,
+        "mean_contributions": {
+          "C_detect": 0.194336,
+          "D_crit": 0.102969,
+          "S_data": 0.136684,
+          "D_clinical_tier": 0.034943
+        },
+        "dominant_component_counts": {
+          "C_detect": 816,
+          "D_crit": 22,
+          "S_data": 213,
+          "D_clinical_tier": 0
+        }
+      },
+      "HIGH": {
+        "count": 611,
+        "mean_contributions": {
+          "C_detect": 0.39096,
+          "D_crit": 0.171064,
+          "S_data": 0.125472,
+          "D_clinical_tier": 0.026759
+        },
+        "dominant_component_counts": {
+          "C_detect": 611,
+          "D_crit": 0,
+          "S_data": 0,
+          "D_clinical_tier": 0
+        }
+      },
+      "CRITICAL": {
+        "count": 55,
+        "mean_contributions": {
+          "C_detect": 0.399512,
+          "D_crit": 0.192364,
+          "S_data": 0.144156,
+          "D_clinical_tier": 0.075909
+        },
+        "dominant_component_counts": {
+          "C_detect": 55,
+          "D_crit": 0,
+          "S_data": 0,
+          "D_clinical_tier": 0
+        }
+      }
+    },
+    "overall_dominant": {
+      "C_detect": 1730,
+      "D_crit": 1299,
+      "S_data": 1867,
+      "D_clinical_tier": 0
+    }
+  },
+  "weight_sensitivity": {
+    "grid_size": 71,
+    "best_weights": {
+      "w1": 0.1,
+      "w2": 0.5,
+      "w3": 0.1,
+      "w4": 0.3
+    },
+    "best_auroc": 0.9935,
+    "default_weights": {
+      "w1": 0.4,
+      "w2": 0.25,
+      "w3": 0.15,
+      "w4": 0.2
+    },
+    "top_10": [
+      {
+        "weights": {
+          "w1": 0.1,
+          "w2": 0.5,
+          "w3": 0.1,
+          "w4": 0.3
+        },
+        "auroc": 0.9935
+      },
+      {
+        "weights": {
+          "w1": 0.2,
+          "w2": 0.5,
+          "w3": 0.1,
+          "w4": 0.2
+        },
+        "auroc": 0.9935
+      },
+      {
+        "weights": {
+          "w1": 0.1,
+          "w2": 0.5,
+          "w3": 0.2,
+          "w4": 0.2
+        },
+        "auroc": 0.9924
+      },
+      {
+        "weights": {
+          "w1": 0.2,
+          "w2": 0.5,
+          "w3": 0.2,
+          "w4": 0.1
+        },
+        "auroc": 0.9912
+      },
+      {
+        "weights": {
+          "w1": 0.3,
+          "w2": 0.5,
+          "w3": 0.1,
+          "w4": 0.1
+        },
+        "auroc": 0.9904
+      },
+      {
+        "weights": {
+          "w1": 0.1,
+          "w2": 0.5,
+          "w3": 0.3,
+          "w4": 0.1
+        },
+        "auroc": 0.9868
+      },
+      {
+        "weights": {
+          "w1": 0.3,
+          "w2": 0.4,
+          "w3": 0.1,
+          "w4": 0.2
+        },
+        "auroc": 0.9805
+      },
+      {
+        "weights": {
+          "w1": 0.2,
+          "w2": 0.4,
+          "w3": 0.1,
+          "w4": 0.3
+        },
+        "auroc": 0.9798
+      },
+      {
+        "weights": {
+          "w1": 0.4,
+          "w2": 0.4,
+          "w3": 0.1,
+          "w4": 0.1
+        },
+        "auroc": 0.9793
+      },
+      {
+        "weights": {
+          "w1": 0.3,
+          "w2": 0.4,
+          "w3": 0.2,
+          "w4": 0.1
+        },
+        "auroc": 0.9756
+      }
+    ],
+    "per_component_sensitivity": {
+      "C_detect": [
+        {
+          "weight": 0.05,
+          "auroc": 0.9499
+        },
+        {
+          "weight": 0.1,
+          "auroc": 0.96
+        },
+        {
+          "weight": 0.15,
+          "auroc": 0.9602
+        },
+        {
+          "weight": 0.2,
+          "auroc": 0.9591
+        },
+        {
+          "weight": 0.25,
+          "auroc": 0.9578
+        },
+        {
+          "weight": 0.3,
+          "auroc": 0.9566
+        },
+        {
+          "weight": 0.35,
+          "auroc": 0.9555
+        },
+        {
+          "weight": 0.4,
+          "auroc": 0.9546
+        },
+        {
+          "weight": 0.45,
+          "auroc": 0.9537
+        },
+        {
+          "weight": 0.5,
+          "auroc": 0.953
+        },
+        {
+          "weight": 0.55,
+          "auroc": 0.9522
+        },
+        {
+          "weight": 0.6,
+          "auroc": 0.9515
+        }
+      ],
+      "D_crit": [
+        {
+          "weight": 0.05,
+          "auroc": 0.9244
+        },
+        {
+          "weight": 0.1,
+          "auroc": 0.9333
+        },
+        {
+          "weight": 0.15,
+          "auroc": 0.9409
+        },
+        {
+          "weight": 0.2,
+          "auroc": 0.9481
+        },
+        {
+          "weight": 0.25,
+          "auroc": 0.9546
+        },
+        {
+          "weight": 0.3,
+          "auroc": 0.9608
+        },
+        {
+          "weight": 0.35,
+          "auroc": 0.9665
+        },
+        {
+          "weight": 0.4,
+          "auroc": 0.9714
+        },
+        {
+          "weight": 0.45,
+          "auroc": 0.9758
+        },
+        {
+          "weight": 0.5,
+          "auroc": 0.9797
+        },
+        {
+          "weight": 0.55,
+          "auroc": 0.9829
+        },
+        {
+          "weight": 0.6,
+          "auroc": 0.9856
+        }
+      ],
+      "S_data": [
+        {
+          "weight": 0.05,
+          "auroc": 0.9646
+        },
+        {
+          "weight": 0.1,
+          "auroc": 0.9596
+        },
+        {
+          "weight": 0.15,
+          "auroc": 0.9546
+        },
+        {
+          "weight": 0.2,
+          "auroc": 0.9503
+        },
+        {
+          "weight": 0.25,
+          "auroc": 0.9467
+        },
+        {
+          "weight": 0.3,
+          "auroc": 0.9434
+        },
+        {
+          "weight": 0.35,
+          "auroc": 0.9402
+        },
+        {
+          "weight": 0.4,
+          "auroc": 0.937
+        },
+        {
+          "weight": 0.45,
+          "auroc": 0.9335
+        },
+        {
+          "weight": 0.5,
+          "auroc": 0.9297
+        },
+        {
+          "weight": 0.55,
+          "auroc": 0.9254
+        },
+        {
+          "weight": 0.6,
+          "auroc": 0.9203
+        }
+      ],
+      "D_clinical_tier": [
+        {
+          "weight": 0.05,
+          "auroc": 0.9621
+        },
+        {
+          "weight": 0.1,
+          "auroc": 0.9598
+        },
+        {
+          "weight": 0.15,
+          "auroc": 0.9571
+        },
+        {
+          "weight": 0.2,
+          "auroc": 0.9546
+        },
+        {
+          "weight": 0.25,
+          "auroc": 0.952
+        },
+        {
+          "weight": 0.3,
+          "auroc": 0.9496
+        },
+        {
+          "weight": 0.35,
+          "auroc": 0.9474
+        },
+        {
+          "weight": 0.4,
+          "auroc": 0.945
+        },
+        {
+          "weight": 0.45,
+          "auroc": 0.9429
+        },
+        {
+          "weight": 0.5,
+          "auroc": 0.9404
+        },
+        {
+          "weight": 0.55,
+          "auroc": 0.9378
+        },
+        {
+          "weight": 0.6,
+          "auroc": 0.9351
+        }
+      ]
+    }
+  },
+  "worked_examples": [
+    {
+      "title": "Highest-risk true attack",
+      "sample_index": 3058,
+      "ground_truth": "attack",
+      "attack_category": "Data Alteration",
+      "components": {
+        "Track_A (XGBoost proba)": 1.0,
+        "Track_B (DAE proba)": 1.0,
+        "C_detect (fused)": 1.0,
+        "D_crit": 0.8,
+        "S_data": 1.0,
+        "D_clinical_tier": 0.5
+      },
+      "weighted_contributions": {
+        "w1(0.4)\u00d7C_detect": 0.4,
+        "w2(0.25)\u00d7D_crit": 0.2,
+        "w3(0.15)\u00d7S_data": 0.15,
+        "w4(0.2)\u00d7D_clinical_tier": 0.1
+      },
+      "R": 0.85,
+      "risk_level": "CRITICAL",
+      "response": {
+        "action": "Immediate network isolation + page physician + escalate to CISO",
+        "max_response_min": 5,
+        "auto_actions": [
+          "isolate_device",
+          "page_oncall",
+          "snapshot_forensics"
+        ]
+      }
+    },
+    {
+      "title": "Lowest-risk true attack (potential under-triage)",
+      "sample_index": 2234,
+      "ground_truth": "attack",
+      "attack_category": "Spoofing",
+      "components": {
+        "Track_A (XGBoost proba)": 0.014779,
+        "Track_B (DAE proba)": 0.046949,
+        "C_detect (fused)": 0.046949,
+        "D_crit": 0.72,
+        "S_data": 0.464286,
+        "D_clinical_tier": 0.0
+      },
+      "weighted_contributions": {
+        "w1(0.4)\u00d7C_detect": 0.01878,
+        "w2(0.25)\u00d7D_crit": 0.18,
+        "w3(0.15)\u00d7S_data": 0.069643,
+        "w4(0.2)\u00d7D_clinical_tier": 0.0
+      },
+      "R": 0.268423,
+      "risk_level": "LOW",
+      "response": {
+        "action": "Log for audit + review at next shift",
+        "max_response_min": 480,
+        "auto_actions": [
+          "log_event"
+        ]
+      }
+    },
+    {
+      "title": "Highest-risk benign sample (false alarm analysis)",
+      "sample_index": 1819,
+      "ground_truth": "benign",
+      "attack_category": "normal",
+      "components": {
+        "Track_A (XGBoost proba)": 0.0,
+        "Track_B (DAE proba)": 1.0,
+        "C_detect (fused)": 1.0,
+        "D_crit": 0.4,
+        "S_data": 0.910714,
+        "D_clinical_tier": 0.75
+      },
+      "weighted_contributions": {
+        "w1(0.4)\u00d7C_detect": 0.4,
+        "w2(0.25)\u00d7D_crit": 0.1,
+        "w3(0.15)\u00d7S_data": 0.136607,
+        "w4(0.2)\u00d7D_clinical_tier": 0.15
+      },
+      "R": 0.786607,
+      "risk_level": "HIGH",
+      "response": {
+        "action": "Active investigation + isolate segment + notify biomedical engineering",
+        "max_response_min": 15,
+        "auto_actions": [
+          "isolate_segment",
+          "notify_biomed",
+          "create_ticket"
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Patient acuity proxy uses biometric deviation magnitude, not clinical diagnosis \u2014 a simplified surrogate for real patient acuity scoring (e.g., APACHE, NEWS2).",
+    "Device criticality uses a static tier assignment for the WUSTL-EHMS-2020 testbed; production deployment requires integration with hospital asset management systems.",
+    "Data sensitivity classification is feature-type-based, not content-aware \u2014 cannot distinguish encrypted vs plaintext PHI.",
+    "Linear weighted sum assumes component independence; multiplicative or Bayesian formulations may better capture risk interactions.",
+    "Weights are expert-calibrated defaults; institutional tuning via AHP or operational feedback loops is recommended for deployment.",
+    "The WUSTL-EHMS-2020 dataset contains only 2 attack categories (Spoofing, Data Alteration); generalizability to broader IoMT threat landscapes requires validation on additional datasets."
+  ]
+}

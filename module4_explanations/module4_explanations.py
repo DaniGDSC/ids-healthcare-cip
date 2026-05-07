@@ -563,14 +563,7 @@ def plot_dae_global_weights(feat_weights: np.ndarray, feat_names: list) -> None:
 
 # ── Stakeholder outputs ────────────────────────────────────────────────
 
-def _severity(n_models_flagged: int) -> str:
-    if n_models_flagged >= 4:
-        return "CRITICAL"
-    elif n_models_flagged == 3:
-        return "HIGH"
-    elif n_models_flagged == 2:
-        return "MEDIUM"
-    return "LOW"
+from module4_explanations._severity import severity as _severity  # noqa: E402
 
 
 def _top_features_shap(sv_row: np.ndarray, feat_names: list, k: int = 3) -> list:

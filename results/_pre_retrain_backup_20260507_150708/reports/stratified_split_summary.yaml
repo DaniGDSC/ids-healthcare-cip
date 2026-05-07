@@ -1,0 +1,21 @@
+schema_version: 1
+random_seed: 42
+holdout_ratio: 0.3
+stratification_key: severity_tier
+calibration:
+  total: 3427
+  per_tier_counts:
+    CRITICAL: 34
+    HIGH: 387
+    MEDIUM: 98
+    LOW: 2908
+  artifact: results/reports/stratified_calibration.parquet
+holdout:
+  total: 1469
+  per_tier_counts:
+    CRITICAL: 14
+    HIGH: 166
+    MEDIUM: 42
+    LOW: 1247
+  artifact: results/reports/stratified_holdout.parquet
+closes_gap: GAP-PB-1 partially (materialised partitions); AC-1 PASS

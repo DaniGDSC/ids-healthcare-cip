@@ -23,15 +23,14 @@ execute anything during load.
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 
+from ._sidecar_io import atomic_write_json, load_sidecar, migrate_legacy_pkl
 from .base import BaseTransformer
 
 logger = logging.getLogger(__name__)
@@ -52,6 +51,7 @@ _SCALER_PARAMS: Dict[str, Tuple[str, ...]] = {
     "minmax": ("min_", "scale_", "data_min_", "data_max_", "data_range_", "n_features_in_"),
 }
 
+_SIDECAR_FORMAT = "phase1.scaler.v1"
 _SIDECAR_FORMAT_VERSION = 1
 
 
@@ -157,28 +157,7 @@ class RobustScalerTransformer(BaseTransformer):
         if not self._fitted:
             raise RuntimeError("Scaler not fitted. Call fit(X_train) first.")
 
-        path = Path(path)
-        # Migrate any caller still passing the legacy ``.pkl`` name.
-        if path.suffix == ".pkl":
-            legacy_pickle = path
-            path = path.with_suffix(".json")
-            if legacy_pickle.exists():
-                try:
-                    legacy_pickle.unlink()
-                    logger.warning(
-                        "Removed legacy pickle scaler at %s; the JSON "
-                        "sidecar at %s is now the canonical artefact.",
-                        legacy_pickle,
-                        path,
-                    )
-                except OSError as exc:
-                    logger.warning(
-                        "Could not remove legacy pickle %s: %s "
-                        "(downstream consumers must be updated to load "
-                        "the JSON sidecar)",
-                        legacy_pickle,
-                        exc,
-                    )
+        path = migrate_legacy_pkl(Path(path), "scaler")
 
         attrs = _SCALER_PARAMS.get(self._method)
         if attrs is None:
@@ -200,18 +179,12 @@ class RobustScalerTransformer(BaseTransformer):
                 params[attr] = value
 
         body = {
-            "format": "phase1.scaler.v1",
+            "format": _SIDECAR_FORMAT,
             "format_version": _SIDECAR_FORMAT_VERSION,
             "method": self._method,
             "params": params,
         }
-
-        path.parent.mkdir(parents=True, exist_ok=True)
-        # Atomic write: a crash mid-write must not leave a half-written
-        # JSON that the loader would parse as a malformed scaler.
-        tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(json.dumps(body, indent=2))
-        os.replace(tmp, path)
+        atomic_write_json(path, body)
         logger.info("Scaler sidecar saved: %s (method=%s)", path, self._method)
 
     @classmethod
@@ -235,14 +208,7 @@ class RobustScalerTransformer(BaseTransformer):
             ValueError: if the file is not a recognised sidecar.
         """
         path = Path(path)
-        if not path.exists():
-            raise FileNotFoundError(f"Scaler sidecar not found: {path}")
-
-        body = json.loads(path.read_text())
-        if body.get("format") != "phase1.scaler.v1":
-            raise ValueError(
-                f"{path} is not a phase1.scaler.v1 sidecar " f"(got format={body.get('format')!r})"
-            )
+        body = load_sidecar(path, _SIDECAR_FORMAT, "scaler")
         method = body.get("method")
         if method not in _SCALERS:
             raise ValueError(f"Unknown scaler method '{method}' in {path}")

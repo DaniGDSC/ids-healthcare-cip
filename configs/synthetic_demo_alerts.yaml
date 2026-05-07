@@ -1,0 +1,96 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Synthetic Demo Alerts
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Honest disclosure
+# -----------------
+# These alerts are NOT in ``results/reports/evaluation_alerts.json`` and
+# are NOT used in any research path:
+#   * not aggregated by ``run_tests.py`` / M1–M8 metrics
+#   * not loaded by Module 5 / Module 6 evaluation
+#   * not rendered in Study Mode (locked schema)
+#   * loaded only when the dashboard's Demo Mode toggle is ON
+#
+# Purpose
+# -------
+# Surface visual treatments that the real evaluation set does not
+# naturally produce so the 10-min defense demo can show them. Currently:
+# DISAGREEMENT_ANOMALY (purple badge) — the v4 enrichment headliner.
+# The real eval set contains 4 benign rows but all are LOW/MEDIUM
+# severity, so the heuristic in ``derive_v4_fields`` (benign + ≥HIGH ⇒
+# DISAGREEMENT_ANOMALY) never fires on real data.
+#
+# Each entry is shaped to match the ``evaluation_alerts.json`` schema
+# closely enough that ``display_alert``, ``render_mve_layers``, and
+# ``derive_v4_fields`` all consume it without special-casing. The
+# ``is_synthetic_demo: true`` marker lets downstream code drop these
+# rows from any non-demo path.
+# ═══════════════════════════════════════════════════════════════════════
+
+version: "1.0"
+
+synthetic_alerts:
+  - alert_id: "SYNTHETIC_DEMO_001"
+    is_synthetic_demo: true
+    sample_index: 99001
+
+    # Heuristic in derive_v4_fields needs:
+    #   ground_truth == "benign" AND risk_level in {CRITICAL, HIGH}
+    # ⇒ classifies as DISAGREEMENT_ANOMALY.
+    ground_truth: "benign"
+    attack_category: "normal"
+    risk_level: "HIGH"
+    risk_score: 0.78
+    adjusted_score: 0.78
+    threshold: 0.5
+    risk_multiplier: 1.0
+    should_surface: true
+
+    true_severity: "HIGH"
+    device_class: "patient_monitor"
+    device_criticality: "HIGH"
+    device_patchable: true
+    affected_system: "patient_monitor (clinical area)"
+    patient_care_impact: "Real-time vitals streaming may be unreliable"
+    active_device: true
+    correct_action: "investigate"
+
+    xai_explanation:
+      consensus: "Track A (XGB/RF/DT) splits: P=0.51, 0.48, 0.55. DAE error 0.81 (HIGH). Disagreement diversity = 0.34."
+      xgboost_top_features:
+        - feature: "TCP Retransmission Rate"
+          shap_value: 0.245
+          direction: "increases"
+        - feature: "Outbound Bytes/sec"
+          shap_value: -0.183
+          direction: "decreases"
+        - feature: "Source Port Entropy"
+          shap_value: 0.156
+          direction: "increases"
+      dae_top_features:
+        - feature: "TCP Retransmission Rate"
+          weighted_error: 1.42e-06
+          pct_contribution: 28.4
+        - feature: "Source Port Entropy"
+          weighted_error: 0.93e-06
+          pct_contribution: 18.6
+        - feature: "InterArrival p99"
+          weighted_error: 0.71e-06
+          pct_contribution: 14.2
+
+    mve_structured:
+      layer_1:
+        baseline_behavior: "patient_monitor normally communicates with approved internal hosts using HTTPS."
+        deviation_description: "Track A models disagree (diversity score 0.34) and DAE flags 3 features as anomalous. The pattern is consistent with adversarial-input perturbation rather than a recognised attack signature."
+        confidence_indicator: "MEDIUM"
+      layer_2:
+        affected_system: "patient_monitor"
+        patient_care_impact: "Vitals stream unreliable until input source verified; clinical staff should cross-check with bedside readings."
+        phi_exposure: "low"
+        severity_label: "HIGH"
+        severity_rationale: "Active clinical device + adversarial-input pattern."
+      layer_3:
+        immediate_action: "Snapshot device for forensic review. Coordinate with security specialist (L2). Verify device data integrity against bedside readings before relying on telemetry."
+        clinical_constraint: "DO NOT power off or detach the monitor — clinical function preserved while investigation proceeds."
+        escalation_path: "L2_security_specialist"
+        timeframe: "within 1 hour"

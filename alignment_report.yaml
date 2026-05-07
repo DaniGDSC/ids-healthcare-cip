@@ -124,48 +124,11 @@ claims_supported:
   - M6
   all_tests_pass: true
   verdict: SUPPORTED
+claims_not_tested:
 - claim_id: C4
   claim_text: enabling correct triage from non-specialist operators
-  supported_by:
-  - m5_result.yaml (user study)
-  all_tests_pass: false
-  verdict: SUPPORTED
-claims_not_tested:
+  reason: NOT_TESTED — requires A/B user study with n≥20 IT generalists (Phase 2)
 - claim_id: C5
   claim_text: reducing dwell time for non-ransomware intrusions
   reason: NOT_TESTED — requires longitudinal field deployment (Phase 3)
 recommendation: SHIP_TO_USER_STUDY
-study_analysis:
-  claim: C4 — enabling correct triage from non-specialist operators
-  metric: M5 — Triage Decision Accuracy (user study)
-  m5_primary:
-    n_participants_with_mve: 25
-    n_participants_without_mve: 25
-    mean_accuracy_with_mve: 0.566
-    mean_accuracy_without_mve: 0.352
-    relative_improvement: 0.608
-    target_improvement: 0.3
-    passes_improvement_threshold: true
-    mann_whitney_statistic: 494.5
-    p_value: 0.00019
-    passes_significance: true
-    cohens_d: 1.3203
-    effect_size: large
-    verdict: PASS
-  secondary_metrics:
-    with_mve:
-      severity_accuracy: 0.662
-      action_accuracy: 0.672
-      over_reaction_rate: 0.136
-      under_reaction_rate: 0.004
-      catastrophic_miss_rate: 0.012
-      mean_decision_time_sec: 17.9
-      mean_confidence: 3.86
-    without_mve:
-      severity_accuracy: 0.438
-      action_accuracy: 0.494
-      over_reaction_rate: 0.094
-      under_reaction_rate: 0.006
-      catastrophic_miss_rate: 0.034
-      mean_decision_time_sec: 20.7
-      mean_confidence: 3.28

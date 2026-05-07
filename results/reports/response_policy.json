@@ -53,7 +53,7 @@
         "escalate_clinical"
       ],
       "max_response_min": 5,
-      "auto_execute": true
+      "recommended_for_auto_execution": true
     },
     "HIGH": {
       "default_actions": [
@@ -63,7 +63,7 @@
         "enhanced_monitoring"
       ],
       "max_response_min": 15,
-      "auto_execute": true
+      "recommended_for_auto_execution": true
     },
     "MEDIUM": {
       "default_actions": [
@@ -72,7 +72,7 @@
         "enhanced_monitoring"
       ],
       "max_response_min": 60,
-      "auto_execute": false
+      "recommended_for_auto_execution": false
     },
     "LOW": {
       "default_actions": [
@@ -80,7 +80,7 @@
         "enhanced_monitoring"
       ],
       "max_response_min": 480,
-      "auto_execute": false
+      "recommended_for_auto_execution": false
     }
   },
   "device_constraints": {

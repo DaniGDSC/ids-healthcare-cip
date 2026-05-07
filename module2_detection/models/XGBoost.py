@@ -12,8 +12,6 @@ from __future__ import annotations
 
 from typing import Any, ClassVar, Dict, List
 
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline as ImbPipeline
 from sklearn.ensemble import GradientBoostingClassifier
 
 from .base import BaseDetector
@@ -47,23 +45,5 @@ class XGBoostDetector(BaseDetector):
     PARAM_SPACE: ClassVar[Dict[str, List[Any]]] = PARAM_SPACE
     DEFAULT_N_ITER: ClassVar[int] = 50
 
-    def _build_pipeline(self) -> ImbPipeline:
-        """SMOTE + GradientBoosting inside an imblearn pipeline."""
-        return ImbPipeline(
-            [
-                (
-                    "smote",
-                    SMOTE(
-                        sampling_strategy=self._smote_strategy,
-                        k_neighbors=self._smote_k,
-                        random_state=self._random_state,
-                    ),
-                ),
-                (
-                    "classifier",
-                    GradientBoostingClassifier(
-                        random_state=self._random_state,
-                    ),
-                ),
-            ]
-        )
+    def _make_classifier(self) -> GradientBoostingClassifier:
+        return GradientBoostingClassifier(random_state=self._random_state)

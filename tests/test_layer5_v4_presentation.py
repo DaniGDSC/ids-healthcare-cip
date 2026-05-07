@@ -50,7 +50,7 @@ def test_badge_palette_matches_prompt_specification() -> None:
         AlertType.STRONG_NOVEL_ANOMALY: "#EA580C",
         AlertType.NOVEL_ANOMALY: "#F97316",
         AlertType.CONFIRMED_ANOMALY: "#EAB308",
-        AlertType.SUSPICIOUS_PATTERN: "#FACC15",
+        AlertType.SUSPICIOUS_PATTERN: "#F59E0B",  # Day 7: amber (was #FACC15) for projector distinguishability vs CONFIRMED_ANOMALY's yellow
         AlertType.BENIGN_WATCH: "#94A3B8",
         AlertType.BENIGN: "#94A3B8",
     }

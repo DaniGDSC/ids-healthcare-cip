@@ -20,6 +20,7 @@ import platform
 import sys
 from typing import Any, Dict, List, Optional
 
+from ._report_common import render_section_header
 from .config import Phase0Config
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,14 @@ def render_reproducibility_report(
     lines: List[str] = []
     w = lines.append
 
-    _section_header(w)
+    render_section_header(
+        w,
+        "## 3.4 Reproducibility and Environment Specification",
+        "This section documents the computational environment, random seed "
+        "configuration, CI/CD pipeline status, and dataset versioning to "
+        "ensure full reproducibility of the reported results as required "
+        "by IEEE Q1 standards.",
+    )
     _section_environment(w, installed_packages)
     _section_experiment_reproducibility(w, config, dataset_hash)
     _section_cicd_summary(w, test_count, coverage_pct, security_findings)
@@ -84,18 +92,6 @@ def render_reproducibility_report(
 # ---------------------------------------------------------------------------
 # Private section renderers
 # ---------------------------------------------------------------------------
-
-
-def _section_header(w) -> None:
-    w("## 3.4 Reproducibility and Environment Specification")
-    w("")
-    w(
-        "This section documents the computational environment, random seed "
-        "configuration, CI/CD pipeline status, and dataset versioning to "
-        "ensure full reproducibility of the reported results as required "
-        "by IEEE Q1 standards."
-    )
-    w("")
 
 
 def _section_environment(

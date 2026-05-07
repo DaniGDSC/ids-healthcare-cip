@@ -1,0 +1,129 @@
+{
+  "version": "1.0",
+  "description": "Maps (alert_tier, device_tier, patient_acuity_level) to response action sets",
+  "action_catalogue": {
+    "log_event": {
+      "cost": 0.1,
+      "reversible": true,
+      "requires_approval": false
+    },
+    "enhanced_monitoring": {
+      "cost": 0.2,
+      "reversible": true,
+      "requires_approval": false
+    },
+    "re_authenticate": {
+      "cost": 0.3,
+      "reversible": true,
+      "requires_approval": false
+    },
+    "restrict_traffic": {
+      "cost": 0.5,
+      "reversible": true,
+      "requires_approval": false
+    },
+    "isolate_device": {
+      "cost": 0.8,
+      "reversible": true,
+      "requires_approval": true
+    },
+    "forensic_snapshot": {
+      "cost": 0.4,
+      "reversible": true,
+      "requires_approval": false
+    },
+    "escalate_clinical": {
+      "cost": 0.7,
+      "reversible": false,
+      "requires_approval": false
+    },
+    "escalate_incident": {
+      "cost": 1.0,
+      "reversible": false,
+      "requires_approval": false
+    }
+  },
+  "tier_policies": {
+    "CRITICAL": {
+      "default_actions": [
+        "log_event",
+        "isolate_device",
+        "forensic_snapshot",
+        "escalate_incident",
+        "escalate_clinical"
+      ],
+      "max_response_min": 5,
+      "auto_execute": true
+    },
+    "HIGH": {
+      "default_actions": [
+        "log_event",
+        "isolate_device",
+        "forensic_snapshot",
+        "enhanced_monitoring"
+      ],
+      "max_response_min": 15,
+      "auto_execute": true
+    },
+    "MEDIUM": {
+      "default_actions": [
+        "log_event",
+        "restrict_traffic",
+        "enhanced_monitoring"
+      ],
+      "max_response_min": 60,
+      "auto_execute": false
+    },
+    "LOW": {
+      "default_actions": [
+        "log_event",
+        "enhanced_monitoring"
+      ],
+      "max_response_min": 480,
+      "auto_execute": false
+    }
+  },
+  "device_constraints": {
+    "life_sustaining": {
+      "max_action_cost": 0.5,
+      "isolation_blocked": true,
+      "clinical_approval_required": true
+    },
+    "vital_monitoring": {
+      "max_action_cost": 0.8,
+      "isolation_blocked": false,
+      "clinical_approval_required": true
+    },
+    "diagnostic": {
+      "max_action_cost": 0.8,
+      "isolation_blocked": false,
+      "clinical_approval_required": false
+    },
+    "auxiliary": {
+      "max_action_cost": 0.8,
+      "isolation_blocked": false,
+      "clinical_approval_required": false
+    }
+  },
+  "acuity_overrides": {
+    "elevated_acuity_threshold": 0.25,
+    "action_on_elevated": "Add escalate_clinical if not present; require clinical confirmation before isolation"
+  },
+  "attack_routing": {
+    "Spoofing": {
+      "add_actions": [
+        "re_authenticate"
+      ],
+      "primary_notify": "IT Security",
+      "secondary_notify": "Biomedical Engineering"
+    },
+    "Data Alteration": {
+      "add_actions": [
+        "forensic_snapshot",
+        "escalate_clinical"
+      ],
+      "primary_notify": "IT Security",
+      "secondary_notify": "Charge Nurse"
+    }
+  }
+}

@@ -1,0 +1,139 @@
+ablation:
+  dataset: EHMS-2020
+  fold_protocol: leave-one-class-out
+  experiment_purity: A
+  n_folds: 2
+  seed: 42
+  sample_cap: null
+  wall_time_seconds: 35.9
+  configs:
+  - name: DAE-raw
+    input_dim: 27
+    input_features: 27 raw network features
+  - name: DAE-cascade
+    input_dim: 28
+    input_features: 27 raw || P_xgb_val (v5 contract)
+  - name: DAE-probas-only
+    input_dim: 1
+    input_features: P_xgb_val
+    note: 1-D DAE is degenerate (bottleneck must be < n_features); we substitute |z-score|
+      vs benign mean as recon-error proxy.
+  caveats:
+  - EHMS-2020 has 2 attack classes; N=2 folds.
+  - XGB uses fixed default hyperparameters per fold (no RandomizedSearchCV) to keep
+    ablation runtime bounded.
+  - DAE-probas-only is a 1-D z-score baseline, not a true autoencoder.
+results:
+- holdout_class: Data Alteration
+  n_train: 8621
+  n_val_benign_for_dae: 1999
+  n_test_benign: 4282
+  n_test_novel: 277
+  p_xgb_val_benign_mean: 0.034693729132413864
+  p_xgb_val_benign_std: 0.08478599786758423
+  config_results:
+  - config: DAE-raw
+    input_dim: 25
+    n_train_benign: 1999
+    n_test_benign: 4282
+    n_test_novel: 277
+    recon_error_mean_benign: 112.42374400305746
+    recon_error_median_benign: 0.006586414369024162
+    recon_error_mean_novel: 2024.910298123711
+    recon_error_median_novel: 0.20749279913182378
+    auc_benign_vs_novel: 0.9963780884468104
+    recon_error_proxy: null
+    wall_time_seconds: 6.6
+  - config: DAE-cascade
+    input_dim: 26
+    n_train_benign: 1999
+    n_test_benign: 4282
+    n_test_novel: 277
+    recon_error_mean_benign: 651.9054654254436
+    recon_error_median_benign: 0.0028777942091391725
+    recon_error_mean_novel: 336.07076522122196
+    recon_error_median_novel: 0.20476570911644004
+    auc_benign_vs_novel: 0.9963764022682474
+    recon_error_proxy: null
+    wall_time_seconds: 5.8
+  - config: DAE-probas-only
+    input_dim: 1
+    n_train_benign: 1999
+    n_test_benign: 4282
+    n_test_novel: 277
+    recon_error_mean_benign: 0.5161290764808655
+    recon_error_median_benign: 0.3782140016555786
+    recon_error_mean_novel: 1.6126583814620972
+    recon_error_median_novel: 1.176790475845337
+    auc_benign_vs_novel: 0.7174571752799479
+    recon_error_proxy: z_score_abs
+    wall_time_seconds: 0.0
+- holdout_class: Spoofing
+  n_train: 8507
+  n_val_benign_for_dae: 1999
+  n_test_benign: 4282
+  n_test_novel: 337
+  p_xgb_val_benign_mean: 0.0009595447336323559
+  p_xgb_val_benign_std: 0.02047182433307171
+  config_results:
+  - config: DAE-raw
+    input_dim: 25
+    n_train_benign: 1999
+    n_test_benign: 4282
+    n_test_novel: 337
+    recon_error_mean_benign: 13.818755330530125
+    recon_error_median_benign: 0.0003226072772732525
+    recon_error_mean_novel: 0.0029468542481646885
+    recon_error_median_novel: 0.00037706596005130917
+    auc_benign_vs_novel: 0.5490820036118345
+    recon_error_proxy: null
+    wall_time_seconds: 5.9
+  - config: DAE-cascade
+    input_dim: 26
+    n_train_benign: 1999
+    n_test_benign: 4282
+    n_test_novel: 337
+    recon_error_mean_benign: 190.748624488135
+    recon_error_median_benign: 0.006388938983076733
+    recon_error_mean_novel: 0.0357732212379209
+    recon_error_median_novel: 0.006677669367445478
+    auc_benign_vs_novel: 0.5285121487089008
+    recon_error_proxy: null
+    wall_time_seconds: 5.9
+  - config: DAE-probas-only
+    input_dim: 1
+    n_train_benign: 1999
+    n_test_benign: 4282
+    n_test_novel: 337
+    recon_error_mean_benign: 0.03081137128174305
+    recon_error_median_benign: 0.022431083023548126
+    recon_error_mean_novel: 0.022370053455233574
+    recon_error_median_novel: 0.022431083023548126
+    auc_benign_vs_novel: 0.49938151145433857
+    recon_error_proxy: z_score_abs
+    wall_time_seconds: 0.0
+summary:
+  ranking_by_mean_auc:
+  - config: DAE-raw
+    mean_auc: 0.7727300460293225
+    delta_vs_raw: 0.0
+  - config: DAE-cascade
+    mean_auc: 0.7624442754885741
+    delta_vs_raw: -0.010285770540748418
+  - config: DAE-probas-only
+    mean_auc: 0.6084193433671432
+    delta_vs_raw: -0.1643107026621793
+  best_per_fold:
+    Data Alteration: DAE-raw
+    Spoofing: DAE-raw
+  cascade_vs_raw_mean_auc_delta: -0.010285770540748418
+  cascade_vs_raw_verdict: REGRESSION
+  per_fold_interpretation:
+  - On 'Data Alteration' the raw 25-dim DAE already separates novel-from-benign at
+    AUC=0.996; the cascade adds nothing measurable here.
+  - "On 'Spoofing' a benign-only DAE collapses to AUC=0.549 (near random); the cascade\
+    \ does not rescue it. The unsupervised path cannot detect this attack class \u2014\
+    \ Track A (a supervised classifier that has seen this class) is required."
+  conclusion: "Cascade input (raw + P_xgb) vs raw alone: mean \u0394 AUC = -0.0103\
+    \ (REGRESSION). DAE-probas-only is a 1-D z-score baseline and is reported only\
+    \ to show what falls out without raw features."

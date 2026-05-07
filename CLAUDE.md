@@ -15,6 +15,21 @@
 **Test framework**: pytest
 **Package manager**: pip (hoặc poetry/uv nếu có `pyproject.toml`)
 
+### Scope rules (project-specific)
+
+The pipeline rules in `research_spec.yaml` define what this prototype is.
+A few do-not-build categories listed there have project-specific carve-outs
+for the evaluation track:
+
+- **UI / frontend.** Building a deployable UI product is out of scope, but
+  UX work in `module6_evaluation/module6_app.py` is **in scope** when it
+  directly supports (a) the Phase 2 user study, (b) the M1–M8 evaluation
+  views, or (c) the thesis-defense demo. This includes role selectors,
+  page navigation, mode/status indicators, and demo-curation toggles —
+  i.e. anything that lets a researcher or examiner exercise the pipeline.
+  It does **not** extend to general-purpose UI features (multi-tenant
+  workspaces, theming systems, plugin frameworks, etc.).
+
 **Architecture** _(TODO: agent đọc cấu trúc thực tế từ root)_:
 ```
 src/           # Main source code

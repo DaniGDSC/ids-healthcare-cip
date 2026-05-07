@@ -23,7 +23,8 @@ tests in lockstep.
 """
 from __future__ import annotations
 
-from typing import Iterable, Sequence, TypedDict
+from enum import Enum
+from typing import Iterable, Sequence, TypedDict, TypeVar
 
 from src.data_models import AlertType, Confidence
 
@@ -91,7 +92,12 @@ BADGE_FOR_ALERT_TYPE: dict[AlertType, BadgeStyle] = {
         "urgency": "MEDIUM",
     },
     AlertType.SUSPICIOUS_PATTERN: {
-        "color": "#FACC15",
+        # Day 7: changed from #FACC15 to #F59E0B (amber) so the badge is
+        # distinguishable from CONFIRMED_ANOMALY's #EAB308 yellow on a
+        # defense-room projector at 2 m viewing distance — the two
+        # tones collapse to "looks the same" when projector contrast is
+        # reduced. Tests pin the new value (see Day 7 invariants).
+        "color": "#F59E0B",
         "icon": "🟡",
         "label": "SUSPICIOUS",
         "urgency": "LOW",
@@ -111,19 +117,38 @@ BADGE_FOR_ALERT_TYPE: dict[AlertType, BadgeStyle] = {
 }
 
 
+_E = TypeVar("_E", bound=Enum)
+_S = TypeVar("_S")
+
+
+def _resolve_style(
+    value: _E | str,
+    enum_cls: type[_E],
+    table: dict[_E, _S],
+    default: _E,
+) -> _S:
+    """Look up *value* in *table*, defaulting on unknown enum strings.
+
+    Shared resolver used by every "render-side" lookup that accepts
+    either a typed enum or its raw string name.  Unknown strings fall
+    back to *default* so the renderer never crashes on stale data while
+    still emitting a recognisable cue the operator can interpret.
+    """
+    if isinstance(value, str):
+        try:
+            value = enum_cls(value)
+        except ValueError:
+            return table[default]
+    return table[value]
+
+
 def badge_for_alert_type(alert_type: AlertType | str) -> BadgeStyle:
     """Return the badge metadata for a v4 alert type.
 
-    Total — an unknown string returns the BENIGN badge so the renderer
-    never crashes on stale data, while still emitting a recognisable
-    colour the operator can interpret.
+    Unknown strings fall back to the BENIGN badge — see
+    :func:`_resolve_style` for the shared default-on-unknown rule.
     """
-    if isinstance(alert_type, str):
-        try:
-            alert_type = AlertType(alert_type)
-        except ValueError:
-            return BADGE_FOR_ALERT_TYPE[AlertType.BENIGN]
-    return BADGE_FOR_ALERT_TYPE[alert_type]
+    return _resolve_style(alert_type, AlertType, BADGE_FOR_ALERT_TYPE, AlertType.BENIGN)
 
 
 # ── 4-level Confidence indicator ───────────────────────────────────────
@@ -139,15 +164,10 @@ CONFIDENCE_INDICATOR: dict[Confidence, ConfidenceStyle] = {
 def confidence_display(confidence: Confidence | str) -> ConfidenceStyle:
     """Return the visual metadata for a :class:`Confidence` level.
 
-    Total — unknown strings get the LOW indicator so the operator at
-    least sees a degraded-confidence cue rather than a blank cell.
+    Unknown strings fall back to the LOW indicator — see
+    :func:`_resolve_style` for the shared default-on-unknown rule.
     """
-    if isinstance(confidence, str):
-        try:
-            confidence = Confidence(confidence)
-        except ValueError:
-            return CONFIDENCE_INDICATOR[Confidence.LOW]
-    return CONFIDENCE_INDICATOR[confidence]
+    return _resolve_style(confidence, Confidence, CONFIDENCE_INDICATOR, Confidence.LOW)
 
 
 # ── Mode A / Mode B indicator ──────────────────────────────────────────

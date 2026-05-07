@@ -1,8 +1,19 @@
-"""Layer 3 v4.0 — enriched 9-stage triage classifier.
+"""Layer 3 v4.1 — enriched 9-stage triage classifier (XGB + DAE only).
 
-Maps the per-alert Layer 2 outputs (calibrated tree probabilities,
-diversity score, DAE percentile-rank score, threshold bucket) to the
-9-class ``AlertType`` typology + a 4-level ``Confidence`` indicator.
+Maps the per-alert Layer 2 outputs (calibrated XGBoost probability and
+DAE percentile-rank score) to the 9-class ``AlertType`` typology + a
+4-level ``Confidence`` indicator.
+
+v5 architectural change
+-----------------------
+Track A is XGB-only at runtime. RandomForest and DecisionTree are
+retained as offline reference baselines for the thesis comparison
+(``analysis/`` scripts) but no longer participate in the runtime
+classification path. The previous ``diversity_score`` signal —
+``std(p_xgb, p_rf, p_dt)`` — is therefore retired from the predicates;
+``DISAGREEMENT_ANOMALY`` is redefined as Track-A-vs-Track-B disagreement
+(XGB in the borderline band AND DAE strongly anomalous), the cleaner
+semantics that don't depend on three correlated ensemble members.
 
 This module is purely a function over Layer 2 outputs — it does no I/O
 and loads no models. Construct a ``Layer2Output`` (e.g. via
@@ -11,9 +22,9 @@ pass the per-alert scalars to :func:`classify_alert_v4`.
 
 INVARIANT 1
 -----------
-``c_detect = max(p_xgb, dae_score, normalized_diversity)`` — the DAE
-and the diversity signal can only ELEVATE confidence, never reduce it.
-The classifier sanity-checks this before returning.
+``c_detect = max(p_xgb, dae_score)`` — the DAE can only ELEVATE
+confidence, never reduce it. The classifier sanity-checks this before
+returning.
 
 Decision tree
 -------------
@@ -21,14 +32,14 @@ The 9 stages are ordered by specificity. Each stage's predicate is
 disjoint from the predicates above it (see
 ``test_layer3_v4_triage::test_stage_predicates_partition_input_space``).
 
-  Stage 1 KNOWN_ATTACK            p_xgb >= 0.85 AND diversity < 0.15
-  Stage 2 KNOWN_ATTACK_UNCERTAIN  p_xgb >= 0.85 AND diversity >= 0.15
-  Stage 3 DISAGREEMENT_ANOMALY    diversity >= 0.30 AND dae >= 0.70
-  Stage 4 STRONG_NOVEL_ANOMALY    p_xgb < 0.40   AND dae >= 0.95
-  Stage 5 NOVEL_ANOMALY           p_xgb < 0.40   AND 0.70 <= dae < 0.95
-  Stage 6 CONFIRMED_ANOMALY       0.40 <= p_xgb < 0.85 AND dae >= 0.70
-  Stage 7 SUSPICIOUS_PATTERN      0.40 <= p_xgb < 0.85 AND dae < 0.70
-  Stage 8 BENIGN_WATCH            p_xgb < 0.40   AND 0.50 <= dae < 0.70
+  Stage 1 KNOWN_ATTACK            p_xgb >= 0.85 AND dae <  0.50
+  Stage 2 KNOWN_ATTACK_UNCERTAIN  p_xgb >= 0.85 AND dae >= 0.50
+  Stage 3 DISAGREEMENT_ANOMALY    0.40 <= p_xgb < 0.85 AND dae >= 0.95
+  Stage 4 STRONG_NOVEL_ANOMALY    p_xgb < 0.40 AND dae >= 0.95
+  Stage 5 NOVEL_ANOMALY           p_xgb < 0.40 AND 0.70 <= dae < 0.95
+  Stage 6 CONFIRMED_ANOMALY       0.40 <= p_xgb < 0.85 AND 0.70 <= dae < 0.95
+  Stage 7 SUSPICIOUS_PATTERN      0.40 <= p_xgb < 0.85 AND dae <  0.70
+  Stage 8 BENIGN_WATCH            p_xgb < 0.40 AND 0.50 <= dae < 0.70
   Stage 9 BENIGN                  default
 """
 from __future__ import annotations
@@ -41,11 +52,15 @@ from src.data_models import AlertType, Confidence
 # Threshold constants — keep in sync with the docstring above.
 P_XGB_HIGH = 0.85
 P_XGB_LOW = 0.40
-DIVERSITY_HIGH = 0.30
-DIVERSITY_MODERATE = 0.15
 DAE_HIGH = 0.95          # 99th-percentile rank
 DAE_MODERATE = 0.70      # 95th-percentile rank
-DAE_WEAK = 0.50          # marginal
+DAE_WEAK = 0.50          # marginal — used to split Stage 1 / Stage 2
+
+# v5: retired but kept for back-compat imports (some legacy callers
+# still reference these constants). New stage predicates do not use
+# diversity at all.
+DIVERSITY_HIGH = 0.30
+DIVERSITY_MODERATE = 0.15
 
 
 @dataclass
@@ -53,7 +68,9 @@ class TriageDecisionV4:
     """Result of the v4.0 enriched triage classifier.
 
     Carries the source signals so audit logs can reproduce the routing
-    decision without re-running the classifier.
+    decision without re-running the classifier. ``diversity_score`` is
+    retained as an audit field (always ``0.0`` in v5 unless the caller
+    explicitly passes one) but is no longer consumed by the predicates.
     """
 
     alert_type: AlertType
@@ -68,38 +85,29 @@ class TriageDecisionV4:
     threshold_level: str
 
 
-def _normalised_diversity(diversity_score: float) -> float:
-    """Map raw diversity (std of 3 calibrated probas, max ~0.47) to [0, 1]
-    so it is comparable with ``p_xgb`` and ``dae_score`` when taking the
-    max for ``c_detect``.
-
-    Anchor at 0.30 (the DISAGREEMENT_ANOMALY threshold). A diversity of
-    0.30 maps to 1.0; values above are clamped.
-    """
-    return min(1.0, diversity_score / DIVERSITY_HIGH) if diversity_score > 0 else 0.0
-
-
 def classify_alert_v4(
     p_xgb: float,
-    p_rf: float,
-    p_dt: float,
-    diversity_score: float,
     dae_score: float,
+    *,
     threshold_level: str = "below_threshold",
+    p_rf: float | None = None,
+    p_dt: float | None = None,
+    diversity_score: float | None = None,
 ) -> TriageDecisionV4:
     """Apply the 9-stage v4 triage decision tree to a single alert.
 
     Args:
-        p_xgb: Calibrated P(attack) from XGBoost.
-        p_rf: Calibrated P(attack) from RandomForest.
-        p_dt: Calibrated P(attack) from DecisionTree.
-        diversity_score: Standard deviation of the three probas
-            (Layer 2 ``diversity_score``).
+        p_xgb: Calibrated P(attack) from XGBoost (Track A).
         dae_score: DAE anomaly score in [0, 1] (Layer 2 ``dae_score``,
-            percentile-rank calibrated).
+            percentile-rank calibrated; Track B).
         threshold_level: One of ``below_threshold`` / ``weak`` /
             ``moderate`` / ``strong`` (Layer 2 ``threshold_level``).
             Carried through for audit; not used by the predicates.
+        p_rf, p_dt, diversity_score: **Deprecated as of v5.** Retained as
+            optional kwargs so existing callers don't break, but the
+            predicates no longer consume them. ``diversity_score`` is
+            echoed onto the returned ``TriageDecisionV4`` for audit
+            continuity; ``p_rf`` / ``p_dt`` are ignored.
 
     Returns:
         ``TriageDecisionV4`` with the matched stage's alert type,
@@ -112,12 +120,10 @@ def classify_alert_v4(
             DAE *reduce* confidence below the primary tree.
     """
     p_xgb = float(p_xgb)
-    p_rf = float(p_rf)
-    p_dt = float(p_dt)
-    diversity_score = float(diversity_score)
     dae_score = float(dae_score)
+    diversity_audit = float(diversity_score) if diversity_score is not None else 0.0
 
-    c_detect = max(p_xgb, dae_score, _normalised_diversity(diversity_score))
+    c_detect = max(p_xgb, dae_score)
     if c_detect < p_xgb - 1e-9:
         raise AssertionError(
             "Layer 3 v4 INVARIANT 1 violated: "
@@ -137,39 +143,39 @@ def classify_alert_v4(
             template_id=template_id,
             c_detect=c_detect,
             p_xgb=p_xgb,
-            diversity_score=diversity_score,
+            diversity_score=diversity_audit,
             dae_score=dae_score,
             threshold_level=threshold_level,
         )
 
-    # Stage 1 — KNOWN_ATTACK (high confidence, models agree)
-    if p_xgb >= P_XGB_HIGH and diversity_score < DIVERSITY_MODERATE:
+    # Stage 1 — KNOWN_ATTACK (XGB confident, DAE confirms not novel)
+    if p_xgb >= P_XGB_HIGH and dae_score < DAE_WEAK:
         return _decision(
             AlertType.KNOWN_ATTACK,
             Confidence.VERY_HIGH,
-            "Track A high P + models agree",
+            "Track A high P + Track B agrees not novel",
             "known_attack_high_confidence",
         )
 
-    # Stage 2 — KNOWN_ATTACK_UNCERTAIN (high P but disagreement)
-    if p_xgb >= P_XGB_HIGH and diversity_score >= DIVERSITY_MODERATE:
+    # Stage 2 — KNOWN_ATTACK_UNCERTAIN (XGB confident BUT DAE flags anomaly)
+    if p_xgb >= P_XGB_HIGH and dae_score >= DAE_WEAK:
         return _decision(
             AlertType.KNOWN_ATTACK_UNCERTAIN,
             Confidence.HIGH,
-            "Track A high P but models disagree",
+            "Track A high P but Track B sees anomaly — verify",
             "known_attack_with_uncertainty",
         )
 
-    # Stage 3 — DISAGREEMENT_ANOMALY (potential adversarial)
-    # Predicate uses the v4 thresholds. We checked stages 1+2 above so
-    # p_xgb is < P_XGB_HIGH at this point — DISAGREEMENT only fires in
-    # the moderate/low-P regime where the disagreement is suspicious
-    # (rather than confirming an already-known attack).
-    if diversity_score >= DIVERSITY_HIGH and dae_score >= DAE_MODERATE:
+    # Stage 3 — DISAGREEMENT_ANOMALY (Track A borderline, Track B strong)
+    # v5 redefinition: the disagreement signal is now between the two
+    # tracks (XGB and DAE) rather than within Track A. XGB sits in the
+    # moderate-P band but DAE asserts strong novelty — the canonical
+    # adversarial-input signature.
+    if P_XGB_LOW <= p_xgb < P_XGB_HIGH and dae_score >= DAE_HIGH:
         return _decision(
             AlertType.DISAGREEMENT_ANOMALY,
             Confidence.HIGH,
-            "Models disagree + DAE elevated → potential adversarial input",
+            "Track A borderline + Track B strongly anomalous → potential adversarial input",
             "adversarial_pattern",
         )
 
@@ -192,7 +198,9 @@ def classify_alert_v4(
         )
 
     # Stage 6 — CONFIRMED_ANOMALY (multi-signal corroboration)
-    if P_XGB_LOW <= p_xgb < P_XGB_HIGH and dae_score >= DAE_MODERATE:
+    # v5: tightened to dae < DAE_HIGH so Stage 3 (which now also lives
+    # in the same XGB band) can fire on the high-DAE side without overlap.
+    if P_XGB_LOW <= p_xgb < P_XGB_HIGH and DAE_MODERATE <= dae_score < DAE_HIGH:
         return _decision(
             AlertType.CONFIRMED_ANOMALY,
             Confidence.HIGH,
@@ -232,9 +240,10 @@ __all__ = [
     "classify_alert_v4",
     "P_XGB_HIGH",
     "P_XGB_LOW",
-    "DIVERSITY_HIGH",
-    "DIVERSITY_MODERATE",
     "DAE_HIGH",
     "DAE_MODERATE",
     "DAE_WEAK",
+    # v5: retired but exported for back-compat imports.
+    "DIVERSITY_HIGH",
+    "DIVERSITY_MODERATE",
 ]

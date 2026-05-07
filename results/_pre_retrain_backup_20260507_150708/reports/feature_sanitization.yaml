@@ -1,0 +1,216 @@
+# feature_sanitization.yaml
+# Step [5] Feature Sanitization — P0 security defect fix
+# Covers ARCHITECTURE.md workflow Step [5].
+#
+# This deliverable documents the contract implemented in src/preprocessing.py
+# and verified by tests/test_feature_sanitization.py. All numerical values
+# below are extracted from the JSON / parquet artifacts named under
+# `source_artifacts`. No values were hand-typed.
+#
+# Generated: 2026-05-05
+
+source_artifacts:
+  - data/processed/train_benign_phase1.parquet   # used to compute medians
+  - data/processed/benign_medians.json            # persisted lookup
+  - src/preprocessing.py                          # implementation
+  - src/risk_scorer.py                            # EA-06 score elevation
+  - tests/test_feature_sanitization.py            # acceptance tests
+
+# ── 1. Current implementation ───────────────────────────────────────────
+
+current_implementation:
+  code_reference: src/preprocessing.py
+  public_api:
+    - "sanitize_features(x, feature_names=None) -> (x_clean, data_quality_flag, nan_rate)"
+    - "load_benign_medians(path=BENIGN_MEDIANS_PATH) -> dict[str, float]"
+  method: "BENIGN_MEDIANS replacement (per-feature median from benign training subset; NOT 0.0)"
+  rationale_vs_zero_replacement: |
+    Zero-replacement was the previous behaviour (Module-3 batch path
+    _sanitise_features). Zero is an artificial outlier in the joint
+    feature-prediction space and an attacker can exploit it to *create*
+    anomalous-looking inputs at will. Per-feature benign-medians make
+    NaN-injected samples look ordinary in raw features so the only signal
+    of tampering is the data_quality_flag itself, which is now
+    consequence-bearing (see EA-06 mitigation below).
+  thresholds:
+    NAN_RATE_DEGRADED: 0.05
+    NAN_RATE_FAILED: 0.50
+  data_quality_flag_taxonomy:
+    OK:       "nan_rate <= 0.05 OR no NaN/Inf at all"
+    DEGRADED: "0.05 < nan_rate < 0.50 — possible sensor issue or NaN-injection attempt (EA-06)"
+    FAILED:   "nan_rate >= 0.50 — input largely garbage; route to biomed for device check"
+  logging:
+    - "WARNING level on DEGRADED with nan_rate value and EA-06 attribution"
+    - "WARNING level on FAILED with nan_rate value"
+  spec_note_ok_threshold: |
+    The original spec text said test_2 (2/25 = 8%) should yield flag=OK
+    with the parenthetical "rate < 5%". 8% > 5%, so the parenthetical
+    is the source of truth and the textual outcome is wrong. The
+    implementation honours the explicit 5% threshold (NAN_RATE_DEGRADED);
+    test_2 therefore asserts flag=DEGRADED, not OK. Lower the threshold
+    to 8% if the table's outcome column is the canonical interpretation.
+
+# ── 2. Sanitization logic ───────────────────────────────────────────────
+
+sanitization_logic:
+  inputs:
+    - "25 raw features (numeric float)"
+    - "May contain np.nan, +np.inf, -np.inf"
+    - "Shape: (25,) or (1, 25)"
+  transformations:
+    - "Detect non-finite cells via np.isfinite mask"
+    - "Compute nan_rate = (#non-finite cells) / (total cells)"
+    - "If nan_rate > 0: replace each non-finite cell with the per-feature benign median"
+    - "Set data_quality_flag from threshold ladder (OK / DEGRADED / FAILED)"
+    - "Log WARNING when flag != OK"
+  outputs:
+    - "x_clean: same shape as input, all values finite"
+    - "data_quality_flag: 'OK' | 'DEGRADED' | 'FAILED'"
+    - "nan_rate: float in [0.0, 1.0]"
+  per_alert_consumption:
+    - "src.risk_scorer.score_alert accepts data_quality kwarg"
+    - "DEGRADED: anomaly_score *= 1.20 (capped at 1.0)"
+    - "FAILED: anomaly_score = max(score, 0.95) — forces surface"
+    - "OK / IMPUTED_NAN: no score modification"
+
+# ── 3. BENIGN_MEDIANS source ────────────────────────────────────────────
+
+benign_medians_source:
+  computed_from: data/processed/train_benign_phase1.parquet
+  benign_train_samples: 9990
+  n_features: 25
+  persisted_to: data/processed/benign_medians.json
+  schema:
+    feature_names: "list[str] of length 25"
+    n_features: 25
+    source_file: "data/processed/train_benign_phase1.parquet"
+    n_benign_samples: 9990
+    medians: "dict[feature_name, float] — np.nanmedian of the benign training column"
+  sample_values:
+    Flgs:    0.0000
+    Sport:   0.0059
+    SrcBytes: 0.0000
+    DstBytes: 0.0000
+    SrcLoad: 0.0677
+
+# ── 4. Test cases ───────────────────────────────────────────────────────
+
+test_cases:
+  test_1_normal_input:
+    name: test_1_normal_input_unchanged_flag_ok
+    input_description: "Clean 25-feature vector, all values finite"
+    expected:
+      x_clean: "unchanged (==x)"
+      flag: OK
+      nan_rate: 0.0
+    status: PASS
+
+  test_2_partial_nan:
+    name: test_2_partial_nan_below_threshold_flag_ok
+    input_description: "2 of 25 features set to np.nan (nan_rate = 0.08)"
+    expected:
+      x_clean: "the 2 NaN slots replaced with their per-feature benign median; other 23 unchanged"
+      flag: DEGRADED   # not OK — see current_implementation.spec_note_ok_threshold
+      nan_rate: 0.08
+    status: PASS
+
+  test_3_high_nan_rate:
+    name: test_3_high_nan_rate_flag_degraded
+    input_description: "5 of 25 features set to np.nan (nan_rate = 0.20)"
+    expected:
+      x_clean: "all 5 NaN slots replaced with medians; output fully finite"
+      flag: DEGRADED
+      nan_rate: 0.20
+    status: PASS
+
+  test_4_inf_handling:
+    name: test_4_inf_handling
+    input_description: "1 feature = +Inf, 1 feature = -Inf (nan_rate = 0.08)"
+    expected:
+      x_clean: "both Inf slots replaced with their per-feature benign median; output fully finite"
+      flag: DEGRADED
+      nan_rate: 0.08
+    status: PASS
+
+  test_5_nan_injection_attack:
+    name: test_5_nan_injection_attack_elevates_score
+    input_description: "Adversary nan-bombs 6 of 25 features (nan_rate = 0.24)"
+    expected:
+      sanitization:
+        flag: DEGRADED
+        nan_rate: 0.24
+      score_alert:
+        raw_anomaly_score: 0.40
+        device_context: "HIGH+unpatchable"
+        adjusted_score: ">0.40 (×1.20 DEGRADED bump, ×1.20 HIGH+unpatchable risk multiplier)"
+        should_surface: true
+        ea_06_mitigation: "PASS — DEGRADED flag elevates the alert past the surfacing threshold even when the adversary forced the raw score below 0.50"
+    status: PASS
+
+# ── 5. Adversarial consideration: EA-06 ─────────────────────────────────
+
+adversarial_consideration:
+  threat_id: EA-06
+  threat_description: |
+    NaN/Inf injection. An attacker who can control even a few feature values
+    in an inbound flow record can write NaN or Inf into them. Naive
+    zero-replacement turns the corrupted sample into a feature-space outlier
+    that shows up as a benign reconstruction-error spike on the DAE while
+    *masking* the true anomaly (the attacker's payload). Median-replacement
+    closes that channel in raw features but loses the tamper signal — so
+    the data_quality_flag becomes the authoritative tamper indicator.
+  mitigation:
+    - "Per-feature BENIGN_MEDIANS replacement (no zero-imputation outliers)"
+    - "data_quality_flag DEGRADED nudges adjusted_score up by 20%"
+    - "data_quality_flag FAILED clamps adjusted_score to >=0.95 — alert always surfaces"
+    - "Both score-modification rules implemented in src/risk_scorer.py::score_alert"
+  test_coverage:
+    - "tests/test_feature_sanitization.py::test_5_nan_injection_attack_elevates_score"
+    - "tests/test_feature_sanitization.py::test_failed_quality_forces_surface"
+  residual_risk: |
+    An adversary who keeps nan_rate at exactly the OK threshold (1/25 = 4%)
+    can still imput one feature without raising the flag. This is by design —
+    a 4% rate is indistinguishable from a normal sensor dropout. The
+    detection layer still sees a single median-replaced cell, which is
+    statistically benign, so no defense can be triggered without false-
+    positives on real sensor noise. Documented as residual risk.
+
+# ── 6. Acceptance criteria ──────────────────────────────────────────────
+
+acceptance_criteria:
+  - check: "All 5 test cases PASS"
+    status: PASS
+    evidence: "pytest tests/test_feature_sanitization.py — 7 passed (5 named + 1 EA-06 FAILED case + 1 medians persistence)"
+  - check: "BENIGN_MEDIANS computed and persisted"
+    status: PASS
+    evidence: "data/processed/benign_medians.json (9990 benign samples, 25 features, all finite)"
+  - check: "data_quality_flag implemented"
+    status: PASS
+    evidence: "src/preprocessing.py::sanitize_features returns (x_clean, flag, nan_rate); DataQuality enum extended with DEGRADED + FAILED in src/data_models.py"
+  - check: "NaN rate logging present"
+    status: PASS
+    evidence: "logger.warning fires on DEGRADED and FAILED with explicit nan_rate value and EA-06 attribution on DEGRADED"
+  - check: "EA-06 mitigation tested"
+    status: PASS
+    evidence: "test_5_nan_injection_attack_elevates_score asserts surfacing despite raw_score < threshold; test_failed_quality_forces_surface asserts clamp at 0.95"
+
+# ── 7. Reproducibility ──────────────────────────────────────────────────
+
+reproducibility:
+  regenerate_benign_medians: |
+    python3 -c "
+    import json, numpy as np, pandas as pd
+    from pathlib import Path
+    feats = ['Flgs','Sport','SrcBytes','DstBytes','SrcLoad','DstLoad','SIntPkt','DIntPkt',
+             'SIntPktAct','sMaxPktSz','dMaxPktSz','sMinPktSz','Dur','TotBytes','Load',
+             'pSrcLoss','pDstLoss','Temp','SpO2','Pulse_Rate','SYS','DIA','Heart_rate',
+             'Resp_Rate','ST']
+    df = pd.read_parquet('data/processed/train_benign_phase1.parquet')
+    out = {'feature_names': feats, 'n_features': 25,
+           'source_file': 'data/processed/train_benign_phase1.parquet',
+           'n_benign_samples': int(len(df)),
+           'medians': {f: float(np.nanmedian(df[f].values)) for f in feats}}
+    Path('data/processed/benign_medians.json').write_text(json.dumps(out, indent=2))
+    "
+  run_acceptance_tests: |
+    python -m pytest tests/test_feature_sanitization.py -v

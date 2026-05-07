@@ -57,7 +57,6 @@ MODELS_DIR = PROJECT_ROOT / "results/models"
 # logged to the signed audit_log.jsonl chain.
 _hardened_audit = HardenedAuditLogger(EVAL_DIR / "audit_log.jsonl")
 
-ROLES = ["Security Analyst", "Clinician", "Administrator"]
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
 
 TIER_COLORS = {"CRITICAL": "#8e44ad", "HIGH": "#e74c3c", "MEDIUM": "#e67e22", "LOW": "#2ecc71"}
@@ -68,6 +67,28 @@ from common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 # Risk-Adaptive Scoring Engine (research_spec.yaml component_2) so tier
 # assignment uses the same logic the prototype tests enforce (M7, M6).
 from module6_evaluation.study_loader import assign_ab_condition, load_study_alerts  # noqa: E402
+
+# v4 visual helpers (Layer 5 v4.0 — 9-class badges, confidence dots, mode A/B).
+# Pure metadata module; safe to import at app startup.
+from src.data_models import AlertType, Confidence, OperatorRole  # noqa: E402
+from module6_evaluation.presentation_v4 import (  # noqa: E402
+    BADGE_FOR_ALERT_TYPE,
+    CONFIDENCE_INDICATOR,
+    MODE_INDICATOR,
+    MODE_A_LLM,
+    MODE_B_RULE_BASED,
+    anomalous_dims_markdown,
+    badge_for_alert_type,
+    confidence_display,
+    mode_display,
+)
+# v4 MITRE per-role formatting (built once in module4_explanations,
+# reused here so the Dashboard / Sim / Browse all surface the same
+# technique copy per role).
+from module4_explanations.triage_v4_adapter import (  # noqa: E402
+    format_mitre_for_alert_type,
+    format_mitre_for_role,
+)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -288,6 +309,19 @@ def render_mve_layers(alert: dict) -> None:
         else:
             st.caption("Baseline deviation detected. See SHAP features below.")
 
+        # Day 2: MITRE per role. The technique is derived from the v4
+        # ``alert_type`` (which we derive heuristically from the legacy
+        # alert fields) so the line goes live without waiting for Layer 3
+        # to plumb ``mitre_technique_id`` into the alert schema.
+        try:
+            alert_type, _, _ = derive_v4_fields(alert)
+            op_role = get_current_operator_role()
+            mitre_line = format_mitre_for_alert_type(alert_type, op_role)
+        except Exception:  # never break Layer 1 over a MITRE lookup miss
+            mitre_line = ""
+        if mitre_line:
+            st.markdown(f"**Threat intelligence:** {mitre_line}")
+
     # ── Layer 2: Clinical Severity ──
     affected = _get("affected_system")
     impact = _get("patient_care_impact")
@@ -357,6 +391,243 @@ def render_mve_layers(alert: dict) -> None:
                         "contacting Biomed Engineering \u2014 clinical function unknown."
                     )
             # MEDIUM/LOW: show nothing (silence is correct)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# v4 visual helpers (Layer 5 v4.0 — 9-class badges, confidence, mode A/B)
+# ═══════════════════════════════════════════════════════════════════════
+
+# Heuristic mapping: cat∈{spoofing, data alteration} ⇒ "known" Track-A category.
+# Anything else (or empty) is treated as a novel/non-cataloged anomaly.
+_KNOWN_ATTACK_CATEGORIES: frozenset[str] = frozenset({"spoofing", "data alteration"})
+
+
+def derive_v4_fields(alert: dict) -> tuple[AlertType, Confidence, str]:
+    """Best-effort heuristic mapping legacy alert schema → v4 fields.
+
+    The Layer 3 v4 fusion does not yet write ``alert_type`` /
+    ``confidence`` / ``generation_mode`` into ``evaluation_alerts.json``.
+    Until that plumbing lands, the dashboard derives them from the
+    fields that *are* present (``ground_truth``, ``attack_category``,
+    ``risk_level``, ``risk_score``) so the v4 visual treatment is
+    exercised end-to-end. Replace this call with a direct field read
+    once the upstream pipeline emits these fields natively.
+
+    Args:
+        alert: A row from ``evaluation_alerts.json`` /
+            ``alert_responses.json`` (loose schema; missing keys are
+            tolerated and degrade to BENIGN / LOW / Mode B).
+
+    Returns:
+        ``(alert_type, confidence, generation_mode)``.
+    """
+    gt = (alert.get("ground_truth") or "").lower()
+    cat = (alert.get("attack_category") or "").lower()
+    lvl = (alert.get("risk_level") or "").upper()
+    try:
+        score = float(alert.get("risk_score", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        score = 0.0
+
+    # Alert type
+    if gt == "benign" or cat in {"normal", "benign", ""}:
+        if lvl in {"CRITICAL", "HIGH"}:
+            alert_type = AlertType.DISAGREEMENT_ANOMALY
+        else:
+            alert_type = AlertType.BENIGN_WATCH
+    elif cat in _KNOWN_ATTACK_CATEGORIES:
+        if lvl == "CRITICAL" and score >= 0.80:
+            alert_type = AlertType.KNOWN_ATTACK
+        elif lvl in {"CRITICAL", "HIGH"}:
+            alert_type = AlertType.KNOWN_ATTACK_UNCERTAIN
+        elif lvl == "MEDIUM":
+            alert_type = AlertType.CONFIRMED_ANOMALY
+        else:
+            alert_type = AlertType.SUSPICIOUS_PATTERN
+    else:
+        if lvl == "CRITICAL":
+            alert_type = AlertType.STRONG_NOVEL_ANOMALY
+        elif lvl == "HIGH":
+            alert_type = AlertType.NOVEL_ANOMALY
+        elif lvl == "MEDIUM":
+            alert_type = AlertType.CONFIRMED_ANOMALY
+        else:
+            alert_type = AlertType.SUSPICIOUS_PATTERN
+
+    # Confidence
+    if score >= 0.85:
+        conf = Confidence.VERY_HIGH
+    elif score >= 0.70:
+        conf = Confidence.HIGH
+    elif score >= 0.50:
+        conf = Confidence.MEDIUM
+    else:
+        conf = Confidence.LOW
+
+    # Mode (precedence: explicit field on alert, then env, then Mode B fallback)
+    raw_mode = (
+        alert.get("generation_mode")
+        or alert.get("mve_mode")
+        or (alert.get("mve_structured") or {}).get("generation_mode")
+    )
+    if raw_mode in (MODE_A_LLM, MODE_B_RULE_BASED):
+        mode = raw_mode
+    else:
+        import os
+        mode = MODE_A_LLM if os.environ.get("ANTHROPIC_API_KEY") else MODE_B_RULE_BASED
+    return alert_type, conf, mode
+
+
+def render_alert_type_badge(alert_or_type) -> None:
+    """Render the 9-class alert-type pill badge.
+
+    Accepts an :class:`AlertType`, the raw string value, or a full
+    alert dict (in which case the type is derived via
+    :func:`derive_v4_fields`). Unknown strings fall back to ``BENIGN``
+    via :func:`badge_for_alert_type`.
+    """
+    if isinstance(alert_or_type, dict):
+        alert_type, _, _ = derive_v4_fields(alert_or_type)
+    else:
+        alert_type = alert_or_type
+    badge = badge_for_alert_type(alert_type)
+    st.markdown(
+        f"<span style='background:{badge['color']};color:white;"
+        f"padding:4px 10px;border-radius:4px;font-weight:600;font-size:13px;'>"
+        f"{badge['icon']} {badge['label']}</span>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_confidence_indicator(confidence) -> None:
+    """Render the 4-level confidence dots indicator."""
+    style = confidence_display(confidence)
+    label = confidence.value if hasattr(confidence, "value") else str(confidence)
+    st.markdown(
+        f"<span style='color:{style['color']};font-weight:600;font-size:14px;'>"
+        f"{style['symbol']}</span> "
+        f"<span style='font-size:12px;color:#374151;'>{label}</span>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_mode_indicator(generation_mode: str) -> None:
+    """Render the Mode A (LLM) / Mode B (rule-based) badge.
+
+    Side effect: also updates the top-bar mode indicator via
+    :func:`set_current_mode` so the global state reflects the most
+    recently rendered alert's mode.
+    """
+    style = mode_display(generation_mode)
+    if generation_mode == MODE_A_LLM:
+        st.success(style["badge"])
+    else:
+        st.warning(style["badge"])
+    set_current_mode(generation_mode)
+
+
+def render_dae_anomalous_dims(
+    anomalous_dims, feature_names=()
+) -> None:
+    """Render Layer 2 v4 anomalous dims as a collapsible expander.
+
+    No-op when ``anomalous_dims`` is empty (the helper from
+    ``presentation_v4`` returns an empty string in that case).
+    """
+    md = anomalous_dims_markdown(anomalous_dims, feature_names)
+    if not md:
+        return
+    n = len(list(anomalous_dims))
+    with st.expander(f"\U0001f52c DAE anomaly details ({n} dims)", expanded=False):
+        st.markdown(md)
+
+
+def render_dae_top_features(items) -> None:
+    """Render the alert's ``xai_explanation.dae_top_features`` list.
+
+    The pipeline already serialises DAE per-dim attribution as a list of
+    ``{"feature": str, "weighted_error": float, "pct_contribution": float}``
+    dicts (Layer 2 v4 emits the indices, Layer 3/4 enriches them with the
+    feature name and contribution share). This helper renders that
+    shape directly so the Dashboard does not need to round-trip through
+    ``anomalous_dims_markdown`` (which expects ``(int_indices,
+    name_table)``).
+
+    No-op on empty lists / non-list inputs so the caller can pass
+    ``alert.get("xai_explanation", {}).get("dae_top_features", [])``
+    unconditionally and skip the empty-state expander.
+    """
+    if not isinstance(items, list) or not items:
+        return
+    n = len(items)
+    with st.expander(f"\U0001f52c DAE Anomaly Details ({n} dim{'s' if n != 1 else ''})", expanded=False):
+        for it in items:
+            if not isinstance(it, dict):
+                continue
+            name = it.get("feature", "?")
+            pct = it.get("pct_contribution")
+            err = it.get("weighted_error")
+            parts = [f"`{name}`"]
+            if isinstance(pct, (int, float)):
+                parts.append(f"**{pct:.1f}%** of reconstruction error")
+            if isinstance(err, (int, float)):
+                parts.append(f"weighted error = {err:.2e}")
+            st.markdown("- " + "  ·  ".join(parts))
+
+
+def _is_safety_floor_alert(alert: dict) -> bool:
+    """True iff the alert triggers the safety floor (INVARIANT 2).
+
+    Safety floor = ``risk_level == 'CRITICAL'`` AND device cannot be
+    patched. The Sim playback auto-pauses on the first tick that surfaces
+    such an alert so the operator (or examiner) sees the explicit
+    "do-not-isolate, escalate-instead" branch before the next alert
+    advances.
+
+    The schema check looks at the canonical ``device_patchable`` boolean
+    (top-level on every ``evaluation_alerts.json`` row). When the field
+    is missing we default to ``True`` (patchable) — the *safer* default,
+    because a missing field shouldn't manufacture a pause.
+    """
+    if (alert.get("risk_level") or "").upper() != "CRITICAL":
+        return False
+    patchable = alert.get("device_patchable", True)
+    return patchable is False
+
+
+def display_alert_header_v4(alert: dict) -> None:
+    """Render the v4 alert header strip.
+
+    Layout: [severity] [alert-type badge] [risk-level pill] [confidence] [mode]
+    """
+    alert_type, conf, mode = derive_v4_fields(alert)
+    cols = st.columns([1.5, 2.5, 1.2, 1.4, 1.6])
+
+    with cols[0]:
+        severity = (alert.get("true_severity")
+                    or alert.get("severity")
+                    or alert.get("risk_level")
+                    or "LOW")
+        color = TIER_COLORS.get(str(severity).upper(), "#999")
+        st.markdown(
+            f"<span style='background:{color};color:white;"
+            f"padding:4px 10px;border-radius:4px;font-weight:600;font-size:13px;'>"
+            f"{severity}</span>",
+            unsafe_allow_html=True,
+        )
+
+    with cols[1]:
+        render_alert_type_badge(alert_type)
+
+    with cols[2]:
+        risk_level = alert.get("risk_level", "—")
+        st.markdown(f"\U0001f4cb **Triage:** {risk_level}")
+
+    with cols[3]:
+        render_confidence_indicator(conf)
+
+    with cols[4]:
+        render_mode_indicator(mode)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -518,8 +789,15 @@ def capture_online_interaction(
     }
     # M6-A4: buffered write — no per-event file open
     _online_writer.log(action_type, **record)
-    # Local eval-app audit trail
-    audit_log("online_interaction", **record)
+    # Local eval-app audit trail. Day 6 enrichment: carry the operator's
+    # current top-bar role into the audit record so the panel can show
+    # who decided what without separately joining session state.
+    audit_log(
+        "online_interaction",
+        role=st.session_state.get("role"),
+        **record,
+    )
+    _mark_decision_submitted()
     # Signed Module 5 audit chain with reviewer attribution
     _hardened_audit.log(
         {"event_type": "reviewer_interaction", "alert_id": alert_id, "details": details or {}},
@@ -609,6 +887,9 @@ def render_analyst(alert: dict):
     """Analyst view: SHAP plots + feature table + classification detail."""
     st.markdown("#### Security Analyst View")
 
+    # Day 3: v4 visual treatment for cross-page consistency with Dashboard.
+    display_alert_header_v4(alert)
+
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
 
@@ -653,6 +934,9 @@ def render_clinician(alert: dict):
     """Clinician view: plain-language NLG summary + biometric safety notes."""
     st.markdown("#### Clinician View")
 
+    # Day 3: v4 visual treatment for cross-page consistency with Dashboard.
+    display_alert_header_v4(alert)
+
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
 
@@ -688,6 +972,9 @@ def render_clinician(alert: dict):
 def render_admin(alert: dict):
     """Administrator view: summary statistics + risk breakdown."""
     st.markdown("#### Administrator View")
+
+    # Day 3: v4 visual treatment for cross-page consistency with Dashboard.
+    display_alert_header_v4(alert)
 
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
@@ -781,31 +1068,50 @@ def load_risk_scores():
     return dict(np.load(path, allow_pickle=True))
 
 
+def _load_json_or(filename: str, default, transform=None):
+    """Read ``EVAL_DIR/filename`` as JSON, returning *default* on absence.
+
+    Single source for the "best-effort artefact load" pattern used by
+    the Streamlit dashboard: the optional artefacts (admin dashboard,
+    clinician summaries, response policy, latency profile, …) are
+    produced by upstream pipeline runs and may not exist in every
+    environment. Returning *default* keeps the dashboard renderable
+    even when an artefact is missing.
+
+    Args:
+        filename: Basename inside ``EVAL_DIR`` (e.g. ``"admin_dashboard.json"``).
+        default: Value returned when the file is absent.
+        transform: Optional post-parse transformer applied to the JSON
+            payload before returning (e.g. dict-by-key indexing).
+
+    Returns:
+        Parsed JSON (optionally transformed) or *default*.
+    """
+    path = EVAL_DIR / filename
+    if not path.exists():
+        return default
+    with open(path) as f:
+        data = json.load(f)
+    return transform(data) if transform is not None else data
+
+
 @st.cache_data
 def load_admin_dashboard() -> dict:
-    path = EVAL_DIR / "admin_dashboard.json"
-    if path.exists():
-        with open(path) as f:
-            return json.load(f)
-    return {}
+    return _load_json_or("admin_dashboard.json", default={})
 
 
 @st.cache_data
 def load_clinician_summaries() -> dict:
-    path = EVAL_DIR / "clinician_summaries.json"
-    if path.exists():
-        with open(path) as f:
-            return {s["sample_index"]: s for s in json.load(f)}
-    return {}
+    return _load_json_or(
+        "clinician_summaries.json",
+        default={},
+        transform=lambda data: {s["sample_index"]: s for s in data},
+    )
 
 
 @st.cache_data
 def load_response_policy() -> dict:
-    path = EVAL_DIR / "response_policy.json"
-    if path.exists():
-        with open(path) as f:
-            return json.load(f)
-    return {}
+    return _load_json_or("response_policy.json", default={})
 
 
 @st.cache_data(max_entries=64, show_spinner=False)
@@ -872,40 +1178,52 @@ def _compute_tier_counts(responses_tuple: tuple) -> dict:
 def _build_feed_dataframe(responses_head: tuple) -> pd.DataFrame:
     """Build the alert-feed DataFrame once per data load.
 
-    Issue 6 fix: the list-of-dicts → pd.DataFrame construction ran on
+    Issue 6 fix: the list-of-dicts -> pd.DataFrame construction ran on
     every render inside dashboard_mode(). Pre-computing it with a hashable
     key (tuple of the first 15 records' key fields) means the O(15) dict
     construction + DataFrame ctor run once per cache key, not per render.
 
     Args:
         responses_head: tuple of (sample_index, risk_level, risk_score,
-            device_class, attack_category, correct_action) for the first
-            15 responses — fully hashable for st.cache_data.
+            device_class, attack_category, correct_action, ground_truth)
+            for the first 15 responses - fully hashable for st.cache_data.
+            ``ground_truth`` is required so the v4 type heuristic can
+            distinguish benign rows from attacks.
+
     Returns:
         pd.DataFrame ready for st.dataframe().
     """
-    rows = [
-        {
-            "Sample": item[0],
-            "Level": item[1],
-            "Score": round(item[2], 3),
-            "Device": item[3] or "\u2014",
-            "Category": item[4] or "",
-            "Action": item[5] or "\u2014",
+    rows = []
+    for item in responses_head:
+        sample, level, score, device, category, action, ground_truth = item
+        synthetic = {
+            "ground_truth": ground_truth,
+            "attack_category": category,
+            "risk_level": level,
+            "risk_score": score,
         }
-        for item in responses_head
-    ]
+        atype, conf, mode = derive_v4_fields(synthetic)
+        badge = badge_for_alert_type(atype)
+        rows.append(
+            {
+                "Sample": sample,
+                "Level": level,
+                "Score": round(score, 3),
+                "Type": f"{badge['icon']} {badge['label']}",
+                "Confidence": conf.value,
+                "Mode": "✓ AI" if mode == MODE_A_LLM else "⚠ Rule",
+                "Device": device or "—",
+                "Category": category or "",
+                "Action": action or "—",
+            }
+        )
     return pd.DataFrame(rows)
 
 
 @st.cache_data
 def load_latency_profile() -> dict:
     """Module 4 online_latency_profile.json — aggregate per-stage latency stats."""
-    path = EVAL_DIR / "online_latency_profile.json"
-    if not path.exists():
-        return {}
-    with open(path) as f:
-        return json.load(f)
+    return _load_json_or("online_latency_profile.json", default={})
 
 
 @st.cache_data
@@ -1008,10 +1326,709 @@ def init_session():
         "sim_source": "alerts",  # "alerts" or "live_parquet"
         "latency_history": deque(maxlen=120),
         "alerts_dict": {},
+        # Top-bar global state (persists across page changes)
+        "role": "IT Generalist",        # one of: IT Generalist | Biomed | Nurse
+        "demo_mode": False,             # curated-demo subset toggle
+        "latest_mve_mode": None,        # last seen MVE generator mode (A_llm / B_rule_based)
+        # Day 3 — Sim polish
+        "researcher_mode": False,       # show research-only export buttons (Sim sidebar)
+        "auto_paused_at_index": None,   # sim_index where the last safety-floor pause fired
+        "safety_floor_banner": False,   # banner flag set by fragment, rendered outside it
+        # Day 5 — Study mode demo bypass
+        "study_demo_bypass_active": False,
+        # Day 6 — Audit panel auto-expand on decision submit
+        "audit_panel_just_submitted": False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Top bar (global, sticky)
+# ═══════════════════════════════════════════════════════════════════════
+
+ROLES: tuple[str, ...] = ("IT Generalist", "Biomed", "Nurse")
+DEMO_ALERT_LIMIT: int = 5
+
+# Display labels with role-affordance icons (selectbox / log / etc.).
+ROLE_DISPLAY_LABEL: dict[str, str] = {
+    "IT Generalist": "🖥️ IT Generalist",
+    "Biomed":        "⚕️ Biomed",
+    "Nurse":         "👩‍⚕️ Nurse",
+}
+
+# Map the top-bar role labels to the existing per-role renderers.
+# IT Generalist ≈ Security Analyst (network/IDS framing).
+# Biomed       ≈ Administrator (device-fleet / biomed-engineering view).
+# Nurse        ≈ Clinician (patient-care framing).
+_ROLE_TO_LEGACY_VIEW: dict[str, str] = {
+    "IT Generalist": "Security Analyst",
+    "Biomed":        "Administrator",
+    "Nurse":         "Clinician",
+}
+
+
+# ── Public accessors ──────────────────────────────────────────────────
+# Wrap session-state reads/writes so callers don't depend on key names.
+# When/if the top bar moves to ``components/top_bar.py``, these stay
+# import-stable.
+
+def get_current_role() -> str:
+    """Return the currently selected top-bar role.
+
+    Falls back to ``"IT Generalist"`` if state is uninitialised.
+    """
+    return st.session_state.get("role", ROLES[0])
+
+
+def get_demo_mode() -> bool:
+    """Return whether Demo Mode is on."""
+    return bool(st.session_state.get("demo_mode", False))
+
+
+def set_current_mode(generation_mode: str) -> None:
+    """Update the top-bar Mode A/B indicator from a page renderer.
+
+    Pages with per-alert MVE rendering call this so the global indicator
+    reflects the most recently shown alert's mode.
+    """
+    if generation_mode in (MODE_A_LLM, MODE_B_RULE_BASED):
+        st.session_state["latest_mve_mode"] = generation_mode
+
+
+# Bridge between the top-bar's display-string roles and the project's
+# canonical ``OperatorRole`` enum (used by the v4 MVE generator and
+# the MITRE per-role formatter).
+_TOPBAR_TO_OPERATOR_ROLE: dict[str, OperatorRole] = {
+    "IT Generalist": OperatorRole.IT_GENERALIST,
+    "Biomed":        OperatorRole.BIOMED_ENGINEER,
+    "Nurse":         OperatorRole.NURSE_MANAGER,
+}
+
+
+def get_current_operator_role() -> OperatorRole:
+    """Return the current top-bar role as an :class:`OperatorRole` enum.
+
+    Used by code paths that talk to the v4 Layer 4 helpers (MITRE per
+    role, role-lensed MVE templates). Defaults to ``IT_GENERALIST``.
+    """
+    return _TOPBAR_TO_OPERATOR_ROLE.get(get_current_role(), OperatorRole.IT_GENERALIST)
+
+
+# ── Day 4: Demo playlist + synthetic alert loaders ───────────────────
+
+PLAYLIST_PATH = Path(__file__).resolve().parent.parent / "configs" / "demo_playlist.yaml"
+SYNTHETIC_ALERTS_PATH = (
+    Path(__file__).resolve().parent.parent / "configs" / "synthetic_demo_alerts.yaml"
+)
+
+
+@st.cache_data(ttl=60)
+def load_demo_playlist() -> dict:
+    """Load ``configs/demo_playlist.yaml``.
+
+    Returns the parsed playlist with ``alerts`` ordered by
+    ``narrative_position``. Returns ``{"alerts": []}`` on missing /
+    malformed file so the dashboard never crashes on a fresh checkout.
+    """
+    import yaml
+    if not PLAYLIST_PATH.exists():
+        return {"alerts": []}
+    try:
+        data = yaml.safe_load(PLAYLIST_PATH.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return {"alerts": []}
+    alerts = sorted(
+        data.get("alerts", []),
+        key=lambda a: a.get("narrative_position", 999),
+    )
+    data["alerts"] = alerts
+    return data
+
+
+@st.cache_data(ttl=60)
+def load_synthetic_demo_alerts() -> list:
+    """Load ``configs/synthetic_demo_alerts.yaml`` (Demo Mode only).
+
+    Each entry is decorated with ``is_synthetic_demo=True`` so callers can
+    filter synthetic rows out of any non-demo path.
+    """
+    import yaml
+    if not SYNTHETIC_ALERTS_PATH.exists():
+        return []
+    try:
+        data = yaml.safe_load(SYNTHETIC_ALERTS_PATH.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return []
+    out = []
+    for a in data.get("synthetic_alerts", []) or []:
+        a = dict(a)
+        a["is_synthetic_demo"] = True
+        out.append(a)
+    return out
+
+
+def _playlist_alert_ids() -> list:
+    """Playlist alert_ids in narrative order."""
+    return [a["alert_id"] for a in load_demo_playlist().get("alerts", []) if "alert_id" in a]
+
+
+def _get_alerts_for_demo_mode() -> list:
+    """Return the alert list the page should render right now.
+
+    Demo Mode OFF → all 20 real alerts.
+    Demo Mode ON  → playlist alerts in narrative order; missing IDs are
+    surfaced via ``st.warning`` so the operator notices a drift between
+    playlist and eval set.
+    """
+    real_alerts = load_alerts()
+    if not st.session_state.get("demo_mode"):
+        return real_alerts
+    playlist_ids = _playlist_alert_ids()
+    if not playlist_ids:
+        return real_alerts
+    real_by_id = {a.get("alert_id"): a for a in real_alerts}
+    syn_by_id = {a.get("alert_id"): a for a in load_synthetic_demo_alerts()}
+    out: list = []
+    missing: list = []
+    for aid in playlist_ids:
+        if aid in real_by_id:
+            out.append(real_by_id[aid])
+        elif aid in syn_by_id:
+            out.append(syn_by_id[aid])
+        else:
+            missing.append(aid)
+    if missing:
+        st.warning(
+            "Demo playlist references unknown alert_id(s): " + ", ".join(missing)
+        )
+    return out
+
+
+def _filter_responses_for_demo_mode(responses: list) -> list:
+    """Filter a Sim-style ``responses`` list to playlist alerts.
+
+    Synthetic alerts have no precomputed response artefact, so they're
+    silently excluded — Sim demos at most ``len(playlist) - synthetics``
+    alerts. Real-alert order matches the playlist.
+    """
+    if not st.session_state.get("demo_mode"):
+        return responses
+    playlist_ids = _playlist_alert_ids()
+    if not playlist_ids:
+        return responses
+    by_id = {r.get("alert_id"): r for r in responses}
+    return [by_id[aid] for aid in playlist_ids if aid in by_id]
+
+
+def _show_demo_mode_indicator() -> None:
+    """Render a uniform Demo-Mode banner at the top of demo-affected pages.
+
+    Skipped on Study Mode (locked schema — Demo Mode does not change
+    study_responses_*.json behaviour).
+    """
+    if st.session_state.get("demo_mode"):
+        n = len(_playlist_alert_ids())
+        st.info(
+            f"\U0001f3ac **Demo Mode** — showing {n}-alert playlist "
+            "(curated narrative beats). Toggle off in the top bar to see "
+            "the full evaluation set."
+        )
+
+
+# ── Day 5: Study Mode demo bypass + Group B alert lookup ─────────────
+
+
+def _study_alert_dict_for(alert_id: str) -> dict | None:
+    """Look up the dashboard alert dict matching a study alert_id.
+
+    Study Mode loads :class:`AlertScenario` (locked schema, only carries
+    the Phase-2 stimulus text). The v4 visual helpers expect the dict
+    shape from ``evaluation_alerts.json`` (``risk_level``,
+    ``attack_category``, ``device_patchable``, ``mve_structured`` …).
+    This helper bridges the two by ``alert_id`` so the Group B chrome
+    can render without disturbing the AlertScenario contract.
+
+    Returns ``None`` when no matching alert is found — callers then fall
+    back to the legacy rendering (no v4 chrome) so Group B never crashes
+    on a missing entry.
+    """
+    real = {a.get("alert_id"): a for a in load_alerts()}
+    syn = {a.get("alert_id"): a for a in load_synthetic_demo_alerts()}
+    return real.get(alert_id) or syn.get(alert_id)
+
+
+def _render_demo_bypass_offer() -> None:
+    """Render the Skip-Registration affordance on the Study registration page.
+
+    Visible only when the top-bar Demo Mode toggle is ON. Click flips
+    ``study_demo_bypass_active`` so ``study_mode`` reroutes to the
+    bypass view on the next rerun.
+    """
+    if not st.session_state.get("demo_mode"):
+        return
+    st.warning(
+        "\U0001f3ac **Demo Mode is on.** Skip the 30-min protocol to show "
+        "A/B differentiation directly. **No data will be saved.**"
+    )
+    if st.button(
+        "⏭ Skip Registration (Demo Only)",
+        type="primary",
+        key="study_skip_registration",
+        help="Bypasses registration and shows ONE curated alert in both Group A and Group B styles.",
+    ):
+        st.session_state.study_demo_bypass_active = True
+        st.rerun()
+
+
+def _render_demo_bypass_view() -> None:
+    """A/B comparison view for the defense demo.
+
+    Renders one curated alert (the playlist's ``ab_comparison`` beat)
+    in two tabs — Group A (control / raw IDS) and Group B (treatment /
+    full v4 chrome). No Likert form is shown and no
+    ``study_responses_*.json`` is written. Designed as the strongest
+    single visual moment of the 10-min defense demo.
+    """
+    st.title("\U0001f4cb Study Mode — A/B Demo Bypass")
+    st.error(
+        "⚠ **DEMO ONLY** — registration bypassed; no study data is "
+        "collected. Click **Exit Demo** to return to the full protocol."
+    )
+    if st.button("← Exit Demo", type="secondary", key="study_exit_demo"):
+        st.session_state.study_demo_bypass_active = False
+        st.rerun()
+
+    st.markdown("---")
+
+    # Pick the playlist's A/B beat (Beat 5). Fall back to first beat.
+    playlist = load_demo_playlist().get("alerts", [])
+    ab_entry = next(
+        (e for e in playlist if e.get("narrative_beat") == "ab_comparison"),
+        playlist[0] if playlist else None,
+    )
+    if ab_entry is None:
+        st.error("Demo playlist is empty — check `configs/demo_playlist.yaml`.")
+        return
+    target_id = ab_entry["alert_id"]
+    alert_dict = _study_alert_dict_for(target_id)
+    if alert_dict is None:
+        st.error(f"Demo A/B alert `{target_id}` not found in evaluation set.")
+        return
+
+    st.markdown(f"### Same alert: `{target_id}`")
+    st.caption(
+        "Group A = control (raw IDS).  Group B = treatment (with MVE). "
+        "The text content of each is identical to what Phase-2 study "
+        "participants saw; Group B simply gets the v4 visual chrome."
+    )
+
+    tab_a, tab_b = st.tabs(
+        ["Group A — Raw IDS (control)", "Group B — With MVE (treatment)"]
+    )
+    with tab_a:
+        st.caption("Operator sees this in the Group A condition.")
+        group_a_text = alert_dict.get("group_a_display") or "(no Group A text)"
+        st.code(group_a_text, language=None)
+
+    with tab_b:
+        st.caption("Operator sees this in the Group B condition.")
+        display_alert_header_v4(alert_dict)
+        try:
+            atype, _, _ = derive_v4_fields(alert_dict)
+            op_role = get_current_operator_role()
+            mitre_line = format_mitre_for_alert_type(atype, op_role)
+        except Exception:
+            mitre_line = ""
+        if mitre_line:
+            st.markdown(f"**Threat intelligence:** {mitre_line}")
+        st.markdown("---")
+        group_b_text = alert_dict.get("group_b_display") or "(no Group B text)"
+        _render_group_b_highlighted(group_b_text)
+
+    st.markdown("---")
+    st.markdown(
+        "**Talking points**\n"
+        "- Group A: minimal information — operator must reason alone.\n"
+        "- Group B: 9-class badge, MITRE per role, 3-layer MVE with prominent DO_NOT.\n"
+        "- Method-1 LLM simulation (M5): +60.8 % composite-accuracy improvement for IT generalist; "
+        "Wilcoxon p < 1e-6, Cohen's h = 0.43 (medium-large)."
+    )
+
+
+# ── Day 6: Last-5-Decisions audit panel (INVARIANT 4 visualisation) ──
+#
+# The local audit log written by ``AuditTrailWriter`` carries a
+# hash-chained record of every UI interaction. The panel surfaces only
+# the records that represent operator *decisions* (not mechanical
+# playback events) so the operator/examiner sees the HITL loop closing
+# without scrolling past sim_pause / sim_jump noise.
+
+_AUDIT_TRAIL_PATH = EVAL_DIR / "audit_trail.jsonl"
+
+DECISION_EVENT_TYPES: frozenset[str] = frozenset(
+    {"response_submit", "alert_response", "online_interaction"}
+)
+
+_ROLE_COMPACT: dict[str, str] = {
+    "IT Generalist":   "🖥️ IT",
+    "Biomed":          "⚕️ Bio",
+    "Nurse":           "👩‍⚕️ RN",
+    # Legacy display labels also seen in older audit records:
+    "IT_generalist":   "🖥️ IT",
+    "biomed_engineer": "⚕️ Bio",
+    "nurse_manager":   "👩‍⚕️ RN",
+}
+
+_EVENT_LABEL: dict[str, str] = {
+    "response_submit":    "Submit",
+    "alert_response":     "Study",
+    "online_interaction": "Sim",
+}
+
+
+def _mark_decision_submitted() -> None:
+    """Flush the audit buffer and set the panel auto-expand flag.
+
+    Called after every audit_log() decision-write so the on-disk file
+    reflects the new entry by the time the panel reads it (the buffered
+    AuditTrailWriter only writes after _FLUSH_AFTER=10 records). The
+    flag tells ``render_last_5_decisions_panel`` to render expanded on
+    the next rerun.
+    """
+    try:
+        _audit_writer.flush()
+        _online_writer.flush()
+    except Exception:
+        pass  # never break a submit over a flush hiccup
+    st.session_state["audit_panel_just_submitted"] = True
+
+
+def _iter_audit_records():
+    """Yield records from ``audit_trail.jsonl`` (skips malformed lines).
+
+    Defensive: returns nothing on missing file, JSON decode errors, or
+    a non-existent EVAL_DIR. Never raises.
+    """
+    if not _AUDIT_TRAIL_PATH.exists():
+        return
+    try:
+        text = _AUDIT_TRAIL_PATH.read_text(encoding="utf-8")
+    except OSError:
+        return
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            yield json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+
+@st.cache_data(ttl=2)
+def load_recent_decisions(n: int = 5) -> list[dict]:
+    """Return the ``n`` most recent operator decisions from the audit
+    trail, ordered most-recent-first.
+
+    Filters by :data:`DECISION_EVENT_TYPES` so playback mechanics
+    (``sim_pause`` / ``sim_jump`` / ``study_start`` / etc.) don't mask
+    real decisions in the panel.
+    """
+    records = [
+        r for r in _iter_audit_records()
+        if r.get("event_type") in DECISION_EVENT_TYPES
+    ]
+    records.sort(key=lambda r: r.get("timestamp", ""), reverse=True)
+    return records[:n]
+
+
+@st.cache_data(ttl=2)
+def _count_total_decisions() -> int:
+    """Total decision-event count in the on-disk audit trail."""
+    return sum(
+        1 for r in _iter_audit_records()
+        if r.get("event_type") in DECISION_EVENT_TYPES
+    )
+
+
+_CHAIN_SEED = "0" * 64
+
+
+@st.cache_data(ttl=2)
+def verify_audit_chain_integrity() -> bool:
+    """Verify every chain *segment* in ``audit_trail.jsonl`` links cleanly.
+
+    ``AuditTrailWriter`` instantiates with ``prev_hash = '0'*64`` at the
+    start of each Streamlit session, so the on-disk file is the
+    concatenation of one segment per session - each starting with the
+    canonical 64-zero seed. A "broken chain" is therefore a record
+    whose ``prev_hash`` is **neither** the seed (segment start)
+    **nor** the previous record's ``integrity_hash`` (continuation).
+
+    Returns ``True`` for an empty / missing log and for any file whose
+    every segment links cleanly. Returns ``False`` on the first broken
+    link or a record missing the hash fields.
+    """
+    expected_prev = None  # None = start-of-file or start-of-segment
+    for r in _iter_audit_records():
+        prev = r.get("prev_hash")
+        ihash = r.get("integrity_hash")
+        if not isinstance(prev, str) or not isinstance(ihash, str):
+            return False
+        if prev == _CHAIN_SEED:
+            # Start of a new session segment - always valid here.
+            pass
+        elif expected_prev is None or prev != expected_prev:
+            return False
+        expected_prev = ihash
+    return True
+
+
+def _decision_summary(record: dict) -> dict:
+    """Project a raw audit record onto the panel's compact display fields.
+
+    Tolerates heterogeneous event-type schemas:
+      * ``response_submit`` carries ``action`` (chosen action label).
+      * ``alert_response`` carries ``condition`` (with_mve / without_mve)
+        and a ``composite_score``.
+      * ``online_interaction`` carries ``action_type`` (confirm / reject
+        / note) and a ``details`` dict with ``tier`` / ``score``.
+    """
+    ts = record.get("timestamp") or ""
+    try:
+        time_disp = datetime.fromisoformat(ts.replace("Z", "+00:00")).strftime("%H:%M:%S")
+    except Exception:
+        time_disp = ts[-8:] if len(ts) >= 8 else "—"
+
+    raw_aid = str(record.get("alert_id", "—"))
+    # 10 chars keeps the ``EVAL-XXXX`` prefix intact while still cutting
+    # off freeform IDs (uuid-style) that would blow up the column width.
+    alert_disp = raw_aid if len(raw_aid) <= 10 else raw_aid[-10:]
+
+    raw_role = record.get("role", "")
+    role_disp = _ROLE_COMPACT.get(raw_role, raw_role or "—")
+    role_disp = role_disp[:10]
+
+    event_disp = _EVENT_LABEL.get(record.get("event_type", ""), record.get("event_type", "—"))
+
+    # Action picks whichever field actually has content
+    action = (
+        record.get("action")
+        or record.get("action_type")
+        or record.get("condition")
+        or "—"
+    )
+    action_disp = action if len(str(action)) <= 28 else str(action)[:25] + "…"
+
+    conf = record.get("confidence")
+    if isinstance(conf, (int, float)):
+        conf_disp = str(int(conf))
+    else:
+        conf_disp = "—"
+
+    return {
+        "Time":   time_disp,
+        "Alert":  alert_disp,
+        "Role":   role_disp,
+        "Event":  event_disp,
+        "Action": action_disp,
+        "Conf":   conf_disp,
+        "_record": record,
+    }
+
+
+def render_last_5_decisions_panel() -> None:
+    """Render the Last-5-Decisions panel at the bottom of a page.
+
+    Default: collapsed. Auto-expands once after a decision submission
+    via the ``audit_panel_just_submitted`` session-state flag (set by
+    :func:`_mark_decision_submitted`). The flag is cleared the moment
+    we render expanded so the next page navigation collapses again.
+    """
+    auto_expand = bool(st.session_state.get("audit_panel_just_submitted"))
+    if auto_expand:
+        st.session_state["audit_panel_just_submitted"] = False
+
+    decisions = load_recent_decisions(5)
+    label = f"\U0001f4cb Last 5 Decisions ({len(decisions)})"
+
+    with st.expander(label, expanded=auto_expand):
+        if not decisions:
+            st.caption(
+                "No operator decisions logged yet. Submit a Likert form "
+                "(Sim or Study) or a Confirm/Reject in Sim to see the "
+                "audit trail populate here."
+            )
+            return
+
+        st.caption(
+            "Append-only audit trail (INVARIANT 4) — most recent first. "
+            "Mechanical events (sim playback, study registration) are "
+            "filtered out so this view is decisions only."
+        )
+
+        rows = [_decision_summary(d) for d in decisions]
+        df = pd.DataFrame(
+            [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]
+        )
+        st.dataframe(df, width="stretch", hide_index=True)
+
+        with st.expander("\U0001f50d Full record details", expanded=False):
+            for i, r in enumerate(rows, start=1):
+                rec = r["_record"]
+                st.markdown(f"**Decision {i}** — `{rec.get('event_type','?')}`")
+                st.text(f"timestamp:       {rec.get('timestamp','—')}")
+                st.text(f"alert_id:        {rec.get('alert_id','—')}")
+                if rec.get("participant_id"):
+                    st.text(f"participant_id:  {rec['participant_id']}")
+                if rec.get("role"):
+                    st.text(f"role:            {rec['role']}")
+                if "details" in rec:
+                    st.text(f"details:         {rec['details']}")
+                ihash = rec.get("integrity_hash") or ""
+                if ihash:
+                    st.text(f"integrity_hash:  {ihash[:16]}…")
+                st.markdown("---")
+
+        col_count, col_chain = st.columns([3, 1])
+        with col_count:
+            st.caption(
+                f"Total decisions in audit trail: {_count_total_decisions()} "
+                "(append-only, hash-chained)."
+            )
+        with col_chain:
+            if verify_audit_chain_integrity():
+                st.success("✓ Chain valid")
+            else:
+                st.warning("⚠ Chain check failed")
+
+
+@st.cache_data(ttl=60)
+def _aggregate_study_decision_quality() -> dict:
+    """Aggregate ``study_responses_*.json`` into a Dashboard metric.
+
+    The legacy ``all_responses.json`` stream the dashboard's feed table
+    runs on does not record operator confidence or follow-rate. The
+    Phase 2 user study does, in ``results/reports/study_responses_*.json``
+    (one file per participant). This helper aggregates *real* decisions
+    across whichever participant files are present so the Dashboard's
+    "Decision Quality" tile shows real-data evidence of the protocol
+    rather than a synthetic placeholder.
+
+    Returns:
+        ``{"n": int, "avg_confidence": float | None,
+            "followed_pct": float | None}``. ``n == 0`` means no study
+        files have been written yet (e.g. fresh checkout); the caller
+        should render a "no study data yet" tile in that case.
+    """
+    n = 0
+    confidences: list[float] = []
+    followed = 0
+    for path in EVAL_DIR.glob("study_responses_*.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(data, list):
+            continue
+        for r in data:
+            if not isinstance(r, dict):
+                continue
+            n += 1
+            c = r.get("confidence")
+            if isinstance(c, (int, float)):
+                confidences.append(float(c))
+            # Heuristic for "followed recommendation": chosen_action equals
+            # correct_action. The study schema does not record an explicit
+            # follow-rate field; this is the closest defensible proxy.
+            if (
+                r.get("chosen_action")
+                and r.get("chosen_action") == r.get("correct_action")
+            ):
+                followed += 1
+    avg_confidence = (sum(confidences) / len(confidences)) if confidences else None
+    followed_pct = (100.0 * followed / n) if n else None
+    return {"n": n, "avg_confidence": avg_confidence, "followed_pct": followed_pct}
+
+
+def _inject_top_bar_css() -> None:
+    """Inject sticky-bar CSS once per page load."""
+    if st.session_state.get("_topbar_css_injected"):
+        return
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stAppViewBlockContainer"] > div:first-child > div[data-testid="stHorizontalBlock"]:first-of-type {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 12px 24px;
+            margin-bottom: 12px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.session_state["_topbar_css_injected"] = True
+
+
+def _render_top_bar() -> None:
+    """Render the global top bar (title / role / mode / demo toggle).
+
+    Layout:  [3 : 2 : 2 : 1] columns
+    - Title:        "🔒 IoMT IDS"
+    - Role:         persistent selectbox (IT Generalist / Biomed / Nurse)
+    - Mode status:  info-only badge from last seen MVE generator mode
+    - Demo toggle:  st.toggle bound to ``st.session_state.demo_mode``
+    """
+    _inject_top_bar_css()
+    title_col, role_col, mode_col, demo_col = st.columns([3, 2, 2, 1])
+
+    with title_col:
+        st.markdown("### 🔒 IoMT IDS")
+
+    with role_col:
+        st.selectbox(
+            "Role",
+            options=ROLES,
+            index=ROLES.index(get_current_role()),
+            key="role",
+            label_visibility="collapsed",
+            format_func=lambda r: ROLE_DISPLAY_LABEL.get(str(r), str(r)),
+        )
+
+    with mode_col:
+        latest = st.session_state.get("latest_mve_mode")
+        if latest == "A_llm":
+            st.markdown(
+                "<div style='padding-top:6px;color:#15803D;'>Mode: ✓ AI Mode (LLM)</div>",
+                unsafe_allow_html=True,
+            )
+        elif latest == "B_rule_based":
+            st.markdown(
+                "<div style='padding-top:6px;color:#B45309;'>Mode: ⚠ Rule-based</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                "<div style='padding-top:6px;color:#6B7280;'>Mode: —</div>",
+                unsafe_allow_html=True,
+            )
+
+    with demo_col:
+        st.toggle(
+            "Demo Mode",
+            key="demo_mode",
+            help=(
+                "Curated subset for the defense demo: Dashboard shows the "
+                "first 5 alerts; Study auto-starts as participant DEMO; "
+                "Browse and Sim show a Demo badge."
+            ),
+        )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -1080,13 +2097,18 @@ def build_fda_record_for_alert(
 
 
 def dashboard_mode():
-    """Full dashboard with risk gauge, alert feed, SHAP, NLG, responses, heatmap."""
-    st.title("IoMT IDS — Real-Time Dashboard")
+    """Full dashboard with risk gauge, alert feed, SHAP, NLG, responses, heatmap.
 
-    # Auto-refresh toggle in sidebar
-    dash_refresh = st.sidebar.toggle("Auto-refresh (30s)", value=False)
-    if dash_refresh:
-        st_autorefresh(interval=30_000, limit=None, key="dash_autorefresh")
+    Day 2: 3-column metric strip (was 5), DAE expander wired below SHAP,
+    MITRE per role in MVE Layer 1, auto-refresh toggle removed (data is
+    static), alert selection via table row-click with selectbox fallback.
+    """
+    st.title("\U0001f512 IoMT IDS \u2014 Real-Time Dashboard")
+    _show_demo_mode_indicator()
+
+    # Day 2: removed auto-refresh toggle. The dashboard runs on static
+    # pre-computed JSON; auto-refresh just re-rendered the same data and
+    # implied liveness that does not exist. Remove the misleading affordance.
 
     responses = load_all_responses()
     admin = load_admin_dashboard()
@@ -1098,19 +2120,84 @@ def dashboard_mode():
         st.warning("No alert data found. Run Modules 3-5 first.")
         return
 
-    # ── Row 1: Summary metrics ──
+    # Day 4: filter responses to the demo playlist when Demo Mode is on.
+    # (Day 1 stub used a "first 5" slice; Day 4 swaps in the curated set.)
+    responses = _filter_responses_for_demo_mode(responses)
+    if not responses:
+        st.warning(
+            "Demo Mode is on but the playlist resolved to zero responses. "
+            "Toggle Demo Mode off or check `configs/demo_playlist.yaml`."
+        )
+        return
+
+    # Best-effort: surface the latest alert's MVE generator mode in the
+    # top-bar indicator. The field is not written by any pipeline stage
+    # today; this is a forward-compatible hook so the indicator goes
+    # live as soon as ``mve_generator`` plumbs ``generation_mode`` into
+    # ``alert_responses.json`` / ``evaluation_alerts.json``.
+    if responses:
+        last = responses[-1]
+        mode = (
+            last.get("mve_mode")
+            or last.get("generation_mode")
+            or last.get("mve_structured", {}).get("generation_mode")
+        )
+        if mode:
+            st.session_state["latest_mve_mode"] = mode
+
+    # ── Row 1: Summary metrics (3-column strip — projector-readable) ──
+    # Day 2: was 5 columns × ~350 px each on 1920×1080 — too dense at 2 m+
+    # viewing distance. Now 3 columns × ~600 px focused on the operator's
+    # actual decision triad: how bad is it, how much is queued, and how
+    # well are decisions tracking the recommendation.
     st.markdown("### System Overview")
-    c1, c2, c3, c4, c5 = st.columns(5)
 
     # Issue 1 fix: O(n) Counter pre-computed once per data load via cache.
     _resp_key = tuple((r.get("sample_index"), r.get("risk_level")) for r in responses)
     tier_counts = _compute_tier_counts(_resp_key)
     total = len(responses)
-    c1.metric("Total Alerts", total)
-    c2.metric("CRITICAL", tier_counts.get("CRITICAL", 0), delta_color="inverse")
-    c3.metric("HIGH", tier_counts.get("HIGH", 0), delta_color="inverse")
-    c4.metric("MEDIUM", tier_counts.get("MEDIUM", 0))
-    c5.metric("LOW", tier_counts.get("LOW", 0))
+    critical_count = tier_counts.get("CRITICAL", 0)
+    high_count = tier_counts.get("HIGH", 0)
+    medium_count = tier_counts.get("MEDIUM", 0)
+    low_count = tier_counts.get("LOW", 0)
+    pending_review = critical_count + high_count
+    quality = _aggregate_study_decision_quality()
+
+    col_critical, col_pending, col_quality = st.columns(3)
+    with col_critical:
+        st.metric(
+            label="🔴 CRITICAL Alerts",
+            value=critical_count,
+            delta=f"of {total} total",
+            delta_color="off",
+            help="Highest-severity alerts requiring immediate attention.",
+        )
+    with col_pending:
+        st.metric(
+            label="📋 Pending Review",
+            value=pending_review,
+            delta=f"H:{high_count}  M:{medium_count}  L:{low_count}",
+            delta_color="off",
+            help="CRITICAL+HIGH awaiting triage; deltas show the rest of the queue.",
+        )
+    with col_quality:
+        if quality["n"] and quality["avg_confidence"] is not None:
+            st.metric(
+                label="📊 Decision Quality",
+                value=f"{quality['avg_confidence']:.1f}/5",
+                delta=f"{quality['followed_pct']:.0f}% followed rec.  (n={quality['n']})",
+                delta_color="off",
+                help="Average operator confidence + recommendation-follow rate, "
+                     "aggregated across study_responses_*.json.",
+            )
+        else:
+            st.metric(
+                label="📊 Decision Quality",
+                value="N/A",
+                delta="No study data yet",
+                delta_color="off",
+                help="Run the Study (A/B) page to capture participant decisions.",
+            )
 
     # ── Row 2: Alert distribution (collapsed to reduce cognitive load) ──
     with st.expander("\U0001f4ca Alert Distribution", expanded=False):
@@ -1134,52 +2221,75 @@ def dashboard_mode():
             elif risk_data is not None:
                 st.info("Admin dashboard not loaded")
 
-    # ── Row 3: Risk gauge (latest alert) + Alert feed ──
+    # ── Row 3: Alert feed (row-click drill-down) ──
     st.markdown("---")
-    col_gauge, col_feed = st.columns([1, 2])
+    st.markdown("#### Alert Feed — click a row to inspect")
 
-    with col_gauge:
-        st.markdown("#### Risk Score Gauge")
-        # Show gauge for selected/latest alert
+    # Issue 6 fix: DataFrame built once per data load via cache;
+    # not rebuilt on every render triggered by widget interactions.
+    _feed_key = tuple(
+        (
+            r.get("sample_index"),
+            r.get("risk_level"),
+            r.get("risk_score", 0.0),
+            r.get("device_class"),
+            r.get("attack_category"),
+            r.get("correct_action"),
+            r.get("ground_truth", ""),
+        )
+        for r in responses[:15]
+    )
+    feed_df = _build_feed_dataframe(_feed_key)
+
+    # Day 2: try row-click drill-down (Streamlit ≥1.35). On older versions
+    # or if any error surfaces, fall back to the legacy selectbox so the
+    # demo never blocks on a UX upgrade.
+    alert_idx = 0
+    try:
+        event = st.dataframe(
+            feed_df,
+            width="stretch",
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+            key="dash_alert_table",
+        )
+        rows = getattr(getattr(event, "selection", None), "rows", None) or []
+        if rows:
+            alert_idx = rows[0]
+    except (TypeError, AttributeError) as exc:
+        st.warning(
+            f"Row-click selection unavailable ({type(exc).__name__}); "
+            "using selectbox fallback."
+        )
+        st.dataframe(feed_df, width="stretch", hide_index=True)
         alert_idx = st.selectbox(
             "Select alert",
             range(min(20, len(responses))),
             format_func=lambda i: f"#{responses[i]['sample_index']} ({responses[i]['risk_level']})",
+            key="dash_alert_idx_fallback",
         )
-        selected = responses[alert_idx]
-        score = selected["risk_score"]
-        level = selected["risk_level"]
 
+    selected = responses[alert_idx]
+    score = selected["risk_score"]
+    level = selected["risk_level"]
+    display_alert_header_v4(selected)
+
+    # ── Row 4: Risk gauge ──
+    col_gauge, _col_pad = st.columns([1, 2])
+    with col_gauge:
+        st.markdown("#### Risk Score Gauge")
         # Gap 2: Device criticality badge
         render_device_criticality(selected)
-
         # Gauge visualization using progress bar + color
         st.metric("Risk Score", f"{score:.3f}", delta=level)
         st.progress(min(score, 1.0))
-
         # Component breakdown
         comps = selected.get("risk_components", {})
         if comps:
             st.markdown("**Components:**")
             for k, v in comps.items():
                 st.text(f"  {k}: {v:.4f}")
-
-    with col_feed:
-        st.markdown("#### Alert Feed (latest 15)")
-        # Issue 6 fix: DataFrame built once per data load via cache;
-        # not rebuilt on every render triggered by widget interactions.
-        _feed_key = tuple(
-            (
-                r.get("sample_index"),
-                r.get("risk_level"),
-                r.get("risk_score", 0.0),
-                r.get("device_class"),
-                r.get("attack_category"),
-                r.get("correct_action"),
-            )
-            for r in responses[:15]
-        )
-        st.dataframe(_build_feed_dataframe(_feed_key), width="stretch", hide_index=True)
 
     # ── Row 4: SHAP waterfall + NLG clinician alert ──
     st.markdown("---")
@@ -1201,6 +2311,12 @@ def dashboard_mode():
                 st.image(force_bytes, width="stretch")
             else:
                 st.info(f"No SHAP chart for sample {sample_idx}")
+
+        # Day 2: DAE per-dim attribution below the SHAP waterfall.
+        # Hidden entirely when the alert carries no DAE features.
+        render_dae_top_features(
+            (selected.get("xai_explanation") or {}).get("dae_top_features", [])
+        )
 
     with col_nlg:
         st.markdown("#### Clinician Alert")
@@ -1263,6 +2379,10 @@ def dashboard_mode():
 # ═══════════════════════════════════════════════════════════════════════
 # 6.3b  Online Simulation Mode
 # ═══════════════════════════════════════════════════════════════════════
+    # Day 6: Last 5 Decisions audit panel — INVARIANT 4.
+    st.markdown("---")
+    render_last_5_decisions_panel()
+
 
 
 def simulation_mode():
@@ -1279,7 +2399,8 @@ def simulation_mode():
     # default; toggle from the sidebar.
     _render_t0 = time.perf_counter()
 
-    st.title("IoMT IDS — Online Simulation")
+    st.title("\U0001f4e1 IoMT IDS \u2014 Online Simulation")
+    _show_demo_mode_indicator()
 
     responses = load_all_responses()
     clin_summaries = load_clinician_summaries()
@@ -1293,14 +2414,23 @@ def simulation_mode():
         st.warning("No alert data. Run Modules 3-5 first.")
         return
 
-    # 6C.8 Role switcher
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("## Stakeholder View")
-    sim_role = st.sidebar.selectbox(
-        "View as:",
-        ["Security Analyst", "Clinician", "Administrator"],
-        key="sim_role",
-    )
+    # Day 4: filter playback sequence to the demo playlist when Demo Mode
+    # is on. Synthetic alerts have no precomputed response artefact, so
+    # they are silently skipped — the synthetic adversarial belongs in
+    # Browse (deep-dive view), not Sim (streaming view).
+    if st.session_state.get("demo_mode"):
+        filtered = _filter_responses_for_demo_mode(responses)
+        if filtered:
+            responses = filtered
+            # Reset playhead if it points past the new (smaller) end.
+            if st.session_state.sim_index >= len(responses):
+                st.session_state.sim_index = 0
+
+    # 6C.8 Stakeholder view — driven by the global top-bar role.
+    sim_role = _ROLE_TO_LEGACY_VIEW.get(get_current_role(), "Security Analyst")
+    # Mirror the legacy key so any downstream readers (audit log, etc.)
+    # that look at ``st.session_state.sim_role`` still see a value.
+    st.session_state["sim_role"] = sim_role
 
     # ── Step 0 instrumentation toggle ──
     st.sidebar.markdown("---")
@@ -1312,6 +2442,19 @@ def simulation_mode():
         "Log render time to /tmp/sim_render_timings.jsonl",
         value=False,
         key="dbg_render_log",
+    )
+
+    # ── Day 3: Researcher Mode (toggles research-only export buttons) ──
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("## Researcher Mode")
+    st.sidebar.toggle(
+        "Show researcher tools",
+        key="researcher_mode",
+        help=(
+            "When enabled, surfaces research-only export controls "
+            "(FDA-style audit record download per alert). Default is "
+            "OFF for an examiner-friendly demo view."
+        ),
     )
 
     # ── Data source toggle (6C.11 mock live source) ──
@@ -1339,6 +2482,32 @@ def simulation_mode():
         using_live = False
         st.session_state.sim_source = "alerts"
 
+    # ── Day 3: Auto-pause on safety-floor alerts (INVARIANT 2) ──
+    # Checked on every rerun (including after each fragment tick) so the
+    # operator never blows past a CRITICAL+unpatchable alert without
+    # explicit acknowledgement. Latched on sim_index to avoid pause-thrash:
+    # after the user resumes, the next index either is non-safety-floor
+    # (no pause) or a fresh safety-floor case (pause again — correct).
+    _cur_idx = st.session_state.sim_index
+    if (
+        st.session_state.sim_running
+        and 0 <= _cur_idx < len(responses)
+        and st.session_state.auto_paused_at_index != _cur_idx
+        and _is_safety_floor_alert(responses[_cur_idx])
+    ):
+        st.session_state.sim_running = False
+        st.session_state.auto_paused_at_index = _cur_idx
+        st.session_state.safety_floor_banner = True
+        audit_log("sim_auto_pause_safety_floor", sim_index=_cur_idx)
+
+    if st.session_state.safety_floor_banner:
+        st.warning(
+            "⚠ **Safety Floor Invoked** — Auto-paused on a "
+            "CRITICAL + unpatchable device alert. "
+            "Review the recommended action / DO NOT constraint, "
+            "then click **▶ Resume** to continue."
+        )
+
     # ── Smoother playback controls ──
     ctrl_a, ctrl_b, ctrl_c, ctrl_d, ctrl_e = st.columns([1.2, 1, 1, 1, 1.4])
 
@@ -1361,8 +2530,17 @@ def simulation_mode():
                 st.session_state.sim_running = False
                 audit_log("sim_pause", sim_index=st.session_state.sim_index)
         else:
-            if st.button("▶ Resume", width="stretch"):
+            # Day 3: highlight Resume when the pause was an automatic
+            # safety-floor pause so examiners notice the explicit ack.
+            resume_label = (
+                "▶ Resume (Safety Floor)"
+                if st.session_state.safety_floor_banner
+                else "▶ Resume"
+            )
+            resume_kind = "primary" if st.session_state.safety_floor_banner else "secondary"
+            if st.button(resume_label, width="stretch", type=resume_kind):
                 st.session_state.sim_running = True
+                st.session_state.safety_floor_banner = False
                 audit_log("sim_resume", sim_index=st.session_state.sim_index)
 
     with ctrl_c:
@@ -1374,6 +2552,10 @@ def simulation_mode():
         if st.button("⟲ Reset", width="stretch"):
             st.session_state.sim_index = 0
             st.session_state.latency_history.clear()
+            # Day 3: reset clears safety-floor latch so the pause can fire
+            # again on the same data on a fresh playback.
+            st.session_state.auto_paused_at_index = None
+            st.session_state.safety_floor_banner = False
             audit_log("sim_reset")
 
     with ctrl_e:
@@ -1398,66 +2580,77 @@ def simulation_mode():
     # (sidebar change, control click, page reload). The fragment below
     # then handles tick-driven updates without re-running these panels.
 
-    # ── System health panels (UX-S-01: collapsed to reduce triage distraction) ──
+    # ── System Diagnostics (Day 3: 3 tabs in one collapsed expander) ──
+    # Latency / threshold / drift used to be a stacked group inside one
+    # expander; the three are now split across explicit tabs so an
+    # examiner doesn't have to scroll through a 600 px column to find the
+    # one they want, and the Sim alert flow above stays visually clean.
     st.markdown("---")
-    with st.expander("\U0001f4c8 System Health (Latency / Threshold / Drift)", expanded=False):
-        st.markdown("#### Real-Time Latency Profile")
-        if not latency_profile:
-            st.info(
-                "No `online_latency_profile.json` found. Run "
-                "`python -m module4_explanations.module4_online_explainer` "
-                "to generate it."
-            )
-        else:
-            all_stages = latency_profile.get("all_alerts", {})
-            startup_ms = latency_profile.get("startup_ms")
-            n_total = latency_profile.get("n_alerts_total", 0)
+    with st.expander("\U0001f527 System Diagnostics", expanded=False):
+        st.caption(
+            "Performance, threshold, and drift telemetry. Default hidden — "
+            "for researcher inspection."
+        )
+        diag_tab_lat, diag_tab_thr, diag_tab_drift = st.tabs(
+            ["\U0001f4ca Latency", "\U0001f3af Thresholds", "\U0001f4c9 Drift"]
+        )
 
-            lc1, lc2, lc3 = st.columns(3)
-            lc1.metric("Profile samples", n_total)
-            if startup_ms is not None:
-                lc2.metric("Startup", f"{startup_ms:.0f} ms")
-            if "total_ms" in all_stages:
-                lc3.metric(
-                    "End-to-end p95",
-                    f"{all_stages['total_ms'].get('p95', 0):.0f} ms",
+        with diag_tab_lat:
+            st.markdown("#### Real-Time Latency Profile")
+            if not latency_profile:
+                st.info(
+                    "No `online_latency_profile.json` found. Run "
+                    "`python -m module4_explanations.module4_online_explainer` "
+                    "to generate it."
                 )
+            else:
+                all_stages = latency_profile.get("all_alerts", {})
+                startup_ms = latency_profile.get("startup_ms")
+                n_total = latency_profile.get("n_alerts_total", 0)
 
-            lat_left, lat_right = st.columns(2)
-
-            with lat_left:
-                st.markdown("**Per-stage mean latency (ms)**")
-                stage_rows = [
-                    {"stage": s, "mean_ms": float(stats.get("mean", 0.0))}
-                    for s, stats in all_stages.items()
-                    if s != "total_ms"
-                ]
-                if stage_rows:
-                    stage_df = pd.DataFrame(stage_rows).set_index("stage")
-                    st.bar_chart(stage_df, color="#3274A1")
-
-            with lat_right:
-                st.markdown("**Percentiles per stage**")
-                pct_rows = [
-                    {
-                        "stage": s,
-                        "p50": round(stats.get("p50", 0.0), 2),
-                        "p95": round(stats.get("p95", 0.0), 2),
-                        "p99": round(stats.get("p99", 0.0), 2),
-                        "max": round(stats.get("max", 0.0), 2),
-                    }
-                    for s, stats in all_stages.items()
-                ]
-                if pct_rows:
-                    st.dataframe(
-                        pd.DataFrame(pct_rows),
-                        hide_index=True,
-                        width="stretch",
+                lc1, lc2, lc3 = st.columns(3)
+                lc1.metric("Profile samples", n_total)
+                if startup_ms is not None:
+                    lc2.metric("Startup", f"{startup_ms:.0f} ms")
+                if "total_ms" in all_stages:
+                    lc3.metric(
+                        "End-to-end p95",
+                        f"{all_stages['total_ms'].get('p95', 0):.0f} ms",
                     )
 
-        st.markdown("---")
-        col_thresh, col_drift = st.columns(2)
-        with col_thresh:
+                lat_left, lat_right = st.columns(2)
+
+                with lat_left:
+                    st.markdown("**Per-stage mean latency (ms)**")
+                    stage_rows = [
+                        {"stage": s, "mean_ms": float(stats.get("mean", 0.0))}
+                        for s, stats in all_stages.items()
+                        if s != "total_ms"
+                    ]
+                    if stage_rows:
+                        stage_df = pd.DataFrame(stage_rows).set_index("stage")
+                        st.bar_chart(stage_df, color="#3274A1")
+
+                with lat_right:
+                    st.markdown("**Percentiles per stage**")
+                    pct_rows = [
+                        {
+                            "stage": s,
+                            "p50": round(stats.get("p50", 0.0), 2),
+                            "p95": round(stats.get("p95", 0.0), 2),
+                            "p99": round(stats.get("p99", 0.0), 2),
+                            "max": round(stats.get("max", 0.0), 2),
+                        }
+                        for s, stats in all_stages.items()
+                    ]
+                    if pct_rows:
+                        st.dataframe(
+                            pd.DataFrame(pct_rows),
+                            hide_index=True,
+                            width="stretch",
+                        )
+
+        with diag_tab_thr:
             st.markdown("#### Adaptive Threshold Monitor")
             dyn_path = EVAL_DIR / "dynamic_threshold_results.json"
             if dyn_path.exists():
@@ -1477,7 +2670,7 @@ def simulation_mode():
             else:
                 st.info("Run `dynamic_threshold_sim.py` to enable adaptive threshold monitoring")
 
-        with col_drift:
+        with diag_tab_drift:
             st.markdown("#### Drift Detection Status")
             drift_path = EVAL_DIR / "drift_detection_results.json"
             if drift_path.exists():
@@ -1698,22 +2891,28 @@ def simulation_mode():
                 if resp:
                     render_prioritized_actions(resp.get("actions", []))
 
+                # Day 3: FDA-style audit record export is researcher-only.
+                # The cache fill is cheap (build once per sample, reuse) and
+                # is kept outside the toggle so the download button shows up
+                # immediately when an examiner flips Researcher Mode on.
                 if sample_idx not in fda_cache:
                     fda_record = build_fda_record_for_alert(sample_idx, r, audit_trail)
                     fda_cache[sample_idx] = json.dumps(fda_record, indent=2).encode("utf-8")
                     fda_filename_cache[sample_idx] = f"audit_{fda_record['alert_id']}.json"
-                st.download_button(
-                    label="⬇ Export FDA-style Audit Record",
-                    data=fda_cache[sample_idx],
-                    file_name=fda_filename_cache[sample_idx],
-                    mime="application/json",
-                    key=f"fda_{sample_idx}",
-                    help=(
-                        "Download this alert as a Module-5 FDA-style audit "
-                        "record (alert_id, timestamp, risk, actions, "
-                        "rationale, simulated outcome, integrity hash)."
-                    ),
-                )
+                if st.session_state.get("researcher_mode"):
+                    st.download_button(
+                        label="⬇ Export FDA-style Audit Record",
+                        data=fda_cache[sample_idx],
+                        file_name=fda_filename_cache[sample_idx],
+                        mime="application/json",
+                        key=f"fda_{sample_idx}",
+                        help=(
+                            "Download this alert as a Module-5 FDA-style audit "
+                            "record (alert_id, timestamp, risk, actions, "
+                            "rationale, simulated outcome, integrity hash). "
+                            "Researcher tool — hidden by default."
+                        ),
+                    )
 
                 btn_col1, btn_col2, btn_col3 = st.columns(3)
                 with btn_col1:
@@ -1838,6 +3037,10 @@ def simulation_mode():
 # ═══════════════════════════════════════════════════════════════════════
 # 6.3a  Offline Evaluation (Browse + Study)
 # ═══════════════════════════════════════════════════════════════════════
+    # Day 6: Last 5 Decisions audit panel — INVARIANT 4.
+    st.markdown("---")
+    render_last_5_decisions_panel()
+
 
 
 def display_alert(alert: dict, show_xai: bool):
@@ -1918,29 +3121,115 @@ def response_form(alert: dict, alert_index: int, show_xai: bool) -> dict | None:
             participant_id=st.session_state.participant_id,
             alert_id=alert["alert_id"],
             action=result["chosen_action"],
+            confidence=result.get("confidence"),
+            role=st.session_state.get("role"),
             decision_time=elapsed,
         )
+        _mark_decision_submitted()
         return result
     return None
 
 
+def _render_demo_playlist_sidebar(alerts: list, current_idx: int) -> None:
+    """Render the Demo Playlist jump-button block in the Browse sidebar.
+
+    Each button writes ``_browse_target_idx`` and triggers a rerun; the
+    main slider reads that value as its initial position. The latch
+    clears after one consumption so manual slider edits remain
+    responsive.
+    """
+    playlist = load_demo_playlist().get("alerts", [])
+    if not playlist:
+        return
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🎬 Demo Playlist")
+    st.sidebar.caption("Click a beat to jump.")
+    current_id = alerts[current_idx].get("alert_id") if 0 <= current_idx < len(alerts) else None
+    by_id = {a.get("alert_id"): i for i, a in enumerate(alerts)}
+    for entry in playlist:
+        aid = entry["alert_id"]
+        beat_n = entry.get("narrative_position", "?")
+        label = entry.get("narrative_label", "—")
+        desc = entry.get("narrative_short_desc", "")
+        target = by_id.get(aid)
+        is_current = (aid == current_id)
+        button_label = f"**{beat_n}. {label}**"
+        if is_current:
+            button_label = "▶ " + button_label
+        if target is None:
+            st.sidebar.button(
+                button_label, key=f"playlist_{beat_n}_disabled",
+                width="stretch", disabled=True,
+                help=f"{desc}\n\n(Not in current view — toggle Demo Mode on to load.)",
+            )
+            continue
+        clicked = st.sidebar.button(
+            button_label,
+            key=f"playlist_jump_{beat_n}",
+            width="stretch",
+            type="primary" if is_current else "secondary",
+            help=desc,
+        )
+        if clicked and target != current_idx:
+            st.session_state["_browse_target_idx"] = target
+            st.rerun()
+    total_s = load_demo_playlist().get("total_demo_time_seconds", 0)
+    if total_s:
+        st.sidebar.caption(f"Total budget: {total_s} s ({total_s // 60} min)")
+
+
 def browse_mode():
-    """6.3a — Free browsing with XAI toggle."""
-    alerts = load_alerts()
+    """6.3a — Free browsing with XAI toggle.
+
+    Day 4 polish:
+      * Honours Demo Mode — slider range follows the curated 5-alert
+        playlist when the toggle is on.
+      * Sidebar carries the playlist jump buttons so each narrative
+        beat is one click away during the defense demo.
+      * v4 alert-header strip surfaces above the existing detail body
+        for visual consistency with Dashboard / Sim.
+    """
+    alerts = _get_alerts_for_demo_mode()
     n = len(alerts)
+    if n == 0:
+        st.title("\U0001f4c2 IoMT Alert Browser")
+        st.warning("No alerts to browse.")
+        return
 
     st.sidebar.markdown("## Browse Controls")
     show_xai = st.sidebar.toggle("Show XAI Explanation", value=True)
-    idx = st.sidebar.slider("Alert #", 0, n - 1, 0)
+
+    # Slider initial value — honours an in-flight playlist jump request.
+    initial_idx = st.session_state.pop("_browse_target_idx", None)
+    if initial_idx is None or not (0 <= initial_idx < n):
+        initial_idx = 0
+    idx = st.sidebar.slider("Alert #", 0, max(n - 1, 0), value=initial_idx)
     alert = alerts[idx]
 
     st.sidebar.markdown("---")
-    st.sidebar.markdown(f"**Ground Truth:** `{alert['ground_truth']}`")
-    st.sidebar.markdown(f"**Attack Type:** `{alert['attack_category']}`")
+    st.sidebar.markdown(f"**Ground Truth:** `{alert.get('ground_truth', 'N/A')}`")
+    st.sidebar.markdown(f"**Attack Type:** `{alert.get('attack_category', 'N/A')}`")
     st.sidebar.markdown(f"**Correct Action:** `{alert.get('correct_action', 'N/A')}`")
+    if alert.get("is_synthetic_demo"):
+        st.sidebar.warning(
+            "⚠ **Synthetic alert** — for demo visualisation only; "
+            "not part of the evaluation set."
+        )
 
-    st.title("IoMT Alert Browser")
-    st.caption(f"Alert {idx + 1} of {n} — {'With XAI' if show_xai else 'Without XAI'}")
+    _render_demo_playlist_sidebar(alerts, idx)
+
+    st.title("\U0001f4c2 IoMT Alert Browser")
+    _show_demo_mode_indicator()
+    st.caption(
+        f"Alert {idx + 1} of {n} — "
+        f"{'With XAI' if show_xai else 'Without XAI'}"
+    )
+    # Day 4: v4 visual header for cross-page consistency. The existing
+    # display_alert body keeps its SHAP / DAE / waterfall content and
+    # already calls render_mve_layers (which carries Day 2's MITRE-per-
+    # role line in Layer 1).
+    display_alert_header_v4(alert)
+    st.markdown("---")
     display_alert(alert, show_xai)
 
     # UX-B-01: Action affordance — show recommended action
@@ -1975,6 +3264,10 @@ def browse_mode():
     )
     st.markdown(f"**{label}**")
     st.caption(guidance)
+    # Day 6: Last 5 Decisions audit panel — INVARIANT 4.
+    st.markdown("---")
+    render_last_5_decisions_panel()
+
 
 
 def _render_proxy_questions():
@@ -2112,8 +3405,20 @@ def study_mode():
     """
     from module6_evaluation.study_loader import load_study_alerts, assign_ab_condition
 
+    # Day 5: Skip Registration demo bypass.
+    # When the top-bar Demo Mode is ON the examiner can flip into a
+    # dedicated A/B-comparison view (one curated alert, two tabs, no
+    # Likert form, NO writes to ``study_responses_*.json``) without
+    # touching the locked study-protocol flow. The Day 1 auto-DEMO
+    # short-circuit (which silently registered participant_id="DEMO")
+    # is removed in favour of this explicit, opt-in path.
+    if st.session_state.get("study_demo_bypass_active"):
+        _render_demo_bypass_view()
+        return
+
     # ── Registration ──────────────────────────────────────────
     if not st.session_state.study_started:
+        _render_demo_bypass_offer()
         if st.session_state.get("pid_conflict_check"):
             st.warning(
                 f"Participant ID '{st.session_state.conflict_pid}' already has saved progress."
@@ -2170,7 +3475,7 @@ def study_mode():
                 st.rerun()
             return
 
-        st.title("Healthcare IDS Alert Evaluation Study")
+        st.title("\U0001f4cb Healthcare IDS Alert Evaluation Study")
         st.markdown(
             """
         **Purpose:** Evaluate how security alert information helps
@@ -2233,7 +3538,7 @@ def study_mode():
 
     # ── Study complete ─────────────────────────────────────────
     if st.session_state.study_complete:
-        st.title("Study Complete")
+        st.title("\U0001f4cb Study Complete")
         st.success(f"Thank you for participating!")
 
         responses = st.session_state.responses
@@ -2291,8 +3596,26 @@ def study_mode():
         "Review the alert below and decide how to respond._"
     )
 
-    # Show Group A or Group B content
+    # Show Group A or Group B content.
+    # Day 5: Group B gets the v4 visual chrome (9-class badge / confidence
+    # / Mode A-B / triage / severity strip + MITRE-per-role line) above
+    # the existing locked stimulus prose. The ``alert.group_b_display``
+    # text is the locked Phase-2 study material — unchanged. Only the
+    # frame around it is enhanced. Group A stays raw (st.code) — that
+    # IS the control-condition feel.
     if show_mve:
+        alert_dict = _study_alert_dict_for(alert.alert_id)
+        if alert_dict is not None:
+            display_alert_header_v4(alert_dict)
+            try:
+                op_role = get_current_operator_role()
+                atype, _, _ = derive_v4_fields(alert_dict)
+                mitre_line = format_mitre_for_alert_type(atype, op_role)
+            except Exception:
+                mitre_line = ""
+            if mitre_line:
+                st.markdown(f"**Threat intelligence:** {mitre_line}")
+            st.markdown("---")
         _render_group_b_highlighted(alert.group_b_display)
     else:
         st.code(alert.group_a_display, language=None)
@@ -2421,19 +3744,76 @@ def study_mode():
                 alert_id=alert.alert_id,
                 condition=response["condition"],
                 composite_score=composite_score,
+                confidence=response.get("confidence"),
+                role=st.session_state.get("role"),
                 decision_time=elapsed,
             )
+            _mark_decision_submitted()
             st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════════════
+    # Day 6: Last 5 Decisions audit panel — INVARIANT 4.
+    st.markdown("---")
+    render_last_5_decisions_panel()
+
+
+
+
+# ─────────────────────────────────────────────────────────────────
+# Day 7: Projector typography
+# ─────────────────────────────────────────────────────────────────
+# Bumps the base font to 17 px and tightens a handful of component
+# selectors so the dashboard reads cleanly on a 1920×1080 projector
+# at 2 m viewing distance. The CSS is scoped to ``[data-testid=...]``
+# selectors (Streamlit's stable hooks) rather than auto-generated
+# CSS class names, so it should survive Streamlit minor-version bumps.
+
+PROJECTOR_CSS = """
+<style>
+html, body, [data-testid="stAppViewContainer"] {
+    font-size: 17px;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 { font-weight: 600; line-height: 1.3; }
+h1 { font-size: 2.0rem; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.3rem; }
+[data-testid="stMarkdownContainer"] p { font-size: 17px; line-height: 1.5; }
+[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    font-size: 2.0rem !important; font-weight: 600;
+}
+[data-testid="stMetric"] [data-testid="stMetricLabel"] {
+    font-size: 1.0rem !important; font-weight: 500;
+}
+[data-testid="stMetric"] [data-testid="stMetricDelta"] { font-size: 0.95rem !important; }
+[data-testid="stSelectbox"] label,
+[data-testid="stRadio"] label,
+[data-testid="stCheckbox"] label { font-size: 17px; font-weight: 500; }
+[data-testid="stButton"] button { font-size: 16px; font-weight: 500; padding: 8px 16px; }
+[data-testid="stDataFrame"] { font-size: 14px; }
+[data-testid="stExpander"] summary { font-size: 16px; font-weight: 500; }
+[data-testid="stCaptionContainer"] { font-size: 13px; color: #6B7280; }
+[data-testid="stTabs"] button[aria-selected="true"] {
+    border-bottom: 3px solid #2563EB; font-weight: 600;
+}
+.do-not-box {
+    border: 2px solid #DC2626; background-color: #FEF2F2;
+    padding: 12px 16px; border-radius: 6px;
+    font-size: 16px; font-weight: 500;
+}
+</style>
+"""
 
 
 def main():
     st.set_page_config(page_title="IoMT IDS Dashboard", layout="wide")
+    st.markdown(PROJECTOR_CSS, unsafe_allow_html=True)
     init_session()
+
+    _render_top_bar()
 
     st.sidebar.title("IoMT IDS")
     mode = st.sidebar.radio(

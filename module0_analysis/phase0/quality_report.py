@@ -17,6 +17,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Tuple
 
+from ._report_common import render_section_header
 from .config import Phase0Config
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,14 @@ def render_quality_report(
     lines: List[str] = []
     w = lines.append
 
-    _section_header(w)
+    render_section_header(
+        w,
+        "## 3.2 Data Quality Assessment",
+        "This section presents a systematic data-quality evaluation of the "
+        "WUSTL-EHMS-2020 dataset [WUSTL-EHMS-2020] conducted prior to any "
+        "preprocessing transformation. Each subsection documents a specific "
+        "quality dimension with quantitative evidence and interpretation.",
+    )
     _section_outliers(w, outlier_report, config)
     _section_class_imbalance(w, class_dist)
     _section_correlation_heatmap(w, high_pairs, config)
@@ -83,19 +91,6 @@ def render_quality_report(
 # ---------------------------------------------------------------------------
 # Private section renderers
 # ---------------------------------------------------------------------------
-
-
-def _section_header(w) -> None:
-    """Render the report title."""
-    w("## 3.2 Data Quality Assessment")
-    w("")
-    w(
-        "This section presents a systematic data-quality evaluation of the "
-        "WUSTL-EHMS-2020 dataset [WUSTL-EHMS-2020] conducted prior to any "
-        "preprocessing transformation. Each subsection documents a specific "
-        "quality dimension with quantitative evidence and interpretation."
-    )
-    w("")
 
 
 def _section_outliers(

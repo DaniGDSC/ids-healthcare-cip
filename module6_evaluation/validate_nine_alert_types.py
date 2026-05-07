@@ -69,15 +69,18 @@ logger = logging.getLogger(__name__)
 # triggers exactly one stage of the 9-stage decision tree.
 
 _SYNTHETIC_INPUTS: dict[AlertType, dict[str, float]] = {
-    AlertType.KNOWN_ATTACK:           {"p_xgb": 0.95, "diversity": 0.05, "dae": 0.10},
-    AlertType.KNOWN_ATTACK_UNCERTAIN: {"p_xgb": 0.95, "diversity": 0.20, "dae": 0.10},
-    AlertType.DISAGREEMENT_ANOMALY:   {"p_xgb": 0.50, "diversity": 0.35, "dae": 0.80},
-    AlertType.STRONG_NOVEL_ANOMALY:   {"p_xgb": 0.10, "diversity": 0.05, "dae": 0.97},
-    AlertType.NOVEL_ANOMALY:          {"p_xgb": 0.10, "diversity": 0.05, "dae": 0.80},
-    AlertType.CONFIRMED_ANOMALY:      {"p_xgb": 0.60, "diversity": 0.05, "dae": 0.80},
-    AlertType.SUSPICIOUS_PATTERN:     {"p_xgb": 0.55, "diversity": 0.05, "dae": 0.30},
-    AlertType.BENIGN_WATCH:           {"p_xgb": 0.10, "diversity": 0.05, "dae": 0.55},
-    AlertType.BENIGN:                 {"p_xgb": 0.05, "diversity": 0.05, "dae": 0.10},
+    # v5: ``diversity`` retired from the predicates; kept here at 0.0
+    # for audit-record continuity. Each entry triggers exactly one
+    # stage of the redesigned (p_xgb, dae)-only decision tree.
+    AlertType.KNOWN_ATTACK:           {"p_xgb": 0.95, "diversity": 0.0, "dae": 0.10},
+    AlertType.KNOWN_ATTACK_UNCERTAIN: {"p_xgb": 0.95, "diversity": 0.0, "dae": 0.80},
+    AlertType.DISAGREEMENT_ANOMALY:   {"p_xgb": 0.50, "diversity": 0.0, "dae": 0.97},
+    AlertType.STRONG_NOVEL_ANOMALY:   {"p_xgb": 0.10, "diversity": 0.0, "dae": 0.97},
+    AlertType.NOVEL_ANOMALY:          {"p_xgb": 0.10, "diversity": 0.0, "dae": 0.80},
+    AlertType.CONFIRMED_ANOMALY:      {"p_xgb": 0.60, "diversity": 0.0, "dae": 0.80},
+    AlertType.SUSPICIOUS_PATTERN:     {"p_xgb": 0.55, "diversity": 0.0, "dae": 0.30},
+    AlertType.BENIGN_WATCH:           {"p_xgb": 0.10, "diversity": 0.0, "dae": 0.55},
+    AlertType.BENIGN:                 {"p_xgb": 0.05, "diversity": 0.0, "dae": 0.10},
 }
 
 
@@ -105,9 +108,12 @@ def _validate_one(alert_type: AlertType) -> TypeValidation:
     inp = _SYNTHETIC_INPUTS[alert_type]
 
     # Layer 3 — triage classifier must return the expected alert type.
+    # v5: signature dropped p_rf/p_dt/diversity_score from required args;
+    # diversity is echoed via the optional kwarg purely for audit.
     decision = classify_alert_v4(
-        p_xgb=inp["p_xgb"], p_rf=inp["p_xgb"], p_dt=inp["p_xgb"],
-        diversity_score=inp["diversity"], dae_score=inp["dae"],
+        p_xgb=inp["p_xgb"],
+        dae_score=inp["dae"],
+        diversity_score=inp["diversity"],
     )
     rec.triage_output = {
         "input": inp,

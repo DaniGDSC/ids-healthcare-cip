@@ -46,26 +46,45 @@ class BaseExporter(ABC):
     Subclass this to add a new output format without modifying any existing
     exporter or the ``ReportExporter`` orchestrator.
 
+    Most subclasses only need to override ``_write`` — the parent-directory
+    creation and post-write log line are handled by the base ``export``
+    template method.  Override ``export`` directly only when the write needs
+    a different control flow (e.g. atomic write-then-rename).
+
     Example::
 
         class FeatherExporter(BaseExporter):
-            def export(self, data: pd.DataFrame, path: Path) -> None:
-                path.parent.mkdir(parents=True, exist_ok=True)
+            _format = "Feather"
+            def _write(self, data: pd.DataFrame, path: Path) -> None:
                 data.to_feather(path)
     """
 
-    @abstractmethod
+    # Format label used in the post-write log line.  Subclasses override.
+    _format: str = "Artifact"
+
     def export(self, data: Any, path: Path) -> None:
         """Persist *data* to *path*.
+
+        Template method: creates the parent directory, delegates the actual
+        write to ``_write``, then emits an info log line.  Subclasses with
+        an atomicity or transactional requirement should override this
+        method directly instead of ``_write``.
 
         Args:
             data: Artifact to write (concrete type defined by each subclass).
             path: Destination file path.  Parent directories are created
-                  automatically by each concrete implementation.
+                  automatically.
 
         Raises:
             IOError: On write failure.
         """
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._write(data, path)
+        logger.info("%s exported → %s", self._format, path)
+
+    @abstractmethod
+    def _write(self, data: Any, path: Path) -> None:
+        """Write *data* to *path* (parent directory already exists)."""
 
 
 # ---------------------------------------------------------------------------
@@ -74,16 +93,21 @@ class BaseExporter(ABC):
 
 
 class JsonExporter(BaseExporter):
-    """Serialize a Python ``dict`` to an indented UTF-8 JSON file.
+    """Serialize a Python ``dict`` to an indented UTF-8 JSON file atomically.
+
+    Overrides ``export`` directly because the write-to-``.tmp``-then-rename
+    sequence cannot be expressed cleanly in the base template.
 
     Args:
         indent: JSON indentation width (default: 2).
     """
 
+    _format = "JSON"
+
     def __init__(self, indent: int = 2) -> None:
         self._indent = indent
 
-    def export(self, data: dict, path: Path) -> None:
+    def export(self, data: Any, path: Path) -> None:
         """Write *data* as JSON to *path* atomically.
 
         Writes to ``path.json.tmp`` and then ``os.replace`` so a crash
@@ -95,26 +119,25 @@ class JsonExporter(BaseExporter):
             data: Serialisable Python dict.
             path: Destination ``.json`` file.
         """
-        path.parent.mkdir(parents=True, exist_ok=True)  # safe for standalone use
+        path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(path.suffix + ".tmp")
         tmp.write_text(json.dumps(data, indent=self._indent))
         os.replace(tmp, path)
-        logger.info("JSON exported → %s", path)
+        logger.info("%s exported → %s", self._format, path)
+
+    def _write(self, data: Any, path: Path) -> None:  # pragma: no cover
+        # Unused: ``export`` is overridden for atomicity.  Required only to
+        # satisfy the abstract contract.
+        raise NotImplementedError
 
 
 class CsvExporter(BaseExporter):
     """Write a pandas DataFrame to a CSV file without the row index."""
 
-    def export(self, data: pd.DataFrame, path: Path) -> None:
-        """Write *data* as CSV to *path*.
+    _format = "CSV"
 
-        Args:
-            data: DataFrame to serialise.
-            path: Destination ``.csv`` file.
-        """
-        path.parent.mkdir(parents=True, exist_ok=True)
+    def _write(self, data: Any, path: Path) -> None:
         data.to_csv(path, index=False)
-        logger.info("CSV exported → %s  (%d rows)", path, len(data))
 
 
 class ParquetExporter(BaseExporter):
@@ -123,31 +146,19 @@ class ParquetExporter(BaseExporter):
     Requires ``pyarrow`` or ``fastparquet`` to be installed.
     """
 
-    def export(self, data: pd.DataFrame, path: Path) -> None:
-        """Write *data* as Parquet to *path*.
+    _format = "Parquet"
 
-        Args:
-            data: DataFrame to serialise.
-            path: Destination ``.parquet`` file.
-        """
-        path.parent.mkdir(parents=True, exist_ok=True)
+    def _write(self, data: Any, path: Path) -> None:
         data.to_parquet(path, index=False)
-        logger.info("Parquet exported → %s  (%d rows)", path, len(data))
 
 
 class MarkdownExporter(BaseExporter):
     """Write a plain-text string to a UTF-8 Markdown file."""
 
-    def export(self, data: str, path: Path) -> None:
-        """Write *data* as Markdown to *path*.
+    _format = "Markdown"
 
-        Args:
-            data: Markdown content string.
-            path: Destination ``.md`` file.
-        """
-        path.parent.mkdir(parents=True, exist_ok=True)
+    def _write(self, data: Any, path: Path) -> None:
         path.write_text(data, encoding="utf-8")
-        logger.info("Markdown exported → %s", path)
 
 
 # ---------------------------------------------------------------------------

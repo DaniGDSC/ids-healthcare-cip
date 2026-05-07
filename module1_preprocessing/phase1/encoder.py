@@ -25,14 +25,13 @@ crashing — and the unknown count is logged.
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
+from ._sidecar_io import atomic_write_json, load_sidecar, migrate_legacy_pkl
 from .base import BaseTransformer
 
 logger = logging.getLogger(__name__)
@@ -148,21 +147,7 @@ class CategoricalEncoder(BaseTransformer):
         Returns:
             The absolute path actually written.
         """
-        path = Path(path)
-        if path.suffix == ".pkl":
-            legacy = path
-            path = path.with_suffix(".json")
-            if legacy.exists():
-                try:
-                    legacy.unlink()
-                    logger.warning(
-                        "Removed legacy pickle encoder at %s; sidecar "
-                        "at %s is now the canonical artefact.",
-                        legacy,
-                        path,
-                    )
-                except OSError as exc:
-                    logger.warning("Could not remove %s: %s", legacy, exc)
+        path = migrate_legacy_pkl(Path(path), "encoder")
 
         body = {
             "format": _SIDECAR_FORMAT,
@@ -172,10 +157,7 @@ class CategoricalEncoder(BaseTransformer):
             "mappings": self._mappings,
             "parse_numeric": self._parse_numeric,
         }
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(json.dumps(body, indent=2, sort_keys=True))
-        os.replace(tmp, path)
+        atomic_write_json(path, body, sort_keys=True)
         logger.info(
             "CategoricalEncoder sidecar saved: %s (%d mapped columns)",
             path,
@@ -194,13 +176,7 @@ class CategoricalEncoder(BaseTransformer):
             ValueError: if the sidecar is not a recognised format.
         """
         path = Path(path)
-        if not path.exists():
-            raise FileNotFoundError(f"Encoder sidecar not found: {path}")
-        body = json.loads(path.read_text())
-        if body.get("format") != _SIDECAR_FORMAT:
-            raise ValueError(
-                f"{path} is not a {_SIDECAR_FORMAT} sidecar " f"(got format={body.get('format')!r})"
-            )
+        body = load_sidecar(path, _SIDECAR_FORMAT, "encoder")
         instance = cls(
             label_encode=list(body.get("mappings", {}).keys()),
             parse_numeric=list(body.get("parse_numeric", [])),

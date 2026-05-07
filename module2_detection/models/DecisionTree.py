@@ -14,8 +14,6 @@ from __future__ import annotations
 
 from typing import Any, ClassVar, Dict, List
 
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline as ImbPipeline
 from sklearn.tree import DecisionTreeClassifier
 
 from .base import BaseDetector
@@ -49,23 +47,5 @@ class DecisionTreeDetector(BaseDetector):
     PARAM_SPACE: ClassVar[Dict[str, List[Any]]] = PARAM_SPACE
     DEFAULT_N_ITER: ClassVar[int] = 25
 
-    def _build_pipeline(self) -> ImbPipeline:
-        """SMOTE + DecisionTree inside an imblearn pipeline."""
-        return ImbPipeline(
-            [
-                (
-                    "smote",
-                    SMOTE(
-                        sampling_strategy=self._smote_strategy,
-                        k_neighbors=self._smote_k,
-                        random_state=self._random_state,
-                    ),
-                ),
-                (
-                    "classifier",
-                    DecisionTreeClassifier(
-                        random_state=self._random_state,
-                    ),
-                ),
-            ]
-        )
+    def _make_classifier(self) -> DecisionTreeClassifier:
+        return DecisionTreeClassifier(random_state=self._random_state)

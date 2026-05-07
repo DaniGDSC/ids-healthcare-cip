@@ -1,0 +1,58 @@
+{
+  "label_order": [
+    "normal",
+    "Data Alteration",
+    "Spoofing"
+  ],
+  "normal_index": 0,
+  "models": {
+    "xgboost": {
+      "accuracy": 0.9795751633986928,
+      "macro_f1": 0.9448155162054954,
+      "weighted_f1": 0.9792619931975745,
+      "per_class_f1": {
+        "normal": 0.9883504193849021,
+        "Data Alteration": 0.9964028776978417,
+        "Spoofing": 0.8496932515337423
+      }
+    },
+    "random_forest": {
+      "accuracy": 0.951797385620915,
+      "macro_f1": 0.8250604538063592,
+      "weighted_f1": 0.9421780647030968,
+      "per_class_f1": {
+        "normal": 0.9730716567777271,
+        "Data Alteration": 1.0,
+        "Spoofing": 0.5021097046413502
+      }
+    },
+    "decision_tree": {
+      "accuracy": 0.9313725490196079,
+      "macro_f1": 0.8352641358983005,
+      "weighted_f1": 0.9342051277036417,
+      "per_class_f1": {
+        "normal": 0.96045197740113,
+        "Data Alteration": 0.9927797833935018,
+        "Spoofing": 0.5525606469002695
+      }
+    }
+  },
+  "artifacts": {
+    "val_proba": {
+      "xgboost": "xgboost_multiclass_val_proba.npy",
+      "random_forest": "random_forest_multiclass_val_proba.npy",
+      "decision_tree": "decision_tree_multiclass_val_proba.npy"
+    },
+    "test_proba": {
+      "xgboost": "xgboost_multiclass_test_proba.npy",
+      "random_forest": "random_forest_multiclass_test_proba.npy",
+      "decision_tree": "decision_tree_multiclass_test_proba.npy"
+    },
+    "models": {
+      "xgboost": "xgboost_multiclass_final_pipeline.pkl",
+      "random_forest": "random_forest_multiclass_final_pipeline.pkl",
+      "decision_tree": "decision_tree_multiclass_final_pipeline.pkl"
+    }
+  },
+  "seed": 42
+}

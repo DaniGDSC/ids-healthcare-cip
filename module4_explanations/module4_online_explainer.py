@@ -37,6 +37,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 
 from common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
+from module4_explanations._severity import severity as _severity  # noqa: E402
 
 # ── Feature group mapping (Fix 3: SHAP stability) ─────────────────────
 # Map each SHAP feature to one of the 8 spec categories consumed by
@@ -272,15 +273,6 @@ class AlertExplainer:
         self._startup_ms = round((time.perf_counter() - t0) * 1000, 1)
         logger.info("AlertExplainer loaded in %.1fms", self._startup_ms)
 
-    def _severity(self, n_flagged: int) -> str:
-        if n_flagged >= 4:
-            return "CRITICAL"
-        elif n_flagged == 3:
-            return "HIGH"
-        elif n_flagged == 2:
-            return "MEDIUM"
-        return "LOW"
-
     @staticmethod
     def build_shap_context(top_features: list) -> dict:
         """Assemble a spec-shaped shap_context dict from TreeSHAP output.
@@ -449,7 +441,7 @@ class AlertExplainer:
 
         # ── Step 2: Determine severity ──
         n_flagged = sum(1 for v in votes.values() if v["prediction"] == 1)
-        severity = self._severity(n_flagged)
+        severity = _severity(n_flagged)
 
         # Minimal explanation for LOW severity
         if severity == "LOW" and n_flagged <= 1:
@@ -609,7 +601,7 @@ def run_batch_simulation(
         }
 
         n_flagged = sum(1 for v in votes.values() if v["prediction"] == 1)
-        severity = explainer._severity(n_flagged)
+        severity = _severity(n_flagged)
 
         timings = {
             "predict_ms": round(pred_ms / len(alert_idx), 3),

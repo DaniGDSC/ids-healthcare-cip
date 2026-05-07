@@ -9,7 +9,13 @@ Each subclass provides:
   - ``MODEL_TYPE``  : descriptive string written into ``get_report()``
   - ``PARAM_SPACE`` : RandomizedSearchCV distribution
   - ``DEFAULT_N_ITER`` : default search budget (was 25 / 40 / 50)
-  - ``_build_pipeline()`` : SMOTE → classifier ``imblearn.Pipeline``
+  - ``_make_classifier()`` : the configured sklearn estimator
+
+The shared ``_build_pipeline`` template wraps ``_make_classifier`` in a
+``SMOTE → classifier`` ``imblearn.Pipeline`` so the SMOTE configuration
+is owned in exactly one place and cannot drift between subclasses. A
+subclass that needs a fundamentally different pipeline shape may
+override ``_build_pipeline`` directly.
 
 The public surface (constructor signature, ``fit / predict / predict_proba /
 evaluate / get_report``, properties ``best_params / optimal_threshold /
@@ -25,7 +31,9 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar, Dict, List
 
 import numpy as np
+from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
+from sklearn.base import BaseEstimator
 from sklearn.metrics import (
     classification_report,
     f1_score,
@@ -47,8 +55,10 @@ class BaseDetector(ABC):
     """Shared SMOTE-in-CV detector implementation.
 
     Subclasses must define ``MODEL_NAME``, ``MODEL_TYPE``, ``PARAM_SPACE``,
-    ``DEFAULT_N_ITER`` (class-level constants) and the ``_build_pipeline``
-    factory.
+    ``DEFAULT_N_ITER`` (class-level constants) and the ``_make_classifier``
+    factory.  The shared ``_build_pipeline`` template assembles the
+    SMOTE → classifier pipeline; override it only if a subclass needs a
+    fundamentally different pipeline shape.
     """
 
     MODEL_NAME: ClassVar[str] = "BaseDetector"
@@ -79,8 +89,35 @@ class BaseDetector(ABC):
         self._test_metrics: Dict[str, float] = {}
 
     @abstractmethod
+    def _make_classifier(self) -> BaseEstimator:
+        """Return a fresh, configured sklearn classifier instance.
+
+        The returned estimator is wrapped by ``_build_pipeline`` into an
+        ``imblearn.Pipeline`` whose first step is SMOTE.  Subclasses
+        therefore only own the classifier-specific kwargs; the SMOTE
+        configuration lives in one place on the base class.
+        """
+
     def _build_pipeline(self) -> ImbPipeline:
-        """Return a fresh SMOTE → classifier ``imblearn.Pipeline``."""
+        """Return a fresh ``SMOTE → classifier`` ``imblearn.Pipeline``.
+
+        Template method: subclasses customise the pipeline by overriding
+        ``_make_classifier``.  Override this method directly only when a
+        subclass needs a fundamentally different pipeline shape.
+        """
+        return ImbPipeline(
+            [
+                (
+                    "smote",
+                    SMOTE(
+                        sampling_strategy=self._smote_strategy,
+                        k_neighbors=self._smote_k,
+                        random_state=self._random_state,
+                    ),
+                ),
+                ("classifier", self._make_classifier()),
+            ]
+        )
 
     def fit(
         self,

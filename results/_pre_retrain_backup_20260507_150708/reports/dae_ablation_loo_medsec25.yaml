@@ -1,0 +1,231 @@
+ablation:
+  dataset: MedSec-25
+  fold_protocol: leave-one-class-out
+  experiment_purity: A
+  n_folds: 4
+  seed: 42
+  sample_cap: 30000
+  wall_time_seconds: 261.9
+  configs:
+  - name: DAE-raw
+    input_dim: 69
+    input_features: 69 raw network features
+  - name: DAE-cascade
+    input_dim: 70
+    input_features: 69 raw || P_xgb_val (v5 contract)
+  - name: DAE-probas-only
+    input_dim: 1
+    input_features: P_xgb_val
+    note: 1-D DAE is degenerate (bottleneck must be < n_features); we substitute |z-score|
+      vs benign mean as recon-error proxy.
+  caveats:
+  - MedSec-25 has 4 attack classes; N=4 folds.
+  - XGB uses fixed default hyperparameters per fold (no RandomizedSearchCV) to keep
+    ablation runtime bounded.
+  - DAE-probas-only is a 1-D z-score baseline, not a true autoencoder.
+results:
+- holdout_class: Exfiltration
+  n_train: 30000
+  n_val_benign_for_dae: 2223
+  n_test_benign: 1235
+  n_test_novel: 2591
+  p_xgb_val_benign_mean: 0.3510478734970093
+  p_xgb_val_benign_std: 0.09131381660699844
+  config_results:
+  - config: DAE-raw
+    input_dim: 69
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 2591
+    recon_error_mean_benign: 1.6523749693238252
+    recon_error_median_benign: 0.0028905055633784704
+    recon_error_mean_novel: 0.17829741862148143
+    recon_error_median_novel: 0.010376629956099035
+    auc_benign_vs_novel: 0.8520459329007136
+    recon_error_proxy: null
+    wall_time_seconds: 6.9
+  - config: DAE-cascade
+    input_dim: 70
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 2591
+    recon_error_mean_benign: 3.548335206030821
+    recon_error_median_benign: 0.006703230176233749
+    recon_error_mean_novel: 0.4486398993115132
+    recon_error_median_novel: 0.023555681717282947
+    auc_benign_vs_novel: 0.7952373288415052
+    recon_error_proxy: null
+    wall_time_seconds: 5.6
+  - config: DAE-probas-only
+    input_dim: 1
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 2591
+    recon_error_mean_benign: 0.3806607723236084
+    recon_error_median_benign: 0.2690944969654083
+    recon_error_mean_novel: 6.934319019317627
+    recon_error_median_novel: 7.028281211853027
+    auc_benign_vs_novel: 0.9959570422062044
+    recon_error_proxy: z_score_abs
+    wall_time_seconds: 0.0
+- holdout_class: Initial access
+  n_train: 30000
+  n_val_benign_for_dae: 2223
+  n_test_benign: 1235
+  n_test_novel: 10209
+  p_xgb_val_benign_mean: 0.14180900156497955
+  p_xgb_val_benign_std: 0.12471085786819458
+  config_results:
+  - config: DAE-raw
+    input_dim: 69
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 10209
+    recon_error_mean_benign: 1.0960813846888466
+    recon_error_median_benign: 0.0016712069429399739
+    recon_error_mean_novel: 9.26041262637172
+    recon_error_median_novel: 0.009543613141104055
+    auc_benign_vs_novel: 0.9049795310401277
+    recon_error_proxy: null
+    wall_time_seconds: 6.0
+  - config: DAE-cascade
+    input_dim: 70
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 10209
+    recon_error_mean_benign: 5.8296586535220305
+    recon_error_median_benign: 0.004350784989467346
+    recon_error_mean_novel: 57.41341270161777
+    recon_error_median_novel: 0.0075711050023780395
+    auc_benign_vs_novel: 0.7914532029569845
+    recon_error_proxy: null
+    wall_time_seconds: 6.3
+  - config: DAE-probas-only
+    input_dim: 1
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 10209
+    recon_error_mean_benign: 0.5224863290786743
+    recon_error_median_benign: 0.3960256576538086
+    recon_error_mean_novel: 6.216642379760742
+    recon_error_median_novel: 6.824666500091553
+    auc_benign_vs_novel: 0.9974488256174693
+    recon_error_proxy: z_score_abs
+    wall_time_seconds: 0.0
+- holdout_class: Lateral movement
+  n_train: 29999
+  n_val_benign_for_dae: 2223
+  n_test_benign: 1235
+  n_test_novel: 1250
+  p_xgb_val_benign_mean: 0.12871956825256348
+  p_xgb_val_benign_std: 0.1426541656255722
+  config_results:
+  - config: DAE-raw
+    input_dim: 69
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 1250
+    recon_error_mean_benign: 2.4532157451279937
+    recon_error_median_benign: 0.0030443450662623614
+    recon_error_mean_novel: 5.127506527072852
+    recon_error_median_novel: 0.006989971699665593
+    auc_benign_vs_novel: 0.8332936032388664
+    recon_error_proxy: null
+    wall_time_seconds: 5.6
+  - config: DAE-cascade
+    input_dim: 70
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 1250
+    recon_error_mean_benign: 1.1545829900427882
+    recon_error_median_benign: 0.0011992891178130999
+    recon_error_mean_novel: 3.323844130367702
+    recon_error_median_novel: 0.0022736591219925774
+    auc_benign_vs_novel: 0.6705120647773278
+    recon_error_proxy: null
+    wall_time_seconds: 5.7
+  - config: DAE-probas-only
+    input_dim: 1
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 1250
+    recon_error_mean_benign: 0.6550074815750122
+    recon_error_median_benign: 0.5266243815422058
+    recon_error_mean_novel: 5.95904541015625
+    recon_error_median_novel: 6.102512836456299
+    auc_benign_vs_novel: 0.9937570850202428
+    recon_error_proxy: z_score_abs
+    wall_time_seconds: 0.0
+- holdout_class: Reconnaissance
+  n_train: 29999
+  n_val_benign_for_dae: 2223
+  n_test_benign: 1235
+  n_test_novel: 40169
+  p_xgb_val_benign_mean: 0.05886869505047798
+  p_xgb_val_benign_std: 0.10087735950946808
+  config_results:
+  - config: DAE-raw
+    input_dim: 69
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 40169
+    recon_error_mean_benign: 4.608867207448652
+    recon_error_median_benign: 0.005146696643205547
+    recon_error_mean_novel: 0.04729938171584553
+    recon_error_median_novel: 0.011920382050868494
+    auc_benign_vs_novel: 0.9274629467826369
+    recon_error_proxy: null
+    wall_time_seconds: 6.2
+  - config: DAE-cascade
+    input_dim: 70
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 40169
+    recon_error_mean_benign: 1.503883988825635
+    recon_error_median_benign: 0.0028148006979793897
+    recon_error_mean_novel: 0.015129109454239087
+    recon_error_median_novel: 0.0024293015721910806
+    auc_benign_vs_novel: 0.49317016173468714
+    recon_error_proxy: null
+    wall_time_seconds: 5.9
+  - config: DAE-probas-only
+    input_dim: 1
+    n_train_benign: 2223
+    n_test_benign: 1235
+    n_test_novel: 40169
+    recon_error_mean_benign: 0.4556683599948883
+    recon_error_median_benign: 0.3445150852203369
+    recon_error_mean_novel: 9.099542617797852
+    recon_error_median_novel: 9.326106071472168
+    auc_benign_vs_novel: 0.9988169921353537
+    recon_error_proxy: z_score_abs
+    wall_time_seconds: 0.0
+summary:
+  ranking_by_mean_auc:
+  - config: DAE-probas-only
+    mean_auc: 0.9964949862448175
+    delta_vs_raw: 0.11704948275423133
+  - config: DAE-raw
+    mean_auc: 0.8794455034905861
+    delta_vs_raw: 0.0
+  - config: DAE-cascade
+    mean_auc: 0.6875931895776262
+    delta_vs_raw: -0.19185231391295998
+  best_per_fold:
+    Exfiltration: DAE-probas-only
+    Initial access: DAE-probas-only
+    Lateral movement: DAE-probas-only
+    Reconnaissance: DAE-probas-only
+  cascade_vs_raw_mean_auc_delta: -0.19185231391295998
+  cascade_vs_raw_verdict: REGRESSION
+  per_fold_interpretation:
+  - "On 'Exfiltration' raw DAE is partial (AUC=0.852); cascade AUC=0.795 (\u0394=-0.057)."
+  - "On 'Initial access' raw DAE is partial (AUC=0.905); cascade AUC=0.791 (\u0394\
+    =-0.114)."
+  - "On 'Lateral movement' raw DAE is partial (AUC=0.833); cascade AUC=0.671 (\u0394\
+    =-0.163)."
+  - "On 'Reconnaissance' raw DAE is partial (AUC=0.927); cascade AUC=0.493 (\u0394\
+    =-0.434)."
+  conclusion: "Cascade input (raw + P_xgb) vs raw alone: mean \u0394 AUC = -0.1919\
+    \ (REGRESSION). DAE-probas-only is a 1-D z-score baseline and is reported only\
+    \ to show what falls out without raw features."
