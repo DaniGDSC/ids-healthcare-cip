@@ -1,0 +1,100 @@
+# Feature → narrative + clinical category mapping (ARCHITECTURE.md Step [11])
+#
+# Maps each of the 25 raw WUSTL-EHMS-2020 feature names to:
+#
+#   * a clinician-readable narrative phrase used in MVE Layer 1
+#     ("unusual network packet timing", "abnormal heart rate", ...).
+#   * one of 8 clinical groupings (timing_pattern, network_destination,
+#     data_volume, device_behavior, biometric, user_access_pattern,
+#     lateral_movement, exfiltration_signal). The first 5 are populated
+#     by EHMS-2020 features; the last 3 are reserved for scenario stubs
+#     (no matching feature in this dataset).
+#
+# Source of truth: ``module4_explanations/module4_online_explainer.py::_feature_to_narrative``
+# loads this YAML at module import and falls back to the in-source
+# defaults when the file is absent.
+
+# Timing-pattern (inter-packet intervals, duration)
+DIntPkt:
+  narrative: "unusual network packet timing"
+  category:  "timing_pattern"
+SIntPkt:
+  narrative: "unusual network packet timing"
+  category:  "timing_pattern"
+SIntPktAct:
+  narrative: "unusual network packet timing"
+  category:  "timing_pattern"
+Dur:
+  narrative: "abnormal connection duration"
+  category:  "timing_pattern"
+
+# Network-destination (ports, protocol flags)
+Sport:
+  narrative: "unexpected network port activity"
+  category:  "network_destination"
+Flgs:
+  narrative: "abnormal protocol flags"
+  category:  "network_destination"
+
+# Data-volume (byte counts, load, packet sizes)
+SrcBytes:
+  narrative: "unusual data transfer volume"
+  category:  "data_volume"
+DstBytes:
+  narrative: "unusual data transfer volume"
+  category:  "data_volume"
+TotBytes:
+  narrative: "unusual data transfer volume"
+  category:  "data_volume"
+SrcLoad:
+  narrative: "abnormal network load"
+  category:  "data_volume"
+DstLoad:
+  narrative: "abnormal network load"
+  category:  "data_volume"
+Load:
+  narrative: "abnormal network load"
+  category:  "data_volume"
+sMaxPktSz:
+  narrative: "unusual packet structure"
+  category:  "data_volume"
+dMaxPktSz:
+  narrative: "unusual packet structure"
+  category:  "data_volume"
+sMinPktSz:
+  narrative: "unusual packet structure"
+  category:  "data_volume"
+
+# Device-behavior (packet loss is a device-level behavioral signal)
+pSrcLoss:
+  narrative: "abnormal packet loss"
+  category:  "device_behavior"
+pDstLoss:
+  narrative: "abnormal packet loss"
+  category:  "device_behavior"
+
+# Biometric (IoMT vitals — 8th category beyond the 7 spec labels)
+Temp:
+  narrative: "abnormal temperature reading"
+  category:  "biometric"
+SpO2:
+  narrative: "abnormal oxygen saturation"
+  category:  "biometric"
+Pulse_Rate:
+  narrative: "abnormal pulse rate"
+  category:  "biometric"
+SYS:
+  narrative: "abnormal blood pressure"
+  category:  "biometric"
+DIA:
+  narrative: "abnormal blood pressure"
+  category:  "biometric"
+Heart_rate:
+  narrative: "abnormal heart rate"
+  category:  "biometric"
+Resp_Rate:
+  narrative: "abnormal respiratory rate"
+  category:  "biometric"
+ST:
+  narrative: "abnormal ST segment"
+  category:  "biometric"

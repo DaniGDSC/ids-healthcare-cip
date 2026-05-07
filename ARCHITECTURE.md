@@ -406,7 +406,7 @@ data/processed/demo_phase1.parquet
 │  ┌───────────────────────────────▼────────────────────────────────────────┐  │
 │  │  [STEP 10] RISK-ADAPTIVE GATE (UPDATED — single decision tree, YAML config)│
 │  │                                                                          │  │
-│  │   Configuration: config/risk_adaptive_thresholds.yaml                   │  │
+│  │   Configuration: configs/risk_adaptive_thresholds.yaml                   │  │
 │  │   ★ Hardcoded multiplier_table moved to YAML config                     │  │
 │  │                                                                          │  │
 │  │   Single decision tree (replaces dual-path early-return):               │  │
@@ -481,7 +481,7 @@ data/processed/demo_phase1.parquet
 │  │      │   persisted at results/models/shap_background.pkl                 │ │
 │  │      ├─ Top-3 features extracted                                         │ │
 │  │      ├─ Feature names mapped to clinician-readable labels                │ │
-│  │      │   (config/feature_categories.yaml)                                │ │
+│  │      │   (configs/feature_categories.yaml)                                │ │
 │  │      └─ Stability score (NEW):                                           │ │
 │  │          • Generate SHAP for alert + 10 perturbations (±1% on continuous)│ │
 │  │          • stability = mean overlap of top-3 across perturbations        │ │
@@ -518,7 +518,7 @@ data/processed/demo_phase1.parquet
 │  │                                                                          │ │
 │  │   Layer 3: RECOMMENDED ACTION (≤60 words action + ≤30 words DO_NOT)     │ │
 │  │      ├─ Action priority order (isolate → restrict → ... → log)           │ │
-│  │      ├─ Action verbs role-specific (config/role_action_authorization.yaml)│
+│  │      ├─ Action verbs role-specific (configs/role_action_authorization.yaml)│
 │  │      ├─ DO NOT constraint (clinical safety)                              │ │
 │  │      └─ Required for CRITICAL on clinical devices (Invariant 7)          │ │
 │  │                                                                          │ │
@@ -563,7 +563,7 @@ data/processed/demo_phase1.parquet
 │  │      Layer 1 specialization happens BELOW the anchor.                  │  │
 │  │      Prevents miscommunication during phone-based incident handling.   │  │
 │  │                                                                          │  │
-│  │   ★ Action Authorization (config/role_action_authorization.yaml):       │  │
+│  │   ★ Action Authorization (configs/role_action_authorization.yaml):       │  │
 │  │      Each role has explicit authorized + forbidden action sets.        │  │
 │  │      MVE Layer 3 generation queries this YAML to ensure suggested      │  │
 │  │      actions are role-authorized.                                      │  │
@@ -614,7 +614,7 @@ data/processed/demo_phase1.parquet
 │  │      ├─ Mode B badge if rule-based fallback active                      │  │
 │  │      └─ SHAP stability indicator if stability_score < 0.90              │  │
 │  │                                                                          │  │
-│  │   Tier routing (config/tier_routing.yaml — RECOMMENDATION ONLY):        │  │
+│  │   Tier routing (configs/tier_routing.yaml — RECOMMENDATION ONLY):        │  │
 │  │      Routing considers BOTH fusion_class AND risk_tier:                 │  │
 │  │      ├─ KNOWN_ATTACK + CRITICAL → L1 + senior_engineer                  │  │
 │  │      ├─ KNOWN_ATTACK + HIGH/MEDIUM → L1                                 │  │
@@ -625,7 +625,7 @@ data/processed/demo_phase1.parquet
 │  │   ★ Routing accounts for clinical impact (not just detection class)     │  │
 │  │   ★ Tooltip shows routing rationale when operator hovers                │  │
 │  │                                                                          │  │
-│  │   Hospital deployment sizing (config/hospital_capabilities.yaml):       │  │
+│  │   Hospital deployment sizing (configs/hospital_capabilities.yaml):       │  │
 │  │      Small hospital (no L2_specialist available):                       │  │
 │  │         L2_specialist → "document_for_external_consultant_review"      │  │
 │  │         Notification → primary_contact, timeline = next business day   │  │
@@ -761,11 +761,11 @@ The diagram above is the canonical design spec. Mapping each step to its current
 | [7] Two-Stage Fusion | `module3_risk_scoring/module3_risk_scores.py::compute_c_detect` + `::classify_fusion` | Fusion produces both `c_detect = max(c_track_a, c_track_b) = max(P_xgb, DAE_score)` and a per-alert `fusion_class` ∈ {`KNOWN_ATTACK`, `CONFIRMED_ANOMALY`, `NOVEL_ANOMALY`, `BENIGN`}. `KNOWN_ATTACK` boundary at `P_xgb ≥ 0.85` (`P_XGB_HIGH_CONF` in `src/data_models.py`). Persisted on `ScoredAlert.fusion_class`, in `risk_scores.npz["fusion_class"]`, and in `evaluation_alerts.json`. |
 | [8] Context Enrichment | `src/context_enrichment.py` (refactored from `module6_evaluation/_src_adapter.py`) | Loads `device_inventory.yaml`, `device_clinical_tier_mapping.yaml`, `attack_to_mitre_mapping.yaml`. Matches alert IP/MAC to inventory entry. Required field `patchable` must be present (no default). UNKNOWN device handling: conservative fallback (`patchable=False`, `device_criticality=HIGH`, `clinical_tier=tier_2`, warning flag, secondary "rogue device" alert). MITRE mapping with confidence levels (HIGH/MEDIUM/LOW). M3 (`compute_composite_risk`) and M6 (dashboard rendering) both import from this module — single source of truth. Tested by `tests/test_context_enrichment.py`. |
 | [9] Composite Risk Scoring | `module3_risk_scoring/module3_risk_scores.py::compute_composite_risk` | Linear weighted sum: `R = w_C·C_detect + w_dcrit·D_crit + w_sdata·S_data + w_dclin·D_clinical_tier`. Default weights (0.40 / 0.25 / 0.15 / 0.20) externalized to `configs/composite_risk_weights.yaml`. Tier mapping (CRITICAL/HIGH/MEDIUM/LOW) anchored to test-split percentiles, verified to fall between R distribution clusters. **Sensitivity analysis** in paper Section 11: tier assignment stable under ±20% weight perturbation for X% of alerts. **Acknowledged limitations**: linear sum vs multiplicative semantics (L1), D_clinical_tier as device-class proxy for patient acuity (L2), D_crit/D_clinical_tier correlation = double-counting "device importance" (L3), tier boundaries calibrated to test split (L4). **Audit**: R components logged per alert (c_detect, d_crit, s_data, d_clinical, R, tier) for forensic review. Tested by `tests/test_step9_composite_risk.py` (NEW): formula correctness, weight sum validation, tier boundary edge cases, sensitivity analysis fixture, R component audit logging. |
-| [10] Risk-Adaptive Gate | `src/risk_scorer.py::score_alert` | Refactored to **single decision tree** (replaces dual-path early-return for cleaner reasoning). Multiplier table externalized to `config/risk_adaptive_thresholds.yaml`. Surfacing decision returns `(should_surface, surfacing_reason)` where reason ∈ {`surfaced_safety_floor`, `surfaced_normal`, `suppressed_maintenance`, `suppressed_below_threshold`}. Safety floor (CRITICAL+unpatchable always surfaces) is highest-priority check. Maintenance window suppresses display, not detection. Covered by `tests/test_safe_failure.py::test_critical_unpatchable_surfaces_in_maintenance_window` and `tests/test_step10_surfacing_logic.py` (NEW). |
-| [11] SHAP Explanation | `module4_explanations/module4_online_explainer.py::build_shap_context` | TreeSHAP on XGBoost with persisted background sample (`results/models/shap_background.pkl`, 200 stratified samples from train). **Stability score IMPLEMENTED**: 10 perturbations at ±1% on continuous features; `stability_score = mean overlap of top-3`; `is_stable = (stability >= 0.90)`. Persisted on `SHAPContext.stability_score`. Feature names mapped via `config/feature_categories.yaml`. **Known gap**: for NOVEL_ANOMALY (DAE-driven), XGBoost SHAP flagged with `shap_source = "xgboost_low_confidence"`; per-feature DAE reconstruction-error attribution is future work. Covered by `tests/test_step11_shap_stability.py` (NEW). |
-| [12] MVE 3-Layer Generation | `src/mve_generator.py::generate_mve` | Mode A (LLM via Anthropic API) and Mode B (rule-based) both present. **Invariants explicitly tested**: Invariant 5 (Layer 1 references SHAP top-3 features as substrings) — fails closed to Mode B; Invariant 7 (DO_NOT for CRITICAL+clinical); Invariant 8 NEW (Layer 2 references clinical_tier name). Word budgets enforced post-generation with sentence-boundary truncation. Mode A reproducibility: full prompt+response+model_version persisted per call. PHI flow documented in `config/llm_data_flow.yaml`; verified by `tests/test_phi_not_in_llm_prompt.py` (NEW). Mode B templates per (attack_class × device_class). Coverage: `tests/test_step12_mve_faithfulness.py` (NEW), `tests/test_coverage_mve.py`. |
-| [13] Stakeholder Adaptation | `src/mve_generator.py::derive_role_view` + `module5_responses/module5_pipeline.py::render_views_for_alert` | Per-role views: `OperatorRole` enum (IT_generalist / biomed_engineer / nurse_manager). **Invariant 9 NEW (shared anchor)**: alert_id, risk_tier, device_id, one_line_summary, timestamp identical across all role views; placed at top of every view to prevent miscommunication during incidents. **Action authorization** externalized to `config/role_action_authorization.yaml`; MVE Layer 3 generation queries this YAML to ensure actions are role-authorized. Layer 2 invariant across roles (Invariant 6). Layer 3 `clinical_constraint` (DO NOT) preserved across roles (Invariant 7). **Cross-role severity invariance deterministically tested** by `tests/test_step13_cross_role_consistency.py` (NEW), supplementing post-hoc M5 Mann-Whitney study. |
-| [14] Display & Tier Recommendation | `module6_evaluation/module6_app.py` + `results/reports/alert_responses.json` | Streamlit dashboard for browse/study modes. Dashboard shows shared anchor (Invariant 9), tier badge, Mode B badge, SHAP stability indicator if low. **Tier routing externalized** to `config/tier_routing.yaml`: routing rules consider both `fusion_class` AND `risk_tier` (e.g., NOVEL+CRITICAL routes differently from NOVEL+LOW). **Hospital sizing** via `config/hospital_capabilities.yaml`: small-hospital fallback documents NOVEL for external consultant review. Audit trail captures tier recommendation rationale + actual handling (post-decision via Step 16). |
+| [10] Risk-Adaptive Gate | `src/risk_scorer.py::score_alert` | Refactored to **single decision tree** (replaces dual-path early-return for cleaner reasoning). Multiplier table externalized to `configs/risk_adaptive_thresholds.yaml`. Surfacing decision returns `(should_surface, surfacing_reason)` where reason ∈ {`surfaced_safety_floor`, `surfaced_normal`, `suppressed_maintenance`, `suppressed_below_threshold`}. Safety floor (CRITICAL+unpatchable always surfaces) is highest-priority check. Maintenance window suppresses display, not detection. Covered by `tests/test_safe_failure.py::test_critical_unpatchable_surfaces_in_maintenance_window` and `tests/test_step10_surfacing_logic.py` (NEW). |
+| [11] SHAP Explanation | `module4_explanations/module4_online_explainer.py::build_shap_context` | TreeSHAP on XGBoost with persisted background sample (`results/models/shap_background.pkl`, 200 stratified samples from train). **Stability score IMPLEMENTED**: 10 perturbations at ±1% on continuous features; `stability_score = mean overlap of top-3`; `is_stable = (stability >= 0.90)`. Persisted on `SHAPContext.stability_score`. Feature names mapped via `configs/feature_categories.yaml`. **Known gap**: for NOVEL_ANOMALY (DAE-driven), XGBoost SHAP flagged with `shap_source = "xgboost_low_confidence"`; per-feature DAE reconstruction-error attribution is future work. Covered by `tests/test_step11_shap_stability.py` (NEW). |
+| [12] MVE 3-Layer Generation | `src/mve_generator.py::generate_mve` | Mode A (LLM via Anthropic API) and Mode B (rule-based) both present. **Invariants explicitly tested**: Invariant 5 (Layer 1 references SHAP top-3 features as substrings) — fails closed to Mode B; Invariant 7 (DO_NOT for CRITICAL+clinical); Invariant 8 NEW (Layer 2 references clinical_tier name). Word budgets enforced post-generation with sentence-boundary truncation. Mode A reproducibility: full prompt+response+model_version persisted per call. PHI flow documented in `configs/llm_data_flow.yaml`; verified by `tests/test_phi_not_in_llm_prompt.py` (NEW). Mode B templates per (attack_class × device_class). Coverage: `tests/test_step12_mve_faithfulness.py` (NEW), `tests/test_coverage_mve.py`. |
+| [13] Stakeholder Adaptation | `src/mve_generator.py::derive_role_view` + `module5_responses/module5_pipeline.py::render_views_for_alert` | Per-role views: `OperatorRole` enum (IT_generalist / biomed_engineer / nurse_manager). **Invariant 9 NEW (shared anchor)**: alert_id, risk_tier, device_id, one_line_summary, timestamp identical across all role views; placed at top of every view to prevent miscommunication during incidents. **Action authorization** externalized to `configs/role_action_authorization.yaml`; MVE Layer 3 generation queries this YAML to ensure actions are role-authorized. Layer 2 invariant across roles (Invariant 6). Layer 3 `clinical_constraint` (DO NOT) preserved across roles (Invariant 7). **Cross-role severity invariance deterministically tested** by `tests/test_step13_cross_role_consistency.py` (NEW), supplementing post-hoc M5 Mann-Whitney study. |
+| [14] Display & Tier Recommendation | `module6_evaluation/module6_app.py` + `results/reports/alert_responses.json` | Streamlit dashboard for browse/study modes. Dashboard shows shared anchor (Invariant 9), tier badge, Mode B badge, SHAP stability indicator if low. **Tier routing externalized** to `configs/tier_routing.yaml`: routing rules consider both `fusion_class` AND `risk_tier` (e.g., NOVEL+CRITICAL routes differently from NOVEL+LOW). **Hospital sizing** via `configs/hospital_capabilities.yaml`: small-hospital fallback documents NOVEL for external consultant review. Audit trail captures tier recommendation rationale + actual handling (post-decision via Step 16). |
 | [15] Response Recommendation | `module5_responses/module5_pipeline.py::recommend` | Returns structured `ResponseRecommendation` dataclass: `primary_action` (string), `primary_action_code` (machine-readable enum), `rationale`, `estimated_clinical_impact`, `operator_decision_required` (always True), `suggested_priority`, `do_not_actions`. Single source of truth for action: Step 13 role-specific Layer 3 must align with `primary_action_code`. **NO AUTO-EXECUTION invariant verified** by expanded grep checking subprocess/os.system/iptables/netcat/curl/wget/ssh/sudo/eval/exec + import statements (`tests/negative_tests.py::test_no_automated_blocking`). Cross-role consistency verified by `tests/test_step15_role_consistency.py` (NEW). |
 | [16] Operator Decision Logging | `module6_evaluation/module6_app.py` (study mode → `survey/study_responses_*.json`); `results/reports/alert_responses.json` for browse mode | **Hash-chained tamper-evident audit log** (~50 LOC implementation): each entry includes SHA256 of previous entry; `verify_audit_log_integrity()` validates entire chain. Schema extended for forensic completeness: alert context (alert_id, fusion_class, risk_tier), operator context (role, view_role_rendered, participant_id, group), decision capture (action_taken, decision_time_seconds, confidence, rationale), explanation context (mve_mode, mve_text_shown, shap_features, shap_stability; for Mode A: full prompt+response+model_version), tamper evidence (previous_hash, entry_hash), forward compatibility for Step 17 (ground_truth_label, decision_quality, feedback_loop_consumed — all Optional). `decision_time_seconds` measured from alert-displayed-to-operator time, excludes pipeline latency. Tested by `tests/test_step16_audit_integrity.py` (NEW). Production deployment would route same schema to SIEM/WORM storage. |
 | [17] Outcome Tracking | — | **FUTURE WORK** — requires real deployment with ground-truth feedback channel (true-positive verification, clinical follow-up). Not implemented; documented as a Phase-3 capability. |
@@ -799,7 +799,7 @@ The diagram above is the canonical design spec. Mapping each step to its current
 - **MVE Layer 2 references clinical_tier** (Invariant 8, NEW): Layer 2 text must reference the specific tier name and at least one concrete patient-care implication. Strengthens RQ2.b.
 - **MVE Layer 3 has DO_NOT for CRITICAL+clinical** (Invariant 7): preserved from prior version, now tested in `tests/test_step12_mve_faithfulness.py`.
 - **Stakeholder views share an anchor** (Invariant 9, NEW): every role view contains identical header (alert_id, risk_tier, device_id, one_line_summary, timestamp). Layer 1 specialization happens below the anchor. Prevents miscommunication during phone-based incident handling. Covered by `tests/test_step13_cross_role_consistency.py`.
-- **Role action authorization is config-driven** (NEW): `config/role_action_authorization.yaml` defines authorized + forbidden actions per role. MVE Layer 3 generation queries this YAML. Closes Invariant 6 with explicit data, not implicit logic.
+- **Role action authorization is config-driven** (NEW): `configs/role_action_authorization.yaml` defines authorized + forbidden actions per role. MVE Layer 3 generation queries this YAML. Closes Invariant 6 with explicit data, not implicit logic.
 - **Cross-role severity invariance is deterministically tested** (NEW): in addition to post-hoc M5 Mann-Whitney study, every alert in test fixtures verifies severity is invariant across IT/Biomed/Nurse role views.
 - **Audit log is hash-chained tamper-evident** (UPDATED): every entry contains SHA256(previous_hash + entry_serialized). Tampering breaks chain. `verify_audit_log_integrity()` validates entire log. Replaces the prior "append-only logical schema" claim. Production deployment would route to SIEM/WORM storage.
 - **Mode A LLM calls are reproducibility-logged** (NEW): full prompt, full response, model version, provider name persisted per call. Required for HIPAA-grade audit reproducibility. PHI flow validated by `tests/test_phi_not_in_llm_prompt.py`.
@@ -1009,7 +1009,7 @@ review:
 # L4: tier boundaries calibrated to test split; redeployment may need recalibration
 ```
 
-#### `config/risk_adaptive_thresholds.yaml` (Step 10)
+#### `configs/risk_adaptive_thresholds.yaml` (Step 10)
 
 ```yaml
 base_threshold: 0.50
@@ -1037,7 +1037,7 @@ similar_events_adjustment:
   similarity_metric: "same_device + same_attack_category"
 ```
 
-#### `config/role_action_authorization.yaml` (Step 13)
+#### `configs/role_action_authorization.yaml` (Step 13)
 
 ```yaml
 roles:
@@ -1073,7 +1073,7 @@ roles:
       - isolate_device_network
 ```
 
-#### `config/tier_routing.yaml` (Step 14)
+#### `configs/tier_routing.yaml` (Step 14)
 
 ```yaml
 routing_rules:
@@ -1098,7 +1098,7 @@ routing_rules:
     secondary: senior_engineer
 ```
 
-#### `config/hospital_capabilities.yaml` (Step 14)
+#### `configs/hospital_capabilities.yaml` (Step 14)
 
 ```yaml
 deployment_size: medium  # small | medium | large
@@ -1115,7 +1115,7 @@ fallback_routing:
     timeline: "next_business_day"
 ```
 
-#### `config/llm_data_flow.yaml` (Step 12)
+#### `configs/llm_data_flow.yaml` (Step 12)
 
 Documents what data crosses the LLM API boundary. Validated by `tests/test_phi_not_in_llm_prompt.py`.
 
@@ -1141,7 +1141,7 @@ validation:
   log_full_prompt: true   # for audit reproducibility
 ```
 
-#### `config/feature_categories.yaml` (Step 11)
+#### `configs/feature_categories.yaml` (Step 11)
 
 Maps the 25 raw feature names to clinician-readable labels and clinical-context categories. Used by SHAP feature display.
 
@@ -1183,7 +1183,7 @@ All policy YAML files are reviewed periodically:
 | `tests/test_step10_surfacing_logic.py` | **NEW**: Step 10 surfacing decision tests — single decision tree paths, surfacing_reason capture for all 4 reasons, multiplier consistency from YAML config, similar-events adjustment within time window |
 | `tests/test_step11_shap_stability.py` | **NEW**: Step 11 SHAP stability tests — perturbation-based stability score computation, is_stable threshold, top-3 overlap calculation, `shap_source` flagging for NOVEL_ANOMALY (XGBoost low-confidence flag) |
 | `tests/test_step12_mve_faithfulness.py` | **NEW**: Step 12 MVE invariants — Invariant 5 (Layer 1 contains SHAP top-3 features as substrings, Mode A→B fallback on failure), Invariant 7 (DO_NOT for CRITICAL+clinical), Invariant 8 (Layer 2 references clinical_tier name), word budget enforcement |
-| `tests/test_phi_not_in_llm_prompt.py` | **NEW**: validates that Mode A LLM prompts contain only allowlisted fields per `config/llm_data_flow.yaml`; no patient identifiers, no MRN, no clinical EHR data |
+| `tests/test_phi_not_in_llm_prompt.py` | **NEW**: validates that Mode A LLM prompts contain only allowlisted fields per `configs/llm_data_flow.yaml`; no patient identifiers, no MRN, no clinical EHR data |
 | `tests/test_step13_cross_role_consistency.py` | **NEW**: Step 13 cross-role tests — Invariant 9 (shared anchor identical across roles), Invariant 6 (each role only authorizes role-appropriate verbs per `role_action_authorization.yaml`), Layer 2 severity invariance across IT/Biomed/Nurse |
 | `tests/test_step15_role_consistency.py` | **NEW**: Step 15 cross-role consistency — every role's Layer 3 references same `primary_action_code` from `ResponseRecommendation`; expanded NO_AUTO_EXECUTION grep (subprocess/os.system/iptables/netcat/curl/wget/ssh/sudo/eval/exec + import statements) |
 | `tests/test_step16_audit_integrity.py` | **NEW**: Step 16 hash-chain tests — append produces correct chain, tampering with any entry breaks `verify_audit_log_integrity()`, schema includes all forensic fields, decision_time_seconds semantics correct |

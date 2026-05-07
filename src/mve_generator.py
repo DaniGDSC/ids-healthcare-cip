@@ -24,6 +24,7 @@ import json
 import logging
 import os
 import re
+from pathlib import Path
 from typing import Any, Optional
 
 from src import sanitize_for_log
@@ -99,20 +100,26 @@ def attck_for_alert_type(alert_type: str) -> tuple[str, str]:
 #
 # Public API (no leading underscore) so tests/test_role_authority.py and
 # external auditors can introspect the policy. Lowercased before match.
-ROLE_FORBIDDEN_ACTION_TERMS: dict[str, tuple[str, ...]] = {
+#
+# Loaded from ``configs/role_action_authorization.yaml`` (canonical per
+# ARCHITECTURE.md Step [13]) with the inline defaults below as a
+# fallback so module import never fails when the YAML is absent.
+
+_ROLE_AUTH_YAML = (
+    Path(__file__).resolve().parent.parent / "configs" / "role_action_authorization.yaml"
+)
+
+
+_ROLE_FORBIDDEN_DEFAULTS: dict[str, tuple[str, ...]] = {
     "IT_generalist": (
-        # IT is broad but cannot administer medication or change clinical
-        # device parameters — those are clinician-only actions.
         "administer", "titrate dose", "adjust ventilator setting",
     ),
     "biomed_engineer": (
-        # Biomed must NOT push network-side mutations.
         "isolate vlan", "block port at switch", "firewall rule",
         "update acl", "push nac", "block outbound traffic",
         "block port", "switch-port block", "isolate at switch",
     ),
     "nurse_manager": (
-        # Nurse manager must not touch network OR device firmware.
         "isolate vlan", "block port at switch", "firewall rule",
         "update acl", "push nac", "block outbound traffic",
         "block port", "switch-port block", "isolate at switch",
@@ -120,6 +127,37 @@ ROLE_FORBIDDEN_ACTION_TERMS: dict[str, tuple[str, ...]] = {
         "reflash firmware", "wipe device",
     ),
 }
+
+
+def _load_role_forbidden_terms() -> dict[str, tuple[str, ...]]:
+    """Read the per-role forbidden-term lists from YAML.
+
+    Falls back to ``_ROLE_FORBIDDEN_DEFAULTS`` when the YAML is missing
+    or malformed — the inline table is the safety net so module import
+    never fails just because the policy YAML hasn't been deployed.
+    """
+    try:
+        import yaml
+    except ImportError:
+        return dict(_ROLE_FORBIDDEN_DEFAULTS)
+    if not _ROLE_AUTH_YAML.exists():
+        return dict(_ROLE_FORBIDDEN_DEFAULTS)
+    body = yaml.safe_load(_ROLE_AUTH_YAML.read_text(encoding="utf-8")) or {}
+    roles = (body.get("roles") or {})
+    out: dict[str, tuple[str, ...]] = {}
+    for role, entry in roles.items():
+        if not isinstance(entry, dict):
+            continue
+        terms = entry.get("forbidden_action_terms") or []
+        out[role] = tuple(str(t).lower() for t in terms)
+    # Layer YAML on top of defaults so a partial YAML doesn't
+    # silently relax a role's policy.
+    merged = dict(_ROLE_FORBIDDEN_DEFAULTS)
+    merged.update(out)
+    return merged
+
+
+ROLE_FORBIDDEN_ACTION_TERMS: dict[str, tuple[str, ...]] = _load_role_forbidden_terms()
 
 # Back-compat alias for any existing internal callers.
 _ROLE_FORBIDDEN_ACTIONS = ROLE_FORBIDDEN_ACTION_TERMS
@@ -945,6 +983,71 @@ def _generate_rule_based(
 # ── Option A: LLM-based generation ─────────────────────────────────────
 
 
+# ── ARCHITECTURE.md Step [12] — Mode A LLM PHI allow-list ───────────────
+
+_LLM_DATA_FLOW_YAML = (
+    Path(__file__).resolve().parent.parent / "configs" / "llm_data_flow.yaml"
+)
+_LLM_PROVIDER = "anthropic"
+_LLM_MODEL_VERSION = "claude-sonnet-4-6"
+
+
+@functools.lru_cache(maxsize=1)
+def _load_llm_data_flow() -> dict[str, Any]:
+    """Load + cache the PHI allow-list YAML."""
+    import yaml
+    if not _LLM_DATA_FLOW_YAML.exists():
+        # No YAML → conservative: nothing allowed. Caller will get an
+        # empty filtered dict and the LLM call will fall back to Mode B.
+        logger.warning(
+            "Mode A LLM: %s missing — no fields will be sent to the API "
+            "(PHI allow-list defaults to empty). Add the YAML to enable "
+            "Mode A.",
+            _LLM_DATA_FLOW_YAML,
+        )
+        return {"allowed": [], "forbidden": []}
+    with _LLM_DATA_FLOW_YAML.open(encoding="utf-8") as f:
+        body = yaml.safe_load(f) or {}
+    inputs = (body.get("mode_a_llm_inputs") or {})
+    return {
+        "allowed":   tuple(inputs.get("allowed") or []),
+        "forbidden": tuple(inputs.get("forbidden") or []),
+    }
+
+
+def _filter_for_llm(payload: dict[str, Any]) -> dict[str, Any]:
+    """Whittle a dict to the PHI allow-list before sending to the LLM.
+
+    Returns a new dict containing only keys that appear in
+    ``configs/llm_data_flow.yaml::mode_a_llm_inputs.allowed``. Keys not
+    on the allow-list are silently dropped (logged at DEBUG); keys on
+    the explicit ``forbidden`` list raise :class:`AssertionError` —
+    presence of an explicitly-forbidden field in the alert payload is
+    a HIPAA red flag the system refuses to silently honor.
+    """
+    cfg = _load_llm_data_flow()
+    allowed = set(cfg["allowed"])
+    forbidden = set(cfg["forbidden"])
+
+    leaked = [k for k in payload if k in forbidden]
+    if leaked:
+        raise AssertionError(
+            f"Mode A LLM: PHI red flag — alert payload contains "
+            f"{leaked!r}, which is on the explicit forbidden list in "
+            f"{_LLM_DATA_FLOW_YAML.name}. Refusing to send."
+        )
+
+    out = {k: v for k, v in payload.items() if k in allowed}
+    dropped = set(payload) - set(out)
+    if dropped:
+        logger.debug(
+            "Mode A LLM: dropped %d non-allowlisted field(s) from "
+            "payload: %s",
+            len(dropped), sorted(dropped),
+        )
+    return out
+
+
 def _generate_llm(
     raw_alert: dict[str, Any],
     device_context: dict[str, Any],
@@ -962,6 +1065,11 @@ def _generate_llm(
     Prompt enforces 3-layer structure, word limits, clinical framing,
     and explicitly prohibits SHAP values, CVSS scores, model internals,
     and RF protocol claims.
+
+    PHI guard: every dict crossing the API boundary is whittled to the
+    explicit allow-list in ``configs/llm_data_flow.yaml`` before the
+    prompt is constructed. The full prompt and response are persisted
+    on the returned ``MVEOutput`` for audit reproducibility (Step [16]).
 
     Args:
         raw_alert: Raw alert dict.
@@ -982,6 +1090,12 @@ def _generate_llm(
     except ImportError:
         logger.debug("anthropic package not installed; using rule-based fallback")
         return None
+
+    # ── PHI allow-list filtering (ARCHITECTURE.md Step [12] guard) ──
+    safe_alert = _filter_for_llm(raw_alert)
+    safe_device = _filter_for_llm(device_context)
+    safe_baseline = _filter_for_llm(baseline) if baseline else {}
+    safe_user = _filter_for_llm(user_context) if user_context else None
 
     # M-3: reuse a single client (and its HTTP connection pool) across all
     # alerts in the process — avoids a new TLS handshake per surfaced alert.
@@ -1008,11 +1122,14 @@ Rules (non-negotiable):
 - DO NOT claim early ransomware detection capability
 Return only valid JSON with keys: layer_1, layer_2, layer_3."""
 
+    # The user prompt is built from the FILTERED dicts only — no PHI
+    # leaks via accidental schema additions. Anything not on the
+    # ``configs/llm_data_flow.yaml`` allow-list was already dropped.
     user_prompt = f"""Alert type: {alert_type}
-Raw alert: {json.dumps(raw_alert)}
-Device context: {json.dumps(device_context)}
-Behavioral baseline: {json.dumps(baseline)}
-User context: {json.dumps(user_context)}
+Raw alert: {json.dumps(safe_alert)}
+Device context: {json.dumps(safe_device)}
+Behavioral baseline: {json.dumps(safe_baseline)}
+User context: {json.dumps(safe_user)}
 
 Return JSON with this exact structure:
 {{
@@ -1039,7 +1156,7 @@ Return JSON with this exact structure:
     try:
         client = _client(api_key)
         response = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=_LLM_MODEL_VERSION,
             max_tokens=512,
             system=system_prompt,
             messages=[{"role": "user", "content": user_prompt}],
@@ -1055,6 +1172,12 @@ Return JSON with this exact structure:
             layer_2=data["layer_2"],
             layer_3=data["layer_3"],
             alert_involves_clinical_system=is_clinical,
+            # ARCHITECTURE.md Step [12] reproducibility audit fields.
+            mode_used="A_llm",
+            llm_provider=_LLM_PROVIDER,
+            llm_model_version=_LLM_MODEL_VERSION,
+            llm_full_prompt=user_prompt,
+            llm_full_response=raw,
         )
         # Validate severity label
         if mve.layer_2.get("severity_label", "").upper() not in VALID_SEVERITY:

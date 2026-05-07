@@ -43,28 +43,59 @@ import pandas as pd
 
 # ── Per-stakeholder views (closes GAP-A2) ────────────────────────────────
 
-def render_views_for_alert(mve, alert_type: str = "T1") -> dict:
+def render_views_for_alert(
+    mve,
+    alert_type: str = "T1",
+    *,
+    shared_anchor=None,
+) -> dict:
     """Return all three role-scoped MVEOutput views for one alert.
 
     Wraps src.mve_generator.derive_role_view so Module 6 (dashboard) can
     fetch every authorised view in one call. INVARIANT 6 (cross-role
-    consistency on layer_2) and INVARIANT 7 (DO NOT preserved) are tested
-    on the underlying helper, not duplicated here.
+    consistency on layer_2), INVARIANT 7 (DO NOT preserved), and
+    INVARIANT 9 (shared anchor — alert_id / risk_tier / device_id /
+    one_line_summary / timestamp identical across role views) are
+    enforced here.
 
     Args:
         mve: Default MVEOutput from src.mve_generator.generate_mve.
         alert_type: T1..T5 for ATT&CK grounding (passed through today).
+        shared_anchor: Optional :class:`src.data_models.SharedAnchor`
+            instance. When provided, its serialised dict is attached
+            verbatim under each role view's ``"shared_anchor"`` key —
+            byte-identical across all three roles. The anchor block is
+            built once at view-render time so phone-based incident
+            handling can rely on every operator seeing the same header.
 
     Returns:
-        {"IT_generalist": MVEOutput, "biomed_engineer": MVEOutput,
-         "nurse_manager": MVEOutput} — same layer_2 across all three.
+        Mapping of role → ``{"view": MVEOutput, "shared_anchor": dict}``
+        when ``shared_anchor`` is provided; otherwise ``{role: MVEOutput}``
+        (back-compat for existing callers).
     """
     from src.mve_generator import derive_role_view
     from src.data_models import OperatorRole
 
-    return {
+    views = {
         role.value: derive_role_view(mve, role.value, alert_type=alert_type)
         for role in OperatorRole
+    }
+
+    if shared_anchor is None:
+        return views
+
+    # INVARIANT 9: every role view carries the SAME serialised anchor
+    # dict. We compute the dict once, then attach the same reference to
+    # each view so a regression that mutates one anchor would mutate
+    # all three (caught by ``test_step13_cross_role_consistency.py``).
+    anchor_dict = (
+        shared_anchor.to_dict()
+        if hasattr(shared_anchor, "to_dict")
+        else dict(shared_anchor)
+    )
+    return {
+        role: {"view": view, "shared_anchor": anchor_dict}
+        for role, view in views.items()
     }
 
 # `cryptography` is used for ECDSA P-256 signing of audit records.
@@ -239,6 +270,73 @@ class PolicyEngine:
                 self.catalogue.get(a, {}).get("requires_approval", False) for a in actions
             ),
         }
+
+    def recommend_structured(
+        self,
+        alert_tier: str,
+        device_tier: str = "vital_monitoring",
+        attack_category: str = "unknown",
+        patient_acuity: float = 0.0,
+    ):
+        """Structured ARCHITECTURE.md Step [15] recommendation.
+
+        Wraps :meth:`recommend` and projects its dict into the
+        :class:`src.data_models.ResponseRecommendation` dataclass —
+        the canonical action contract per the doc. Lets new callers
+        (M6 dashboard, audit log) use the doc-shaped object while
+        legacy consumers keep their dict.
+        """
+        from src.data_models import ResponseRecommendation
+
+        legacy = self.recommend(
+            alert_tier=alert_tier,
+            device_tier=device_tier,
+            attack_category=attack_category,
+            patient_acuity=patient_acuity,
+        )
+        actions = legacy["actions"] or ["log_event"]
+        primary_code = actions[0]
+        catalogue_entry = self.catalogue.get(primary_code, {})
+        primary_human = catalogue_entry.get("name") or primary_code.replace("_", " ").title()
+
+        # Estimated clinical impact: cheap actions are minimal; isolation
+        # of life-sustaining devices is high; otherwise moderate.
+        cost = float(catalogue_entry.get("cost", 0.0))
+        if primary_code == "isolate_device" and device_tier in ("life_sustaining", "vital_monitoring"):
+            impact = "high"
+        elif cost >= 0.6:
+            impact = "moderate"
+        else:
+            impact = "minimal"
+
+        # Suggested priority: 1 (CRITICAL) → 5 (LOW); fall back to MEDIUM.
+        priority_map = {"CRITICAL": 1, "HIGH": 2, "MEDIUM": 3, "LOW": 4}
+        priority = priority_map.get(alert_tier.upper(), 3)
+
+        # do_not_actions: clinical override (downgrade isolation on
+        # critical devices) explicitly forbids isolation; otherwise
+        # carry the device-tier constraint forward.
+        do_not = []
+        clinical_override = legacy.get("clinical_override", {})
+        if clinical_override.get("triggered"):
+            do_not.append("isolate_device")
+        if device_tier in ("life_sustaining", "vital_monitoring"):
+            do_not.append("power_cycle_device")
+
+        rationale = (
+            f"{alert_tier} {attack_category} on {device_tier} → "
+            f"{primary_human} (max response: {legacy['max_response_min']} min)"
+        )
+
+        return ResponseRecommendation(
+            primary_action=primary_human,
+            primary_action_code=primary_code,
+            rationale=rationale,
+            estimated_clinical_impact=impact,
+            operator_decision_required=True,   # INVARIANT 3 — always
+            suggested_priority=priority,
+            do_not_actions=sorted(set(do_not)),
+        )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -612,6 +710,7 @@ class AuditLogger:
         reviewer_role: str | None = None,
         review_timestamp: str | None = None,
         review_action: str | None = None,
+        mve_audit: dict | None = None,
     ) -> dict:
         """Append a hash-chained, signed record to the audit log.
 
@@ -624,6 +723,14 @@ class AuditLogger:
                 UTC if any other reviewer field is provided.
             review_action: optional free-text action label
                 (confirm / reject / acknowledge / ...).
+            mve_audit: optional ARCHITECTURE.md Step [16] explanation
+                context — a dict with keys ``mve_mode`` (``A_llm`` /
+                ``B_rule``), ``mve_text_shown``, ``shap_top_features``,
+                ``shap_stability``, and for Mode A: ``llm_provider``,
+                ``llm_model_version``, ``llm_full_prompt``,
+                ``llm_full_response``. Stored verbatim under
+                ``record["mve_audit"]`` so the operator decision is
+                replayable.
 
         Returns:
             The record as it was written (with all envelope fields).
@@ -640,6 +747,22 @@ class AuditLogger:
                 "review_timestamp": review_timestamp,
                 "review_action": review_action,
             }
+
+        # ARCHITECTURE.md Step [16] explanation context (Mode A LLM
+        # reproducibility): persist the full prompt + response +
+        # model_version on the audit record so any LLM-generated MVE
+        # is replayable post-hoc.
+        if mve_audit is not None:
+            record["mve_audit"] = dict(mve_audit)
+
+        # ARCHITECTURE.md Step [16] forward-compatibility placeholders.
+        # Step [17] (outcome tracking) and Step [18] (continuous
+        # improvement) are post-defense work; we reserve the schema
+        # slots NOW so the chain doesn't have to be retroactively
+        # extended when those phases land.
+        record.setdefault("ground_truth_label", None)
+        record.setdefault("decision_quality", None)
+        record.setdefault("feedback_loop_consumed", False)
 
         # 1. Chain
         record["prev_hash"] = self.prev_hash

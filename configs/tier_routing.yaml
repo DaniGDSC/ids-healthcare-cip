@@ -1,0 +1,60 @@
+# Tier routing rules — ARCHITECTURE.md Step [14].
+#
+# Maps (fusion_class × risk_tier) → (primary_tier, secondary_tier). The
+# rules are evaluated in order; the first matching condition wins.
+#
+# Routing is RECOMMENDATION ONLY — INVARIANT 3 forbids auto-routing
+# alerts to a queue. The dashboard surfaces the recommended tier and
+# the operator decides what to do.
+#
+# Source of truth: ``module5_responses/tier_routing_v4.py`` loads this
+# YAML at module import and falls back to inline defaults when the
+# file is missing.
+
+routing_rules:
+  - id: "rule_known_critical"
+    condition: "fusion_class == KNOWN_ATTACK and risk_tier == CRITICAL"
+    primary:   "L1"
+    secondary: "senior_engineer"
+    rationale: "High-confidence attack on critical device — L1 with senior backup."
+
+  - id: "rule_known_high_medium"
+    condition: "fusion_class == KNOWN_ATTACK and risk_tier in [HIGH, MEDIUM]"
+    primary:   "L1"
+    secondary: null
+    rationale: "Known attack pattern — standard L1 handling."
+
+  - id: "rule_novel_critical_high"
+    condition: "fusion_class == NOVEL_ANOMALY and risk_tier in [CRITICAL, HIGH]"
+    primary:   "L2_specialist"
+    secondary: "incident_response"
+    rationale: "Novel anomaly + high impact — L2 + IR coordination."
+
+  - id: "rule_novel_low"
+    condition: "fusion_class == NOVEL_ANOMALY and risk_tier in [MEDIUM, LOW]"
+    primary:   "L1"
+    secondary: "document_for_review"
+    rationale: "Low-impact novel pattern — document for trend analysis."
+
+  - id: "rule_disagreement"
+    condition: "fusion_class == DISAGREEMENT_ANOMALY"
+    primary:   "L2_security_specialist"
+    secondary: "incident_response"
+    rationale: "Track-A vs Track-B disagreement — potential adversarial input."
+
+  - id: "rule_confirmed"
+    condition: "fusion_class == CONFIRMED_ANOMALY"
+    primary:   "L1"
+    secondary: "senior_engineer"
+    rationale: "Multi-signal confirmation — L1 + senior validation."
+
+  - id: "rule_default"
+    condition: "default"
+    primary:   "L1"
+    secondary: null
+    rationale: "Default — standard L1."
+
+review:
+  reviewers: ["CISO", "SOC Lead"]
+  review_period: "12 months"
+  last_reviewed: "2026-05-07"

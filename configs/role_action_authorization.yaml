@@ -1,0 +1,59 @@
+# Role action authorization — ARCHITECTURE.md Step [12]/[13] INVARIANT 6.
+#
+# Per-role lists of FORBIDDEN action-term substrings. A role's
+# Layer 3 ``immediate_action`` text MUST NOT contain any of the role's
+# forbidden terms (case-insensitive substring match). Enforced by
+# ``src/mve_generator.role_authority_violations``.
+#
+# Roles
+# -----
+# IT_generalist    — broad authority, but cannot administer medication
+#                    or alter clinical device parameters (clinical-only).
+# biomed_engineer  — owns device-side actions; MUST NOT push network
+#                    policy or alter firewalls.
+# nurse_manager    — owns clinical workflow only; MUST NOT touch network
+#                    OR device firmware.
+#
+# Adding a new forbidden term to a role's list immediately tightens the
+# authority guard at the next test run; tests/test_role_authority.py is
+# the regression net.
+
+roles:
+  IT_generalist:
+    forbidden_action_terms:
+      - "administer"
+      - "titrate dose"
+      - "adjust ventilator setting"
+
+  biomed_engineer:
+    forbidden_action_terms:
+      - "isolate vlan"
+      - "block port at switch"
+      - "firewall rule"
+      - "update acl"
+      - "push nac"
+      - "block outbound traffic"
+      - "block port"
+      - "switch-port block"
+      - "isolate at switch"
+
+  nurse_manager:
+    forbidden_action_terms:
+      - "isolate vlan"
+      - "block port at switch"
+      - "firewall rule"
+      - "update acl"
+      - "push nac"
+      - "block outbound traffic"
+      - "block port"
+      - "switch-port block"
+      - "isolate at switch"
+      - "power-cycle device"
+      - "restart device firmware"
+      - "reflash firmware"
+      - "wipe device"
+
+review:
+  reviewers: ["CISO", "Clinical Engineering Director"]
+  review_period: "12 months"
+  last_reviewed: "2026-05-07"

@@ -15,14 +15,17 @@ Usage:
 
 from __future__ import annotations
 
+import functools
 import json
 import logging
 import sys
 import time
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
@@ -58,45 +61,80 @@ from module4_explanations._severity import severity as _severity  # noqa: E402
 #   user_access_pattern, lateral_movement, exfiltration_signal
 _FEATURE_GROUPS = {
     # Timing-pattern features (inter-packet intervals, duration)
-    "DIntPkt":    ("unusual network packet timing",     "timing_pattern"),
-    "SIntPkt":    ("unusual network packet timing",     "timing_pattern"),
-    "SIntPktAct": ("unusual network packet timing",     "timing_pattern"),
-    "Dur":        ("abnormal connection duration",      "timing_pattern"),
+    "DIntPkt": ("unusual network packet timing", "timing_pattern"),
+    "SIntPkt": ("unusual network packet timing", "timing_pattern"),
+    "SIntPktAct": ("unusual network packet timing", "timing_pattern"),
+    "Dur": ("abnormal connection duration", "timing_pattern"),
     # Network-destination features (ports, protocol flags)
-    "Sport":      ("unexpected network port activity",  "network_destination"),
-    "Flgs":       ("abnormal protocol flags",           "network_destination"),
+    "Sport": ("unexpected network port activity", "network_destination"),
+    "Flgs": ("abnormal protocol flags", "network_destination"),
     # Data-volume features (byte counts, load, packet sizes)
-    "SrcBytes":   ("unusual data transfer volume",      "data_volume"),
-    "DstBytes":   ("unusual data transfer volume",      "data_volume"),
-    "TotBytes":   ("unusual data transfer volume",      "data_volume"),
-    "SrcLoad":    ("abnormal network load",             "data_volume"),
-    "DstLoad":    ("abnormal network load",             "data_volume"),
-    "Load":       ("abnormal network load",             "data_volume"),
-    "sMaxPktSz":  ("unusual packet structure",          "data_volume"),
-    "dMaxPktSz":  ("unusual packet structure",          "data_volume"),
-    "sMinPktSz":  ("unusual packet structure",          "data_volume"),
+    "SrcBytes": ("unusual data transfer volume", "data_volume"),
+    "DstBytes": ("unusual data transfer volume", "data_volume"),
+    "TotBytes": ("unusual data transfer volume", "data_volume"),
+    "SrcLoad": ("abnormal network load", "data_volume"),
+    "DstLoad": ("abnormal network load", "data_volume"),
+    "Load": ("abnormal network load", "data_volume"),
+    "sMaxPktSz": ("unusual packet structure", "data_volume"),
+    "dMaxPktSz": ("unusual packet structure", "data_volume"),
+    "sMinPktSz": ("unusual packet structure", "data_volume"),
     # Device-behavior features (packet loss = device-level behavioral signal)
-    "pSrcLoss":   ("abnormal packet loss",              "device_behavior"),
-    "pDstLoss":   ("abnormal packet loss",              "device_behavior"),
+    "pSrcLoss": ("abnormal packet loss", "device_behavior"),
+    "pDstLoss": ("abnormal packet loss", "device_behavior"),
     # Biometric (IoMT vitals — 8th category beyond the 7 spec labels)
-    "Temp":       ("abnormal temperature reading",      "biometric"),
-    "SpO2":       ("abnormal oxygen saturation",        "biometric"),
-    "Pulse_Rate": ("abnormal pulse rate",               "biometric"),
-    "SYS":        ("abnormal blood pressure",           "biometric"),
-    "DIA":        ("abnormal blood pressure",           "biometric"),
-    "Heart_rate": ("abnormal heart rate",               "biometric"),
-    "Resp_Rate":  ("abnormal respiratory rate",         "biometric"),
-    "ST":         ("abnormal ST segment",               "biometric"),
+    "Temp": ("abnormal temperature reading", "biometric"),
+    "SpO2": ("abnormal oxygen saturation", "biometric"),
+    "Pulse_Rate": ("abnormal pulse rate", "biometric"),
+    "SYS": ("abnormal blood pressure", "biometric"),
+    "DIA": ("abnormal blood pressure", "biometric"),
+    "Heart_rate": ("abnormal heart rate", "biometric"),
+    "Resp_Rate": ("abnormal respiratory rate", "biometric"),
+    "ST": ("abnormal ST segment", "biometric"),
 }
+
+
+_FEATURE_CATEGORIES_YAML = (
+    Path(__file__).resolve().parent.parent / "configs" / "feature_categories.yaml"
+)
+
+
+@functools.lru_cache(maxsize=1)
+def _load_feature_categories() -> dict[str, tuple[str, str]]:
+    """Load ``configs/feature_categories.yaml`` with the inline
+    ``_FEATURE_GROUPS`` table as fallback.
+
+    The YAML is the canonical source per ARCHITECTURE.md Step [11];
+    the inline dict is preserved as a defence-in-depth fallback so
+    SHAP narrative lookup keeps working if the YAML is missing.
+    """
+    import yaml
+    if not _FEATURE_CATEGORIES_YAML.exists():
+        return dict(_FEATURE_GROUPS)
+    body = yaml.safe_load(_FEATURE_CATEGORIES_YAML.read_text(encoding="utf-8")) or {}
+    out: dict[str, tuple[str, str]] = {}
+    for feat, entry in body.items():
+        if not isinstance(entry, dict):
+            continue
+        out[feat] = (entry.get("narrative", feat), entry.get("category", "unknown"))
+    # Layer YAML on top of inline defaults so additions in YAML are
+    # honored but YAML omissions don't break callers using legacy names.
+    merged = dict(_FEATURE_GROUPS)
+    merged.update(out)
+    return merged
 
 
 def _feature_to_narrative(feature_name: str) -> tuple:
     """Map a SHAP feature name to (narrative_phrase, category).
 
+    Reads the policy table from
+    ``configs/feature_categories.yaml`` (loaded once, cached). Falls
+    back to the in-source ``_FEATURE_GROUPS`` dict when the YAML is
+    absent so the lookup never crashes the dashboard.
+
     Returns:
         (narrative_phrase, category) — e.g., ("unusual network packet timing", "timing_pattern")
     """
-    return _FEATURE_GROUPS.get(feature_name, (feature_name, "unknown"))
+    return _load_feature_categories().get(feature_name, (feature_name, "unknown"))
 
 
 # ── SHAP stability check (closes GAP-A3) ─────────────────────────────────
@@ -106,7 +144,12 @@ def _feature_to_narrative(feature_name: str) -> tuple:
 STABILITY_N_SAMPLES: int = 10
 STABILITY_NOISE_SIGMA: float = 0.01
 STABILITY_K_TOP: int = 3
-STABILITY_LOW: float = 0.5  # operator-facing fragility threshold
+STABILITY_LOW: float = 0.5  # operator-facing fragility warning floor
+STABILITY_HIGH: float = 0.90
+"""``is_stable`` boolean cutoff per ARCHITECTURE.md Step [11]:
+``is_stable = (stability_score >= 0.90)``. Used by the dashboard to
+decide whether to render a stability indicator (low score) or treat
+the SHAP narrative as load-bearing for the operator decision (high)."""
 
 
 def compute_shap_stability(
@@ -145,7 +188,9 @@ def compute_shap_stability(
     x_flat = _np.asarray(x, dtype=_np.float32).reshape(1, -1)
     n_features = x_flat.shape[1]
     perturbed = x_flat + rng.normal(
-        0.0, noise_sigma, size=(n_samples, n_features),
+        0.0,
+        noise_sigma,
+        size=(n_samples, n_features),
     ).astype(_np.float32)
     batch = _np.vstack([x_flat, perturbed])
 
@@ -193,8 +238,7 @@ CLINICIAN_TEMPLATES = {
         "No immediate clinical action required, but flagged for review."
     ),
     "LOW": (
-        "LOW ALERT: Borderline detection by one model. "
-        "Likely benign; logged for audit purposes."
+        "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes."
     ),
 }
 
@@ -215,6 +259,7 @@ TRACK_A = {
 
 
 # ── AlertExplainer ─────────────────────────────────────────────────────
+
 
 class AlertExplainer:
     """Per-alert explanation engine. Load once, call explain() per sample."""
@@ -274,22 +319,37 @@ class AlertExplainer:
         logger.info("AlertExplainer loaded in %.1fms", self._startup_ms)
 
     @staticmethod
-    def build_shap_context(top_features: list) -> dict:
+    def build_shap_context(
+        top_features: list,
+        *,
+        stability_score: float = 1.0,
+        fusion_class: str | None = None,
+    ) -> dict:
         """Assemble a spec-shaped shap_context dict from TreeSHAP output.
 
-        Maps ranked top_features to v2.0 SHAPContext fields per
-        research_spec.yaml §2.module_4_shap_explainer.output:
-          - top_category: feature group with highest |SHAP| sum
-          - top_features: feature names (preserving rank)
-          - shap_direction: 'elevated' if top-1 SHAP > 0 else 'suppressed'
-          - confidence_from_shap: HIGH (>0.3), MEDIUM (0.1-0.3), LOW (<0.1)
+        Maps ranked top_features to ``SHAPContext`` (per ARCHITECTURE.md
+        Step [11] output schema):
+
+        - ``top_category``: feature group with highest |SHAP| sum.
+        - ``top_features``: feature names preserving rank.
+        - ``shap_direction``: 'elevated' if top-1 SHAP > 0 else 'suppressed'.
+        - ``confidence_from_shap``: HIGH (>0.3), MEDIUM (0.1-0.3), LOW (<0.1).
+        - ``stability_score``: from :func:`compute_shap_stability`.
+        - ``is_stable``: ``stability_score >= STABILITY_HIGH (0.90)``.
+        - ``shap_source``: ``"xgboost"`` for KNOWN_ATTACK / CONFIRMED_ANOMALY;
+          ``"xgboost_low_confidence"`` for NOVEL_ANOMALY / STRONG_NOVEL_ANOMALY
+          (DAE drove the alert; XGBoost SHAP is computed but flagged
+          as not-faithful per the ARCHITECTURE.md "Known gap" note).
 
         Args:
             top_features: list of dicts with keys 'feature', 'shap_value'
-                (as produced by _top_shap); already sorted by |SHAP| desc.
+                (as produced by ``_top_shap``); sorted by |SHAP| desc.
+            stability_score: bootstrap stability from ``compute_shap_stability``.
+            fusion_class: optional ``FusionClass`` value used to flag
+                ``shap_source = "xgboost_low_confidence"`` for NOVEL alerts.
 
         Returns:
-            Dict ready to pass as shap_context to src.mve_generator.generate_mve.
+            Dict ready to pass as shap_context to ``src.mve_generator.generate_mve``.
             Empty dict if top_features is empty.
         """
         if not top_features:
@@ -310,11 +370,24 @@ class AlertExplainer:
         else:
             confidence = "LOW"
 
+        # ARCHITECTURE.md Step [11] "Known gap": when DAE is the deciding
+        # signal (NOVEL_ANOMALY / STRONG_NOVEL_ANOMALY), XGBoost SHAP is
+        # computed but flagged so downstream consumers don't treat it as
+        # load-bearing.
+        novel_classes = {"NOVEL_ANOMALY", "STRONG_NOVEL_ANOMALY"}
+        if fusion_class in novel_classes:
+            shap_source = "xgboost_low_confidence"
+        else:
+            shap_source = "xgboost"
+
         return {
             "top_category": top_category,
             "top_features": [tf["feature"] for tf in top_features],
             "shap_direction": "elevated" if top1["shap_value"] > 0 else "suppressed",
             "confidence_from_shap": confidence,
+            "stability_score": float(stability_score),
+            "is_stable": bool(stability_score >= STABILITY_HIGH),
+            "shap_source": shap_source,
         }
 
     def _top_shap(self, sv_row: np.ndarray, k: int = 3) -> list:
@@ -340,7 +413,9 @@ class AlertExplainer:
             {
                 "feature": self.feat_names[i],
                 "weighted_error": round(float(werr_row[i]), 8),
-                "pct_contribution": round(float(werr_row[i] / total * 100), 1) if total > 0 else 0.0,
+                "pct_contribution": round(float(werr_row[i] / total * 100), 1)
+                if total > 0
+                else 0.0,
             }
             for i in top_i
         ]
@@ -374,18 +449,14 @@ class AlertExplainer:
                 # Ambiguous: cite both features
                 narrative_2, category_2 = _feature_to_narrative(top2_feat)
                 if category_1 != category_2:
-                    secondary_note = (
-                        f"A secondary indicator ({narrative_2}) also contributed. "
-                    )
+                    secondary_note = f"A secondary indicator ({narrative_2}) also contributed. "
                 # else: same category, single narrative covers both
 
             # Add biometric note if any top feature is biometric
-            bio_feats = [f["feature"] for f in top_features
-                         if f["feature"] in BIOMETRIC_FEATURES]
+            bio_feats = [f["feature"] for f in top_features if f["feature"] in BIOMETRIC_FEATURES]
             if bio_feats and category_1 != "biometric":
                 secondary_note += (
-                    f"Note: Biometric data ({', '.join(bio_feats)}) "
-                    "showed unusual values. "
+                    f"Note: Biometric data ({', '.join(bio_feats)}) showed unusual values. "
                 )
 
         return CLINICIAN_TEMPLATES[severity].format(
@@ -427,10 +498,9 @@ class AlertExplainer:
         # Cascaded DAE prediction: augment input with Track A probabilities.
         # The DAE was trained on [raw_features || Track_A_OOF_probas],
         # so inference must provide the same augmented input.
-        track_a_probas = np.array([[
-            votes[name]["confidence"]
-            for name in self.classifiers
-        ]])  # shape (1, 3)
+        track_a_probas = np.array(
+            [[votes[name]["confidence"] for name in self.classifiers]]
+        )  # shape (1, 3)
         x_augmented = np.column_stack([x_2d, track_a_probas])
 
         dae_error_arr, dae_per_feature = self.dae.reconstruction_error_decomposed(x_augmented)
@@ -491,7 +561,9 @@ class AlertExplainer:
         # ── Step 6: Risk decomposition ──
         t0 = time.perf_counter()
         flagging_models = [name for name, v in votes.items() if v["prediction"] == 1]
-        confidences = [votes[m].get("confidence", 0) for m in flagging_models if "confidence" in votes[m]]
+        confidences = [
+            votes[m].get("confidence", 0) for m in flagging_models if "confidence" in votes[m]
+        ]
         risk_decomposition = {
             "flagging_models": flagging_models,
             "confidence_spread": {
@@ -523,6 +595,7 @@ class AlertExplainer:
 
 # ── Batch simulation + latency profiling ───────────────────────────────
 
+
 def run_batch_simulation(
     explainer: AlertExplainer,
     X_test: np.ndarray,
@@ -546,7 +619,7 @@ def run_batch_simulation(
     if len(alert_idx) == 0:
         return [], []
 
-    X_alerts = X_test[alert_idx]   # (k, n_features)
+    X_alerts = X_test[alert_idx]  # (k, n_features)
     explainer.feat_names = feat_names
 
     # ── Batch Track A predictions (all alerts at once) ──
@@ -579,7 +652,10 @@ def run_batch_simulation(
 
     logger.info(
         "  Batch: predict=%.1fms, shap=%.1fms, dae=%.1fms for %d alerts",
-        pred_ms, shap_ms, dae_ms, len(alert_idx),
+        pred_ms,
+        shap_ms,
+        dae_ms,
+        len(alert_idx),
     )
 
     # ── Assemble per-alert results ──
@@ -699,8 +775,9 @@ def plot_latency_cdf(all_timings: list) -> None:
     sla_pcts = (totals[:, np.newaxis] < sla_vals).mean(axis=0) * 100
     sla_colors = ["green", "orange", "red"]
     for sla, pct, color in zip(sla_vals, sla_pcts, sla_colors):
-        ax.axvline(sla, color=color, linestyle="--", alpha=0.7,
-                   label=f"{sla}ms SLA: {pct:.1f}% pass")
+        ax.axvline(
+            sla, color=color, linestyle="--", alpha=0.7, label=f"{sla}ms SLA: {pct:.1f}% pass"
+        )
 
     ax.set_xlabel("Total Latency (ms)")
     ax.set_ylabel("Cumulative % of Alerts")
@@ -744,6 +821,7 @@ def plot_component_breakdown(stats: dict) -> None:
 
 # ── Main ────────────────────────────────────────────────────────────────
 
+
 def main() -> None:
     logging.basicConfig(
         level=logging.INFO,
@@ -764,9 +842,7 @@ def main() -> None:
     X_test = df[feat_names].values.astype(np.float32)
 
     # Load XGBoost predictions to identify alert samples
-    xgb_preds = np.load(
-        PROJECT_ROOT / "results/models/xgboost_test_predictions.npz"
-    )
+    xgb_preds = np.load(PROJECT_ROOT / "results/models/xgboost_test_predictions.npz")
     y_pred_xgb = xgb_preds["y_pred"]
     n_alerts = (y_pred_xgb == 1).sum()
     logger.info("Test set: %d samples, %d XGBoost alerts to explain", len(X_test), n_alerts)
@@ -783,7 +859,10 @@ def main() -> None:
     logger.info("")
     logger.info("── Per-Alert Simulation ──")
     all_timings, sample_explanations = run_batch_simulation(
-        explainer, X_test, y_pred_xgb, feat_names,
+        explainer,
+        X_test,
+        y_pred_xgb,
+        feat_names,
     )
 
     # Compute stats
@@ -835,13 +914,15 @@ def main() -> None:
     cleaned_samples = _clean(sample_explanations)
     samples_path = OUTPUT_DIR / "online_sample_explanations.json"
     samples_path.write_text(
-        json.dumps(cleaned_samples, indent=2), encoding="utf-8",
+        json.dumps(cleaned_samples, indent=2),
+        encoding="utf-8",
     )
     logger.info("Saved: %s (%d examples)", samples_path, len(sample_explanations))
 
     legacy_samples_path = OUTPUT_DIR / "sample_explanations.json"
     legacy_samples_path.write_text(
-        json.dumps(cleaned_samples, indent=2), encoding="utf-8",
+        json.dumps(cleaned_samples, indent=2),
+        encoding="utf-8",
     )
     logger.info("Saved: %s (legacy alias)", legacy_samples_path)
 
@@ -856,21 +937,38 @@ def main() -> None:
     logger.info(sep)
     logger.info("LATENCY PROFILING COMPLETE")
     logger.info(sep)
-    logger.info("  Alerts profiled : %d (%d full, %d minimal)",
-                len(all_timings), len(full_timings), len(minimal_timings))
+    logger.info(
+        "  Alerts profiled : %d (%d full, %d minimal)",
+        len(all_timings),
+        len(full_timings),
+        len(minimal_timings),
+    )
     if "total_ms" in stats:
-        logger.info("  Total latency   : p50=%.1fms, p95=%.1fms, p99=%.1fms",
-                    stats["total_ms"]["p50"], stats["total_ms"]["p95"], stats["total_ms"]["p99"])
+        logger.info(
+            "  Total latency   : p50=%.1fms, p95=%.1fms, p99=%.1fms",
+            stats["total_ms"]["p50"],
+            stats["total_ms"]["p95"],
+            stats["total_ms"]["p99"],
+        )
     if full_timings:
         fs = compute_latency_stats(full_timings)
         if "total_ms" in fs:
-            logger.info("  Full explain    : p50=%.1fms, p95=%.1fms, p99=%.1fms",
-                        fs["total_ms"]["p50"], fs["total_ms"]["p95"], fs["total_ms"]["p99"])
+            logger.info(
+                "  Full explain    : p50=%.1fms, p95=%.1fms, p99=%.1fms",
+                fs["total_ms"]["p50"],
+                fs["total_ms"]["p95"],
+                fs["total_ms"]["p99"],
+            )
         if "treeshap_ms" in fs:
-            logger.info("  TreeSHAP only   : p50=%.1fms, p95=%.1fms",
-                        fs["treeshap_ms"]["p50"], fs["treeshap_ms"]["p95"])
-    logger.info("  SLA feasibility : <150ms per alert = %s",
-                "PASS" if stats.get("total_ms", {}).get("p95", 999) < 150 else "FAIL")
+            logger.info(
+                "  TreeSHAP only   : p50=%.1fms, p95=%.1fms",
+                fs["treeshap_ms"]["p50"],
+                fs["treeshap_ms"]["p95"],
+            )
+    logger.info(
+        "  SLA feasibility : <150ms per alert = %s",
+        "PASS" if stats.get("total_ms", {}).get("p95", 999) < 150 else "FAIL",
+    )
     logger.info("  Output          : %s", OUTPUT_DIR)
     logger.info(sep)
 

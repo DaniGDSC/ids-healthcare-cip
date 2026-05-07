@@ -1,0 +1,66 @@
+# Hospital deployment sizing + tier-fallback policy.
+# ARCHITECTURE.md Step [14].
+#
+# Specifies which response tiers are actually staffed at this
+# deployment. When a tier-routing rule recommends a tier that the
+# deployment does not have, the fallback below kicks in — for example,
+# a small hospital without an L2 security specialist routes
+# NOVEL_ANOMALY alerts to "document_for_external_consultant_review"
+# with a next-business-day timeline.
+#
+# Loaded by ``module5_responses/tier_routing_v4.py`` to ground the
+# pure-function recommendation in deployment reality.
+
+deployment_size: medium   # small | medium | large
+
+available_tiers:
+  - L1
+  - L2_specialist
+  - L2_security_specialist
+  - senior_engineer
+  - incident_response
+
+# Per-tier fallback when a recommended tier is unavailable. The key is
+# the tier name; the value is the substitution. ``null`` means "keep
+# the original recommendation and emit a warning".
+fallback_routing:
+  L2_specialist_unavailable:
+    action: "document_for_external_consultant_review"
+    notification: "primary_contact"
+    timeline: "next_business_day"
+  L2_security_specialist_unavailable:
+    action: "document_for_external_consultant_review"
+    notification: "primary_contact"
+    timeline: "next_business_day"
+  senior_engineer_unavailable:
+    action: "L1_with_documentation"
+    notification: "primary_contact"
+    timeline: "same_shift"
+  incident_response_unavailable:
+    action: "external_ir_retainer"
+    notification: "primary_contact"
+    timeline: "within_4_hours"
+
+# Small / medium / large preset profiles. The deployment owner picks
+# one (via ``deployment_size`` above) and ``tier_routing_v4`` pulls
+# ``available_tiers`` from the matching preset.
+presets:
+  small:
+    available_tiers: ["L1"]
+    description: "Single-shift L1 only; everything else routes external."
+  medium:
+    available_tiers: ["L1", "L2_specialist", "senior_engineer"]
+    description: "Standard mid-size hospital staffing."
+  large:
+    available_tiers:
+      - L1
+      - L2_specialist
+      - L2_security_specialist
+      - senior_engineer
+      - incident_response
+    description: "Full SOC + dedicated IR team."
+
+review:
+  reviewers: ["CISO", "Hospital Operations Lead"]
+  review_period: "per deployment + on staffing change"
+  last_reviewed: "2026-05-07"

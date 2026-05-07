@@ -1,0 +1,83 @@
+# LLM data-flow allow-list — ARCHITECTURE.md Step [12], Mode A.
+#
+# Documents EXACTLY what fields cross the LLM API boundary. Validated
+# at every Mode A call by ``src/mve_generator._validate_llm_inputs`` and
+# regression-tested by ``tests/test_phi_not_in_llm_prompt.py``. The
+# strict allow-list (vs. a deny-list) means a new field added to the
+# alert schema is invisible to the LLM until it's explicitly approved
+# here — a YAML edit reviewed by privacy/security, NOT a code change.
+#
+# Locked: changes require privacy + security review.
+
+mode_a_llm_inputs:
+  # Fields that MAY cross the API boundary. Anything else is filtered
+  # out by ``_validate_llm_inputs`` before the prompt is constructed.
+  allowed:
+    # Synthetic / categorical IDs that don't identify patients
+    - alert_id
+    - alert_type
+    - fusion_class
+    - risk_level
+    - risk_score
+    - severity_label
+
+    # Network telemetry (IPs, ports, protocols are operational, not PHI
+    # under HIPAA — they describe the device traffic, not the patient)
+    - src_addr
+    - dst_addr
+    - src_port
+    - dst_port
+    - protocol
+
+    # Detection model outputs (categorical / numeric, no PHI)
+    - confidence
+    - confidence_indicator
+    - shap_top_features
+    - top_category
+    - shap_direction
+    - confidence_from_shap
+    - mitre_techniques
+    - data_quality
+
+    # Device context (asset metadata; not patient-linked in this
+    # prototype's evaluation_alerts.json schema)
+    - device_class
+    - device_type
+    - device_criticality
+    - patchable
+    - clinical_function
+    - clinical_tier
+
+    # Threat-intel (public, not PHI)
+    - attack_category
+
+  # Fields that MUST NOT cross the API boundary. Always-empty allow-list
+  # complement; presence of any of these in the LLM prompt is a HIPAA
+  # red flag and the test suite blocks it.
+  forbidden:
+    - patient_id
+    - patient_name
+    - mrn
+    - medical_record_number
+    - dob
+    - date_of_birth
+    - ssn
+    - phone_number
+    - address
+    - room_number_with_patient_context
+    - clinical_notes
+    - ehr_record
+    - lab_result
+    - prescription
+    - any_clinical_data_from_ehr
+
+validation:
+  sanitize_before_send: true
+  log_full_prompt: true     # for audit reproducibility
+  log_full_response: true   # for audit reproducibility
+  max_input_chars: 8192     # defence-in-depth against accidental dumps
+
+review:
+  reviewers: ["Privacy Officer", "CISO"]
+  review_period: "annually + on schema change"
+  last_reviewed: "2026-05-07"
