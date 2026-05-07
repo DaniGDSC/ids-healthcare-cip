@@ -7,7 +7,7 @@ anomalies (EA-06).
 
 Design notes
 ------------
-- Medians are computed once from `data/processed/train_benign_phase1.parquet`
+- Medians are computed once from `data/processed/benign_only_train.parquet`
   and persisted to `data/processed/benign_medians.json`. The lookup is loaded
   lazily on first call to `sanitize_features()`.
 - The flag taxonomy here (OK / DEGRADED / FAILED) is the operator-facing

@@ -1,0 +1,44 @@
+{
+  "xgboost": {
+    "top_features_masked": [
+      "Dur",
+      "Sport",
+      "DIntPkt",
+      "Temp",
+      "Flgs"
+    ],
+    "f1_baseline": 0.8923,
+    "f1_after_masking": 0.2229,
+    "f1_drop": 0.6695,
+    "f1_drop_pct": 75.0,
+    "faithful": true
+  },
+  "random_forest": {
+    "top_features_masked": [
+      "Pulse_Rate",
+      "Temp",
+      "Sport",
+      "DIntPkt",
+      "Flgs"
+    ],
+    "f1_baseline": 0.8003,
+    "f1_after_masking": 0.2677,
+    "f1_drop": 0.5326,
+    "f1_drop_pct": 66.5,
+    "faithful": true
+  },
+  "decision_tree": {
+    "top_features_masked": [
+      "Pulse_Rate",
+      "Temp",
+      "Sport",
+      "DIntPkt",
+      "Flgs"
+    ],
+    "f1_baseline": 0.6977,
+    "f1_after_masking": 0.2231,
+    "f1_drop": 0.4746,
+    "f1_drop_pct": 68.0,
+    "faithful": true
+  }
+}

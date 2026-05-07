@@ -12,8 +12,8 @@ What it writes (atomic — old files only replaced after successful write):
 
 - ``data/processed/train_phase1.parquet``      (overwritten — smaller)
 - ``data/processed/val_phase1.parquet``        (new)
-- ``data/processed/train_benign_phase1.parquet`` (rebuilt subset)
-- ``data/processed/val_benign_phase1.parquet``   (new)
+- ``data/processed/benign_only_train.parquet`` (rebuilt subset)
+- ``data/processed/benign_only_val.parquet``   (new)
 
 The test parquet is untouched; carve happens only on train.
 """
@@ -77,8 +77,8 @@ def main() -> int:
 
     # Atomic-ish write: stage to *.tmp then rename
     val_path = PROCESSED / "val_phase1.parquet"
-    train_benign_path = PROCESSED / "train_benign_phase1.parquet"
-    val_benign_path = PROCESSED / "val_benign_phase1.parquet"
+    train_benign_path = PROCESSED / "benign_only_train.parquet"
+    val_benign_path = PROCESSED / "benign_only_val.parquet"
 
     new_train_benign = new_train[new_train["Label"] == 0].reset_index(drop=True)
     val_benign = val[val["Label"] == 0].reset_index(drop=True)

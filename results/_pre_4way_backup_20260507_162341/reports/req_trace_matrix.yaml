@@ -1,0 +1,432 @@
+# req_trace_matrix.yaml
+# Method 6 — Formal Specification Compliance
+# Maps each MVE-system requirement (REQ-MVE-01..22) to its
+# implementation path and verification test.
+#
+# Coverage target: ≥90% PASS (20/22 minimum).
+# Generated: 2026-05-05  Branch: fix/shap-category-vocab
+
+source_artifacts:
+  - CLAUDE.md                                # Module contracts + DO NOT BUILD list
+  - research_spec.yaml                       # canonical spec
+  - docs/architecture.md                     # 7 invariants
+  - docs/threat_model.md                     # STRIDE + ATT&CK mapping
+  - results/reports/invariant_verification.log
+
+deliverable_metadata:
+  method: "Method 6 — Formal Specification Compliance"
+  thesis_section: "Chapter 5.3.1 Formal Compliance"
+  total_requirements: 22
+  pass_threshold_minimum: 0.90  # ≥20/22
+  computed_pass_rate_target: 22 of 22
+
+# ── Requirement Categories ──────────────────────────────────────────────
+#
+#   Layered MVE structure        REQ-MVE-01..05  (5)
+#   Generation modes             REQ-MVE-06..08  (3)
+#   Per-stakeholder + safety     REQ-MVE-09..14  (6)
+#   Auditing + traceability      REQ-MVE-15      (1)
+#   Robustness + sanitization    REQ-MVE-16..17  (2)
+#   Threat-intel grounding       REQ-MVE-18      (1)
+#   Risk-adaptive gating         REQ-MVE-19      (1)
+#   XAI quality                  REQ-MVE-20      (1)
+#   Audit schema                 REQ-MVE-21      (1)
+#   No-execution invariant       REQ-MVE-22      (1)
+#                                              ──
+#                                              22
+
+requirements:
+
+  # ── Layered MVE Structure (5) ──────────────────────────────────────────
+
+  REQ-MVE-01:
+    title: "Three-layer MVE output structure"
+    spec_source: "CLAUDE.md § Module 4 — MVE Generator Contracts"
+    requirement: |
+      The MVE generator must emit exactly three labelled layers:
+      Layer 1 (WHY anomalous), Layer 2 (CLINICAL SEVERITY), Layer 3
+      (RECOMMENDED ACTION + DO NOT). Each layer is a dict of named string
+      fields, never a flat blob.
+    implementation: src/data_models.py::MVEOutput (dataclass with layer_1, layer_2, layer_3)
+    test_evidence:
+      - tests/acceptance_tests.py::test_mve_completeness (M1)
+      - alignment_report.yaml: M1 result_value=1.0, target=0.95 → PASS
+    status: PASS
+
+  REQ-MVE-02:
+    title: "Word-count budget enforcement"
+    spec_source: "CLAUDE.md § Module 4: Layer 1 ≤60 words, Layer 2 ≤50, Layer 3 ≤60, total ≤150"
+    requirement: |
+      Each layer must remain inside its word-count budget. Combined
+      output ≤ 150 words. The constraint is hard — exceeding the budget
+      blocks the alert.
+    implementation: src/mve_generator.py::generate_mve enforces _layer_word_count() helpers
+    test_evidence:
+      - tests/acceptance_tests.py::test_layer1_length_constraint (M1b)
+      - alignment_report.yaml: M1b result_value=1.0, target=0.95 → PASS
+    status: PASS
+
+  REQ-MVE-03:
+    title: "No raw model internals (SHAP values, model weights) in MVE text"
+    spec_source: "CLAUDE.md § Negative Tests; threat_model.md § T-I3 (SHAP feature leakage)"
+    requirement: |
+      Layer 1 must reference SHAP categories (e.g. timing_pattern) and
+      clinician-readable narratives, never raw |SHAP| magnitudes,
+      model coefficients, or other internals. Mitigation T-I3.
+    implementation: src/mve_generator.py renders only top_category + narrative; never sv values
+    test_evidence:
+      - tests/negative_tests.py::test_no_model_internals_exposed (zero violations)
+      - tests/test_negative_pytest.py::test_neg_no_model_internals_exposed (pytest wrapper)
+    status: PASS
+
+  REQ-MVE-04:
+    title: "No CVSS scoring in clinical severity"
+    spec_source: "CLAUDE.md § Severity Mapping (clinical, not CVSS)"
+    requirement: |
+      Severity labels MUST come from the clinical 4-tier ladder
+      (CRITICAL / HIGH / MEDIUM / LOW). CVSS scores are forbidden — the
+      clinical-context override is the source of truth.
+    implementation: src/mve_generator.py::VALID_SEVERITY = {CRITICAL, HIGH, MEDIUM, LOW}
+    test_evidence:
+      - tests/negative_tests.py::test_severity_uses_clinical_not_cvss (zero violations)
+    status: PASS
+
+  REQ-MVE-05:
+    title: "Severity-label accuracy on labelled fixture set"
+    spec_source: "CLAUDE.md § DONE CONDITION: M8 minimum 70%, target 80%; 0 CRITICAL↔LOW mismatch"
+    requirement: |
+      Severity labels assigned by the generator must match labelled
+      fixtures at ≥70% (target 80%). Any single CRITICAL↔LOW mismatch
+      hard-fails the milestone.
+    implementation: src/mve_generator.py severity assignment + clinical-tier override at lines 400-405
+    test_evidence:
+      - tests/acceptance_tests.py::test_severity_label_accuracy (M8)
+      - alignment_report.yaml: M8 result_value=0.931, target=0.8 → PASS, no CRITICAL↔LOW mismatch
+    status: PASS
+
+  # ── Generation Modes (3) ───────────────────────────────────────────────
+
+  REQ-MVE-06:
+    title: "Mode B (rule-based offline fallback) must always work without API key"
+    spec_source: "CLAUDE.md § Module 4: 'MUST have offline/rule-based fallback'"
+    requirement: |
+      All M1–M8 acceptance tests must pass when ANTHROPIC_API_KEY is
+      unset. The deterministic rule-based generator covers every alert
+      type (T1–T5).
+    implementation: src/mve_generator.py::_generate_rule_based (lines 354-774)
+    test_evidence:
+      - tests/test_coverage_mve.py — 73 tests, all alert types and edge cases
+      - alignment_report.yaml regenerated offline produces same M1-M8 PASS
+    status: PASS
+
+  REQ-MVE-07:
+    title: "Mode A (LLM-augmented) is optional and degrades gracefully"
+    spec_source: "CLAUDE.md § Module 4: 'Mode A: Use if ANTHROPIC_API_KEY in environment'"
+    requirement: |
+      When ANTHROPIC_API_KEY is set, generator uses LLM augmentation;
+      when LLM call fails or key absent, falls back to Mode B without
+      raising an exception.
+    implementation: src/mve_generator.py::_generate_llm + try/except in generate_mve
+    test_evidence:
+      - tests/test_coverage_mve.py covers Mode A path with mocked client
+      - tests/test_safe_failure.py::test_mve_timeout_does_not_suppress
+    status: PASS
+
+  REQ-MVE-08:
+    title: "Layer 1 must reference actual SHAP top features (faithfulness)"
+    spec_source: "docs/architecture.md § INVARIANT 5; CLAUDE.md § Module 4 MVE Layer 1 rules"
+    requirement: |
+      When shap_context is provided, Layer 1 deviation_description MUST
+      mention either top_category OR at least one top_feature. Layer 1
+      cannot use generic boilerplate that bypasses model attribution.
+    implementation: src/mve_generator.py::generate_mve consumes shap_context; falls back deterministically when absent
+    test_evidence:
+      - tests/acceptance_tests.py::test_shap_narrative_alignment (M5)
+      - alignment_report.yaml: M5 result_value=1.0, target=0.85 → PASS
+    status: PASS
+
+  # ── Per-Stakeholder + Safety (6) ───────────────────────────────────────
+
+  REQ-MVE-09:
+    title: "Role authority — each role only sees role-appropriate Layer 3 actions"
+    spec_source: "docs/architecture.md § INVARIANT 6; ARCHITECTURE.md § Step [13]"
+    requirement: |
+      Three OperatorRole views (IT_generalist, biomed_engineer,
+      nurse_manager). Layer 2 invariant across views (cross-role
+      severity consistency). Layer 3 immediate_action must NOT contain
+      role-forbidden verbs:
+        - biomed: no network mutations
+        - nurse: no network OR firmware actions
+    implementation: src/mve_generator.py::derive_role_view + ROLE_FORBIDDEN_ACTION_TERMS table + role_authority_violations() helper
+    test_evidence:
+      - tests/test_role_authority.py — 39 parametrised tests (role × alert × device)
+      - tests/test_safe_failure.py::test_role_view_* — 8 smoke tests (GAP-A2)
+    status: PASS
+
+  REQ-MVE-10:
+    title: "DO NOT clinical_constraint required for CRITICAL on clinical devices"
+    spec_source: "docs/architecture.md § INVARIANT 7; CLAUDE.md § MVE Layer 3 rules"
+    requirement: |
+      Every CRITICAL or HIGH alert on an IoMT clinical device must
+      include explicit DO NOT wording in clinical_constraint
+      (e.g. 'DO NOT power off ventilator. Switch-port block is SAFE.').
+    implementation: src/mve_generator.py rule-based clinical_constraint generation lines 615-621
+    test_evidence:
+      - tests/acceptance_tests.py::test_clinical_constraint_awareness (M4)
+      - alignment_report.yaml: M4 result_value=1.0, target=0.90 → PASS
+      - tests/test_role_authority.py::test_clinical_constraint_preserved_exhaustive
+    status: PASS
+
+  REQ-MVE-11:
+    title: "Two-stage fusion classifier emits 4 fusion_class labels"
+    spec_source: "ARCHITECTURE.md § Canonical Workflow Step [7]"
+    requirement: |
+      classify_fusion(c_track_a, c_track_b, a_high, a_low, b) must
+      partition every alert into exactly one of:
+        KNOWN_ATTACK | NOVEL_ANOMALY | CONFIRMED_ANOMALY | BENIGN
+      per the spec decision tree.
+    implementation: module3_risk_scoring/module3_risk_scores.py::classify_fusion + src/data_models.py::FusionClass
+    test_evidence:
+      - tests/test_two_stage_fusion.py — 9 tests (6 named + 3 invariant)
+      - results/reports/two_stage_fusion_validation.yaml § acceptance — 6/6 PASS
+    status: PASS
+
+  REQ-MVE-12:
+    title: "Track B (DAE) only ELEVATES — never suppresses Track A"
+    spec_source: "docs/architecture.md § INVARIANT 1"
+    requirement: |
+      c_detect = max(c_track_a, c_track_b). The DAE cannot lower a
+      Track A signal. Architecturally enforced by the np.maximum
+      operator; FusionClass taxonomy preserves the property.
+    implementation: module3_risk_scoring/module3_risk_scores.py::compute_c_detect uses np.maximum
+    test_evidence:
+      - tests/test_safe_failure.py::test_fusion_class_known_attack (and 5 sibling cases)
+      - results/reports/risk_report.json::dual_track_fusion.recall.fusion_gain = 0.0033 (non-negative by construction)
+    status: PASS
+
+  REQ-MVE-13:
+    title: "Safety floor — CRITICAL+unpatchable always surfaces"
+    spec_source: "docs/architecture.md § INVARIANT 2; CLAUDE.md § Risk-Adaptive Rules"
+    requirement: |
+      A CRITICAL+unpatchable device alert always sets should_surface=True
+      regardless of any other rule, including the maintenance-window
+      early-return (which suppresses display, not detection).
+    implementation: src/risk_scorer.py:155-156 (normal path) + 125-128 (maintenance-window early-return)
+    test_evidence:
+      - tests/test_safe_failure.py::test_critical_unpatchable_surfaces_in_maintenance_window (ST-09)
+      - tests/test_safe_failure.py::test_low_patchable_suppressed_in_maintenance_window (negative control)
+      - tests/test_safe_failure.py::test_non_patchable_priority
+      - tests/test_safe_failure.py::test_mve_timeout_does_not_suppress
+    status: PASS
+
+  REQ-MVE-14:
+    title: "NO AUTO-EXECUTION of any clinical or network action"
+    spec_source: "docs/architecture.md § INVARIANT 3; CLAUDE.md § DO NOT BUILD"
+    requirement: |
+      Module 5 must contain zero subprocess/os.system/iptables/scapy/
+      socket primitives. The system emits string recommendations only.
+    implementation: module5_responses/module5_pipeline.py recommend() returns dict with action labels only; no execution call sites
+    test_evidence:
+      - tests/negative_tests.py::test_no_automated_blocking — 0 violations
+      - tests/test_negative_pytest.py::test_neg_no_automated_blocking (pytest wrapper)
+      - results/reports/invariant_verification.log § Part 1 — 5 grep commands all empty
+    status: PASS
+
+  # ── Auditing + Traceability (1) ────────────────────────────────────────
+
+  REQ-MVE-15:
+    title: "Audit trail — append-only, schema-validated, complete"
+    spec_source: "docs/architecture.md § INVARIANT 4; ARCHITECTURE.md § Step [16]"
+    requirement: |
+      Every operator decision and every system alert (including
+      suppressed) must be recorded. Files are append-only;
+      tampering MUST produce a hash mismatch (forensic integrity);
+      records MUST validate against OperatorDecision schema.
+    implementation: |
+      module6_evaluation/module6_app.py append-only writes;
+      src/data_models.py::OperatorDecision.validate() schema enforcement.
+    test_evidence:
+      - tests/test_audit_append_only.py — 3 tests (history-preservation, tampering-detection, monotonic growth)
+      - tests/test_safe_failure.py::test_operator_decision_* — 4 schema-validation tests
+    status: PASS
+
+  # ── Robustness + Sanitization (2) ──────────────────────────────────────
+
+  REQ-MVE-16:
+    title: "Per-feature sanitization with data_quality flag"
+    spec_source: "ARCHITECTURE.md § Step [5]; results/reports/feature_sanitization.yaml"
+    requirement: |
+      sanitize_features(x) replaces NaN/Inf with per-feature benign
+      medians (NOT 0.0), returns (x_clean, data_quality_flag, nan_rate)
+      where flag ∈ {OK, DEGRADED, FAILED}.
+    implementation: src/preprocessing.py::sanitize_features + DataQuality enum in src/data_models.py
+    test_evidence:
+      - tests/test_feature_sanitization.py — 7 tests (5 named + EA-06 + medians-persistence)
+      - results/reports/feature_sanitization.yaml § acceptance — 5/5 PASS
+    status: PASS
+
+  REQ-MVE-17:
+    title: "EA-06 mitigation — NaN-injection cannot mask anomalies"
+    spec_source: "docs/threat_model.md § T-T4 (Sanitiser injection)"
+    requirement: |
+      DEGRADED-flagged inputs must elevate adjusted_score by ×1.20.
+      FAILED-flagged inputs must clamp adjusted_score ≥ 0.95 so the
+      alert always surfaces, even when the imputed features look benign.
+    implementation: src/risk_scorer.py:140-144 EA-06 score elevation block
+    test_evidence:
+      - tests/test_feature_sanitization.py::test_5_nan_injection_attack_elevates_score
+      - tests/test_feature_sanitization.py::test_failed_quality_forces_surface
+    status: PASS
+
+  # ── Threat-Intel Grounding (1) ─────────────────────────────────────────
+
+  REQ-MVE-18:
+    title: "Deterministic ATT&CK technique-ID lookup for every alert type"
+    spec_source: "ARCHITECTURE.md § Step [8]; docs/threat_model.md § 5"
+    requirement: |
+      attck_for_alert_type(alert_type) returns (technique_id,
+      label) for T1..T5 deterministically (not LLM-dependent). Mode B
+      MVEs must consume this lookup, so ATT&CK grounding survives the
+      offline path.
+    implementation: src/mve_generator.py::attck_for_alert_type + _ATTACK_TECHNIQUES dict
+    test_evidence:
+      - tests/test_safe_failure.py::test_attck_lookup_covers_all_5_alert_types
+      - tests/test_safe_failure.py::test_attck_lookup_unknown_alert_type_returns_empty
+    status: PASS
+
+  # ── Risk-Adaptive Gating (1) ───────────────────────────────────────────
+
+  REQ-MVE-19:
+    title: "Per-device-class threshold override (GAP-A1 closure)"
+    spec_source: "ARCHITECTURE.md § Step [10] multiplier_table"
+    requirement: |
+      score_alert must consult a (device_class, patchable) lookup table
+      BEFORE the (criticality, patchable) fallback. Unknown device
+      classes use a conservative 0.80 fallback multiplier. The override
+      is evidence-traceable to ARCHITECTURE.md Step [10].
+    implementation: src/risk_scorer.py::_THRESHOLD_MULT_BY_DEVICE + _UNKNOWN_DEVICE_FALLBACK_MULT
+    test_evidence:
+      - tests/test_safe_failure.py::test_device_class_override_lowers_infusion_pump_threshold
+      - tests/test_safe_failure.py::test_device_class_override_for_ehr_workstation
+      - tests/test_safe_failure.py::test_device_class_unknown_falls_back_to_conservative
+      - tests/test_safe_failure.py::test_no_device_class_uses_criticality_table
+    status: PASS
+
+  # ── XAI Quality (1) ────────────────────────────────────────────────────
+
+  REQ-MVE-20:
+    title: "SHAP explanation stability score"
+    spec_source: "ARCHITECTURE.md § Step [11]; GAP-A3 closure"
+    requirement: |
+      The online explainer must compute a bootstrap-Jaccard stability
+      score on top-k SHAP features under small input perturbations.
+      Score ∈ [0, 1] persisted to SHAPContext.stability_score.
+      Values < STABILITY_LOW (0.5) should be surfaced as fragility.
+    implementation: module4_explanations/module4_online_explainer.py::compute_shap_stability + SHAPContext.stability_score field
+    test_evidence:
+      - tests/test_safe_failure.py::test_shap_stability_identical_features_is_one
+      - tests/test_safe_failure.py::test_shap_stability_noisy_features_is_low
+      - tests/test_safe_failure.py::test_shap_context_default_stability_is_one
+    status: PASS
+
+  # ── Audit Schema (1) ───────────────────────────────────────────────────
+
+  REQ-MVE-21:
+    title: "OperatorDecision dataclass with .validate()"
+    spec_source: "ARCHITECTURE.md § Step [16]; GAP-A5 closure"
+    requirement: |
+      Audit-log records must conform to the OperatorDecision schema:
+      required fields (alert_id, operator_role, operator_action_taken,
+      decision_time_seconds, timestamp); optional Likert confidence
+      bounded [1,5]; .validate() raises ValueError on schema violations.
+    implementation: src/data_models.py::OperatorDecision dataclass + .validate() method
+    test_evidence:
+      - tests/test_safe_failure.py::test_operator_decision_valid_record_passes
+      - tests/test_safe_failure.py::test_operator_decision_missing_alert_id_raises
+      - tests/test_safe_failure.py::test_operator_decision_negative_time_raises
+      - tests/test_safe_failure.py::test_operator_decision_confidence_out_of_range_raises
+    status: PASS
+
+  # ── No-Execution Invariant (1) ─────────────────────────────────────────
+
+  REQ-MVE-22:
+    title: "Recommendation-only output with audit-traceable HITL boundary"
+    spec_source: "docs/architecture.md § INVARIANT 3; docs/threat_model.md § §6 T-S2 mitigation"
+    requirement: |
+      All Module 5 actions surface as RECOMMENDATIONS (string output).
+      The HITL boundary (TB-3 in trust_boundaries.png) is read-only
+      from the IDS's side; only the operator decision (TB-4) writes
+      back to the audit log. Empty greps for execution primitives in
+      response layer.
+    implementation: |
+      module5_responses/module5_pipeline.py::recommend produces dict-only output;
+      no subprocess/os.system/iptables/scapy/socket call sites anywhere in pipeline.
+    test_evidence:
+      - 5 grep commands in results/reports/invariant_verification.log § Part 1 (all empty)
+      - tests/negative_tests.py::test_no_automated_blocking + test_no_device_discovery_attempted
+      - GAP-A4 closure: auto_execute renamed to recommended_for_auto_execution to remove the misleading label
+    status: PASS
+
+# ── Coverage Summary ────────────────────────────────────────────────────
+
+coverage_summary:
+  total_requirements: 22
+  pass: 22
+  fail: 0
+  partial: 0
+  pass_rate: 1.0000
+  pass_threshold_minimum: 0.90
+  exceeds_threshold_by: 0.10
+
+  pass_by_category:
+    "Layered MVE structure (REQ-01..05)":   {total: 5, pass: 5}
+    "Generation modes (REQ-06..08)":         {total: 3, pass: 3}
+    "Per-stakeholder + safety (REQ-09..14)": {total: 6, pass: 6}
+    "Auditing + traceability (REQ-15)":      {total: 1, pass: 1}
+    "Robustness + sanitization (REQ-16..17)": {total: 2, pass: 2}
+    "Threat-intel grounding (REQ-18)":       {total: 1, pass: 1}
+    "Risk-adaptive gating (REQ-19)":         {total: 1, pass: 1}
+    "XAI quality (REQ-20)":                  {total: 1, pass: 1}
+    "Audit schema (REQ-21)":                 {total: 1, pass: 1}
+    "No-execution invariant (REQ-22)":       {total: 1, pass: 1}
+
+# ── Cross-Reference to Other Deliverables ───────────────────────────────
+
+cross_references:
+  M1_M8_acceptance: results/reports/alignment_report.yaml (or alignment_report.yaml at project root)
+  invariant_grep_evidence: results/reports/invariant_verification.log
+  detection_baseline: results/reports/detection_baseline.yaml
+  novelty_validation: results/reports/novelty_validation.yaml
+  two_stage_fusion: results/reports/two_stage_fusion_validation.yaml
+  risk_adaptive_gate: results/reports/risk_adaptive_validation.yaml
+  feature_sanitization: results/reports/feature_sanitization.yaml
+  trust_boundaries_diagram: docs/figures/trust_boundaries.png
+  system_architecture_diagram: docs/figures/system_architecture.png
+
+# ── Acceptance ──────────────────────────────────────────────────────────
+
+acceptance_criteria:
+  - check: "All requirements documented (REQ-MVE-01..22)"
+    status: PASS
+    evidence: "22/22 requirements with title, spec_source, requirement text, implementation path, test_evidence list, status."
+  - check: "Trace matrix (REQ → impl → test → status)"
+    status: PASS
+    evidence: "Every REQ has all four traceability slots populated."
+  - check: "≥90% PASS coverage"
+    status: PASS
+    evidence: "22/22 = 100.0% PASS, exceeds 90% threshold by 10pp."
+
+# ── Open Items ──────────────────────────────────────────────────────────
+
+caveats:
+  - "REQ-MVE-05 PASS evidence (M8 result_value=0.931) was last computed prior to GAP-A10 retraining; re-running run_tests.py would refresh that single value but the threshold is still met."
+  - "REQ-MVE-08 PASS evidence (M5 = 1.0) uses the SHAP stub fixture in tests/fixtures/shap_stubs.yaml, not live SHAP output. Closing GAP-NV-1 (live SHAP integration test) would harden this."
+  - "REQ-MVE-15 audit-trail PASS covers append-only and schema; production deployment should additionally route to a write-once SIEM (out of scope for this prototype)."
+
+reproducibility:
+  full_test_suite: "python -m pytest tests/ — 177 passed"
+  acceptance_run: "python run_tests.py — produces alignment_report.yaml"
+  per_requirement_drilldown: |
+    For any REQ-MVE-NN: read the implementation file at the path under
+    'implementation', then run the test names listed under 'test_evidence'
+    via `python -m pytest <test_path>::<test_name> -v`.

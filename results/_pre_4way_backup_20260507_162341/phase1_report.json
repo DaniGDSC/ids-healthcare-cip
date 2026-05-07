@@ -1,0 +1,152 @@
+{
+  "ingestion": {
+    "files_loaded": 1,
+    "raw_rows": 16318,
+    "raw_columns": 45
+  },
+  "integrity": {
+    "verified": true,
+    "n_files_verified": 1,
+    "files": [
+      {
+        "file": "wustl-ehms-2020_with_attacks_categories.csv",
+        "sha256": "8359da96154fa60247df9d75e52d232077acb9886c09c36de2a0aaaee6cf2c25",
+        "rows": 16318
+      }
+    ]
+  },
+  "identifier_removal": {
+    "columns_requested": [
+      "SrcAddr",
+      "DstAddr",
+      "SrcMac",
+      "DstMac",
+      "Packet_num"
+    ],
+    "columns_dropped": [
+      "SrcAddr",
+      "DstAddr",
+      "SrcMac",
+      "DstMac",
+      "Packet_num"
+    ],
+    "n_dropped": 5
+  },
+  "label_separation": {
+    "y_binary_column": "Label",
+    "y_multi_column": "Attack Category",
+    "n_samples": 16318
+  },
+  "encoding": {
+    "label_encoded": {
+      "Dir": 1,
+      "Flgs": 7
+    },
+    "parsed_numeric": {
+      "Sport": 3
+    },
+    "sentinel": -99999,
+    "unknown_value": -1,
+    "mapping_classes": {
+      "Dir": 1,
+      "Flgs": 7
+    }
+  },
+  "cleaning": {
+    "biometric_strategy": "median",
+    "biometric_cells_filled": 0,
+    "network_strategy": "dropna",
+    "network_cells_missing": 0,
+    "network_cells_filled_zero": 0,
+    "rows_dropped": 0,
+    "rows_remaining": 16318
+  },
+  "variance": {
+    "max_unique": 1,
+    "columns_dropped": [
+      "Dir",
+      "Dport",
+      "SrcGap",
+      "DstGap",
+      "DIntPktAct",
+      "dMinPktSz",
+      "Trans"
+    ],
+    "n_dropped": 7
+  },
+  "redundancy": {
+    "threshold": 0.95,
+    "columns_dropped": [
+      "SrcJitter",
+      "pLoss",
+      "Rate",
+      "DstJitter",
+      "Loss",
+      "TotPkts"
+    ],
+    "columns_refused": [],
+    "n_dropped": 6,
+    "n_refused_protected": 0
+  },
+  "split": {
+    "train_samples": 9137,
+    "val_samples": 2285,
+    "test_samples": 4896,
+    "train_ratio_global": 0.5599,
+    "val_ratio_global": 0.14,
+    "test_ratio_global": 0.3,
+    "val_ratio_within_trainval": 0.2,
+    "stratified": true,
+    "train_attack_rate": 0.1254,
+    "val_attack_rate": 0.1252,
+    "test_attack_rate": 0.1254
+  },
+  "scaling": {
+    "method": "robust",
+    "fitted": true
+  },
+  "elapsed_seconds": 0.17,
+  "random_state": 42,
+  "track_b": {
+    "enabled": true,
+    "benign_train_samples": 7991,
+    "attack_train_samples": 1146
+  },
+  "track_a": {
+    "smote_enabled": true,
+    "smote_strategy": "auto",
+    "smote_k_neighbors": 5,
+    "note": "SMOTE applied inside CV pipeline, not during preprocessing"
+  },
+  "encoder_sidecar": "categorical_encoder.json",
+  "output": {
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "n_features": 25
+  }
+}

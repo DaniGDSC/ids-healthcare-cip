@@ -10,8 +10,8 @@ This section documents the seven-step preprocessing pipeline applied to the WUST
 | 2. HIPAA | 16,318 × 45 | 16,318 × 40 | 5 identifier cols dropped |
 | 3. Missing | 16,318 × 40 | 16,318 × 40 | ffill bio, fill_zero net |
 | 4. Redundancy | 16,318 × 40 | 16,318 × 34 | 6 correlated features dropped |
-| 5. Split | 16,318 × 34 | train 9,137 / test 4,896 | Stratified 70/30 |
-| 6. Scale | train 9,137 × 25 | train 9,137 × 25 | RobustScaler (train fit) |
+| 5. Split | 16,318 × 34 | train 9,790 / test 2,448 | Stratified 70/30 |
+| 6. Scale | train 9,790 × 25 | train 9,790 × 25 | RobustScaler (train fit) |
 | 7. SMOTE | (deferred) | (deferred) | enabled, applied inside Phase 2 CV |
 
 ### Feature Reduction Summary
@@ -67,8 +67,8 @@ High-correlation pairs (|*r*| ≥ 0.95) were identified in Phase 0 (§3.2.3) and
 
 | Partition | Samples | Ratio |
 |-----------|--------:|------:|
-| Train | 9,137 | 70% |
-| Test | 4,896 | 30% |
+| Train | 9,790 | 70% |
+| Test | 2,448 | 30% |
 
 Stratification via `StratifiedShuffleSplit` with `random_state=42` preserves the original class prior in both partitions, preventing evaluation bias from sampling variance.
 
@@ -87,15 +87,15 @@ SMOTE is configured here but executed inside the Phase 2 stratified cross-valida
 
 RobustScaler (median / IQR normalisation) is chosen over StandardScaler (mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 identified heavy-tailed distributions in network-traffic features. RobustScaler is insensitive to extreme values, preserving the morphology of attack signatures for downstream explainability analysis.
 
-Scaler fitted exclusively on training set (n=9,137). Test set transformed without refitting — preventing information leakage from test distribution. The fitted parameters are persisted as a JSON sidecar (`robust_scaler.json`), not a pickle, so loading the artefact never executes Python.
+Scaler fitted exclusively on training set (n=9,790). Test set transformed without refitting — preventing information leakage from test distribution. The fitted parameters are persisted as a JSON sidecar (`robust_scaler.json`), not a pickle, so loading the artefact never executes Python.
 
 ### 4.1.7 Pipeline Output Summary
 
 | Artifact | Format | Description |
 |----------|--------|-------------|
-| `train_phase1.parquet` | Apache Parquet | 9,137 rows × 25 features |
-| `test_phase1.parquet` | Apache Parquet | 4,896 rows × 25 features |
+| `train_phase1.parquet` | Apache Parquet | 9,790 rows × 25 features |
+| `test_phase1.parquet` | Apache Parquet | 2,448 rows × 25 features |
 | `robust_scaler.json` | JSON sidecar | Fitted RobustScaler params (`center_`, `scale_`) — pickle-free |
 | `preprocessing_report.json` | JSON | Per-step audit trail |
 
-Total pipeline elapsed time: **0.17 s**
+Total pipeline elapsed time: **0.13 s**

@@ -102,39 +102,42 @@ class PreprocessingPipeline:
         feat_names = df.columns.tolist()
         X = df.values.astype(np.float32)
 
-        # ── Step 5: Train / val / test split ──
-        # When cfg.val_ratio > 0 (closes GAP-L1-2), the splitter carves a
-        # held-out validation slice off the training side. The DAE
-        # cascade in Module 2 trains on this validation slice's
-        # benign-only rows + Track-A val-set probas (closes GAP-L1-1,
-        # replacing OOF probas).
+        # ── Step 5: 4-way Stratified Split (Strategy 1) ──
+        # train (60%) + val (15%) + test (15%) + demo (10%).
+        # Test and demo are frozen — never seen by any model during training.
         splitter = DataSplitter(
-            test_ratio=cfg.test_ratio,
+            train_ratio=cfg.train_ratio,
             val_ratio=cfg.val_ratio,
+            test_ratio=cfg.test_ratio,
+            demo_ratio=cfg.demo_ratio,
             random_state=cfg.random_state,
             label_column=cfg.label_column,
             multi_label_column=cfg.multi_label_column,
         )
-        # Reassemble DataFrame with labels for DataSplitter
         split_df = pd.DataFrame(X, columns=feat_names)
         split_df[cfg.label_column] = y_binary
         if y_multi is not None:
             split_df[cfg.multi_label_column] = y_multi
 
         sout = splitter.split(split_df)
-        X_train, X_val, X_test = sout.X_train, sout.X_val, sout.X_test
-        y_train, y_val, y_test = sout.y_train, sout.y_val, sout.y_test
+        X_train, X_val, X_test, X_demo = (
+            sout.X_train, sout.X_val, sout.X_test, sout.X_demo,
+        )
+        y_train, y_val, y_test, y_demo = (
+            sout.y_train, sout.y_val, sout.y_test, sout.y_demo,
+        )
         y_multi_train = sout.y_multi_train
         y_multi_val = sout.y_multi_val
         y_multi_test = sout.y_multi_test
+        y_multi_demo = sout.y_multi_demo
         feat_names = sout.feature_names
         self._report["split"] = splitter.get_report()
 
-        # ── Step 6: Scaling (fit on TRAIN, transform VAL + TEST) ──
+        # ── Step 6: Scaling (fit on TRAIN, transform VAL + TEST + DEMO) ──
         scaler = RobustScalerTransformer(method=cfg.scaling_method)
         X_train, X_test = scaler.scale_both(X_train, X_test)
-        if X_val.size > 0:
-            X_val = scaler.transform(X_val)
+        X_val = scaler.transform(X_val)
+        X_demo = scaler.transform(X_demo)
         self._report["scaling"] = scaler.get_report()
 
         # ── Dual-track branch & export ──
@@ -146,6 +149,7 @@ class PreprocessingPipeline:
             y_multi_train, y_multi_test,
             feat_names, scaler, cfg,
             X_val=X_val, y_val=y_val, y_multi_val=y_multi_val,
+            X_demo=X_demo, y_demo=y_demo, y_multi_demo=y_multi_demo,
         )
 
         self._log_summary()
@@ -278,33 +282,39 @@ class PreprocessingPipeline:
         feat_names: List[str],
         scaler: RobustScalerTransformer,
         cfg: Phase1Config,
-        X_val: "np.ndarray | None" = None,
-        y_val: "np.ndarray | None" = None,
-        y_multi_val: "np.ndarray | None" = None,
+        X_val: np.ndarray,
+        y_val: np.ndarray,
+        y_multi_val: np.ndarray,
+        X_demo: np.ndarray,
+        y_demo: np.ndarray,
+        y_multi_demo: np.ndarray,
     ) -> None:
-        """Write all pipeline artifacts to disk."""
+        """Write all pipeline artifacts to disk (4-way Strategy 1)."""
         output_dir = self._root / cfg.output_dir
         scaler_dir = self._root / "models" / "scalers"
         exporter = PreprocessingExporter(
             output_dir, scaler_dir, cfg.label_column, cfg.multi_label_column,
         )
 
+        # ── 4-way scaled feature parquets ──
         exporter.export_parquet(
             X_train_s, y_train, feat_names, cfg.train_parquet,
             y_multi=y_multi_train,
         )
         exporter.export_parquet(
+            X_val, y_val, feat_names, cfg.val_parquet,
+            y_multi=y_multi_val,
+        )
+        exporter.export_parquet(
             X_test_s, y_test, feat_names, cfg.test_parquet,
             y_multi=y_multi_test,
         )
-        # GAP-L1-2: held-out validation parquet (when val_ratio > 0).
-        # Empty arrays bypass the write — preserves backward compatibility.
-        has_val = X_val is not None and X_val.size > 0
-        if has_val:
-            exporter.export_parquet(
-                X_val, y_val, feat_names, cfg.val_parquet,
-                y_multi=y_multi_val,
-            )
+        exporter.export_parquet(
+            X_demo, y_demo, feat_names, cfg.demo_parquet,
+            y_multi=y_multi_demo,
+        )
+
+        # ── Track B benign-only subsets ──
         if cfg.track_b_enabled:
             benign_mask = y_train == 0
             exporter.export_parquet(
@@ -313,18 +323,27 @@ class PreprocessingPipeline:
                 feat_names,
                 cfg.train_benign_parquet,
             )
-            # Also emit benign-only validation parquet — the DAE
-            # cascade trains on this slice (closes GAP-L1-1).
-            if has_val:
-                val_benign_mask = y_val == 0
-                exporter.export_parquet(
-                    X_val[val_benign_mask],
-                    np.zeros(int(val_benign_mask.sum()), dtype=int),
-                    feat_names,
-                    cfg.val_benign_parquet,
-                )
+            val_benign_mask = y_val == 0
+            exporter.export_parquet(
+                X_val[val_benign_mask],
+                np.zeros(int(val_benign_mask.sum()), dtype=int),
+                feat_names,
+                cfg.val_benign_parquet,
+            )
 
         exporter.export_scaler(scaler, cfg.scaler_file)
+
+        # ── split_metadata.yaml: provenance for the 4-way split ──
+        # Single source of truth for downstream consumers / reviewers.
+        self._export_split_metadata(
+            output_dir / cfg.split_metadata_file,
+            cfg=cfg,
+            feat_names=feat_names,
+            y_train=y_train, y_multi_train=y_multi_train,
+            y_val=y_val,     y_multi_val=y_multi_val,
+            y_test=y_test,   y_multi_test=y_multi_test,
+            y_demo=y_demo,   y_multi_demo=y_multi_demo,
+        )
 
         # Persist the deterministic categorical-encoder mappings as a
         # JSON sidecar so downstream inference can reproduce the same
@@ -355,6 +374,95 @@ class PreprocessingPipeline:
         md_path.parent.mkdir(parents=True, exist_ok=True)
         md_path.write_text(md, encoding="utf-8")
         logger.info("Thesis report → %s", md_path)
+
+    # ------------------------------------------------------------------
+    # split_metadata.yaml — provenance for the 4-way Strategy 1 split
+    # ------------------------------------------------------------------
+
+    def _export_split_metadata(
+        self,
+        path: Path,
+        *,
+        cfg: Phase1Config,
+        feat_names: List[str],
+        y_train: np.ndarray, y_multi_train: np.ndarray,
+        y_val: np.ndarray,   y_multi_val: np.ndarray,
+        y_test: np.ndarray,  y_multi_test: np.ndarray,
+        y_demo: np.ndarray,  y_multi_demo: np.ndarray,
+    ) -> None:
+        """Write ``split_metadata.yaml`` documenting the 4-way split.
+
+        Captures everything a reviewer / downstream consumer needs to
+        reproduce or audit the partition: random_state, sample counts,
+        attack-class distributions, feature names, pre-split drops, and
+        the SHA-256 of the source dataset (Phase 0 baseline).
+        """
+        import yaml
+
+        def _attack_dist(y_multi: np.ndarray) -> Dict[str, int]:
+            if y_multi is None or y_multi.size == 0:
+                return {}
+            uniq, counts = np.unique(y_multi.astype(str), return_counts=True)
+            return {str(k): int(v) for k, v in zip(uniq, counts)}
+
+        def _section(y: np.ndarray, y_multi: np.ndarray) -> Dict[str, Any]:
+            return {
+                "n": int(len(y)),
+                "attack_rate": round(float(y.mean()), 6) if len(y) else 0.0,
+                "label_counts": {
+                    "0": int((y == 0).sum()),
+                    "1": int((y == 1).sum()),
+                },
+                "attack_category_counts": _attack_dist(y_multi),
+            }
+
+        n_total = int(len(y_train) + len(y_val) + len(y_test) + len(y_demo))
+
+        integrity_section = self._report.get("integrity", {})
+        # ``integrity`` is a list of per-file digests when populated by
+        # ``_ingest_with_integrity``; pull the first entry's hash if any.
+        source_sha256 = ""
+        if isinstance(integrity_section, list) and integrity_section:
+            source_sha256 = integrity_section[0].get("sha256", "") or ""
+        elif isinstance(integrity_section, dict):
+            source_sha256 = integrity_section.get("sha256", "") or ""
+
+        payload: Dict[str, Any] = {
+            "format": "phase1.split_metadata.v1",
+            "strategy": "Strategy 1 — Frozen Test + Demo Pool (4-way stratified)",
+            "random_state": int(cfg.random_state),
+            "stratified_on": cfg.multi_label_column,
+            "ratios": {
+                "train": float(cfg.train_ratio),
+                "val":   float(cfg.val_ratio),
+                "test":  float(cfg.test_ratio),
+                "demo":  float(cfg.demo_ratio),
+            },
+            "n_total": n_total,
+            "n_features": len(feat_names),
+            "feature_names": list(feat_names),
+            "source_dataset_sha256": source_sha256,
+            "splits": {
+                "train": _section(y_train, y_multi_train),
+                "val":   _section(y_val,   y_multi_val),
+                "test":  _section(y_test,  y_multi_test),
+                "demo":  _section(y_demo,  y_multi_demo),
+            },
+            "invariants": [
+                "train ∩ val ∩ test ∩ demo = ∅",
+                "train ∪ val ∪ test ∪ demo = full dataset post-filter",
+                "test and demo are FROZEN — never seen by any model in training",
+                "stratification preserves Attack Category proportions within ±2%",
+                "deterministic in random_state — same seed → byte-identical splits",
+            ],
+        }
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            yaml.safe_dump(payload, sort_keys=False, allow_unicode=True),
+            encoding="utf-8",
+        )
+        logger.info("split_metadata sidecar → %s", path)
 
     # ------------------------------------------------------------------
     # Ingestion & integrity (single in-memory pass per file)

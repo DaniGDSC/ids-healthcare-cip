@@ -85,12 +85,15 @@ correlation_removal:
 
 # ══════════════════ LEAKAGE BARRIER ══════════════════════════════════════
 
-# ── Step 5a: Train–Val–Test Split ────────────────────────────────────────
+# ── Step 5a: 4-way Stratified Split ──────────────────────────────────────
+# Strategy 1 — Frozen Test + Demo Pool. Ratios sum to 1.0.
+# Sequential stratified shuffle on Attack Category preserves class
+# proportions within ±2% across all 4 partitions.
 splitting:
-  train_ratio: 0.70
-  test_ratio: 0.30
-  val_ratio: 0.20         # GAP-L1-2: carve held-out val off train (~14% global)
-                          # Closes train-inference skew in DAE cascade input.
+  train_ratio: 0.60       # 60% — model fitting (Track A, Track B)
+  val_ratio:   0.15       # 15% — threshold calibration / DAE cascade input
+  test_ratio:  0.15       # 15% — frozen, paper metrics only
+  demo_ratio:  0.10       # 10% — frozen, dashboard alerts + user-study only
   stratify: true          # stratified on Attack Category
   random_state: 42
 
@@ -122,7 +125,11 @@ track_b:
 output:
   train_parquet: "train_phase1.parquet"
   test_parquet: "test_phase1.parquet"
-  train_benign_parquet: "train_benign_phase1.parquet"   # Track B: benign-only
+  train_benign_parquet: "benign_only_train.parquet"   # Track B: benign-only
+  val_benign_parquet: "benign_only_val.parquet"       # Track B: held-out benign val
+  demo_parquet: "demo_phase1.parquet"                 # 10% frozen demo pool
+  val_parquet: "val_phase1.parquet"                   # 15% threshold calibration
+  split_metadata_file: "split_metadata.yaml"          # provenance for 4-way split
   scaler_file: "robust_scaler.json"            # JSON sidecar — never a pickle
   encoder_file: "categorical_encoder.json"     # deterministic mappings, JSON-only
   report_file: "phase1_report.json"

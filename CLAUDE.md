@@ -61,6 +61,31 @@ Nếu agent gặp lỗi/uncertainty → **báo rõ ràng** với user. KHÔNG đ
 - Generate code "trông giống đúng" mà không verify
 - Claim đã làm thứ chưa làm
 
+### Rule 6: ARCHITECTURE.md LÀ SOURCE OF TRUTH
+
+**`ARCHITECTURE.md` ở project root là canonical design spec**. Code phải bám sát doc này — module boundaries, data flow, design invariants, step → code map, naming conventions, configuration files đều phải khớp.
+
+**Trước khi viết hoặc sửa code**, agent BẮT BUỘC:
+
+1. Đọc section liên quan trong `ARCHITECTURE.md` (ví dụ: sửa Module 3 → đọc Step [9] Composite Risk Scoring + invariant tương ứng)
+2. Implementation phải khớp với spec — module boundaries, file paths, function names, invariants, config file locations
+3. Nếu phát hiện code đã drift khỏi doc → **báo rõ với user**, propose 1 trong 3:
+   - **A**: Update doc để khớp với code (nếu code phản ánh quyết định mới)
+   - **B**: Update code để khớp với doc (nếu doc là target spec)
+   - **C**: Hybrid — doc-update ngắn hạn, code-update khi an toàn
+
+**KHÔNG được tự ý đi lệch**. Ví dụ: doc nói "DAE on raw 25 features only (no cascade)" nhưng code vẫn cascade → đây là drift cần báo, không phải bug để giấu hoặc tự "fix" code.
+
+**Ngoại lệ**: nếu user explicitly chấp nhận drift (ví dụ Phase B post-defense), document drift đó vào `docs/` thay vì xóa khỏi `ARCHITECTURE.md`.
+
+**Why**: Doc và code lệch nhau là silent technical debt. Người đọc doc tin một thứ, người đọc code thấy thứ khác — cả paper, defense slides, và onboarding đều dựa trên doc. Bám sát doc là cách rẻ nhất giữ cho codebase reasonable.
+
+**How to apply**:
+
+- Mọi PR sửa Module N phải có note: "Affected ARCHITECTURE.md sections: [...]" hoặc "No doc impact"
+- Mọi review module phải bắt đầu từ doc, không từ code
+- Khi spec mơ hồ → ưu tiên hỏi user, không suy diễn
+
 ---
 
 ## 🛠️ Available Tools (Agent BẮT BUỘC dùng)

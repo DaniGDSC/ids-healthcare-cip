@@ -91,11 +91,12 @@ class Phase1Config(BaseModel):
     correlation_threshold: float = 0.95
     phase0_corr_file: Path
 
-    # Step 5a: Split
-    train_ratio: float = 0.70
-    test_ratio: float = 0.30
-    val_ratio: float = 0.0  # >0 carves a held-out validation slice off train
-                            # (closes GAP-L1-2; required for val-set probas)
+    # Step 5a: 4-way Split (Strategy 1 — Frozen Test + Demo Pool)
+    # Ratios MUST sum to 1.0 (validated in _ratios_sum_to_one).
+    train_ratio: float = 0.60   # model fitting (Track A + Track B)
+    val_ratio:   float = 0.15   # threshold calibration / DAE input probas
+    test_ratio:  float = 0.15   # frozen, paper metrics
+    demo_ratio:  float = 0.10   # frozen, dashboard + user-study
     random_state: int = 42
     stratify: bool = True
 
@@ -116,13 +117,15 @@ class Phase1Config(BaseModel):
 
     # Output filenames
     train_parquet: str = "train_phase1.parquet"
+    val_parquet: str = "val_phase1.parquet"
     test_parquet: str = "test_phase1.parquet"
-    val_parquet: str = "val_phase1.parquet"  # written when val_ratio > 0
-    train_benign_parquet: str = "train_benign_phase1.parquet"
-    val_benign_parquet: str = "val_benign_phase1.parquet"  # written when val_ratio > 0
+    demo_parquet: str = "demo_phase1.parquet"
+    train_benign_parquet: str = "benign_only_train.parquet"
+    val_benign_parquet: str = "benign_only_val.parquet"
     scaler_file: str = "robust_scaler.json"
     encoder_file: str = "categorical_encoder.json"
     report_file: str = "preprocessing_report.json"
+    split_metadata_file: str = "split_metadata.yaml"
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -164,9 +167,16 @@ class Phase1Config(BaseModel):
 
     @model_validator(mode="after")
     def _ratios_sum_to_one(self) -> Phase1Config:
-        total = round(self.train_ratio + self.test_ratio, 4)
+        total = round(
+            self.train_ratio + self.val_ratio + self.test_ratio + self.demo_ratio,
+            6,
+        )
         if abs(total - 1.0) > 1e-6:
-            raise ValueError(f"train_ratio + test_ratio must equal 1.0, got {total}")
+            raise ValueError(
+                f"train + val + test + demo ratios must equal 1.0, got "
+                f"{self.train_ratio} + {self.val_ratio} + {self.test_ratio} "
+                f"+ {self.demo_ratio} = {total}"
+            )
         return self
 
     @classmethod
@@ -275,9 +285,10 @@ class Phase1Config(BaseModel):
             ),
             variance_enabled=var.get("enabled", True),
             variance_max_unique=var.get("max_unique", 1),
-            train_ratio=split.get("train_ratio", 0.70),
-            test_ratio=split.get("test_ratio", 0.30),
-            val_ratio=split.get("val_ratio", 0.0),
+            train_ratio=split.get("train_ratio", 0.60),
+            val_ratio=split.get("val_ratio", 0.15),
+            test_ratio=split.get("test_ratio", 0.15),
+            demo_ratio=split.get("demo_ratio", 0.10),
             random_state=split.get("random_state", 42),
             stratify=split.get("stratify", True),
             scaling_method=norm.get("method", "robust"),
@@ -286,11 +297,13 @@ class Phase1Config(BaseModel):
             smote_k_neighbors=smote.get("k_neighbors", 5),
             track_b_enabled=track_b.get("enabled", True),
             train_parquet=output.get("train_parquet", "train_phase1.parquet"),
-            test_parquet=output.get("test_parquet", "test_phase1.parquet"),
             val_parquet=output.get("val_parquet", "val_phase1.parquet"),
-            train_benign_parquet=output.get("train_benign_parquet", "train_benign_phase1.parquet"),
-            val_benign_parquet=output.get("val_benign_parquet", "val_benign_phase1.parquet"),
+            test_parquet=output.get("test_parquet", "test_phase1.parquet"),
+            demo_parquet=output.get("demo_parquet", "demo_phase1.parquet"),
+            train_benign_parquet=output.get("train_benign_parquet", "benign_only_train.parquet"),
+            val_benign_parquet=output.get("val_benign_parquet", "benign_only_val.parquet"),
             scaler_file=output.get("scaler_file", "robust_scaler.json"),
             encoder_file=output.get("encoder_file", "categorical_encoder.json"),
             report_file=output.get("report_file", "preprocessing_report.json"),
+            split_metadata_file=output.get("split_metadata_file", "split_metadata.yaml"),
         )

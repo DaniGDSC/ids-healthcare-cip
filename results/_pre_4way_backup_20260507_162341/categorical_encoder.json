@@ -1,0 +1,23 @@
+{
+  "format": "phase1.encoder.v1",
+  "format_version": 1,
+  "mappings": {
+    "Dir": {
+      "   ->": 0
+    },
+    "Flgs": {
+      " M        ": 0,
+      " M *      ": 1,
+      " M d      ": 2,
+      " MR       ": 3,
+      " e        ": 4,
+      " e s      ": 5,
+      " eR       ": 6
+    }
+  },
+  "parse_numeric": [
+    "Sport"
+  ],
+  "sentinel": -99999,
+  "unknown_value": -1
+}

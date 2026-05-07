@@ -1,18 +1,24 @@
-"""Stratified train/val/test splitter — Single Responsibility.
+"""4-way stratified train / val / test / demo splitter — Strategy 1.
 
-Produces a stratified train/test split (default 70/30) preserving class
-balance via ``StratifiedShuffleSplit``. When ``val_ratio > 0``, also
-carves a held-out validation slice off the training side for use by
-the cascaded DAE in Module 2 (closes GAP-L1-2 / GAP-L1-1: replaces
-OOF probas with validation-set probas to eliminate train-inference
-skew on the joint feature-prediction space).
+Produces 4 disjoint stratified partitions preserving class balance via
+sequential ``StratifiedShuffleSplit`` calls on the multi-class label
+(``Attack Category``). ARCHITECTURE.md Step [1] / "Strategy 1 — Frozen
+Test + Demo Pool":
+
+* ``train`` (60%) — Track A + Track B model fitting
+* ``val``   (15%) — threshold calibration / DAE cascade input probas
+* ``test``  (15%) — frozen, paper metrics only (M-metrics)
+* ``demo``  (10%) — frozen, dashboard alerts + Phase 2 user study
+
+The four ratios MUST sum to 1.0. The split is deterministic in
+``random_state`` and reproducible byte-for-byte across runs.
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -23,56 +29,84 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SplitOutput:
-    """Container for a 3-way stratified split. ``val_*`` arrays are
-    empty when ``val_ratio == 0`` (backward-compatible 2-way mode)."""
+    """Container for the 4-way stratified split."""
 
     X_train: np.ndarray
     X_val: np.ndarray
     X_test: np.ndarray
+    X_demo: np.ndarray
     y_train: np.ndarray
     y_val: np.ndarray
     y_test: np.ndarray
+    y_demo: np.ndarray
     feature_names: List[str]
     y_multi_train: np.ndarray
     y_multi_val: np.ndarray
     y_multi_test: np.ndarray
+    y_multi_demo: np.ndarray
 
 
 class DataSplitter:
-    """Stratified train/val/test split preserving class balance.
+    """Stratified 4-way split preserving class balance.
+
+    Implements Strategy 1 (Frozen Test + Demo Pool) via three
+    sequential ``StratifiedShuffleSplit`` calls. The split is
+    deterministic in ``random_state``: the same seed always produces
+    byte-identical splits.
 
     Args:
-        test_ratio: Fraction of total samples for the test partition.
-        val_ratio: Fraction of the *training* partition (post-test-split)
-            held out as a validation set. ``0.0`` (default) preserves the
-            legacy 2-way behaviour. ``0.20`` produces a ~14% global
-            validation split (since 0.20 × 0.70 ≈ 0.14).
+        train_ratio: Global fraction of samples for ``train`` (model fit).
+        val_ratio:   Global fraction for ``val`` (calibration).
+        test_ratio:  Global fraction for ``test`` (frozen, paper metrics).
+        demo_ratio:  Global fraction for ``demo`` (frozen, dashboard).
         random_state: Seed for reproducibility.
         label_column: Name of the binary label column.
-        multi_label_column: Name of the multi-class label column.
+        multi_label_column: Name of the multi-class label column
+            (stratification target when present; falls back to binary
+            label otherwise).
+
+    The four ratios MUST sum to 1.0 (validated at construction time).
     """
 
     def __init__(
         self,
-        test_ratio: float = 0.30,
-        val_ratio: float = 0.0,
+        train_ratio: float = 0.60,
+        val_ratio: float = 0.15,
+        test_ratio: float = 0.15,
+        demo_ratio: float = 0.10,
         random_state: int = 42,
         label_column: str = "Label",
         multi_label_column: str = "Attack Category",
     ) -> None:
-        self._test_ratio = test_ratio
+        total = round(train_ratio + val_ratio + test_ratio + demo_ratio, 6)
+        if abs(total - 1.0) > 1e-6:
+            raise ValueError(
+                f"DataSplitter ratios must sum to 1.0, got "
+                f"train={train_ratio} + val={val_ratio} + test={test_ratio} "
+                f"+ demo={demo_ratio} = {total}"
+            )
+        self._train_ratio = train_ratio
         self._val_ratio = val_ratio
+        self._test_ratio = test_ratio
+        self._demo_ratio = demo_ratio
         self._random_state = random_state
         self._label_col = label_column
         self._multi_label_col = multi_label_column
         self._stats: Dict[str, Any] = {}
 
     def split(self, df: pd.DataFrame) -> SplitOutput:
-        """Split the DataFrame into stratified train/val/test partitions.
+        """4-way stratified split → ``SplitOutput`` dataclass.
 
-        Returns:
-            ``SplitOutput`` dataclass with X_*, y_*, y_multi_* arrays.
-            When ``val_ratio == 0`` the val arrays are empty.
+        The split is implemented as 3 sequential
+        ``StratifiedShuffleSplit`` calls, each stratified on the
+        multi-class label (``Attack Category``) when available, else
+        on the binary label. This preserves attack-category proportions
+        within ±2% across all 4 partitions.
+
+        Sequence:
+            (1) split → demo (10%) vs rest (90%)
+            (2) split rest → test (15% absolute = 16.67% of rest) vs trainval
+            (3) split trainval → val (15% absolute = 20% of trainval) vs train
 
         Raises:
             ValueError: If the label column is not found.
@@ -82,10 +116,8 @@ class DataSplitter:
 
         y = df[self._label_col].values
 
-        # Extract multi-class labels if present
         has_multi = self._multi_label_col in df.columns
-        if has_multi:
-            y_multi = df[self._multi_label_col].values
+        y_multi = df[self._multi_label_col].values if has_multi else None
 
         drop_cols = [self._label_col]
         if has_multi:
@@ -94,82 +126,101 @@ class DataSplitter:
         feature_names = X_df.columns.tolist()
         X = X_df.values
 
-        # Stratify on y_multi (Attack Category) if available for finer balance
-        stratify_on = y_multi if has_multi else y
+        stratify_full = y_multi if has_multi else y
 
-        # ── Step 1: train+val vs test ──
-        sss = StratifiedShuffleSplit(
+        # ── Step (1): demo (10%) vs rest (90%) ──
+        sss_demo = StratifiedShuffleSplit(
             n_splits=1,
-            test_size=self._test_ratio,
+            test_size=self._demo_ratio,
             random_state=self._random_state,
         )
-        trainval_idx, test_idx = next(sss.split(X, stratify_on))
+        rest_idx, demo_idx = next(sss_demo.split(X, stratify_full))
 
-        X_test, y_test = X[test_idx], y[test_idx]
-        y_multi_test = y_multi[test_idx] if has_multi else np.array([], dtype=object)
+        # ── Step (2): test (15% absolute) vs trainval (75%) ──
+        # test_size relative to rest = test_global / (1 - demo_global)
+        test_size_rel = self._test_ratio / (1.0 - self._demo_ratio)
+        sss_test = StratifiedShuffleSplit(
+            n_splits=1,
+            test_size=test_size_rel,
+            random_state=self._random_state,
+        )
+        stratify_rest = (y_multi[rest_idx] if has_multi else y[rest_idx])
+        inner_trainval_idx, inner_test_idx = next(
+            sss_test.split(X[rest_idx], stratify_rest)
+        )
+        trainval_idx = rest_idx[inner_trainval_idx]
+        test_idx = rest_idx[inner_test_idx]
 
-        # ── Step 2 (optional): split train+val into train and val ──
-        empty = np.array([], dtype=object)
-        if self._val_ratio > 0.0:
-            stratify_inner = (y_multi[trainval_idx]
-                              if has_multi else y[trainval_idx])
-            sss_inner = StratifiedShuffleSplit(
-                n_splits=1,
-                test_size=self._val_ratio,
-                random_state=self._random_state,
-            )
-            inner_train_idx, inner_val_idx = next(
-                sss_inner.split(X[trainval_idx], stratify_inner)
-            )
-            train_idx = trainval_idx[inner_train_idx]
-            val_idx = trainval_idx[inner_val_idx]
-            X_val = X[val_idx]
-            y_val = y[val_idx]
-            y_multi_val = y_multi[val_idx] if has_multi else empty
+        # ── Step (3): val (15% absolute) vs train (60%) ──
+        # val_size relative to trainval = val_global / (train_global + val_global)
+        val_size_rel = self._val_ratio / (self._train_ratio + self._val_ratio)
+        sss_val = StratifiedShuffleSplit(
+            n_splits=1,
+            test_size=val_size_rel,
+            random_state=self._random_state,
+        )
+        stratify_trainval = (
+            y_multi[trainval_idx] if has_multi else y[trainval_idx]
+        )
+        inner_train_idx, inner_val_idx = next(
+            sss_val.split(X[trainval_idx], stratify_trainval)
+        )
+        train_idx = trainval_idx[inner_train_idx]
+        val_idx = trainval_idx[inner_val_idx]
+
+        # ── Materialise partitions ──
+        X_train, y_train = X[train_idx], y[train_idx]
+        X_val,   y_val   = X[val_idx],   y[val_idx]
+        X_test,  y_test  = X[test_idx],  y[test_idx]
+        X_demo,  y_demo  = X[demo_idx],  y[demo_idx]
+
+        empty_obj = np.array([], dtype=object)
+        if has_multi:
+            y_multi_train = y_multi[train_idx]
+            y_multi_val = y_multi[val_idx]
+            y_multi_test = y_multi[test_idx]
+            y_multi_demo = y_multi[demo_idx]
         else:
-            train_idx = trainval_idx
-            val_idx = np.array([], dtype=np.int64)
-            X_val = np.empty((0, X.shape[1]), dtype=X.dtype)
-            y_val = np.array([], dtype=y.dtype)
-            y_multi_val = empty
+            y_multi_train = empty_obj
+            y_multi_val = empty_obj
+            y_multi_test = empty_obj
+            y_multi_demo = empty_obj
 
-        X_train = X[train_idx]
-        y_train = y[train_idx]
-        y_multi_train = y_multi[train_idx] if has_multi else empty
-
+        n_total = len(X)
         self._stats = {
             "train_samples": int(len(X_train)),
-            "val_samples": int(len(X_val)),
-            "test_samples": int(len(X_test)),
-            "train_ratio_global": round(len(X_train) / len(X), 4),
-            "val_ratio_global": round(len(X_val) / len(X), 4) if len(X_val) else 0.0,
-            "test_ratio_global": round(len(X_test) / len(X), 4),
-            "val_ratio_within_trainval": self._val_ratio,
+            "val_samples":   int(len(X_val)),
+            "test_samples":  int(len(X_test)),
+            "demo_samples":  int(len(X_demo)),
+            "train_ratio_global": round(len(X_train) / n_total, 4),
+            "val_ratio_global":   round(len(X_val)   / n_total, 4),
+            "test_ratio_global":  round(len(X_test)  / n_total, 4),
+            "demo_ratio_global":  round(len(X_demo)  / n_total, 4),
             "stratified": True,
-            "train_attack_rate": round(float(y_train.mean()), 4) if len(y_train) else 0.0,
-            "val_attack_rate": round(float(y_val.mean()), 4) if len(y_val) else 0.0,
-            "test_attack_rate": round(float(y_test.mean()), 4) if len(y_test) else 0.0,
+            "stratify_target": (
+                self._multi_label_col if has_multi else self._label_col
+            ),
+            "train_attack_rate": round(float(y_train.mean()), 4),
+            "val_attack_rate":   round(float(y_val.mean()),   4),
+            "test_attack_rate":  round(float(y_test.mean()),  4),
+            "demo_attack_rate":  round(float(y_demo.mean()),  4),
         }
-        if len(X_val) > 0:
-            logger.info(
-                "DataSplitter: train=%d (atk=%.1f%%) | val=%d (atk=%.1f%%) | test=%d (atk=%.1f%%)",
-                len(X_train), y_train.mean() * 100,
-                len(X_val), y_val.mean() * 100,
-                len(X_test), y_test.mean() * 100,
-            )
-        else:
-            logger.info(
-                "DataSplitter: train=%d (atk=%.1f%%) | test=%d (atk=%.1f%%)",
-                len(X_train), y_train.mean() * 100,
-                len(X_test), y_test.mean() * 100,
-            )
+        logger.info(
+            "DataSplitter: train=%d (atk=%.1f%%) | val=%d (atk=%.1f%%) "
+            "| test=%d (atk=%.1f%%) | demo=%d (atk=%.1f%%)",
+            len(X_train), y_train.mean() * 100,
+            len(X_val), y_val.mean() * 100,
+            len(X_test), y_test.mean() * 100,
+            len(X_demo), y_demo.mean() * 100,
+        )
         return SplitOutput(
-            X_train=X_train, X_val=X_val, X_test=X_test,
-            y_train=y_train, y_val=y_val, y_test=y_test,
+            X_train=X_train, X_val=X_val, X_test=X_test, X_demo=X_demo,
+            y_train=y_train, y_val=y_val, y_test=y_test, y_demo=y_demo,
             feature_names=feature_names,
             y_multi_train=y_multi_train,
             y_multi_val=y_multi_val,
             y_multi_test=y_multi_test,
+            y_multi_demo=y_multi_demo,
         )
 
     def get_report(self) -> Dict[str, Any]:

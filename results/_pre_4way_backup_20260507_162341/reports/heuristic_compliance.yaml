@@ -1,0 +1,392 @@
+# heuristic_compliance.yaml
+# Method 4 — Heuristic Evaluation against four standards frameworks
+# Output of Chapter 5.3.6 (Standards Compliance) NEW
+#
+# Evaluates the XAI-IDS-Healthcare prototype against:
+#   • Nielsen's 10 Usability Heuristics (Nielsen, 1994; reaffirmed 2020)
+#   • DARPA XAI 4 Principles (Gunning & Aha, 2019)
+#   • NIST AI Risk Management Framework — Map / Measure / Manage / Govern (NIST AI 100-1, 2023)
+#   • Healthcare-specific standards: HIPAA Security Rule (NIST 800-66r2),
+#     FDA Premarket Cybersecurity Guidance (2023), IEC 62443-4-1 (medical-device sec)
+#
+# Generated: 2026-05-06  Branch: fix/shap-category-vocab
+
+source_artifacts:
+  - ARCHITECTURE.md                      # canonical workflow
+  - docs/architecture.md                 # 7 invariants
+  - docs/threat_model.md                 # STRIDE + ATT&CK
+  - docs/risk_formula_specification.md   # honest-limitation statement
+  - results/reports/req_trace_matrix.yaml # 22-REQ formal trace
+  - results/reports/invariant_verification.log
+
+deliverable_metadata:
+  method: "Method 4 — Heuristic Evaluation"
+  thesis_section: "Chapter 5.3.6 Standards Compliance (NEW)"
+  total_heuristics: 26
+  pass_threshold_minimum: 0.80     # ≥21/26
+  evaluation_methodology: |
+    Each heuristic is evaluated against concrete artifact evidence
+    (code path, test name, doc section). Status ∈ {PASS, PARTIAL,
+    NOT_APPLICABLE}. PARTIAL flagged when the spirit of the heuristic
+    is honoured but a measurable gap remains; NOT_APPLICABLE used only
+    when the heuristic targets a system layer outside the prototype's
+    scope (e.g. clinical-staff training, hardware tamper-resistance).
+
+# ── Framework 1: Nielsen's 10 Usability Heuristics ───────────────────────
+
+nielsen_heuristics:
+  framework_source: "Nielsen, J. (1994; reaffirmed 2020) — '10 Usability Heuristics for User Interface Design'"
+  total: 10
+  evaluation:
+
+    H1_visibility_of_system_status:
+      heuristic: "The system should always keep users informed about what is going on, through appropriate feedback within reasonable time."
+      evidence:
+        - "Step [10] should_surface decision is timestamped + persisted in audit log; operator sees the alert tier badge in the dashboard immediately on render"
+        - "Step [16] OperatorDecision schema captures decision_time_seconds + timestamp"
+        - "Mode B fallback badge: when LLM is unavailable, dashboard renders 'Rule-based fallback' chip"
+      status: PASS
+
+    H2_match_real_world_language:
+      heuristic: "Use words, phrases, and concepts familiar to users — clinical not technical."
+      evidence:
+        - "MVE generator emits clinician-readable narratives via _feature_to_narrative (e.g. 'unusual network packet timing' instead of 'DIntPkt')"
+        - "Severity ladder is clinical (CRITICAL/HIGH/MEDIUM/LOW), not CVSS — REQ-MVE-04"
+        - "Layer 2 patient_care_impact uses clinical terminology, not network jargon"
+      status: PASS
+
+    H3_user_control_freedom:
+      heuristic: "Provide undo/redo and clear emergency exits."
+      evidence:
+        - "INVARIANT 3: NO AUTO-EXECUTION — every action is a recommendation that the operator can ignore (the ultimate undo)"
+        - "Operator decision is the only state-changing event (Step [16])"
+        - "Maintenance window suppresses display for non-CRITICAL but never silences detection (REQ-MVE-13)"
+      status: PASS
+
+    H4_consistency_and_standards:
+      heuristic: "Follow platform conventions; same words/situations yield same actions."
+      evidence:
+        - "OperatorRole enum (3 values) used identically by mve_generator.derive_role_view, module5_pipeline.notify, and audit-log schema"
+        - "FusionClass enum (4 values) used identically across module3, module5, dashboard"
+        - "Severity tier (CRITICAL/HIGH/MEDIUM/LOW) is the SAME ladder in MVE Layer 2, risk_score tier-mapping, and threat_model.md"
+      status: PASS
+
+    H5_error_prevention:
+      heuristic: "Prevent errors by good design, not just error messages."
+      evidence:
+        - "Safety floor (REQ-MVE-13): CRITICAL+unpatchable always surfaces — operator cannot accidentally configure their way past it"
+        - "ROLE_FORBIDDEN_ACTION_TERMS table (REQ-MVE-09): biomed/nurse views structurally cannot contain network-mutation verbs"
+        - "EA-06 mitigation (REQ-MVE-17): NaN-injection cannot mask anomalies because DEGRADED inputs elevate adjusted_score by ×1.20"
+      status: PASS
+
+    H6_recognition_over_recall:
+      heuristic: "Make objects, actions, and options visible. User shouldn't have to remember information."
+      evidence:
+        - "MVE 3-layer structure (REQ-MVE-01) renders all decision-relevant context on the same screen — operator does not need to recall device criticality, attack category, or DO NOT constraints from elsewhere"
+        - "ATT&CK technique ID surfaced in Layer 1 (REQ-MVE-18) — operator does not need to look up T1071/T1565 mapping"
+        - "Risk-score tier visible as a badge, not a bare number"
+      status: PASS
+
+    H7_flexibility_efficiency_of_use:
+      heuristic: "Accelerators for expert users without confusing novices."
+      evidence:
+        - "Per-role views (REQ-MVE-09) — IT generalist gets default wording; biomed/nurse get role-specific verbs that match their expert vocabulary without IT-jargon overhead"
+        - "Tier-recommendation routing (Step [14]): KNOWN_ATTACK→L1, NOVEL→L2_specialist, CONFIRMED→L1_with_senior — accelerates triage for the operator"
+      status: PARTIAL
+      gap: |
+        The Streamlit dashboard does not yet have keyboard shortcuts or
+        bulk-action acceleration for an experienced operator handling
+        50+ alerts/day. Documented for production-deployment phase.
+
+    H8_aesthetic_minimalist_design:
+      heuristic: "Don't include irrelevant information. Every extra unit of information competes with the relevant units."
+      evidence:
+        - "MVE word budget (REQ-MVE-02): Layer 1 ≤60w, Layer 2 ≤50w, Layer 3 ≤60w, total ≤150 — hard ceiling enforced at generator level"
+        - "REQ-MVE-03: no raw SHAP values in MVE text — model internals filtered out"
+        - "Information-gain analysis (Method 7): MVE adds exactly the 5 dimensions (D4 why, D5 severity, D6 patient impact, D7 action, D8 DO NOT) that raw IDS lacks; nothing extraneous"
+      status: PASS
+
+    H9_help_users_recover_from_errors:
+      heuristic: "Error messages in plain language, precisely indicate problem, constructively suggest a solution."
+      evidence:
+        - "ScoredAlert.suppression_reason carries human-readable text when alert is suppressed (e.g. 'maintenance window — reduced confidence, verify with biomed')"
+        - "DataQuality.DEGRADED/FAILED surface as fragility warnings tied to EA-06 mitigation (REQ-MVE-17)"
+        - "MVE Layer 3 'immediate_action' is itself the constructive solution — never 'investigate further' or 'monitor closely' (per CLAUDE.md DONE CONDITION)"
+      status: PASS
+
+    H10_help_documentation:
+      heuristic: "Easy to search documentation, focused on user task, list concrete steps."
+      evidence:
+        - "ARCHITECTURE.md + docs/architecture.md + docs/threat_model.md + docs/risk_formula_specification.md form the reference layer"
+        - "REQ trace matrix (results/reports/req_trace_matrix.yaml) maps every requirement to its implementation file and test"
+        - "Step-by-step canonical workflow (ARCHITECTURE.md) lists 18 steps with code-map references"
+      status: PASS
+
+  summary:
+    total: 10
+    pass: 9
+    partial: 1
+    fail: 0
+    pass_rate: 0.90
+
+# ── Framework 2: DARPA XAI 4 Principles ─────────────────────────────────
+
+darpa_xai_principles:
+  framework_source: "Gunning, D. & Aha, D. (2019) — 'DARPA's Explainable Artificial Intelligence (XAI) Program'"
+  total: 4
+  evaluation:
+
+    P1_explanation:
+      principle: "AI system delivers accompanying evidence for outputs."
+      evidence:
+        - "Every surfaced alert carries a SHAPContext with top_category + top_features (REQ-MVE-08)"
+        - "MVE Layer 1 references the actual SHAP top features in clinician-readable narrative (M5 result_value=1.0)"
+        - "Mode A LLM augmentation can elaborate; Mode B rule-based fallback always works offline (REQ-MVE-06/07)"
+      status: PASS
+
+    P2_meaningful:
+      principle: "Explanations are understandable to the individual user (role-appropriate)."
+      evidence:
+        - "Three-role view rendering (REQ-MVE-09): IT generalist sees network features; biomed sees device-behaviour interpretation; nurse sees clinical-impact framing"
+        - "Method 7 information-gain shows MVE covers 8/8 dims vs raw 3/8"
+        - "Method 1 LLM-simulation: severity-accuracy 55-58% across all 3 roles in Group B vs 0-5% in Group A — the explanation IS understandable enough to drive correct severity assessment"
+      status: PASS
+
+    P3_explanation_accuracy:
+      principle: "Explanation accurately reflects the AI's process."
+      evidence:
+        - "INVARIANT 5 (REQ-MVE-08): Layer 1 must reference top_category OR a top_feature actually used by the model"
+        - "SHAP stability score (REQ-MVE-20) quantifies how robust the top-k attribution is under input perturbation; values <0.5 are surfaced as fragility"
+        - "Test: tests/acceptance_tests.py::test_shap_narrative_alignment (M5) result_value=1.0"
+      status: PASS
+
+    P4_knowledge_limits:
+      principle: "AI system communicates the boundaries of its knowledge."
+      evidence:
+        - "DataQuality.DEGRADED/FAILED flag (REQ-MVE-16/17) explicitly marks fragile inputs"
+        - "SHAPContext.confidence_from_shap = HIGH/MEDIUM/LOW conveys per-alert confidence"
+        - "Honest-limitation statement in docs/risk_formula_specification.md §3 explicitly documents D_clinical_tier as a proxy for true patient acuity"
+        - "novelty_validation.yaml §6.honest_position acknowledges DAE doesn't add in-distribution recall pre-A10 / minimal post-A10"
+      status: PASS
+
+  summary:
+    total: 4
+    pass: 4
+    partial: 0
+    fail: 0
+    pass_rate: 1.00
+
+# ── Framework 3: NIST AI RMF (Map / Measure / Manage / Govern) ──────────
+
+nist_ai_rmf:
+  framework_source: "NIST AI 100-1, 'Artificial Intelligence Risk Management Framework' (2023)"
+  total: 4   # 4 functions; sub-categories evaluated in the body
+
+  Map:
+    function: "Establish context and identify AI system risks"
+    sub_categories:
+      Map_1_context: "Context (deployment env, stakeholders) is documented"
+      Map_2_classification: "AI system classification (foundation/specialised/etc.)"
+      Map_3_capabilities: "AI capabilities, including limitations, are documented"
+      Map_4_third_party: "Third-party components are inventoried and risk-assessed"
+    evidence:
+      - "ARCHITECTURE.md + docs/threat_model.md document context (mid-sized hospital, 200-500 beds), stakeholders (IT generalist + biomed + nurse), and trust boundaries (TB-1 through TB-4)"
+      - "System classification: hybrid supervised (XGBoost/RF/DT) + unsupervised (DAE) detector with explainable post-hoc layer (SHAP + MVE) — classified in research_spec.yaml"
+      - "Capabilities + limitations explicit: docs/risk_formula_specification.md §3, docs/threat_model.md §7 residual risks, novelty_validation.yaml §6.honest_position"
+      - "Third-party components: scikit-learn, xgboost, shap, keras (DAE backbone), Anthropic SDK (optional Mode A) — pinned in env spec; signed_pickle.py mitigates pickle-RCE risk"
+    status: PASS
+
+  Measure:
+    function: "Analyse and quantify AI risks"
+    sub_categories:
+      Measure_1_metrics: "Performance metrics measured against ground-truth"
+      Measure_2_uncertainty: "Uncertainty quantified"
+      Measure_3_explainability: "Explainability measured"
+      Measure_4_safety: "Safety/security incidents tracked"
+    evidence:
+      - "Metrics: detection_baseline.yaml (per-model + per-category Wilson CIs), track_a_performance.yaml (FNR_CRITICAL, per-device metrics), two_stage_fusion_validation.yaml, risk_adaptive_validation.yaml (12-point sensitivity sweep)"
+      - "Uncertainty: SHAP stability_score (REQ-MVE-20), Wilson 95% CIs on every reported FNR/FPR, small-sample warnings on n<50 strata"
+      - "Explainability: M5 SHAP narrative alignment = 1.0; Method 7 information-gain (raw 3.0/8 → MVE 8.0/8); Method 1 multi-role accuracy"
+      - "Safety/security: invariant_verification.log Parts 1-4; tests/test_audit_append_only.py + test_role_authority.py exhaustive coverage"
+    status: PASS
+
+  Manage:
+    function: "Take risk-treatment actions"
+    sub_categories:
+      Manage_1_prioritise: "Risks prioritised, treatment plans documented"
+      Manage_2_residual: "Residual risks accepted with rationale"
+      Manage_3_monitoring: "Continuous monitoring of risk indicators"
+      Manage_4_response: "Response plan for adverse events"
+    evidence:
+      - "Threat→mitigation matrix in docs/threat_model.md §6 — 17 threats, every one mapped to mitigation OR explicit acceptance"
+      - "Residual risks documented in docs/threat_model.md §7 + GAP-* IDs across all YAML deliverables (10 open gaps tracked)"
+      - "Drift/anomaly monitoring: drift_detection.py (DAE reconstruction-error trend); dynamic_threshold_sim.py adaptive threshold"
+      - "Adverse-event response: append-only audit log (REQ-MVE-15) provides forensic trail; suppression_reason field in ScoredAlert preserves rationale"
+    status: PARTIAL
+    gap: |
+      Continuous-monitoring is partial: drift_detection.py runs as a
+      simulation, not a production deployment. GAP-NV-1 (adversarial
+      robustness) and Steps [17]/[18] (outcome tracking + continuous
+      improvement) are explicitly Phase-3 future work.
+
+  Govern:
+    function: "Cultivate AI risk-management culture"
+    sub_categories:
+      Govern_1_policies: "AI policies and procedures"
+      Govern_2_accountability: "Roles and responsibilities clear"
+      Govern_3_workforce: "Workforce competency"
+      Govern_4_engagement: "Stakeholder engagement"
+    evidence:
+      - "Policy: CLAUDE.md DO NOT BUILD list (no auto-execution, no CVSS, no model internals); INVARIANTS 1-7 are immutable contracts"
+      - "Accountability: HITL boundary (TB-3/TB-4 in trust_boundaries.png) — only the operator decision changes state; OperatorDecision schema validates per-action"
+      - "Workforce competency: M5 user-study evaluates IT-generalist effectiveness; Method 1 simulates biomed + nurse personas — three-role evaluation supports training-needs analysis"
+      - "Stakeholder engagement: 50-participant M5 study measured triage-decision quality; user_study_alert_scenarios.yaml fixture set is curated from clinical input"
+    status: PASS
+
+  summary:
+    total_functions: 4
+    pass: 3
+    partial: 1
+    fail: 0
+    pass_rate: 0.75
+
+# ── Framework 4: Healthcare-specific standards ──────────────────────────
+
+healthcare_standards:
+  framework_source: |
+    HIPAA Security Rule (NIST 800-66r2, 2024 update),
+    FDA Premarket Cybersecurity Guidance (2023),
+    IEC 62443-4-1 secure development for medical devices.
+
+  total: 8
+  evaluation:
+
+    HIPAA_administrative_safeguards:
+      requirement: "Workforce training, access management, audit controls"
+      evidence:
+        - "Audit controls: append-only audit log + OperatorDecision schema (REQ-MVE-15, REQ-MVE-21)"
+        - "Access management: HITL boundary — system cannot bypass operator authority; INVARIANT 3 (NO AUTO-EXECUTION)"
+        - "Training: out of scope for prototype but the per-role differentiation (REQ-MVE-09) is structured to support role-specific training material"
+      status: PASS
+
+    HIPAA_physical_safeguards:
+      requirement: "Physical security of devices and workstations"
+      evidence: "Out of scope — physical security is hospital-facility responsibility per docs/threat_model.md §3.3 attacker-model exclusions."
+      status: NOT_APPLICABLE
+
+    HIPAA_technical_safeguards:
+      requirement: "Encryption, integrity controls, transmission security"
+      evidence:
+        - "PHI handling: src/preprocessing.py BENIGN_MEDIANS replacement preserves data integrity under sanitization (REQ-MVE-16)"
+        - "Audit trail integrity: tests/test_audit_append_only.py::test_audit_log_tampering_detectable verifies SHA-256-based tamper detection"
+        - "Transmission security: out of scope (hospital network/firewall responsibility, threat T-T1 documented as accepted)"
+      status: PASS
+
+    HIPAA_phi_minimum_necessary:
+      requirement: "Use minimum-necessary PHI for each task"
+      evidence:
+        - "REQ-MVE-03: no raw SHAP values or model internals leak into MVE — only clinical narratives"
+        - "S_data term in risk formula weights PHI biometric features (1.0) higher to surface PHI-touching alerts faster (docs/risk_formula_specification.md §2.3)"
+        - "MVE word budget enforces compactness (REQ-MVE-02)"
+      status: PASS
+
+    FDA_premarket_cybersecurity:
+      requirement: "Threat modelling + cybersecurity risk-management throughout SDLC"
+      evidence:
+        - "STRIDE threat model with 17 threats + ATT&CK mapping (docs/threat_model.md §4-§5)"
+        - "Threat→mitigation matrix (§6); each threat has either mitigation or explicit acceptance"
+        - "FDA guidance specifies SBOM (Software Bill of Materials); the project pins dependencies but does not yet emit a formal SBOM artifact"
+      status: PARTIAL
+      gap: "Formal CycloneDX or SPDX SBOM not yet generated. Production-deployment requirement; documented as Phase-2/3 work."
+
+    FDA_post_market_surveillance:
+      requirement: "Plan for continuous monitoring + vulnerability disclosure"
+      evidence:
+        - "drift_detection.py provides operational drift tracking foundation"
+        - "Steps [17]/[18] outcome-tracking + continuous-improvement explicitly marked as Phase-3 future work in ARCHITECTURE.md"
+      status: PARTIAL
+      gap: "No formal CVD (Coordinated Vulnerability Disclosure) policy; no SOAR integration. Phase-3 deployment work."
+
+    IEC_62443_4_1_security_by_design:
+      requirement: "Defence-in-depth architecture for medical-device security"
+      evidence:
+        - "Two-stage fusion + risk-adaptive gate + safety-floor + maintenance-window-aware suppression form layered defence (REQ-MVE-11/13/19)"
+        - "Recommendation-only invariant (REQ-MVE-22) keeps the system from itself becoming an attack surface"
+        - "Trust boundaries explicitly identified (docs/figures/trust_boundaries.png)"
+      status: PASS
+
+    IEC_62443_4_1_secure_development_lifecycle:
+      requirement: "Secure-by-design SDLC: threat-model, security testing, signed releases"
+      evidence:
+        - "Threat model present (docs/threat_model.md)"
+        - "177 automated tests covering invariants 1-7 + role authority + audit"
+        - "Signed-pickle protection: common/signed_pickle.py prevents arbitrary code execution on model load"
+        - "Negative tests: tests/negative_tests.py + test_negative_pytest.py wrappers (6 invariant-violation checks)"
+      status: PASS
+
+  summary:
+    total: 8
+    pass: 5
+    partial: 2
+    not_applicable: 1
+    fail: 0
+    pass_rate_excl_na: 0.857   # 5/(8-1) excluding the explicitly-NA item
+
+# ── Aggregate compliance ────────────────────────────────────────────────
+
+aggregate_compliance:
+  total_heuristics_evaluated: 26
+  total_excluding_na: 25       # one HIPAA physical-safeguards row is N/A
+  pass: 21
+  partial: 4
+  fail: 0
+  not_applicable: 1
+  pass_rate_strict: 0.84       # 21/25 (excluding NA)
+  pass_rate_with_partial_credit: 0.92   # (21 + 4*0.5) / 25
+  threshold_minimum: 0.80
+  exceeds_threshold: true
+
+# ── Strengths and gaps summary ──────────────────────────────────────────
+
+strengths:
+  - "Nielsen H4/H6/H8: consistency, recognition-over-recall, minimalist design — MVE word budget + 3-layer structure + role-specific views deliver the canonical UX virtues."
+  - "DARPA XAI: 4/4 principles PASS — explanation, meaningfulness, accuracy (M5=1.0), and explicit knowledge-limit signalling (DataQuality + SHAP stability + honest-limitation docs)."
+  - "Defence-in-depth: 7 invariants + two-stage fusion + safety-floor + per-device thresholds + EA-06 mitigation form a layered architecture explicitly recognised in IEC 62443-4-1."
+  - "Audit + traceability: append-only log with SHA-256 tamper detection + OperatorDecision schema + 22-REQ trace matrix is unusually rigorous for a research prototype."
+
+gaps:
+  - "Nielsen H7 (flexibility for expert users): no keyboard accelerators or bulk-action UX in the Streamlit dashboard. Production-deployment phase work."
+  - "NIST RMF Manage (continuous monitoring): drift_detection.py is a simulation; live operational drift dashboards + alert-fatigue trend tracking are Phase-3 work."
+  - "FDA premarket: no formal CycloneDX/SPDX SBOM artifact yet — pinning is informal."
+  - "FDA post-market: no CVD policy; no SOAR integration. Phase-3."
+
+# ── Acceptance Criteria ─────────────────────────────────────────────────
+
+acceptance_criteria:
+  - check: "Per-framework compliance table"
+    status: PASS
+    evidence: "All 4 frameworks have evaluation block + summary block + per-heuristic evidence."
+  - check: "Identified strengths and gaps"
+    status: PASS
+    evidence: "§strengths (4 items) + §gaps (4 items)."
+  - check: "≥80% PASS coverage (excluding NOT_APPLICABLE)"
+    status: PASS
+    evidence: "21/25 = 84% strict PASS; 92% with partial credit; both exceed the 80% threshold."
+
+# ── Cross-references ────────────────────────────────────────────────────
+
+cross_references:
+  formal_compliance_baseline: results/reports/req_trace_matrix.yaml
+  information_gain_evidence: results/reports/information_gain.yaml
+  multi_stakeholder_simulation: survey/m5_multi_role_result.yaml
+  trust_boundaries_diagram: docs/figures/trust_boundaries.png
+  invariant_verification_log: results/reports/invariant_verification.log
+  threat_model: docs/threat_model.md
+
+# ── Open follow-ups ─────────────────────────────────────────────────────
+
+open_gaps:
+  GAP-HE-1: "Generate CycloneDX SBOM artifact (FDA premarket gap; production-deployment requirement)."
+  GAP-HE-2: "CVD policy + SOAR integration for production phase (FDA post-market)."
+  GAP-HE-3: "Live drift-monitoring dashboard (NIST RMF Manage; Phase-3 deployment)."
+  GAP-HE-4: "Streamlit dashboard accelerators for high-volume operators (Nielsen H7; production-UX phase)."

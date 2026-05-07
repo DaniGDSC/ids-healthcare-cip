@@ -311,8 +311,8 @@ class Layer2Detector:
         import pandas as pd  # local: pandas import is heavy enough to defer
         # Pick the largest benign reference available without loading attacks.
         candidates = [
-            self._models_dir.parent.parent / "data/processed/val_benign_phase1.parquet",
-            self._models_dir.parent.parent / "data/processed/train_benign_phase1.parquet",
+            self._models_dir.parent.parent / "data/processed/benign_only_val.parquet",
+            self._models_dir.parent.parent / "data/processed/benign_only_train.parquet",
         ]
         reference_path = next((p for p in candidates if p.exists()), None)
         if reference_path is None:

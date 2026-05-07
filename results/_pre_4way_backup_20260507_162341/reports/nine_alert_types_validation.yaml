@@ -1,0 +1,357 @@
+format: layer7_v4.nine_alert_types_validation
+format_version: 1
+generated_at_utc: '2026-05-06T11:33:35.447085+00:00'
+summary:
+  total_alert_types: 9
+  passed: 9
+  failed: 0
+  pass_rate: 1.0
+  overall_status: PASS
+invariants_verified:
+- "Every AlertType reached by \u22651 synthetic input"
+- "INVARIANT 1: c_detect \u2265 p_xgb on every type"
+- Adversarial flag exclusive to DISAGREEMENT_ANOMALY
+- L2_SECURITY_SPECIALIST routing exclusive to DISAGREEMENT_ANOMALY
+- Purple badge (#9333EA) exclusive to DISAGREEMENT_ANOMALY
+- Per-role MITRE rendering non-empty for all roles + types
+- "Layer 4 legacy template \u2208 {T1..T5} for every type"
+per_type:
+- alert_type: KNOWN_ATTACK
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.95
+      diversity: 0.05
+      dae: 0.1
+    alert_type: KNOWN_ATTACK
+    confidence: VERY_HIGH
+    template_id: known_attack_high_confidence
+    c_detect: 0.95
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#DC2626'
+      icon: "\U0001F534"
+      label: KNOWN ATTACK
+      urgency: HIGH
+  layer6:
+    recommended_tier: L1_immediate
+    rationale: "Established attack signature with high confidence \u2014 immediate\
+      \ L1 response."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: true
+    fallback_options:
+    - Best-effort L1 response
+    - Document for forensics
+    escalation_options:
+    - L2 specialist
+    - Senior IT
+    - External SOC
+- alert_type: KNOWN_ATTACK_UNCERTAIN
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.95
+      diversity: 0.2
+      dae: 0.1
+    alert_type: KNOWN_ATTACK_UNCERTAIN
+    confidence: HIGH
+    template_id: known_attack_with_uncertainty
+    c_detect: 0.95
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#DC2626'
+      icon: "\U0001F534"
+      label: KNOWN ATTACK (Uncertain)
+      urgency: HIGH
+  layer6:
+    recommended_tier: L1_with_review
+    rationale: "High Track A probability but ensemble disagreement \u2014 L1 with\
+      \ peer review."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: true
+    fallback_options:
+    - L1 documents and pages senior
+    - Peer review at handoff
+    escalation_options:
+    - Senior IT
+    - L2 specialist
+- alert_type: DISAGREEMENT_ANOMALY
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.5
+      diversity: 0.35
+      dae: 0.8
+    alert_type: DISAGREEMENT_ANOMALY
+    confidence: HIGH
+    template_id: adversarial_pattern
+    c_detect: 1.0
+  layer4:
+    legacy_template: T1
+    is_adversarial: true
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#9333EA'
+      icon: "\U0001F7E3"
+      label: ADVERSARIAL DETECTED
+      urgency: HIGH
+  layer6:
+    recommended_tier: L2_security_specialist
+    rationale: "Model disagreement combined with DAE elevation \u2014 potential adversarial\
+      \ input. Security specialist required."
+    adversarial_flag: true
+    requires_security_specialist: true
+    requires_immediate_attention: false
+    fallback_options:
+    - L1 documents and routes to security review queue
+    - External CISO consultation
+    escalation_options:
+    - External security consultant
+    - CISO
+- alert_type: STRONG_NOVEL_ANOMALY
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.1
+      diversity: 0.05
+      dae: 0.97
+    alert_type: STRONG_NOVEL_ANOMALY
+    confidence: HIGH
+    template_id: novel_pattern_strong
+    c_detect: 0.97
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#EA580C'
+      icon: "\U0001F7E0"
+      label: STRONG NOVEL
+      urgency: MEDIUM
+  layer6:
+    recommended_tier: L2_specialist
+    rationale: "Strong novelty signal in the silent regime \u2014 specialist investigation\
+      \ needed."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: false
+    fallback_options:
+    - L1 documents for L2 review
+    - Vendor support consultation
+    escalation_options:
+    - Senior IT
+    - External consultant
+    - CISO
+- alert_type: NOVEL_ANOMALY
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.1
+      diversity: 0.05
+      dae: 0.8
+    alert_type: NOVEL_ANOMALY
+    confidence: MEDIUM
+    template_id: novel_pattern_moderate
+    c_detect: 0.8
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#F97316'
+      icon: "\U0001F7E0"
+      label: NOVEL ANOMALY
+      urgency: MEDIUM
+  layer6:
+    recommended_tier: L2_specialist
+    rationale: "Moderate novelty signal \u2014 specialist review."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: false
+    fallback_options:
+    - L1 documents for L2 review
+    - Vendor consultation
+    escalation_options:
+    - Senior IT
+    - External consultant
+- alert_type: CONFIRMED_ANOMALY
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.6
+      diversity: 0.05
+      dae: 0.8
+    alert_type: CONFIRMED_ANOMALY
+    confidence: HIGH
+    template_id: multi_signal_corroborated
+    c_detect: 0.8
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#EAB308'
+      icon: "\U0001F7E1"
+      label: CONFIRMED ANOMALY
+      urgency: MEDIUM
+  layer6:
+    recommended_tier: L1_with_senior
+    rationale: "Multi-signal corroboration \u2014 senior input recommended."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: true
+    fallback_options:
+    - L1 best-effort with senior on-call
+    escalation_options:
+    - L2 specialist
+    - External consultant
+- alert_type: SUSPICIOUS_PATTERN
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.55
+      diversity: 0.05
+      dae: 0.3
+    alert_type: SUSPICIOUS_PATTERN
+    confidence: MEDIUM
+    template_id: suspicious_pattern_review
+    c_detect: 0.55
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#FACC15'
+      icon: "\U0001F7E1"
+      label: SUSPICIOUS
+      urgency: LOW
+  layer6:
+    recommended_tier: L1
+    rationale: "Track A moderate, DAE benign \u2014 standard L1 review."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: false
+    fallback_options:
+    - L1 standard handling
+    escalation_options:
+    - Senior IT
+    - Coordinate with biomed
+- alert_type: BENIGN_WATCH
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.1
+      diversity: 0.05
+      dae: 0.55
+    alert_type: BENIGN_WATCH
+    confidence: LOW
+    template_id: benign_watch
+    c_detect: 0.55
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#94A3B8'
+      icon: "\u26AA"
+      label: BENIGN WATCH
+      urgency: INFO
+  layer6:
+    recommended_tier: AUDIT_LOG
+    rationale: "Marginal anomaly \u2014 logged for pattern analysis only."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: false
+    fallback_options:
+    - Audit log only
+    escalation_options: []
+- alert_type: BENIGN
+  status: PASS
+  failures: []
+  triage:
+    input:
+      p_xgb: 0.05
+      diversity: 0.05
+      dae: 0.1
+    alert_type: BENIGN
+    confidence: HIGH
+    template_id: benign
+    c_detect: 0.16666666666666669
+  layer4:
+    legacy_template: T1
+    is_adversarial: false
+    mitre_per_role:
+      IT_generalist: T1071 (Application Layer Protocol)
+      biomed_engineer: Network communication consistent with attacker remote control.
+      nurse_manager: Equipment may be communicating with an unauthorized external
+        system.
+  layer5:
+    badge:
+      color: '#94A3B8'
+      icon: "\u26AA"
+      label: BENIGN
+      urgency: INFO
+  layer6:
+    recommended_tier: SUPPRESSED
+    rationale: "All filters indicate benign \u2014 no display."
+    adversarial_flag: false
+    requires_security_specialist: false
+    requires_immediate_attention: false
+    fallback_options: []
+    escalation_options: []

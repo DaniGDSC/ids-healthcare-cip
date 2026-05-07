@@ -1,0 +1,55 @@
+{
+  "format": "phase1.test_split_assignment.v1",
+  "split_strategy": "scope_a_split_flag_v1",
+  "rationale": "Scope-A: freeze the existing curated demo subset (unique sample_indices in evaluation_alerts.json) and label everything else in test_phase1 as paper-metrics. No retraining; no parquet schema change.",
+  "generated_at": "2026-05-07T08:19:06.550671+00:00",
+  "source": {
+    "test_parquet": "data/processed/test_phase1.parquet",
+    "test_n_rows": 4896,
+    "demo_seed": "results/reports/evaluation_alerts.json",
+    "demo_seed_n_alerts": 20,
+    "demo_seed_n_unique_sample_indices": 10
+  },
+  "demo_pool": {
+    "row_ids": [
+      517,
+      554,
+      2294,
+      2314,
+      3058,
+      3125,
+      3235,
+      3727,
+      4732,
+      4846
+    ],
+    "n": 10,
+    "label_counts": {
+      "1": 6,
+      "0": 4
+    },
+    "attack_category_counts": {
+      "Spoofing": 4,
+      "normal": 4,
+      "Data Alteration": 2
+    }
+  },
+  "test_paper": {
+    "n": 4886,
+    "fraction_of_test": 0.997958,
+    "label_counts": {
+      "0": 4278,
+      "1": 608
+    },
+    "attack_category_counts": {
+      "normal": 4278,
+      "Spoofing": 333,
+      "Data Alteration": 275
+    }
+  },
+  "invariants": [
+    "demo_pool \u2229 test_paper = \u2205",
+    "demo_pool \u222a test_paper = test_phase1 row_ids",
+    "every sample_index in evaluation_alerts.json must be in demo_pool"
+  ]
+}

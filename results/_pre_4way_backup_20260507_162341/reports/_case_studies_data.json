@@ -1,0 +1,890 @@
+[
+  {
+    "label": "CRITICAL_Spoofing",
+    "alert_id": "EVAL-3301",
+    "category": "Spoofing",
+    "risk_level": "CRITICAL",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "correct_action": "isolate",
+    "raw_view_text": "Alert ID: EVAL-3301\nAnomaly score: 0.83\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      }
+    }
+  },
+  {
+    "label": "CRITICAL_DataAlt",
+    "alert_id": "EVAL-3544",
+    "category": "Data Alteration",
+    "risk_level": "CRITICAL",
+    "device_class": "ventilator",
+    "device_criticality": "CRITICAL",
+    "correct_action": "isolate",
+    "raw_view_text": "Alert ID: EVAL-3544\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      }
+    }
+  },
+  {
+    "label": "HIGH_Spoofing",
+    "alert_id": "EVAL-3407",
+    "category": "Spoofing",
+    "risk_level": "HIGH",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "correct_action": "isolate",
+    "raw_view_text": "Alert ID: EVAL-3407\nAnomaly score: 0.79\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "UNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "unknown (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could disrupt active patient care. Clinical coordination required before any isolation.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nUNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nunknown (clinical area) \u2014 clinical operations Compromise could disrupt active patient care. Clinical coordination required before any isolation. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "UNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "unknown (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could disrupt active patient care. Clinical coordination required before any isolation.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nUNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nunknown (clinical area) \u2014 clinical operations Compromise could disrupt active patient care. Clinical coordination required before any isolation. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "UNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "unknown (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could disrupt active patient care. Clinical coordination required before any isolation.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nUNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nunknown (clinical area) \u2014 clinical operations Compromise could disrupt active patient care. Clinical coordination required before any isolation. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      }
+    }
+  },
+  {
+    "label": "HIGH_DataAlt",
+    "alert_id": "EVAL-1185",
+    "category": "Data Alteration",
+    "risk_level": "HIGH",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "correct_action": "isolate",
+    "raw_view_text": "Alert ID: EVAL-1185\nAnomaly score: 0.80\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      }
+    }
+  },
+  {
+    "label": "MEDIUM_Mixed",
+    "alert_id": "EVAL-0227",
+    "category": "Spoofing",
+    "risk_level": "MEDIUM",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "correct_action": "investigate",
+    "raw_view_text": "Alert ID: EVAL-0227\nAnomaly score: 0.60\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 0,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 4,
+          "max": 5
+        }
+      }
+    }
+  },
+  {
+    "label": "LOW_1",
+    "alert_id": "EVAL-4737",
+    "category": "Spoofing",
+    "risk_level": "LOW",
+    "device_class": "ventilator",
+    "device_criticality": "CRITICAL",
+    "correct_action": "monitor",
+    "raw_view_text": "Alert ID: EVAL-4737\nAnomaly score: 0.40\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "CRITICAL",
+          "severity_rationale": "Life-sustaining system actively supporting patient care."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+          "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+          "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      }
+    }
+  },
+  {
+    "label": "LOW_2_diff_device",
+    "alert_id": "EVAL-3171",
+    "category": "normal",
+    "risk_level": "LOW",
+    "device_class": "ehr_workstation",
+    "device_criticality": "HIGH",
+    "correct_action": "dismiss",
+    "raw_view_text": "Alert ID: EVAL-3171\nAnomaly score: 0.20\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "ehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ehr_workstation (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Clinical documentation access disrupted. No direct patient physiological risk.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nehr_workstation (clinical area) \u2014 clinical operations Clinical documentation access disrupted. No direct patient physiological risk. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "ehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ehr_workstation (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Clinical documentation access disrupted. No direct patient physiological risk.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nehr_workstation (clinical area) \u2014 clinical operations Clinical documentation access disrupted. No direct patient physiological risk. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "ehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "ehr_workstation (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Clinical documentation access disrupted. No direct patient physiological risk.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\nehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\nehr_workstation (clinical area) \u2014 clinical operations Clinical documentation access disrupted. No direct patient physiological risk. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      }
+    }
+  },
+  {
+    "label": "normal_TN",
+    "alert_id": "EVAL-1615",
+    "category": "normal",
+    "risk_level": "LOW",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "correct_action": "dismiss",
+    "raw_view_text": "Alert ID: EVAL-1615\nAnomaly score: 0.30\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "raw_view_rubric": {
+      "correctness": 0,
+      "role_appropriate": 0,
+      "actionable": 0,
+      "do_not_compliant": 1,
+      "concise": 1,
+      "total": 2,
+      "max": 5
+    },
+    "role_views": {
+      "IT_generalist": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "biomed_engineer": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Device behaviour unusual: At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      },
+      "nurse_manager": {
+        "layer_1": {
+          "baseline_behavior": "patient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS.",
+          "deviation_description": "Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list.",
+          "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
+        },
+        "layer_2": {
+          "affected_system": "patient_monitor (clinical area) \u2014 clinical operations",
+          "patient_care_impact": "Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms.",
+          "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
+          "severity_label": "HIGH",
+          "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        },
+        "layer_3": {
+          "immediate_action": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log.",
+          "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
+          "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
+          "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        },
+        "view_text": "Layer 1 \u2014 WHY ANOMALOUS:\npatient_monitor (clinical area) normally communicates with approved internal hosts using HTTPS. Equipment may be compromised. Patient safety priority. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nLayer 2 \u2014 CLINICAL SEVERITY:\npatient_monitor (clinical area) \u2014 clinical operations Compromise could produce false vital sign readings. Clinical staff may miss patient deterioration or respond to false alarms. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nLayer 3 \u2014 RECOMMENDED ACTION:\nVerify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log. DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rubric": {
+          "correctness": 1,
+          "role_appropriate": 1,
+          "actionable": 1,
+          "do_not_compliant": 1,
+          "concise": 1,
+          "total": 5,
+          "max": 5
+        }
+      }
+    }
+  }
+]
