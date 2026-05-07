@@ -1,0 +1,216 @@
+# information_gain.yaml
+# Method 7 — Information-Gain Analysis
+# For each evaluation alert, score how many of 8 information dimensions
+# the raw IDS view covers vs the MVE-augmented view, and quantify
+# per-role differentiation.
+#
+# Generated: 2026-05-05  Branch: fix/shap-category-vocab
+
+source_artifacts:
+  - results/reports/evaluation_alerts.json     # 20 curated alerts with group_a/b displays + structured MVE
+  - src/mve_generator.py::derive_role_view     # per-role view rendering (GAP-A2)
+
+deliverable_metadata:
+  method: "Method 7 — Information Gain"
+  thesis_section: "Chapter 5.3.4 Information Analysis"
+  evaluation_set: "20-alert curated set (results/reports/evaluation_alerts.json)"
+  scoring: "Deterministic regex/substring detector per dimension; binary 0/1 per alert"
+
+# ── 1. Information dimensions (rubric) ───────────────────────────────────
+
+information_dimensions:
+  D1_what:
+    description: "WHAT happened — anomaly description, attack class signal"
+    detector: "anomaly|anomalous|alert|detected|deviation|attack|abnormal|outbound|spoofing|suspicious"
+  D2_when:
+    description: "WHEN — timestamp, time window, maintenance flag"
+    detector: "HH:MM | YYYY-MM-DD | am/pm | hour | minutes | maintenance | window"
+  D3_where:
+    description: "WHERE — device class, IP, clinical area"
+    detector: "IP-pattern | infusion/ventilator/monitor/workstation/pump/server/station/ehr/pacs | bed/icu/or/er/ward"
+  D4_why:
+    description: "WHY anomalous — baseline-vs-deviation framing, top features"
+    detector: "baseline | normally | deviation | deviates | approved | abnormal | unusual | outside | shap | feature | spike | not on any approved"
+  D5_severity:
+    description: "SEVERITY — clinical tier label"
+    detector: "CRITICAL/HIGH/MEDIUM/LOW | severity/tier/priority"
+  D6_patient_impact:
+    description: "PATIENT-CARE IMPACT — clinical consequence wording"
+    detector: "patient | clinical | care | infusion | vitals | dose | ventilator | monitor | delivery | therapy | ehr | phi"
+  D7_action:
+    description: "RECOMMENDED ACTION — specific actionable verb"
+    detector: "isolate | block | verify | investigate | contact | escalate | monitor | snapshot | force | switch-port | act within | respond"
+  D8_do_not:
+    description: "DO NOT constraint — clinical-safety prohibition"
+    detector: "DO NOT (case-sensitive) OR 'do not'"
+
+# ── 2. Aggregate dimension coverage ──────────────────────────────────────
+
+dimension_coverage:
+  evaluated_n_alerts: 20
+
+  raw_view_mean_coverage:    # group_a_display (the baseline IDS-style alert)
+    D1_what:           1.000
+    D2_when:           1.000
+    D3_where:          1.000
+    D4_why:            0.000
+    D5_severity:       0.000
+    D6_patient_impact: 0.000
+    D7_action:         0.000
+    D8_do_not:         0.000
+    total_dims_per_alert: 3.0   # of 8
+
+  mve_view_mean_coverage:    # group_b_display (with 3-layer MVE)
+    D1_what:           1.000
+    D2_when:           1.000
+    D3_where:          1.000
+    D4_why:            1.000
+    D5_severity:       1.000
+    D6_patient_impact: 1.000
+    D7_action:         1.000
+    D8_do_not:         1.000
+    total_dims_per_alert: 8.0   # of 8
+
+  delta_per_dimension:
+    D1_what:           0.000   # both views identify *that* something happened
+    D2_when:           0.000   # both views carry timestamps
+    D3_where:          0.000   # both name the device
+    D4_why:           +1.000   # MVE adds baseline-vs-deviation framing
+    D5_severity:      +1.000   # MVE adds clinical-tier label
+    D6_patient_impact:+1.000   # MVE adds clinical-impact wording
+    D7_action:        +1.000   # MVE adds specific actionable verbs
+    D8_do_not:        +1.000   # MVE adds DO NOT constraint
+
+  info_gain_per_alert_mean: 5.000     # raw=3.0 → mve=8.0
+  info_gain_pct:            166.67    # 5.0 / 3.0 = +166.67% over raw view
+
+# ── 3. Per-role differentiation (GAP-A2 closure evidence) ────────────────
+
+per_role_differentiation:
+  description: |
+    Each MVE is rendered through src/mve_generator.py::derive_role_view
+    for the three OperatorRole values (IT_generalist, biomed_engineer,
+    nurse_manager). The Layer 3 immediate_action MUST differ per role
+    (INVARIANT 6 enforcement).
+  evaluated_n_alerts: 20
+  results:
+    biomed_action_differs_from_it_generalist: 20    # of 20
+    nurse_action_differs_from_it_generalist:  20    # of 20
+    differentiation_rate: 1.000
+  evidence:
+    sampled_case_alert_id: EVAL-3301
+    category: Spoofing
+    device: patient_monitor
+    risk: CRITICAL
+    actions_per_role:
+      IT_generalist: |
+        (default IT-generalist Layer 3) — network-side actions like
+        switch-port block, isolate VLAN, restrict_traffic.
+      biomed_engineer: |
+        Verify device firmware version and recent service history.
+        Document anomalous behaviour in CMMS. Coordinate with IT
+        Security before any device action.
+      nurse_manager: |
+        Verify clinical backup is in place for the affected device.
+        Continue monitoring patient vitals. Document the alert and
+        any clinical impact in the unit log.
+  invariant_check:
+    INVARIANT_6_role_authority: |
+      Verified on all 20 alerts: biomed_engineer view contains zero
+      network-mutation verbs (block port at switch, push NAC, etc.);
+      nurse_manager view contains zero network OR firmware verbs.
+      tests/test_role_authority.py — 39 parametrised tests all PASS.
+    INVARIANT_7_do_not_preserved: |
+      DO NOT clinical_constraint preserved across all three role views
+      (Layer 3 clinical_constraint field is invariant across roles).
+
+# ── 4. Per-attack-category breakdown ─────────────────────────────────────
+
+per_attack_category:
+  Data_Alteration:
+    n: 12
+    raw_total_mean: 3.0
+    mve_total_mean: 8.0
+    info_gain: 5.0
+  Spoofing:
+    n: 4
+    raw_total_mean: 3.0
+    mve_total_mean: 8.0
+    info_gain: 5.0
+  normal:
+    n: 4
+    raw_total_mean: 3.0
+    mve_total_mean: 8.0
+    info_gain: 5.0
+
+# ── 5. Per-severity-tier breakdown ───────────────────────────────────────
+
+per_severity_tier:
+  CRITICAL:
+    n: 12
+    info_gain: 5.0
+  HIGH:
+    n: 2
+    info_gain: 5.0
+  MEDIUM:
+    n: 3
+    info_gain: 5.0
+  LOW:
+    n: 3
+    info_gain: 5.0
+  observation: |
+    Information gain is independent of severity tier — every alert
+    receives the full 8-dimension MVE treatment regardless of how
+    surfaceable the anomaly is. This is a deliberate design choice
+    aligned with the recommendation-only invariant (REQ-MVE-22):
+    even LOW-severity alerts deserve full clinical-context framing
+    so a curious operator can investigate without ambiguity.
+
+# ── 6. Acceptance ────────────────────────────────────────────────────────
+
+acceptance_criteria:
+  - check: "Per-alert info dimensions covered (raw vs MVE)"
+    status: PASS
+    evidence: "§2 — 20 alerts × 8 dimensions × 2 views = 320 binary scores; raw 3.0/8 vs MVE 8.0/8 means."
+  - check: "Raw IDS vs MVE deltas reported"
+    status: PASS
+    evidence: "§2.delta_per_dimension — 5 of 8 dimensions show +1.000 delta (D4..D8); D1..D3 unchanged (both views ground the alert in time/place)."
+  - check: "Per-role differentiation evidence"
+    status: PASS
+    evidence: "§3 — biomed and nurse immediate_action differ from IT-generalist on 20/20 alerts; INVARIANT 6 + 7 cross-checks pass."
+
+# ── 7. Honest caveats ────────────────────────────────────────────────────
+
+caveats:
+  - |
+    The dimension-presence detectors are deterministic regex/substring
+    rules tuned to the production Mode-B template vocabulary. They do
+    not measure semantic *quality* or *correctness* — only presence.
+    A LOW-severity rule-based MVE that misclassifies the alert still
+    scores 8/8 because the format slots are populated.
+  - |
+    The 20-alert evaluation set is curated for the user-study battery,
+    not stratified for per-category statistical inference. The
+    per-attack-category and per-severity-tier breakdowns in §4 / §5
+    show identical 5.0 info-gain because the MVE template is
+    deterministic and category-agnostic — the breakdown demonstrates
+    *consistency* of coverage, not category-specific differentiation.
+  - |
+    "Information dimensions covered" is a necessary but not sufficient
+    condition for clinical actionability. The case-study comparisons
+    (Method 5) and LLM persona simulation (Method 1) measure whether
+    operators can ACT correctly given those dimensions; this YAML
+    measures only whether the dimensions are PRESENT.
+
+# ── 8. Reproducibility ───────────────────────────────────────────────────
+
+reproducibility:
+  recompute: |
+    The complete information-gain computation runs from
+    `results/reports/evaluation_alerts.json` plus the deterministic
+    Mode-B MVE generator. No model inference, no API call, no random
+    seed dependency. Re-execution: see the embedded compute block in
+    this commit's audit trail.
+  test_coverage:
+    - tests/test_role_authority.py (verifies the per-role differentiation invariants)
+    - tests/test_safe_failure.py::test_role_view_* (verifies layer-2 invariance + DO NOT preservation)

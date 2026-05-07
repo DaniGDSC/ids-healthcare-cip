@@ -1,0 +1,943 @@
+{
+  "n_alerts_evaluated": 20,
+  "raw_view_dimension_coverage": {
+    "D1_what": 1.0,
+    "D2_when": 1.0,
+    "D3_where": 1.0,
+    "D4_why": 0.0,
+    "D5_severity": 0.0,
+    "D6_patient_impact": 0.0,
+    "D7_action": 0.0,
+    "D8_do_not": 0.0
+  },
+  "mve_view_dimension_coverage": {
+    "D1_what": 1.0,
+    "D2_when": 1.0,
+    "D3_where": 1.0,
+    "D4_why": 1.0,
+    "D5_severity": 1.0,
+    "D6_patient_impact": 1.0,
+    "D7_action": 1.0,
+    "D8_do_not": 1.0
+  },
+  "delta_per_dimension": {
+    "D1_what": 0.0,
+    "D2_when": 0.0,
+    "D3_where": 0.0,
+    "D4_why": 1.0,
+    "D5_severity": 1.0,
+    "D6_patient_impact": 1.0,
+    "D7_action": 1.0,
+    "D8_do_not": 1.0
+  },
+  "raw_total_mean": 3.0,
+  "mve_total_mean": 8.0,
+  "info_gain_per_alert_mean": 5.0,
+  "per_alert_results": [
+    {
+      "alert_id": "EVAL-3301",
+      "attack_category": "Spoofing",
+      "risk_level": "CRITICAL",
+      "device_class": "patient_monitor",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3407",
+      "attack_category": "Spoofing",
+      "risk_level": "HIGH",
+      "device_class": "other",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-1185",
+      "attack_category": "Data Alteration",
+      "risk_level": "HIGH",
+      "device_class": "patient_monitor",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "attack_category": "Spoofing",
+      "risk_level": "MEDIUM",
+      "device_class": "patient_monitor",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "attack_category": "Spoofing",
+      "risk_level": "LOW",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "attack_category": "normal",
+      "risk_level": "LOW",
+      "device_class": "ehr_workstation",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "attack_category": "normal",
+      "risk_level": "LOW",
+      "device_class": "patient_monitor",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "attack_category": "normal",
+      "risk_level": "MEDIUM",
+      "device_class": "infusion_pump",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "attack_category": "normal",
+      "risk_level": "MEDIUM",
+      "device_class": "ehr_workstation",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "attack_category": "Data Alteration",
+      "risk_level": "CRITICAL",
+      "device_class": "ventilator",
+      "raw_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 0,
+        "D5_severity": 0,
+        "D6_patient_impact": 0,
+        "D7_action": 0,
+        "D8_do_not": 0
+      },
+      "mve_score": {
+        "D1_what": 1,
+        "D2_when": 1,
+        "D3_where": 1,
+        "D4_why": 1,
+        "D5_severity": 1,
+        "D6_patient_impact": 1,
+        "D7_action": 1,
+        "D8_do_not": 1
+      },
+      "raw_total": 3,
+      "mve_total": 8,
+      "delta": 5
+    }
+  ],
+  "per_role_cases": [
+    {
+      "alert_id": "EVAL-3301",
+      "category": "Spoofing",
+      "risk": "CRITICAL",
+      "device": "patient_monitor",
+      "views_action": {
+        "IT_generalist": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3407",
+      "category": "Spoofing",
+      "risk": "HIGH",
+      "device": "other",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-1185",
+      "category": "Data Alteration",
+      "risk": "HIGH",
+      "device": "patient_monitor",
+      "views_action": {
+        "IT_generalist": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-0227",
+      "category": "Spoofing",
+      "risk": "MEDIUM",
+      "device": "patient_monitor",
+      "views_action": {
+        "IT_generalist": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-4737",
+      "category": "Spoofing",
+      "risk": "LOW",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3171",
+      "category": "normal",
+      "risk": "LOW",
+      "device": "ehr_workstation",
+      "views_action": {
+        "IT_generalist": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-1615",
+      "category": "normal",
+      "risk": "LOW",
+      "device": "patient_monitor",
+      "views_action": {
+        "IT_generalist": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-0415",
+      "category": "normal",
+      "risk": "MEDIUM",
+      "device": "infusion_pump",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-1168",
+      "category": "normal",
+      "risk": "MEDIUM",
+      "device": "ehr_workstation",
+      "views_action": {
+        "IT_generalist": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    },
+    {
+      "alert_id": "EVAL-3544",
+      "category": "Data Alteration",
+      "risk": "CRITICAL",
+      "device": "ventilator",
+      "views_action": {
+        "IT_generalist": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "biomed_engineer": "Verify device firmware version and recent service history. Document anomalous behaviour in CMMS. Coordinate with IT Security before any device action.",
+        "nurse_manager": "Verify clinical backup is in place for the affected device. Continue monitoring patient vitals. Document the alert and any clinical impact in the unit log."
+      },
+      "views_dim_score": {
+        "IT_generalist": 8,
+        "biomed_engineer": 8,
+        "nurse_manager": 8
+      }
+    }
+  ],
+  "n_role_action_diff_biomed": 20,
+  "n_role_action_diff_nurse": 20,
+  "n_role_evaluated": 20
+}

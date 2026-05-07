@@ -10,14 +10,14 @@
     "criterion": "gini",
     "class_weight": "balanced"
   },
-  "optimal_threshold": 0.3189349206349206,
+  "optimal_threshold": 0.3189349206349207,
   "test_metrics": {
     "attack_f1": 0.7083906464924347,
     "attack_f2": 0.78125,
     "weighted_f1": 0.9189553992709844,
     "macro_f1": 0.8287695616726984,
     "auc_roc": 0.9487860706205965,
-    "optimal_threshold": 0.3189349206349206
+    "optimal_threshold": 0.3189349206349207
   },
   "data": {
     "n_features": 25,
@@ -53,5 +53,5 @@
     "train_attack_rate": 0.1254,
     "random_seed": 42
   },
-  "elapsed_seconds": 12.6
+  "elapsed_seconds": 12.9
 }

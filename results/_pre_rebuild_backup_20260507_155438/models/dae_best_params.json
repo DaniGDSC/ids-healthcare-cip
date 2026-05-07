@@ -1,0 +1,11 @@
+{
+  "encoding_dims": [
+    24,
+    12,
+    24
+  ],
+  "noise_rate": 0.1,
+  "learning_rate": 0.0001,
+  "threshold_percentile": 99.0,
+  "clip_percentile": 1.0
+}

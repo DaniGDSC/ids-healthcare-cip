@@ -98,4 +98,4 @@ Scaler fitted exclusively on training set (n=9,137). Test set transformed withou
 | `robust_scaler.json` | JSON sidecar | Fitted RobustScaler params (`center_`, `scale_`) — pickle-free |
 | `preprocessing_report.json` | JSON | Per-step audit trail |
 
-Total pipeline elapsed time: **0.08 s**
+Total pipeline elapsed time: **0.17 s**

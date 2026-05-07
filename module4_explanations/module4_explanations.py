@@ -182,7 +182,11 @@ from module4_explanations.module4_online_explainer import (
 def load_test_data() -> tuple:
     """Load test parquet and return X, y, attack categories, feature names."""
     df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
-    drop_cols = ["Label", "Attack Category"]
+    drop_cols = [
+        c for c in ["Label", "Attack Category", "row_id",
+                    "device_class", "attack_category"]
+        if c in df.columns
+    ]
     feat_names = [c for c in df.columns if c not in drop_cols]
     X_test = df[feat_names].values.astype(np.float32)
     y_test = df["Label"].values
@@ -1353,10 +1357,24 @@ def main() -> None:
         plot_per_category_importance(name, sv, y_test, attack_cats, feat_names)
 
     # ── Track B: DAE ──
-    dae_path = PROJECT_ROOT / "results/models/dae_detector.pkl"
-    sq_err, weighted_err, feat_weights = compute_dae_feature_errors(
-        dae_path, X_test, feat_names,
+    dae_json = PROJECT_ROOT / "results/models/dae_detector.json"
+    dae_weights = PROJECT_ROOT / "results/models/dae_model.weights.h5"
+    # DAE was trained on cascaded input [raw 25 || P_xgb, P_rf, P_dt] = 28 dims.
+    # Augment with calibrated Track A test probas, then slice the per-feature
+    # error decomposition back to the 25 raw features for downstream display.
+    track_a_test = np.column_stack([
+        np.load(PROJECT_ROOT / "results/models" / f"{n}_test_proba_calibrated.npy")
+        for n in ("xgboost", "random_forest", "decision_tree")
+    ])
+    X_test_aug = np.column_stack([X_test, track_a_test])
+    aug_feat_names = feat_names + ["track_a_xgb", "track_a_rf", "track_a_dt"]
+    sq_err_aug, weighted_err_aug, feat_weights_aug = compute_dae_feature_errors(
+        dae_json, dae_weights, X_test_aug, aug_feat_names,
     )
+    n_raw = len(feat_names)
+    sq_err = sq_err_aug[:, :n_raw]
+    weighted_err = weighted_err_aug[:, :n_raw]
+    feat_weights = feat_weights_aug[:n_raw]
     save_dae_errors(sq_err, weighted_err, feat_weights, feat_names)
     plot_dae_global_weights(feat_weights, feat_names)
 

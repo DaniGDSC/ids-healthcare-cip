@@ -1,0 +1,25 @@
+{
+  "method": "isotonic",
+  "label_order": [
+    "normal",
+    "Data Alteration",
+    "Spoofing"
+  ],
+  "n_val": 2285,
+  "raw": {
+    "val_multiclass_brier": 0.023272848869078842,
+    "test_multiclass_brier": 0.025081017490869575,
+    "test_p_attack_auc_roc": 0.9568105332982395,
+    "test_p_attack_brier": 0.037641465229157636
+  },
+  "calibrated": {
+    "val_multiclass_brier": 0.020565544713923488,
+    "test_multiclass_brier": 0.02361981865591305,
+    "test_p_attack_auc_roc": 0.9560758846592128,
+    "test_p_attack_brier": 0.03542972798386957
+  },
+  "improvements": {
+    "delta_val_multiclass_brier": 0.0027073041551553545,
+    "delta_test_multiclass_brier": 0.0014611988349565244
+  }
+}

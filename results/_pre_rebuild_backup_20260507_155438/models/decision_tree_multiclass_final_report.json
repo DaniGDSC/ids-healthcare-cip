@@ -1,0 +1,111 @@
+{
+  "model": "decision_tree",
+  "stage": "final_training_multiclass",
+  "label_order": [
+    "normal",
+    "Data Alteration",
+    "Spoofing"
+  ],
+  "best_hyperparameters": {
+    "ccp_alpha": 0.0,
+    "class_weight": "balanced",
+    "criterion": "gini",
+    "max_depth": null,
+    "max_features": null,
+    "max_leaf_nodes": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 2,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "random_state": 42,
+    "splitter": "best"
+  },
+  "data": {
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "train_samples": 9137,
+    "val_samples": 2285,
+    "test_samples": 4896,
+    "random_seed": 42,
+    "argmax_test_distribution": {
+      "normal": 4214,
+      "Spoofing": 405,
+      "Data Alteration": 277
+    },
+    "softmax_confidence_buckets_test": {
+      "high_conf_>=0.85": 4896,
+      "low_conf_<0.40": 0,
+      "uncertain_band": 0
+    }
+  },
+  "test_metrics": {
+    "accuracy": 0.9313725490196079,
+    "macro_f1": 0.8352641358983005,
+    "weighted_f1": 0.9342051277036417,
+    "per_class_f1": {
+      "normal": 0.96045197740113,
+      "Data Alteration": 0.9927797833935018,
+      "Spoofing": 0.5525606469002695
+    },
+    "classification_report": {
+      "normal": {
+        "precision": 0.9682012339819649,
+        "recall": 0.9528257823446987,
+        "f1-score": 0.96045197740113,
+        "support": 4282.0
+      },
+      "Data Alteration": {
+        "precision": 0.9927797833935018,
+        "recall": 0.9927797833935018,
+        "f1-score": 0.9927797833935018,
+        "support": 277.0
+      },
+      "Spoofing": {
+        "precision": 0.5061728395061729,
+        "recall": 0.6083086053412463,
+        "f1-score": 0.5525606469002695,
+        "support": 337.0
+      },
+      "accuracy": 0.9313725490196079,
+      "macro avg": {
+        "precision": 0.8223846189605465,
+        "recall": 0.8513047236931489,
+        "f1-score": 0.8352641358983005,
+        "support": 4896.0
+      },
+      "weighted avg": {
+        "precision": 0.937789610053994,
+        "recall": 0.9313725490196079,
+        "f1-score": 0.9342051277036417,
+        "support": 4896.0
+      }
+    }
+  }
+}
