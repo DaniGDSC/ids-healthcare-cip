@@ -158,13 +158,13 @@ def test_filter_responses_demo_on_keeps_real_drops_synthetic(fake_session):
     load_demo_playlist.clear()
     fake_session["demo_mode"] = True
     fake_responses = [
-        {"alert_id": "EVAL-0895"},
+        {"alert_id": "EVAL-0570"},
         {"alert_id": "EVAL-0976"},
         {"alert_id": "EVAL-9999"},  # not in playlist — should be filtered out
     ]
     out = _filter_responses_for_demo_mode(fake_responses)
     out_ids = [r["alert_id"] for r in out]
-    assert "EVAL-0895" in out_ids
+    assert "EVAL-0570" in out_ids
     assert "EVAL-0976" in out_ids
     assert "EVAL-9999" not in out_ids
     assert "SYNTHETIC_DEMO_001" not in out_ids

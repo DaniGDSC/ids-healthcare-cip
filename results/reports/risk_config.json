@@ -1,6 +1,6 @@
 {
   "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
-  "fusion": "C_detect = cascaded(Track_A \u2192 Track_B): DAE input = [raw_features || Track_A_probas]",
+  "fusion": "C_detect = max(Track_A, Track_B): DAE input = raw 25 features (Phase B \u2014 no cascade)",
   "weights": {
     "w1": 0.4,
     "w2": 0.25,

@@ -5,19 +5,19 @@
   "statistics": {
     "total_alerts": 1632,
     "alerts_by_level": {
-      "LOW": 1158,
-      "MEDIUM": 239,
-      "HIGH": 216,
+      "LOW": 1141,
+      "MEDIUM": 270,
+      "HIGH": 202,
       "CRITICAL": 19
     },
     "actions_triggered": {
       "log_event": 1632,
       "enhanced_monitoring": 1613,
-      "restrict_traffic": 341,
-      "forensic_snapshot": 235,
-      "escalate_clinical": 295,
-      "isolate_device": 235,
-      "re_authenticate": 113
+      "restrict_traffic": 372,
+      "re_authenticate": 113,
+      "forensic_snapshot": 221,
+      "isolate_device": 221,
+      "escalate_clinical": 202
     },
     "true_positives_by_level": {
       "HIGH": 167,
@@ -26,21 +26,21 @@
       "LOW": 8
     },
     "false_positives_by_level": {
-      "LOW": 1150,
-      "MEDIUM": 228,
-      "HIGH": 49
+      "LOW": 1133,
+      "MEDIUM": 259,
+      "HIGH": 35
     },
     "precision_by_level": {
-      "LOW": 0.0069,
-      "MEDIUM": 0.046,
-      "HIGH": 0.7731,
+      "LOW": 0.007,
+      "MEDIUM": 0.0407,
+      "HIGH": 0.8267,
       "CRITICAL": 1.0
     }
   },
   "effectiveness": {
     "outcome_distribution": {
-      "benign_logged": 1150,
-      "false_positive_isolated": 277,
+      "benign_logged": 1133,
+      "false_positive_isolated": 294,
       "threat_contained": 205,
       "threat_logged_not_mitigated": 0
     },
@@ -61,31 +61,10 @@
       },
       "restrict_traffic": {
         "true_attacks": 113,
-        "false_positives": 228,
-        "total": 341,
-        "precision": 0.3314,
-        "false_positive_rate": 0.6686
-      },
-      "forensic_snapshot": {
-        "true_attacks": 186,
-        "false_positives": 49,
-        "total": 235,
-        "precision": 0.7915,
-        "false_positive_rate": 0.2085
-      },
-      "escalate_clinical": {
-        "true_attacks": 172,
-        "false_positives": 123,
-        "total": 295,
-        "precision": 0.5831,
-        "false_positive_rate": 0.4169
-      },
-      "isolate_device": {
-        "true_attacks": 186,
-        "false_positives": 49,
-        "total": 235,
-        "precision": 0.7915,
-        "false_positive_rate": 0.2085
+        "false_positives": 259,
+        "total": 372,
+        "precision": 0.3038,
+        "false_positive_rate": 0.6962
       },
       "re_authenticate": {
         "true_attacks": 113,
@@ -93,32 +72,53 @@
         "total": 113,
         "precision": 1.0,
         "false_positive_rate": 0.0
+      },
+      "forensic_snapshot": {
+        "true_attacks": 186,
+        "false_positives": 35,
+        "total": 221,
+        "precision": 0.8416,
+        "false_positive_rate": 0.1584
+      },
+      "isolate_device": {
+        "true_attacks": 186,
+        "false_positives": 35,
+        "total": 221,
+        "precision": 0.8416,
+        "false_positive_rate": 0.1584
+      },
+      "escalate_clinical": {
+        "true_attacks": 169,
+        "false_positives": 33,
+        "total": 202,
+        "precision": 0.8366,
+        "false_positive_rate": 0.1634
       }
     },
     "proportionality_analysis": [
       {
         "action": "isolate_device",
         "cost": 0.8,
-        "precision": 0.7915,
-        "total": 235
+        "precision": 0.8416,
+        "total": 221
       },
       {
         "action": "escalate_clinical",
         "cost": 0.7,
-        "precision": 0.5831,
-        "total": 295
+        "precision": 0.8366,
+        "total": 202
       },
       {
         "action": "restrict_traffic",
         "cost": 0.5,
-        "precision": 0.3314,
-        "total": 341
+        "precision": 0.3038,
+        "total": 372
       },
       {
         "action": "forensic_snapshot",
         "cost": 0.4,
-        "precision": 0.7915,
-        "total": 235
+        "precision": 0.8416,
+        "total": 221
       },
       {
         "action": "re_authenticate",
@@ -139,9 +139,9 @@
         "total": 1632
       }
     ],
-    "over_response_count": 277,
+    "over_response_count": 294,
     "under_response_count": 0,
-    "over_response_rate": 0.1697,
+    "over_response_rate": 0.1801,
     "under_response_rate": 0.0
   },
   "mitigation_catalogue": {

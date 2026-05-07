@@ -1,0 +1,109 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Demo Playlist — 10-minute defense-demo narrative
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Curated 5-alert sequence that the dashboard's Demo Mode toggle filters
+# to. Each alert ID resolves either to a row in
+# ``results/reports/evaluation_alerts.json`` (real evaluation data) OR to
+# an entry in ``configs/synthetic_demo_alerts.yaml`` (clearly marked
+# synthetic, used only to surface visuals the real eval set does not
+# naturally produce — see Beat 4).
+#
+# Update procedure
+# ----------------
+# 1. Run ``python tests/test_day4_demo_playlist.py`` (or pytest) to
+#    confirm every alert_id below resolves.
+# 2. If you re-curate, keep ``narrative_position`` 1..5 contiguous.
+# 3. Each beat's ``time_budget_seconds`` should sum to ~570 s to leave
+#    ~30 s buffer in the 10-minute demo.
+# ═══════════════════════════════════════════════════════════════════════
+
+version: "1.0"
+total_alerts: 5
+total_demo_time_seconds: 600
+
+alerts:
+  # ── Beat 1: Opener ──────────────────────────────────────────────────
+  # Re-mapped 2026-05-07 after the Strategy 1 4-way split migration.
+  # Demo pool is now its own parquet (10% of total) and curated alert
+  # IDs all changed. EVAL-0895 is MEDIUM Spoofing on an EHR
+  # workstation — the "soft entry" opener.
+  - alert_id: "EVAL-0895"
+    narrative_position: 1
+    narrative_beat: opener
+    narrative_label: "Opener"
+    narrative_short_desc: "MEDIUM / Spoofing — EHR workstation"
+    time_budget_seconds: 90
+    why_chosen: "MEDIUM severity, EHR workstation — easy entry, no DO_NOT pressure."
+    talking_points:
+      - "9-class badge taxonomy visible"
+      - "Confidence indicator + Mode A/B"
+      - "MITRE technique line per role"
+
+  # ── Beat 2: Role Switching ──────────────────────────────────────────
+  # EVAL-0301 — HIGH Spoofing on patient_monitor. Same role-switching
+  # narrative carries over from the previous mapping; patient_monitor
+  # is meaningful to all three role views.
+  - alert_id: "EVAL-0301"
+    narrative_position: 2
+    narrative_beat: role_switching
+    narrative_label: "Role Switching"
+    narrative_short_desc: "Patient monitor — HIGH Spoofing"
+    time_budget_seconds: 120
+    why_chosen: "patient_monitor + HIGH severity — meaningful for all 3 roles."
+    talking_points:
+      - "Switch role → MITRE re-renders per role"
+      - "DO_NOT consistent across all 3 roles"
+      - "RQ2 made visible: stakeholder-tailored explanations"
+
+  # ── Beat 3: Critical Safety Floor ───────────────────────────────────
+  # EVAL-0976 — CRITICAL Data Alteration on ventilator. Textbook
+  # INVARIANT 2 case: safety floor must surface this even under
+  # maintenance window or low similar-events count.
+  - alert_id: "EVAL-0976"
+    narrative_position: 3
+    narrative_beat: critical_safety
+    narrative_label: "Critical Safety"
+    narrative_short_desc: "Ventilator — CRITICAL Data Alteration"
+    time_budget_seconds: 120
+    why_chosen: "CRITICAL + ventilator — INVARIANT 2 textbook case."
+    talking_points:
+      - "Sim auto-pauses on this alert (Day 3)"
+      - "DO_NOT prominent in red box"
+      - "Maintenance window cannot bypass"
+
+  # ── Beat 4: Adversarial Detection ───────────────────────────────────
+  # Real data has 0 DISAGREEMENT_ANOMALY rows (no benign alerts at
+  # CRITICAL/HIGH risk in the eval set). The synthetic row below ensures
+  # the purple #9333EA badge shows up during the defense demo. The row
+  # is loaded from configs/synthetic_demo_alerts.yaml ONLY when Demo
+  # Mode is ON; it is excluded from any research evaluation path.
+  - alert_id: "SYNTHETIC_DEMO_001"
+    narrative_position: 4
+    narrative_beat: adversarial
+    narrative_label: "Adversarial"
+    narrative_short_desc: "DISAGREEMENT_ANOMALY (synthetic)"
+    time_budget_seconds: 120
+    is_synthetic: true
+    why_chosen: "v4 enrichment showcase — purple badge, L2 specialist routing."
+    talking_points:
+      - "Models disagree → potential adversarial input"
+      - "Routed to L2_security_specialist"
+      - "Purple badge (#9333EA) — visually distinct from threat-tone reds"
+
+  # ── Beat 5: A/B Comparison ──────────────────────────────────────────
+  # EVAL-0325 — HIGH Data Alteration on ventilator. Demo pool no
+  # longer surfaces an infusion_pump alert; ventilator is the closest
+  # life-critical analogue. The A/B contrast (raw text vs full v4
+  # chrome) carries the beat, not the device class.
+  - alert_id: "EVAL-0325"
+    narrative_position: 5
+    narrative_beat: ab_comparison
+    narrative_label: "A/B Comparison"
+    narrative_short_desc: "Ventilator — HIGH Data Alteration"
+    time_budget_seconds: 90
+    why_chosen: "Clean MVE — clear differentiation between Group A (raw) and Group B (with MVE)."
+    talking_points:
+      - "XAI off → operator confused"
+      - "XAI on → clear action path"
+      - "Method 1 LLM simulation: +60.8% IT improvement (Wilcoxon p < 1e-6)"

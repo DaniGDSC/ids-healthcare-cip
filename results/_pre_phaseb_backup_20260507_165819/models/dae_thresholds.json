@@ -1,0 +1,17 @@
+{
+  "format": "layer1_v4.dae_thresholds",
+  "format_version": 1,
+  "source_detector_path": "results/models/dae_detector.json",
+  "source_detector_sha256": "04ea5ca7297691b5e97df453ac6efef58c76e7674e3d9ce490964d548a54fe9e",
+  "generated_at_utc": "2026-05-07T09:31:36.889997+00:00",
+  "fitted_threshold_percentile": 99.0,
+  "thresholds": {
+    "screening_threshold": 0.01514389338753545,
+    "confirmation_threshold": 0.021431091989163185,
+    "high_confidence_threshold": 0.03180212430178397,
+    "training_min_error": 0.00638677906769124,
+    "training_mean_error": 0.012324313168067706,
+    "training_max_error": 0.0392008951967101,
+    "training_size": 2141
+  }
+}

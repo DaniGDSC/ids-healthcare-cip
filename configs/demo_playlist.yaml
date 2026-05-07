@@ -24,17 +24,17 @@ total_demo_time_seconds: 600
 
 alerts:
   # ── Beat 1: Opener ──────────────────────────────────────────────────
-  # Re-mapped 2026-05-07 after the Strategy 1 4-way split migration.
-  # Demo pool is now its own parquet (10% of total) and curated alert
-  # IDs all changed. EVAL-0895 is MEDIUM Spoofing on an EHR
-  # workstation — the "soft entry" opener.
-  - alert_id: "EVAL-0895"
+  # Re-mapped 2026-05-07 after Phase B (DAE-raw 25-dim + drop RF/DT
+  # baselines from production training). EVAL-0570 is MEDIUM Spoofing
+  # on a ventilator — soft entry, no DO_NOT pressure (still patchable
+  # context). Beats 2/3/5 IDs are unchanged from the post-4-way set.
+  - alert_id: "EVAL-0570"
     narrative_position: 1
     narrative_beat: opener
     narrative_label: "Opener"
-    narrative_short_desc: "MEDIUM / Spoofing — EHR workstation"
+    narrative_short_desc: "MEDIUM / Spoofing — ventilator"
     time_budget_seconds: 90
-    why_chosen: "MEDIUM severity, EHR workstation — easy entry, no DO_NOT pressure."
+    why_chosen: "MEDIUM severity Spoofing — easy entry, no DO_NOT pressure."
     talking_points:
       - "9-class badge taxonomy visible"
       - "Confidence indicator + Mode A/B"

@@ -7,15 +7,15 @@
       "clinician": {
         "role": "clinician",
         "format": "text",
-        "content": "CRITICAL SECURITY ALERT \u2014 Immediate action required.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +14.094).\n\nSource Port showed abnormal source port used (SHAP contribution: +3.693).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +1.842). Clinical review of this vital sign is recommended.\n\nSource Load showed normal source load (SHAP contribution: -1.541).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +1.117).\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response."
+        "content": "MODERATE ALERT \u2014 Flagged for review.\n\nThe intrusion detection system flagged this network flow with 2/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +14.094).\n\nSource Port showed abnormal source port used (SHAP contribution: +3.693).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +1.842). Clinical review of this vital sign is recommended.\n\nSource Load showed normal source load (SHAP contribution: -1.541).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +1.117).\n\nPatient vitals are within normal ranges.\n\nRecommended: Enable enhanced monitoring. Queue for security team review."
       },
       "analyst": {
         "role": "analyst",
         "format": "json",
         "content": {
           "sample_index": 488,
-          "severity": "CRITICAL",
-          "consensus": "4/4 models flagged",
+          "severity": "MEDIUM",
+          "consensus": "2/4 models flagged",
           "top_features_shap": [
             {
               "feature": "Flgs",
@@ -46,18 +46,18 @@
           "dae_top_features": [
             {
               "feature": "sMinPktSz",
-              "weighted_error": 0.0042097,
-              "pct_contribution": 54.7
+              "weighted_error": 0.00056134,
+              "pct_contribution": 24.0
             },
             {
-              "feature": "dMaxPktSz",
-              "weighted_error": 0.00054978,
-              "pct_contribution": 7.1
+              "feature": "pSrcLoss",
+              "weighted_error": 0.00026331,
+              "pct_contribution": 11.2
             },
             {
               "feature": "pDstLoss",
-              "weighted_error": 0.00046906,
-              "pct_contribution": 6.1
+              "weighted_error": 0.00021285,
+              "pct_contribution": 9.1
             }
           ],
           "risk_score": 0.0,
@@ -73,10 +73,10 @@
         "format": "json",
         "content": {
           "sample_index": 488,
-          "severity": "CRITICAL",
+          "severity": "MEDIUM",
           "risk_score": 0.0,
-          "risk_level": "CRITICAL",
-          "action_required": true,
+          "risk_level": "MEDIUM",
+          "action_required": false,
           "global_charts": [
             "global_importance_xgboost.png",
             "beeswarm_xgboost.png"
@@ -93,15 +93,15 @@
       "clinician": {
         "role": "clinician",
         "format": "text",
-        "content": "CRITICAL SECURITY ALERT \u2014 Immediate action required.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +9.793).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +4.836).\n\nPatient Pulse Rate showed elevated heart rate (tachycardia) (SHAP contribution: +2.607). Clinical review of this vital sign is recommended.\n\nSource Inter-Packet Gap showed abnormal packet timing (slow) (SHAP contribution: +2.308).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +1.765).\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response."
+        "content": "MODERATE ALERT \u2014 Flagged for review.\n\nThe intrusion detection system flagged this network flow with 2/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +9.793).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +4.836).\n\nPatient Pulse Rate showed elevated heart rate (tachycardia) (SHAP contribution: +2.607). Clinical review of this vital sign is recommended.\n\nSource Inter-Packet Gap showed abnormal packet timing (slow) (SHAP contribution: +2.308).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +1.765).\n\nPatient vitals are within normal ranges.\n\nRecommended: Enable enhanced monitoring. Queue for security team review."
       },
       "analyst": {
         "role": "analyst",
         "format": "json",
         "content": {
           "sample_index": 1120,
-          "severity": "CRITICAL",
-          "consensus": "4/4 models flagged",
+          "severity": "MEDIUM",
+          "consensus": "2/4 models flagged",
           "top_features_shap": [
             {
               "feature": "Flgs",
@@ -131,19 +131,19 @@
           ],
           "dae_top_features": [
             {
+              "feature": "pSrcLoss",
+              "weighted_error": 0.00102524,
+              "pct_contribution": 19.5
+            },
+            {
+              "feature": "Flgs",
+              "weighted_error": 0.00087725,
+              "pct_contribution": 16.6
+            },
+            {
               "feature": "sMinPktSz",
-              "weighted_error": 0.00426653,
-              "pct_contribution": 46.0
-            },
-            {
-              "feature": "DstBytes",
-              "weighted_error": 0.00058779,
-              "pct_contribution": 6.3
-            },
-            {
-              "feature": "dMaxPktSz",
-              "weighted_error": 0.00045274,
-              "pct_contribution": 4.9
+              "weighted_error": 0.00068711,
+              "pct_contribution": 13.0
             }
           ],
           "risk_score": 0.0,
@@ -159,10 +159,10 @@
         "format": "json",
         "content": {
           "sample_index": 1120,
-          "severity": "CRITICAL",
+          "severity": "MEDIUM",
           "risk_score": 0.0,
-          "risk_level": "CRITICAL",
-          "action_required": true,
+          "risk_level": "MEDIUM",
+          "action_required": false,
           "global_charts": [
             "global_importance_xgboost.png",
             "beeswarm_xgboost.png"
@@ -179,15 +179,15 @@
       "clinician": {
         "role": "clinician",
         "format": "text",
-        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 3/4 models flagged using a confidence of 100%.\n\nSource Port showed abnormal source port used (SHAP contribution: +10.757).\n\nSource Inter-Packet Gap showed rapid packet bursts (SHAP contribution: -3.905).\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -2.734).\n\nPatient Respiratory Rate showed rapid breathing (tachypnea) (SHAP contribution: +1.547). Clinical review of this vital sign is recommended.\n\nSource Load showed high source bandwidth utilization (SHAP contribution: +1.508).\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
+        "content": "LOW PRIORITY \u2014 Logged for audit.\n\nThe intrusion detection system flagged this network flow with 1/4 models flagged using a confidence of 100%.\n\nSource Port showed abnormal source port used (SHAP contribution: +10.757).\n\nSource Inter-Packet Gap showed rapid packet bursts (SHAP contribution: -3.905).\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -2.734).\n\nPatient Respiratory Rate showed rapid breathing (tachypnea) (SHAP contribution: +1.547). Clinical review of this vital sign is recommended.\n\nSource Load showed high source bandwidth utilization (SHAP contribution: +1.508).\n\nPatient vitals are within normal ranges.\n\nRecommended: No immediate action. Review at next security audit."
       },
       "analyst": {
         "role": "analyst",
         "format": "json",
         "content": {
           "sample_index": 11,
-          "severity": "HIGH",
-          "consensus": "3/4 models flagged",
+          "severity": "LOW",
+          "consensus": "1/4 models flagged",
           "top_features_shap": [
             {
               "feature": "Sport",
@@ -218,18 +218,18 @@
           "dae_top_features": [
             {
               "feature": "sMinPktSz",
-              "weighted_error": 0.00435902,
-              "pct_contribution": 48.4
+              "weighted_error": 0.00057501,
+              "pct_contribution": 24.9
             },
             {
-              "feature": "dMaxPktSz",
-              "weighted_error": 0.00066699,
-              "pct_contribution": 7.4
+              "feature": "pSrcLoss",
+              "weighted_error": 0.00028156,
+              "pct_contribution": 12.2
             },
             {
-              "feature": "pDstLoss",
-              "weighted_error": 0.00058948,
-              "pct_contribution": 6.6
+              "feature": "Flgs",
+              "weighted_error": 0.00023163,
+              "pct_contribution": 10.0
             }
           ],
           "risk_score": 0.0,
@@ -245,10 +245,10 @@
         "format": "json",
         "content": {
           "sample_index": 11,
-          "severity": "HIGH",
+          "severity": "LOW",
           "risk_score": 0.0,
-          "risk_level": "HIGH",
-          "action_required": true,
+          "risk_level": "LOW",
+          "action_required": false,
           "global_charts": [
             "global_importance_xgboost.png",
             "beeswarm_xgboost.png"
@@ -265,15 +265,15 @@
       "clinician": {
         "role": "clinician",
         "format": "text",
-        "content": "CRITICAL SECURITY ALERT \u2014 Immediate action required.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +8.425).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +3.621).\n\nPatient Body Temperature showed below-normal temperature (SHAP contribution: -3.161). Clinical review of this vital sign is recommended.\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.200).\n\nSource Port showed abnormal source port used (SHAP contribution: +2.090).\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response."
+        "content": "MODERATE ALERT \u2014 Flagged for review.\n\nThe intrusion detection system flagged this network flow with 2/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +8.425).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +3.621).\n\nPatient Body Temperature showed below-normal temperature (SHAP contribution: -3.161). Clinical review of this vital sign is recommended.\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.200).\n\nSource Port showed abnormal source port used (SHAP contribution: +2.090).\n\nPatient vitals are within normal ranges.\n\nRecommended: Enable enhanced monitoring. Queue for security team review."
       },
       "analyst": {
         "role": "analyst",
         "format": "json",
         "content": {
           "sample_index": 40,
-          "severity": "CRITICAL",
-          "consensus": "4/4 models flagged",
+          "severity": "MEDIUM",
+          "consensus": "2/4 models flagged",
           "top_features_shap": [
             {
               "feature": "Flgs",
@@ -303,19 +303,19 @@
           ],
           "dae_top_features": [
             {
+              "feature": "pSrcLoss",
+              "weighted_error": 0.00087167,
+              "pct_contribution": 18.6
+            },
+            {
+              "feature": "Flgs",
+              "weighted_error": 0.00066248,
+              "pct_contribution": 14.1
+            },
+            {
               "feature": "sMinPktSz",
-              "weighted_error": 0.00441142,
-              "pct_contribution": 49.0
-            },
-            {
-              "feature": "DstBytes",
-              "weighted_error": 0.00046791,
-              "pct_contribution": 5.2
-            },
-            {
-              "feature": "dMaxPktSz",
-              "weighted_error": 0.00046442,
-              "pct_contribution": 5.2
+              "weighted_error": 0.00057572,
+              "pct_contribution": 12.3
             }
           ],
           "risk_score": 0.0,
@@ -331,10 +331,10 @@
         "format": "json",
         "content": {
           "sample_index": 40,
-          "severity": "CRITICAL",
+          "severity": "MEDIUM",
           "risk_score": 0.0,
-          "risk_level": "CRITICAL",
-          "action_required": true,
+          "risk_level": "MEDIUM",
+          "action_required": false,
           "global_charts": [
             "global_importance_xgboost.png",
             "beeswarm_xgboost.png"
@@ -390,18 +390,18 @@
           "dae_top_features": [
             {
               "feature": "sMinPktSz",
-              "weighted_error": 0.00501378,
-              "pct_contribution": 34.0
+              "weighted_error": 0.00057524,
+              "pct_contribution": 27.5
             },
             {
-              "feature": "SIntPktAct",
-              "weighted_error": 0.00135973,
-              "pct_contribution": 9.2
+              "feature": "pSrcLoss",
+              "weighted_error": 0.00022199,
+              "pct_contribution": 10.6
             },
             {
-              "feature": "sMaxPktSz",
-              "weighted_error": 0.00119159,
-              "pct_contribution": 8.1
+              "feature": "pDstLoss",
+              "weighted_error": 0.00018724,
+              "pct_contribution": 9.0
             }
           ],
           "risk_score": 0.0,

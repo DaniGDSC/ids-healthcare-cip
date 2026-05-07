@@ -1,0 +1,117 @@
+{
+  "model": "random_forest",
+  "stage": "final_training_multiclass",
+  "label_order": [
+    "normal",
+    "Data Alteration",
+    "Spoofing"
+  ],
+  "best_hyperparameters": {
+    "bootstrap": true,
+    "ccp_alpha": 0.0,
+    "class_weight": "balanced",
+    "criterion": "gini",
+    "max_depth": null,
+    "max_features": 0.5,
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 1,
+    "min_samples_split": 5,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "n_estimators": 200,
+    "n_jobs": -1,
+    "oob_score": false,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "data": {
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "train_samples": 9137,
+    "val_samples": 2285,
+    "test_samples": 4896,
+    "random_seed": 42,
+    "argmax_test_distribution": {
+      "normal": 4482,
+      "Data Alteration": 277,
+      "Spoofing": 137
+    },
+    "softmax_confidence_buckets_test": {
+      "high_conf_>=0.85": 4166,
+      "low_conf_<0.40": 0,
+      "uncertain_band": 730
+    }
+  },
+  "test_metrics": {
+    "accuracy": 0.951797385620915,
+    "macro_f1": 0.8250604538063592,
+    "weighted_f1": 0.9421780647030968,
+    "per_class_f1": {
+      "normal": 0.9730716567777271,
+      "Data Alteration": 1.0,
+      "Spoofing": 0.5021097046413502
+    },
+    "classification_report": {
+      "normal": {
+        "precision": 0.9513609995537706,
+        "recall": 0.9957963568425969,
+        "f1-score": 0.9730716567777271,
+        "support": 4282.0
+      },
+      "Data Alteration": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 277.0
+      },
+      "Spoofing": {
+        "precision": 0.8686131386861314,
+        "recall": 0.35311572700296734,
+        "f1-score": 0.5021097046413502,
+        "support": 337.0
+      },
+      "accuracy": 0.951797385620915,
+      "macro avg": {
+        "precision": 0.9399913794133007,
+        "recall": 0.7829706946151881,
+        "f1-score": 0.8250604538063592,
+        "support": 4896.0
+      },
+      "weighted avg": {
+        "precision": 0.9484171625462565,
+        "recall": 0.951797385620915,
+        "f1-score": 0.9421780647030968,
+        "support": 4896.0
+      }
+    }
+  }
+}

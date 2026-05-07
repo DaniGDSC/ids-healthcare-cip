@@ -168,120 +168,20 @@ def _calibrate_binary_models(method: str) -> None:
         )
 
 
-def _load_multiclass_split(
-    name: str, label_col: str, label_order: tuple[str, ...],
-) -> tuple:
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed" / f"{name}.parquet")
-    label_to_id = {s: i for i, s in enumerate(label_order)}
-    y = np.array([label_to_id[s] for s in df[label_col].astype(str).values],
-                 dtype=np.int64)
-    X = drop_non_feature_cols(df).values.astype(np.float32)
-    return X, y
-
-
-def _calibrate_multiclass_models(method: str) -> None:
-    """Calibrate each multi-class tree on val; emit *_multiclass_*_calibrated artefacts."""
-    from src.data_models import MULTICLASS_LABEL_ORDER_EHMS
-
-    output_dir = PROJECT_ROOT / "results/models"
-    label_order = MULTICLASS_LABEL_ORDER_EHMS
-
-    X_val, y_val = _load_multiclass_split(
-        "val_phase1", "Attack Category", label_order,
-    )
-    X_test, y_test = _load_multiclass_split(
-        "test_phase1", "Attack Category", label_order,
-    )
-    cal_method = _calibrator(method, len(X_val))
-    logger.info("Multi-class calibration: method=%s, n_val=%d, classes=%s",
-                cal_method, len(X_val), label_order)
-
-    for name in ("xgboost", "random_forest", "decision_tree"):
-        pkl = output_dir / f"{name}_multiclass_final_pipeline.pkl"
-        if not pkl.exists():
-            logger.warning("  %s: no fitted multiclass model at %s — skipping",
-                           name, pkl)
-            continue
-        clf = joblib.load(pkl)
-        cal = CalibratedClassifierCV(estimator=clf, method=cal_method, cv="prefit")
-        cal.fit(X_val, y_val)
-
-        raw_val = clf.predict_proba(X_val)
-        cal_val = cal.predict_proba(X_val)
-        raw_test = clf.predict_proba(X_test)
-        cal_test = cal.predict_proba(X_test)
-
-        # Multi-class Brier (one-hot encoded)
-        n_classes = len(label_order)
-        y_val_oh = np.eye(n_classes)[y_val]
-        y_test_oh = np.eye(n_classes)[y_test]
-        raw_val_brier = float(np.mean((raw_val - y_val_oh) ** 2))
-        cal_val_brier = float(np.mean((cal_val - y_val_oh) ** 2))
-        raw_test_brier = float(np.mean((raw_test - y_test_oh) ** 2))
-        cal_test_brier = float(np.mean((cal_test - y_test_oh) ** 2))
-
-        # P(attack) = 1 - P(normal); compare to binary y_val/y_test
-        normal_idx = label_order.index("normal") if "normal" in label_order else 0
-        raw_val_pa = 1.0 - raw_val[:, normal_idx]
-        cal_val_pa = 1.0 - cal_val[:, normal_idx]
-        raw_test_pa = 1.0 - raw_test[:, normal_idx]
-        cal_test_pa = 1.0 - cal_test[:, normal_idx]
-        bin_y_val = (y_val != normal_idx).astype(int)
-        bin_y_test = (y_test != normal_idx).astype(int)
-
-        diagnostics = {
-            "method": cal_method,
-            "label_order": list(label_order),
-            "n_val": int(len(X_val)),
-            "raw": {
-                "val_multiclass_brier": raw_val_brier,
-                "test_multiclass_brier": raw_test_brier,
-                "test_p_attack_auc_roc": float(roc_auc_score(bin_y_test, raw_test_pa)),
-                "test_p_attack_brier": float(brier_score_loss(bin_y_test, raw_test_pa)),
-            },
-            "calibrated": {
-                "val_multiclass_brier": cal_val_brier,
-                "test_multiclass_brier": cal_test_brier,
-                "test_p_attack_auc_roc": float(roc_auc_score(bin_y_test, cal_test_pa)),
-                "test_p_attack_brier": float(brier_score_loss(bin_y_test, cal_test_pa)),
-            },
-            "improvements": {
-                "delta_val_multiclass_brier": raw_val_brier - cal_val_brier,
-                "delta_test_multiclass_brier": raw_test_brier - cal_test_brier,
-            },
-        }
-
-        np.save(output_dir / f"{name}_multiclass_val_proba_calibrated.npy", cal_val)
-        np.save(output_dir / f"{name}_multiclass_test_proba_calibrated.npy", cal_test)
-        joblib.dump(cal, output_dir / f"{name}_multiclass_calibrator.pkl")
-        (output_dir / f"{name}_multiclass_calibration_report.json").write_text(
-            json.dumps(diagnostics, indent=2), encoding="utf-8"
-        )
-
-        logger.info(
-            "  %-15s mc-Brier val %.4f→%.4f (Δ%+.4f)  test %.4f→%.4f (Δ%+.4f)  test P(atk) AUC %.4f→%.4f",
-            name,
-            raw_val_brier, cal_val_brier,
-            raw_val_brier - cal_val_brier,
-            raw_test_brier, cal_test_brier,
-            raw_test_brier - cal_test_brier,
-            diagnostics["raw"]["test_p_attack_auc_roc"],
-            diagnostics["calibrated"]["test_p_attack_auc_roc"],
-        )
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Post-hoc calibration of Track A trees (Enhancement 1)",
     )
-    parser.add_argument("--binary", action="store_true",
-                        help="Calibrate binary models only")
-    parser.add_argument("--multiclass", action="store_true",
-                        help="Calibrate multi-class models only")
     parser.add_argument("--method", default="auto",
                         choices=("auto", "isotonic", "sigmoid"),
                         help="Calibration method (default: auto — isotonic "
                              "if n_val>=1000, else sigmoid)")
+    # ``--binary`` is accepted as a no-op for backward compatibility with
+    # existing ``run_all_modules.py`` invocations; the multiclass branch
+    # was removed when the multi-class fusion path was archived.
+    parser.add_argument("--binary", action="store_true",
+                        help="(Deprecated, no-op) — only binary "
+                             "calibration is supported now.")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -290,20 +190,10 @@ def main() -> int:
     )
     sep = "=" * 72
 
-    do_binary = args.binary or not (args.binary or args.multiclass)
-    do_mc = args.multiclass or not (args.binary or args.multiclass)
-
-    if do_binary:
-        logger.info(sep)
-        logger.info("ENHANCEMENT 1 — BINARY TRACK A CALIBRATION")
-        logger.info(sep)
-        _calibrate_binary_models(args.method)
-
-    if do_mc:
-        logger.info(sep)
-        logger.info("ENHANCEMENT 1 — MULTI-CLASS TRACK A CALIBRATION")
-        logger.info(sep)
-        _calibrate_multiclass_models(args.method)
+    logger.info(sep)
+    logger.info("ENHANCEMENT 1 — BINARY TRACK A CALIBRATION")
+    logger.info(sep)
+    _calibrate_binary_models(args.method)
 
     return 0
 

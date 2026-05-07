@@ -43,10 +43,9 @@ TEST_PARQUET = PROJECT_ROOT / "data/processed/test_phase1.parquet"
 DAE_CAL = MODELS_DIR / "dae_calibration.json"
 DAE_THR = MODELS_DIR / "dae_thresholds.json"
 
+# Phase B: XGB-only production runtime. RF/DT are baselines, optional.
 REQUIRED = (
     MODELS_DIR / "xgboost_final_pipeline.pkl",
-    MODELS_DIR / "random_forest_final_pipeline.pkl",
-    MODELS_DIR / "decision_tree_final_pipeline.pkl",
     MODELS_DIR / "dae_detector.json",
     MODELS_DIR / "dae_model.weights.h5",
 )
@@ -54,7 +53,7 @@ REQUIRED = (
 
 pytestmark = pytest.mark.skipif(
     not (all(p.exists() for p in REQUIRED) and TEST_PARQUET.exists()),
-    reason="Layer 2 v4 tests require trained Track A + DAE artefacts on disk",
+    reason="Layer 2 v4 tests require trained XGBoost + DAE artefacts on disk",
 )
 
 

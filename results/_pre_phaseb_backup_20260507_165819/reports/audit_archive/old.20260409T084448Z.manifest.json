@@ -1,0 +1,16 @@
+{
+  "archived_path": "/home/un1/project/ids-healthcare-cip/results/reports/audit_archive/old.20260409T084448Z.jsonl",
+  "first_record_ts": "2025-01-01T00:00:00+00:00",
+  "last_record_ts": "2025-01-01T00:00:00+00:00",
+  "n_records": 3,
+  "first_integrity_hash": "8ce33da055941a615b64af23e1634405e172a8ac139461d5ea3e0f61400a4da3",
+  "last_integrity_hash": "b1acfd06eac41b6bbf67e8ae49de3b0efb766bb3c54ae05bc6d6a8783ef194ac",
+  "signing_key_id": "ecdsa-p256-39aa1a0704361a1f",
+  "sealed_at": "2026-04-09T08:44:48.890253+00:00",
+  "verifier_summary": {
+    "total": 3,
+    "valid_signed": 3,
+    "valid_legacy": 0,
+    "first_break_at": null
+  }
+}

@@ -20,7 +20,6 @@ import json
 import logging
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -54,10 +53,36 @@ RANDOM_STATE = 42
 
 # ── Data loading ────────────────────────────────────────────────────────
 
+
+# Strategy 1 invariant: the demo split is FROZEN — never seen by any
+# model during training. Loading ``demo_phase1.parquet`` from a training
+# routine is always a bug; we refuse it loudly. The test split is also
+# frozen for paper metrics, but is intentionally loaded here as a
+# held-out evaluation set after fitting — no parameter sees it during
+# fit (SMOTE/CV/fit operate on train only; cross_val_predict uses train
+# only). See ARCHITECTURE.md Step [2] "Leakage guard".
+_FORBIDDEN_TRAINING_PARQUETS = frozenset({"demo_phase1.parquet"})
+
+
+def _assert_no_demo_leakage(parquet_path: Path) -> None:
+    """Refuse to read the demo split from any training-side function."""
+    if parquet_path.name in _FORBIDDEN_TRAINING_PARQUETS:
+        raise RuntimeError(
+            f"Module 2 training functions must not load "
+            f"{parquet_path.name}. Strategy 1 invariant: the demo split "
+            f"is frozen and may only be touched at inference time "
+            f"(see module2_train_models.predict_demo). If you need "
+            f"demo predictions, run predict_demo() on already-fitted "
+            f"pipelines — do not refit on demo rows."
+        )
+
+
 def load_data(label_col: str = "Label") -> tuple:
     """Load Phase 1 parquet files, return X/y arrays and feature names."""
     train_path = PROJECT_ROOT / "data/processed/train_phase1.parquet"
     test_path = PROJECT_ROOT / "data/processed/test_phase1.parquet"
+    _assert_no_demo_leakage(train_path)
+    _assert_no_demo_leakage(test_path)
 
     train_df = pd.read_parquet(train_path)
     test_df = pd.read_parquet(test_path)
@@ -305,60 +330,12 @@ def train_track_a(
     return metrics
 
 
-# ── Track B: DAE ────────────────────────────────────────────────────────
-
-_TRACK_A_MODELS = ("xgboost", "random_forest", "decision_tree")
-
-
-def _load_track_a_probas(
-    output_dir: Path,
-    benign_mask: np.ndarray,
-    *,
-    suffix: str,
-) -> np.ndarray:
-    """Load Track A probabilities for all 3 models and stack benign rows.
-
-    Args:
-        output_dir: Directory containing ``{model}_{suffix}.npy`` files.
-        benign_mask: Boolean mask selecting benign rows.
-        suffix: Either ``"oof_proba"`` (out-of-fold, used as fallback) or
-            ``"val_proba"`` (held-out validation set — closes GAP-L1-1).
-
-    Returns:
-        Array of shape ``(n_benign, 3)`` — one column per Track A model.
-
-    Opt-5: three .npy files are loaded concurrently via ThreadPoolExecutor
-    (I/O bound, GIL released for numpy file reads).
-    """
-    def _load_one(name: str) -> np.ndarray:
-        return np.load(output_dir / f"{name}_{suffix}.npy")[benign_mask]
-
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        cols = list(pool.map(_load_one, _TRACK_A_MODELS))
-    return np.column_stack(cols)
-
-
-def _val_probas_available(output_dir: Path) -> bool:
-    """True iff all 3 Track A val-proba files exist."""
-    return all(
-        (output_dir / f"{n}_val_proba.npy").exists()
-        for n in _TRACK_A_MODELS
-    )
-
-
-def _track_a_test_probas(X_test: np.ndarray, output_dir: Path) -> np.ndarray:
-    """Run Track A models on test set, return stacked probabilities.
-
-    Returns:
-        Array of shape (n_test, 3).
-    """
-    from common import loads_signed
-
-    cols = []
-    for name in ("xgboost", "random_forest", "decision_tree"):
-        clf = loads_signed(output_dir / f"{name}_final_pipeline.pkl")
-        cols.append(clf.predict_proba(X_test)[:, 1])
-    return np.column_stack(cols)
+# ── Track B: DAE (Phase B — raw 25-dim, no cascade) ───────────────────
+# The cascade helpers ``_load_track_a_probas``, ``_val_probas_available``,
+# and ``_track_a_test_probas`` were removed alongside the 28-dim cascade.
+# Track A probas are no longer fed into Track B; the DAE trains and runs
+# on raw 25-dim input only. See ARCHITECTURE.md Track B and the ablation
+# evidence (EHMS ΔAUC=+0.02 marginal, MedSec-25 ΔAUC=−0.19 regression).
 
 
 def train_track_b_dae(
@@ -368,91 +345,73 @@ def train_track_b_dae(
     y_test: np.ndarray,
     feat_names: list,
 ) -> dict:
-    """Train cascaded DAE: input = [raw features || Track A probas].
+    """Train DAE on raw 25 features only — NO cascade (Phase B).
 
-    Track A must be trained first. The DAE learns to reconstruct benign
-    samples in the joint (features + Track-A-prediction) space. Spoofing
-    attacks that look normal in raw features but trigger Track A become
-    visible as high reconstruction error.
+    Per ARCHITECTURE.md Track B: the cascade design ``[raw || P_xgb,
+    P_rf, P_dt]`` was evaluated via leave-one-class-out and rejected
+    (EHMS ΔAUC=+0.02 marginal; MedSec-25 ΔAUC=−0.19 regression). The
+    production design is **DAE-raw** — autoencoder fits benign-only
+    rows on the 25 raw features, no probability cascade.
 
-    GAP-L1-1: when held-out validation artifacts exist (``val_phase1.parquet``
-    + ``*_val_proba.npy`` for all three Track A models), train on val benign
-    samples augmented with val-set probas. Otherwise fall back to the legacy
-    OOF path (train benign + OOF probas).
+    Training data is the held-out **benign val** subset
+    (``benign_only_val.parquet``). This still avoids OOF leakage (the
+    GAP-L1-1 fix) without needing Track-A probas; the val benign rows
+    are simply the natural held-out novelty reference.
     """
     t0 = time.perf_counter()
     sep = "-" * 60
 
     logger.info(sep)
-    logger.info("FINAL TRAINING: DAE (TRACK B — CASCADED)")
+    logger.info("FINAL TRAINING: DAE (TRACK B — RAW 25-DIM)")
     logger.info(sep)
 
     output_dir = PROJECT_ROOT / "results/models"
 
-    # Load best params
+    # Load best params (re-used from prior tuning; encoding_dims may
+    # need re-derivation since they were tuned for 28-dim cascade input).
     params_path = output_dir / "dae_best_params.json"
     with open(params_path) as f:
         best_hp = json.load(f)
     logger.info("Best params: %s", best_hp)
 
-    val_parquet_path = PROJECT_ROOT / "data/processed/val_phase1.parquet"
-    use_val_path = val_parquet_path.exists() and _val_probas_available(output_dir)
+    # Prefer the held-out benign val subset; fall back to benign train.
+    val_benign_path = PROJECT_ROOT / "data/processed/benign_only_val.parquet"
+    train_benign_path = PROJECT_ROOT / "data/processed/benign_only_train.parquet"
 
-    if use_val_path:
-        # ── GAP-L1-1: held-out validation-set probas ──
-        # The DAE trains on benign val samples + val-set Track A probas
-        # (predict_proba on rows the supervised models never saw during
-        # CV). This eliminates the train-inference skew that arose from
-        # using OOF probas, which encode CV-fold structure into the
-        # joint (features, Track-A-prediction) space.
-        val_df = pd.read_parquet(val_parquet_path)
-        drop_cols = [
+    if val_benign_path.exists():
+        bdf = pd.read_parquet(val_benign_path)
+        proba_source = "val_benign"  # held-out val → no leakage
+    elif train_benign_path.exists():
+        bdf = pd.read_parquet(train_benign_path)
+        proba_source = "train_benign"
+    else:
+        # Last-resort fall-back: derive from train arrays already loaded.
+        benign_mask = y_train == 0
+        X_benign_raw = X_train[benign_mask]
+        proba_source = "train_arrays"
+        bdf = None
+
+    if bdf is not None:
+        bdrop = [
             c for c in ["Label", "Attack Category", "row_id",
                         "device_class", "attack_category"]
-            if c in val_df.columns
+            if c in bdf.columns
         ]
-        y_val = val_df["Label"].values.astype(int)
-        X_val = val_df.drop(columns=drop_cols).values.astype(np.float32)
-        benign_mask = y_val == 0
-        X_benign = X_val[benign_mask]
-        probas = _load_track_a_probas(output_dir, benign_mask, suffix="val_proba")
-        proba_source = "val"
-        logger.info(
-            "GAP-L1-1: using held-out val set for DAE training "
-            "(n_val=%d, n_benign=%d)",
-            len(y_val), int(benign_mask.sum()),
-        )
-    else:
-        # Legacy OOF path (no val artifacts available)
-        benign_mask = y_train == 0
-        X_benign = X_train[benign_mask]
-        probas = _load_track_a_probas(output_dir, benign_mask, suffix="oof_proba")
-        proba_source = "oof"
-        logger.info(
-            "Val artifacts unavailable; falling back to OOF probas "
-            "(legacy path; benign train n=%d)",
-            int(benign_mask.sum()),
-        )
+        X_benign_raw = bdf.drop(columns=bdrop).values.astype(np.float32)
 
     logger.info(
-        "Track A %s probas (benign): shape=%s, means=%s",
-        proba_source, probas.shape,
-        np.round(probas.mean(axis=0), 4),
+        "DAE training input: shape=%s (raw 25-dim, source=%s)",
+        X_benign_raw.shape, proba_source,
     )
 
-    # Augmented input: [25 raw features || 3 Track A probas] = 28 features
-    X_benign_aug = np.column_stack([X_benign, probas])
-    aug_feat_names = feat_names + ["track_a_xgb", "track_a_rf", "track_a_dt"]
-    logger.info(
-        "Cascaded DAE input: %d features (%d raw + %d Track A)",
-        X_benign_aug.shape[1], len(feat_names), probas.shape[1],
-    )
-
-    # Adjust architecture for 28 features
-    # Bottleneck must be < n_features; scale encoder/decoder proportionally
-    n_feat = X_benign_aug.shape[1]
-    enc_dim = max(best_hp.get("encoding_dims", [20, 12, 20])[0], n_feat - 4)
-    bot_dim = min(best_hp.get("encoding_dims", [20, 12, 20])[1], n_feat - 2)
+    # Architecture sized for 25 raw features. Bottleneck must be <
+    # n_features; encoder/decoder symmetric. Reuse best_hp's
+    # ``encoding_dims`` if compatible, else derive a default that the
+    # 25-dim space supports.
+    n_feat = X_benign_raw.shape[1]
+    raw_dims = best_hp.get("encoding_dims", [20, 12, 20])
+    enc_dim = min(raw_dims[0], n_feat - 1)
+    bot_dim = min(raw_dims[1], n_feat - 2)
     dec_dim = enc_dim
     adjusted_dims = [enc_dim, bot_dim, dec_dim]
     logger.info("Adjusted architecture: %s (for %d features)", adjusted_dims, n_feat)
@@ -467,14 +426,10 @@ def train_track_b_dae(
         batch_size=256,
         random_state=RANDOM_STATE,
     )
-    det.fit(X_benign_aug, validation_split=0.0)
+    det.fit(X_benign_raw, validation_split=0.0)
 
-    # Augmented test set
-    test_probas = _track_a_test_probas(X_test, output_dir)
-    X_test_aug = np.column_stack([X_test, test_probas])
-
-    # Evaluate
-    test_metrics = det.evaluate(X_test_aug, y_test)
+    # Test set is also raw 25-dim — no augmentation.
+    test_metrics = det.evaluate(X_test, y_test)
 
     elapsed = round(time.perf_counter() - t0, 1)
 
@@ -489,27 +444,27 @@ def train_track_b_dae(
     # Report
     report = det.get_report()
     report["stage"] = "final_training"
-    report["architecture"] = "cascaded"
+    report["architecture"] = "raw_25dim"
     report["best_hyperparameters"] = best_hp
     report["adjusted_encoding_dims"] = adjusted_dims
     report["data"] = {
         "n_raw_features": len(feat_names),
-        "n_track_a_features": 3,
+        "n_track_a_features": 0,
         "n_total_features": n_feat,
-        "feature_names": aug_feat_names,
-        "benign_train_samples": int(benign_mask.sum()),
+        "feature_names": list(feat_names),
+        "benign_train_samples": int(X_benign_raw.shape[0]),
         "test_samples": int(len(y_test)),
         "random_seed": int(RANDOM_STATE),
-        "track_a_proba_source": proba_source,  # "val" closes GAP-L1-1; "oof" = legacy
+        "track_a_proba_source": proba_source,
     }
     report["elapsed_seconds"] = elapsed
 
     report_path = output_dir / "dae_final_report.json"
     report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
 
-    # Test predictions (on augmented input)
-    y_pred = det.predict(X_test_aug)
-    errors = det.reconstruction_error(X_test_aug)
+    # Test predictions (raw 25-dim)
+    y_pred = det.predict(X_test)
+    errors = det.reconstruction_error(X_test)
     np.savez(
         output_dir / "dae_test_predictions.npz",
         y_true=y_test, y_pred=y_pred, reconstruction_error=errors,
@@ -563,9 +518,21 @@ def predict_demo() -> None:
         len(y_demo), float(y_demo.mean()),
     )
 
-    # Track A: 3 supervised pipelines
+    # Track A: emit predictions for every supervised pipeline that has
+    # been trained. Production runtime only needs XGBoost (Module 3
+    # `triage_v4.py` consumes only `c_track_a = P_xgb`); RF/DT are
+    # included only when ``--include-baselines`` was passed at training
+    # time, so this loop must tolerate missing artefacts.
     for name in ("xgboost", "random_forest", "decision_tree"):
-        clf = loads_signed(output_dir / f"{name}_final_pipeline.pkl")
+        pipeline_path = output_dir / f"{name}_final_pipeline.pkl"
+        if not pipeline_path.exists():
+            logger.info(
+                "  %s pipeline absent — skipping demo predictions "
+                "(production runtime is XGB-only; RF/DT are baselines)",
+                name,
+            )
+            continue
+        clf = loads_signed(pipeline_path)
         with open(output_dir / f"{name}_final_report.json") as f:
             threshold = json.load(f)["optimal_threshold"]
         y_proba = clf.predict_proba(X_demo)[:, 1]
@@ -576,19 +543,13 @@ def predict_demo() -> None:
         )
         logger.info("  %s_demo_predictions.npz written (n=%d)", name, len(y_demo))
 
-    # Track B: DAE on cascaded input [raw 25 || P_xgb, P_rf, P_dt] = 28 dims
-    track_a_demo = np.column_stack([
-        np.load(output_dir / f"{n}_demo_predictions.npz")["y_proba"]
-        for n in ("xgboost", "random_forest", "decision_tree")
-    ])
-    X_demo_aug = np.column_stack([X_demo, track_a_demo])
-
+    # Track B: DAE on raw 25-dim input (Phase B — no cascade).
     det = DAEDetector.from_artefacts(
         output_dir / "dae_detector.json",
         output_dir / "dae_model.weights.h5",
     )
-    y_pred_dae = det.predict(X_demo_aug)
-    errors = det.reconstruction_error(X_demo_aug)
+    y_pred_dae = det.predict(X_demo)
+    errors = det.reconstruction_error(X_demo)
     np.savez(
         output_dir / "dae_demo_predictions.npz",
         y_true=y_demo, y_pred=y_pred_dae, reconstruction_error=errors,
@@ -613,6 +574,13 @@ def main() -> None:
         help="Random seed for SMOTE, KFold, classifiers, and DAE init "
              "(default: 42; persisted into every *_final_report.json)",
     )
+    parser.add_argument(
+        "--include-baselines", action="store_true",
+        help="Also train RandomForest + DecisionTree as comparative "
+             "baselines for thesis Section 4. Default is XGBoost-only "
+             "(matches production runtime path; RF/DT are not consumed "
+             "by Module 3).",
+    )
     args = parser.parse_args()
 
     global RANDOM_STATE
@@ -629,8 +597,21 @@ def main() -> None:
 
     all_metrics = {}
 
-    # Track A models
-    for name, cfg in TRACK_A_MODELS.items():
+    # Track A models. Production runtime is XGBoost-only (Module 3
+    # `triage_v4.py` consumes only ``P_xgb``). RF/DT are kept as
+    # comparative baselines for thesis Section 4 — opt-in via
+    # ``--include-baselines``.
+    models_to_train = ["xgboost"]
+    if args.include_baselines:
+        models_to_train += ["random_forest", "decision_tree"]
+        logger.info("Training Track A: %s (baselines included)", models_to_train)
+    else:
+        logger.info(
+            "Training Track A: ['xgboost'] only — RF/DT baselines skipped. "
+            "Re-run with --include-baselines to reproduce thesis Section 4."
+        )
+    for name in models_to_train:
+        cfg = TRACK_A_MODELS[name]
         metrics = train_track_a(name, cfg, X_train, y_train, X_test, y_test, feat_names)
         all_metrics[name] = metrics
 

@@ -1,0 +1,44 @@
+# Composite risk formula weights — ARCHITECTURE.md Step [9]
+#
+# R = w_C·C_detect + w_dcrit·D_crit + w_sdata·S_data + w_dclin·D_clinical_tier
+#
+# Weights MUST sum to 1.0 (validated at load time in
+# ``module3_risk_scoring/module3_risk_scores.py::load_composite_weights``).
+# These are POLICY parameters — set by hospital security/clinical
+# leadership, NOT learned from data. Reviewed annually.
+#
+# Sensitivity analysis under ±20% perturbation is reported in paper
+# Section 11; the weights here are the calibration baseline.
+
+weights:
+  detection_confidence:    0.40   # w_C — threat probability (DAE | XGBoost)
+  device_criticality:      0.25   # w_dcrit — security criticality tier
+  data_sensitivity:        0.15   # w_sdata — data exposure impact
+  clinical_tier:           0.20   # w_dclin — patient impact proxy
+
+tier_boundaries:
+  critical_min:  0.80
+  high_min:      0.60
+  medium_min:    0.40
+  # below 0.40 → LOW
+
+# Calibration metadata
+calibration:
+  anchored_to: "EHMS-2020 4-way test split"
+  date:        "2026-05-07"
+  validated_against_distribution: true   # boundaries don't cut clusters
+  expected_distribution:
+    CRITICAL: "~5%"
+    HIGH:     "~20%"
+    MEDIUM:   "~40%"
+    LOW:      "~35%"
+
+review:
+  reviewers: ["CISO", "Patient Safety Officer", "Clinical Engineering Director"]
+  review_period: "12 months"
+
+# Acknowledged limitations (Section 11):
+#   L1: Linear sum allows compensatory effects vs true multiplicative risk
+#   L2: clinical_tier is device-class proxy, not real-time patient acuity
+#   L3: device_criticality and clinical_tier are correlated (double-counting)
+#   L4: tier boundaries calibrated to test split; redeployment may need recalibration

@@ -1,0 +1,78 @@
+{
+  "xgboost": {
+    "native_top5": [
+      "Flgs",
+      "DIntPkt",
+      "Sport",
+      "Temp",
+      "Pulse_Rate"
+    ],
+    "shap_top5": [
+      "Flgs",
+      "Temp",
+      "DIntPkt",
+      "Sport",
+      "SIntPkt"
+    ],
+    "top5_overlap": [
+      "DIntPkt",
+      "Flgs",
+      "Sport",
+      "Temp"
+    ],
+    "top5_overlap_count": 4,
+    "spearman_rho": 0.8715,
+    "spearman_p_value": 0.0
+  },
+  "random_forest": {
+    "native_top5": [
+      "DIntPkt",
+      "Flgs",
+      "Sport",
+      "Temp",
+      "SrcLoad"
+    ],
+    "shap_top5": [
+      "Flgs",
+      "DIntPkt",
+      "Sport",
+      "Temp",
+      "SrcLoad"
+    ],
+    "top5_overlap": [
+      "DIntPkt",
+      "Flgs",
+      "Sport",
+      "SrcLoad",
+      "Temp"
+    ],
+    "top5_overlap_count": 5,
+    "spearman_rho": 0.97,
+    "spearman_p_value": 0.0
+  },
+  "decision_tree": {
+    "native_top5": [
+      "Flgs",
+      "Sport",
+      "DIntPkt",
+      "Temp",
+      "Resp_Rate"
+    ],
+    "shap_top5": [
+      "Flgs",
+      "DIntPkt",
+      "Sport",
+      "Temp",
+      "Pulse_Rate"
+    ],
+    "top5_overlap": [
+      "DIntPkt",
+      "Flgs",
+      "Sport",
+      "Temp"
+    ],
+    "top5_overlap_count": 4,
+    "spearman_rho": 0.9592,
+    "spearman_p_value": 0.0
+  }
+}

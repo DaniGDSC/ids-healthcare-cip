@@ -12,33 +12,5 @@
     "f1_drop": 0.6639,
     "f1_drop_pct": 74.4,
     "faithful": true
-  },
-  "random_forest": {
-    "top_features_masked": [
-      "SrcLoad",
-      "Temp",
-      "Sport",
-      "DIntPkt",
-      "Flgs"
-    ],
-    "f1_baseline": 0.7574,
-    "f1_after_masking": 0.2234,
-    "f1_drop": 0.534,
-    "f1_drop_pct": 70.5,
-    "faithful": true
-  },
-  "decision_tree": {
-    "top_features_masked": [
-      "Pulse_Rate",
-      "Temp",
-      "Sport",
-      "DIntPkt",
-      "Flgs"
-    ],
-    "f1_baseline": 0.7597,
-    "f1_after_masking": 0.2233,
-    "f1_drop": 0.5364,
-    "f1_drop_pct": 70.6,
-    "faithful": true
   }
 }

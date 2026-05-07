@@ -1,0 +1,9 @@
+{
+  "corrections": [],
+  "thematic_recommendations": [
+    "If 'wanted_more_detail' > 3: expand NLG templates with feature-value context",
+    "If 'too_technical' > 3: simplify analyst view terminology for clinician role",
+    "If 'action_unclear' > 3: add explicit step-by-step response instructions"
+  ],
+  "reclassification_summary": {}
+}

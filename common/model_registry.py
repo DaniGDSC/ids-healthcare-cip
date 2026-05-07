@@ -43,31 +43,39 @@ _DAE_WEIGHTS = PROJECT_ROOT / "results/models/dae_model.weights.h5"
 
 @lru_cache(maxsize=None)
 def get_track_a_classifiers() -> dict:
-    """Load all three Track A classifiers once and cache for the process lifetime.
+    """Load Track A classifiers once and cache for the process lifetime.
+
+    Phase B: production runtime is XGBoost-only. RandomForest and
+    DecisionTree pickles are loaded only when their artefacts exist
+    (re-trained via ``module2_train_models.py --include-baselines``).
+    Missing baselines are logged at INFO level and silently skipped.
 
     Returns:
         dict mapping model name → fitted sklearn classifier (bare, not Pipeline).
-        The bare classifier is extracted when the artefact is a full sklearn
-        Pipeline with a named 'classifier' step (legacy format); otherwise the
-        loaded object is used directly.
-
-    Raises:
-        FileNotFoundError: if any model artefact is missing.
-        RuntimeError: if loads_signed() rejects the signature.
     """
     from common import loads_signed
 
     classifiers = {}
     for name, rel_path in _TRACK_A_PATHS.items():
         path = PROJECT_ROOT / rel_path
+        if not path.exists():
+            logger.info(
+                "ModelRegistry: %s artefact absent at %s — skipping "
+                "(production runtime is XGB-only; RF/DT are baselines)",
+                name, path,
+            )
+            continue
         logger.info("ModelRegistry: loading %s from %s", name, path)
         obj = loads_signed(path)
-        # Extract bare classifier if artefact is a full Pipeline
         classifiers[name] = (
             obj.named_steps["classifier"]
             if hasattr(obj, "named_steps") else obj
         )
-    logger.info("ModelRegistry: Track A classifiers loaded (3 models)")
+    logger.info(
+        "ModelRegistry: Track A classifiers loaded (%d model%s: %s)",
+        len(classifiers), "" if len(classifiers) == 1 else "s",
+        ", ".join(classifiers.keys()),
+    )
     return classifiers
 
 
@@ -109,9 +117,14 @@ def get_track_a_thresholds() -> dict:
     thresholds = {}
     for name, rel_path in _REPORT_PATHS.items():
         path = PROJECT_ROOT / rel_path
+        if not path.exists():
+            continue
         with open(path) as f:
             thresholds[name] = json.load(f)["optimal_threshold"]
-    logger.info("ModelRegistry: Track A thresholds loaded")
+    logger.info(
+        "ModelRegistry: Track A thresholds loaded (%d model%s)",
+        len(thresholds), "" if len(thresholds) == 1 else "s",
+    )
     return thresholds
 
 

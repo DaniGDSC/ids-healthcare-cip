@@ -120,18 +120,36 @@ def test_triage_v4_does_not_call_normalised_diversity():
     assert "c_detect = max(p_xgb, dae_score)" in src
 
 
-# ── Retrain script exists for Phase B ─────────────────────────────────
+# ── Phase B completion guards ────────────────────────────────────────
 
 
-def test_phase_b_retrain_script_present():
-    """The DAE 26-dim retrain script is the documented Phase B path.
-    If someone deletes it, the Phase B plan in
-    ``docs/post_defense_track_a_simplification.md`` becomes stale."""
-    script = PROJECT_ROOT / "module2_detection" / "retrain_dae_26dim.py"
-    assert script.exists(), (
-        "module2_detection/retrain_dae_26dim.py missing — "
-        "post-defense DAE retrain plan is no longer reachable."
+def test_dae_artifact_reports_raw_25dim_architecture():
+    """Phase B post-condition: the DAE was retrained on raw 25 features
+    only — no cascade. Any drift back to a cascaded shape would silently
+    re-introduce the rejected design (cf. ARCHITECTURE.md ablation
+    summary: cascade ΔAUC=−0.19 on MedSec-25)."""
+    import json
+    report = json.loads(
+        (PROJECT_ROOT / "results/models/dae_final_report.json").read_text(
+            encoding="utf-8"
+        )
     )
-    src = script.read_text(encoding="utf-8")
-    assert "26-dim cascade" in src
-    assert "[25 raw || P_xgb_val]" in src
+    assert report.get("architecture") == "raw_25dim", (
+        f"DAE architecture is {report.get('architecture')!r}, expected "
+        "'raw_25dim' (Phase B). Cascaded artefacts are forbidden in "
+        "production after Phase B landed."
+    )
+    assert report["data"]["n_total_features"] == 25
+    assert report["data"]["n_track_a_features"] == 0
+
+
+def test_phase_b_retrain_script_archived():
+    """The 26-dim retrain script was an intermediate Phase B draft;
+    Phase B shipped at 25-dim instead, so the 26-dim script is
+    archived under ``docs/_archive/``. If it reappears in
+    ``module2_detection/``, someone is reverting Phase B."""
+    live = PROJECT_ROOT / "module2_detection" / "retrain_dae_26dim.py"
+    assert not live.exists(), (
+        f"{live} should not exist — Phase B shipped DAE-raw 25-dim, "
+        "not the 26-dim cascade. Move this script back to docs/_archive/."
+    )

@@ -1,178 +1,111 @@
-# Track A Simplification — Phase B (post-defense)
+# Track A Simplification — Phase A + Phase B (completion log)
 
-> Companion to the v5 architectural change executed on **2026-05-07**.
-> Phase A (Layer 3 logic, this commit) landed today. Phase B (DAE
-> retrain on 26-dim cascade, runtime drops RF/DT inference entirely)
-> is queued for after the thesis defense.
+> **Status (2026-05-07)**: Phase A and Phase B both shipped pre-defense.
+> The runtime + training paths are now XGBoost-only and the DAE is
+> raw 25-dim (no cascade). This file is kept as a completion log; the
+> mid-Phase-B intermediate (26-dim cascade) was archived under
+> `docs/_archive/retrain_dae_26dim.py`.
 
 ---
 
-## What Phase A already did
+## Phase A (shipped 2026-05-07 morning)
 
-1. `module3_risk_scoring/triage_v4.classify_alert_v4` no longer requires
-   `p_rf` / `p_dt` / `diversity_score`. The 9-stage decision tree is now
-   a function of `(p_xgb, dae_score)` only.
+1. `module3_risk_scoring/triage_v4.classify_alert_v4` no longer
+   requires `p_rf` / `p_dt` / `diversity_score`. The 9-stage decision
+   tree is now a function of `(p_xgb, dae_score)` only.
 2. `c_detect = max(p_xgb, dae_score)`. The `_normalised_diversity` term
-   is gone. INVARIANT 1 still holds.
+   was retired. INVARIANT 1 still holds.
 3. `DISAGREEMENT_ANOMALY` is redefined as **Track-A-vs-Track-B**
-   disagreement (`0.40 ≤ p_xgb < 0.85 AND dae_score ≥ 0.95`), the
-   cleaner semantics that don't depend on three correlated trees.
+   disagreement (`0.40 ≤ p_xgb < 0.85 AND dae_score ≥ 0.95`).
 4. The legacy `p_rf` / `p_dt` / `diversity_score` kwargs are accepted
    by `classify_alert_v4` for back-compat — they're echoed onto the
    audit record (`diversity_score`) but never consumed by the
    predicates.
-5. `module6_evaluation/validate_nine_alert_types.py` is updated to the
-   new signature. M1–M8 + negatives + claims still pass; defense gate
-   remains `SHIP_TO_USER_STUDY`.
+5. `module6_evaluation/validate_nine_alert_types.py` updated to the
+   new signature. M1–M8 + negatives + claims still pass; defense
+   gate is `SHIP_TO_USER_STUDY`.
 
-## What Phase A intentionally did NOT do
+## Phase B (shipped 2026-05-07 afternoon)
 
-* **DAE input shape stayed at 28-dim** (`[25 raw || P_xgb || P_rf || P_dt]`).
-  The trained `dae_detector.pkl` expects this shape. Layer 2's
-  `layer2_detector.py` still constructs the 28-dim cascade at
-  inference, which means RandomForest and DecisionTree pickles are
-  still loaded at runtime to compute `P_rf` and `P_dt`. The latency
-  win is partial — Layer 3 logic no longer cares about RF/DT, but
-  Layer 2 still pays for the inference.
-* **The trained DAE was not touched.** Replacing it with a 26-dim
-  retrain mid-defense-week was rejected as too risky (M6 false-positive
-  rate could shift; ≥ 1 hour of compute; demo narrative would need a
-  re-rehearsal).
+### What landed
 
-## Phase B — the work that's left
+1. **DAE retrained on raw 25 features** (no cascade).
+   - `module2_detection/module2_train_models.py::train_track_b_dae`
+     rewritten — drops `[X_benign \|\| probas]` augmentation; trains
+     on the held-out benign val subset (`benign_only_val.parquet`,
+     2141 rows).
+   - `dae_final_report.json::architecture` = `"raw_25dim"`,
+     `n_track_a_features` = `0`, `n_total_features` = `25`. Locked
+     by `tests/test_track_a_xgb_only_v5.py::test_dae_artifact_reports_raw_25dim_architecture`.
+   - `dae_thresholds.json` + `dae_calibration.json` regenerated via
+     `module2_detection/build_dae_v4_artifacts.py` (now operates on
+     25-dim error distribution).
 
-### 1. Retrain the DAE on a 26-dim cascade
+2. **Production training defaults to XGBoost-only**.
+   - `module2_train_models.py` adds `--include-baselines`
+     (default off). Without the flag, only XGBoost trains; RF and
+     DT pickles are not emitted. With the flag, all 3 are trained
+     and the thesis Section 4 comparison reproduces.
+   - `predict_demo()` skips models whose pipelines are absent.
+   - `module2_detection/calibrate.py` already had skip-on-missing
+     for individual models — no change needed.
+   - `common/model_registry.get_track_a_classifiers` now returns
+     whatever pipelines exist (XGB-only by default, all 3 with
+     baselines).
 
-Cascade input becomes `[25 raw || P_xgb_val]` (26 dims, drop the two
-ensemble-baseline probas). Use the existing val-benigns parquet
-(`data/processed/val_benign_phase1.parquet`) and the calibrated
-XGBoost val probas (`results/models/xgboost_val_proba.npy` if cached,
-otherwise regenerate from `xgboost_calibrator.pkl`).
+3. **Layer 2 detector tolerates missing baselines**.
+   - `module2_detection/layer2_detector.Layer2Detector.__init__`
+     hard-requires only XGBoost; RF/DT load attempts log INFO and
+     fall back to `p_rf = p_dt = p_xgb` for legacy
+     `Layer2Output.diversity_score` field continuity.
+   - `score_alert()` no longer constructs a 28-dim cascade — the
+     DAE is called on raw 25-dim input directly.
+   - `_compute_per_dim_thresholds()` returns 25 per-dim cutoffs
+     (was 28).
 
-A one-shot script lives at `module2_detection/retrain_dae_26dim.py`
-(co-committed). Run as:
+4. **M3 cascade fusion → max(Track_A, Track_B-raw)**.
+   - `compute_c_detect()` rewritten — drops the
+     `_load_track_a_probas_for_dae` joblib parallel dispatch and
+     the pre-allocated `(n, n_raw + 3)` cascade buffer. DAE runs
+     on the sanitized raw matrix directly.
+   - Helper `_load_track_a_probas_for_dae` and `_run_single_track_a`
+     removed; `joblib` import removed.
 
-```bash
-python -m module2_detection.retrain_dae_26dim \
-    --output-dir results/models \
-    --random-state 42
-```
+5. **M4 explanations** on raw 25-dim DAE.
+   - `module4_explanations/module4_explanations.py::compute_dae_feature_errors`
+     called with raw `X_test` (no augmentation, no slice-back).
+   - SHAP loops + analyst/clinician builders skip Track A models
+     whose pickles are absent.
 
-It produces:
+6. **Demo playlist** re-curated.
+   - Beat 1 remapped: EVAL-0895 → EVAL-0570 (MEDIUM Spoofing on
+     ventilator). Beats 2/3/5 + the synthetic Beat 4 unchanged.
 
-* `results/models/dae_detector.pkl` — fresh 26-dim DAE
-* `results/models/dae_calibration.json` — fresh percentile-rank curve
-* `results/models/dae_thresholds.json` — fresh per-bucket thresholds
+### What got archived
 
-Backup the old artefacts before running (the script does not
-auto-backup):
+- `module2_detection/retrain_dae_26dim.py` was the mid-Phase-B
+  intermediate (26-dim cascade, drop RF+DT probas, keep P_xgb only).
+  It was overtaken by the full 25-dim Phase B and lives at
+  `docs/_archive/retrain_dae_26dim.py`. Re-introducing it would
+  revert the documented architecture; locked by
+  `tests/test_track_a_xgb_only_v5.py::test_phase_b_retrain_script_archived`.
 
-```bash
-mkdir -p results/models/_v4_backup
-cp results/models/dae_detector.pkl       results/models/_v4_backup/
-cp results/models/dae_calibration.json   results/models/_v4_backup/
-cp results/models/dae_thresholds.json    results/models/_v4_backup/
-```
+### Verification
 
-### 2. Update `layer2_detector.py` cascade input
+- `pytest tests/` — 516 passed, 1 skipped.
+- `python run_tests.py` — `RECOMMENDATION: ✓ SHIP_TO_USER_STUDY`.
+- M6 `test_false_positive_rate` = 77.4% (well above 40% target,
+  no regression vs. pre-Phase-B 77.4%).
+- XGBoost AUC unchanged at 0.9952 (re-fit identical).
 
-In `module2_detection/layer2_detector.py`, the inference path
-constructs `X_aug = np.column_stack([X_raw, P_xgb, P_rf, P_dt])`. The
-26-dim equivalent is `X_aug = np.column_stack([X_raw, P_xgb])`. The
-RF/DT pickle loads can then be deleted from the constructor.
+### Known follow-ups (not blocking defense)
 
-### 3. Verify M1–M8 still hold after retrain
-
-* `python run_tests.py` must still emit `RECOMMENDATION: ✓ SHIP_TO_USER_STUDY`.
-* M6 (`test_false_positive_rate`) is the most likely to move — DAE
-  thresholds re-tuned against a different cascade distribution will
-  produce different FPRs. If M6 dips below the 0.20 minimum, the DAE
-  needs threshold re-calibration via
-  `module2_detection/calibrate.py`.
-
-### 4. Decommission RF/DT runtime artefacts (optional)
-
-If M6 is healthy after Phase B, the RF/DT pickles can be moved out
-of the runtime load path:
-
-* `results/models/random_forest_*.pkl` → keep as offline thesis
-  reference (cited in `analysis/`)
-* `results/models/decision_tree_*.pkl` → same
-
-The pickles remain in `results/models/` but no module under
-`module2_detection`, `module3_risk_scoring`, `module4_explanations`,
-or `module5_responses` should `loads_signed` them. A grep test
-locks this:
-
-```bash
-grep -rn "random_forest_calibrator\.pkl\|decision_tree_calibrator\.pkl" \
-    module2_detection module3_risk_scoring module4_explanations \
-    module5_responses src
-# expected: zero matches in runtime path
-```
-
-### 5. Update `CLAUDE.md` Module 2 contract
-
-Reword the "Track A" paragraph to make the runtime/baseline split
-explicit:
-
-```
-Track A (supervised, SMOTE-balanced):
-- XGBoost   → P_xgb(attack)             [runtime]
-- RandomForest, DecisionTree            [offline reference baselines —
-                                         trained for thesis comparison
-                                         only; not in the inference path]
-- Input: 25 raw network features
-```
-
-### 6. Drop diversity_score from `Layer2Output` (cosmetic cleanup)
-
-`module2_detection/layer2_detector.Layer2Output.diversity_score` becomes
-load-bearing only as a legacy field for old test fixtures; remove or
-deprecate.
-
----
-
-## Why Phase A is safe alone
-
-The Phase-A change is *behaviourally equivalent* on every alert that
-Layer 3 has ever classified, because:
-
-* `c_detect` formula change (`max(p_xgb, dae_score, _norm_div)` →
-  `max(p_xgb, dae_score)`) only matters when `_normalised_diversity`
-  was the argmax. That requires `diversity_score / 0.30 > p_xgb` AND
-  `> dae_score` — i.e. raw `diversity > 0.30 * max(p_xgb, dae_score)`.
-  In the eval set, max diversity over the 20 alerts is well below
-  this band, so `c_detect` is unchanged in practice.
-* `DISAGREEMENT_ANOMALY` (Stage 3) trigger changed from
-  `(diversity ≥ 0.30 AND dae ≥ 0.70)` to
-  `(0.40 ≤ p_xgb < 0.85 AND dae ≥ 0.95)`. Both predicates fire
-  exactly **zero** times on the current 20-alert eval set — the
-  benign rows have low risk, and there's no high-disagreement attack
-  in the eval set. So no real alert flips classification.
-* The synthetic adversarial alert (`SYNTHETIC_DEMO_001`) still works
-  for the demo: its v4 fields are *derived* by `derive_v4_fields()`
-  in `module6_evaluation/module6_app.py` from
-  `(ground_truth, attack_category, risk_level, risk_score)`, which
-  has nothing to do with the Layer 3 classifier or with diversity.
-
-This means Phase A is purely an architectural simplification with
-zero behavioural drift on real eval data, and the demo narrative
-holds without modification.
-
----
-
-## Defense-day talking points (if asked about the architecture)
-
-* "Track A in the runtime path is XGBoost. RandomForest and Decision
-  Tree are kept as offline thesis baselines — `module2_train_models.py`
-  still trains them, the calibration analysis cites them, but the
-  inference path doesn't load them."
-* "DISAGREEMENT_ANOMALY is now Track-A-vs-Track-B disagreement —
-  XGBoost in the borderline confidence band but the DAE strongly
-  flags novelty. That's the canonical adversarial-input signature —
-  cleaner than the within-Track-A diversity we used in the v4 draft."
-* "Phase B — collapsing the DAE cascade input from 28 to 26 dims to
-  drop RF/DT from runtime entirely — is queued post-defense. It
-  requires a DAE retrain and an M6 (FPR) re-validation, which is the
-  kind of change you don't ship the week of defense."
+- `Layer2Output.diversity_score` is now `0.0` whenever RF/DT pickles
+  are absent (computed as `std([p_xgb, p_xgb, p_xgb]) = 0`). This is
+  a schema-only artefact — Module 3 ignores it post-Phase-A. A
+  future cleanup could remove the field entirely from
+  `Layer2Output`. Tracked, not urgent.
+- `module2_detection/_features.py` and `module2_detection/calibrate.py`
+  still iterate over `("xgboost", "random_forest", "decision_tree")`
+  but skip-on-missing — cosmetically the loops could be tightened to
+  the available set.

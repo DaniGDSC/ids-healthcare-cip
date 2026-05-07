@@ -34,10 +34,11 @@ from module2_detection.layer2_detector import (
 MODELS_DIR = PROJECT_ROOT / "results/models"
 TEST_PARQUET = PROJECT_ROOT / "data/processed/test_phase1.parquet"
 
+# Phase B: production runtime is XGB-only. RF/DT pickles are
+# baseline-only artefacts emitted by ``module2_train_models.py
+# --include-baselines`` and are not required for Layer 2 to run.
 REQUIRED_ARTEFACTS = (
     MODELS_DIR / "xgboost_final_pipeline.pkl",
-    MODELS_DIR / "random_forest_final_pipeline.pkl",
-    MODELS_DIR / "decision_tree_final_pipeline.pkl",
     MODELS_DIR / "dae_detector.json",
     MODELS_DIR / "dae_model.weights.h5",
 )
@@ -49,7 +50,7 @@ def _artefacts_present() -> bool:
 
 pytestmark = pytest.mark.skipif(
     not _artefacts_present(),
-    reason="Layer 2 detector requires trained Track A + DAE artefacts on disk",
+    reason="Layer 2 detector requires trained XGBoost + DAE artefacts on disk",
 )
 
 

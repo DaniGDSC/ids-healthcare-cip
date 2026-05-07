@@ -33,23 +33,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00078065,
+          "pct_contribution": 17.1
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438167,
-          "pct_contribution": 42.7
+          "weighted_error": 0.00063476,
+          "pct_contribution": 13.9
         },
         {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00075953,
-          "pct_contribution": 7.4
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00075776,
-          "pct_contribution": 7.4
+          "feature": "Flgs",
+          "weighted_error": 0.00057647,
+          "pct_contribution": 12.6
         }
       ],
-      "consensus": "3/4 models flagged",
-      "clinician_summary": "HIGH ALERT (Sample 59): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
+      "consensus": "1/4 models flagged",
+      "clinician_summary": "LOW ALERT (Sample 59): Borderline detection by one model. Likely benign; logged for audit purposes."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0059\nAnomaly score: 0.83\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -146,23 +146,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -260,22 +260,22 @@
       "dae_top_features": [
         {
           "feature": "sMinPktSz",
-          "weighted_error": 0.0043069,
-          "pct_contribution": 47.9
+          "weighted_error": 0.00058054,
+          "pct_contribution": 19.1
         },
         {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00059387,
-          "pct_contribution": 6.6
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00036151,
+          "pct_contribution": 11.9
         },
         {
-          "feature": "DstBytes",
-          "weighted_error": 0.00054154,
-          "pct_contribution": 6.0
+          "feature": "Flgs",
+          "weighted_error": 0.00031065,
+          "pct_contribution": 10.2
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 301): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 301): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0301\nAnomaly score: 0.79\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -372,23 +372,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00065363,
+          "pct_contribution": 16.0
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00405482,
-          "pct_contribution": 50.2
+          "weighted_error": 0.00060632,
+          "pct_contribution": 14.9
         },
         {
-          "feature": "DstBytes",
-          "weighted_error": 0.00035775,
-          "pct_contribution": 4.4
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00034354,
-          "pct_contribution": 4.2
+          "feature": "Flgs",
+          "weighted_error": 0.0005578,
+          "pct_contribution": 13.7
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 325): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 325): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0325\nAnomaly score: 0.79\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -452,116 +452,116 @@
     }
   },
   {
-    "alert_id": "EVAL-0895",
-    "sample_index": 895,
+    "alert_id": "EVAL-0570",
+    "sample_index": 570,
     "ground_truth": "attack",
     "attack_category": "Spoofing",
-    "risk_score": 0.5916,
+    "risk_score": 0.5962,
     "risk_level": "MEDIUM",
-    "device_class": "ehr_workstation",
-    "true_severity": "MEDIUM",
-    "device_criticality": "HIGH",
-    "device_patchable": true,
-    "affected_system": "EHR workstation \u2014 clinical documentation",
-    "patient_care_impact": "Disruption affects active patient charting for floor nurses.",
-    "active_device": false,
+    "device_class": "ventilator",
+    "true_severity": "CRITICAL",
+    "device_criticality": "CRITICAL",
+    "device_patchable": false,
+    "affected_system": "Ventilator \u2014 active respiratory support",
+    "patient_care_impact": "Device disruption directly affects patient breathing.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [
         {
-          "feature": "Sport",
-          "shap_value": 3.353617,
-          "direction": "increases_risk"
-        },
-        {
           "feature": "Flgs",
-          "shap_value": -2.836054,
+          "shap_value": -2.299624,
           "direction": "decreases_risk"
         },
         {
-          "feature": "DIntPkt",
-          "shap_value": 2.272804,
+          "feature": "Temp",
+          "shap_value": -2.043061,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "Sport",
+          "shap_value": 1.760231,
           "direction": "increases_risk"
         }
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00105087,
+          "pct_contribution": 18.8
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.00076594,
+          "pct_contribution": 13.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00406538,
-          "pct_contribution": 63.0
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00042592,
-          "pct_contribution": 6.6
-        },
-        {
-          "feature": "pDstLoss",
-          "weighted_error": 0.00036026,
-          "pct_contribution": 5.6
+          "weighted_error": 0.00063198,
+          "pct_contribution": 11.3
         }
       ],
-      "consensus": "3/4 models flagged",
-      "clinician_summary": "HIGH ALERT (Sample 895): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
+      "consensus": "1/4 models flagged",
+      "clinician_summary": "LOW ALERT (Sample 570): Borderline detection by one model. Likely benign; logged for audit purposes."
     },
     "correct_action": "investigate",
-    "group_a_display": "Alert ID: EVAL-0895\nAnomaly score: 0.59\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
-    "group_b_display": "WHY ANOMALOUS\nehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nehr_workstation (clinical area) \u2014 clinical operations Clinical documentation access disrupted. No direct patient physiological risk. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nRECOMMENDED ACTION\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. \u26a0\ufe0f DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
-    "adjusted_score": 0.6508,
+    "group_a_display": "Alert ID: EVAL-0570\nAnomaly score: 0.60\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "group_b_display": "WHY ANOMALOUS\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nRECOMMENDED ACTION\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. \u26a0\ufe0f DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+    "adjusted_score": 0.8943,
     "should_surface": true,
-    "threshold": 0.45,
-    "risk_multiplier": 1.1,
+    "threshold": 0.35,
+    "risk_multiplier": 1.5,
     "fusion_class": "BENIGN",
     "data_quality": "OK",
     "mve_structured": {
       "layer_1": {
-        "baseline_behavior": "ehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS.",
+        "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
         "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
         "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
       },
       "layer_2": {
-        "affected_system": "ehr_workstation (clinical area) \u2014 clinical operations",
-        "patient_care_impact": "Clinical documentation access disrupted. No direct patient physiological risk.",
+        "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+        "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
         "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
-        "severity_label": "HIGH",
-        "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        "severity_label": "CRITICAL",
+        "severity_rationale": "Life-sustaining system actively supporting patient care."
       },
       "layer_3": {
-        "immediate_action": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
-        "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
-        "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
-        "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        "immediate_action": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+        "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+        "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
       }
     },
     "raw_features": {
-      "row_id": 895,
+      "row_id": 570,
       "Flgs": 0.0,
-      "Sport": 0.5442914962768555,
+      "Sport": -0.5589644312858582,
       "SrcBytes": 0.0,
       "DstBytes": 0.0,
-      "SrcLoad": 0.24639959633350372,
-      "DstLoad": 0.24599625170230865,
-      "SIntPkt": -0.21520133316516876,
-      "DIntPkt": 0.928307294845581,
+      "SrcLoad": -0.5115630030632019,
+      "DstLoad": -0.5116626024246216,
+      "SIntPkt": 0.5500525832176208,
+      "DIntPkt": 0.2966417670249939,
       "SIntPktAct": 0.0,
       "sMaxPktSz": 0.0,
       "dMaxPktSz": 0.0,
       "sMinPktSz": 0.0,
-      "Dur": -0.21492117643356323,
+      "Dur": 0.5503327250480652,
       "TotBytes": 0.0,
-      "Load": 0.2460184395313263,
+      "Load": -0.5117087364196777,
       "pSrcLoss": 0.0,
       "pDstLoss": 0.0,
-      "Temp": 0.0,
-      "SpO2": 0.0,
-      "Pulse_Rate": 0.0,
-      "SYS": 0.6666666865348816,
-      "DIA": 0.125,
-      "Heart_rate": 0.0,
-      "Resp_Rate": 0.0,
-      "ST": 0.0,
+      "Temp": 0.3000011444091797,
+      "SpO2": -2.0,
+      "Pulse_Rate": 1.3333333730697632,
+      "SYS": 0.1666666716337204,
+      "DIA": 0.5,
+      "Heart_rate": 1.3333333730697632,
+      "Resp_Rate": -1.5,
+      "ST": -2.5999999046325684,
       "Label": 1,
       "Attack Category": "Spoofing",
-      "device_class": "ehr_workstation"
+      "device_class": "ventilator"
     }
   },
   {
@@ -599,22 +599,22 @@
       "dae_top_features": [
         {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00439225,
-          "pct_contribution": 54.0
+          "weighted_error": 0.00056118,
+          "pct_contribution": 20.8
         },
         {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00057266,
-          "pct_contribution": 7.0
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00034523,
+          "pct_contribution": 12.8
         },
         {
-          "feature": "pDstLoss",
-          "weighted_error": 0.00046272,
-          "pct_contribution": 5.7
+          "feature": "Flgs",
+          "weighted_error": 0.00028612,
+          "pct_contribution": 10.6
         }
       ],
-      "consensus": "2/4 models flagged",
-      "clinician_summary": "MODERATE ALERT (Sample 998): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+      "consensus": "1/4 models flagged",
+      "clinician_summary": "LOW ALERT (Sample 998): Borderline detection by one model. Likely benign; logged for audit purposes."
     },
     "correct_action": "monitor",
     "group_a_display": "Alert ID: EVAL-0998\nAnomaly score: 0.38\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -678,11 +678,11 @@
     }
   },
   {
-    "alert_id": "EVAL-0516",
-    "sample_index": 516,
+    "alert_id": "EVAL-1511",
+    "sample_index": 1511,
     "ground_truth": "benign",
     "attack_category": "normal",
-    "risk_score": 0.1997,
+    "risk_score": 0.2097,
     "risk_level": "LOW",
     "device_class": "ehr_workstation",
     "true_severity": "LOW",
@@ -698,9 +698,9 @@
       "clinician_summary": ""
     },
     "correct_action": "dismiss",
-    "group_a_display": "Alert ID: EVAL-0516\nAnomaly score: 0.20\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "group_a_display": "Alert ID: EVAL-1511\nAnomaly score: 0.21\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
     "group_b_display": "WHY ANOMALOUS\nehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nehr_workstation (clinical area) \u2014 clinical operations Clinical documentation access disrupted. No direct patient physiological risk. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nRECOMMENDED ACTION\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. \u26a0\ufe0f DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
-    "adjusted_score": 0.2197,
+    "adjusted_score": 0.2307,
     "should_surface": false,
     "threshold": 0.45,
     "risk_multiplier": 1.1,
@@ -727,25 +727,25 @@
       }
     },
     "raw_features": {
-      "row_id": 516,
+      "row_id": 1511,
       "Flgs": 0.0,
-      "Sport": 0.2102103978395462,
+      "Sport": 0.9671375751495361,
       "SrcBytes": 0.0,
       "DstBytes": 0.0,
-      "SrcLoad": 1.0001122951507568,
-      "DstLoad": 0.9993748068809509,
-      "SIntPkt": -0.7361125349998474,
-      "DIntPkt": -0.5801234245300293,
+      "SrcLoad": 0.460467666387558,
+      "DstLoad": 0.45996248722076416,
+      "SIntPkt": -0.3819269835948944,
+      "DIntPkt": -0.4463329315185547,
       "SIntPktAct": 0.0,
       "sMaxPktSz": 0.0,
       "dMaxPktSz": 0.0,
       "sMinPktSz": 0.0,
-      "Dur": -0.7358317971229553,
+      "Dur": -0.38164636492729187,
       "TotBytes": 0.0,
-      "Load": 0.9995009899139404,
+      "Load": 0.4600159823894501,
       "pSrcLoss": 0.0,
       "pDstLoss": 0.0,
-      "Temp": 1.1000003814697266,
+      "Temp": 1.5,
       "SpO2": 0.0,
       "Pulse_Rate": 0.0,
       "SYS": 0.6666666865348816,
@@ -759,19 +759,19 @@
     }
   },
   {
-    "alert_id": "EVAL-0006",
-    "sample_index": 6,
+    "alert_id": "EVAL-0869",
+    "sample_index": 869,
     "ground_truth": "benign",
     "attack_category": "normal",
-    "risk_score": 0.3002,
+    "risk_score": 0.3,
     "risk_level": "LOW",
-    "device_class": "ehr_workstation",
+    "device_class": "ventilator",
     "true_severity": "LOW",
-    "device_criticality": "HIGH",
-    "device_patchable": true,
-    "affected_system": "EHR workstation \u2014 clinical documentation",
-    "patient_care_impact": "Disruption affects active patient charting for floor nurses.",
-    "active_device": false,
+    "device_criticality": "CRITICAL",
+    "device_patchable": false,
+    "affected_system": "Ventilator \u2014 active respiratory support",
+    "patient_care_impact": "Device disruption directly affects patient breathing.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [],
       "dae_top_features": [],
@@ -779,72 +779,72 @@
       "clinician_summary": ""
     },
     "correct_action": "dismiss",
-    "group_a_display": "Alert ID: EVAL-0006\nAnomaly score: 0.30\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
-    "group_b_display": "WHY ANOMALOUS\nehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nehr_workstation (clinical area) \u2014 clinical operations Clinical documentation access disrupted. No direct patient physiological risk. Device data and clinical records for clinical area patients at risk. HIGH Active clinical system with direct patient-care and PHI exposure risk.\n\nRECOMMENDED ACTION\nApply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity. \u26a0\ufe0f DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic. (1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse. Act within 1 hour. Preserve logs from the past 4 hours.",
-    "adjusted_score": 0.3303,
-    "should_surface": false,
-    "threshold": 0.45,
-    "risk_multiplier": 1.1,
+    "group_a_display": "Alert ID: EVAL-0869\nAnomaly score: 0.30\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "group_b_display": "WHY ANOMALOUS\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nRECOMMENDED ACTION\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. \u26a0\ufe0f DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+    "adjusted_score": 0.45,
+    "should_surface": true,
+    "threshold": 0.35,
+    "risk_multiplier": 1.5,
     "fusion_class": "BENIGN",
     "data_quality": "OK",
     "mve_structured": {
       "layer_1": {
-        "baseline_behavior": "ehr_workstation (clinical area) normally communicates with approved internal hosts using HTTPS.",
+        "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
         "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
         "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
       },
       "layer_2": {
-        "affected_system": "ehr_workstation (clinical area) \u2014 clinical operations",
-        "patient_care_impact": "Clinical documentation access disrupted. No direct patient physiological risk.",
+        "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+        "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
         "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
-        "severity_label": "HIGH",
-        "severity_rationale": "Active clinical system with direct patient-care and PHI exposure risk."
+        "severity_label": "CRITICAL",
+        "severity_rationale": "Life-sustaining system actively supporting patient care."
       },
       "layer_3": {
-        "immediate_action": "Apply firewall rule to block unknown protocol outbound from unknown, maintain internal EHR and clinical network connectivity.",
-        "clinical_constraint": "DO NOT isolate device entirely \u2014 restrict suspicious outbound only, preserve clinical traffic.",
-        "escalation_path": "(1) Clinical Engineering, (2) Security lead, (3) Floor charge nurse.",
-        "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours."
+        "immediate_action": "Apply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity.",
+        "clinical_constraint": "DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first.",
+        "escalation_path": "(1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse.",
+        "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes."
       }
     },
     "raw_features": {
-      "row_id": 6,
+      "row_id": 869,
       "Flgs": 0.0,
-      "Sport": 0.6334202289581299,
+      "Sport": 0.2542290687561035,
       "SrcBytes": 0.0,
       "DstBytes": 0.0,
-      "SrcLoad": -1.8795586824417114,
-      "DstLoad": -1.8791420459747314,
-      "SIntPkt": 3.466761589050293,
-      "DIntPkt": 2.0655245780944824,
+      "SrcLoad": 0.0127016706392169,
+      "DstLoad": 0.012359929271042347,
+      "SIntPkt": -0.011768780648708344,
+      "DIntPkt": -0.3860178291797638,
       "SIntPktAct": 0.0,
       "sMaxPktSz": 0.0,
       "dMaxPktSz": 0.0,
       "sMinPktSz": 0.0,
-      "Dur": 3.4670398235321045,
+      "Dur": -0.011488768272101879,
       "TotBytes": 0.0,
-      "Load": -1.8792874813079834,
+      "Load": 0.012385091744363308,
       "pSrcLoss": 0.0,
       "pDstLoss": 0.0,
-      "Temp": -0.10000038146972656,
-      "SpO2": 0.0,
-      "Pulse_Rate": 0.0,
-      "SYS": 0.6666666865348816,
-      "DIA": 0.125,
-      "Heart_rate": 0.0,
-      "Resp_Rate": 0.0,
-      "ST": 0.0,
+      "Temp": 1.3000011444091797,
+      "SpO2": -1.0,
+      "Pulse_Rate": 1.1666666269302368,
+      "SYS": 0.5,
+      "DIA": 0.25,
+      "Heart_rate": 1.1666666269302368,
+      "Resp_Rate": 2.5,
+      "ST": -1.399999976158142,
       "Label": 0,
       "Attack Category": "normal",
-      "device_class": "ehr_workstation"
+      "device_class": "ventilator"
     }
   },
   {
-    "alert_id": "EVAL-0904",
-    "sample_index": 904,
+    "alert_id": "EVAL-0462",
+    "sample_index": 462,
     "ground_truth": "benign",
     "attack_category": "normal",
-    "risk_score": 0.4501,
+    "risk_score": 0.4498,
     "risk_level": "MEDIUM",
     "device_class": "ventilator",
     "true_severity": "LOW",
@@ -860,9 +860,9 @@
       "clinician_summary": ""
     },
     "correct_action": "dismiss",
-    "group_a_display": "Alert ID: EVAL-0904\nAnomaly score: 0.45\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "group_a_display": "Alert ID: EVAL-0462\nAnomaly score: 0.45\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
     "group_b_display": "WHY ANOMALOUS\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nRECOMMENDED ACTION\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. \u26a0\ufe0f DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
-    "adjusted_score": 0.6752,
+    "adjusted_score": 0.6748,
     "should_surface": true,
     "threshold": 0.35,
     "risk_multiplier": 1.5,
@@ -889,51 +889,51 @@
       }
     },
     "raw_features": {
-      "row_id": 904,
+      "row_id": 462,
       "Flgs": 0.0,
-      "Sport": -0.0830049142241478,
+      "Sport": -0.07366761565208435,
       "SrcBytes": 0.0,
       "DstBytes": 0.0,
-      "SrcLoad": -0.007505532819777727,
-      "DstLoad": -0.007839176803827286,
-      "SIntPkt": 0.007005149964243174,
-      "DIntPkt": -0.8246744275093079,
+      "SrcLoad": 0.5332937836647034,
+      "DstLoad": 0.5327754616737366,
+      "SIntPkt": -0.4348866939544678,
+      "DIntPkt": -0.5307744741439819,
       "SIntPktAct": 0.0,
       "sMaxPktSz": 0.0,
       "dMaxPktSz": 0.0,
       "sMinPktSz": 0.0,
-      "Dur": 0.007285388186573982,
+      "Dur": -0.43460601568222046,
       "TotBytes": 0.0,
-      "Load": -0.007815835066139698,
+      "Load": 0.5328235030174255,
       "pSrcLoss": 0.0,
       "pDstLoss": 0.0,
-      "Temp": 0.7000007629394531,
-      "SpO2": 1.0,
-      "Pulse_Rate": -0.5,
-      "SYS": -0.3333333432674408,
-      "DIA": -1.375,
-      "Heart_rate": 1.3333333730697632,
-      "Resp_Rate": 1.1666666269302368,
-      "ST": -2.5999999046325684,
+      "Temp": -1.1000003814697266,
+      "SpO2": -1.0,
+      "Pulse_Rate": 0.8333333134651184,
+      "SYS": -0.1666666716337204,
+      "DIA": -0.625,
+      "Heart_rate": -0.1666666716337204,
+      "Resp_Rate": -0.8333333134651184,
+      "ST": -2.0,
       "Label": 0,
       "Attack Category": "normal",
       "device_class": "ventilator"
     }
   },
   {
-    "alert_id": "EVAL-0607",
-    "sample_index": 607,
+    "alert_id": "EVAL-0464",
+    "sample_index": 464,
     "ground_truth": "benign",
     "attack_category": "normal",
-    "risk_score": 0.5486,
+    "risk_score": 0.5485,
     "risk_level": "MEDIUM",
-    "device_class": "other",
+    "device_class": "ventilator",
     "true_severity": "LOW",
-    "device_criticality": "MEDIUM",
-    "device_patchable": true,
-    "affected_system": "Clinical network device",
-    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
-    "active_device": false,
+    "device_criticality": "CRITICAL",
+    "device_patchable": false,
+    "affected_system": "Ventilator \u2014 active respiratory support",
+    "patient_care_impact": "Device disruption directly affects patient breathing.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [],
       "dae_top_features": [],
@@ -941,23 +941,23 @@
       "clinician_summary": ""
     },
     "correct_action": "dismiss",
-    "group_a_display": "Alert ID: EVAL-0607\nAnomaly score: 0.55\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
-    "group_b_display": "WHY ANOMALOUS\nUNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nunknown (clinical area) \u2014 clinical operations Compromise could disrupt active patient care. Clinical coordination required before any isolation. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nRECOMMENDED ACTION\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. \u26a0\ufe0f DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
-    "adjusted_score": 0.5486,
+    "group_a_display": "Alert ID: EVAL-0464\nAnomaly score: 0.55\nPrediction: Attack\nSource: 10.4.12.8:54321 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
+    "group_b_display": "WHY ANOMALOUS\nventilator (clinical area) normally communicates with approved internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destination list. Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign\n\nCLINICAL SEVERITY\nventilator (clinical area) \u2014 clinical operations Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient. Device data and clinical records for clinical area patients at risk. CRITICAL Life-sustaining system actively supporting patient care.\n\nRECOMMENDED ACTION\nApply NAC policy CLINICAL-QUARANTINE: block outbound non-HTTPS from unknown, preserve EHR and device controller connectivity. \u26a0\ufe0f DO NOT power-cycle or disconnect device during active clinical use \u2014 coordinate with ICU charge nurse first. (1) Clinical Engineering on-call, (2) Security lead, (3) ICU charge nurse. Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+    "adjusted_score": 0.8228,
     "should_surface": true,
-    "threshold": 0.5,
-    "risk_multiplier": 1.0,
+    "threshold": 0.35,
+    "risk_multiplier": 1.5,
     "fusion_class": "BENIGN",
     "data_quality": "OK",
     "mve_structured": {
       "layer_1": {
-        "baseline_behavior": "UNREGISTERED DEVICE \u2014 identity not confirmed. unknown (clinical area) normally communicates with approved internal hosts using HTTPS.",
+        "baseline_behavior": "ventilator (clinical area) normally communicates with approved internal hosts using HTTPS.",
         "deviation_description": "At , it initiated unknown protocol to unknown, not on any approved destination list.",
         "confidence_indicator": "Confidence: LOW \u2014 weak anomaly signal \u2014 may be benign"
       },
       "layer_2": {
-        "affected_system": "unknown (clinical area) \u2014 clinical operations",
-        "patient_care_impact": "Compromise could disrupt active patient care. Clinical coordination required before any isolation.",
+        "affected_system": "ventilator (clinical area) \u2014 clinical operations",
+        "patient_care_impact": "Compromise could alter respiratory parameters or disable ventilation. Respiratory arrest risk for connected patient.",
         "phi_exposure": "Device data and clinical records for clinical area patients at risk.",
         "severity_label": "CRITICAL",
         "severity_rationale": "Life-sustaining system actively supporting patient care."
@@ -970,35 +970,35 @@
       }
     },
     "raw_features": {
-      "row_id": 607,
+      "row_id": 464,
       "Flgs": 0.0,
-      "Sport": -0.3780391812324524,
+      "Sport": -0.018128903582692146,
       "SrcBytes": 0.0,
       "DstBytes": 0.0,
-      "SrcLoad": -2.84602427482605,
-      "DstLoad": -2.8451883792877197,
-      "SIntPkt": 10.613525390625,
-      "DIntPkt": -0.8361891508102417,
+      "SrcLoad": 0.2590852379798889,
+      "DstLoad": 0.2586447298526764,
+      "SIntPkt": -0.22556956112384796,
+      "DIntPkt": -0.07676483690738678,
       "SIntPktAct": 0.0,
       "sMaxPktSz": 0.0,
       "dMaxPktSz": 0.0,
       "sMinPktSz": 0.0,
-      "Dur": 10.613799095153809,
+      "Dur": -0.22528909146785736,
       "TotBytes": 0.0,
-      "Load": -2.845456838607788,
+      "Load": 0.2586921155452728,
       "pSrcLoss": 0.0,
       "pDstLoss": 0.0,
-      "Temp": 0.5,
-      "SpO2": 0.0,
-      "Pulse_Rate": 0.1666666716337204,
-      "SYS": -1.6666666269302368,
-      "DIA": -0.5,
-      "Heart_rate": -1.0,
-      "Resp_Rate": 0.0,
-      "ST": -0.6000001430511475,
+      "Temp": -1.3999996185302734,
+      "SpO2": -1.0,
+      "Pulse_Rate": 0.3333333432674408,
+      "SYS": -0.1666666716337204,
+      "DIA": -0.625,
+      "Heart_rate": 1.1666666269302368,
+      "Resp_Rate": -3.1666667461395264,
+      "ST": -1.1999999284744263,
       "Label": 0,
       "Attack Category": "normal",
-      "device_class": "other"
+      "device_class": "ventilator"
     }
   },
   {
@@ -1035,23 +1035,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1148,23 +1148,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1261,23 +1261,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1374,23 +1374,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1487,23 +1487,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1600,23 +1600,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1713,23 +1713,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1826,23 +1826,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -1939,23 +1939,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",
@@ -2052,23 +2052,23 @@
       ],
       "dae_top_features": [
         {
+          "feature": "pSrcLoss",
+          "weighted_error": 0.00097758,
+          "pct_contribution": 18.4
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 0.0009451,
+          "pct_contribution": 17.7
+        },
+        {
           "feature": "sMinPktSz",
-          "weighted_error": 0.00438949,
-          "pct_contribution": 42.3
-        },
-        {
-          "feature": "dMaxPktSz",
-          "weighted_error": 0.00056769,
-          "pct_contribution": 5.5
-        },
-        {
-          "feature": "DstBytes",
-          "weighted_error": 0.00056361,
-          "pct_contribution": 5.4
+          "weighted_error": 0.00066804,
+          "pct_contribution": 12.5
         }
       ],
-      "consensus": "4/4 models flagged",
-      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate",
     "group_a_display": "Alert ID: EVAL-0976\nAnomaly score: 0.85\nPrediction: Attack\nSource: 10.4.12.8:0 \u2192 203.0.113.42:443\nProtocol: TCP\nTimestamp: 2024-01-15 10:23:45",

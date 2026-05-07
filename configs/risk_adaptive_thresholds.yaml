@@ -1,0 +1,82 @@
+# Risk-adaptive surfacing thresholds — ARCHITECTURE.md Step [10]
+#
+# These multipliers tune the per-alert surfacing decision in
+# ``src/risk_scorer.py::score_alert``. The base threshold is 0.50;
+# the effective per-alert threshold is ``base × multiplier``.
+#
+# Two parallel tables, both consumed by ``score_alert``:
+#
+#   1. by_criticality — keyed on (criticality, patchable) — the
+#      coarse-grained tier policy.
+#
+#   2. by_device_class — keyed on (device_class, patchable) — fine
+#      overrides used when the device class is present in the alert.
+#      Takes precedence over ``by_criticality``.
+#
+# Rationale: a ventilator and an EHR workstation can share a CRITICAL
+# tier yet have very different operational sensitivity profiles.
+# Per-class overrides let operators tune the gate without re-classifying
+# devices.
+
+base_threshold: 0.50
+
+by_criticality:
+  CRITICAL:
+    unpatchable: 0.70   # ≥30% reduction required by spec
+    patchable:   0.80
+  HIGH:
+    unpatchable: 0.85
+    patchable:   0.90
+  MEDIUM:
+    unpatchable: 0.95
+    patchable:   1.00
+  LOW:
+    unpatchable: 1.00
+    patchable:   1.00
+
+by_device_class:
+  infusion_pump:
+    unpatchable: 0.70
+    patchable:   0.85
+  ventilator:
+    unpatchable: 0.70
+    patchable:   0.85
+  patient_monitor:
+    unpatchable: 0.75
+    patchable:   0.90
+  monitor:
+    unpatchable: 0.75
+    patchable:   0.90
+  ehr_workstation:
+    unpatchable: 0.80
+    patchable:   0.95
+  unknown:
+    unpatchable: 0.70   # conservative — UNKNOWN device IS a security signal
+    patchable:   0.80
+
+unknown_device_fallback_multiplier: 0.80
+
+# Track A (Module 2) per-device P(attack) surfacing thresholds. ABSOLUTE
+# values on the F2-tuned P(attack) scale (baseline 0.05); not
+# multiplicative.
+track_a_surfacing:
+  default: 0.05
+  by_device_class:
+    infusion_pump:   0.03
+    ventilator:      0.03
+    patient_monitor: 0.05
+    monitor:         0.05
+    imaging:         0.07
+    ehr_workstation: 0.10
+
+# Similar-events campaign-detection adjustment.
+similar_events_adjustment:
+  threshold_count: 5
+  reduction:       0.20
+  floor:           0.50
+  time_window_minutes: 60
+  similarity_metric: "same_device + same_attack_category"
+
+review:
+  reviewers: ["CISO"]
+  review_period: "12 months"

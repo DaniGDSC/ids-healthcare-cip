@@ -32,7 +32,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Patch
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -45,10 +44,68 @@ CHARTS_DIR = PROJECT_ROOT / "results/charts"
 # ── Configuration ──────────────────────────────────────────────────────
 
 # Composite formula: R = w1·C_detect + w2·D_crit + w3·S_data + w4·D_clinical_tier
-WEIGHTS = {"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}
+#
+# Weights and tier boundaries are POLICY parameters externalised to
+# ``configs/composite_risk_weights.yaml`` per ARCHITECTURE.md Step [9].
+# The constants below are the authoritative defaults, kept in-sync with
+# the YAML at load time. ``load_composite_weights()`` and
+# ``load_tier_boundaries()`` re-read the YAML on demand.
 
-# Risk level thresholds — 3 boundaries, 4 tiers
-RISK_THRESHOLDS = [(0.80, "CRITICAL"), (0.60, "HIGH"), (0.40, "MEDIUM")]
+_COMPOSITE_WEIGHTS_YAML = (
+    Path(__file__).resolve().parent.parent / "configs" / "composite_risk_weights.yaml"
+)
+
+
+def _load_yaml_dict(path: Path) -> dict:
+    import yaml
+    with path.open(encoding="utf-8") as f:
+        body = yaml.safe_load(f) or {}
+    if not isinstance(body, dict):
+        raise ValueError(f"{path} must be a YAML mapping at the top level")
+    return body
+
+
+def load_composite_weights() -> dict[str, float]:
+    """Return ``{"w1": w_C, "w2": w_dcrit, "w3": w_sdata, "w4": w_dclin}``.
+
+    Reads from ``configs/composite_risk_weights.yaml`` when present.
+    Validates that the four weights sum to 1.0 (±1e-6); raises
+    ``ValueError`` otherwise.
+    """
+    if _COMPOSITE_WEIGHTS_YAML.exists():
+        body = _load_yaml_dict(_COMPOSITE_WEIGHTS_YAML)
+        w = body.get("weights") or {}
+        weights = {
+            "w1": float(w["detection_confidence"]),
+            "w2": float(w["device_criticality"]),
+            "w3": float(w["data_sensitivity"]),
+            "w4": float(w["clinical_tier"]),
+        }
+    else:
+        weights = {"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}
+    total = round(sum(weights.values()), 6)
+    if abs(total - 1.0) > 1e-6:
+        raise ValueError(
+            f"Composite-risk weights must sum to 1.0, got {total}: {weights}"
+        )
+    return weights
+
+
+def load_tier_boundaries() -> list[tuple[float, str]]:
+    """Return ``[(min_R, tier_name)]`` sorted descending by min_R."""
+    if _COMPOSITE_WEIGHTS_YAML.exists():
+        body = _load_yaml_dict(_COMPOSITE_WEIGHTS_YAML)
+        b = body.get("tier_boundaries") or {}
+        return [
+            (float(b.get("critical_min", 0.80)), "CRITICAL"),
+            (float(b.get("high_min",     0.60)), "HIGH"),
+            (float(b.get("medium_min",   0.40)), "MEDIUM"),
+        ]
+    return [(0.80, "CRITICAL"), (0.60, "HIGH"), (0.40, "MEDIUM")]
+
+
+WEIGHTS: dict[str, float] = load_composite_weights()
+RISK_THRESHOLDS: list[tuple[float, str]] = load_tier_boundaries()
 
 from common.phi import BIOMETRIC_COLUMNS
 
@@ -280,42 +337,30 @@ def compute_c_detect(
     X_test: np.ndarray,
     xgb_threshold: float = 0.05,
 ) -> tuple:
-    """Fused detection confidence: cascaded Track A → Track B.
+    """Fused detection confidence: Track A | Track B (Phase B — no cascade).
 
-    The DAE (Track B) receives ``[raw_features || Track_A_probas]`` so it
-    learns what "normal" looks like in the joint feature-prediction space.
-    Spoofing attacks that are invisible to reconstruction error on raw
-    features alone become detectable because Track A's elevated
-    probabilities are far outside the DAE's benign training distribution.
+    Phase B simplification: the DAE (Track B) is now trained and run on
+    raw 25-dim input — no probability cascade. Per ARCHITECTURE.md
+    Track B and the LOO-ablation evidence (EHMS ΔAUC=+0.02 marginal,
+    MedSec-25 ΔAUC=−0.19 regression), cascade was rejected.
 
     Fusion: ``C_detect = max(Track_A, Track_B)`` — the DAE can elevate
     but never suppress Track A.
 
     Returns:
         (c_detect, c_track_b, fusion_class, data_quality) — all shape (n,).
-
-    Optimisations applied (Opt-1, Opt-7, Opt-8, Opt-11):
-      - Model registry: Track A + DAE loaded once per process (Opt-1)
-      - Parallel Track A inference via joblib threading backend (Opt-7)
-      - Pre-allocated augmented matrix — avoids np.column_stack copy (Opt-11)
     """
-    from common.model_registry import get_dae, get_track_a_classifiers
+    from common.model_registry import get_dae
 
-    # Opt-1 + Opt-7: classifiers from registry, parallel inference
-    track_a_probas, dq_flags = _load_track_a_probas_for_dae(X_test)
+    # Sanitise inputs (NaN/Inf → 0.0) — keeps the data-quality flag path
+    # unchanged for downstream consumers.
+    X_clean, dq_flags = _sanitise_features(X_test)
 
-    # Opt-11: pre-allocate augmented buffer — single contiguous allocation,
-    # no column_stack copy.
-    n, n_raw = X_test.shape
-    X_augmented = np.empty((n, n_raw + 3), dtype=np.float32)
-    X_augmented[:, :n_raw] = X_test
-    X_augmented[:, n_raw:] = track_a_probas
-
-    # Opt-1: DAE from registry — already loaded, no disk I/O
+    # Opt-1: DAE from registry — already loaded, no disk I/O.
     det = get_dae()
-    c_track_b = det.predict_proba(X_augmented)
+    c_track_b = det.predict_proba(X_clean)
 
-    # Fusion: DAE elevates, never suppresses
+    # Fusion: DAE elevates, never suppresses.
     c_detect = np.maximum(c_track_a, c_track_b)
     fusion_class = classify_fusion(
         c_track_a, c_track_b, xgb_threshold=xgb_threshold,
@@ -356,41 +401,10 @@ def _sanitise_features(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return X, flags
 
 
-def _run_single_track_a(
-    name: str,
-    clf,
-    X_clean: np.ndarray,
-) -> np.ndarray:
-    """Predict P(attack) for one Track A model — designed for joblib dispatch."""
-    return clf.predict_proba(X_clean)[:, 1]
-
-
-def _load_track_a_probas_for_dae(
-    X_test: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute Track A model probabilities for DAE cascaded input.
-
-    Returns:
-        (track_a_probas, data_quality_flags) — probas shape (n, 3),
-        flags shape (n,) of {"OK", "IMPUTED_NAN"} strings.
-
-    Optimisations (Opt-1, Opt-7):
-      - Models loaded from registry (one disk read per process, cached).
-      - All three classifiers run in parallel using joblib threading backend.
-        sklearn/XGBoost/DT all release the GIL during predict_proba, so
-        threading avoids pickling overhead while still achieving true
-        parallelism.  Wall time ≈ max(T_xgb, T_rf, T_dt) instead of sum.
-    """
-    from common.model_registry import get_track_a_classifiers
-
-    X_clean, dq_flags = _sanitise_features(X_test)
-    classifiers = get_track_a_classifiers()
-
-    probas = joblib.Parallel(n_jobs=3, backend="threading")(
-        joblib.delayed(_run_single_track_a)(name, clf, X_clean)
-        for name, clf in classifiers.items()
-    )
-    return np.column_stack(probas), dq_flags
+# Phase B removed ``_load_track_a_probas_for_dae`` and the per-model
+# joblib parallel dispatch helper — the DAE no longer consumes Track A
+# probas (raw 25-dim input). Track A inference at runtime is XGBoost
+# only and lives in ``load_xgboost_proba``.
 
 
 def compute_d_crit(attack_cats: np.ndarray) -> np.ndarray:
@@ -950,7 +964,7 @@ def export_config_jsons() -> None:
     # 3.8 Risk scoring config
     risk_cfg = {
         "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
-        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
+        "fusion": "C_detect = max(Track_A, Track_B): DAE input = raw 25 features (Phase B — no cascade)",
         "weights": WEIGHTS,
         "thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
         "alert_tiers": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
@@ -1235,7 +1249,7 @@ def save_outputs(
 
     report = {
         "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
-        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
+        "fusion": "C_detect = max(Track_A, Track_B): DAE input = raw 25 features (Phase B — no cascade)",
         "weights": WEIGHTS,
         "risk_thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
         "total_samples": int(len(R)),
@@ -1313,7 +1327,7 @@ def main() -> None:
     c_detect, c_track_b, fusion_class, data_quality = compute_c_detect(
         c_track_a, X_test, xgb_threshold=xgb_threshold,
     )
-    logger.info("  C_detect (cascaded fusion): range [%.4f, %.4f]",
+    logger.info("  C_detect (Track A | DAE-raw fusion): range [%.4f, %.4f]",
                 c_detect.min(), c_detect.max())
     unique, counts = np.unique(fusion_class, return_counts=True)
     logger.info("  Fusion class distribution: %s",
@@ -1405,7 +1419,7 @@ def main() -> None:
     logger.info(sep)
     logger.info("  Formula   : R = %.2f·C_detect + %.2f·D_crit + %.2f·S_data + %.2f·D_clinical_tier",
                 WEIGHTS["w1"], WEIGHTS["w2"], WEIGHTS["w3"], WEIGHTS["w4"])
-    logger.info("  Fusion    : C_detect = cascaded(Track_A → Track_B)")
+    logger.info("  Fusion    : C_detect = max(Track_A, Track_B-raw)  [Phase B]")
     logger.info("  Output    : %s", OUTPUT_DIR)
     logger.info(sep)
 

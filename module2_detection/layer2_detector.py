@@ -4,7 +4,7 @@ Implements the redesigned Layer 2 from system_architecture_final.md:
 
     Step 1: feature sanitization (NaN/Inf → BENIGN_MEDIAN, NOT 0.0)
     Step 2a: Track A (XGB + RF + DT, calibrated, with diversity score)
-    Step 2b: Track B (cascaded DAE on [25 raw || P_xgb, P_rf, P_dt])
+    Step 2b: Track B (DAE on raw 25 features — Phase B, no cascade)
             with multi-threshold (p80/p95/p99) and per-dim error breakdown
 
 Returns a single ``Layer2Output`` dataclass with every field the diagram
@@ -193,15 +193,28 @@ class Layer2Detector:
 
         # ── Step 1 prereqs (sanitizer is module-level; nothing to load) ──
 
-        # ── Step 2a prereqs: 3 calibrated trees ──
+        # ── Step 2a prereqs: Track A pipelines ──
+        # Phase B: production runtime is XGBoost-only. RF/DT are baseline
+        # artefacts emitted only by ``--include-baselines`` and may be
+        # absent. XGBoost remains hard-required (its absence means M2
+        # was never run and the detector cannot score).
         self._track_a: dict[str, Any] = {}
         for name in ("xgboost", "random_forest", "decision_tree"):
             base_pkl = self._models_dir / f"{name}_final_pipeline.pkl"
             cal_pkl = self._models_dir / f"{name}_calibrator.pkl"
             if not base_pkl.exists():
-                raise FileNotFoundError(
-                    f"Missing {base_pkl}. Run module2_detection/module2_train_models.py first."
+                if name == "xgboost":
+                    raise FileNotFoundError(
+                        f"Missing {base_pkl}. Run "
+                        "module2_detection/module2_train_models.py first."
+                    )
+                logger.info(
+                    "Track A: %s pipeline absent — production runtime is "
+                    "XGB-only; RF/DT are baselines (re-run training with "
+                    "--include-baselines to populate)",
+                    name,
                 )
+                continue
             if prefer_calibrated and cal_pkl.exists():
                 self._track_a[name] = joblib.load(cal_pkl)
                 self._calibration_used[name] = True
@@ -302,14 +315,13 @@ class Layer2Detector:
     def _compute_per_dim_thresholds(self) -> tuple[np.ndarray, list[str]]:
         """Compute per-dimension p95 cutoff over a benign reference set.
 
-        Output ordering matches the cascade input layout:
-            ``[25 raw features || track_a_xgb, track_a_rf, track_a_dt]``
+        Phase B: DAE input is raw 25-dim — no cascade. Per-dim
+        thresholds are computed over the 25 raw feature columns only.
 
         Returns:
-            (per_dim_p95, cascade_feature_names) — both length 28.
+            (per_dim_p95, feature_names) — both length 25.
         """
         import pandas as pd  # local: pandas import is heavy enough to defer
-        # Pick the largest benign reference available without loading attacks.
         candidates = [
             self._models_dir.parent.parent / "data/processed/benign_only_val.parquet",
             self._models_dir.parent.parent / "data/processed/benign_only_train.parquet",
@@ -329,26 +341,17 @@ class Layer2Detector:
         feat_names = [c for c in df.columns if c not in drop]
         X_benign = df.drop(columns=drop).values.astype(np.float32)
 
-        # Run Track A on benigns to construct the cascade input — same
-        # transform as score_alert(). Probas mean-pooled across the 3
-        # models? No — Track A in the cascade emits 3 separate columns.
-        p_xgb = self._track_a["xgboost"].predict_proba(X_benign)[:, 1]
-        p_rf = self._track_a["random_forest"].predict_proba(X_benign)[:, 1]
-        p_dt = self._track_a["decision_tree"].predict_proba(X_benign)[:, 1]
-        proba_cols = np.column_stack([p_xgb, p_rf, p_dt]).astype(np.float32)
-        X_aug = np.column_stack([X_benign, proba_cols])
+        _, per_feat_err = self._dae.reconstruction_error_decomposed(X_benign)
+        per_dim_p95 = np.percentile(
+            per_feat_err, PER_DIM_PERCENTILE, axis=0,
+        ).astype(np.float64)
 
-        _, per_feat_err = self._dae.reconstruction_error_decomposed(X_aug)
-        per_dim_p95 = np.percentile(per_feat_err, PER_DIM_PERCENTILE,
-                                      axis=0).astype(np.float64)
-
-        cascade_names = list(feat_names) + ["track_a_xgb", "track_a_rf", "track_a_dt"]
-        if len(cascade_names) != X_aug.shape[1]:
+        if len(feat_names) != X_benign.shape[1]:
             raise RuntimeError(
-                f"Feature-name count {len(cascade_names)} != cascade dim "
-                f"{X_aug.shape[1]}; refusing to proceed with mismatched names."
+                f"Feature-name count {len(feat_names)} != raw input dim "
+                f"{X_benign.shape[1]}; refusing to proceed with mismatched names."
             )
-        return per_dim_p95, cascade_names
+        return per_dim_p95, list(feat_names)
 
     def _bucket_threshold_level(self, recon_err: float) -> str:
         """Map a single reconstruction error to one of THRESHOLD_LEVELS."""
@@ -391,21 +394,24 @@ class Layer2Detector:
         # Phase-1 artefacts → directly in scaled space; live alerts must
         # be transformed via the persisted scaler before reaching here.
 
-        # ── Step 2a: Track A (3 calibrated probas + diversity) ──
+        # ── Step 2a: Track A (XGBoost only — Phase B production runtime) ──
+        # RandomForest + DecisionTree are loaded only when their pickles
+        # exist (re-trained via ``--include-baselines``); we silently
+        # default their probas to P_xgb so legacy fields on Layer2Output
+        # (``p_rf`` / ``p_dt`` / ``diversity_score``) remain populated.
         p_xgb = float(self._track_a["xgboost"].predict_proba(x_2d)[0, 1])
-        p_rf = float(self._track_a["random_forest"].predict_proba(x_2d)[0, 1])
-        p_dt = float(self._track_a["decision_tree"].predict_proba(x_2d)[0, 1])
+        rf_clf = self._track_a.get("random_forest")
+        dt_clf = self._track_a.get("decision_tree")
+        p_rf = float(rf_clf.predict_proba(x_2d)[0, 1]) if rf_clf is not None else p_xgb
+        p_dt = float(dt_clf.predict_proba(x_2d)[0, 1]) if dt_clf is not None else p_xgb
         c_track_a = max(p_xgb, p_rf, p_dt)
         diversity = float(np.std([p_xgb, p_rf, p_dt]))
         device_threshold = get_track_a_surfacing_threshold(device_class)
 
-        # ── Step 2b: Track B (cascaded DAE + multi-threshold + per-dim) ──
-        proba_columns = np.array([[p_xgb, p_rf, p_dt]], dtype=np.float32)
-        x_aug = np.column_stack([x_2d.astype(np.float32), proba_columns])
-        # Single forward pass yields BOTH per-sample and per-feature error
-        # (reconstruction_error_decomposed). This is the reason the DAE
-        # exposes a decomposed call — halves compute per alert.
-        per_sample_err, per_feat_err = self._dae.reconstruction_error_decomposed(x_aug)
+        # ── Step 2b: Track B (DAE on raw 25-dim — Phase B, no cascade) ──
+        # Single forward pass yields BOTH per-sample and per-feature error.
+        x_raw = x_2d.astype(np.float32)
+        per_sample_err, per_feat_err = self._dae.reconstruction_error_decomposed(x_raw)
         recon_err = float(per_sample_err[0])
         per_dim_errors = per_feat_err[0].astype(np.float64)
 

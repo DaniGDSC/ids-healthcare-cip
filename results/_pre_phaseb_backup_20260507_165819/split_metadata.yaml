@@ -1,0 +1,85 @@
+format: phase1.split_metadata.v1
+strategy: Strategy 1 — Frozen Test + Demo Pool (4-way stratified)
+random_state: 42
+stratified_on: Attack Category
+ratios:
+  train: 0.6
+  val: 0.15
+  test: 0.15
+  demo: 0.1
+n_total: 16318
+n_features: 25
+feature_names:
+- Flgs
+- Sport
+- SrcBytes
+- DstBytes
+- SrcLoad
+- DstLoad
+- SIntPkt
+- DIntPkt
+- SIntPktAct
+- sMaxPktSz
+- dMaxPktSz
+- sMinPktSz
+- Dur
+- TotBytes
+- Load
+- pSrcLoss
+- pDstLoss
+- Temp
+- SpO2
+- Pulse_Rate
+- SYS
+- DIA
+- Heart_rate
+- Resp_Rate
+- ST
+source_dataset_sha256: ''
+splits:
+  train:
+    n: 9790
+    attack_rate: 0.125332
+    label_counts:
+      '0': 8563
+      '1': 1227
+    attack_category_counts:
+      Data Alteration: 554
+      Spoofing: 673
+      normal: 8563
+  val:
+    n: 2448
+    attack_rate: 0.125408
+    label_counts:
+      '0': 2141
+      '1': 307
+    attack_category_counts:
+      Data Alteration: 138
+      Spoofing: 169
+      normal: 2141
+  test:
+    n: 2448
+    attack_rate: 0.125408
+    label_counts:
+      '0': 2141
+      '1': 307
+    attack_category_counts:
+      Data Alteration: 138
+      Spoofing: 169
+      normal: 2141
+  demo:
+    n: 1632
+    attack_rate: 0.125613
+    label_counts:
+      '0': 1427
+      '1': 205
+    attack_category_counts:
+      Data Alteration: 92
+      Spoofing: 113
+      normal: 1427
+invariants:
+- train ∩ val ∩ test ∩ demo = ∅
+- train ∪ val ∪ test ∪ demo = full dataset post-filter
+- test and demo are FROZEN — never seen by any model in training
+- stratification preserves Attack Category proportions within ±2%
+- deterministic in random_state — same seed → byte-identical splits

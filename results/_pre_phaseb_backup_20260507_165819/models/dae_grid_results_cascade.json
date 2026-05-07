@@ -1,0 +1,1946 @@
+[
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7345309381237525,
+    "val_attack_f2": 0.6769683590875644,
+    "val_weighted_f1": 0.80028663121752,
+    "val_macro_f1": 0.7909164449516581,
+    "val_auc_roc": 0.8760052447552447,
+    "val_threshold": 0.055465132180638,
+    "val_mean_benign_error": 1294.0718558751928,
+    "val_mean_attack_error": 4583.58041503745
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6866952789699571,
+    "val_attack_f2": 0.6042296072507553,
+    "val_weighted_f1": 0.775416455739803,
+    "val_macro_f1": 0.7627736880500999,
+    "val_auc_roc": 0.8004632867132868,
+    "val_threshold": 0.07886741672389355,
+    "val_mean_benign_error": 364.32790964391415,
+    "val_mean_attack_error": 8351.757628465415
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6952595936794582,
+    "val_attack_f2": 0.5918524212144505,
+    "val_weighted_f1": 0.7882175298732924,
+    "val_macro_f1": 0.774971023965671,
+    "val_auc_roc": 0.6881555944055944,
+    "val_threshold": 0.08105311951070819,
+    "val_mean_benign_error": 1245.3814223055344,
+    "val_mean_attack_error": 6887.032377979951
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6540084388185654,
+    "val_attack_f2": 0.5818318318318318,
+    "val_weighted_f1": 0.749264123262083,
+    "val_macro_f1": 0.7356901882288818,
+    "val_auc_roc": 0.6496853146853147,
+    "val_threshold": 4.5098884905397406e-05,
+    "val_mean_benign_error": 95.53954414663934,
+    "val_mean_attack_error": 4189.057259735593
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6724137931034483,
+    "val_attack_f2": 0.5900151285930408,
+    "val_weighted_f1": 0.7658163154587153,
+    "val_macro_f1": 0.7525064560230899,
+    "val_auc_roc": 0.8577185314685314,
+    "val_threshold": 0.002238192811149278,
+    "val_mean_benign_error": 930.6924650146634,
+    "val_mean_attack_error": 9945.09666569
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6935123042505593,
+    "val_attack_f2": 0.5938697318007663,
+    "val_weighted_f1": 0.7858619180355928,
+    "val_macro_f1": 0.7727020980712256,
+    "val_auc_roc": 0.9063636363636364,
+    "val_threshold": 0.00786800407621821,
+    "val_mean_benign_error": 952.5301947115955,
+    "val_mean_attack_error": 4704.111154835055
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8324324324324325,
+    "val_attack_f2": 0.8174097664543525,
+    "val_weighted_f1": 0.8637656558821598,
+    "val_macro_f1": 0.8593006715405737,
+    "val_auc_roc": 0.9224125874125874,
+    "val_threshold": 1.9843565340545058e-05,
+    "val_mean_benign_error": 42.96137083335715,
+    "val_mean_attack_error": 136.69009614342954
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8650646950092421,
+    "val_attack_f2": 0.8363116511794139,
+    "val_weighted_f1": 0.8925220339470632,
+    "val_macro_f1": 0.8886093631484238,
+    "val_auc_roc": 0.9304108391608391,
+    "val_threshold": 1.1727429983549791e-05,
+    "val_mean_benign_error": 316.17380259903786,
+    "val_mean_attack_error": 226.35298820433968
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7983539094650206,
+    "val_attack_f2": 0.7217261904761905,
+    "val_weighted_f1": 0.8514364807316901,
+    "val_macro_f1": 0.8438722143261898,
+    "val_auc_roc": 0.9430157342657344,
+    "val_threshold": 0.0002701210939988443,
+    "val_mean_benign_error": 3027.359924253723,
+    "val_mean_attack_error": 3760.1114813189
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7001934235976789,
+    "val_attack_f2": 0.6581818181818182,
+    "val_weighted_f1": 0.7693013108832293,
+    "val_macro_f1": 0.7594534369450383,
+    "val_auc_roc": 0.8214423076923076,
+    "val_threshold": 0.1420398609431054,
+    "val_mean_benign_error": 1549.2854504706709,
+    "val_mean_attack_error": 3473.401194285024
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7124463519313304,
+    "val_attack_f2": 0.6268882175226587,
+    "val_weighted_f1": 0.7938753771858466,
+    "val_macro_f1": 0.7822717410870781,
+    "val_auc_roc": 0.9256643356643357,
+    "val_threshold": 0.08650386066390207,
+    "val_mean_benign_error": 2054.4555582721323,
+    "val_mean_attack_error": 6261.122657376452
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.9292196007259528,
+    "val_attack_f2": 0.9084457061745919,
+    "val_weighted_f1": 0.9427924020128657,
+    "val_macro_f1": 0.9408582778294807,
+    "val_auc_roc": 0.9301048951048949,
+    "val_threshold": 0.14265231185884253,
+    "val_mean_benign_error": 1457.0358921438822,
+    "val_mean_attack_error": 5712.380527555543
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.704,
+    "val_attack_f2": 0.6480117820324006,
+    "val_weighted_f1": 0.777629871345655,
+    "val_macro_f1": 0.7671376146788991,
+    "val_auc_roc": 0.8553583916083916,
+    "val_threshold": 0.00010283800219082405,
+    "val_mean_benign_error": 195.68545561971868,
+    "val_mean_attack_error": 26034.230911660496
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7176220806794055,
+    "val_attack_f2": 0.63581640331076,
+    "val_weighted_f1": 0.7962017639648096,
+    "val_macro_f1": 0.7850041590966395,
+    "val_auc_roc": 0.9133041958041959,
+    "val_threshold": 0.0006496449330640402,
+    "val_mean_benign_error": 818.3276860995309,
+    "val_mean_attack_error": 25125.606066776185
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7983539094650206,
+    "val_attack_f2": 0.7217261904761905,
+    "val_weighted_f1": 0.8514364807316901,
+    "val_macro_f1": 0.8438722143261898,
+    "val_auc_roc": 0.9407692307692308,
+    "val_threshold": 0.0003501558951028789,
+    "val_mean_benign_error": 149.02765462640954,
+    "val_mean_attack_error": 4817.986532434243
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7909604519774012,
+    "val_attack_f2": 0.755939524838013,
+    "val_weighted_f1": 0.8358897911904065,
+    "val_macro_f1": 0.8294873603525532,
+    "val_auc_roc": 0.8885227272727272,
+    "val_threshold": 2.222861096101964e-05,
+    "val_mean_benign_error": 3314.3347998876216,
+    "val_mean_attack_error": 1628.5441040065314
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8442776735459663,
+    "val_attack_f2": 0.8087706685837527,
+    "val_weighted_f1": 0.8773943103132786,
+    "val_macro_f1": 0.8726751895739366,
+    "val_auc_roc": 0.9453933566433567,
+    "val_threshold": 6.0330262578683235e-06,
+    "val_mean_benign_error": 136.53670428247852,
+    "val_mean_attack_error": 39.9083397225827
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7264770240700219,
+    "val_attack_f2": 0.6311787072243346,
+    "val_weighted_f1": 0.8063084841703453,
+    "val_macro_f1": 0.7949325011060492,
+    "val_auc_roc": 0.8748951048951049,
+    "val_threshold": 6.079743419761895e-05,
+    "val_mean_benign_error": 149.00342042701612,
+    "val_mean_attack_error": 20791.446384660692
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6570841889117043,
+    "val_attack_f2": 0.5947955390334573,
+    "val_weighted_f1": 0.7470056152187271,
+    "val_macro_f1": 0.7341918119699764,
+    "val_auc_roc": 0.754291958041958,
+    "val_threshold": 0.07191885028302554,
+    "val_mean_benign_error": 2512.1625256526295,
+    "val_mean_attack_error": 6000.3118163982335
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7112970711297071,
+    "val_attack_f2": 0.6362275449101796,
+    "val_weighted_f1": 0.7896297316328619,
+    "val_macro_f1": 0.7784673275111622,
+    "val_auc_roc": 0.8371940559440559,
+    "val_threshold": 0.061874838128342644,
+    "val_mean_benign_error": 1780.7700930026301,
+    "val_mean_attack_error": 3455.5598789980063
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.918625678119349,
+    "val_attack_f2": 0.9000708717221828,
+    "val_weighted_f1": 0.9340363293937489,
+    "val_macro_f1": 0.931840311587147,
+    "val_auc_roc": 0.950804195804196,
+    "val_threshold": 0.14823584580902668,
+    "val_mean_benign_error": 1471.5186294902178,
+    "val_mean_attack_error": 4394.721886837665
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.717948717948718,
+    "val_attack_f2": 0.6666666666666666,
+    "val_weighted_f1": 0.7860148188094397,
+    "val_macro_f1": 0.7763153994367867,
+    "val_auc_roc": 0.8824562937062939,
+    "val_threshold": 0.00026705255454068083,
+    "val_mean_benign_error": 34.48381349189361,
+    "val_mean_attack_error": 1218.3992355538826
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6843267108167771,
+    "val_attack_f2": 0.5911517925247902,
+    "val_weighted_f1": 0.7776616215350327,
+    "val_macro_f1": 0.7643613967576812,
+    "val_auc_roc": 0.7472202797202797,
+    "val_threshold": 0.0001875932496577443,
+    "val_mean_benign_error": 34.19287945998106,
+    "val_mean_attack_error": 600.0326190783585
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6936936936936937,
+    "val_attack_f2": 0.5913978494623656,
+    "val_weighted_f1": 0.7868450535586355,
+    "val_macro_f1": 0.7735709847778813,
+    "val_auc_roc": 0.7559265734265734,
+    "val_threshold": 0.00025320662416301187,
+    "val_mean_benign_error": 148.74282382914132,
+    "val_mean_attack_error": 21289.126472802323
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8363636363636363,
+    "val_attack_f2": 0.8167613636363636,
+    "val_weighted_f1": 0.867936413355749,
+    "val_macro_f1": 0.863437292634373,
+    "val_auc_roc": 0.922770979020979,
+    "val_threshold": 1.8186836413660834e-05,
+    "val_mean_benign_error": 13560.043855759997,
+    "val_mean_attack_error": 1451.3890286673504
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.9094138543516874,
+    "val_attack_f2": 0.9007741027445461,
+    "val_weighted_f1": 0.9254752855751213,
+    "val_macro_f1": 0.9231865316257819,
+    "val_auc_roc": 0.9647202797202797,
+    "val_threshold": 4.414380451574101e-05,
+    "val_mean_benign_error": 532.0221354541835,
+    "val_mean_attack_error": 1539.4950637413801
+  },
+  {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.8057259713701431,
+    "val_attack_f2": 0.7312546399406088,
+    "val_weighted_f1": 0.8562718953703963,
+    "val_macro_f1": 0.8490691012003604,
+    "val_auc_roc": 0.9426660839160839,
+    "val_threshold": 3.286220682951136e-05,
+    "val_mean_benign_error": 11.388241236374851,
+    "val_mean_attack_error": 157.15119454944892
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7906137184115524,
+    "val_attack_f2": 0.7754957507082153,
+    "val_weighted_f1": 0.830017211493128,
+    "val_macro_f1": 0.8244022137290036,
+    "val_auc_roc": 0.8783566433566434,
+    "val_threshold": 0.06272225399861354,
+    "val_mean_benign_error": 1195.6798016201162,
+    "val_mean_attack_error": 4935.861409314335
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6723404255319149,
+    "val_attack_f2": 0.5948795180722891,
+    "val_weighted_f1": 0.7638435550660326,
+    "val_macro_f1": 0.7508043591074208,
+    "val_auc_roc": 0.7473513986013987,
+    "val_threshold": 0.018517962744610938,
+    "val_mean_benign_error": 527.8897037092493,
+    "val_mean_attack_error": 2855.0472693621723
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.690744920993228,
+    "val_attack_f2": 0.5880092236740968,
+    "val_weighted_f1": 0.7850800117973412,
+    "val_macro_f1": 0.771637261357755,
+    "val_auc_roc": 0.6203146853146854,
+    "val_threshold": 0.05215832400604307,
+    "val_mean_benign_error": 1686.620655227021,
+    "val_mean_attack_error": 19145.749307833452
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6854838709677419,
+    "val_attack_f2": 0.6277695716395865,
+    "val_weighted_f1": 0.7650371871493372,
+    "val_macro_f1": 0.7537008395934599,
+    "val_auc_roc": 0.7805506993006993,
+    "val_threshold": 0.00018404542283174358,
+    "val_mean_benign_error": 11058.030148618396,
+    "val_mean_attack_error": 5571.014100016865
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7329192546583851,
+    "val_attack_f2": 0.6599552572706935,
+    "val_weighted_f1": 0.8040410527337906,
+    "val_macro_f1": 0.7939061965080452,
+    "val_auc_roc": 0.9181905594405595,
+    "val_threshold": 0.00027349241887606964,
+    "val_mean_benign_error": 1409.1958018911275,
+    "val_mean_attack_error": 13263.592425825436
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7494646680942184,
+    "val_attack_f2": 0.660377358490566,
+    "val_weighted_f1": 0.8201664546539738,
+    "val_macro_f1": 0.8100914500692087,
+    "val_auc_roc": 0.9121153846153844,
+    "val_threshold": 0.0010283348687010387,
+    "val_mean_benign_error": 196.18801894598397,
+    "val_mean_attack_error": 1665.1897845093374
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8591549295774648,
+    "val_attack_f2": 0.8555399719495091,
+    "val_weighted_f1": 0.8832613918867045,
+    "val_macro_f1": 0.8798262210076379,
+    "val_auc_roc": 0.9444930069930071,
+    "val_threshold": 4.7614522804762e-06,
+    "val_mean_benign_error": 38.237069688812916,
+    "val_mean_attack_error": 653.9832610092492
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8132295719844358,
+    "val_attack_f2": 0.7616618075801749,
+    "val_weighted_f1": 0.8568927300762448,
+    "val_macro_f1": 0.850670730048162,
+    "val_auc_roc": 0.9111188811188811,
+    "val_threshold": 3.312862655094976e-05,
+    "val_mean_benign_error": 734.4921061697391,
+    "val_mean_attack_error": 12040.099128106182
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7568710359408034,
+    "val_attack_f2": 0.6724267468069121,
+    "val_weighted_f1": 0.8240483263471946,
+    "val_macro_f1": 0.8144755624642839,
+    "val_auc_roc": 0.9283041958041959,
+    "val_threshold": 0.00017067004668324857,
+    "val_mean_benign_error": 1949.6364379941858,
+    "val_mean_attack_error": 1026.5592478405606
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.75,
+    "val_attack_f2": 0.7340425531914894,
+    "val_weighted_f1": 0.797642750479983,
+    "val_macro_f1": 0.7908536585365853,
+    "val_auc_roc": 0.8755769230769231,
+    "val_threshold": 0.05656984205218988,
+    "val_mean_benign_error": 2601.422292440669,
+    "val_mean_attack_error": 6117.500680409825
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6779661016949152,
+    "val_attack_f2": 0.6015037593984962,
+    "val_weighted_f1": 0.7672634832787029,
+    "val_macro_f1": 0.7545386064030132,
+    "val_auc_roc": 0.7678846153846154,
+    "val_threshold": 0.08511868715950018,
+    "val_mean_benign_error": 2123.87973248105,
+    "val_mean_attack_error": 5367.337471527803
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7069351230425056,
+    "val_attack_f2": 0.6053639846743295,
+    "val_weighted_f1": 0.795240228194618,
+    "val_macro_f1": 0.782656750710442,
+    "val_auc_roc": 0.8579195804195805,
+    "val_threshold": 0.040343125432899384,
+    "val_mean_benign_error": 2966.258345483122,
+    "val_mean_attack_error": 3486.050570387703
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8369565217391305,
+    "val_attack_f2": 0.8191489361702128,
+    "val_weighted_f1": 0.8680278807478151,
+    "val_macro_f1": 0.8636002120890774,
+    "val_auc_roc": 0.9372465034965034,
+    "val_threshold": 0.00030570939479615343,
+    "val_mean_benign_error": 71.87626110867392,
+    "val_mean_attack_error": 638.4071268903267
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7242105263157895,
+    "val_attack_f2": 0.6451612903225806,
+    "val_weighted_f1": 0.799864818007068,
+    "val_macro_f1": 0.7890840814410609,
+    "val_auc_roc": 0.8649475524475525,
+    "val_threshold": 2.7870999867052322e-05,
+    "val_mean_benign_error": 66.29457743561336,
+    "val_mean_attack_error": 14211.164744290363
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6981981981981982,
+    "val_attack_f2": 0.5952380952380952,
+    "val_weighted_f1": 0.7899796851239497,
+    "val_macro_f1": 0.7769008232370301,
+    "val_auc_roc": 0.8322639860139861,
+    "val_threshold": 0.0008044902409172565,
+    "val_mean_benign_error": 69.94976395585284,
+    "val_mean_attack_error": 2774.535974901694
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8342245989304813,
+    "val_attack_f2": 0.8245243128964059,
+    "val_weighted_f1": 0.864021775699887,
+    "val_macro_f1": 0.8597756780102468,
+    "val_auc_roc": 0.921923076923077,
+    "val_threshold": 3.5963336197741554e-06,
+    "val_mean_benign_error": 33.89634968341234,
+    "val_mean_attack_error": 153.21683826584814
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.9001814882032668,
+    "val_attack_f2": 0.8800567778566359,
+    "val_weighted_f1": 0.9193226182232722,
+    "val_macro_f1": 0.9165950071954214,
+    "val_auc_roc": 0.9570192307692307,
+    "val_threshold": 4.222583106625289e-05,
+    "val_mean_benign_error": 152.12471361090036,
+    "val_mean_attack_error": 10201.091962122906
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.8089430894308943,
+    "val_attack_f2": 0.737037037037037,
+    "val_weighted_f1": 0.8580618817054855,
+    "val_macro_f1": 0.8510624538063563,
+    "val_auc_roc": 0.9522202797202798,
+    "val_threshold": 0.0003095400992294617,
+    "val_mean_benign_error": 1430.1781859627852,
+    "val_mean_attack_error": 3520.246488610379
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7570621468926554,
+    "val_attack_f2": 0.7235421166306696,
+    "val_weighted_f1": 0.8092773248969587,
+    "val_macro_f1": 0.8018366620313455,
+    "val_auc_roc": 0.8767919580419581,
+    "val_threshold": 0.04084465468183009,
+    "val_mean_benign_error": 1384.225957980606,
+    "val_mean_attack_error": 3165.869305095539
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6854663774403471,
+    "val_attack_f2": 0.5989385898407885,
+    "val_weighted_f1": 0.7760598880168411,
+    "val_macro_f1": 0.7631503127596906,
+    "val_auc_roc": 0.8367045454545455,
+    "val_threshold": 0.05040408433518827,
+    "val_mean_benign_error": 1319.7382510129041,
+    "val_mean_attack_error": 3745.907937501861
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6923076923076923,
+    "val_attack_f2": 0.5884615384615385,
+    "val_weighted_f1": 0.7864509859243236,
+    "val_macro_f1": 0.7730355665839537,
+    "val_auc_roc": 0.8262587412587412,
+    "val_threshold": 0.04246908635845979,
+    "val_mean_benign_error": 3355.937458371756,
+    "val_mean_attack_error": 1802.2466981436148
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.673469387755102,
+    "val_attack_f2": 0.6120178041543026,
+    "val_weighted_f1": 0.7580902137336956,
+    "val_macro_f1": 0.746031746031746,
+    "val_auc_roc": 0.7661451048951048,
+    "val_threshold": 8.362174806013138e-05,
+    "val_mean_benign_error": 537.5320577382125,
+    "val_mean_attack_error": 812.6916386276318
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6781115879828327,
+    "val_attack_f2": 0.5966767371601208,
+    "val_weighted_f1": 0.7692634819244552,
+    "val_macro_f1": 0.756274337037774,
+    "val_auc_roc": 0.8763898601398602,
+    "val_threshold": 0.00021638206536480077,
+    "val_mean_benign_error": 1049.255246417305,
+    "val_mean_attack_error": 261.2742501811526
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6936936936936937,
+    "val_attack_f2": 0.5913978494623656,
+    "val_weighted_f1": 0.7868450535586355,
+    "val_macro_f1": 0.7735709847778813,
+    "val_auc_roc": 0.6751398601398602,
+    "val_threshold": 0.0001672265990461827,
+    "val_mean_benign_error": 366.30965427463474,
+    "val_mean_attack_error": 35822.83658179277
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8561278863232682,
+    "val_attack_f2": 0.8479943701618579,
+    "val_weighted_f1": 0.881637218266369,
+    "val_macro_f1": 0.8780021384644772,
+    "val_auc_roc": 0.9248164335664336,
+    "val_threshold": 1.5963922473098976e-07,
+    "val_mean_benign_error": 17.566094983271185,
+    "val_mean_attack_error": 22.043058891286034
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8690909090909091,
+    "val_attack_f2": 0.8487215909090909,
+    "val_weighted_f1": 0.8943491306845992,
+    "val_macro_f1": 0.8907498341074984,
+    "val_auc_roc": 0.9489947552447552,
+    "val_threshold": 5.667743760160991e-05,
+    "val_mean_benign_error": 54.20557426343229,
+    "val_mean_attack_error": 7448.815646824757
+  },
+  {
+    "encoding_dims": [
+      28,
+      14,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7942386831275721,
+    "val_attack_f2": 0.7180059523809523,
+    "val_weighted_f1": 0.848404572175194,
+    "val_macro_f1": 0.840685932985908,
+    "val_auc_roc": 0.9396416083916083,
+    "val_threshold": 3.1812895356463626e-05,
+    "val_mean_benign_error": 1998.8276709117126,
+    "val_mean_attack_error": 10446.848707387107
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6573705179282868,
+    "val_attack_f2": 0.6066176470588235,
+    "val_weighted_f1": 0.741876834340197,
+    "val_macro_f1": 0.7298346842514998,
+    "val_auc_roc": 0.7572989510489512,
+    "val_threshold": 0.050359456310771857,
+    "val_mean_benign_error": 733.071412272846,
+    "val_mean_attack_error": 6044.102081633258
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6708860759493671,
+    "val_attack_f2": 0.5968468468468469,
+    "val_weighted_f1": 0.7614951416395425,
+    "val_macro_f1": 0.7485833497786925,
+    "val_auc_roc": 0.6767307692307691,
+    "val_threshold": 0.05698681032197953,
+    "val_mean_benign_error": 2030.003545066028,
+    "val_mean_attack_error": 2368.9172156948007
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7024608501118568,
+    "val_attack_f2": 0.6015325670498084,
+    "val_weighted_f1": 0.7921141248082763,
+    "val_macro_f1": 0.7793385331640366,
+    "val_auc_roc": 0.705909090909091,
+    "val_threshold": 0.09194141602305939,
+    "val_mean_benign_error": 1758.242310443354,
+    "val_mean_attack_error": 4053.700384755005
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8641975308641975,
+    "val_attack_f2": 0.8596491228070176,
+    "val_weighted_f1": 0.8876087817229492,
+    "val_macro_f1": 0.884272678475577,
+    "val_auc_roc": 0.9384353146853147,
+    "val_threshold": 0.0003380951454125133,
+    "val_mean_benign_error": 1008.0561402609161,
+    "val_mean_attack_error": 11424.064028591483
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6724890829694323,
+    "val_attack_f2": 0.5851063829787234,
+    "val_weighted_f1": 0.7677643782887215,
+    "val_macro_f1": 0.7541876487057227,
+    "val_auc_roc": 0.6295104895104895,
+    "val_threshold": 5.869293694407463e-06,
+    "val_mean_benign_error": 163.13745489937182,
+    "val_mean_attack_error": 36209.95380124662
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6966292134831461,
+    "val_attack_f2": 0.5947812739831159,
+    "val_weighted_f1": 0.7886057257605156,
+    "val_macro_f1": 0.7754990727609905,
+    "val_auc_roc": 0.8297027972027973,
+    "val_threshold": 0.000221396805948415,
+    "val_mean_benign_error": 24.80139952575283,
+    "val_mean_attack_error": 361.97206998585705
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8645833333333334,
+    "val_attack_f2": 0.8682008368200836,
+    "val_weighted_f1": 0.8864064918860581,
+    "val_macro_f1": 0.8832966917922949,
+    "val_auc_roc": 0.9366346153846153,
+    "val_threshold": 5.363984205273607e-06,
+    "val_mean_benign_error": 43.253698725103646,
+    "val_mean_attack_error": 715.8229988499636
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7591836734693878,
+    "val_attack_f2": 0.6899109792284867,
+    "val_weighted_f1": 0.8215915326286005,
+    "val_macro_f1": 0.8126984126984127,
+    "val_auc_roc": 0.9321940559440559,
+    "val_threshold": 5.50439531300249e-05,
+    "val_mean_benign_error": 91.91423923704902,
+    "val_mean_attack_error": 2999.1656685613552
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.8040816326530612,
+    "val_attack_f2": 0.7307121661721068,
+    "val_weighted_f1": 0.8548541282402173,
+    "val_macro_f1": 0.8476190476190476,
+    "val_auc_roc": 0.9404895104895105,
+    "val_threshold": 2.436015467918536e-05,
+    "val_mean_benign_error": 311.959608271452,
+    "val_mean_attack_error": 671.8056089688142
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7327102803738318,
+    "val_attack_f2": 0.7035175879396985,
+    "val_weighted_f1": 0.7889443631748272,
+    "val_macro_f1": 0.7809310063756854,
+    "val_auc_roc": 0.8524562937062937,
+    "val_threshold": 0.04631121654573638,
+    "val_mean_benign_error": 930.2421883848665,
+    "val_mean_attack_error": 10589.830491152796
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6666666666666666,
+    "val_attack_f2": 0.5882352941176471,
+    "val_weighted_f1": 0.7604083352683677,
+    "val_macro_f1": 0.7470501474926253,
+    "val_auc_roc": 0.780236013986014,
+    "val_threshold": 0.08624174861940974,
+    "val_mean_benign_error": 1241.3856056834397,
+    "val_mean_attack_error": 5774.11097733534
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7053571428571429,
+    "val_attack_f2": 0.6049004594180705,
+    "val_weighted_f1": 0.7938619325281132,
+    "val_macro_f1": 0.78125,
+    "val_auc_roc": 0.7736451048951049,
+    "val_threshold": 0.08298924037389757,
+    "val_mean_benign_error": 2685.321397710966,
+    "val_mean_attack_error": 10255.042394565695
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8916083916083916,
+    "val_attack_f2": 0.8916083916083916,
+    "val_weighted_f1": 0.9096209912536443,
+    "val_macro_f1": 0.9070541958041958,
+    "val_auc_roc": 0.9477010489510489,
+    "val_threshold": 7.82497610927351e-05,
+    "val_mean_benign_error": 1019.420438735325,
+    "val_mean_attack_error": 62.32452059128595
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7326315789473684,
+    "val_attack_f2": 0.6526631657914479,
+    "val_weighted_f1": 0.8059758159305163,
+    "val_macro_f1": 0.7955242621604177,
+    "val_auc_roc": 0.856555944055944,
+    "val_threshold": 4.798429563051059e-05,
+    "val_mean_benign_error": 297.7638341036464,
+    "val_mean_attack_error": 1598.2922642412323
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6952595936794582,
+    "val_attack_f2": 0.5918524212144505,
+    "val_weighted_f1": 0.7882175298732924,
+    "val_macro_f1": 0.774971023965671,
+    "val_auc_roc": 0.7873863636363636,
+    "val_threshold": 0.0006310035404284914,
+    "val_mean_benign_error": 27.531064770371568,
+    "val_mean_attack_error": 13216.155370668714
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8443649373881932,
+    "val_attack_f2": 0.8327452364149612,
+    "val_weighted_f1": 0.8727171196045814,
+    "val_macro_f1": 0.8686769336387461,
+    "val_auc_roc": 0.9261538461538461,
+    "val_threshold": 1.240022525861344e-06,
+    "val_mean_benign_error": 25.350499942681058,
+    "val_mean_attack_error": 72.46642242656996
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8759124087591241,
+    "val_attack_f2": 0.8534850640113798,
+    "val_weighted_f1": 0.9001475804187251,
+    "val_macro_f1": 0.896694068457232,
+    "val_auc_roc": 0.9459003496503496,
+    "val_threshold": 8.533833411672489e-05,
+    "val_mean_benign_error": 541.4903126253823,
+    "val_mean_attack_error": 9062.735610016409
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.8185483870967742,
+    "val_attack_f2": 0.7496307237813885,
+    "val_weighted_f1": 0.8644445310476947,
+    "val_macro_f1": 0.8579043305346885,
+    "val_auc_roc": 0.9444667832167831,
+    "val_threshold": 3.6804776683229364e-05,
+    "val_mean_benign_error": 150.17300646321166,
+    "val_mean_attack_error": 58.41835238033608
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6451612903225806,
+    "val_attack_f2": 0.5908419497784343,
+    "val_weighted_f1": 0.7349137496043806,
+    "val_macro_f1": 0.7221240241567242,
+    "val_auc_roc": 0.7329545454545455,
+    "val_threshold": 0.06977603844359695,
+    "val_mean_benign_error": 1254.023618884542,
+    "val_mean_attack_error": 2989.088914927792
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6681127982646421,
+    "val_attack_f2": 0.5837755875663382,
+    "val_weighted_f1": 0.7637045714936321,
+    "val_macro_f1": 0.7500827438085012,
+    "val_auc_roc": 0.7476835664335665,
+    "val_threshold": 0.04724952183977224,
+    "val_mean_benign_error": 1246.8162069561672,
+    "val_mean_attack_error": 5789.917404508831
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7098214285714286,
+    "val_attack_f2": 0.608728943338438,
+    "val_weighted_f1": 0.7969852365807177,
+    "val_macro_f1": 0.784564393939394,
+    "val_auc_roc": 0.8500262237762237,
+    "val_threshold": 0.08290210146994233,
+    "val_mean_benign_error": 2292.2251419409463,
+    "val_mean_attack_error": 6240.655294957206
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6639175257731958,
+    "val_attack_f2": 0.5994043186895012,
+    "val_weighted_f1": 0.7527320870185081,
+    "val_macro_f1": 0.7400760120410511,
+    "val_auc_roc": 0.7907692307692307,
+    "val_threshold": 0.00018740133011729306,
+    "val_mean_benign_error": 226.724826617074,
+    "val_mean_attack_error": 1512.9439301290133
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6842105263157895,
+    "val_attack_f2": 0.593607305936073,
+    "val_weighted_f1": 0.7766794671376775,
+    "val_macro_f1": 0.7635026430705585,
+    "val_auc_roc": 0.780979020979021,
+    "val_threshold": 0.00033389425665259696,
+    "val_mean_benign_error": 1875.8670766673024,
+    "val_mean_attack_error": 27660.039716768977
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6993318485523385,
+    "val_attack_f2": 0.6006120887528692,
+    "val_weighted_f1": 0.7893644799995408,
+    "val_macro_f1": 0.7765348300183145,
+    "val_auc_roc": 0.8947027972027972,
+    "val_threshold": 0.0008848612740113855,
+    "val_mean_benign_error": 593.339357794246,
+    "val_mean_attack_error": 3758.918506953538
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8656195462478184,
+    "val_attack_f2": 0.8665269042627534,
+    "val_weighted_f1": 0.8877828061156511,
+    "val_macro_f1": 0.8846245415844849,
+    "val_auc_roc": 0.937875874125874,
+    "val_threshold": 2.4428071639704816e-05,
+    "val_mean_benign_error": 271.12419664920867,
+    "val_mean_attack_error": 19007.982233684943
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8544776119402985,
+    "val_attack_f2": 0.8213773314203731,
+    "val_weighted_f1": 0.8849271470149358,
+    "val_macro_f1": 0.8805880882668,
+    "val_auc_roc": 0.9314860139860139,
+    "val_threshold": 3.2373894547917576e-05,
+    "val_mean_benign_error": 92.43118191887281,
+    "val_mean_attack_error": 1955.494524616914
+  },
+  {
+    "encoding_dims": [
+      28,
+      18,
+      28
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.828,
+    "val_attack_f2": 0.7621502209131075,
+    "val_weighted_f1": 0.870784925241394,
+    "val_macro_f1": 0.8646880733944954,
+    "val_auc_roc": 0.9346765734265735,
+    "val_threshold": 2.3223886134909548e-05,
+    "val_mean_benign_error": 21831.79170250904,
+    "val_mean_attack_error": 178.72736118993984
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6485355648535565,
+    "val_attack_f2": 0.5800898203592815,
+    "val_weighted_f1": 0.7438970645965275,
+    "val_macro_f1": 0.7303080508831541,
+    "val_auc_roc": 0.6408041958041958,
+    "val_threshold": 0.030630283193387474,
+    "val_mean_benign_error": 1117.5937837328365,
+    "val_mean_attack_error": 7095.813033443608
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.683982683982684,
+    "val_attack_f2": 0.5984848484848485,
+    "val_weighted_f1": 0.7746985764478477,
+    "val_macro_f1": 0.7617715617715618,
+    "val_auc_roc": 0.7924125874125874,
+    "val_threshold": 0.021220543994814742,
+    "val_mean_benign_error": 480.45125940311897,
+    "val_mean_attack_error": 14773.674770024474
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6952595936794582,
+    "val_attack_f2": 0.5918524212144505,
+    "val_weighted_f1": 0.7882175298732924,
+    "val_macro_f1": 0.774971023965671,
+    "val_auc_roc": 0.8201573426573425,
+    "val_threshold": 0.08049450028503956,
+    "val_mean_benign_error": 7431.401821696556,
+    "val_mean_attack_error": 2147.7136113254255
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.763915547024952,
+    "val_attack_f2": 0.7215373459028281,
+    "val_weighted_f1": 0.8172966623526685,
+    "val_macro_f1": 0.8096898534184689,
+    "val_auc_roc": 0.8893706293706294,
+    "val_threshold": 1.1261119076732176e-05,
+    "val_mean_benign_error": 114.49038563370655,
+    "val_mean_attack_error": 4440.396551481673
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8155339805825242,
+    "val_attack_f2": 0.764748725418791,
+    "val_weighted_f1": 0.8584577186482405,
+    "val_macro_f1": 0.8523410859738758,
+    "val_auc_roc": 0.9257342657342656,
+    "val_threshold": 8.018886118384059e-05,
+    "val_mean_benign_error": 345.53116792607005,
+    "val_mean_attack_error": 11356.07583125433
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7445887445887446,
+    "val_attack_f2": 0.6515151515151515,
+    "val_weighted_f1": 0.8179070686359317,
+    "val_macro_f1": 0.8074592074592075,
+    "val_auc_roc": 0.9166520979020978,
+    "val_threshold": 0.00016798956785501294,
+    "val_mean_benign_error": 5373.8305498658565,
+    "val_mean_attack_error": 3569.951019348028
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.865979381443299,
+    "val_attack_f2": 0.875,
+    "val_weighted_f1": 0.8865545658989906,
+    "val_macro_f1": 0.8836226021140545,
+    "val_auc_roc": 0.9512674825174825,
+    "val_threshold": 8.418716790061438e-06,
+    "val_mean_benign_error": 294.8804196615059,
+    "val_mean_attack_error": 902.4650087460165
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8852459016393442,
+    "val_attack_f2": 0.8635394456289979,
+    "val_weighted_f1": 0.907522804353102,
+    "val_macro_f1": 0.9043483457163914,
+    "val_auc_roc": 0.9498164335664335,
+    "val_threshold": 9.236761687258572e-06,
+    "val_mean_benign_error": 43.14039115012288,
+    "val_mean_attack_error": 3371.5018028845757
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7991718426501035,
+    "val_attack_f2": 0.7196122296793438,
+    "val_weighted_f1": 0.8526510241486642,
+    "val_macro_f1": 0.8450302407851193,
+    "val_auc_roc": 0.9570367132867134,
+    "val_threshold": 9.637534694176689e-05,
+    "val_mean_benign_error": 6004.133001399534,
+    "val_mean_attack_error": 12862.379965416476
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7876588021778584,
+    "val_attack_f2": 0.7700496806245565,
+    "val_weighted_f1": 0.8283772060385974,
+    "val_macro_f1": 0.822574833488442,
+    "val_auc_roc": 0.89125,
+    "val_threshold": 0.0478909719322968,
+    "val_mean_benign_error": 4083.249088263216,
+    "val_mean_attack_error": 5631.005596179502
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6695464362850972,
+    "val_attack_f2": 0.5866767600302801,
+    "val_weighted_f1": 0.7640868048167209,
+    "val_macro_f1": 0.7506148023009644,
+    "val_auc_roc": 0.5883828671328672,
+    "val_threshold": 0.0035952760296340093,
+    "val_mean_benign_error": 19387.10808551695,
+    "val_mean_attack_error": 419.09051769387594
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.6935123042505593,
+    "val_attack_f2": 0.5938697318007663,
+    "val_weighted_f1": 0.7858619180355928,
+    "val_macro_f1": 0.7727020980712256,
+    "val_auc_roc": 0.751013986013986,
+    "val_threshold": 0.0360579565923766,
+    "val_mean_benign_error": 644.8522568975558,
+    "val_mean_attack_error": 5903.591952171877
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.7054108216432866,
+    "val_attack_f2": 0.6484893146647015,
+    "val_weighted_f1": 0.7789993339649354,
+    "val_macro_f1": 0.7685129709591003,
+    "val_auc_roc": 0.824117132867133,
+    "val_threshold": 2.834816366747442e-05,
+    "val_mean_benign_error": 7.7727802681771,
+    "val_mean_attack_error": 1148.1534903448735
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8646616541353384,
+    "val_attack_f2": 0.8273381294964028,
+    "val_weighted_f1": 0.8935969661763739,
+    "val_macro_f1": 0.8894736842105263,
+    "val_auc_roc": 0.9423513986013986,
+    "val_threshold": 4.963417247812198e-05,
+    "val_mean_benign_error": 84.48112120798702,
+    "val_mean_attack_error": 11834.303475487462
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7950310559006211,
+    "val_attack_f2": 0.7158836689038032,
+    "val_weighted_f1": 0.8496129009352346,
+    "val_macro_f1": 0.8418349880178021,
+    "val_auc_roc": 0.9343094405594405,
+    "val_threshold": 0.0012113718839118794,
+    "val_mean_benign_error": 321.071753275418,
+    "val_mean_attack_error": 4003.554354061739
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8641114982578397,
+    "val_attack_f2": 0.8659217877094972,
+    "val_weighted_f1": 0.8863529797971427,
+    "val_macro_f1": 0.883183568677792,
+    "val_auc_roc": 0.942840909090909,
+    "val_threshold": 3.0693057849113213e-06,
+    "val_mean_benign_error": 15691.538409621682,
+    "val_mean_attack_error": 2997.760730611049
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.7208333333333333,
+    "val_attack_f2": 0.6464872944693573,
+    "val_weighted_f1": 0.7960184362021555,
+    "val_macro_f1": 0.7853045590433483,
+    "val_auc_roc": 0.8512237762237762,
+    "val_threshold": 1.9929003500690237e-06,
+    "val_mean_benign_error": 23.281677552729064,
+    "val_mean_attack_error": 18524.514858095892
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.8303393213572854,
+    "val_attack_f2": 0.7652685798381162,
+    "val_weighted_f1": 0.8723636364924,
+    "val_macro_f1": 0.8663751715856461,
+    "val_auc_roc": 0.9451835664335664,
+    "val_threshold": 0.0004197928170545946,
+    "val_mean_benign_error": 1187.7390894550927,
+    "val_mean_attack_error": 2944.3615428249445
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6343434343434343,
+    "val_attack_f2": 0.5801921655580192,
+    "val_weighted_f1": 0.727212915898835,
+    "val_macro_f1": 0.7139790147771904,
+    "val_auc_roc": 0.6639685314685314,
+    "val_threshold": 0.05660868527169615,
+    "val_mean_benign_error": 1619.9792003502716,
+    "val_mean_attack_error": 9378.669018596593
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.6753812636165577,
+    "val_attack_f2": 0.5884586180713743,
+    "val_weighted_f1": 0.7695039976386249,
+    "val_macro_f1": 0.7560915080404804,
+    "val_auc_roc": 0.7616433566433566,
+    "val_threshold": 0.017930254621394137,
+    "val_mean_benign_error": 2353.402907998345,
+    "val_mean_attack_error": 11067.301309448765
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7056179775280899,
+    "val_attack_f2": 0.602455871066769,
+    "val_weighted_f1": 0.794869259812056,
+    "val_macro_f1": 0.7821509520865908,
+    "val_auc_roc": 0.7769405594405594,
+    "val_threshold": 0.05381299575935436,
+    "val_mean_benign_error": 1415.60095565022,
+    "val_mean_attack_error": 2656.705825668312
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.6841046277665996,
+    "val_attack_f2": 0.6273062730627307,
+    "val_weighted_f1": 0.7636771063699984,
+    "val_macro_f1": 0.7523380281690142,
+    "val_auc_roc": 0.7873601398601399,
+    "val_threshold": 3.519340807063367e-05,
+    "val_mean_benign_error": 160.13452943830055,
+    "val_mean_attack_error": 15866.433297853266
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8710280373831776,
+    "val_attack_f2": 0.83632447954056,
+    "val_weighted_f1": 0.8981619654479935,
+    "val_macro_f1": 0.8942953806987572,
+    "val_auc_roc": 0.9308741258741259,
+    "val_threshold": 1.7841036428439374e-05,
+    "val_mean_benign_error": 30.734791805552774,
+    "val_mean_attack_error": 1971.9450227544937
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.0005,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7149122807017544,
+    "val_attack_f2": 0.6202435312024354,
+    "val_weighted_f1": 0.7983911856104033,
+    "val_macro_f1": 0.7864954416609209,
+    "val_auc_roc": 0.9144230769230769,
+    "val_threshold": 0.0004258870225030422,
+    "val_mean_benign_error": 7880.3765790257285,
+    "val_mean_attack_error": 280.6909454229528
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "val_attack_f1": 0.8775510204081632,
+    "val_attack_f2": 0.8921161825726142,
+    "val_weighted_f1": 0.8954007258880228,
+    "val_macro_f1": 0.8928571428571428,
+    "val_auc_roc": 0.9547290209790209,
+    "val_threshold": 1.4844994398830049e-05,
+    "val_mean_benign_error": 105.04393814075647,
+    "val_mean_attack_error": 333.29557053726387
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 95.0,
+    "val_attack_f1": 0.8985507246376812,
+    "val_attack_f2": 0.8794326241134752,
+    "val_weighted_f1": 0.9178840146875293,
+    "val_macro_f1": 0.9151290208554259,
+    "val_auc_roc": 0.9601486013986014,
+    "val_threshold": 1.4095709442644972e-05,
+    "val_mean_benign_error": 205.16245799148305,
+    "val_mean_attack_error": 35728.67048857212
+  },
+  {
+    "encoding_dims": [
+      32,
+      20,
+      32
+    ],
+    "noise_rate": 0.2,
+    "learning_rate": 0.001,
+    "threshold_percentile": 99.0,
+    "val_attack_f1": 0.7248908296943232,
+    "val_attack_f2": 0.6306990881458967,
+    "val_weighted_f1": 0.8049220777625259,
+    "val_macro_f1": 0.7935176249128071,
+    "val_auc_roc": 0.9352797202797203,
+    "val_threshold": 1.3063020427787207e-05,
+    "val_mean_benign_error": 170.0178946398754,
+    "val_mean_attack_error": 36686.557032049575
+  }
+]

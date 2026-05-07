@@ -13,50 +13,97 @@ Key additions over module3:
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Optional
 
 from src.data_models import DataQuality, FusionClass, ScoredAlert
 
 # ── Constants ───────────────────────────────────────────────────────────
 
-DEFAULT_THRESHOLD: float = 0.50
-"""Baseline surfacing threshold (static, for comparison baseline)."""
+# ── Policy: thresholds + multipliers from configs/risk_adaptive_thresholds.yaml ──
+# Per ARCHITECTURE.md Step [10], the multiplier tables are POLICY
+# parameters reviewed annually by the CISO. The YAML is the canonical
+# source; the in-module constants below mirror it for fast access and
+# fall back to spec-mandated defaults if the YAML is missing.
 
-# Threshold multipliers per (criticality, patchable). Default policy.
-# CRITICAL + unpatchable: 0.70 → threshold = 0.50 * 0.70 = 0.35 (30% reduction).
-# LOW + patchable: 1.00 → threshold = 0.50 (default, per spec).
-_THRESHOLD_MULT: dict[tuple[str, bool], float] = {
-    ("CRITICAL", False): 0.70,   # ≥30% reduction required by spec
-    ("CRITICAL", True):  0.80,
-    ("HIGH",     False): 0.85,
-    ("HIGH",     True):  0.90,
-    ("MEDIUM",   False): 0.95,
-    ("MEDIUM",   True):  1.00,
-    ("LOW",      False): 1.00,
-    ("LOW",      True):  1.00,   # default threshold per spec
-}
+_THRESHOLDS_YAML = Path(__file__).resolve().parent.parent / "configs" / "risk_adaptive_thresholds.yaml"
 
-# Per-device-class threshold overrides (closes GAP-A1).
-# Keys are (device_class, patchable). When a device's class is present here,
-# the override is preferred over the (criticality, patchable) lookup. Values
-# come from ARCHITECTURE.md Step [10] multiplier_table.
-#
-# Rationale: a vent and an EHR workstation can share criticality but have
-# different operational sensitivity profiles. Per-class overrides let
-# operators tune the gate without changing the criticality taxonomy.
-_THRESHOLD_MULT_BY_DEVICE: dict[tuple[str, bool], float] = {
-    ("infusion_pump",   False): 0.70,
-    ("infusion_pump",   True):  0.85,
-    ("ventilator",      False): 0.70,
-    ("ventilator",      True):  0.85,
-    ("patient_monitor", False): 0.75,
-    ("patient_monitor", True):  0.90,
-    ("monitor",         False): 0.75,
-    ("monitor",         True):  0.90,
-    ("ehr_workstation", False): 0.80,
-    ("ehr_workstation", True):  0.95,
-}
-_UNKNOWN_DEVICE_FALLBACK_MULT: float = 0.80   # conservative; matches spec
+
+def _load_thresholds_yaml() -> dict:
+    if not _THRESHOLDS_YAML.exists():
+        return {}
+    import yaml
+    with _THRESHOLDS_YAML.open(encoding="utf-8") as f:
+        body = yaml.safe_load(f) or {}
+    return body if isinstance(body, dict) else {}
+
+
+_THRESHOLDS_CFG = _load_thresholds_yaml()
+
+
+def _crit_table_from_yaml() -> dict[tuple[str, bool], float]:
+    out: dict[tuple[str, bool], float] = {
+        ("CRITICAL", False): 0.70, ("CRITICAL", True): 0.80,
+        ("HIGH",     False): 0.85, ("HIGH",     True): 0.90,
+        ("MEDIUM",   False): 0.95, ("MEDIUM",   True): 1.00,
+        ("LOW",      False): 1.00, ("LOW",      True): 1.00,
+    }
+    cfg = (_THRESHOLDS_CFG.get("by_criticality") or {})
+    for crit, entry in cfg.items():
+        if not isinstance(entry, dict):
+            continue
+        if "unpatchable" in entry:
+            out[(crit, False)] = float(entry["unpatchable"])
+        if "patchable" in entry:
+            out[(crit, True)] = float(entry["patchable"])
+    return out
+
+
+def _device_table_from_yaml() -> dict[tuple[str, bool], float]:
+    out: dict[tuple[str, bool], float] = {
+        ("infusion_pump",   False): 0.70, ("infusion_pump",   True): 0.85,
+        ("ventilator",      False): 0.70, ("ventilator",      True): 0.85,
+        ("patient_monitor", False): 0.75, ("patient_monitor", True): 0.90,
+        ("monitor",         False): 0.75, ("monitor",         True): 0.90,
+        ("ehr_workstation", False): 0.80, ("ehr_workstation", True): 0.95,
+    }
+    cfg = (_THRESHOLDS_CFG.get("by_device_class") or {})
+    for dev, entry in cfg.items():
+        if not isinstance(entry, dict) or dev == "unknown":
+            continue
+        if "unpatchable" in entry:
+            out[(dev, False)] = float(entry["unpatchable"])
+        if "patchable" in entry:
+            out[(dev, True)] = float(entry["patchable"])
+    return out
+
+
+def _track_a_table_from_yaml() -> tuple[dict[str, float], float]:
+    cfg = (_THRESHOLDS_CFG.get("track_a_surfacing") or {})
+    by_class: dict[str, float] = dict(cfg.get("by_device_class") or {})
+    default = float(cfg.get("default", 0.05))
+    if not by_class:
+        by_class = {
+            "infusion_pump":   0.03,
+            "ventilator":      0.03,
+            "patient_monitor": 0.05,
+            "monitor":         0.05,
+            "imaging":         0.07,
+            "ehr_workstation": 0.10,
+        }
+    return by_class, default
+
+
+DEFAULT_THRESHOLD: float = float(_THRESHOLDS_CFG.get("base_threshold", 0.50))
+"""Baseline surfacing threshold (static, for comparison baseline). Loaded
+from ``configs/risk_adaptive_thresholds.yaml::base_threshold`` with a
+fall-back to 0.50."""
+
+_THRESHOLD_MULT: dict[tuple[str, bool], float] = _crit_table_from_yaml()
+_THRESHOLD_MULT_BY_DEVICE: dict[tuple[str, bool], float] = _device_table_from_yaml()
+_UNKNOWN_DEVICE_FALLBACK_MULT: float = float(
+    _THRESHOLDS_CFG.get("unknown_device_fallback_multiplier", 0.80)
+)
 
 
 # ── Enhancement 2: per-device Track A surfacing thresholds ──────────────
@@ -74,15 +121,11 @@ _UNKNOWN_DEVICE_FALLBACK_MULT: float = 0.80   # conservative; matches spec
 # Rationale: life-critical devices need lower P(attack) thresholds so
 # even mildly anomalous traffic surfaces; admin endpoints can tolerate
 # higher noise floors before triggering alert fatigue.
-_TRACK_A_SURFACING_BY_DEVICE: dict[str, float] = {
-    "infusion_pump":   0.03,   # life-sustaining, more sensitive
-    "ventilator":      0.03,   # life-sustaining
-    "patient_monitor": 0.05,   # F2-tuned baseline
-    "monitor":         0.05,
-    "imaging":         0.07,   # clinical-support, less time-critical
-    "ehr_workstation": 0.10,   # PHI but not life-critical → noise floor
-}
-_TRACK_A_SURFACING_DEFAULT: float = 0.05   # global F2-tuned baseline
+_TRACK_A_SURFACING_BY_DEVICE, _TRACK_A_SURFACING_DEFAULT = _track_a_table_from_yaml()
+"""Per-device-class P(attack) surfacing thresholds + global default.
+
+Loaded from ``configs/risk_adaptive_thresholds.yaml::track_a_surfacing``;
+falls back to spec-mandated defaults when the YAML is absent."""
 
 
 def get_track_a_surfacing_threshold(device_class: str | None) -> float:

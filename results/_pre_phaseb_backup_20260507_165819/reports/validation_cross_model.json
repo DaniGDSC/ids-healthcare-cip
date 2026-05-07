@@ -1,0 +1,43 @@
+{
+  "pairwise_comparisons": {
+    "xgboost_vs_random_forest": {
+      "spearman_rho": 0.9508,
+      "spearman_p_value": 0.0,
+      "top5_overlap": [
+        "DIntPkt",
+        "Flgs",
+        "Sport",
+        "Temp"
+      ],
+      "top5_overlap_count": 4
+    },
+    "xgboost_vs_decision_tree": {
+      "spearman_rho": 0.8277,
+      "spearman_p_value": 0.0,
+      "top5_overlap": [
+        "DIntPkt",
+        "Flgs",
+        "Sport",
+        "Temp"
+      ],
+      "top5_overlap_count": 4
+    },
+    "random_forest_vs_decision_tree": {
+      "spearman_rho": 0.8423,
+      "spearman_p_value": 0.0,
+      "top5_overlap": [
+        "DIntPkt",
+        "Flgs",
+        "Sport",
+        "Temp"
+      ],
+      "top5_overlap_count": 4
+    }
+  },
+  "consensus_top5_all_models": [
+    "DIntPkt",
+    "Flgs",
+    "Sport",
+    "Temp"
+  ]
+}

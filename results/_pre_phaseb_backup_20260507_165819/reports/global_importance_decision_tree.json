@@ -1,0 +1,130 @@
+{
+  "model": "decision_tree",
+  "features": [
+    {
+      "rank": 1,
+      "feature": "Flgs",
+      "mean_abs_shap": 0.189053
+    },
+    {
+      "rank": 2,
+      "feature": "DIntPkt",
+      "mean_abs_shap": 0.104912
+    },
+    {
+      "rank": 3,
+      "feature": "Sport",
+      "mean_abs_shap": 0.071737
+    },
+    {
+      "rank": 4,
+      "feature": "Temp",
+      "mean_abs_shap": 0.057451
+    },
+    {
+      "rank": 5,
+      "feature": "Pulse_Rate",
+      "mean_abs_shap": 0.026872
+    },
+    {
+      "rank": 6,
+      "feature": "Heart_rate",
+      "mean_abs_shap": 0.023131
+    },
+    {
+      "rank": 7,
+      "feature": "DIA",
+      "mean_abs_shap": 0.020814
+    },
+    {
+      "rank": 8,
+      "feature": "ST",
+      "mean_abs_shap": 0.019874
+    },
+    {
+      "rank": 9,
+      "feature": "DstLoad",
+      "mean_abs_shap": 0.01791
+    },
+    {
+      "rank": 10,
+      "feature": "Resp_Rate",
+      "mean_abs_shap": 0.017779
+    },
+    {
+      "rank": 11,
+      "feature": "SpO2",
+      "mean_abs_shap": 0.015033
+    },
+    {
+      "rank": 12,
+      "feature": "SYS",
+      "mean_abs_shap": 0.013861
+    },
+    {
+      "rank": 13,
+      "feature": "Dur",
+      "mean_abs_shap": 0.013249
+    },
+    {
+      "rank": 14,
+      "feature": "SrcLoad",
+      "mean_abs_shap": 0.005485
+    },
+    {
+      "rank": 15,
+      "feature": "Load",
+      "mean_abs_shap": 0.004801
+    },
+    {
+      "rank": 16,
+      "feature": "SIntPkt",
+      "mean_abs_shap": 0.004398
+    },
+    {
+      "rank": 17,
+      "feature": "pDstLoss",
+      "mean_abs_shap": 0.000538
+    },
+    {
+      "rank": 18,
+      "feature": "TotBytes",
+      "mean_abs_shap": 0.000473
+    },
+    {
+      "rank": 19,
+      "feature": "SrcBytes",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 20,
+      "feature": "DstBytes",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 21,
+      "feature": "SIntPktAct",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 22,
+      "feature": "sMaxPktSz",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 23,
+      "feature": "dMaxPktSz",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 24,
+      "feature": "sMinPktSz",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 25,
+      "feature": "pSrcLoss",
+      "mean_abs_shap": 0.0
+    }
+  ]
+}

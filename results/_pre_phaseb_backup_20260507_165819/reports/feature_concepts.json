@@ -1,0 +1,152 @@
+{
+  "Flgs": {
+    "label": "TCP Flag Pattern",
+    "category": "network",
+    "direction_high": "unusual flag combination detected",
+    "direction_low": "normal flag pattern"
+  },
+  "Sport": {
+    "label": "Source Port",
+    "category": "network",
+    "direction_high": "abnormal source port used",
+    "direction_low": "standard port range"
+  },
+  "SrcBytes": {
+    "label": "Outbound Byte Volume",
+    "category": "network",
+    "direction_high": "unusually high outbound data volume",
+    "direction_low": "minimal outbound traffic"
+  },
+  "DstBytes": {
+    "label": "Inbound Byte Volume",
+    "category": "network",
+    "direction_high": "unusually high inbound data volume",
+    "direction_low": "minimal inbound traffic"
+  },
+  "SrcLoad": {
+    "label": "Source Load",
+    "category": "network",
+    "direction_high": "high source bandwidth utilization",
+    "direction_low": "normal source load"
+  },
+  "DstLoad": {
+    "label": "Destination Load",
+    "category": "network",
+    "direction_high": "high destination bandwidth utilization",
+    "direction_low": "normal destination load"
+  },
+  "SIntPkt": {
+    "label": "Source Inter-Packet Gap",
+    "category": "network",
+    "direction_high": "abnormal packet timing (slow)",
+    "direction_low": "rapid packet bursts"
+  },
+  "DIntPkt": {
+    "label": "Dest Inter-Packet Gap",
+    "category": "network",
+    "direction_high": "abnormal response timing",
+    "direction_low": "unusually fast responses"
+  },
+  "SIntPktAct": {
+    "label": "Active Inter-Packet Time",
+    "category": "network",
+    "direction_high": "extended active session timing",
+    "direction_low": "brief session activity"
+  },
+  "sMaxPktSz": {
+    "label": "Max Source Packet Size",
+    "category": "network",
+    "direction_high": "large packets sent",
+    "direction_low": "small packet sizes"
+  },
+  "dMaxPktSz": {
+    "label": "Max Dest Packet Size",
+    "category": "network",
+    "direction_high": "large packets received",
+    "direction_low": "small packet sizes"
+  },
+  "sMinPktSz": {
+    "label": "Min Source Packet Size",
+    "category": "network",
+    "direction_high": "varying source packet sizes",
+    "direction_low": "consistent small packets"
+  },
+  "Dur": {
+    "label": "Flow Duration",
+    "category": "network",
+    "direction_high": "prolonged connection duration",
+    "direction_low": "unusually brief connection"
+  },
+  "TotBytes": {
+    "label": "Total Byte Volume",
+    "category": "network",
+    "direction_high": "high total data transfer",
+    "direction_low": "minimal data transferred"
+  },
+  "Load": {
+    "label": "Network Load",
+    "category": "network",
+    "direction_high": "high network utilization",
+    "direction_low": "low network activity"
+  },
+  "pSrcLoss": {
+    "label": "Source Packet Loss",
+    "category": "network",
+    "direction_high": "significant packet loss from source",
+    "direction_low": "no source packet loss"
+  },
+  "pDstLoss": {
+    "label": "Dest Packet Loss",
+    "category": "network",
+    "direction_high": "significant packet loss at destination",
+    "direction_low": "no destination packet loss"
+  },
+  "Temp": {
+    "label": "Body Temperature",
+    "category": "biometric",
+    "direction_high": "elevated temperature reading",
+    "direction_low": "below-normal temperature"
+  },
+  "SpO2": {
+    "label": "Blood Oxygen Saturation",
+    "category": "biometric",
+    "direction_high": "normal SpO2",
+    "direction_low": "dangerously low oxygen saturation"
+  },
+  "Pulse_Rate": {
+    "label": "Pulse Rate",
+    "category": "biometric",
+    "direction_high": "elevated heart rate (tachycardia)",
+    "direction_low": "low heart rate (bradycardia)"
+  },
+  "SYS": {
+    "label": "Systolic Blood Pressure",
+    "category": "biometric",
+    "direction_high": "elevated systolic BP (hypertension)",
+    "direction_low": "low systolic BP (hypotension)"
+  },
+  "DIA": {
+    "label": "Diastolic Blood Pressure",
+    "category": "biometric",
+    "direction_high": "elevated diastolic BP",
+    "direction_low": "low diastolic BP"
+  },
+  "Heart_rate": {
+    "label": "Heart Rate",
+    "category": "biometric",
+    "direction_high": "elevated heart rate",
+    "direction_low": "low heart rate"
+  },
+  "Resp_Rate": {
+    "label": "Respiratory Rate",
+    "category": "biometric",
+    "direction_high": "rapid breathing (tachypnea)",
+    "direction_low": "slow breathing (bradypnea)"
+  },
+  "ST": {
+    "label": "ST Segment (ECG)",
+    "category": "biometric",
+    "direction_high": "ST elevation (possible cardiac event)",
+    "direction_low": "ST depression"
+  }
+}

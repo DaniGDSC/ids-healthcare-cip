@@ -1,0 +1,214 @@
+{
+  "single_iteration": {
+    "thresholds_before": {
+      "CRITICAL": 0.8,
+      "HIGH": 0.6,
+      "MEDIUM": 0.4
+    },
+    "thresholds_after": {
+      "CRITICAL": 0.8,
+      "HIGH": 0.6,
+      "MEDIUM": 0.4
+    },
+    "rates_before": {
+      "tp": 571,
+      "fp": 170,
+      "fn": 43,
+      "tn": 4112,
+      "fpr": 0.034722,
+      "fnr": 0.008783,
+      "precision": 0.77058,
+      "recall": 0.929967,
+      "f1": 0.842804
+    },
+    "rates_after": {
+      "tp": 571,
+      "fp": 170,
+      "fn": 43,
+      "tn": 4112,
+      "fpr": 0.034722,
+      "fnr": 0.008783,
+      "precision": 0.77058,
+      "recall": 0.929967,
+      "f1": 0.842804
+    },
+    "feedback": {
+      "total_evaluated": 4896,
+      "true_positives": 571,
+      "false_positives": 170,
+      "false_negatives": 43,
+      "fpr": 0.0347,
+      "fnr": 0.0088,
+      "mean_fp_risk_score": 0.553,
+      "mean_tp_risk_score": 0.7239,
+      "current_thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "suggested_threshold_change": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "adjustments": [
+        {
+          "metric": "calibrated",
+          "current_value": null,
+          "target": null,
+          "direction": "none"
+        }
+      ]
+    }
+  },
+  "convergence_history": [
+    {
+      "iteration": 0,
+      "thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "rates": {
+        "tp": 571,
+        "fp": 170,
+        "fn": 43,
+        "tn": 4112,
+        "fpr": 0.034722,
+        "fnr": 0.008783,
+        "precision": 0.77058,
+        "recall": 0.929967,
+        "f1": 0.842804
+      }
+    },
+    {
+      "iteration": 1,
+      "thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "rates": {
+        "tp": 571,
+        "fp": 170,
+        "fn": 43,
+        "tn": 4112,
+        "fpr": 0.034722,
+        "fnr": 0.008783,
+        "precision": 0.77058,
+        "recall": 0.929967,
+        "f1": 0.842804
+      }
+    },
+    {
+      "iteration": 2,
+      "thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "rates": {
+        "tp": 571,
+        "fp": 170,
+        "fn": 43,
+        "tn": 4112,
+        "fpr": 0.034722,
+        "fnr": 0.008783,
+        "precision": 0.77058,
+        "recall": 0.929967,
+        "f1": 0.842804
+      }
+    },
+    {
+      "iteration": 3,
+      "thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "rates": {
+        "tp": 571,
+        "fp": 170,
+        "fn": 43,
+        "tn": 4112,
+        "fpr": 0.034722,
+        "fnr": 0.008783,
+        "precision": 0.77058,
+        "recall": 0.929967,
+        "f1": 0.842804
+      }
+    },
+    {
+      "iteration": 4,
+      "thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "rates": {
+        "tp": 571,
+        "fp": 170,
+        "fn": 43,
+        "tn": 4112,
+        "fpr": 0.034722,
+        "fnr": 0.008783,
+        "precision": 0.77058,
+        "recall": 0.929967,
+        "f1": 0.842804
+      }
+    },
+    {
+      "iteration": 5,
+      "thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      },
+      "rates": {
+        "tp": 571,
+        "fp": 170,
+        "fn": 43,
+        "tn": 4112,
+        "fpr": 0.034722,
+        "fnr": 0.008783,
+        "precision": 0.77058,
+        "recall": 0.929967,
+        "f1": 0.842804
+      }
+    }
+  ],
+  "weight_adjustment": {
+    "weights_before": {
+      "w1": 0.4,
+      "w2": 0.25,
+      "w3": 0.15,
+      "w4": 0.2
+    },
+    "weights_after": {
+      "w1": 0.5317,
+      "w2": 0.2622,
+      "w3": 0.0777,
+      "w4": 0.1284
+    },
+    "variances": {
+      "w1": 0.017745,
+      "w2": 0.000882,
+      "w3": 0.000784,
+      "w4": 0.000715
+    },
+    "auroc_before": 0.982263,
+    "auroc_after": 0.992058
+  },
+  "comparison_table_md": "| Metric | Before | After | Delta |\n|--------|-------:|------:|------:|\n| Threshold CRITICAL | 0.8000 | 0.8000 | +0.0000 |\n| Threshold HIGH | 0.6000 | 0.6000 | +0.0000 |\n| Threshold MEDIUM | 0.4000 | 0.4000 | +0.0000 |\n| FPR | 0.0347 | 0.0347 | +0.0000 |\n| FNR | 0.0088 | 0.0088 | +0.0000 |\n| PRECISION | 0.7706 | 0.7706 | +0.0000 |\n| RECALL | 0.9300 | 0.9300 | +0.0000 |\n| F1 | 0.8428 | 0.8428 | +0.0000 |",
+  "final_thresholds": {
+    "CRITICAL": 0.8,
+    "HIGH": 0.6,
+    "MEDIUM": 0.4
+  },
+  "final_weights": {
+    "w1": 0.5317,
+    "w2": 0.2622,
+    "w3": 0.0777,
+    "w4": 0.1284
+  }
+}

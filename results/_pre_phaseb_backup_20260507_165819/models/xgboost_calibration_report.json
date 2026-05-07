@@ -1,0 +1,22 @@
+{
+  "method": "isotonic",
+  "n_val": 2448,
+  "raw": {
+    "val_brier": 0.013290236734650997,
+    "val_log_loss": 0.06493248576601285,
+    "test_brier": 0.013311479935441897,
+    "test_auc_roc": 0.9952045301367591,
+    "test_auprc": 0.9806486275855537
+  },
+  "calibrated": {
+    "val_brier": 0.011640475632632808,
+    "val_log_loss": 0.0418954432792139,
+    "test_brier": 0.012319578783679466,
+    "test_auc_roc": 0.9947595190533207,
+    "test_auprc": 0.9715465021662174
+  },
+  "improvements": {
+    "delta_val_brier": 0.0016497611020181886,
+    "delta_test_brier": 0.0009919011517624306
+  }
+}

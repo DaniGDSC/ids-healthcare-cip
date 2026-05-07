@@ -1,0 +1,108 @@
+{
+  "model": "xgboost",
+  "n_rows": 4896,
+  "device_class_source": "parquet column",
+  "ci_method": "Wilson score interval, z=1.96",
+  "per_device_class": {
+    "ehr_workstation": {
+      "n_total": 1493,
+      "n_attacks": 156,
+      "n_benign": 1337,
+      "tp": 136,
+      "fn": 20,
+      "fp": 77,
+      "tn": 1260,
+      "fnr": 0.1282,
+      "fpr": 0.0576,
+      "recall": 0.8718,
+      "fnr_95_ci_wilson": [
+        0.0845,
+        0.1897
+      ],
+      "fpr_95_ci_wilson": [
+        0.0463,
+        0.0714
+      ]
+    },
+    "infusion_pump": {
+      "n_total": 582,
+      "n_attacks": 75,
+      "n_benign": 507,
+      "tp": 73,
+      "fn": 2,
+      "fp": 0,
+      "tn": 507,
+      "fnr": 0.0267,
+      "fpr": 0.0,
+      "recall": 0.9733,
+      "fnr_95_ci_wilson": [
+        0.0073,
+        0.0921
+      ],
+      "fpr_95_ci_wilson": [
+        0.0,
+        0.0075
+      ]
+    },
+    "other": {
+      "n_total": 1138,
+      "n_attacks": 127,
+      "n_benign": 1011,
+      "tp": 123,
+      "fn": 4,
+      "fp": 17,
+      "tn": 994,
+      "fnr": 0.0315,
+      "fpr": 0.0168,
+      "recall": 0.9685,
+      "fnr_95_ci_wilson": [
+        0.0123,
+        0.0782
+      ],
+      "fpr_95_ci_wilson": [
+        0.0105,
+        0.0268
+      ]
+    },
+    "patient_monitor": {
+      "n_total": 968,
+      "n_attacks": 150,
+      "n_benign": 818,
+      "tp": 142,
+      "fn": 8,
+      "fp": 6,
+      "tn": 812,
+      "fnr": 0.0533,
+      "fpr": 0.0073,
+      "recall": 0.9467,
+      "fnr_95_ci_wilson": [
+        0.0273,
+        0.1017
+      ],
+      "fpr_95_ci_wilson": [
+        0.0034,
+        0.0159
+      ]
+    },
+    "ventilator": {
+      "n_total": 715,
+      "n_attacks": 106,
+      "n_benign": 609,
+      "tp": 103,
+      "fn": 3,
+      "fp": 1,
+      "tn": 608,
+      "fnr": 0.0283,
+      "fpr": 0.0016,
+      "recall": 0.9717,
+      "fnr_95_ci_wilson": [
+        0.0097,
+        0.0799
+      ],
+      "fpr_95_ci_wilson": [
+        0.0003,
+        0.0092
+      ]
+    }
+  }
+}

@@ -64,7 +64,7 @@
         "recipient": "Clinical Staff",
         "channel": "Page / Dashboard",
         "priority": "CRITICAL",
-        "message": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+        "message": "MODERATE ALERT (Sample 976): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
       },
       {
         "recipient": "Charge Nurse",
@@ -155,7 +155,7 @@
         "recipient": "Clinical Staff",
         "channel": "Page / Dashboard",
         "priority": "HIGH",
-        "message": "CRITICAL ALERT (Sample 301): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+        "message": "MODERATE ALERT (Sample 301): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
       },
       {
         "recipient": "Biomedical Engineering",

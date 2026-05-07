@@ -1,0 +1,83 @@
+{
+  "model_type": "Denoising Autoencoder (DAE)",
+  "architecture": "cascaded_multiclass",
+  "training": {
+    "epochs_run": 100,
+    "final_loss": 0.030555371195077896,
+    "final_val_loss": null
+  },
+  "threshold": 0.004480303153648465,
+  "threshold_percentile": 99.0,
+  "test_metrics": {
+    "attack_f1": 0.626,
+    "attack_f2": 0.5506685432793808,
+    "weighted_f1": 0.9158932615509048,
+    "macro_f1": 0.7917306642402184,
+    "auc_roc": 0.6536558611382851,
+    "threshold": 0.004480303153648465,
+    "mean_benign_error": 77.42727481914673,
+    "mean_attack_error": 1667.8465841107907
+  },
+  "feature_weights": [
+    0.008787656545642567,
+    3.0299700361116543e-05,
+    0.005984904773593773,
+    0.012719011948382862,
+    1.8232333815965302e-05,
+    1.8002029351102503e-05,
+    9.247322518845706e-06,
+    1.363741762698163e-05,
+    0.005605607463894833,
+    0.030199125588121243,
+    0.0020349619292970153,
+    0.5685240110357598,
+    1.1739227971263438e-05,
+    0.2825371779691863,
+    2.0523236399992548e-05,
+    0.006087003281323061,
+    0.07710815582991715,
+    3.9010097633749095e-05,
+    2.6710920236335277e-05,
+    1.4448678691840386e-05,
+    2.146837752250641e-05,
+    2.1111036812502247e-05,
+    5.925589073019106e-05,
+    4.240707354703409e-05,
+    3.4006645108087174e-05,
+    1.611765912116105e-05,
+    1.1293463267098921e-05,
+    4.872524165805033e-06
+  ],
+  "stage": "final_training_multiclass_cascade",
+  "best_hyperparameters": {
+    "encoding_dims": [
+      24,
+      12,
+      24
+    ],
+    "noise_rate": 0.1,
+    "learning_rate": 0.0001,
+    "threshold_percentile": 99.0,
+    "clip_percentile": 1.0
+  },
+  "adjusted_encoding_dims": [
+    24,
+    12,
+    24
+  ],
+  "data": {
+    "n_raw_features": 25,
+    "n_track_a_features": 3,
+    "n_total_features": 28,
+    "benign_train_samples": 1999,
+    "test_samples": 4896,
+    "random_seed": 42,
+    "track_a_proba_source": "multiclass_val",
+    "label_order": [
+      "normal",
+      "Data Alteration",
+      "Spoofing"
+    ]
+  },
+  "elapsed_seconds": 6.1
+}
