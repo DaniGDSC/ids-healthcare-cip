@@ -1,0 +1,51 @@
+# Device class → clinical-tier mapping (ARCHITECTURE.md Step [8]).
+#
+# Maps each device class to a clinical tier whose weight enters the
+# composite-risk formula at ``D_clinical_tier``. Tier weights are
+# POLICY parameters acknowledged in Section 11 limitations (L2: tier
+# is a device-class proxy for real-time patient acuity).
+#
+# Loaded by ``src.context_enrichment.enrich_alert_context`` with the
+# inline ``DEFAULT_DEVICE_CLASS_TO_TIER`` table as a fallback. The
+# YAML is the canonical source per ARCHITECTURE.md Step [8].
+#
+# Reviewed annually by Clinical Engineering + CISO + Patient Safety.
+
+mappings:
+  infusion_pump:
+    tier: tier_1_life_critical
+    weight: 1.0
+    rationale: "Direct medication delivery; failure = patient harm within minutes"
+  ventilator:
+    tier: tier_1_life_critical
+    weight: 1.0
+    rationale: "Life support; immediate failure = death"
+  patient_monitor:
+    tier: tier_1_life_critical
+    weight: 1.0
+    rationale: "Vital sign monitoring; failure = missed deterioration"
+  ekg_machine:
+    tier: tier_2_high_clinical
+    weight: 0.8
+    rationale: "Diagnostic; brief unavailability acceptable"
+  ehr_workstation:
+    tier: tier_3_moderate
+    weight: 0.5
+    rationale: "Clinical workflow but not real-time; PHI exposure concern"
+  bedside_terminal:
+    tier: tier_4_supportive
+    weight: 0.3
+    rationale: "Charting + low-criticality use"
+  admin_workstation:
+    tier: tier_5_administrative
+    weight: 0.1
+    rationale: "Non-clinical administrative use"
+  other:
+    tier: tier_3_moderate
+    weight: 0.5
+    rationale: "Unknown device class — moderate fallback (UNKNOWN devices are handled separately by the conservative-fail-safe block in src/context_enrichment.py)"
+
+review:
+  reviewers: ["CISO", "Clinical Engineering Director", "Patient Safety Officer"]
+  review_period: "12 months"
+  last_reviewed: "2026-05-08"

@@ -112,7 +112,7 @@ For each module: **inputs → outputs**, **key functions**, **invariants**.
 | --- | --- |
 | **Inputs** | All upstream artefacts (`risk_scores.npz`, `analyst_report.json`, `MVEOutput` per alert) |
 | **Outputs** | `evaluation_alerts.json`, `survey/study_responses_*.json`, `survey/m5_result.yaml`, `results/rq2_metrics.json`, Streamlit dashboard |
-| **Key functions** | [`module6_evaluation.py`](../module6_evaluation/module6_evaluation.py) (artifact builder), [`module6_app.py`](../module6_evaluation/module6_app.py) (browse + study modes), [`compute_rq2_metrics.py`](../module6_evaluation/compute_rq2_metrics.py), [`study_loader.py`](../module6_evaluation/study_loader.py), [`study_analysis.py`](../module6_evaluation/study_analysis.py) |
+| **Key functions** | [`module6_evaluation.py`](../module6_evaluation/module6_evaluation.py) (artifact builder), [`module6_app.py`](../module6_evaluation/module6_app.py) (browse + study modes), [`compute_rq1_metrics.py`](../module6_evaluation/compute_rq1_metrics.py), [`study_loader.py`](../module6_evaluation/study_loader.py), [`study_analysis.py`](../module6_evaluation/study_analysis.py) |
 | **Invariants** | Audit trail append-only (Inv-4) · MD5-seeded deterministic shuffle for A/B per participant |
 
 ---

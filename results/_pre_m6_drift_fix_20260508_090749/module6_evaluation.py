@@ -412,61 +412,6 @@ def _build_eval_alert(idx, R, levels, y_true, attack_cats,
             "layer_2": mve_output.layer_2 if isinstance(mve_output, dict) else getattr(mve_output, "layer_2", {}),
             "layer_3": mve_output.layer_3 if isinstance(mve_output, dict) else getattr(mve_output, "layer_3", {})
         }
-        # ARCHITECTURE.md Step [12] Mode A reproducibility — surface
-        # the LLM mode + provider/model on the alert so M6's "Rule-based
-        # fallback" badge can render and the audit log can replay.
-        mode_used = (
-            mve_output.get("mode_used") if isinstance(mve_output, dict)
-            else getattr(mve_output, "mode_used", "B_rule")
-        )
-        alert_dict["mve_mode"] = mode_used or "B_rule"
-        alert_dict["llm_provider"] = (
-            mve_output.get("llm_provider") if isinstance(mve_output, dict)
-            else getattr(mve_output, "llm_provider", None)
-        )
-        alert_dict["llm_model_version"] = (
-            mve_output.get("llm_model_version") if isinstance(mve_output, dict)
-            else getattr(mve_output, "llm_model_version", None)
-        )
-
-    # ARCHITECTURE.md Step [11] SHAP stability indicator. The dashboard
-    # reads ``stability_score`` + ``is_stable`` to decide whether to
-    # render a fragility warning. ``shap_source`` flags NOVEL alerts as
-    # ``xgboost_low_confidence`` (DAE-driven; XGB SHAP is not faithful).
-    shap_ctx = analyst.get("shap_context") or {}
-    fusion = (scored_alert.fusion_class.value if scored_alert
-              else alert_dict.get("fusion_class", ""))
-    novel = fusion in {"NOVEL_ANOMALY", "STRONG_NOVEL_ANOMALY"}
-    stability = float(shap_ctx.get("stability_score", 1.0))
-    alert_dict["shap_stability_score"] = round(stability, 4)
-    alert_dict["shap_is_stable"] = bool(stability >= 0.90)
-    alert_dict["shap_source"] = (
-        "xgboost_low_confidence" if novel else "xgboost"
-    )
-
-    # ARCHITECTURE.md Step [13] / INVARIANT 9 — shared anchor block.
-    # Identical across the 3 role views; lives at the top of every
-    # operator panel to prevent miscommunication during phone-based
-    # incident handling.
-    from datetime import datetime, timezone
-    # ``active_device`` is sometimes a boolean flag (legacy schema)
-    # and sometimes a string device label — coerce to a sensible
-    # device_id by falling back to the class name unless the field
-    # already carries a non-empty string.
-    raw_active = alert_dict.get("active_device")
-    if isinstance(raw_active, str) and raw_active:
-        device_id_str = raw_active
-    else:
-        device_id_str = str(device_cls)
-    alert_dict["shared_anchor"] = {
-        "alert_id":         alert_dict["alert_id"],
-        "risk_tier":        alert_dict["risk_level"],
-        "device_id":        device_id_str,
-        "one_line_summary": (
-            f"{alert_dict['risk_level']} {attack_category} on {device_cls}"
-        ),
-        "timestamp":        datetime.now(tz=timezone.utc).isoformat(),
-    }
     
     if raw_row is not None:
         try:

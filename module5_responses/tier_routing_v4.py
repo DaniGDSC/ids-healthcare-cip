@@ -16,13 +16,87 @@ operator-facing tier recommendation can differentiate, e.g.,
 ``DISAGREEMENT_ANOMALY`` (route to security specialist) from
 ``CONFIRMED_ANOMALY`` (route to senior IT) even when both produce a
 HIGH-severity composite risk score.
+
+Two policy YAMLs feed the recommendation:
+
+* ``configs/tier_routing.yaml``        — routing rules per fusion_class
+                                         × risk_tier (Step [14]).
+* ``configs/hospital_capabilities.yaml`` — deployment sizing + tier
+                                         availability fallbacks
+                                         (Step [14]).
+
+Both are loaded lazily via :func:`load_tier_routing_yaml` and
+:func:`load_hospital_capabilities`. The in-source ``_ROUTING`` table
+remains the canonical source for the 9-class AlertType mapping; the
+YAMLs add the fusion-class × risk-tier overlay on top.
 """
 from __future__ import annotations
 
+import functools
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from src.data_models import AlertType, Confidence
+
+
+# ── Configuration loaders (ARCHITECTURE.md Step [14]) ─────────────────
+
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_TIER_ROUTING_YAML = _PROJECT_ROOT / "configs" / "tier_routing.yaml"
+_HOSPITAL_CAPABILITIES_YAML = _PROJECT_ROOT / "configs" / "hospital_capabilities.yaml"
+
+
+@functools.lru_cache(maxsize=1)
+def load_tier_routing_yaml() -> dict[str, Any]:
+    """Cached load of ``configs/tier_routing.yaml``.
+
+    Returns ``{"routing_rules": [...]}`` or ``{}`` when the YAML is
+    absent. The dict is the source of truth for the fusion_class ×
+    risk_tier overlay; downstream callers iterate ``routing_rules`` in
+    order and pick the first matching condition.
+    """
+    if not _TIER_ROUTING_YAML.exists():
+        return {}
+    import yaml
+    body = yaml.safe_load(_TIER_ROUTING_YAML.read_text(encoding="utf-8")) or {}
+    return body if isinstance(body, dict) else {}
+
+
+@functools.lru_cache(maxsize=1)
+def load_hospital_capabilities() -> dict[str, Any]:
+    """Cached load of ``configs/hospital_capabilities.yaml``.
+
+    Returns the deployment-sizing dict (``deployment_size``,
+    ``available_tiers``, ``presets``, ``fallback_routing``) or ``{}``
+    when the YAML is absent. Used by the M6 dashboard to grey out
+    unavailable tiers and surface the doc-mandated small-hospital
+    fallback ("document_for_external_consultant_review")."""
+    if not _HOSPITAL_CAPABILITIES_YAML.exists():
+        return {}
+    import yaml
+    body = yaml.safe_load(_HOSPITAL_CAPABILITIES_YAML.read_text(encoding="utf-8")) or {}
+    return body if isinstance(body, dict) else {}
+
+
+def get_available_tiers() -> list[str]:
+    """Return the list of tiers staffed at this deployment.
+
+    Reads ``deployment_size`` from ``configs/hospital_capabilities.yaml``
+    and pulls the matching preset's ``available_tiers``. Falls back to
+    a permissive list (``["L1", "L2_specialist", "senior_engineer"]``)
+    when the YAML is absent.
+    """
+    cfg = load_hospital_capabilities()
+    presets = (cfg.get("presets") or {})
+    size = cfg.get("deployment_size", "medium")
+    preset = presets.get(size) or {}
+    avail = preset.get("available_tiers") or cfg.get("available_tiers")
+    if avail:
+        return list(avail)
+    return ["L1", "L2_specialist", "senior_engineer"]
 
 
 class TierLevel(str, Enum):

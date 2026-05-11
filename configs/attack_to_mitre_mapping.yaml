@@ -1,0 +1,93 @@
+# Attack category → MITRE ATT&CK mapping (ARCHITECTURE.md Step [8]).
+#
+# Static mapping from this prototype's ``attack_category`` taxonomy
+# (Spoofing / Data Alteration / Reconnaissance / Initial Access /
+# Exfiltration / Lateral Movement) to MITRE ATT&CK techniques with
+# explicit confidence levels (HIGH / MEDIUM / LOW). Validated against
+# a pinned MITRE framework version for reproducibility.
+#
+# Confidence semantics:
+#   HIGH   — direct, documented mapping from the dataset's attack
+#            description to the MITRE technique.
+#   MEDIUM — plausible technique covering the same threat surface
+#            but the dataset doesn't enumerate sub-techniques.
+#   LOW    — speculative; multiple techniques could fit and the
+#            mapping is offered for analyst orientation only.
+#
+# Reviewed quarterly by the security team to track MITRE framework
+# updates.
+
+mitre_framework_version: "v14.1"
+
+mappings:
+  - attack_category: "Data Alteration"
+    mitre_techniques:
+      - id: "T1565"
+        name: "Data Manipulation"
+        confidence: HIGH
+      - id: "T1565.001"
+        name: "Stored Data Manipulation"
+        confidence: MEDIUM
+      - id: "T1565.002"
+        name: "Transmitted Data Manipulation"
+        confidence: MEDIUM
+    last_validated: "2026-05-08"
+
+  - attack_category: "Spoofing"
+    mitre_techniques:
+      - id: "T1556"
+        name: "Modify Authentication Process"
+        confidence: MEDIUM
+      - id: "T1557"
+        name: "Adversary-in-the-Middle"
+        confidence: MEDIUM
+    last_validated: "2026-05-08"
+
+  - attack_category: "Reconnaissance"
+    mitre_techniques:
+      - id: "T1595"
+        name: "Active Scanning"
+        confidence: HIGH
+      - id: "T1592"
+        name: "Gather Victim Host Information"
+        confidence: MEDIUM
+    last_validated: "2026-05-08"
+
+  - attack_category: "Initial Access"
+    mitre_techniques:
+      - id: "T1190"
+        name: "Exploit Public-Facing Application"
+        confidence: MEDIUM
+      - id: "T1078"
+        name: "Valid Accounts"
+        confidence: LOW
+    last_validated: "2026-05-08"
+
+  - attack_category: "Exfiltration"
+    mitre_techniques:
+      - id: "T1041"
+        name: "Exfiltration Over C2 Channel"
+        confidence: HIGH
+      - id: "T1567"
+        name: "Exfiltration Over Web Service"
+        confidence: MEDIUM
+    last_validated: "2026-05-08"
+
+  - attack_category: "Lateral Movement"
+    mitre_techniques:
+      - id: "T1021"
+        name: "Remote Services"
+        confidence: HIGH
+      - id: "T1570"
+        name: "Lateral Tool Transfer"
+        confidence: MEDIUM
+    last_validated: "2026-05-08"
+
+  - attack_category: "normal"
+    mitre_techniques: []
+    last_validated: "2026-05-08"
+
+review:
+  reviewers: ["Security Team", "Threat Intel"]
+  review_period: "quarterly + on MITRE framework release"
+  last_reviewed: "2026-05-08"

@@ -33,7 +33,7 @@ Module sequence: 2 (Train) → 3 (Risk Scores) → 4 (Explanations) → 5 (Respo
 Run after Module 6 has produced `results/reports/evaluation_alerts.json`:
 
 ```bash
-python module6_evaluation/compute_rq2_metrics.py
+python module6_evaluation/compute_rq1_metrics.py
 # Output: results/rq2_metrics.json
 ```
 

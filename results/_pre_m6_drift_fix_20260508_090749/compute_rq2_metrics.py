@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import json
 from pathlib import Path
 
@@ -21,18 +22,10 @@ def main():
     fn_critical = sum(1 for a in true_critical if not a.get("should_surface", False))
     fnr_critical = fn_critical / total_true_critical if total_true_critical > 0 else 0
 
-    tp = sum(
-        1 for a in alerts if a.get("ground_truth") == "attack" and a.get("should_surface") is True
-    )
-    fn = sum(
-        1 for a in alerts if a.get("ground_truth") == "attack" and a.get("should_surface") is False
-    )
-    fp = sum(
-        1 for a in alerts if a.get("ground_truth") == "benign" and a.get("should_surface") is True
-    )
-    tn = sum(
-        1 for a in alerts if a.get("ground_truth") == "benign" and a.get("should_surface") is False
-    )
+    tp = sum(1 for a in alerts if a.get("ground_truth") == "attack" and a.get("should_surface") is True)
+    fn = sum(1 for a in alerts if a.get("ground_truth") == "attack" and a.get("should_surface") is False)
+    fp = sum(1 for a in alerts if a.get("ground_truth") == "benign" and a.get("should_surface") is True)
+    tn = sum(1 for a in alerts if a.get("ground_truth") == "benign" and a.get("should_surface") is False)
 
     metrics = {
         "critical_alert_rate": round(critical_alert_rate, 4),
@@ -45,24 +38,17 @@ def main():
         "specificity": round(tn / (tn + fp), 4) if (tn + fp) else 0,
     }
 
-    out_path = Path("results/rq1_metrics.json")
+    out_path = Path("results/rq2_metrics.json")
     out_path.parent.mkdir(exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(metrics, f, indent=2)
 
-    # Back-compat shim: write rq2_metrics.json as well so any consumer
-    # still pointed at the old filename keeps working until the next
-    # release. Drop after one cycle.
-    legacy_path = Path("results/rq2_metrics.json")
-    with open(legacy_path, "w") as f:
-        json.dump(metrics, f, indent=2)
-
-    print("=== RQ1 Detection Metrics ===")
+    print("=== RQ2 Metrics ===")
     print(f"FNR_CRITICAL: {fnr_critical:.2%}")
     print(f"CRITICAL alert rate: {critical_alert_rate:.2%}")
     print(f"Sensitivity: {metrics['sensitivity']:.2%}")
     print(f"Specificity: {metrics['specificity']:.2%}")
-    print(f"Saved to: {out_path} (+ legacy {legacy_path})")
+    print(f"Saved to: {out_path}")
 
 
 if __name__ == "__main__":

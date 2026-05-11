@@ -847,7 +847,7 @@ The pipeline reads multiple YAML configuration files for policy parameters, asse
 
 Step 8 is parameterized by three YAML configuration files that encode hospital policy, asset state, and threat intelligence. These are explicitly **policy parameters** (not learned), reviewed periodically by clinical engineering, IT security, and patient safety leadership.
 
-### `configs/device_inventory.yaml`
+### `config/device_inventory.yaml`
 
 Asset database mapping network identifiers to device context. Schema:
 
@@ -869,7 +869,7 @@ devices:
 
 Lookup priority for matching alert flow to inventory entry: (1) IP exact match, (2) MAC exact match if available, (3) hostname pattern match, (4) UNKNOWN fallback (conservative).
 
-### `configs/device_clinical_tier_mapping.yaml`
+### `config/device_clinical_tier_mapping.yaml`
 
 Maps device class to clinical tier with rationale per device. Tier weights are policy parameters acknowledged in Section 11 limitations.
 
@@ -909,7 +909,7 @@ review:
   review_period: "12 months"
 ```
 
-### `configs/attack_to_mitre_mapping.yaml`
+### `config/attack_to_mitre_mapping.yaml`
 
 Static mapping from detection's `attack_category` to MITRE ATT&CK techniques with confidence levels. Validated against a pinned MITRE framework version.
 
