@@ -1,0 +1,120 @@
+[2026-05-16 17:04:30] RQ1.1: BEGIN test-split baseline metrics
+[2026-05-16 17:04:30] RQ1.1: OUTPUT: rq1_metrics.json
+[2026-05-16 17:04:30] RQ1.1: END (0.3s) AUC=0.9952 F2=0.9462 sens=0.9739 spec=0.9752
+[2026-05-16 17:04:30] RQ1.2: BEGIN Track B per-class AUC
+[2026-05-16 17:04:30] RQ1.2: OUTPUT: rq1_track_b_per_class.json
+[2026-05-16 17:04:30] RQ1.2: END (0.0s) keys: ['ehms', 'medsec25']
+[2026-05-16 17:04:30] RQ1.3: BEGIN sensitivity analysis (30 perturbations + 3 baselines)
+[2026-05-16 17:04:30] RQ1.3: OUTPUT: rq1_sensitivity_analysis.json
+[2026-05-16 17:04:30] RQ1.3: END (0.1s) mean_agreement=0.982
+[2026-05-16 17:04:30] RQ1.4: BEGIN truth table from src.risk_scorer.score_alert()
+[2026-05-16 17:04:30] RQ1.4: IMPORT ERROR: cannot import name 'DeviceClinicalTier' from 'src.data_models' (/home/un1/project/ids-healthcare-cip/src/data_models.py)
+[2026-05-16 17:04:30] RQ1.4: END (0.0s) IMPORT ERROR
+[2026-05-16 17:04:30] RQ1.5: BEGIN D_crit vs D_clinical_tier Pearson correlation
+[2026-05-16 17:04:30] RQ1.5: END (0.0s) only 0 devices aligned
+[2026-05-16 17:04:39] RQ1.1: BEGIN test-split baseline metrics
+[2026-05-16 17:04:39] RQ1.1: baseline match (delta=0.0000)
+[2026-05-16 17:04:39] RQ1.1: OUTPUT: rq1_metrics.json
+[2026-05-16 17:04:39] RQ1.1: END (0.2s) AUC=0.9952 F2=0.9462 sens=0.9739 spec=0.9752
+[2026-05-16 17:04:39] RQ1.2: BEGIN Track B per-class AUC
+[2026-05-16 17:04:39] RQ1.2: OUTPUT: rq1_track_b_per_class.json
+[2026-05-16 17:04:39] RQ1.2: END (0.0s) keys: ['ehms', 'medsec25']
+[2026-05-16 17:04:39] RQ1.3: BEGIN sensitivity analysis (30 perturbations + 3 baselines)
+[2026-05-16 17:04:39] RQ1.3: OUTPUT: rq1_sensitivity_analysis.json
+[2026-05-16 17:04:39] RQ1.3: END (0.1s) mean_agreement=0.982
+[2026-05-16 17:04:39] RQ1.4: BEGIN truth table from src.risk_scorer.score_alert()
+[2026-05-16 17:04:39] RQ1.4: IMPORT ERROR: cannot import name 'DeviceClinicalTier' from 'src.data_models' (/home/un1/project/ids-healthcare-cip/src/data_models.py)
+[2026-05-16 17:04:39] RQ1.4: END (0.0s) IMPORT ERROR
+[2026-05-16 17:04:39] RQ1.5: BEGIN D_crit vs D_clinical_tier Pearson correlation
+[2026-05-16 17:04:39] RQ1.5: END (0.0s) only 0 devices aligned
+[2026-05-16 17:04:53] RQ1.1: BEGIN test-split baseline metrics
+[2026-05-16 17:04:53] RQ1.1: baseline match (delta=0.0000)
+[2026-05-16 17:04:53] RQ1.1: OUTPUT: rq1_metrics.json
+[2026-05-16 17:04:53] RQ1.1: END (0.2s) AUC=0.9952 F2=0.9462 sens=0.9739 spec=0.9752
+[2026-05-16 17:04:53] RQ1.2: BEGIN Track B per-class AUC
+[2026-05-16 17:04:53] RQ1.2: OUTPUT: rq1_track_b_per_class.json
+[2026-05-16 17:04:53] RQ1.2: END (0.0s) keys: ['ehms', 'medsec25']
+[2026-05-16 17:04:53] RQ1.3: BEGIN sensitivity analysis (30 perturbations + 3 baselines)
+[2026-05-16 17:04:53] RQ1.3: OUTPUT: rq1_sensitivity_analysis.json
+[2026-05-16 17:04:53] RQ1.3: END (0.1s) mean_agreement=0.982
+[2026-05-16 17:04:53] RQ1.4: BEGIN truth table from src.risk_scorer.score_alert()
+[2026-05-16 17:04:53] RQ1.4: IMPORT ERROR: cannot import name 'DeviceClinicalTier' from 'src.data_models' (/home/un1/project/ids-healthcare-cip/src/data_models.py)
+[2026-05-16 17:04:53] RQ1.4: END (0.0s) IMPORT ERROR
+[2026-05-16 17:04:53] RQ1.5: BEGIN D_crit vs D_clinical_tier Pearson correlation
+[2026-05-16 17:04:53] RQ1.5: END (0.0s) only 0 devices aligned
+[2026-05-16 17:05:03] RQ1.1: BEGIN test-split baseline metrics
+[2026-05-16 17:05:03] RQ1.1: baseline match (delta=0.0000)
+[2026-05-16 17:05:03] RQ1.1: OUTPUT: rq1_metrics.json
+[2026-05-16 17:05:03] RQ1.1: END (0.2s) AUC=0.9952 F2=0.9462 sens=0.9739 spec=0.9752
+[2026-05-16 17:05:03] RQ1.2: BEGIN Track B per-class AUC
+[2026-05-16 17:05:03] RQ1.2: OUTPUT: rq1_track_b_per_class.json
+[2026-05-16 17:05:03] RQ1.2: END (0.0s) keys: ['ehms', 'medsec25']
+[2026-05-16 17:05:03] RQ1.3: BEGIN sensitivity analysis (30 perturbations + 3 baselines)
+[2026-05-16 17:05:03] RQ1.3: OUTPUT: rq1_sensitivity_analysis.json
+[2026-05-16 17:05:03] RQ1.3: END (0.1s) mean_agreement=0.982
+[2026-05-16 17:05:03] RQ1.4: BEGIN truth table from src.risk_scorer.score_alert()
+[2026-05-16 17:05:03] RQ1.4: IMPORT ERROR: cannot import name 'DeviceClinicalTier' from 'src.data_models' (/home/un1/project/ids-healthcare-cip/src/data_models.py)
+[2026-05-16 17:05:03] RQ1.4: END (0.0s) IMPORT ERROR
+[2026-05-16 17:05:03] RQ1.5: BEGIN D_crit vs D_clinical_tier Pearson correlation
+[2026-05-16 17:05:03] RQ1.5: END (0.0s) only 0 devices aligned
+[2026-05-16 17:07:33] RQ1.1: BEGIN test-split baseline metrics
+[2026-05-16 17:07:33] RQ1.1: baseline match (delta=0.0000)
+[2026-05-16 17:07:33] RQ1.1: OUTPUT: rq1_metrics.json
+[2026-05-16 17:07:33] RQ1.1: END (0.2s) AUC=0.9952 F2=0.9462 sens=0.9739 spec=0.9752
+[2026-05-16 17:07:33] RQ1.2: BEGIN Track B per-class AUC
+[2026-05-16 17:07:33] RQ1.2: OUTPUT: rq1_track_b_per_class.json
+[2026-05-16 17:07:33] RQ1.2: END (0.0s) keys: ['ehms', 'medsec25']
+[2026-05-16 17:07:33] RQ1.3: BEGIN sensitivity analysis (30 perturbations + 3 baselines)
+[2026-05-16 17:07:33] RQ1.3: OUTPUT: rq1_sensitivity_analysis.json
+[2026-05-16 17:07:33] RQ1.3: END (0.1s) mean_agreement=0.982
+[2026-05-16 17:07:33] RQ1.4: BEGIN truth table from src.risk_scorer.score_alert()
+[2026-05-16 17:07:33] RQ1.4: FLAG: 2 truth-table discrepancies between code and docs
+[2026-05-16 17:07:33] RQ1.4: OUTPUT: rq1_truth_table.md
+[2026-05-16 17:07:33] RQ1.4: OUTPUT: rq1_truth_table.yaml
+[2026-05-16 17:07:33] RQ1.4: END (0.0s) rows=16 discrepancies=2
+[2026-05-16 17:07:33] RQ1.5: BEGIN D_crit vs D_clinical_tier Pearson correlation
+[2026-05-16 17:07:33] RQ1.5: OUTPUT: rq1_dcrit_dclinical_correlation.json
+[2026-05-16 17:07:33] RQ1.5: END (0.0s) r=0.612 n=11
+[2026-05-16 17:09:26] RQ3.2: BEGIN no-auto-execution grep on module5_responses/
+[2026-05-16 17:09:26] RQ3.2: OUTPUT: rq3_no_auto_execution.json (PASSED — No auto-execution verified)
+[2026-05-16 17:09:26] RQ3.2: END (0.0s) PASSED — No auto-execution verified
+[2026-05-16 17:09:26] RQ3.3: BEGIN audit hash chain verification
+[2026-05-16 17:09:26] RQ3.3: OUTPUT: rq3_audit_integrity.json (FAILED)
+[2026-05-16 17:09:26] RQ3.3: END (0.1s) all_intact=False
+[2026-05-16 17:09:26] RQ3.4: BEGIN cross-role consistency checks
+[2026-05-16 17:09:26] RQ3.4: OUTPUT: rq3_cross_role_consistency.json (PASSED)
+[2026-05-16 17:09:26] RQ3.4: END (0.0s) PASSED
+[2026-05-16 17:09:26] RQ3.5: BEGIN HITL user-study analysis
+[2026-05-16 17:09:27] RQ3.5: OUTPUT: rq3_user_study.json (roles=['IT_generalist', 'biomed_engineer', 'nurse_manager'])
+[2026-05-16 17:09:27] RQ3.5: END (0.4s) roles=3
+[2026-05-16 17:10:30] RQ3.3: BEGIN audit hash chain verification
+[2026-05-16 17:10:31] RQ3.3: OUTPUT: rq3_audit_integrity.json (FAILED)
+[2026-05-16 17:10:31] RQ3.3: END (0.1s) all_intact=False
+[2026-05-16 17:11:03] RQ3.3: BEGIN audit hash chain verification
+[2026-05-16 17:11:04] RQ3.3: OUTPUT: rq3_audit_integrity.json (FAILED)
+[2026-05-16 17:11:04] RQ3.3: END (0.2s) all_intact=False
+[2026-05-16 17:11:38] RQ3.3: BEGIN audit hash chain verification
+[2026-05-16 17:11:38] RQ3.3: OUTPUT: rq3_audit_integrity.json (PASSED)
+[2026-05-16 17:11:38] RQ3.3: END (0.3s) all_intact=True
+[2026-05-16 17:13:57] RQ2.2: BEGIN MVE-SHAP alignment, stratified by fusion class
+[2026-05-16 17:13:57] RQ2.2: OUTPUT: rq2_mve_shap_alignment.json (classes=['BENIGN'])
+[2026-05-16 17:13:57] RQ2.2: END (0.0s) n=16
+[2026-05-16 17:13:57] RQ2.3: BEGIN MITRE ATT&CK coverage
+[2026-05-16 17:13:57] RQ2.3: OUTPUT: rq2_mitre_coverage.json
+[2026-05-16 17:13:57] RQ2.3: END (0.0s) categories=7 layer1_grounded=0/20
+[2026-05-16 17:13:57] RQ2.4: BEGIN user study faithfulness analysis
+[2026-05-16 17:13:57] RQ2.4: OUTPUT: rq2_user_study.json (+ survey/m5_result.yaml)
+[2026-05-16 17:13:57] RQ2.4: END (0.3s) roles=['IT_generalist', 'biomed_engineer', 'nurse_manager']
+[2026-05-16 17:14:56] RQ2.2: BEGIN MVE-SHAP alignment, stratified by fusion class
+[2026-05-16 17:14:56] RQ2.2: OUTPUT: rq2_mve_shap_alignment.json (classes=['BENIGN'])
+[2026-05-16 17:14:56] RQ2.2: END (0.0s) n=16
+[2026-05-16 17:15:13] RQ2.1: BEGIN SHAP stability measurement
+[2026-05-16 17:15:15] RQ2.1: OUTPUT: rq2_shap_stability.json (18 alerts, mean=0.863)
+[2026-05-16 17:15:15] RQ2.1: END (1.9s) n=18 mean=0.863
+[2026-05-16 17:16:02] RQ3.1: BEGIN pytest summary
+[2026-05-16 17:16:08] RQ3.1: pytest exit code: 0
+[2026-05-16 17:16:08] RQ3.1: OUTPUT: rq3_test_summary.json (passed=635 failed=0 skipped=1)
+[2026-05-16 17:16:08] RQ3.1: END (5.7s) passed=635 failed=0
+[2026-05-16 17:19:55] RQ1.2: BEGIN Track B per-class AUC
+[2026-05-16 17:19:55] RQ1.2: OUTPUT: rq1_track_b_per_class.json
+[2026-05-16 17:19:55] RQ1.2: END (0.0s) keys: ['ehms', 'ehms_by_config', 'medsec25', 'medsec25_by_config']

@@ -1,0 +1,83 @@
+{
+  "provenance": {
+    "generated_at": "2026-05-16T10:07:33Z",
+    "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+    "random_seed": 42,
+    "schema_version": "1.0",
+    "code_version": "thesis-v1.0",
+    "python_version": "3.10.20",
+    "input_files": {
+      "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+      "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+      "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+      "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+      "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+      "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+      "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+    }
+  },
+  "results": {
+    "perturbation_results": {
+      "n_perturbations": 30,
+      "agreement_mean": 0.9823,
+      "agreement_std": 0.0082,
+      "agreement_min": 0.9669,
+      "agreement_max": 0.9947,
+      "agreement_p25": 0.9755,
+      "agreement_p50": 0.9828,
+      "agreement_p75": 0.9905,
+      "histogram_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        30
+      ],
+      "histogram_edges": [
+        0.0,
+        0.1,
+        0.2,
+        0.30000000000000004,
+        0.4,
+        0.5,
+        0.6000000000000001,
+        0.7000000000000001,
+        0.8,
+        0.9,
+        1.0
+      ]
+    },
+    "baselines": {
+      "equal_weights": {
+        "agreement": 0.7345,
+        "fnr_critical_delta": 0.0106
+      },
+      "c_detect_only": {
+        "agreement": 0.7659,
+        "fnr_critical_delta": 0.0
+      },
+      "multiplicative": {
+        "agreement": 0.7929,
+        "fnr_critical_delta": 0.0
+      }
+    },
+    "baseline_weights": {
+      "detection_confidence": 0.4,
+      "device_criticality": 0.25,
+      "data_sensitivity": 0.15,
+      "clinical_tier": 0.2
+    },
+    "tier_boundaries": {
+      "critical_min": 0.8,
+      "high_min": 0.6,
+      "medium_min": 0.4
+    },
+    "perturbation_method": "multiplicative \u00b110% then L1 renormalize to sum=1.0",
+    "n_alerts_evaluated": 2448
+  }
+}

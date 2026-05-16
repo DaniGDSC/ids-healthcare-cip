@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "generated_at": "2026-05-16T10:07:33Z",
+    "generated_at": "2026-05-16T10:14:56Z",
     "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
     "random_seed": 42,
     "schema_version": "1.0",
@@ -17,29 +17,22 @@
     }
   },
   "results": {
-    "fnr_critical": 0.0261,
-    "sensitivity": 0.9739,
-    "specificity": 0.9752,
-    "f1_score": 0.9074,
-    "f2_score": 0.9462,
-    "auc": 0.9952,
-    "pr_auc": 0.9806,
-    "confusion_matrix": {
-      "TP": 299,
-      "FN": 8,
-      "FP": 53,
-      "TN": 2088
+    "by_fusion_class": {
+      "BENIGN": {
+        "n_alerts": 16,
+        "all_3_present": 0.0,
+        "two_plus_present": 0.0,
+        "any_present": 1.0,
+        "mitre_referenced": 0.0,
+        "shap_source_xgb_low_conf": 0
+      }
     },
-    "threshold_used": 0.01846158612363696,
-    "n_test_samples": 2448,
-    "n_attacks_test": 307,
-    "n_benign_test": 2141,
-    "assertions": {
-      "fnr_critical_in_range": true,
-      "sensitivity_above_0_30": true,
-      "specificity_above_0_30": true,
-      "auc_above_0_50": true,
-      "metrics_in_probability_range": true
-    }
+    "aggregate_with_caveats": {
+      "n_alerts_total": 16,
+      "overall_all_3": 0.0,
+      "note": "Overall metric averages across fusion classes including those where SHAP is acknowledged as not faithful (NOVEL_ANOMALY); see by_fusion_class for stratified reporting."
+    },
+    "input_source": "results/reports/evaluation_alerts.json",
+    "feature_categories_source": "configs/feature_categories.yaml"
   }
 }

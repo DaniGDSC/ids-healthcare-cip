@@ -1,0 +1,113 @@
+{
+  "provenance": {
+    "generated_at": "2026-05-16T10:13:57Z",
+    "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+    "random_seed": 42,
+    "schema_version": "1.0",
+    "code_version": "thesis-v1.0",
+    "python_version": "3.10.20",
+    "input_files": {
+      "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+      "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+      "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+      "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+      "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+      "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+      "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+    }
+  },
+  "results": {
+    "config_coverage": {
+      "total_attack_categories": 7,
+      "mapped_categories": 6,
+      "orphan_categories": [
+        "normal"
+      ],
+      "mitre_framework_version": "v14.1",
+      "techniques_by_confidence": {
+        "HIGH": 4,
+        "MEDIUM": 8,
+        "LOW": 1
+      },
+      "per_category": {
+        "Data Alteration": {
+          "n_techniques": 3,
+          "by_confidence": {
+            "HIGH": 1,
+            "MEDIUM": 2
+          },
+          "ids": [
+            "T1565",
+            "T1565.001",
+            "T1565.002"
+          ]
+        },
+        "Spoofing": {
+          "n_techniques": 2,
+          "by_confidence": {
+            "MEDIUM": 2
+          },
+          "ids": [
+            "T1556",
+            "T1557"
+          ]
+        },
+        "Reconnaissance": {
+          "n_techniques": 2,
+          "by_confidence": {
+            "HIGH": 1,
+            "MEDIUM": 1
+          },
+          "ids": [
+            "T1595",
+            "T1592"
+          ]
+        },
+        "Initial Access": {
+          "n_techniques": 2,
+          "by_confidence": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "ids": [
+            "T1190",
+            "T1078"
+          ]
+        },
+        "Exfiltration": {
+          "n_techniques": 2,
+          "by_confidence": {
+            "HIGH": 1,
+            "MEDIUM": 1
+          },
+          "ids": [
+            "T1041",
+            "T1567"
+          ]
+        },
+        "Lateral Movement": {
+          "n_techniques": 2,
+          "by_confidence": {
+            "HIGH": 1,
+            "MEDIUM": 1
+          },
+          "ids": [
+            "T1021",
+            "T1570"
+          ]
+        },
+        "normal": {
+          "n_techniques": 0,
+          "by_confidence": {},
+          "ids": []
+        }
+      }
+    },
+    "layer1_grounding": {
+      "n_alerts_total": 20,
+      "n_alerts_with_mitre": 0,
+      "alerts_referencing_mitre": 0.0,
+      "note": "Layer-1 MVE text typically describes baseline deviation in clinical language; MITRE technique IDs may not appear in Layer-1 explicitly. Coverage of the mapping file itself is more informative."
+    }
+  }
+}

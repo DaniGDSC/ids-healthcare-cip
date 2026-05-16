@@ -1,0 +1,60 @@
+{
+  "provenance": {
+    "generated_at": "2026-05-16T10:19:55Z",
+    "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+    "random_seed": 42,
+    "schema_version": "1.0",
+    "code_version": "thesis-v1.0",
+    "python_version": "3.10.20",
+    "input_files": {
+      "ehms_ablation": "sha256:6443e550636fb04351f45a354c01d7397f1f467513ccc722979b00e0e82c3603",
+      "medsec25_ablation": "sha256:c24ca60fc85c53071ff5b78b3abf3bb9aa5d03c81b6fc6f46a87d9195365dae6"
+    }
+  },
+  "results": {
+    "ehms": {
+      "Data Alteration": 0.9964,
+      "Spoofing": 0.5491
+    },
+    "ehms_by_config": {
+      "DAE-raw": {
+        "Data Alteration": 0.9964,
+        "Spoofing": 0.5491
+      },
+      "DAE-cascade": {
+        "Data Alteration": 0.9964,
+        "Spoofing": 0.5285
+      },
+      "DAE-probas-only": {
+        "Data Alteration": 0.7175,
+        "Spoofing": 0.4994
+      }
+    },
+    "medsec25": {
+      "Exfiltration": 0.852,
+      "Initial access": 0.905,
+      "Lateral movement": 0.8333,
+      "Reconnaissance": 0.9275
+    },
+    "medsec25_by_config": {
+      "DAE-raw": {
+        "Exfiltration": 0.852,
+        "Initial access": 0.905,
+        "Lateral movement": 0.8333,
+        "Reconnaissance": 0.9275
+      },
+      "DAE-cascade": {
+        "Exfiltration": 0.7952,
+        "Initial access": 0.7915,
+        "Lateral movement": 0.6705,
+        "Reconnaissance": 0.4932
+      },
+      "DAE-probas-only": {
+        "Exfiltration": 0.996,
+        "Initial access": 0.9974,
+        "Lateral movement": 0.9938,
+        "Reconnaissance": 0.9988
+      }
+    }
+  }
+}

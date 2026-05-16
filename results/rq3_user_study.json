@@ -1,0 +1,141 @@
+{
+  "provenance": {
+    "generated_at": "2026-05-16T10:09:27Z",
+    "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+    "random_seed": 42,
+    "schema_version": "1.0",
+    "code_version": "thesis-v1.0",
+    "python_version": "3.10.20",
+    "input_files": {
+      "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+      "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+      "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+      "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+      "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+      "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+      "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+    },
+    "n_survey_files": 100
+  },
+  "results": {
+    "per_role": {
+      "IT_generalist": {
+        "n_responses": 1000,
+        "action_distribution": {
+          "investigate": 483,
+          "null": 142,
+          "restrict": 112,
+          "isolate": 263
+        },
+        "by_condition": {
+          "A": {
+            "n": 500,
+            "action_distribution": {
+              "investigate": 463,
+              "null": 37
+            },
+            "escalation_rate": 0.0,
+            "mean_confidence": 3.7019,
+            "accuracy": 0.048
+          },
+          "B": {
+            "n": 500,
+            "action_distribution": {
+              "investigate": 20,
+              "restrict": 112,
+              "isolate": 263,
+              "null": 105
+            },
+            "escalation_rate": 0.0,
+            "mean_confidence": 2.0,
+            "accuracy": 0.444
+          }
+        }
+      },
+      "biomed_engineer": {
+        "n_responses": 600,
+        "action_distribution": {
+          "escalate": 198,
+          "investigate": 369,
+          "null": 33
+        },
+        "by_condition": {
+          "A": {
+            "n": 300,
+            "action_distribution": {
+              "escalate": 7,
+              "investigate": 287,
+              "null": 6
+            },
+            "escalation_rate": 0.0233,
+            "mean_confidence": 3.9898,
+            "accuracy": 0.0367
+          },
+          "B": {
+            "n": 300,
+            "action_distribution": {
+              "investigate": 82,
+              "escalate": 191,
+              "null": 27
+            },
+            "escalation_rate": 0.6367,
+            "mean_confidence": 2.0,
+            "accuracy": 0.0467
+          }
+        }
+      },
+      "nurse_manager": {
+        "n_responses": 400,
+        "action_distribution": {
+          "monitor": 321,
+          "null": 79
+        },
+        "by_condition": {
+          "A": {
+            "n": 200,
+            "action_distribution": {
+              "monitor": 164,
+              "null": 36
+            },
+            "escalation_rate": 0.0,
+            "mean_confidence": 3.6707,
+            "accuracy": 0.04
+          },
+          "B": {
+            "n": 200,
+            "action_distribution": {
+              "monitor": 157,
+              "null": 43
+            },
+            "escalation_rate": 0.0,
+            "mean_confidence": 2.0,
+            "accuracy": 0.045
+          }
+        }
+      }
+    },
+    "escalation_chi_square_A_vs_B": {
+      "IT_generalist": {
+        "error": "The internally computed table of expected frequencies has a zero element at (np.int64(0), np.int64(0))."
+      },
+      "biomed_engineer": {
+        "chi2": 252.4975,
+        "p_value": 0.0,
+        "table": [
+          [
+            7,
+            293
+          ],
+          [
+            191,
+            109
+          ]
+        ]
+      },
+      "nurse_manager": {
+        "error": "The internally computed table of expected frequencies has a zero element at (np.int64(0), np.int64(0))."
+      }
+    },
+    "n_files_loaded": 100
+  }
+}

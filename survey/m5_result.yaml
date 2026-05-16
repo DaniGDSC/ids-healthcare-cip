@@ -1,0 +1,148 @@
+provenance:
+  generated_at: '2026-05-16T10:13:57Z'
+  git_commit: 52521ee16850dd6a0dae6a1e76c716f53dbf359b
+  random_seed: 42
+  schema_version: '1.0'
+  code_version: thesis-v1.0
+  python_version: 3.10.20
+  input_files:
+    test_split: sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9
+    demo_split: sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb
+    xgboost_model: sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95
+    dae_detector_json: sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448
+    dae_weights: sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60
+    composite_weights_yaml: sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c
+    adaptive_thresholds_yaml: sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37
+  n_survey_files: 100
+results:
+  by_role:
+    IT_generalist:
+      per_metric:
+        accuracy:
+          A:
+            median: 0.0
+            mean: 0.048
+            iqr:
+            - 0.0
+            - 0.0
+            n: 500
+          B:
+            median: 0.0
+            mean: 0.444
+            iqr:
+            - 0.0
+            - 1.0
+            n: 500
+          statistic_U: 75500.0
+          p_value_raw: 7.728217518498573e-48
+          cliffs_delta: -0.396
+          p_value_holm_bonferroni: 0.0
+        confidence:
+          A:
+            median: 4.0
+            mean: 3.7019438444924404
+            iqr:
+            - 3.0
+            - 4.0
+            n: 463
+          B:
+            median: 2.0
+            mean: 2.0
+            iqr:
+            - 2.0
+            - 2.0
+            n: 395
+          statistic_U: 182885.0
+          p_value_raw: 1.310414533633222e-166
+          cliffs_delta: 1.0
+          p_value_holm_bonferroni: 0.0
+      n_responses: 1000
+    biomed_engineer:
+      per_metric:
+        accuracy:
+          A:
+            median: 0.0
+            mean: 0.03666666666666667
+            iqr:
+            - 0.0
+            - 0.0
+            n: 300
+          B:
+            median: 0.0
+            mean: 0.04666666666666667
+            iqr:
+            - 0.0
+            - 0.0
+            n: 300
+          statistic_U: 44550.0
+          p_value_raw: 0.5407274622487155
+          cliffs_delta: -0.01
+          p_value_holm_bonferroni: 0.540727
+        confidence:
+          A:
+            median: 4.0
+            mean: 3.989795918367347
+            iqr:
+            - 4.0
+            - 4.0
+            n: 294
+          B:
+            median: 2.0
+            mean: 2.0
+            iqr:
+            - 2.0
+            - 2.0
+            n: 273
+          statistic_U: 80262.0
+          p_value_raw: 2.0557914832717944e-124
+          cliffs_delta: 1.0
+          p_value_holm_bonferroni: 0.0
+      n_responses: 600
+    nurse_manager:
+      per_metric:
+        accuracy:
+          A:
+            median: 0.0
+            mean: 0.04
+            iqr:
+            - 0.0
+            - 0.0
+            n: 200
+          B:
+            median: 0.0
+            mean: 0.045
+            iqr:
+            - 0.0
+            - 0.0
+            n: 200
+          statistic_U: 19900.0
+          p_value_raw: 0.8054406729779137
+          cliffs_delta: -0.005
+          p_value_holm_bonferroni: 0.805441
+        confidence:
+          A:
+            median: 4.0
+            mean: 3.6707317073170733
+            iqr:
+            - 3.0
+            - 4.0
+            n: 164
+          B:
+            median: 2.0
+            mean: 2.0
+            iqr:
+            - 2.0
+            - 2.0
+            n: 157
+          statistic_U: 25748.0
+          p_value_raw: 3.283154500986968e-64
+          cliffs_delta: 1.0
+          p_value_holm_bonferroni: 0.0
+      n_responses: 400
+  n_survey_files: 100
+  metrics_computed:
+  - accuracy
+  - confidence
+  stat_test: Mann-Whitney U (two-sided) + Cliff's delta; Holm-Bonferroni correction
+  note: LLM-persona simulation data; not human user study. Decision_time field absent
+    in LLM responses. Bootstrap CI computed when N<30.

@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "generated_at": "2026-05-16T10:07:33Z",
+    "generated_at": "2026-05-16T10:11:38Z",
     "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
     "random_seed": 42,
     "schema_version": "1.0",
@@ -17,29 +17,35 @@
     }
   },
   "results": {
-    "fnr_critical": 0.0261,
-    "sensitivity": 0.9739,
-    "specificity": 0.9752,
-    "f1_score": 0.9074,
-    "f2_score": 0.9462,
-    "auc": 0.9952,
-    "pr_auc": 0.9806,
-    "confusion_matrix": {
-      "TP": 299,
-      "FN": 8,
-      "FP": 53,
-      "TN": 2088
-    },
-    "threshold_used": 0.01846158612363696,
-    "n_test_samples": 2448,
-    "n_attacks_test": 307,
-    "n_benign_test": 2141,
-    "assertions": {
-      "fnr_critical_in_range": true,
-      "sensitivity_above_0_30": true,
-      "specificity_above_0_30": true,
-      "auc_above_0_50": true,
-      "metrics_in_probability_range": true
-    }
+    "logs_checked": [
+      {
+        "file": "results/reports/audit_log.jsonl",
+        "n_entries": 22898,
+        "chain_intact": true,
+        "verification_status": "PASSED",
+        "chain_restarts": [
+          3042,
+          6084,
+          9126
+        ],
+        "n_chain_restarts": 3
+      },
+      {
+        "file": "results/reports/alert_responses.json",
+        "n_entries": 1632,
+        "chain_intact": null,
+        "verification_status": "N/A \u2014 no hash chain fields"
+      },
+      {
+        "file": "survey/study_responses_*.json (n=100)",
+        "n_entries": 2000,
+        "chain_intact": null,
+        "verification_status": "N/A \u2014 no hash chain in survey JSON"
+      }
+    ],
+    "total_logs": 3,
+    "total_entries": 26530,
+    "all_chains_intact": true,
+    "overall_status": "PASSED"
   }
 }

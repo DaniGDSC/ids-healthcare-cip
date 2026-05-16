@@ -1,0 +1,287 @@
+{
+  "provenance": {
+    "generated_at": "2026-05-16T10:15:15Z",
+    "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+    "random_seed": 42,
+    "schema_version": "1.0",
+    "code_version": "thesis-v1.0",
+    "python_version": "3.10.20",
+    "input_files": {
+      "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+      "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+      "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+      "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+      "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+      "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+      "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+    }
+  },
+  "results": {
+    "per_alert": [
+      {
+        "alert_id": "EVAL-0059",
+        "fusion_class": "BENIGN",
+        "stability_score": 0.5,
+        "is_stable": false,
+        "top3_features": [
+          "Pulse_Rate",
+          "Sport",
+          "Flgs"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0301",
+        "fusion_class": "BENIGN",
+        "stability_score": 0.5,
+        "is_stable": false,
+        "top3_features": [
+          "Flgs",
+          "Resp_Rate",
+          "SrcLoad"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0325",
+        "fusion_class": "BENIGN",
+        "stability_score": 0.8,
+        "is_stable": false,
+        "top3_features": [
+          "Flgs",
+          "DIntPkt",
+          "Temp"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0570",
+        "fusion_class": "BENIGN",
+        "stability_score": 0.32,
+        "is_stable": false,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "Sport"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0869",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "DIntPkt",
+          "Temp",
+          "Flgs"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0462",
+        "fusion_class": "BENIGN",
+        "stability_score": 0.85,
+        "is_stable": false,
+        "top3_features": [
+          "DIntPkt",
+          "Flgs",
+          "SIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0464",
+        "fusion_class": "BENIGN",
+        "stability_score": 0.56,
+        "is_stable": false,
+        "top3_features": [
+          "Flgs",
+          "Sport",
+          "DIA"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      },
+      {
+        "alert_id": "EVAL-0976",
+        "fusion_class": "BENIGN",
+        "stability_score": 1.0,
+        "is_stable": true,
+        "top3_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "shap_source": "xgboost"
+      }
+    ],
+    "aggregate": {
+      "n_alerts": 18,
+      "mean_stability": 0.8628,
+      "median_stability": 1.0,
+      "pct_stable": 0.6667,
+      "by_fusion_class": {
+        "BENIGN": {
+          "mean": 0.8628,
+          "median": 1.0,
+          "n": 18,
+          "pct_stable": 0.6667
+        }
+      },
+      "histogram_counts": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        3,
+        0,
+        0,
+        2,
+        12
+      ],
+      "histogram_edges": [
+        0.0,
+        0.1,
+        0.2,
+        0.30000000000000004,
+        0.4,
+        0.5,
+        0.6000000000000001,
+        0.7000000000000001,
+        0.8,
+        0.9,
+        1.0
+      ]
+    },
+    "computation_params": {
+      "n_perturbations": 10,
+      "noise_method": "U(0.99, 1.01) multiplicative on all features",
+      "noise_sigma_label": 0.01,
+      "stability_threshold": 0.9
+    },
+    "computation_sampled": false,
+    "sample_size": null,
+    "input_source": "results/reports/evaluation_alerts.json (surfaced subset)"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "generated_at": "2026-05-16T10:07:33Z",
+    "generated_at": "2026-05-16T10:09:26Z",
     "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
     "random_seed": 42,
     "schema_version": "1.0",
@@ -17,29 +17,24 @@
     }
   },
   "results": {
-    "fnr_critical": 0.0261,
-    "sensitivity": 0.9739,
-    "specificity": 0.9752,
-    "f1_score": 0.9074,
-    "f2_score": 0.9462,
-    "auc": 0.9952,
-    "pr_auc": 0.9806,
-    "confusion_matrix": {
-      "TP": 299,
-      "FN": 8,
-      "FP": 53,
-      "TN": 2088
+    "alerts_checked": 20,
+    "anchors_present": 20,
+    "invariant_9_shared_anchor": {
+      "all_identical": true,
+      "violations": [],
+      "n_violations": 0
     },
-    "threshold_used": 0.01846158612363696,
-    "n_test_samples": 2448,
-    "n_attacks_test": 307,
-    "n_benign_test": 2141,
-    "assertions": {
-      "fnr_critical_in_range": true,
-      "sensitivity_above_0_30": true,
-      "specificity_above_0_30": true,
-      "auc_above_0_50": true,
-      "metrics_in_probability_range": true
-    }
+    "invariant_6_severity": {
+      "all_identical": true,
+      "violations": [],
+      "n_violations": 0
+    },
+    "invariant_6_action_authorization": {
+      "all_authorized": true,
+      "violations": [],
+      "n_violations": 0,
+      "note": "Checked against the most-restrictive role (nurse_manager). Full per-role comparison requires per-role MVE renderings, which evaluation_alerts.json does not include (each alert has one mve_structured for the active study condition)."
+    },
+    "overall_status": "PASSED"
   }
 }

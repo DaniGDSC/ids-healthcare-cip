@@ -1,0 +1,325 @@
+{
+  "provenance": {
+    "generated_at": "2026-05-16T10:16:08Z",
+    "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+    "random_seed": 42,
+    "schema_version": "1.0",
+    "code_version": "thesis-v1.0",
+    "python_version": "3.10.20",
+    "input_files": {
+      "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+      "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+      "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+      "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+      "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+      "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+      "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+    }
+  },
+  "results": {
+    "test_files": [
+      {
+        "file": "tests/test_audit_append_only.py",
+        "test_count": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_context_enrichment.py",
+        "test_count": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_coverage_mve.py",
+        "test_count": 73,
+        "passed": 73,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_data_split_integrity.py",
+        "test_count": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_day2_dashboard_polish.py",
+        "test_count": 40,
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_day3_sim_polish.py",
+        "test_count": 17,
+        "passed": 17,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_day4_demo_playlist.py",
+        "test_count": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_day5_study_polish.py",
+        "test_count": 11,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 1,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_day6_audit_panel.py",
+        "test_count": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_day7_visual_polish.py",
+        "test_count": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_feature_sanitization.py",
+        "test_count": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer1_v4_artifacts.py",
+        "test_count": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer2_detector.py",
+        "test_count": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer2_v4_invariants.py",
+        "test_count": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer3_v4_triage.py",
+        "test_count": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer4_v4_adapter.py",
+        "test_count": 20,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer5_v4_presentation.py",
+        "test_count": 19,
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer6_v4_routing.py",
+        "test_count": 34,
+        "passed": 34,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_layer7_v4_nine_types_validation.py",
+        "test_count": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_m6_dashboard_affordances.py",
+        "test_count": 17,
+        "passed": 17,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_module3_calibration.py",
+        "test_count": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_negative_pytest.py",
+        "test_count": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_phi_not_in_llm_prompt.py",
+        "test_count": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_role_authority.py",
+        "test_count": 39,
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_safe_failure.py",
+        "test_count": 40,
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_split_consistency.py",
+        "test_count": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_step10_surfacing_logic.py",
+        "test_count": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_step11_shap_stability.py",
+        "test_count": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_step12_mve_faithfulness.py",
+        "test_count": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_step13_cross_role_consistency.py",
+        "test_count": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_step15_role_consistency.py",
+        "test_count": 19,
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_step16_audit_integrity.py",
+        "test_count": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_step9_composite_risk.py",
+        "test_count": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_top_bar_state.py",
+        "test_count": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_track_a_xgb_only_v5.py",
+        "test_count": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_two_stage_fusion.py",
+        "test_count": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "file": "tests/test_v4_render_helpers.py",
+        "test_count": 40,
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0,
+        "status": "passed"
+      }
+    ],
+    "total_tests": 636,
+    "passed": 635,
+    "failed": 0,
+    "skipped": 1,
+    "pytest_exit_code": 0,
+    "overall_status": "PASSED"
+  }
+}
