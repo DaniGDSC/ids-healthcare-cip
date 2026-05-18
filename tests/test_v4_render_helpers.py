@@ -173,7 +173,7 @@ def test_derive_v4_fields_confidence_thresholds(score, expected):
 
 
 def test_derive_v4_fields_mode_explicit_field_wins(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     alert = {
         "ground_truth": "attack",
         "attack_category": "Spoofing",
@@ -186,13 +186,13 @@ def test_derive_v4_fields_mode_explicit_field_wins(monkeypatch):
 
 
 def test_derive_v4_fields_mode_falls_back_to_env(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     alert = {"ground_truth": "attack", "attack_category": "Spoofing",
              "risk_level": "CRITICAL", "risk_score": 0.9}
     _, _, mode = derive_v4_fields(alert)
     assert mode == MODE_B_RULE_BASED
 
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-fake")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-fake")
     _, _, mode = derive_v4_fields(alert)
     assert mode == MODE_A_LLM
 

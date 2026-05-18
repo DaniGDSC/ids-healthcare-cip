@@ -1,0 +1,173 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-18T17:39:23.671106+00:00",
+    "generated_by": "analysis/compute_track_b_cascade_ablation.py",
+    "source_yamls": {
+      "ehms_2020": "results/reports/dae_ablation_loo.yaml",
+      "medsec_25": "results/reports/dae_ablation_loo_medsec25.yaml"
+    },
+    "note": "Cascade vs raw AUCs aggregated from Module 2's LOO ablation YAMLs.  No retraining performed."
+  },
+  "results": {
+    "ehms_2020": {
+      "configs": {
+        "DAE-raw": {
+          "auc_mean": 0.7727,
+          "auc_min": 0.5491,
+          "auc_max": 0.9964,
+          "n_folds": 2
+        },
+        "DAE-cascade": {
+          "auc_mean": 0.7624,
+          "auc_min": 0.5285,
+          "auc_max": 0.9964,
+          "n_folds": 2
+        },
+        "DAE-probas-only": {
+          "auc_mean": 0.6084,
+          "auc_min": 0.4994,
+          "auc_max": 0.7175,
+          "n_folds": 2
+        }
+      },
+      "delta_cascade_minus_raw": -0.0103,
+      "per_fold": [
+        {
+          "holdout_class": "Data Alteration",
+          "config": "DAE-raw",
+          "auc": 0.9963780884468104,
+          "n_test_novel": 277
+        },
+        {
+          "holdout_class": "Data Alteration",
+          "config": "DAE-cascade",
+          "auc": 0.9963764022682474,
+          "n_test_novel": 277
+        },
+        {
+          "holdout_class": "Data Alteration",
+          "config": "DAE-probas-only",
+          "auc": 0.7174571752799479,
+          "n_test_novel": 277
+        },
+        {
+          "holdout_class": "Spoofing",
+          "config": "DAE-raw",
+          "auc": 0.5490820036118345,
+          "n_test_novel": 337
+        },
+        {
+          "holdout_class": "Spoofing",
+          "config": "DAE-cascade",
+          "auc": 0.5285121487089008,
+          "n_test_novel": 337
+        },
+        {
+          "holdout_class": "Spoofing",
+          "config": "DAE-probas-only",
+          "auc": 0.49938151145433857,
+          "n_test_novel": 337
+        }
+      ]
+    },
+    "medsec_25": {
+      "configs": {
+        "DAE-raw": {
+          "auc_mean": 0.8794,
+          "auc_min": 0.8333,
+          "auc_max": 0.9275,
+          "n_folds": 4
+        },
+        "DAE-cascade": {
+          "auc_mean": 0.6876,
+          "auc_min": 0.4932,
+          "auc_max": 0.7952,
+          "n_folds": 4
+        },
+        "DAE-probas-only": {
+          "auc_mean": 0.9965,
+          "auc_min": 0.9938,
+          "auc_max": 0.9988,
+          "n_folds": 4
+        }
+      },
+      "delta_cascade_minus_raw": -0.1918,
+      "per_fold": [
+        {
+          "holdout_class": "Exfiltration",
+          "config": "DAE-raw",
+          "auc": 0.8520459329007136,
+          "n_test_novel": 2591
+        },
+        {
+          "holdout_class": "Exfiltration",
+          "config": "DAE-cascade",
+          "auc": 0.7952373288415052,
+          "n_test_novel": 2591
+        },
+        {
+          "holdout_class": "Exfiltration",
+          "config": "DAE-probas-only",
+          "auc": 0.9959570422062044,
+          "n_test_novel": 2591
+        },
+        {
+          "holdout_class": "Initial access",
+          "config": "DAE-raw",
+          "auc": 0.9049795310401277,
+          "n_test_novel": 10209
+        },
+        {
+          "holdout_class": "Initial access",
+          "config": "DAE-cascade",
+          "auc": 0.7914532029569845,
+          "n_test_novel": 10209
+        },
+        {
+          "holdout_class": "Initial access",
+          "config": "DAE-probas-only",
+          "auc": 0.9974488256174693,
+          "n_test_novel": 10209
+        },
+        {
+          "holdout_class": "Lateral movement",
+          "config": "DAE-raw",
+          "auc": 0.8332936032388664,
+          "n_test_novel": 1250
+        },
+        {
+          "holdout_class": "Lateral movement",
+          "config": "DAE-cascade",
+          "auc": 0.6705120647773278,
+          "n_test_novel": 1250
+        },
+        {
+          "holdout_class": "Lateral movement",
+          "config": "DAE-probas-only",
+          "auc": 0.9937570850202428,
+          "n_test_novel": 1250
+        },
+        {
+          "holdout_class": "Reconnaissance",
+          "config": "DAE-raw",
+          "auc": 0.9274629467826369,
+          "n_test_novel": 40169
+        },
+        {
+          "holdout_class": "Reconnaissance",
+          "config": "DAE-cascade",
+          "auc": 0.49317016173468714,
+          "n_test_novel": 40169
+        },
+        {
+          "holdout_class": "Reconnaissance",
+          "config": "DAE-probas-only",
+          "auc": 0.9988169921353537,
+          "n_test_novel": 40169
+        }
+      ]
+    }
+  },
+  "verdict": "Cascade rejected \u2014 generalisation regression on MedSec-25 (EHMS \u0394=-0.0103, MedSec \u0394=-0.1918). DAE on raw 25-dim input retained as production configuration (Phase B)."
+}

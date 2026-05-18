@@ -34,6 +34,15 @@ import pandas as pd  # noqa: E402
 from src.risk_scorer import score_alert  # noqa: E402
 from src.mve_generator import generate_mve, _generate_rule_based  # noqa: E402
 
+# Shared device context and severity-derivation mappings live in
+# common/context_mappings.py — single source of truth shared with
+# Module 3 (risk scoring) per RQ1_pipeline.md §3.1.
+from common.context_mappings import (  # noqa: E402
+    DEVICE_CONTEXT,
+    lookup_device_context,
+    map_true_severity,
+)
+
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -41,64 +50,6 @@ OUTPUT_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
-
-# UX-X-01 / UX-X-02: Device context for evaluation alerts
-DEVICE_CONTEXT = {
-    "infusion_pump": {
-        "affected_system": "Infusion pump — active drug delivery",
-        "patient_care_impact": "Compromise could alter infusion parameters for active patients.",
-        "device_criticality": "CRITICAL",
-        "active_device": True,
-    },
-    "ventilator": {
-        "affected_system": "Ventilator — active respiratory support",
-        "patient_care_impact": "Device disruption directly affects patient breathing.",
-        "device_criticality": "CRITICAL",
-        "active_device": True,
-    },
-    "patient_monitor": {
-        "affected_system": "Patient monitor — vital signs tracking",
-        "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
-        "device_criticality": "HIGH",
-        "active_device": True,
-    },
-    "ehr_workstation": {
-        "affected_system": "EHR workstation — clinical documentation",
-        "patient_care_impact": "Disruption affects active patient charting for floor nurses.",
-        "device_criticality": "HIGH",
-        "active_device": False,
-    },
-    "pacs_server": {
-        "affected_system": "PACS server — diagnostic imaging",
-        "patient_care_impact": "Disruption affects radiology reads and image delivery.",
-        "device_criticality": "HIGH",
-        "active_device": False,
-    },
-    "insulin_pump": {
-        "affected_system": "Insulin pump — active drug delivery (mobile)",
-        "patient_care_impact": "Compromise could alter insulin dosing. Hypo/hyperglycemia risk.",
-        "device_criticality": "HIGH",
-        "active_device": True,
-    },
-    "pharmacy_system": {
-        "affected_system": "Pharmacy system — medication dispensing",
-        "patient_care_impact": "Disruption affects automated drug dispensing for all patients.",
-        "device_criticality": "HIGH",
-        "active_device": False,
-    },
-    "server": {
-        "affected_system": "Clinical server — infrastructure",
-        "patient_care_impact": "Server disruption may cascade to dependent clinical systems.",
-        "device_criticality": "MEDIUM",
-        "active_device": False,
-    },
-    "other": {
-        "affected_system": "Clinical network device",
-        "patient_care_impact": "Impact depends on device function — verify with Biomed.",
-        "device_criticality": "MEDIUM",
-        "active_device": False,
-    },
-}
 
 _DEVICE_TYPE_KEYWORDS = [
     ("infusion", "infusion_pump"), ("ventilator", "ventilator"),
@@ -324,19 +275,8 @@ def curate_evaluation_alerts() -> list:
     return alerts[:20]
 
 
-def map_true_severity(attack_category: str, device_class: str) -> str:
-    """Map attack category + device class to clinical severity (ground truth)."""
-    if attack_category == "normal":
-        return "LOW"
-    if device_class in ["ventilator", "patient_monitor", "infusion_pump"]:
-        if attack_category in ["Data Alteration", "Spoofing"]:
-            return "CRITICAL"
-        return "HIGH"
-    if attack_category == "Data Alteration":
-        return "HIGH"
-    elif attack_category == "Spoofing":
-        return "MEDIUM"
-    return "MEDIUM"
+# NOTE: ``map_true_severity`` has moved to ``common.context_mappings``
+# (RQ1_pipeline.md §3.1) and is re-exported via the top-of-file import.
 
 
 def _build_eval_alert(idx, R, levels, y_true, attack_cats,

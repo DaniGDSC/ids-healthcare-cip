@@ -1,0 +1,34 @@
+# survey/qualitative_themes.yaml
+# Manual theme coding of LLM-persona rationales from the RQ2.c user study.
+# Filled in after reading survey/qualitative_rationales_for_review.json.
+
+schema_version: "1.0"
+last_coded: ""              # ISO-8601 date when coding completed
+coded_by: ""                # Developer name/initials
+methodology: |
+  Single-coder thematic analysis of LLM-persona rationales (not human
+  clinician free-text). For each role × condition bucket: read all rationales,
+  identify recurring patterns, group into positive themes (consistent with
+  the correct_action) and confusion patterns (divergent from correct_action
+  or contradictory across alerts). No inter-rater reliability computed
+  (single coder); themes are descriptive, not inferential, and describe
+  model behaviour rather than human reasoning.
+
+themes_per_role:
+  biomed_engineer:
+    positive_themes:
+      - theme: ""
+        frequency: 0
+        example_quote: ""
+    confusion_patterns:
+      - theme: ""
+        frequency: 0
+        example_quote: ""
+
+  IT_generalist:
+    positive_themes: []
+    confusion_patterns: []
+
+  nurse_manager:
+    positive_themes: []
+    confusion_patterns: []

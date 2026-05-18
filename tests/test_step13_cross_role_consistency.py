@@ -130,3 +130,27 @@ def test_role_authority_bounds_hold_after_render():
         assert not violations, (
             f"Role {role} layer_3 contains forbidden terms: {violations}"
         )
+
+
+# ── RQ2_Compliance.md §6 — positive role differentiation ────────────
+
+
+def test_layer_3_immediate_action_differs_across_roles():
+    """Positive proof of role adaptation: Layer 3 ``immediate_action``
+    must differ between at least two role views derived from the same
+    source MVE.  If all three roles produce identical action text the
+    role-scoping has silently failed — Invariants 6 + 9 alone don't
+    catch this regression (they assert *what should match*, not *what
+    should differ*).
+    """
+    views = render_views_for_alert(_make_mve())
+    actions = {
+        role: view.layer_3.get("immediate_action", "")
+        for role, view in views.items()
+    }
+    distinct = set(actions.values())
+    assert len(distinct) >= 2, (
+        "Role adaptation failed: all three roles produced identical "
+        f"Layer 3 immediate_action text.  Samples: "
+        f"{[(r, (a or '')[:80]) for r, a in actions.items()]}"
+    )

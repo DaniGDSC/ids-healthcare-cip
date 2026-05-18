@@ -582,3 +582,52 @@ def run_acceptance_tests(
         })
 
     return results
+
+
+# ── RQ1_pipeline.md §5.3 — RQ1 targets CI assertion ────────────────────
+
+def test_rq1_targets_met():
+    """Asserts RQ1 headline metrics meet defense targets.
+
+    Reads ``results/rq1_metrics.json`` produced by
+    ``module6_evaluation/compute_rq1_metrics.py``.  Run the aggregator
+    first if the file is missing.
+    """
+    import json
+    from pathlib import Path
+
+    import pytest
+
+    metrics_path = Path(__file__).resolve().parents[1] / "results/rq1_metrics.json"
+    if not metrics_path.exists():
+        pytest.skip(
+            "results/rq1_metrics.json missing — run "
+            "`python -m module6_evaluation.compute_rq1_metrics` first."
+        )
+
+    m = json.loads(metrics_path.read_text(encoding="utf-8"))
+    h = m["headline"]
+    s = m["surfacing_summary"]
+
+    assert h["fnr_critical_pass"], (
+        f"FNR_critical = {h['fnr_critical']:.4f} >= "
+        f"{h['fnr_critical_target']} (target)"
+    )
+    assert h["auc_track_a_pass"], (
+        f"AUC Track A = {h['auc_track_a']:.4f} <= 0.99"
+    )
+    assert h["sensitivity_pass"], (
+        f"Sensitivity = {h['sensitivity']:.4f} <= 0.90"
+    )
+    assert h["specificity_pass"], (
+        f"Specificity = {h['specificity']:.4f} <= 0.95"
+    )
+
+    inv = s["_invariant_check"]
+    assert inv["invariant_1_dae_only_elevates"]["pass"], (
+        "Invariant 1 violated: DAE suppressed Track A on some rows"
+    )
+    assert inv["invariant_2_safety_floor_tier_proxy"]["pass"], (
+        "Invariant 2 (proxy) violated: CRITICAL+unpatchable tiered "
+        "below CRITICAL"
+    )

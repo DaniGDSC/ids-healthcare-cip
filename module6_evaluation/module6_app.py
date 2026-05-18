@@ -485,7 +485,7 @@ def derive_v4_fields(alert: dict) -> tuple[AlertType, Confidence, str]:
         mode = raw_mode
     else:
         import os
-        mode = MODE_A_LLM if os.environ.get("ANTHROPIC_API_KEY") else MODE_B_RULE_BASED
+        mode = MODE_A_LLM if os.environ.get("OPENAI_API_KEY") else MODE_B_RULE_BASED
     return alert_type, conf, mode
 
 

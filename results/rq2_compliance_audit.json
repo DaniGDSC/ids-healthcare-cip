@@ -1,0 +1,101 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-18T18:51:02.792095+00:00",
+    "generated_by": "analysis/make_rq2_compliance_table.py",
+    "manifest_path": "configs/rq2_compliance_manifest.yaml",
+    "manifest_schema_version": "1.0",
+    "last_validated": "2026-05-19"
+  },
+  "requirements_total": 8,
+  "evidence_audit": [
+    {
+      "id": "REQ-FAITHFULNESS",
+      "literature_term": "Faithfulness",
+      "evidence_required_total": 2,
+      "evidence_required_present": 2,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 1,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": [
+        "analysis/compute_mve_shap_alignment.py"
+      ]
+    },
+    {
+      "id": "REQ-STABILITY",
+      "literature_term": "Stability",
+      "evidence_required_total": 2,
+      "evidence_required_present": 2,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 1,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": [
+        "analysis/compute_shap_stability.py"
+      ]
+    },
+    {
+      "id": "REQ-COMPLETENESS",
+      "literature_term": "Completeness",
+      "evidence_required_total": 3,
+      "evidence_required_present": 3,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 0,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": []
+    },
+    {
+      "id": "REQ-BREVITY",
+      "literature_term": "Brevity",
+      "evidence_required_total": 4,
+      "evidence_required_present": 4,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 0,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": []
+    },
+    {
+      "id": "REQ-AUDIENCE_APPROPRIATENESS",
+      "literature_term": "Audience appropriateness",
+      "evidence_required_total": 4,
+      "evidence_required_present": 4,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 0,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": []
+    },
+    {
+      "id": "REQ-PROVENANCE",
+      "literature_term": "Provenance",
+      "evidence_required_total": 4,
+      "evidence_required_present": 4,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 1,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": [
+        "logs/llm_audit.jsonl"
+      ]
+    },
+    {
+      "id": "REQ-FALLBACK",
+      "literature_term": "Fallback / availability",
+      "evidence_required_total": 3,
+      "evidence_required_present": 3,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 0,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": []
+    },
+    {
+      "id": "REQ-PHI_CONTROL",
+      "literature_term": "Data minimization / HIPAA boundary",
+      "evidence_required_total": 3,
+      "evidence_required_present": 3,
+      "evidence_required_missing": [],
+      "evidence_pending_total": 0,
+      "evidence_pending_present": 0,
+      "evidence_pending_missing": []
+    }
+  ],
+  "all_required_evidence_present": true,
+  "any_pending_evidence_missing": true
+}

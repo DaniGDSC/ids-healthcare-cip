@@ -268,11 +268,12 @@ class MVEOutput:
     the rule-based fallback."""
 
     llm_provider: Optional[str] = None
-    """Provider name (e.g. ``"anthropic"``). ``None`` for Mode B."""
+    """Provider name (e.g. ``"openai"``). ``None`` for Mode B."""
 
     llm_model_version: Optional[str] = None
-    """Model identifier (e.g. ``"claude-haiku-4-5-20251001"``).
-    ``None`` for Mode B. Required for audit reproducibility."""
+    """Model identifier (e.g. ``"gpt-4o-mini"`` or
+    ``"gpt-4o-mini-2024-07-18"``).  ``None`` for Mode B. Required for
+    audit reproducibility."""
 
     llm_full_prompt: Optional[str] = None
     """Full prompt sent to the LLM API. ``None`` for Mode B."""

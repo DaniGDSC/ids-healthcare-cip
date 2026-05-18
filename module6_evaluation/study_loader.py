@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -20,6 +20,9 @@ class AlertScenario:
     correct_severity: str
     correct_action: str
     ground_truth_label: str
+    # Optional list of additional actions that count as acceptable for accuracy
+    # scoring. Empty default = strict accuracy (only correct_action counts).
+    reasonable_alternatives: list[str] = field(default_factory=list)
 
 
 import json
@@ -41,6 +44,7 @@ def load_study_alerts(participant_id: str = "default_seed") -> list[AlertScenari
             correct_severity=alert["risk_level"],
             correct_action=alert.get("correct_action", ""),
             ground_truth_label=alert["ground_truth"],
+            reasonable_alternatives=list(alert.get("reasonable_alternatives", [])),
         ))
 
     # Sort dynamically using participant ID as a seed to ensure exact presentation

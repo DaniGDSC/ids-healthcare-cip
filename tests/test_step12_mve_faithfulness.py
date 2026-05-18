@@ -62,14 +62,14 @@ def test_mve_output_carries_llm_audit_fields_when_set():
                  "clinical_constraint": "DO NOT power-cycle.",
                  "escalation_path": "(1) call IT.", "timeframe": "Act within 1h."},
         mode_used="A_llm",
-        llm_provider="anthropic",
-        llm_model_version="claude-sonnet-4-6",
+        llm_provider="openai",
+        llm_model_version="gpt-4o-mini",
         llm_full_prompt="Alert type: T1\\n...",
         llm_full_response='{"layer_1": {...}, ...}',
     )
     assert mve.mode_used == "A_llm"
-    assert mve.llm_provider == "anthropic"
-    assert mve.llm_model_version == "claude-sonnet-4-6"
+    assert mve.llm_provider == "openai"
+    assert mve.llm_model_version == "gpt-4o-mini"
     assert mve.llm_full_prompt
     assert mve.llm_full_response
 

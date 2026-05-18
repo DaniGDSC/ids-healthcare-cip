@@ -1,0 +1,249 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-18T18:26:45.414054+00:00",
+    "generated_by": "analysis/audit_mitre_config.py",
+    "inputs": {
+      "yaml_path": "configs/attack_to_mitre_mapping.yaml",
+      "yaml_sha256": "f7d96e1b831e208e23d188c0894f81e641837f6eb5877539e5980e36c17b6adb",
+      "risk_scores_npz": "results/reports/risk_scores.npz",
+      "risk_scores_sha256": "0e4b346e1a15ab8b168907f9c6a2fae52fb6c4f0c03fa9880921d5504cdb0b59"
+    },
+    "config": {
+      "required_top_level_fields": [
+        "mitre_framework_version",
+        "last_validated_anywhere"
+      ],
+      "tid_regex": "^T\\d{4}(\\.\\d{3})?$",
+      "valid_confidence_levels": [
+        "HIGH",
+        "LOW",
+        "MEDIUM"
+      ],
+      "benign_sentinel": "normal",
+      "phase0_pattern": "D \u2014 mappings is a list of entry dicts"
+    }
+  },
+  "headline": {
+    "audit_pass": true,
+    "n_fail": 0,
+    "n_warn": 0,
+    "n_info": 1,
+    "mitre_framework_version": "v14.1",
+    "last_validated_top_level": null,
+    "last_validated_per_entry_count": 7,
+    "n_categories_mapped": 6,
+    "n_categories_in_data": 2,
+    "orphan_categories": [],
+    "unused_mappings": [
+      "Exfiltration",
+      "Initial Access",
+      "Lateral Movement",
+      "Reconnaissance"
+    ],
+    "benign_sentinel_mapped_empty": true
+  },
+  "findings": [
+    {
+      "check_id": "A1",
+      "severity": "PASS",
+      "description": "YAML parsed successfully",
+      "details": null
+    },
+    {
+      "check_id": "A2",
+      "severity": "PASS",
+      "description": "mitre_framework_version present and non-empty",
+      "details": {
+        "value": "v14.1"
+      }
+    },
+    {
+      "check_id": "A3",
+      "severity": "PASS",
+      "description": "last_validated present (top-level or per-entry)",
+      "details": {
+        "top_level": null,
+        "per_entry_count": 7,
+        "per_entry_keys": [
+          "Data Alteration",
+          "Exfiltration",
+          "Initial Access",
+          "Lateral Movement",
+          "Reconnaissance",
+          "Spoofing",
+          "normal"
+        ]
+      }
+    },
+    {
+      "check_id": "A4",
+      "severity": "PASS",
+      "description": "Every in-data attack_category has a mapping",
+      "details": {
+        "orphans": [],
+        "categories_in_data": [
+          "Data Alteration",
+          "Spoofing"
+        ],
+        "categories_in_yaml": [
+          "Data Alteration",
+          "Exfiltration",
+          "Initial Access",
+          "Lateral Movement",
+          "Reconnaissance",
+          "Spoofing"
+        ]
+      }
+    },
+    {
+      "check_id": "A9",
+      "severity": "INFO",
+      "description": "Mappings exist but no test-split data uses them",
+      "details": {
+        "unused_mappings": [
+          "Exfiltration",
+          "Initial Access",
+          "Lateral Movement",
+          "Reconnaissance"
+        ]
+      }
+    }
+  ],
+  "mappings_summary": {
+    "Data Alteration": {
+      "n_techniques": 3,
+      "technique_ids": [
+        "T1565",
+        "T1565.001",
+        "T1565.002"
+      ],
+      "technique_names": [
+        "Data Manipulation",
+        "Stored Data Manipulation",
+        "Transmitted Data Manipulation"
+      ],
+      "confidence_set": [
+        "HIGH",
+        "MEDIUM"
+      ],
+      "confidence_counts": {
+        "HIGH": 1,
+        "MEDIUM": 2
+      },
+      "last_validated": "2026-05-08",
+      "is_benign_sentinel": false
+    },
+    "Spoofing": {
+      "n_techniques": 2,
+      "technique_ids": [
+        "T1556",
+        "T1557"
+      ],
+      "technique_names": [
+        "Modify Authentication Process",
+        "Adversary-in-the-Middle"
+      ],
+      "confidence_set": [
+        "MEDIUM"
+      ],
+      "confidence_counts": {
+        "MEDIUM": 2
+      },
+      "last_validated": "2026-05-08",
+      "is_benign_sentinel": false
+    },
+    "Reconnaissance": {
+      "n_techniques": 2,
+      "technique_ids": [
+        "T1595",
+        "T1592"
+      ],
+      "technique_names": [
+        "Active Scanning",
+        "Gather Victim Host Information"
+      ],
+      "confidence_set": [
+        "HIGH",
+        "MEDIUM"
+      ],
+      "confidence_counts": {
+        "HIGH": 1,
+        "MEDIUM": 1
+      },
+      "last_validated": "2026-05-08",
+      "is_benign_sentinel": false
+    },
+    "Initial Access": {
+      "n_techniques": 2,
+      "technique_ids": [
+        "T1190",
+        "T1078"
+      ],
+      "technique_names": [
+        "Exploit Public-Facing Application",
+        "Valid Accounts"
+      ],
+      "confidence_set": [
+        "LOW",
+        "MEDIUM"
+      ],
+      "confidence_counts": {
+        "MEDIUM": 1,
+        "LOW": 1
+      },
+      "last_validated": "2026-05-08",
+      "is_benign_sentinel": false
+    },
+    "Exfiltration": {
+      "n_techniques": 2,
+      "technique_ids": [
+        "T1041",
+        "T1567"
+      ],
+      "technique_names": [
+        "Exfiltration Over C2 Channel",
+        "Exfiltration Over Web Service"
+      ],
+      "confidence_set": [
+        "HIGH",
+        "MEDIUM"
+      ],
+      "confidence_counts": {
+        "HIGH": 1,
+        "MEDIUM": 1
+      },
+      "last_validated": "2026-05-08",
+      "is_benign_sentinel": false
+    },
+    "Lateral Movement": {
+      "n_techniques": 2,
+      "technique_ids": [
+        "T1021",
+        "T1570"
+      ],
+      "technique_names": [
+        "Remote Services",
+        "Lateral Tool Transfer"
+      ],
+      "confidence_set": [
+        "HIGH",
+        "MEDIUM"
+      ],
+      "confidence_counts": {
+        "HIGH": 1,
+        "MEDIUM": 1
+      },
+      "last_validated": "2026-05-08",
+      "is_benign_sentinel": false
+    },
+    "normal": {
+      "n_techniques": 0,
+      "technique_ids": [],
+      "technique_names": [],
+      "confidence_set": [],
+      "last_validated": "2026-05-08",
+      "is_benign_sentinel": true
+    }
+  }
+}

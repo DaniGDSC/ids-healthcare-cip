@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-18T19:00:24.372477+00:00",
+  "generated_by": "module5_responses/module5_mve_batch.py",
+  "inputs": {
+    "risk_scores_npz": "results/reports/risk_scores.npz",
+    "risk_scores_sha256": "0e4b346e1a15ab8b168907f9c6a2fae52fb6c4f0c03fa9880921d5504cdb0b59",
+    "test_parquet": "data/processed/test_phase1.parquet",
+    "test_parquet_sha256": "8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9"
+  },
+  "selection": {
+    "rule": "fusion_class != 'BENIGN' (surfaced alerts)",
+    "limit": null,
+    "n_rows_in_split": 2448,
+    "n_surfaced_in_split": 356,
+    "n_written": 356
+  },
+  "mode_counts": {
+    "B_rule": 356
+  },
+  "fallback_to_rule_based_count": 356,
+  "wall_time_seconds": 0.0
+}

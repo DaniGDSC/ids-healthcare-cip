@@ -5,8 +5,8 @@ device context, behavioral baseline, and optional user context.
 
 Design mirrors the two-track approach in
 module4_explanations/module4_online_explainer.py:
-  Option A (LLM) — Anthropic API with a structured JSON prompt if
-                   ANTHROPIC_API_KEY is set in the environment.
+  Option A (LLM) — OpenAI API with a structured JSON prompt if
+                   OPENAI_API_KEY is set in the environment.
   Option B (rule-based) — deterministic templates per alert type,
                           always implemented as offline fallback.
 
@@ -35,6 +35,127 @@ logger = logging.getLogger(__name__)
 # ── Constants ───────────────────────────────────────────────────────────
 
 VALID_SEVERITY = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
+
+
+# ── MITRE ATT&CK grounding (RQ2_Mitre.md Phase 2) ──────────────────────
+#
+# Per the locked decision in RQ2_Mitre.md §2, MVE Layer 1 must reference
+# the mapped MITRE technique by either T-ID or human name.  The
+# rule-based template path now appends one short clause to
+# ``confidence_indicator`` naming the primary technique for the alert's
+# ``Attack Category`` (parquet column).  Tests in
+# ``tests/test_mitre_grounding.py`` gate this on ≥ 99% Mode B grounding.
+#
+# The mapping is loaded lazily once per process from
+# ``configs/attack_to_mitre_mapping.yaml`` (Pattern D — list of
+# ``{attack_category, mitre_techniques}`` dicts).  When the YAML is
+# missing or malformed we skip injection silently — the MVE is still
+# produced, only the MITRE clause is absent.
+
+_MITRE_BY_CATEGORY_CACHE: dict[str, tuple[str, str]] | None = None
+_MITRE_CONFIDENCE_RANK = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+
+
+def _load_mitre_by_category() -> dict[str, tuple[str, str]]:
+    """Build ``{attack_category: (technique_id, technique_name)}``.
+
+    Picks the highest-confidence technique per category (HIGH > MEDIUM >
+    LOW), breaking ties by YAML order.  Empty mappings (the benign
+    sentinel ``"normal"``) are omitted.
+    """
+    global _MITRE_BY_CATEGORY_CACHE
+    if _MITRE_BY_CATEGORY_CACHE is not None:
+        return _MITRE_BY_CATEGORY_CACHE
+    yaml_path = (
+        Path(__file__).resolve().parents[1]
+        / "configs/attack_to_mitre_mapping.yaml"
+    )
+    out: dict[str, tuple[str, str]] = {}
+    try:
+        import yaml  # local import — keep mve_generator importable in slim env
+
+        doc = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        for entry in doc.get("mappings", []) or []:
+            cat = entry.get("attack_category")
+            techs = entry.get("mitre_techniques") or []
+            if not cat or not techs:
+                continue
+            ranked = sorted(
+                techs,
+                key=lambda t: _MITRE_CONFIDENCE_RANK.get(
+                    str(t.get("confidence", "")).upper(), 99
+                ),
+            )
+            top = ranked[0]
+            tid = top.get("id")
+            name = top.get("name")
+            if tid and name:
+                out[str(cat)] = (str(tid), str(name))
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("MITRE mapping unavailable (%s); skipping injection", exc)
+    _MITRE_BY_CATEGORY_CACHE = out
+    return out
+
+
+def _inject_mitre_grounding(mve: MVEOutput, raw_alert: dict[str, Any]) -> None:
+    """Append a one-clause MITRE reference to ``layer_1.confidence_indicator``.
+
+    Looks up the primary MITRE technique for the alert's
+    ``attack_category`` (key names tried: ``"Attack Category"``,
+    ``"attack_category"``).  Mutates ``mve`` in place.
+
+    No-op when:
+      * the category is missing / "normal" / unmapped,
+      * the YAML is unavailable,
+      * the layer_1 confidence clause is missing (defensive),
+      * appending would push the per-layer or total word budget past
+        the contracted limits (60 for L1, 150 total).
+
+    Format: ``"... MITRE ATT&CK: T1565 — Data Manipulation."`` — both
+    T-ID and human name present so permissive AND strict grounding
+    metrics both register a hit.
+    """
+    category = (
+        raw_alert.get("Attack Category")
+        or raw_alert.get("attack_category")
+        or ""
+    )
+    category = str(category).strip()
+    if not category or category.lower() == "normal":
+        return
+
+    mapping = _load_mitre_by_category()
+    pair = mapping.get(category)
+    if pair is None:
+        return
+    tid, name = pair
+
+    clause = f" MITRE ATT&CK: {tid} — {name}."
+    existing = mve.layer_1.get("confidence_indicator", "")
+    candidate = (existing + clause).strip() if existing else clause.strip()
+
+    # Defensive word-budget check: layer_1 max 60, total max 150
+    # (MVEOutput contract per src/data_models.py).
+    proposed_layer_1 = dict(mve.layer_1)
+    proposed_layer_1["confidence_indicator"] = candidate
+    proposed_l1_words = sum(
+        len(proposed_layer_1.get(f, "").split())
+        for f in MVEOutput._L1
+    )
+    if proposed_l1_words > 60:
+        return
+    # Substitute the candidate into a shallow proposal of the full
+    # MVEOutput word count.  We approximate by reusing the existing
+    # layer_2 / layer_3 word counts; ``total_word_count`` recomputes
+    # cheaply but we avoid mutating before validating.
+    current_total = mve.total_word_count
+    delta = len(candidate.split()) - len(
+        mve.layer_1.get("confidence_indicator", "").split()
+    )
+    if current_total + delta > 150:
+        return
+
+    mve.layer_1["confidence_indicator"] = candidate
 
 _SEVERITY_RATIONALE = {
     "CRITICAL": "Life-sustaining system actively supporting patient care.",
@@ -988,8 +1109,8 @@ def _generate_rule_based(
 _LLM_DATA_FLOW_YAML = (
     Path(__file__).resolve().parent.parent / "configs" / "llm_data_flow.yaml"
 )
-_LLM_PROVIDER = "anthropic"
-_LLM_MODEL_VERSION = "claude-sonnet-4-6"
+_LLM_PROVIDER = "openai"
+_LLM_MODEL_VERSION = "gpt-4o-mini"
 
 
 @functools.lru_cache(maxsize=1)
@@ -1055,11 +1176,11 @@ def _generate_llm(
     user_context: Optional[dict[str, Any]],
     alert_type: str,
 ) -> Optional[MVEOutput]:
-    """Attempt LLM-based MVE generation using the Anthropic API.
+    """Attempt LLM-based MVE generation using the OpenAI API.
 
     Falls back to None (caller uses rule-based) if:
-      - ANTHROPIC_API_KEY not set in environment
-      - anthropic package not installed
+      - OPENAI_API_KEY not set in environment
+      - openai package not installed
       - API call fails for any reason
 
     Prompt enforces 3-layer structure, word limits, clinical framing,
@@ -1081,14 +1202,14 @@ def _generate_llm(
     Returns:
         MVEOutput if successful, None if unavailable or failed.
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
         return None
 
     try:
-        import anthropic  # optional dependency
+        import openai  # optional dependency
     except ImportError:
-        logger.debug("anthropic package not installed; using rule-based fallback")
+        logger.debug("openai package not installed; using rule-based fallback")
         return None
 
     # ── PHI allow-list filtering (ARCHITECTURE.md Step [12] guard) ──
@@ -1100,8 +1221,8 @@ def _generate_llm(
     # M-3: reuse a single client (and its HTTP connection pool) across all
     # alerts in the process — avoids a new TLS handshake per surfaced alert.
     @functools.lru_cache(maxsize=1)
-    def _client(key: str) -> "anthropic.Anthropic":
-        return anthropic.Anthropic(api_key=key)
+    def _client(key: str) -> "openai.OpenAI":
+        return openai.OpenAI(api_key=key)
 
     criticality = str(device_context.get("criticality", "LOW")).upper()
     is_clinical = _IS_CLINICAL.get(criticality, False)
@@ -1155,14 +1276,22 @@ Return JSON with this exact structure:
 
     try:
         client = _client(api_key)
-        response = client.messages.create(
+        # OpenAI Chat Completions: the system prompt is the first
+        # message; ``response_format`` constrains the assistant output
+        # to a JSON object so the json.loads below never sees prose.
+        response = client.chat.completions.create(
             model=_LLM_MODEL_VERSION,
             max_tokens=512,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
         )
-        raw = response.content[0].text.strip()
+        raw = (response.choices[0].message.content or "").strip()
         # M-4: strip markdown fences with pre-compiled patterns
+        # (response_format=json_object usually prevents fences, but
+        # older models/back-compat may still emit them).
         raw = _RE_FENCE_OPEN.sub("", raw)
         raw = _RE_FENCE_CLOSE.sub("", raw)
         data = json.loads(raw)
@@ -1335,5 +1464,12 @@ def generate_mve(
             mve.layer_1["deviation_description"] = (
                 f"{existing} Primary signal: {readable} ({feat})."
             ).strip()
+
+    # ── RQ2_Mitre.md Phase 2: MITRE ATT&CK grounding for Layer 1 ────
+    # Append the primary mapped technique to confidence_indicator so
+    # tests/test_mitre_grounding.py::test_grounding_target passes for
+    # both Mode A and Mode B outputs.  No-op when attack_category is
+    # missing, "normal", or unmapped.
+    _inject_mitre_grounding(mve, raw_alert)
 
     return mve

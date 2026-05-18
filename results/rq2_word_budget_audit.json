@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-18T18:49:06.560670+00:00",
+    "generated_by": "analysis/audit_word_budgets.py",
+    "inputs": {
+      "mve_outputs": "results/reports/mve_outputs.jsonl",
+      "mve_outputs_sha256": "727febdeed1aa4ea863675d54a4ecd772885fbe25948e5106921d866d7344ffc",
+      "n_records": 356
+    },
+    "config": {
+      "binding_contract": "src/data_models.py:MVEOutput",
+      "word_count_method": "len(text.split())",
+      "layer_budgets": {
+        "layer_1": 60,
+        "layer_2": 50,
+        "layer_3": 60
+      },
+      "total_budget": 150,
+      "layer_fields": {
+        "layer_1": [
+          "baseline_behavior",
+          "deviation_description",
+          "confidence_indicator",
+          "role_authorization_check"
+        ],
+        "layer_2": [
+          "affected_system",
+          "patient_care_impact",
+          "phi_exposure",
+          "severity_label",
+          "severity_rationale"
+        ],
+        "layer_3": [
+          "immediate_action",
+          "clinical_constraint",
+          "escalation_path",
+          "timeframe"
+        ]
+      },
+      "pass_criterion": "Hard fail on any per-layer or total violation (RQ2_Compliance.md \u00a72 locked decision)",
+      "drift_note": "Spec proposes 40/50/60/30=180; codebase contract is 60/50/60=150.  Audit honours the codebase contract \u2014 see RQ2_Compliance.md plan \u00a7D1 for the drift resolution."
+    }
+  },
+  "headline": {
+    "n_records": 356,
+    "n_records_with_violations": 0,
+    "audit_pass": true,
+    "violation_rate": 0.0
+  },
+  "per_layer_stats": {
+    "layer_1": {
+      "max": 47,
+      "mean": 40.28,
+      "n_over": 0,
+      "budget": 60
+    },
+    "layer_2": {
+      "max": 41,
+      "mean": 34.08,
+      "n_over": 0,
+      "budget": 50
+    },
+    "layer_3": {
+      "max": 55,
+      "mean": 53.24,
+      "n_over": 0,
+      "budget": 60
+    }
+  },
+  "total_stats": {
+    "max": 133,
+    "mean": 127.6,
+    "n_over": 0,
+    "budget": 150
+  },
+  "by_mode": {
+    "B_rule": {
+      "n": 356,
+      "total_max": 133,
+      "total_mean": 127.6,
+      "total_over": 0
+    }
+  },
+  "violations": [],
+  "violations_total_count": 0,
+  "violations_truncated_at": 50
+}

@@ -166,3 +166,64 @@ def test_tier_assignment_stable_under_20pct_weight_perturbation():
                 f"Tier-assignment agreement under {wkey} {delta:+.0%} "
                 f"perturbation = {agreement:.3f} < 0.80 threshold"
             )
+
+
+# ── RQ1_pipeline.md §4.1 — npz schema v1.1 contract ────────────────────
+
+def test_risk_scores_npz_schema_v1_1():
+    """The persisted risk_scores.npz must expose the seven RQ1-pipeline
+    extension arrays plus a sidecar meta.json declaring schema_version 1.1.
+
+    Per RQ1_pipeline.md §4.2.  Run Module 3 first to regenerate the npz
+    if this test fails due to a stale (v1.0) artifact.
+    """
+    import json
+
+    repo_root = Path(__file__).resolve().parents[1]
+    npz_path = repo_root / "results/reports/risk_scores.npz"
+    meta_path = repo_root / "results/reports/risk_scores.meta.json"
+    if not npz_path.exists():
+        pytest.skip(
+            "risk_scores.npz not present — "
+            "run `python -m module3_risk_scoring.module3_risk_scores` first."
+        )
+    # NPZ present without sidecar → stale v1.0 schema; this is exactly the
+    # contract-violation case the test is meant to catch.  Fail loudly so
+    # CI surfaces it instead of silently skipping.
+    assert meta_path.exists(), (
+        "risk_scores.npz exists but risk_scores.meta.json is missing — "
+        "the npz is the legacy v1.0 schema; re-run Module 3 to regenerate."
+    )
+
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta["schema_version"] == "1.1", (
+        f"Expected schema v1.1, got {meta.get('schema_version')!r}. "
+        "Re-run Module 3 to regenerate."
+    )
+
+    data = np.load(npz_path, allow_pickle=False)
+    required = {
+        "row_id", "attack_category", "device_class",
+        "device_criticality", "patchable", "true_severity",
+        "R_counterfactual",
+    }
+    missing = required - set(data.files)
+    assert not missing, f"Missing required arrays: {missing}"
+
+    # All arrays same length
+    n = len(data["y_true"])
+    for name in required:
+        assert len(data[name]) == n, (
+            f"{name} length {len(data[name])} != {n}"
+        )
+
+    # Invariant 1: R_counterfactual >= R - eps (counterfactual is upper bound).
+    assert np.all(data["R_counterfactual"] + 1e-9 >= data["R"]), (
+        "R_counterfactual must be >= R for every row"
+    )
+
+    # Invariant 2: row_id is the identity range over test parquet rows
+    # (Module 3 must not shuffle/filter between parquet → npz).
+    assert np.array_equal(data["row_id"], np.arange(n, dtype=data["row_id"].dtype)), (
+        "row_id must be identity range over test parquet rows"
+    )

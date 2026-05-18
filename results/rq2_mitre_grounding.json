@@ -1,0 +1,94 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-18T19:00:24.540141+00:00",
+    "generated_by": "analysis/compute_mitre_grounding.py",
+    "inputs": {
+      "audit_json": "results/rq2_mitre_audit.json",
+      "audit_sha256": "fa626f033387d65802fb163782e899f969f8c05ad3b8baf5d6ef52665828116d",
+      "mve_outputs": "results/reports/mve_outputs.jsonl",
+      "mve_outputs_sha256": "727febdeed1aa4ea863675d54a4ecd772885fbe25948e5106921d866d7344ffc",
+      "risk_scores_npz": "results/reports/risk_scores.npz",
+      "n_records_in_mve_jsonl": 356,
+      "n_evaluated": 275,
+      "n_surfaced": 275,
+      "n_skipped_benign_sentinel": 2141,
+      "n_skipped_no_mve_for_row": 32
+    },
+    "config": {
+      "match_rule": "case-insensitive substring; T-ID OR human name accepted",
+      "search_scope": "layer_1_why_anomalous field only",
+      "strict_appendix_metric": "T-ID AND human name both present",
+      "grounded_target": 0.9,
+      "benign_sentinel_excluded": "normal"
+    }
+  },
+  "headline": {
+    "_scope": "surfaced alerts (fusion_class != BENIGN)",
+    "n_evaluated": 275,
+    "n_grounded": 275,
+    "n_strict_grounded": 275,
+    "grounded_pct": 1.0,
+    "strict_grounded_pct": 1.0,
+    "target": 0.9,
+    "pass": true
+  },
+  "by_attack_category": {
+    "Data Alteration": {
+      "_scope": "surfaced alerts of category=Data Alteration",
+      "n_evaluated": 138,
+      "n_grounded": 138,
+      "n_strict_grounded": 138,
+      "grounded_pct": 1.0,
+      "strict_grounded_pct": 1.0,
+      "expected_tids": [
+        "t1565",
+        "t1565.001",
+        "t1565.002"
+      ],
+      "expected_names": [
+        "data manipulation",
+        "stored data manipulation",
+        "transmitted data manipulation"
+      ],
+      "_pair_validity": "paired against mapped technique for this category"
+    },
+    "Spoofing": {
+      "_scope": "surfaced alerts of category=Spoofing",
+      "n_evaluated": 137,
+      "n_grounded": 137,
+      "n_strict_grounded": 137,
+      "grounded_pct": 1.0,
+      "strict_grounded_pct": 1.0,
+      "expected_tids": [
+        "t1556",
+        "t1557"
+      ],
+      "expected_names": [
+        "adversary-in-the-middle",
+        "modify authentication process"
+      ],
+      "_pair_validity": "paired against mapped technique for this category"
+    }
+  },
+  "by_mode": {
+    "B_rule": {
+      "_scope": "surfaced alerts, mode=B_rule",
+      "n_evaluated": 275,
+      "n_grounded": 275,
+      "n_strict_grounded": 275,
+      "grounded_pct": 1.0,
+      "strict_grounded_pct": 1.0,
+      "_note": "Rule-based MVE template \u2014 MITRE term injection depends on whether src.mve_generator includes T-IDs/names in layer_1_why_anomalous strings; this number is the truth."
+    }
+  },
+  "appendix_all_mve": {
+    "_scope": "all alerts with an MVE output (excludes benign-sentinel rows)",
+    "n_evaluated": 275,
+    "n_grounded": 275,
+    "n_strict_grounded": 275,
+    "grounded_pct": 1.0,
+    "strict_grounded_pct": 1.0
+  },
+  "failure_examples": []
+}

@@ -71,10 +71,17 @@ def _valid_llm_json(severity: str = "CRITICAL") -> str:
     })
 
 
-def _mock_anthropic_response(text: str) -> MagicMock:
+def _mock_openai_response(text: str) -> MagicMock:
+    """Build a mock object shaped like an OpenAI Chat Completions response.
+
+    Real shape: ``response.choices[0].message.content`` is the assistant
+    string.  The migration from Anthropic's ``response.content[0].text``
+    happened when src/mve_generator.py switched providers.
+    """
     mock_response = MagicMock()
-    mock_response.content = [MagicMock()]
-    mock_response.content[0].text = text
+    mock_response.choices = [MagicMock()]
+    mock_response.choices[0].message = MagicMock()
+    mock_response.choices[0].message.content = text
     return mock_response
 
 
@@ -84,7 +91,7 @@ def _mock_anthropic_response(text: str) -> MagicMock:
 class TestGenerateLlm:
     def test_no_api_key_returns_none(self) -> None:
         env = dict(os.environ)
-        env.pop("ANTHROPIC_API_KEY", None)
+        env.pop("OPENAI_API_KEY", None)
         with patch.dict(os.environ, env, clear=True):
             result = _generate_llm(
                 SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
@@ -92,23 +99,23 @@ class TestGenerateLlm:
             assert result is None
 
     def test_import_error_returns_none(self) -> None:
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with patch.dict("sys.modules", {"anthropic": None}):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            with patch.dict("sys.modules", {"openai": None}):
                 result = _generate_llm(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is None
 
     def test_successful_llm_call(self) -> None:
-        mock_anthropic = MagicMock()
+        mock_openai = MagicMock()
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = _mock_anthropic_response(
+        mock_client.chat.completions.create.return_value = _mock_openai_response(
             _valid_llm_json("CRITICAL")
         )
-        mock_anthropic.Anthropic.return_value = mock_client
+        mock_openai.OpenAI.return_value = mock_client
 
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            with patch.dict("sys.modules", {"openai": mock_openai}):
                 result = _generate_llm(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
@@ -116,28 +123,28 @@ class TestGenerateLlm:
                 assert result.layer_2["severity_label"] == "CRITICAL"
 
     def test_invalid_severity_returns_none(self) -> None:
-        mock_anthropic = MagicMock()
+        mock_openai = MagicMock()
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = _mock_anthropic_response(
+        mock_client.chat.completions.create.return_value = _mock_openai_response(
             _valid_llm_json("INVALID_LEVEL")
         )
-        mock_anthropic.Anthropic.return_value = mock_client
+        mock_openai.OpenAI.return_value = mock_client
 
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            with patch.dict("sys.modules", {"openai": mock_openai}):
                 result = _generate_llm(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is None
 
     def test_api_exception_returns_none(self) -> None:
-        mock_anthropic = MagicMock()
+        mock_openai = MagicMock()
         mock_client = MagicMock()
-        mock_client.messages.create.side_effect = RuntimeError("API error")
-        mock_anthropic.Anthropic.return_value = mock_client
+        mock_client.chat.completions.create.side_effect = RuntimeError("API error")
+        mock_openai.OpenAI.return_value = mock_client
 
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            with patch.dict("sys.modules", {"openai": mock_openai}):
                 result = _generate_llm(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
@@ -145,13 +152,13 @@ class TestGenerateLlm:
 
     def test_markdown_fenced_json(self) -> None:
         text = "```json\n" + _valid_llm_json("HIGH") + "\n```"
-        mock_anthropic = MagicMock()
+        mock_openai = MagicMock()
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = _mock_anthropic_response(text)
-        mock_anthropic.Anthropic.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _mock_openai_response(text)
+        mock_openai.OpenAI.return_value = mock_client
 
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            with patch.dict("sys.modules", {"openai": mock_openai}):
                 result = _generate_llm(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
@@ -159,32 +166,32 @@ class TestGenerateLlm:
                 assert result.layer_2["severity_label"] == "HIGH"
 
     def test_llm_with_user_context(self) -> None:
-        mock_anthropic = MagicMock()
+        mock_openai = MagicMock()
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = _mock_anthropic_response(
+        mock_client.chat.completions.create.return_value = _mock_openai_response(
             _valid_llm_json("HIGH")
         )
-        mock_anthropic.Anthropic.return_value = mock_client
+        mock_openai.OpenAI.return_value = mock_client
         user_ctx: dict[str, Any] = {"user_id": "jdoe", "role": "nurse"}
 
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            with patch.dict("sys.modules", {"openai": mock_openai}):
                 result = _generate_llm(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, user_ctx, "T2"
                 )
                 assert result is not None
 
     def test_llm_low_severity_not_clinical(self) -> None:
-        mock_anthropic = MagicMock()
+        mock_openai = MagicMock()
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = _mock_anthropic_response(
+        mock_client.chat.completions.create.return_value = _mock_openai_response(
             _valid_llm_json("LOW")
         )
-        mock_anthropic.Anthropic.return_value = mock_client
+        mock_openai.OpenAI.return_value = mock_client
         low_device: dict[str, Any] = dict(SAMPLE_DEVICE, criticality="LOW")
 
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            with patch.dict("sys.modules", {"openai": mock_openai}):
                 result = _generate_llm(
                     SAMPLE_RAW, low_device, SAMPLE_BASELINE, None, "T1"
                 )
@@ -249,7 +256,7 @@ class TestGenerateMveEdgeCases:
     def test_llm_fallback_to_rule_based(self) -> None:
         """When LLM path returns None, rule-based should be used."""
         env = dict(os.environ)
-        env.pop("ANTHROPIC_API_KEY", None)
+        env.pop("OPENAI_API_KEY", None)
         with patch.dict(os.environ, env, clear=True):
             mve = generate_mve(SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None)
             assert mve is not None

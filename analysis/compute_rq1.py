@@ -173,7 +173,13 @@ def compute_rq1_1() -> dict[str, Any]:
             "assertions": assertions,
         },
     }
-    out_path = RESULTS_DIR / "rq1_metrics.json"
+    # RQ1_pipeline.md cutover (2026-05-19): the canonical
+    # ``results/rq1_metrics.json`` is now owned by
+    # ``module6_evaluation/compute_rq1_metrics.py`` (the rich aggregator
+    # over ``risk_scores.npz`` v1.1).  This script's RQ1.1 output —
+    # baseline XGB-test metrics — is retained as a sibling artifact for
+    # historical comparison but no longer overwrites the canonical file.
+    out_path = RESULTS_DIR / "rq1_metrics_legacy_baseline.json"
 
     # Compare to existing
     if out_path.exists():

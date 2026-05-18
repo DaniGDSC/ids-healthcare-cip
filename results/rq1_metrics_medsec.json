@@ -1,0 +1,61 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-18T17:40:13.228767+00:00",
+    "generated_by": "module6_evaluation/compute_rq1_metrics_medsec.py",
+    "dataset": "MedSec-25",
+    "split": "loo_ablation_proxy",
+    "source": "results/reports/dae_ablation_loo_medsec25.yaml",
+    "scope_note": "MedSec-25 test parquet lacks the device_class taxonomy required for FNR_critical, surfacing, and correlation diagnostics.  Per RQ1_pipeline.md \u00a76.3 the sibling JSON is therefore scoped to Track B per-class AUC, sourced from Module 2's leave-one-class-out ablation yaml."
+  },
+  "track_b_per_class": {
+    "Exfiltration": {
+      "auc": 0.8520459329007136,
+      "n_positive": 2591,
+      "n_negative": 1235,
+      "verdict": "acceptable"
+    },
+    "Initial access": {
+      "auc": 0.9049795310401277,
+      "n_positive": 10209,
+      "n_negative": 1235,
+      "verdict": "good_to_excellent"
+    },
+    "Lateral movement": {
+      "auc": 0.8332936032388664,
+      "n_positive": 1250,
+      "n_negative": 1235,
+      "verdict": "acceptable"
+    },
+    "Reconnaissance": {
+      "auc": 0.9274629467826369,
+      "n_positive": 40169,
+      "n_negative": 1235,
+      "verdict": "good_to_excellent"
+    }
+  },
+  "headline": {
+    "_status": "scoped_out",
+    "reason": "Headline FNR_critical / sensitivity / specificity require device-class-derived severity, which MedSec-25 does not carry in this prototype."
+  },
+  "track_a_ablation": {
+    "_status": "scoped_out",
+    "reason": "Track A models not retrained on MedSec-25."
+  },
+  "fusion_classes": {
+    "_status": "scoped_out",
+    "reason": "Cascade fusion classes require full pipeline run."
+  },
+  "risk_tier_distribution": {
+    "_status": "scoped_out",
+    "reason": "Composite R not computed on MedSec-25."
+  },
+  "surfacing_summary": {
+    "_status": "scoped_out",
+    "reason": "Surfacing invariants require device_criticality + patchable, which MedSec-25 lacks."
+  },
+  "correlation_diagnostics": {
+    "_status": "scoped_out",
+    "reason": "D_crit / D_clinical_tier are not defined for MedSec-25 rows."
+  }
+}

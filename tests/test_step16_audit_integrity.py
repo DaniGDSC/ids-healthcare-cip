@@ -120,16 +120,16 @@ def test_mve_audit_block_persisted_for_mode_a(audit_log):
         "mve_text_shown": "Confidence: HIGH — ...",
         "shap_top_features": ["DIntPkt", "Sport", "SrcBytes"],
         "shap_stability": 0.93,
-        "llm_provider": "anthropic",
-        "llm_model_version": "claude-sonnet-4-6",
+        "llm_provider": "openai",
+        "llm_model_version": "gpt-4o-mini",
         "llm_full_prompt": "Alert type: T1\\n...",
         "llm_full_response": '{"layer_1": {...}}',
     }
     e = audit_log.log({"alert_id": "EVAL-1", "action": "log_event"},
                       mve_audit=mve_audit)
     assert "mve_audit" in e
-    assert e["mve_audit"]["llm_provider"] == "anthropic"
-    assert e["mve_audit"]["llm_model_version"] == "claude-sonnet-4-6"
+    assert e["mve_audit"]["llm_provider"] == "openai"
+    assert e["mve_audit"]["llm_model_version"] == "gpt-4o-mini"
     assert e["mve_audit"]["llm_full_prompt"]
     assert e["mve_audit"]["llm_full_response"]
 

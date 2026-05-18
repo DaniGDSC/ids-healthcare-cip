@@ -240,6 +240,57 @@ def load_test_data() -> tuple:
     return load_split_data("test")
 
 
+def load_split_metadata(split: str = "test") -> dict:
+    """Read joinable per-row metadata from a frozen split parquet.
+
+    Returns the columns dropped by ``load_split_data`` so RQ1 consumers can
+    enrich the npz with row identity + device context.  Schema is fixed by
+    RQ1_pipeline.md §4.1.1.
+
+    Per CLAUDE.md Rule 6 (ARCHITECTURE.md source-of-truth): the parquet's
+    ``row_id`` column is asserted to be the identity range — Module 3 does
+    not shuffle/filter rows, so any deviation indicates an upstream change
+    in Module 1 that must be surfaced rather than silently absorbed.
+
+    Args:
+        split: "test" or "demo" — matches ``load_split_data``.
+
+    Returns:
+        Dict with keys "row_id" (int64 ndarray), "attack_category" (object),
+        "device_class" (object).
+    """
+    if split not in ("test", "demo"):
+        raise ValueError(f"split must be 'test' or 'demo', got {split!r}")
+    df = pd.read_parquet(
+        PROJECT_ROOT / "data/processed" / f"{split}_phase1.parquet"
+    )
+
+    n = len(df)
+    if "row_id" in df.columns:
+        row_id = df["row_id"].values.astype(np.int64, copy=False)
+        if not np.array_equal(row_id, np.arange(n, dtype=np.int64)):
+            raise RuntimeError(
+                f"{split}_phase1.parquet 'row_id' column is not the identity "
+                f"range 0..{n - 1}; Module 3 assumes no shuffling/filtering "
+                "between parquet load and npz emit (RQ1_pipeline.md §4.1.3)."
+            )
+    else:
+        row_id = np.arange(n, dtype=np.int64)
+
+    attack_category = (
+        df["attack_category"].astype(str).values
+        if "attack_category" in df.columns
+        else df["Attack Category"].astype(str).values
+    )
+    device_class = df["device_class"].astype(str).values
+
+    return {
+        "row_id": row_id,
+        "attack_category": attack_category,
+        "device_class": device_class,
+    }
+
+
 def load_xgboost_proba(*, prefer_calibrated: bool = True) -> tuple:
     """Load XGBoost predict_proba and optimal threshold.
 
@@ -1206,8 +1257,27 @@ def save_outputs(
     worked_examples: list,
     fusion_class: np.ndarray | None = None,
     data_quality: np.ndarray | None = None,
+    extended_arrays: dict | None = None,
 ) -> None:
-    """Save all risk score artifacts."""
+    """Save all risk score artifacts.
+
+    ``extended_arrays`` (RQ1_pipeline.md §4.1.1, schema v1.1) is an optional
+    dict of seven additional per-row arrays to embed in ``risk_scores.npz``:
+
+      * ``row_id`` (int64) — identity range over parquet rows.
+      * ``attack_category`` (str) — passthrough from parquet.
+      * ``device_class`` (str) — passthrough from parquet.
+      * ``device_criticality`` (str) — looked up from device context.
+      * ``patchable`` (bool) — looked up from device context.
+      * ``true_severity`` (str) — derived via ``map_true_severity``.
+      * ``R_counterfactual`` (float64) — hypothetical R with c_detect=1.0.
+
+    When supplied, a sidecar ``risk_scores.meta.json`` is written
+    alongside the npz with ``schema_version: "1.1"``; otherwise the legacy
+    v1.0 npz format is emitted with no sidecar.
+    """
+    from datetime import datetime, timezone
+
     # NPZ
     npz_payload = dict(
         R=R, c_detect=c_detect, d_crit=d_crit,
@@ -1219,8 +1289,44 @@ def save_outputs(
         npz_payload["fusion_class"] = fusion_class.astype(str)
     if data_quality is not None:
         npz_payload["data_quality"] = data_quality.astype(str)
+
+    schema_version = "1.0"
+    if extended_arrays is not None:
+        # Invariant: R_counterfactual >= R for every row (c_detect=1.0 is
+        # the upper bound of the detection component).  Fail loudly rather
+        # than silently emit an incoherent npz.
+        rcf = np.asarray(extended_arrays["R_counterfactual"], dtype=np.float64)
+        if not np.all(rcf + 1e-9 >= R):
+            n_bad = int(np.sum(rcf + 1e-9 < R))
+            raise AssertionError(
+                f"R_counterfactual < R on {n_bad}/{len(R)} rows — "
+                "violates the c_detect upper-bound invariant "
+                "(RQ1_pipeline.md §4.1.3)."
+            )
+        for key in (
+            "row_id", "attack_category", "device_class",
+            "device_criticality", "patchable", "true_severity",
+            "R_counterfactual",
+        ):
+            npz_payload[key] = extended_arrays[key]
+        schema_version = "1.1"
+
     np.savez(OUTPUT_DIR / "risk_scores.npz", **npz_payload)
-    logger.info("  Saved: risk_scores.npz")
+    logger.info("  Saved: risk_scores.npz (schema v%s)", schema_version)
+
+    if extended_arrays is not None:
+        meta = {
+            "schema_version": schema_version,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "dataset": "WUSTL-EHMS-2020",
+            "split": "test",
+            "n_rows": int(len(R)),
+            "arrays": sorted(npz_payload.keys()),
+        }
+        (OUTPUT_DIR / "risk_scores.meta.json").write_text(
+            json.dumps(meta, indent=2), encoding="utf-8"
+        )
+        logger.info("  Saved: risk_scores.meta.json")
 
     # CSV detail
     csv_cols = {
@@ -1318,6 +1424,12 @@ def main() -> None:
     n_attacks = (y_test == 1).sum()
     logger.info("Test data: %d samples (%d attacks)", n_samples, n_attacks)
 
+    # RQ1_pipeline.md §4.1: joinable metadata for npz schema v1.1.
+    metadata = load_split_metadata("test")
+    assert len(metadata["row_id"]) == n_samples, (
+        f"metadata row count {len(metadata['row_id'])} != test samples {n_samples}"
+    )
+
     # ── Compute components ──
     logger.info("Computing risk components...")
 
@@ -1390,13 +1502,61 @@ def main() -> None:
         logger.info("  %s (sample %d): R=%.4f → %s",
                     ex["title"], ex["sample_index"], ex["R"], ex["risk_level"])
 
+    # ── RQ1 npz schema v1.1: derive joinable metadata + counterfactual R ──
+    # (RQ1_pipeline.md §4.1.1)
+    from common.context_mappings import lookup_device_context, map_true_severity
+
+    device_classes = metadata["device_class"]
+    attack_categories = metadata["attack_category"]
+
+    # Vectorised per-row context lookup via pd.Series.map for O(N) scan.
+    dev_series = pd.Series(device_classes, dtype=str)
+    device_criticality_arr = (
+        dev_series.map(lambda d: lookup_device_context(d)["device_criticality"])
+        .astype(str).values
+    )
+    patchable_arr = (
+        dev_series.map(lambda d: lookup_device_context(d)["patchable"])
+        .astype(bool).values
+    )
+    true_severity_arr = np.array(
+        [map_true_severity(a, d) for a, d in zip(attack_categories, device_classes)],
+        dtype="<U10",
+    )
+
+    # Counterfactual R: hypothetical full-detection (c_detect = 1.0) score.
+    # Weights are hard-coded per RQ1_pipeline.md §2 (locked decisions),
+    # NOT WEIGHTS — even if Module 3's policy weights drift later, the
+    # counterfactual formula is fixed so FNR_critical's third criterion
+    # (R_cf >= 0.80) stays comparable across reruns.
+    R_counterfactual = (
+        0.40 * 1.0
+        + 0.25 * d_crit
+        + 0.15 * s_data
+        + 0.20 * d_clinical_tier
+    )
+    R_counterfactual = np.clip(R_counterfactual, 0.0, 1.0)
+
+    # Fixed-width unicode dtypes so the npz is loadable with
+    # ``allow_pickle=False`` (RQ1_pipeline.md §4.1.1 schema, §4.2 test).
+    extended_arrays = {
+        "row_id": metadata["row_id"].astype(np.int64),
+        "attack_category": np.asarray(attack_categories, dtype="<U20"),
+        "device_class": np.asarray(device_classes, dtype="<U20"),
+        "device_criticality": np.asarray(device_criticality_arr, dtype="<U10"),
+        "patchable": patchable_arr,
+        "true_severity": true_severity_arr,
+        "R_counterfactual": R_counterfactual.astype(np.float64),
+    }
+
     # ── Save ──
     logger.info("")
     logger.info("Saving outputs...")
     save_outputs(R, c_detect, d_crit, s_data, d_clinical_tier, c_track_a, c_track_b,
                  levels, y_test, attack_cats, fusion, contributions,
                  sensitivity, worked_examples,
-                 fusion_class=fusion_class, data_quality=data_quality)
+                 fusion_class=fusion_class, data_quality=data_quality,
+                 extended_arrays=extended_arrays)
 
     # ── Visualizations ──
     logger.info("Generating charts...")
