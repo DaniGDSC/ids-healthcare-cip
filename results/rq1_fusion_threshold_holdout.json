@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-19T01:49:23.171072+00:00",
+  "generated_by": "analysis/verify_fusion_threshold_holdout.py",
+  "thresholds_applied": {
+    "a_high": 0.41,
+    "a_low": 0.4,
+    "b": 0.7
+  },
+  "thresholds_source": "results/models/_fusion_thresholds.json",
+  "results": {
+    "val": {
+      "n_rows": 2448,
+      "n_attacks": 307,
+      "sensitivity": 0.9413680781758957,
+      "specificity": 0.9565623540401681,
+      "f2": 0.8975155279503105,
+      "confusion_matrix": {
+        "tp": 289,
+        "fn": 18,
+        "fp": 93,
+        "tn": 2048
+      },
+      "_note": "tuning split \u2014 reproduces calibration metrics",
+      "split_sha256": "94da4b78cbc37d6a8cb8e4afad182f6eec378af9d5fb69898d2e5409d7409950"
+    },
+    "test": {
+      "n_rows": 2448,
+      "n_attacks": 307,
+      "sensitivity": 0.9511400651465798,
+      "specificity": 0.9542269967304998,
+      "f2": 0.9023485784919654,
+      "confusion_matrix": {
+        "tp": 292,
+        "fn": 15,
+        "fp": 98,
+        "tn": 2043
+      },
+      "_note": "production headline split \u2014 RQ1 report",
+      "split_sha256": "8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9"
+    },
+    "stratified_holdout": {
+      "n_rows": 1469,
+      "n_attacks": 185,
+      "sensitivity": 0.9243243243243243,
+      "specificity": 0.7850467289719626,
+      "f2": 0.7203032855939343,
+      "confusion_matrix": {
+        "tp": 171,
+        "fn": 14,
+        "fp": 276,
+        "tn": 1008
+      },
+      "_note": "legacy held-out split; informational only (known preprocessing drift vs current Phase-1)",
+      "split_sha256": "16f839b9094432d486e7ee09cb980b299dfcbab94bc5230af06e9e2b24a0d87f"
+    }
+  },
+  "val_to_test_delta": {
+    "delta_sensitivity": -0.009771986970684043,
+    "delta_specificity": 0.0023353573096682734,
+    "limit": 0.05,
+    "pass": true
+  }
+}

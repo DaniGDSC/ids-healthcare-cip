@@ -685,3 +685,67 @@ def test_rq2d_failure_catalog_outputs_exist():
         + ", ".join(missing)
         + ". Run the analysis/* scripts named in RQ2_failure.md §8."
     )
+
+
+# ── RQ2_Doc.md §7 — RQ2 targets + failure-catalog framing gates ─────────
+
+def test_rq2_targets_met():
+    """Assert every actively-failed RQ2 target is met.
+
+    Pending or insufficient-data targets (``pass is None``) are tolerated;
+    only ``pass is False`` fails this gate. Run ``python -m
+    module6_evaluation.compute_rq2_metrics`` first.
+    """
+    import json
+    from pathlib import Path
+
+    metrics_path = (Path(__file__).resolve().parents[1]
+                    / "results" / "rq2_metrics.json")
+    assert metrics_path.exists(), (
+        "results/rq2_metrics.json missing — run "
+        "`python -m module6_evaluation.compute_rq2_metrics` first."
+    )
+    m = json.loads(metrics_path.read_text(encoding="utf-8"))
+    targets = m.get("targets") or {}
+    failures = [
+        {"target": tid, "value": t.get("value"),
+         "target_value": t.get("target")}
+        for tid, t in targets.items()
+        if t.get("pass") is False
+    ]
+    assert not failures, (
+        f"RQ2 targets failed: {failures}. "
+        "Inspect results/rq2_metrics.json for details."
+    )
+
+
+def test_rq2_failure_catalog_framing():
+    """DEFENSE-CRITICAL: failure catalog framing must remain observation-only.
+
+    Per RQ2.d rescope to thesis §7.2.3, the catalog records observations,
+    not improvements. The aggregator pulls the framing string from the
+    catalog's _disclosure block; this test guards against drift.
+    """
+    import json
+    from pathlib import Path
+
+    metrics_path = (Path(__file__).resolve().parents[1]
+                    / "results" / "rq2_metrics.json")
+    if not metrics_path.exists():
+        import pytest
+        pytest.skip("results/rq2_metrics.json missing — aggregator not run.")
+
+    m = json.loads(metrics_path.read_text(encoding="utf-8"))
+    catalog_block = m.get("failure_catalog") or {}
+    if catalog_block.get("_status") == "pending":
+        import pytest
+        pytest.skip("failure_catalog pending — nothing to assert yet.")
+
+    disclosure = catalog_block.get("disclosure") or {}
+    assert disclosure.get("framing") == "observation_not_improvement", (
+        "Failure catalog framing must be 'observation_not_improvement' "
+        "(RQ2.d rescoped to future work; see thesis §7.2.3)."
+    )
+    assert disclosure.get("iteration_performed") is False, (
+        "iteration_performed must be False — no iteration was done in scope."
+    )

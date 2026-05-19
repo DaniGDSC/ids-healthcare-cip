@@ -328,6 +328,32 @@ def load_xgboost_proba(*, prefer_calibrated: bool = True) -> tuple:
 
 # ── Component computation ──────────────────────────────────────────────
 
+def load_fusion_thresholds() -> dict:
+    """Return calibrated fusion thresholds {'a_high', 'a_low', 'b'}.
+
+    Reads ``results/models/_fusion_thresholds.json`` (produced by
+    ``analysis/calibrate_fusion_threshold.py``). The picked ``a_high`` is
+    a Stage-5B calibration on val_phase1.parquet that resolves the
+    sensitivity headline-target miss documented in [RQ1_pipeline.md §6.1].
+
+    Falls back to (P_XGB_HIGH_CONF, 0.40, 0.70) when the file is absent —
+    preserves pre-calibration behaviour for tests and ad-hoc runs.
+    """
+    import json
+    from src.data_models import P_XGB_HIGH_CONF
+
+    path = PROJECT_ROOT / "results/models/_fusion_thresholds.json"
+    if not path.exists():
+        return {"a_high": float(P_XGB_HIGH_CONF), "a_low": 0.40, "b": 0.70}
+    payload = json.loads(path.read_text())
+    picked = payload["picked"]
+    return {
+        "a_high": float(picked["a_high"]),
+        "a_low": float(picked["a_low"]),
+        "b": float(picked["b"]),
+    }
+
+
 def classify_fusion(
     c_track_a: np.ndarray,
     c_track_b: np.ndarray,
@@ -353,20 +379,27 @@ def classify_fusion(
             the explicit `a_low` wins.
         dae_threshold: Back-compat alias for `b`. If both are passed,
             the explicit `b` wins.
-        a_high: KNOWN_ATTACK boundary (default P_XGB_HIGH_CONF = 0.85).
-        a_low:  NOVEL/CONFIRMED boundary (default 0.40 per spec).
-        b:      DAE flag threshold (default 0.70 per spec).
+        a_high: KNOWN_ATTACK boundary. Default loaded from
+            ``results/models/_fusion_thresholds.json``; falls back to
+            ``P_XGB_HIGH_CONF`` when the calibration file is absent.
+        a_low:  NOVEL/CONFIRMED boundary. Default loaded from the same
+            file; falls back to 0.40.
+        b:      DAE flag threshold. Default loaded from the same file;
+            falls back to 0.70.
 
     Returns:
         np.ndarray of FusionClass string values, shape (n,).
     """
-    from src.data_models import FusionClass, P_XGB_HIGH_CONF
+    from src.data_models import FusionClass
 
-    a_high_v = float(a_high if a_high is not None else P_XGB_HIGH_CONF)
+    defaults = load_fusion_thresholds()
+    a_high_v = float(a_high if a_high is not None else defaults["a_high"])
     a_low_v = float(a_low if a_low is not None else
-                    (xgb_threshold if xgb_threshold is not None else 0.40))
+                    (xgb_threshold if xgb_threshold is not None
+                     else defaults["a_low"]))
     b_v = float(b if b is not None else
-                (dae_threshold if dae_threshold is not None else 0.70))
+                (dae_threshold if dae_threshold is not None
+                 else defaults["b"]))
 
     high_conf = c_track_a >= a_high_v
     in_confirm_band = (c_track_a >= a_low_v) & (c_track_a < a_high_v)

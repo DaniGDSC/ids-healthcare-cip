@@ -84,12 +84,11 @@ def test_low_patchable_suppressed_in_maintenance_window() -> None:
 # ── M1 fix: two-stage fusion classifier ──────────────────────────────────
 
 def test_fusion_class_known_attack() -> None:
-    """P_xgb >= 0.85 => KNOWN_ATTACK regardless of DAE."""
+    """P_xgb >= a_high => KNOWN_ATTACK regardless of DAE."""
     arr = classify_fusion(
         c_track_a=np.array([0.9, 0.86]),
         c_track_b=np.array([0.0, 0.99]),
-        xgb_threshold=0.05,
-        dae_threshold=0.5,
+        a_high=0.85, a_low=0.05, b=0.5,
     )
     assert all(c == "KNOWN_ATTACK" for c in arr)
 
@@ -99,19 +98,21 @@ def test_fusion_class_novel_anomaly() -> None:
     arr = classify_fusion(
         c_track_a=np.array([0.01]),
         c_track_b=np.array([0.9]),
-        xgb_threshold=0.05,
-        dae_threshold=0.5,
+        a_high=0.85, a_low=0.05, b=0.5,
     )
     assert arr[0] == "NOVEL_ANOMALY"
 
 
 def test_fusion_class_confirmed_anomaly() -> None:
-    """Both flag below high-confidence => CONFIRMED_ANOMALY."""
+    """Both flag below high-confidence => CONFIRMED_ANOMALY.
+
+    Passes explicit thresholds to test the fusion-rule contract
+    independent of the calibrated runtime defaults.
+    """
     arr = classify_fusion(
         c_track_a=np.array([0.5]),
         c_track_b=np.array([0.9]),
-        xgb_threshold=0.05,
-        dae_threshold=0.5,
+        a_high=0.85, a_low=0.05, b=0.5,
     )
     assert arr[0] == "CONFIRMED_ANOMALY"
 
@@ -121,8 +122,7 @@ def test_fusion_class_benign() -> None:
     arr = classify_fusion(
         c_track_a=np.array([0.01]),
         c_track_b=np.array([0.1]),
-        xgb_threshold=0.05,
-        dae_threshold=0.5,
+        a_high=0.85, a_low=0.05, b=0.5,
     )
     assert arr[0] == "BENIGN"
 

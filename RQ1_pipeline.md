@@ -765,18 +765,56 @@ pytest tests/acceptance_tests.py::test_rq1_targets_met
 
 ---
 
+## 5b. Phase 3.5 — Fusion threshold calibration (`a_high`)
+
+**Resolves:** the `a_high` half of Stage 5B (§6.1). Joint sensitivity over `a_low` and `b` remains future work.
+
+### 5b.1 Motivation
+
+Before Phase 3.5, `a_high` was hard-coded to `P_XGB_HIGH_CONF = 0.85` in [src/data_models.py](src/data_models.py). On the EHMS test split this caused 32 Spoofing samples to be classified `BENIGN` despite XGBoost ranking them in the 0.4–0.71 confidence band — XGBoost couldn't fire `KNOWN_ATTACK` (needs ≥ 0.85) and the DAE couldn't corroborate `CONFIRMED_ANOMALY` (Spoofing is benign-mimicking, documented FM-TB-01). Result: sensitivity = 0.8958 < 0.90 target, while XGBoost alone at its F2-optimal threshold already achieves sens = 0.987.
+
+### 5b.2 Procedure (deterministic, locked)
+
+1. **Score the tuning split.** [module3_risk_scoring/score_split.py](module3_risk_scoring/score_split.py) runs the calibrated XGBoost + DAE on an arbitrary parquet. Verified bit-exact against the persisted test-set probas (`xgboost_test_proba_calibrated.npy`, `c_track_b` in `risk_scores.npz`).
+2. **Sweep.** [analysis/calibrate_fusion_threshold.py](analysis/calibrate_fusion_threshold.py) scores [data/processed/val_phase1.parquet](data/processed/val_phase1.parquet) (2,448 rows; canonical Phase-1 held-out validation split; disjoint from train/test/demo per [split_metadata.yaml](data/processed/split_metadata.yaml)) and sweeps `a_high ∈ [0.30, 0.85]` at step 0.01 with `a_low = 0.40`, `b = 0.70` fixed.
+3. **Selection rule.** Smallest `a_high` such that (a) `a_high > a_low + step` (preserves the four-class CONFIRM band), and (b) sensitivity > 0.90 AND specificity > 0.95 on val. Tiebreak: max F2. Fails loudly if no `a_high` satisfies all conditions — signals that single-knob calibration is insufficient and a joint `(a_low, b)` sweep is needed.
+4. **Persistence.** Writes `results/models/_fusion_thresholds.json` with full sweep table + provenance (split sha256, git commit, selection rule, all 56 sweep rows).
+5. **Runtime loading.** [`load_fusion_thresholds()`](module3_risk_scoring/module3_risk_scores.py) reads the JSON; `classify_fusion()` calls it for default values. Falls back to `(P_XGB_HIGH_CONF, 0.40, 0.70)` when the JSON is absent.
+6. **Verification.** [analysis/verify_fusion_threshold_holdout.py](analysis/verify_fusion_threshold_holdout.py) reports val/test/stratified-holdout metrics side by side; CI-gates a >5pp val→test degradation in either sensitivity or specificity.
+
+### 5b.3 Why `val_phase1.parquet` not `stratified_calibration.parquet`
+
+`stratified_calibration.parquet` (and `stratified_holdout.parquet`) were produced by the deprecated [docs/_archive/build_stratified_eval_set.py](docs/_archive/build_stratified_eval_set.py) and exhibit a preprocessing-drift signal vs the current Phase-1 pipeline: Track A AUC = 0.949 on these splits vs 0.995 on current test. Using them for fusion-threshold selection would tune to a distribution the model no longer faces. `val_phase1.parquet` is in the live preprocessing pipeline, disjoint from test, and was previously used only for isotonic XGBoost calibration — a different decision than fusion-threshold selection. `stratified_holdout.parquet` is still scored by the verification script as an informational "tougher distribution" check (not a gate).
+
+### 5b.4 Calibration result (current)
+
+- Picked `a_high = 0.41` (smallest value above `a_low = 0.40 + step`).
+- Tuning (val) metrics: sens = 0.9414, spec = 0.9566, F2 = 0.8975.
+- Test metrics after applying picked threshold: sens = 0.9511, spec = 0.9542, F2 = 0.9023.
+- val→test delta: Δsens = +0.97pp, Δspec = −0.24pp (well within ±5pp gate).
+- Headline target gate (`tests/acceptance_tests.py::test_rq1_targets_met`): all four targets PASS.
+
+### 5b.5 Tests
+
+- [tests/test_fusion_threshold_loading.py](tests/test_fusion_threshold_loading.py) — JSON schema, loader contract, fallback behaviour, classify_fusion wiring, end-to-end gate on test split.
+- [tests/test_two_stage_fusion.py](tests/test_two_stage_fusion.py) and [tests/test_safe_failure.py](tests/test_safe_failure.py) fusion tests updated to pin explicit thresholds — they validate the function contract independently of the calibrated runtime defaults.
+
+---
+
 ## 6. Phase 4 — Supporting analyses (independent, parallel-safe)
 
-### 6.1 Stage 5B — Weight sensitivity (SPEC PENDING)
+### 6.1 Stage 5B — Weight sensitivity (SPEC PENDING, `a_high` half RESOLVED in §5b)
 
-**Status:** design not finalized. Open questions for the developer before implementation:
+**Resolved:** the `a_high` half of this stage was completed in [Phase 3.5](#5b-phase-35--fusion-threshold-calibration-a_high) and persisted to `results/models/_fusion_thresholds.json`. Calibrated value: `a_high = 0.41` on val_phase1.
+
+**Still pending:** joint sensitivity over `(a_low, b)` plus full risk-weight perturbation. Open questions for the developer before implementation:
 
 - Perturbation protocol: one-at-a-time vs joint sampling vs Dirichlet?
 - Number of perturbations per condition?
 - Agreement metric: exact tier match, Cohen's κ, both?
 - Multiplicative R: implement as a separate condition or skip?
 
-**Until specified, this stage is deferred.** `compute_rq1_metrics.py` already emits a `pending` placeholder; that's sufficient for the JSON to be valid.
+**Until specified, the broader sensitivity analysis is deferred.** `compute_rq1_metrics.py` already emits a `pending` placeholder under `weight_sensitivity`; that's sufficient for the JSON to be valid.
 
 When ready to implement, create `analysis/compute_weight_sensitivity.py` writing to `results/rq1_weight_sensitivity.json`. The merge script (Stage 5E) folds it in.
 

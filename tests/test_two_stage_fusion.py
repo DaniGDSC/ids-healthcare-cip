@@ -87,8 +87,9 @@ def test_back_compat_with_old_kwargs() -> None:
     arr = classify_fusion(
         c_track_a=np.array([0.95]),
         c_track_b=np.array([0.0]),
+        a_high=0.85,           # pin a_high to spec default for stability
         xgb_threshold=0.05,    # back-compat alias for a_low
         dae_threshold=0.5,     # back-compat alias for b
     )
-    # 0.95 >= a_high (default 0.85) → KNOWN_ATTACK
+    # 0.95 >= a_high (0.85) → KNOWN_ATTACK
     assert arr[0] == FusionClass.KNOWN_ATTACK.value

@@ -1,0 +1,2542 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-19T02:25:47.653348+00:00",
+    "generated_by": "module6_evaluation/compute_rq2_metrics.py",
+    "research_question": "RQ2 \u2014 Can MVE provide role-tailored security explanations enabling non-specialist hospital stakeholders to make informed threat triage decisions?",
+    "active_subquestions": [
+      "RQ2.a",
+      "RQ2.b",
+      "RQ2.c",
+      "RQ2.e"
+    ],
+    "rescoped_subquestions": [
+      "RQ2.d (moved to thesis \u00a77.2.3)"
+    ],
+    "blocks_present": [
+      "faithfulness",
+      "mitre_grounding",
+      "compliance",
+      "user_study",
+      "failure_catalog"
+    ],
+    "blocks_pending": [],
+    "rename_note": "Old compute_rq2_metrics.py archived at results/_pre_m6_drift_fix_20260508_090749/compute_detection_metrics.py; old detection-metrics JSON preserved at results/detection_metrics.json."
+  },
+  "headline": {
+    "_description": "Highest-level pass/fail per sub-RQ. Read this first.",
+    "rq2_a_compliance": "complete",
+    "rq2_b_faithfulness": "complete",
+    "rq2_c_user_study": "complete",
+    "rq2_e_mitre_grounding": "complete",
+    "rq2_d_failure_catalog": "complete",
+    "_overall_status": "complete"
+  },
+  "faithfulness": {
+    "_status": "complete",
+    "_merged_at": "2026-05-19T02:25:47.646026+00:00",
+    "_subfile_paths": [
+      "results/rq2_shap_stability.json",
+      "results/rq2_mve_shap_alignment.json"
+    ],
+    "shap_stability": {
+      "provenance": {
+        "generated_at": "2026-05-16T10:15:15Z",
+        "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+        "random_seed": 42,
+        "schema_version": "1.0",
+        "code_version": "thesis-v1.0",
+        "python_version": "3.10.20",
+        "input_files": {
+          "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+          "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+          "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+          "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+          "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+          "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+          "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+        }
+      },
+      "results": {
+        "per_alert": [
+          {
+            "alert_id": "EVAL-0059",
+            "fusion_class": "BENIGN",
+            "stability_score": 0.5,
+            "is_stable": false,
+            "top3_features": [
+              "Pulse_Rate",
+              "Sport",
+              "Flgs"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0301",
+            "fusion_class": "BENIGN",
+            "stability_score": 0.5,
+            "is_stable": false,
+            "top3_features": [
+              "Flgs",
+              "Resp_Rate",
+              "SrcLoad"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0325",
+            "fusion_class": "BENIGN",
+            "stability_score": 0.8,
+            "is_stable": false,
+            "top3_features": [
+              "Flgs",
+              "DIntPkt",
+              "Temp"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0570",
+            "fusion_class": "BENIGN",
+            "stability_score": 0.32,
+            "is_stable": false,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "Sport"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0869",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "DIntPkt",
+              "Temp",
+              "Flgs"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0462",
+            "fusion_class": "BENIGN",
+            "stability_score": 0.85,
+            "is_stable": false,
+            "top3_features": [
+              "DIntPkt",
+              "Flgs",
+              "SIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0464",
+            "fusion_class": "BENIGN",
+            "stability_score": 0.56,
+            "is_stable": false,
+            "top3_features": [
+              "Flgs",
+              "Sport",
+              "DIA"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          },
+          {
+            "alert_id": "EVAL-0976",
+            "fusion_class": "BENIGN",
+            "stability_score": 1.0,
+            "is_stable": true,
+            "top3_features": [
+              "Flgs",
+              "Temp",
+              "DIntPkt"
+            ],
+            "shap_source": "xgboost"
+          }
+        ],
+        "aggregate": {
+          "n_alerts": 18,
+          "mean_stability": 0.8628,
+          "median_stability": 1.0,
+          "pct_stable": 0.6667,
+          "by_fusion_class": {
+            "BENIGN": {
+              "mean": 0.8628,
+              "median": 1.0,
+              "n": 18,
+              "pct_stable": 0.6667
+            }
+          },
+          "histogram_counts": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            0,
+            0,
+            2,
+            12
+          ],
+          "histogram_edges": [
+            0.0,
+            0.1,
+            0.2,
+            0.30000000000000004,
+            0.4,
+            0.5,
+            0.6000000000000001,
+            0.7000000000000001,
+            0.8,
+            0.9,
+            1.0
+          ]
+        },
+        "computation_params": {
+          "n_perturbations": 10,
+          "noise_method": "U(0.99, 1.01) multiplicative on all features",
+          "noise_sigma_label": 0.01,
+          "stability_threshold": 0.9
+        },
+        "computation_sampled": false,
+        "sample_size": null,
+        "input_source": "results/reports/evaluation_alerts.json (surfaced subset)"
+      }
+    },
+    "mve_shap_alignment": {
+      "provenance": {
+        "generated_at": "2026-05-16T10:14:56Z",
+        "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+        "random_seed": 42,
+        "schema_version": "1.0",
+        "code_version": "thesis-v1.0",
+        "python_version": "3.10.20",
+        "input_files": {
+          "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+          "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+          "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+          "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+          "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+          "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+          "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+        }
+      },
+      "results": {
+        "by_fusion_class": {
+          "BENIGN": {
+            "n_alerts": 16,
+            "all_3_present": 0.0,
+            "two_plus_present": 0.0,
+            "any_present": 1.0,
+            "mitre_referenced": 0.0,
+            "shap_source_xgb_low_conf": 0
+          }
+        },
+        "aggregate_with_caveats": {
+          "n_alerts_total": 16,
+          "overall_all_3": 0.0,
+          "note": "Overall metric averages across fusion classes including those where SHAP is acknowledged as not faithful (NOVEL_ANOMALY); see by_fusion_class for stratified reporting."
+        },
+        "input_source": "results/reports/evaluation_alerts.json",
+        "feature_categories_source": "configs/feature_categories.yaml"
+      }
+    }
+  },
+  "mitre_grounding": {
+    "_status": "complete",
+    "_merged_at": "2026-05-19T02:25:47.646560+00:00",
+    "_subfile_paths": [
+      "results/rq2_mitre_audit.json",
+      "results/rq2_mitre_grounding.json"
+    ],
+    "config_audit": {
+      "_meta": {
+        "schema_version": "1.0",
+        "generated_at": "2026-05-18T18:26:45.414054+00:00",
+        "generated_by": "analysis/audit_mitre_config.py",
+        "inputs": {
+          "yaml_path": "configs/attack_to_mitre_mapping.yaml",
+          "yaml_sha256": "f7d96e1b831e208e23d188c0894f81e641837f6eb5877539e5980e36c17b6adb",
+          "risk_scores_npz": "results/reports/risk_scores.npz",
+          "risk_scores_sha256": "0e4b346e1a15ab8b168907f9c6a2fae52fb6c4f0c03fa9880921d5504cdb0b59"
+        },
+        "config": {
+          "required_top_level_fields": [
+            "mitre_framework_version",
+            "last_validated_anywhere"
+          ],
+          "tid_regex": "^T\\d{4}(\\.\\d{3})?$",
+          "valid_confidence_levels": [
+            "HIGH",
+            "LOW",
+            "MEDIUM"
+          ],
+          "benign_sentinel": "normal",
+          "phase0_pattern": "D \u2014 mappings is a list of entry dicts"
+        }
+      },
+      "headline": {
+        "audit_pass": true,
+        "n_fail": 0,
+        "n_warn": 0,
+        "n_info": 1,
+        "mitre_framework_version": "v14.1",
+        "last_validated_top_level": null,
+        "last_validated_per_entry_count": 7,
+        "n_categories_mapped": 6,
+        "n_categories_in_data": 2,
+        "orphan_categories": [],
+        "unused_mappings": [
+          "Exfiltration",
+          "Initial Access",
+          "Lateral Movement",
+          "Reconnaissance"
+        ],
+        "benign_sentinel_mapped_empty": true
+      },
+      "findings": [
+        {
+          "check_id": "A1",
+          "severity": "PASS",
+          "description": "YAML parsed successfully",
+          "details": null
+        },
+        {
+          "check_id": "A2",
+          "severity": "PASS",
+          "description": "mitre_framework_version present and non-empty",
+          "details": {
+            "value": "v14.1"
+          }
+        },
+        {
+          "check_id": "A3",
+          "severity": "PASS",
+          "description": "last_validated present (top-level or per-entry)",
+          "details": {
+            "top_level": null,
+            "per_entry_count": 7,
+            "per_entry_keys": [
+              "Data Alteration",
+              "Exfiltration",
+              "Initial Access",
+              "Lateral Movement",
+              "Reconnaissance",
+              "Spoofing",
+              "normal"
+            ]
+          }
+        },
+        {
+          "check_id": "A4",
+          "severity": "PASS",
+          "description": "Every in-data attack_category has a mapping",
+          "details": {
+            "orphans": [],
+            "categories_in_data": [
+              "Data Alteration",
+              "Spoofing"
+            ],
+            "categories_in_yaml": [
+              "Data Alteration",
+              "Exfiltration",
+              "Initial Access",
+              "Lateral Movement",
+              "Reconnaissance",
+              "Spoofing"
+            ]
+          }
+        },
+        {
+          "check_id": "A9",
+          "severity": "INFO",
+          "description": "Mappings exist but no test-split data uses them",
+          "details": {
+            "unused_mappings": [
+              "Exfiltration",
+              "Initial Access",
+              "Lateral Movement",
+              "Reconnaissance"
+            ]
+          }
+        }
+      ],
+      "mappings_summary": {
+        "Data Alteration": {
+          "n_techniques": 3,
+          "technique_ids": [
+            "T1565",
+            "T1565.001",
+            "T1565.002"
+          ],
+          "technique_names": [
+            "Data Manipulation",
+            "Stored Data Manipulation",
+            "Transmitted Data Manipulation"
+          ],
+          "confidence_set": [
+            "HIGH",
+            "MEDIUM"
+          ],
+          "confidence_counts": {
+            "HIGH": 1,
+            "MEDIUM": 2
+          },
+          "last_validated": "2026-05-08",
+          "is_benign_sentinel": false
+        },
+        "Spoofing": {
+          "n_techniques": 2,
+          "technique_ids": [
+            "T1556",
+            "T1557"
+          ],
+          "technique_names": [
+            "Modify Authentication Process",
+            "Adversary-in-the-Middle"
+          ],
+          "confidence_set": [
+            "MEDIUM"
+          ],
+          "confidence_counts": {
+            "MEDIUM": 2
+          },
+          "last_validated": "2026-05-08",
+          "is_benign_sentinel": false
+        },
+        "Reconnaissance": {
+          "n_techniques": 2,
+          "technique_ids": [
+            "T1595",
+            "T1592"
+          ],
+          "technique_names": [
+            "Active Scanning",
+            "Gather Victim Host Information"
+          ],
+          "confidence_set": [
+            "HIGH",
+            "MEDIUM"
+          ],
+          "confidence_counts": {
+            "HIGH": 1,
+            "MEDIUM": 1
+          },
+          "last_validated": "2026-05-08",
+          "is_benign_sentinel": false
+        },
+        "Initial Access": {
+          "n_techniques": 2,
+          "technique_ids": [
+            "T1190",
+            "T1078"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application",
+            "Valid Accounts"
+          ],
+          "confidence_set": [
+            "LOW",
+            "MEDIUM"
+          ],
+          "confidence_counts": {
+            "MEDIUM": 1,
+            "LOW": 1
+          },
+          "last_validated": "2026-05-08",
+          "is_benign_sentinel": false
+        },
+        "Exfiltration": {
+          "n_techniques": 2,
+          "technique_ids": [
+            "T1041",
+            "T1567"
+          ],
+          "technique_names": [
+            "Exfiltration Over C2 Channel",
+            "Exfiltration Over Web Service"
+          ],
+          "confidence_set": [
+            "HIGH",
+            "MEDIUM"
+          ],
+          "confidence_counts": {
+            "HIGH": 1,
+            "MEDIUM": 1
+          },
+          "last_validated": "2026-05-08",
+          "is_benign_sentinel": false
+        },
+        "Lateral Movement": {
+          "n_techniques": 2,
+          "technique_ids": [
+            "T1021",
+            "T1570"
+          ],
+          "technique_names": [
+            "Remote Services",
+            "Lateral Tool Transfer"
+          ],
+          "confidence_set": [
+            "HIGH",
+            "MEDIUM"
+          ],
+          "confidence_counts": {
+            "HIGH": 1,
+            "MEDIUM": 1
+          },
+          "last_validated": "2026-05-08",
+          "is_benign_sentinel": false
+        },
+        "normal": {
+          "n_techniques": 0,
+          "technique_ids": [],
+          "technique_names": [],
+          "confidence_set": [],
+          "last_validated": "2026-05-08",
+          "is_benign_sentinel": true
+        }
+      }
+    },
+    "layer1_grounding": {
+      "_meta": {
+        "schema_version": "1.0",
+        "generated_at": "2026-05-18T19:00:24.540141+00:00",
+        "generated_by": "analysis/compute_mitre_grounding.py",
+        "inputs": {
+          "audit_json": "results/rq2_mitre_audit.json",
+          "audit_sha256": "fa626f033387d65802fb163782e899f969f8c05ad3b8baf5d6ef52665828116d",
+          "mve_outputs": "results/reports/mve_outputs.jsonl",
+          "mve_outputs_sha256": "727febdeed1aa4ea863675d54a4ecd772885fbe25948e5106921d866d7344ffc",
+          "risk_scores_npz": "results/reports/risk_scores.npz",
+          "n_records_in_mve_jsonl": 356,
+          "n_evaluated": 275,
+          "n_surfaced": 275,
+          "n_skipped_benign_sentinel": 2141,
+          "n_skipped_no_mve_for_row": 32
+        },
+        "config": {
+          "match_rule": "case-insensitive substring; T-ID OR human name accepted",
+          "search_scope": "layer_1_why_anomalous field only",
+          "strict_appendix_metric": "T-ID AND human name both present",
+          "grounded_target": 0.9,
+          "benign_sentinel_excluded": "normal"
+        }
+      },
+      "headline": {
+        "_scope": "surfaced alerts (fusion_class != BENIGN)",
+        "n_evaluated": 275,
+        "n_grounded": 275,
+        "n_strict_grounded": 275,
+        "grounded_pct": 1.0,
+        "strict_grounded_pct": 1.0,
+        "target": 0.9,
+        "pass": true
+      },
+      "by_attack_category": {
+        "Data Alteration": {
+          "_scope": "surfaced alerts of category=Data Alteration",
+          "n_evaluated": 138,
+          "n_grounded": 138,
+          "n_strict_grounded": 138,
+          "grounded_pct": 1.0,
+          "strict_grounded_pct": 1.0,
+          "expected_tids": [
+            "t1565",
+            "t1565.001",
+            "t1565.002"
+          ],
+          "expected_names": [
+            "data manipulation",
+            "stored data manipulation",
+            "transmitted data manipulation"
+          ],
+          "_pair_validity": "paired against mapped technique for this category"
+        },
+        "Spoofing": {
+          "_scope": "surfaced alerts of category=Spoofing",
+          "n_evaluated": 137,
+          "n_grounded": 137,
+          "n_strict_grounded": 137,
+          "grounded_pct": 1.0,
+          "strict_grounded_pct": 1.0,
+          "expected_tids": [
+            "t1556",
+            "t1557"
+          ],
+          "expected_names": [
+            "adversary-in-the-middle",
+            "modify authentication process"
+          ],
+          "_pair_validity": "paired against mapped technique for this category"
+        }
+      },
+      "by_mode": {
+        "B_rule": {
+          "_scope": "surfaced alerts, mode=B_rule",
+          "n_evaluated": 275,
+          "n_grounded": 275,
+          "n_strict_grounded": 275,
+          "grounded_pct": 1.0,
+          "strict_grounded_pct": 1.0,
+          "_note": "Rule-based MVE template \u2014 MITRE term injection depends on whether src.mve_generator includes T-IDs/names in layer_1_why_anomalous strings; this number is the truth."
+        }
+      },
+      "appendix_all_mve": {
+        "_scope": "all alerts with an MVE output (excludes benign-sentinel rows)",
+        "n_evaluated": 275,
+        "n_grounded": 275,
+        "n_strict_grounded": 275,
+        "grounded_pct": 1.0,
+        "strict_grounded_pct": 1.0
+      },
+      "failure_examples": []
+    }
+  },
+  "compliance": {
+    "_status": "complete",
+    "_merged_at": "2026-05-19T02:25:47.646942+00:00",
+    "_subfile_paths": [
+      "results/rq2_word_budget_audit.json",
+      "results/rq2_compliance_audit.json"
+    ],
+    "word_budget_audit": {
+      "_meta": {
+        "schema_version": "1.0",
+        "generated_at": "2026-05-18T18:49:06.560670+00:00",
+        "generated_by": "analysis/audit_word_budgets.py",
+        "inputs": {
+          "mve_outputs": "results/reports/mve_outputs.jsonl",
+          "mve_outputs_sha256": "727febdeed1aa4ea863675d54a4ecd772885fbe25948e5106921d866d7344ffc",
+          "n_records": 356
+        },
+        "config": {
+          "binding_contract": "src/data_models.py:MVEOutput",
+          "word_count_method": "len(text.split())",
+          "layer_budgets": {
+            "layer_1": 60,
+            "layer_2": 50,
+            "layer_3": 60
+          },
+          "total_budget": 150,
+          "layer_fields": {
+            "layer_1": [
+              "baseline_behavior",
+              "deviation_description",
+              "confidence_indicator",
+              "role_authorization_check"
+            ],
+            "layer_2": [
+              "affected_system",
+              "patient_care_impact",
+              "phi_exposure",
+              "severity_label",
+              "severity_rationale"
+            ],
+            "layer_3": [
+              "immediate_action",
+              "clinical_constraint",
+              "escalation_path",
+              "timeframe"
+            ]
+          },
+          "pass_criterion": "Hard fail on any per-layer or total violation (RQ2_Compliance.md \u00a72 locked decision)",
+          "drift_note": "Spec proposes 40/50/60/30=180; codebase contract is 60/50/60=150.  Audit honours the codebase contract \u2014 see RQ2_Compliance.md plan \u00a7D1 for the drift resolution."
+        }
+      },
+      "headline": {
+        "n_records": 356,
+        "n_records_with_violations": 0,
+        "audit_pass": true,
+        "violation_rate": 0.0
+      },
+      "per_layer_stats": {
+        "layer_1": {
+          "max": 47,
+          "mean": 40.28,
+          "n_over": 0,
+          "budget": 60
+        },
+        "layer_2": {
+          "max": 41,
+          "mean": 34.08,
+          "n_over": 0,
+          "budget": 50
+        },
+        "layer_3": {
+          "max": 55,
+          "mean": 53.24,
+          "n_over": 0,
+          "budget": 60
+        }
+      },
+      "total_stats": {
+        "max": 133,
+        "mean": 127.6,
+        "n_over": 0,
+        "budget": 150
+      },
+      "by_mode": {
+        "B_rule": {
+          "n": 356,
+          "total_max": 133,
+          "total_mean": 127.6,
+          "total_over": 0
+        }
+      },
+      "violations": [],
+      "violations_total_count": 0,
+      "violations_truncated_at": 50
+    },
+    "compliance_manifest_audit": {
+      "_meta": {
+        "schema_version": "1.0",
+        "generated_at": "2026-05-18T18:51:02.792095+00:00",
+        "generated_by": "analysis/make_rq2_compliance_table.py",
+        "manifest_path": "configs/rq2_compliance_manifest.yaml",
+        "manifest_schema_version": "1.0",
+        "last_validated": "2026-05-19"
+      },
+      "requirements_total": 8,
+      "evidence_audit": [
+        {
+          "id": "REQ-FAITHFULNESS",
+          "literature_term": "Faithfulness",
+          "evidence_required_total": 2,
+          "evidence_required_present": 2,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 1,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": [
+            "analysis/compute_mve_shap_alignment.py"
+          ]
+        },
+        {
+          "id": "REQ-STABILITY",
+          "literature_term": "Stability",
+          "evidence_required_total": 2,
+          "evidence_required_present": 2,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 1,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": [
+            "analysis/compute_shap_stability.py"
+          ]
+        },
+        {
+          "id": "REQ-COMPLETENESS",
+          "literature_term": "Completeness",
+          "evidence_required_total": 3,
+          "evidence_required_present": 3,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 0,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": []
+        },
+        {
+          "id": "REQ-BREVITY",
+          "literature_term": "Brevity",
+          "evidence_required_total": 4,
+          "evidence_required_present": 4,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 0,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": []
+        },
+        {
+          "id": "REQ-AUDIENCE_APPROPRIATENESS",
+          "literature_term": "Audience appropriateness",
+          "evidence_required_total": 4,
+          "evidence_required_present": 4,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 0,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": []
+        },
+        {
+          "id": "REQ-PROVENANCE",
+          "literature_term": "Provenance",
+          "evidence_required_total": 4,
+          "evidence_required_present": 4,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 1,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": [
+            "logs/llm_audit.jsonl"
+          ]
+        },
+        {
+          "id": "REQ-FALLBACK",
+          "literature_term": "Fallback / availability",
+          "evidence_required_total": 3,
+          "evidence_required_present": 3,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 0,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": []
+        },
+        {
+          "id": "REQ-PHI_CONTROL",
+          "literature_term": "Data minimization / HIPAA boundary",
+          "evidence_required_total": 3,
+          "evidence_required_present": 3,
+          "evidence_required_missing": [],
+          "evidence_pending_total": 0,
+          "evidence_pending_present": 0,
+          "evidence_pending_missing": []
+        }
+      ],
+      "all_required_evidence_present": true,
+      "any_pending_evidence_missing": true
+    },
+    "_note": "PHI flow control and cross-role consistency are pytest-only gates; see tests/test_phi_not_in_llm_prompt.py and tests/test_step13_cross_role_consistency.py."
+  },
+  "user_study": {
+    "_status": "complete",
+    "_merged_at": "2026-05-19T02:25:47.652281+00:00",
+    "_subfile_paths": [
+      "survey/study_data_audit.json",
+      "survey/rq2c_exclusions.json",
+      "analysis/outputs/rq2c_per_role.json",
+      "survey/qualitative_themes.yaml"
+    ],
+    "data_source": "LLM-persona simulation (gpt-4o-mini); not human study",
+    "data_audit": {
+      "_meta": {
+        "generated_at": "2026-05-18T19:10:22.402136+00:00",
+        "generated_by": "analysis/audit_study_data.py",
+        "data_source": "LLM-persona simulation (gpt-4o-mini); not human study",
+        "n_participant_files": 100,
+        "n_excluded": 0,
+        "exclusion_rules": {
+          "EX-3": "Schema validation failed OR zero successful rows",
+          "EX-1_attention_check": "N/A \u2014 LLM personas have no attention check",
+          "EX-2_duration_outlier": "N/A \u2014 LLM personas have no response timing"
+        }
+      },
+      "summary": {
+        "n_total": 100,
+        "n_included": 100,
+        "n_excluded": 0,
+        "exclusion_rate": 0.0,
+        "by_role": {
+          "IT_generalist": 50,
+          "biomed_engineer": 30,
+          "nurse_manager": 20
+        },
+        "by_condition": {
+          "A": 50,
+          "B": 50
+        },
+        "by_role_x_condition": {
+          "IT_generalist|A": 25,
+          "IT_generalist|B": 25,
+          "biomed_engineer|A": 15,
+          "biomed_engineer|B": 15,
+          "nurse_manager|A": 10,
+          "nurse_manager|B": 10
+        }
+      },
+      "audit_records": [
+        {
+          "file": "study_responses_LLM_IT_generalist_P01.json",
+          "persona_id": "IT_generalist_P01",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P02.json",
+          "persona_id": "IT_generalist_P02",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P03.json",
+          "persona_id": "IT_generalist_P03",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P04.json",
+          "persona_id": "IT_generalist_P04",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P05.json",
+          "persona_id": "IT_generalist_P05",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P06.json",
+          "persona_id": "IT_generalist_P06",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P07.json",
+          "persona_id": "IT_generalist_P07",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P08.json",
+          "persona_id": "IT_generalist_P08",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P09.json",
+          "persona_id": "IT_generalist_P09",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P10.json",
+          "persona_id": "IT_generalist_P10",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P11.json",
+          "persona_id": "IT_generalist_P11",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P12.json",
+          "persona_id": "IT_generalist_P12",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P13.json",
+          "persona_id": "IT_generalist_P13",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P14.json",
+          "persona_id": "IT_generalist_P14",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P15.json",
+          "persona_id": "IT_generalist_P15",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P16.json",
+          "persona_id": "IT_generalist_P16",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P17.json",
+          "persona_id": "IT_generalist_P17",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 19,
+          "n_error": 1,
+          "success_rate": 0.95,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P18.json",
+          "persona_id": "IT_generalist_P18",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P19.json",
+          "persona_id": "IT_generalist_P19",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 19,
+          "n_error": 1,
+          "success_rate": 0.95,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P20.json",
+          "persona_id": "IT_generalist_P20",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 13,
+          "n_error": 7,
+          "success_rate": 0.65,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P21.json",
+          "persona_id": "IT_generalist_P21",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 14,
+          "n_error": 6,
+          "success_rate": 0.7,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P22.json",
+          "persona_id": "IT_generalist_P22",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P23.json",
+          "persona_id": "IT_generalist_P23",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P24.json",
+          "persona_id": "IT_generalist_P24",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P25.json",
+          "persona_id": "IT_generalist_P25",
+          "role": "IT_generalist",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P26.json",
+          "persona_id": "IT_generalist_P26",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P27.json",
+          "persona_id": "IT_generalist_P27",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 13,
+          "n_error": 7,
+          "success_rate": 0.65,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P28.json",
+          "persona_id": "IT_generalist_P28",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P29.json",
+          "persona_id": "IT_generalist_P29",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 13,
+          "n_error": 7,
+          "success_rate": 0.65,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P30.json",
+          "persona_id": "IT_generalist_P30",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P31.json",
+          "persona_id": "IT_generalist_P31",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P32.json",
+          "persona_id": "IT_generalist_P32",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P33.json",
+          "persona_id": "IT_generalist_P33",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P34.json",
+          "persona_id": "IT_generalist_P34",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P35.json",
+          "persona_id": "IT_generalist_P35",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P36.json",
+          "persona_id": "IT_generalist_P36",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P37.json",
+          "persona_id": "IT_generalist_P37",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P38.json",
+          "persona_id": "IT_generalist_P38",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P39.json",
+          "persona_id": "IT_generalist_P39",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P40.json",
+          "persona_id": "IT_generalist_P40",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P41.json",
+          "persona_id": "IT_generalist_P41",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P42.json",
+          "persona_id": "IT_generalist_P42",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P43.json",
+          "persona_id": "IT_generalist_P43",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P44.json",
+          "persona_id": "IT_generalist_P44",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P45.json",
+          "persona_id": "IT_generalist_P45",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P46.json",
+          "persona_id": "IT_generalist_P46",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 12,
+          "n_error": 8,
+          "success_rate": 0.6,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P47.json",
+          "persona_id": "IT_generalist_P47",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P48.json",
+          "persona_id": "IT_generalist_P48",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P49.json",
+          "persona_id": "IT_generalist_P49",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 13,
+          "n_error": 7,
+          "success_rate": 0.65,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_IT_generalist_P50.json",
+          "persona_id": "IT_generalist_P50",
+          "role": "IT_generalist",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P01.json",
+          "persona_id": "biomed_engineer_P01",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 14,
+          "n_error": 6,
+          "success_rate": 0.7,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P02.json",
+          "persona_id": "biomed_engineer_P02",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P03.json",
+          "persona_id": "biomed_engineer_P03",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P04.json",
+          "persona_id": "biomed_engineer_P04",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P05.json",
+          "persona_id": "biomed_engineer_P05",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P06.json",
+          "persona_id": "biomed_engineer_P06",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P07.json",
+          "persona_id": "biomed_engineer_P07",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P08.json",
+          "persona_id": "biomed_engineer_P08",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P09.json",
+          "persona_id": "biomed_engineer_P09",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P10.json",
+          "persona_id": "biomed_engineer_P10",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P11.json",
+          "persona_id": "biomed_engineer_P11",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P12.json",
+          "persona_id": "biomed_engineer_P12",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P13.json",
+          "persona_id": "biomed_engineer_P13",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P14.json",
+          "persona_id": "biomed_engineer_P14",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P15.json",
+          "persona_id": "biomed_engineer_P15",
+          "role": "biomed_engineer",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P16.json",
+          "persona_id": "biomed_engineer_P16",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P17.json",
+          "persona_id": "biomed_engineer_P17",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P18.json",
+          "persona_id": "biomed_engineer_P18",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P19.json",
+          "persona_id": "biomed_engineer_P19",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P20.json",
+          "persona_id": "biomed_engineer_P20",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P21.json",
+          "persona_id": "biomed_engineer_P21",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P22.json",
+          "persona_id": "biomed_engineer_P22",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P23.json",
+          "persona_id": "biomed_engineer_P23",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 20,
+          "n_error": 0,
+          "success_rate": 1.0,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P24.json",
+          "persona_id": "biomed_engineer_P24",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P25.json",
+          "persona_id": "biomed_engineer_P25",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 19,
+          "n_error": 1,
+          "success_rate": 0.95,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P26.json",
+          "persona_id": "biomed_engineer_P26",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P27.json",
+          "persona_id": "biomed_engineer_P27",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 14,
+          "n_error": 6,
+          "success_rate": 0.7,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P28.json",
+          "persona_id": "biomed_engineer_P28",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P29.json",
+          "persona_id": "biomed_engineer_P29",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_biomed_engineer_P30.json",
+          "persona_id": "biomed_engineer_P30",
+          "role": "biomed_engineer",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 13,
+          "n_error": 7,
+          "success_rate": 0.65,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P01.json",
+          "persona_id": "nurse_manager_P01",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P02.json",
+          "persona_id": "nurse_manager_P02",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P03.json",
+          "persona_id": "nurse_manager_P03",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P04.json",
+          "persona_id": "nurse_manager_P04",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P05.json",
+          "persona_id": "nurse_manager_P05",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P06.json",
+          "persona_id": "nurse_manager_P06",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P07.json",
+          "persona_id": "nurse_manager_P07",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P08.json",
+          "persona_id": "nurse_manager_P08",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P09.json",
+          "persona_id": "nurse_manager_P09",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P10.json",
+          "persona_id": "nurse_manager_P10",
+          "role": "nurse_manager",
+          "condition": "A",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P11.json",
+          "persona_id": "nurse_manager_P11",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 18,
+          "n_error": 2,
+          "success_rate": 0.9,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P12.json",
+          "persona_id": "nurse_manager_P12",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P13.json",
+          "persona_id": "nurse_manager_P13",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 15,
+          "n_error": 5,
+          "success_rate": 0.75,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P14.json",
+          "persona_id": "nurse_manager_P14",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 16,
+          "n_error": 4,
+          "success_rate": 0.8,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P15.json",
+          "persona_id": "nurse_manager_P15",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P16.json",
+          "persona_id": "nurse_manager_P16",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P17.json",
+          "persona_id": "nurse_manager_P17",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 13,
+          "n_error": 7,
+          "success_rate": 0.65,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P18.json",
+          "persona_id": "nurse_manager_P18",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 14,
+          "n_error": 6,
+          "success_rate": 0.7,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P19.json",
+          "persona_id": "nurse_manager_P19",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 13,
+          "n_error": 7,
+          "success_rate": 0.65,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        },
+        {
+          "file": "study_responses_LLM_nurse_manager_P20.json",
+          "persona_id": "nurse_manager_P20",
+          "role": "nurse_manager",
+          "condition": "B",
+          "n_rows": 20,
+          "n_success": 17,
+          "n_error": 3,
+          "success_rate": 0.85,
+          "schema_errors": [],
+          "excluded": false,
+          "exclusion_reasons": []
+        }
+      ]
+    },
+    "exclusions": {
+      "_meta": {
+        "generated_at": "2026-05-18T19:10:22.402136+00:00",
+        "generated_by": "analysis/audit_study_data.py",
+        "data_source": "LLM-persona simulation (gpt-4o-mini); not human study",
+        "n_participant_files": 100,
+        "n_excluded": 0,
+        "exclusion_rules": {
+          "EX-3": "Schema validation failed OR zero successful rows",
+          "EX-1_attention_check": "N/A \u2014 LLM personas have no attention check",
+          "EX-2_duration_outlier": "N/A \u2014 LLM personas have no response timing"
+        }
+      },
+      "exclusions": []
+    },
+    "per_role_analysis": {
+      "_meta": {
+        "schema_version": "1.0",
+        "generated_at": "2026-05-18T19:10:29.078848+00:00",
+        "generated_by": "analysis/compute_rq2c_per_role.py",
+        "inputs": {
+          "n_participant_files": 100,
+          "n_included": 100,
+          "exclusion_audit": "survey/rq2c_exclusions.json"
+        }
+      },
+      "methodology_notes": [
+        "Data source: LLM-persona simulation (gpt-4o-mini, 100 personas \u00d7 20 alerts). Not a human study; complements but does not replace human user study results.",
+        "Aggregation: one composite value per persona (mean accuracy, mean confidence over successful rows); Mann-Whitney U on persona-level values to satisfy independence.",
+        "Raw p-values reported; NO multiple-comparisons correction applied across the 6 role \u00d7 metric cells.",
+        "Mann-Whitney U is two-sided.",
+        "Cliff's delta thresholds: negligible<0.147, small<0.33, medium<0.474, else large.",
+        "Cells with n<10 per group flagged with n_warning=true.",
+        "Accuracy uses pre-recorded correct_action per AlertScenario (strict match). reasonable_alternatives field exists on AlertScenario but is currently empty.",
+        "Exclusion criteria: EX-3 schema invalid OR zero successful rows. EX-1 (attention check) and EX-2 (duration) do not apply to LLM personas."
+      ],
+      "limitations": [
+        "Multiple comparisons across 6 role \u00d7 metric cells inflates Type I error rate. With \u03b1=0.05 and no correction, ~0.30 false positives expected under the null. Findings are exploratory.",
+        "Participants are LLM personas, not humans. Behavioral fidelity to real clinicians/IT staff is not established. Generalization to human operators requires the parallel human user study.",
+        "Decision-time metric absent in LLM responses; the 9-cell \u00d7 3-metric table in the spec collapses to a 6-cell \u00d7 2-metric table here.",
+        "Self-selected role assignment is N/A for LLM personas; role is set at persona-generation time. Cell-size imbalance reflects the persona-generation budget, not recruitment bias.",
+        "Some persona \u00d7 alert calls failed with OpenAI 429 rate-limit errors; statistical analysis operates on successful rows only. Failures treated as MCAR per the rate-limit error class."
+      ],
+      "overall": {
+        "_scope": "All included personas",
+        "n_A": 50,
+        "n_B": 50,
+        "accuracy": {
+          "n_A": 50,
+          "n_B": 50,
+          "median_A": 0.05,
+          "median_B": 0.25721153846153844,
+          "mean_A": 0.04663677576293676,
+          "mean_B": 0.3081857925356377,
+          "n_warning": false,
+          "mannwhitney_u": 440.5,
+          "p_value": 1.227248752408273e-08,
+          "cliffs_delta": -0.6476,
+          "magnitude": "large",
+          "direction": "B higher than A"
+        },
+        "confidence": {
+          "n_A": 50,
+          "n_B": 50,
+          "median_A": 3.7,
+          "median_B": 2.0,
+          "mean_A": 3.7817513334618598,
+          "mean_B": 2.0,
+          "n_warning": false,
+          "mannwhitney_u": 2500.0,
+          "p_value": 2.569617385518521e-20,
+          "cliffs_delta": 1.0,
+          "magnitude": "large",
+          "direction": "A higher than B"
+        }
+      },
+      "per_role": {
+        "biomed_engineer": {
+          "n_A": 15,
+          "n_B": 15,
+          "n_warning": false,
+          "accuracy": {
+            "n_A": 15,
+            "n_B": 15,
+            "median_A": 0.05,
+            "median_B": 0.05,
+            "mean_A": 0.03666666666666667,
+            "mean_B": 0.05095586187691451,
+            "n_warning": false,
+            "mannwhitney_u": 57.0,
+            "p_value": 0.008075758397655647,
+            "cliffs_delta": -0.4933,
+            "magnitude": "large",
+            "direction": "B higher than A"
+          },
+          "confidence": {
+            "n_A": 15,
+            "n_B": 15,
+            "median_A": 4.0,
+            "median_B": 2.0,
+            "mean_A": 3.9900000000000007,
+            "mean_B": 2.0,
+            "n_warning": false,
+            "mannwhitney_u": 225.0,
+            "p_value": 2.484756677263702e-07,
+            "cliffs_delta": 1.0,
+            "magnitude": "large",
+            "direction": "A higher than B"
+          }
+        },
+        "IT_generalist": {
+          "n_A": 25,
+          "n_B": 25,
+          "n_warning": false,
+          "accuracy": {
+            "n_A": 25,
+            "n_B": 25,
+            "median_A": 0.05,
+            "median_B": 0.5625,
+            "mean_A": 0.05180949923829181,
+            "mean_B": 0.562339366515837,
+            "n_warning": false,
+            "mannwhitney_u": 0.0,
+            "p_value": 8.22355173364063e-10,
+            "cliffs_delta": -1.0,
+            "magnitude": "large",
+            "direction": "B higher than A"
+          },
+          "confidence": {
+            "n_A": 25,
+            "n_B": 25,
+            "median_A": 3.7,
+            "median_B": 2.0,
+            "mean_A": 3.701496130976007,
+            "mean_B": 2.0,
+            "n_warning": false,
+            "mannwhitney_u": 625.0,
+            "p_value": 4.935072493540308e-11,
+            "cliffs_delta": 1.0,
+            "magnitude": "large",
+            "direction": "A higher than B"
+          }
+        },
+        "nurse_manager": {
+          "n_A": 10,
+          "n_B": 10,
+          "n_warning": false,
+          "accuracy": {
+            "n_A": 10,
+            "n_B": 10,
+            "median_A": 0.06066176470588235,
+            "median_B": 0.06066176470588235,
+            "mean_A": 0.04866013071895424,
+            "mean_B": 0.05864675357322415,
+            "n_warning": false,
+            "mannwhitney_u": 36.0,
+            "p_value": 0.3001064857793556,
+            "cliffs_delta": -0.28,
+            "magnitude": "small",
+            "direction": "B higher than A"
+          },
+          "confidence": {
+            "n_A": 10,
+            "n_B": 10,
+            "median_A": 3.677083333333333,
+            "median_B": 2.0,
+            "mean_A": 3.6700163398692807,
+            "mean_B": 2.0,
+            "n_warning": false,
+            "mannwhitney_u": 100.0,
+            "p_value": 6.294387081562151e-05,
+            "cliffs_delta": 1.0,
+            "magnitude": "large",
+            "direction": "A higher than B"
+          }
+        }
+      },
+      "cell_diagnostics": {
+        "_description": "Per-cell sample sizes across role \u00d7 condition cells",
+        "min_n_per_cell": 10,
+        "max_n_per_cell": 25,
+        "cells_with_warning": 0,
+        "warning_threshold": 10
+      }
+    },
+    "qualitative_themes_path": "survey/qualitative_themes.yaml"
+  },
+  "failure_catalog": {
+    "_status": "complete",
+    "_merged_at": "2026-05-19T02:25:47.653221+00:00",
+    "_subfile_paths": [
+      "results/rq2_failure_mode_catalog.json"
+    ],
+    "summary": {
+      "total_observations": 1,
+      "by_category": {
+        "TECHNICAL_LAYER_1": 1,
+        "MITRE_NOT_REFERENCED": 0,
+        "DO_NOT_IGNORED": 0,
+        "ROLE_VIEW_MISMATCH": 0,
+        "OTHER": 0
+      },
+      "other_bucket_diagnostic": {
+        "size": 0,
+        "size_pct": 0.0,
+        "_assessment": "Within acceptable range (<20%). Taxonomy stable."
+      }
+    },
+    "disclosure": {
+      "framing": "observation_not_improvement",
+      "iteration_performed": false,
+      "evaluation_rounds": 1,
+      "intended_use": "Failure observations are reported as evidence that the MVE evaluation framework can systematically surface problems. Per thesis Section 7.2.3, addressing these is future work.",
+      "taxonomy_predates_data": false,
+      "taxonomy_locked_on": "2026-05-19",
+      "taxonomy_source": "RQ2_failure.md spec \u00a74.1"
+    },
+    "catalog_path": "results/rq2_failure_mode_catalog.json",
+    "catalog_md_path": "results/rq2_failure_mode_catalog.md"
+  },
+  "targets": {
+    "shap_stability_mean": {
+      "value": 0.8628,
+      "target": 0.9,
+      "pass": null,
+      "n": 18,
+      "_note": "insufficient_data (n=18 < 100)"
+    },
+    "shap_stability_pass_rate": {
+      "value": 0.6667,
+      "target": 0.8,
+      "pass": null,
+      "n": 18,
+      "_note": "insufficient_data (n=18 < 100)"
+    },
+    "alignment_all_three": {
+      "value": 0.0,
+      "target": 0.8,
+      "pass": null,
+      "n": 16,
+      "_note": "insufficient_data (n=16 < 100)"
+    },
+    "alignment_at_least_two": {
+      "value": 0.0,
+      "target": 0.95,
+      "pass": null,
+      "n": 16,
+      "_note": "insufficient_data (n=16 < 100)"
+    },
+    "mitre_audit": {
+      "value": true,
+      "target": true,
+      "pass": true
+    },
+    "mitre_grounding_rate": {
+      "value": 1.0,
+      "target": 0.9,
+      "pass": true,
+      "n": 275
+    },
+    "word_budget_audit": {
+      "value": true,
+      "target": true,
+      "pass": true
+    },
+    "compliance_manifest_evidence": {
+      "value": true,
+      "target": true,
+      "pass": true
+    },
+    "failure_catalog_disclosure": {
+      "value": "observation_not_improvement",
+      "target": "observation_not_improvement",
+      "pass": true
+    }
+  }
+}

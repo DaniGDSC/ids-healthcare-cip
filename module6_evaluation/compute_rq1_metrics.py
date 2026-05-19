@@ -118,6 +118,7 @@ def build_meta(data) -> dict:
                 "R_counterfactual>=0.80, "
                 "device_criticality=='CRITICAL')"
             ),
+            "fusion_thresholds": _load_fusion_threshold_provenance(),
             "targets": {
                 "fnr_critical": FNR_CRITICAL_TARGET,
                 "sensitivity": SENSITIVITY_TARGET,
@@ -125,6 +126,40 @@ def build_meta(data) -> dict:
                 "auc_track_a": AUC_A_TARGET,
             },
         },
+    }
+
+
+def _load_fusion_threshold_provenance() -> dict:
+    """Mirror the picked thresholds + selection provenance into the metrics
+    JSON so any reader can audit *which* a_high was used and *why*.
+
+    Falls back to a status marker when ``_fusion_thresholds.json`` is absent,
+    so the metrics file stays valid even on a pre-calibration repo state.
+    """
+    path = REPO_ROOT / "results/models/_fusion_thresholds.json"
+    if not path.exists():
+        return {
+            "_status": "uncalibrated — _fusion_thresholds.json missing; "
+                       "fusion using built-in defaults from src.data_models.",
+        }
+    payload = json.loads(path.read_text())
+    picked = payload["picked"]
+    return {
+        "_source": str(path.relative_to(REPO_ROOT)),
+        "schema_version": payload.get("schema_version"),
+        "generated_at": payload.get("generated_at"),
+        "tuning_split": payload.get("tuning_split"),
+        "tuning_split_sha256": payload.get("tuning_split_sha256"),
+        "tuning_n_rows": payload.get("tuning_n_rows"),
+        "selection_rule": payload.get("selection_rule"),
+        "fixed": payload.get("fixed_thresholds"),
+        "picked": {
+            "a_high": picked["a_high"],
+            "a_low": picked["a_low"],
+            "b": picked["b"],
+        },
+        "tuning_metrics_at_picked":
+            payload.get("tuning_metrics_at_picked"),
     }
 
 
