@@ -1,0 +1,539 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-19T14:47:35.985033+00:00",
+    "generated_by": "analysis/validate_invariant_manifest.py",
+    "manifest_path": "configs/invariants_manifest.yaml"
+  },
+  "headline": {
+    "validation_pass": true,
+    "n_invariants": 9,
+    "n_checks": 58,
+    "n_fail": 0
+  },
+  "findings": [
+    {
+      "check_id": "V1",
+      "severity": "PASS",
+      "description": "Manifest parsed",
+      "details": null
+    },
+    {
+      "check_id": "V2",
+      "severity": "PASS",
+      "description": "taxonomy_locked_on / preregistered_date present",
+      "details": {
+        "value": "2026-05-19"
+      }
+    },
+    {
+      "check_id": "V3",
+      "severity": "PASS",
+      "description": "Exactly 9 invariants",
+      "details": {
+        "count": 9
+      }
+    },
+    {
+      "check_id": "V4",
+      "severity": "PASS",
+      "description": "IDs unique and complete 1-9",
+      "details": {
+        "ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      }
+    },
+    {
+      "check_id": "V5-1",
+      "severity": "PASS",
+      "description": "Inv 1 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-1",
+      "severity": "PASS",
+      "description": "Inv 1 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_step9_composite_risk.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-1",
+      "severity": "PASS",
+      "description": "Inv 1 severity valid",
+      "details": {
+        "value": "safety_critical"
+      }
+    },
+    {
+      "check_id": "V8-1",
+      "severity": "PASS",
+      "description": "Inv 1 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-1",
+      "severity": "PASS",
+      "description": "Inv 1 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-1",
+      "severity": "PASS",
+      "description": "Inv 1 serves_rqs valid",
+      "details": {
+        "value": [
+          1
+        ]
+      }
+    },
+    {
+      "check_id": "V5-2",
+      "severity": "PASS",
+      "description": "Inv 2 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-2",
+      "severity": "PASS",
+      "description": "Inv 2 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_safe_failure.py",
+          "tests/test_step10_surfacing_logic.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-2",
+      "severity": "PASS",
+      "description": "Inv 2 severity valid",
+      "details": {
+        "value": "safety_critical"
+      }
+    },
+    {
+      "check_id": "V8-2",
+      "severity": "PASS",
+      "description": "Inv 2 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-2",
+      "severity": "PASS",
+      "description": "Inv 2 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-2",
+      "severity": "PASS",
+      "description": "Inv 2 serves_rqs valid",
+      "details": {
+        "value": [
+          1,
+          3
+        ]
+      }
+    },
+    {
+      "check_id": "V5-3",
+      "severity": "PASS",
+      "description": "Inv 3 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-3",
+      "severity": "PASS",
+      "description": "Inv 3 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [],
+        "has_grep_audit": true
+      }
+    },
+    {
+      "check_id": "V7-3",
+      "severity": "PASS",
+      "description": "Inv 3 severity valid",
+      "details": {
+        "value": "safety_critical"
+      }
+    },
+    {
+      "check_id": "V8-3",
+      "severity": "PASS",
+      "description": "Inv 3 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-3",
+      "severity": "PASS",
+      "description": "Inv 3 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-3",
+      "severity": "PASS",
+      "description": "Inv 3 serves_rqs valid",
+      "details": {
+        "value": [
+          3
+        ]
+      }
+    },
+    {
+      "check_id": "V5-4",
+      "severity": "PASS",
+      "description": "Inv 4 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-4",
+      "severity": "PASS",
+      "description": "Inv 4 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_step16_audit_integrity.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-4",
+      "severity": "PASS",
+      "description": "Inv 4 severity valid",
+      "details": {
+        "value": "safety_critical"
+      }
+    },
+    {
+      "check_id": "V8-4",
+      "severity": "PASS",
+      "description": "Inv 4 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-4",
+      "severity": "PASS",
+      "description": "Inv 4 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-4",
+      "severity": "PASS",
+      "description": "Inv 4 serves_rqs valid",
+      "details": {
+        "value": [
+          3
+        ]
+      }
+    },
+    {
+      "check_id": "V5-5",
+      "severity": "PASS",
+      "description": "Inv 5 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-5",
+      "severity": "PASS",
+      "description": "Inv 5 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_step12_mve_faithfulness.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-5",
+      "severity": "PASS",
+      "description": "Inv 5 severity valid",
+      "details": {
+        "value": "quality"
+      }
+    },
+    {
+      "check_id": "V8-5",
+      "severity": "PASS",
+      "description": "Inv 5 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-5",
+      "severity": "PASS",
+      "description": "Inv 5 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-5",
+      "severity": "PASS",
+      "description": "Inv 5 serves_rqs valid",
+      "details": {
+        "value": [
+          2
+        ]
+      }
+    },
+    {
+      "check_id": "V5-6",
+      "severity": "PASS",
+      "description": "Inv 6 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-6",
+      "severity": "PASS",
+      "description": "Inv 6 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_step13_cross_role_consistency.py",
+          "tests/test_step15_role_consistency.py",
+          "tests/test_safe_failure.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-6",
+      "severity": "PASS",
+      "description": "Inv 6 severity valid",
+      "details": {
+        "value": "quality"
+      }
+    },
+    {
+      "check_id": "V8-6",
+      "severity": "PASS",
+      "description": "Inv 6 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-6",
+      "severity": "PASS",
+      "description": "Inv 6 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-6",
+      "severity": "PASS",
+      "description": "Inv 6 serves_rqs valid",
+      "details": {
+        "value": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "check_id": "V5-7",
+      "severity": "PASS",
+      "description": "Inv 7 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-7",
+      "severity": "PASS",
+      "description": "Inv 7 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_step12_mve_faithfulness.py",
+          "tests/test_step13_cross_role_consistency.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-7",
+      "severity": "PASS",
+      "description": "Inv 7 severity valid",
+      "details": {
+        "value": "quality"
+      }
+    },
+    {
+      "check_id": "V8-7",
+      "severity": "PASS",
+      "description": "Inv 7 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-7",
+      "severity": "PASS",
+      "description": "Inv 7 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-7",
+      "severity": "PASS",
+      "description": "Inv 7 serves_rqs valid",
+      "details": {
+        "value": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "check_id": "V5-8",
+      "severity": "PASS",
+      "description": "Inv 8 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-8",
+      "severity": "PASS",
+      "description": "Inv 8 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_step12_mve_faithfulness.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-8",
+      "severity": "PASS",
+      "description": "Inv 8 severity valid",
+      "details": {
+        "value": "quality"
+      }
+    },
+    {
+      "check_id": "V8-8",
+      "severity": "PASS",
+      "description": "Inv 8 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-8",
+      "severity": "PASS",
+      "description": "Inv 8 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-8",
+      "severity": "PASS",
+      "description": "Inv 8 serves_rqs valid",
+      "details": {
+        "value": [
+          2
+        ]
+      }
+    },
+    {
+      "check_id": "V5-9",
+      "severity": "PASS",
+      "description": "Inv 9 has title/text/rationale",
+      "details": {
+        "missing_fields": []
+      }
+    },
+    {
+      "check_id": "V6-9",
+      "severity": "PASS",
+      "description": "Inv 9 has at least one test_file or grep_audit",
+      "details": {
+        "test_files": [
+          "tests/test_step13_cross_role_consistency.py"
+        ],
+        "has_grep_audit": false
+      }
+    },
+    {
+      "check_id": "V7-9",
+      "severity": "PASS",
+      "description": "Inv 9 severity valid",
+      "details": {
+        "value": "quality"
+      }
+    },
+    {
+      "check_id": "V8-9",
+      "severity": "PASS",
+      "description": "Inv 9 status valid",
+      "details": {
+        "value": "enforced"
+      }
+    },
+    {
+      "check_id": "V9-9",
+      "severity": "PASS",
+      "description": "Inv 9 test files exist (enforced)",
+      "details": {
+        "missing_files": []
+      }
+    },
+    {
+      "check_id": "V10-9",
+      "severity": "PASS",
+      "description": "Inv 9 serves_rqs valid",
+      "details": {
+        "value": [
+          2,
+          3
+        ]
+      }
+    }
+  ]
+}

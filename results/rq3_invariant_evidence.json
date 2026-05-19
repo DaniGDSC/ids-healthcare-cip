@@ -1,0 +1,229 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-19T14:47:36.038416+00:00",
+    "generated_by": "analysis/compile_invariant_evidence.py",
+    "manifest_path": "configs/invariants_manifest.yaml",
+    "taxonomy_locked_on": "2026-05-19",
+    "pytest_report_path": "tests/_report.json",
+    "pytest_report_available": true
+  },
+  "headline": {
+    "all_invariants_pass": true,
+    "n_invariants_total": 9,
+    "n_enforced": 9,
+    "n_pending": 0,
+    "n_documented": 0,
+    "n_failed": 0,
+    "n_no_tests_found": 0,
+    "_overall_status": "all enforced invariants pass"
+  },
+  "invariants": [
+    {
+      "id": 1,
+      "title": "DAE only elevates detection confidence; never suppresses",
+      "severity": "safety_critical",
+      "serves_rqs": [
+        1
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_step9_composite_risk.py"
+        ],
+        "n_tests_total": 17,
+        "n_tests_passed": 17,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    },
+    {
+      "id": 2,
+      "title": "Safety floor \u2014 CRITICAL+unpatchable always surfaces",
+      "severity": "safety_critical",
+      "serves_rqs": [
+        1,
+        3
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_safe_failure.py",
+          "tests/test_step10_surfacing_logic.py"
+        ],
+        "n_tests_total": 53,
+        "n_tests_passed": 53,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    },
+    {
+      "id": 3,
+      "title": "No auto-execution \u2014 recommendation only",
+      "severity": "safety_critical",
+      "serves_rqs": [
+        3
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "grep",
+      "test_results": null,
+      "grep_results": {
+        "target_dirs": [
+          "module5_responses"
+        ],
+        "pattern_matches": [],
+        "import_matches": [],
+        "n_pattern_matches": 0,
+        "n_import_matches": 0,
+        "outcome": "pass"
+      },
+      "_overall_status": "pass"
+    },
+    {
+      "id": 4,
+      "title": "Audit trail complete",
+      "severity": "safety_critical",
+      "serves_rqs": [
+        3
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_step16_audit_integrity.py"
+        ],
+        "n_tests_total": 9,
+        "n_tests_passed": 9,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    },
+    {
+      "id": 5,
+      "title": "Layer 1 references actual SHAP top features",
+      "severity": "quality",
+      "serves_rqs": [
+        2
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_step12_mve_faithfulness.py"
+        ],
+        "n_tests_total": 6,
+        "n_tests_passed": 6,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    },
+    {
+      "id": 6,
+      "title": "Each role authorizes only role-appropriate actions",
+      "severity": "quality",
+      "serves_rqs": [
+        2,
+        3
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_step13_cross_role_consistency.py",
+          "tests/test_step15_role_consistency.py",
+          "tests/test_safe_failure.py"
+        ],
+        "n_tests_total": 68,
+        "n_tests_passed": 68,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    },
+    {
+      "id": 7,
+      "title": "DO_NOT present for CRITICAL on clinical devices",
+      "severity": "quality",
+      "serves_rqs": [
+        2,
+        3
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_step12_mve_faithfulness.py",
+          "tests/test_step13_cross_role_consistency.py"
+        ],
+        "n_tests_total": 15,
+        "n_tests_passed": 15,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    },
+    {
+      "id": 8,
+      "title": "Layer 2 severity string matches risk_tier",
+      "severity": "quality",
+      "serves_rqs": [
+        2
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_step12_mve_faithfulness.py"
+        ],
+        "n_tests_total": 6,
+        "n_tests_passed": 6,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    },
+    {
+      "id": 9,
+      "title": "Shared anchor identical across roles",
+      "severity": "quality",
+      "serves_rqs": [
+        2,
+        3
+      ],
+      "status_manifest": "enforced",
+      "verification_method": "pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_step13_cross_role_consistency.py"
+        ],
+        "n_tests_total": 9,
+        "n_tests_passed": 9,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
+      "grep_results": null,
+      "_overall_status": "pass"
+    }
+  ]
+}

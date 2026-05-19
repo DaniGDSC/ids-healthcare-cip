@@ -1,0 +1,230 @@
+# configs/invariants_manifest.yaml
+# Canonical list of 9 architectural invariants for XAI-IDS-Healthcare.
+#
+# Single source of truth: Python reads this file; markdown is rendered from
+# it; tests are tagged against it.
+#
+# DEFENSE-CRITICAL: invariant DEFINITIONS (title/text/rationale) are locked
+# at taxonomy_locked_on. Edits to verification_method, test_files, or
+# status are acceptable as implementation evolves; the semantic claim is
+# frozen.
+
+schema_version: "1.0"
+# Honest disclosure (same pattern as RQ2.d failure-mode manifest):
+# this manifest was authored during the RQ3 implementation pass, NOT
+# strictly prior to upstream evaluation data collection. Defense framing
+# relies on (a) the invariants being derived from the architecture, not
+# from data, and (b) the locked-on date being verifiable in git history.
+taxonomy_locked_on: "2026-05-19"
+taxonomy_predates_data: false
+taxonomy_source: "RQ3_INVARIANT_EVIDENCE_SPEC.md §4.1 + RQ3_expected_outputs.md §4.1"
+last_implementation_update: "2026-05-19"
+
+# Severity tier informs CI gate behaviour: safety_critical failures hard
+# fail the build; quality failures are reported but tolerated under the
+# strictness escape valve.
+severity_tiers:
+  safety_critical: [1, 2, 3, 4]
+  quality:         [5, 6, 7, 8, 9]
+
+invariants:
+  - id: 1
+    title: "DAE only elevates detection confidence; never suppresses"
+    text: |
+      Fusion uses c_detect = max(c_track_a, c_track_b). The DAE (Track B)
+      can only increase detection confidence above Track A's, never below.
+      This guarantees the supervised path's evidence is preserved.
+    rationale: |
+      Without this property, a noisy DAE could mask a real attack that
+      the supervised classifier correctly flagged.
+    serves_rqs: [1]
+    severity: safety_critical
+    enforced_by:
+      - "src/risk_scorer.py: c_detect = max(c_track_a, c_track_b)"
+      - "Module 3 batch scoring (module3_risk_scoring/module3_risk_scores.py)"
+    verification_method: pytest
+    test_files:
+      - "tests/test_step9_composite_risk.py"
+    status: enforced
+
+  - id: 2
+    title: "Safety floor — CRITICAL+unpatchable always surfaces"
+    text: |
+      For any alert where device_criticality = CRITICAL AND patchable = False,
+      should_surface = True regardless of risk score, maintenance window, or
+      threshold. Operator override cannot suppress these.
+    rationale: |
+      Life-critical devices that cannot be patched are the worst-case
+      threat surface. Even during maintenance windows or under quiet-mode
+      configuration, the operator must see these.
+    serves_rqs: [1, 3]
+    severity: safety_critical
+    enforced_by:
+      - "src/risk_scorer.py: should_surface logic"
+    verification_method: pytest
+    test_files:
+      - "tests/test_safe_failure.py"
+      - "tests/test_step10_surfacing_logic.py"
+    status: enforced
+
+  - id: 3
+    title: "No auto-execution — recommendation only"
+    text: |
+      The system must never execute mitigation actions automatically.
+      Every alert produces a recommendation; the operator's explicit
+      decision is required before any state-changing action.
+    rationale: |
+      Hospital networks contain life-critical devices. Automated quarantine
+      of a ventilator is unacceptable. The system is HITL by design.
+    serves_rqs: [3]
+    severity: safety_critical
+    enforced_by:
+      - "module5_responses/ (recommend-only pipeline)"
+      - "ResponseRecommendation.operator_decision_required = True always"
+    # Verification is grep-only. tests/negative_tests.py exists and defines
+    # test_no_automated_blocking + sibling functions, but they accept
+    # positional system-state arguments (orchestrator-style invocation via
+    # run_negative_tests), so pytest's auto-collection cannot execute them.
+    # The grep audit is the canonical structural enforcement.
+    verification_method: grep
+    grep_audit:
+      target_dirs:
+        # Phase 0 confirmed: module5_responses/ exists; pipeline/module5_response/ does not.
+        - "module5_responses/"
+      forbidden_patterns:
+        - 'subprocess'
+        - 'os\.system'
+        - 'iptables'
+        - 'netcat'
+        - '\bnc\s'
+        - 'curl'
+        - 'wget'
+        - '\bssh\b'
+        - '\bsudo\b'
+        - '\beval\('
+        - '\bexec\('
+      forbidden_imports:
+        - "^import subprocess"
+        - "^from subprocess"
+    # negative_tests.py listed for traceability only; not pytest-collected.
+    test_files: []
+    status: enforced
+
+  - id: 4
+    title: "Audit trail complete"
+    text: |
+      Every alert decision produces an audit log entry containing alert
+      context, operator context, decision capture, explanation context,
+      and tamper-evidence (SHA256 hash chain). Schema is non-negotiable.
+    rationale: |
+      Distributed responsibility requires that any operator action be
+      traceable to its full context. Hash chain makes silent tampering
+      detectable.
+    serves_rqs: [3]
+    severity: safety_critical
+    enforced_by:
+      - "src/audit_logger.py (per Step 16)"
+      - "Hash chain: SHA256 of previous_hash || entry_body"
+    verification_method: pytest
+    test_files:
+      - "tests/test_step16_audit_integrity.py"
+    status: enforced
+
+  - id: 5
+    title: "Layer 1 references actual SHAP top features"
+    text: |
+      MVE Layer 1 (WHY) must contain the top-3 SHAP features (raw names or
+      human-readable mappings) that drove the detection. No top features
+      → no faithful explanation.
+    rationale: |
+      Faithfulness requires explanations to reflect the actual model
+      decision logic, not post-hoc plausible-sounding text.
+    serves_rqs: [2]
+    severity: quality
+    enforced_by:
+      - "src/mve_generator.py: build_layer1 + Mode B fallback"
+      - "configs/llm_data_flow.yaml: SHAP fields allowed in prompts"
+    verification_method: pytest
+    test_files:
+      - "tests/test_step12_mve_faithfulness.py"
+    status: enforced
+
+  - id: 6
+    title: "Each role authorizes only role-appropriate actions"
+    text: |
+      Layer 3 immediate_action per role view must be among the actions
+      authorized for that role in configs/role_action_authorization.yaml.
+      Cross-role severity (Layer 2) is invariant across roles.
+    rationale: |
+      Distributed responsibility requires clear authorization boundaries.
+      An IT generalist must not see a "biomed-only" action and an alert
+      cannot show one role a different severity than another.
+    serves_rqs: [2, 3]
+    severity: quality
+    enforced_by:
+      - "src/mve_generator.py: derive_role_view"
+      - "configs/role_action_authorization.yaml"
+    verification_method: pytest
+    test_files:
+      - "tests/test_step13_cross_role_consistency.py"
+      - "tests/test_step15_role_consistency.py"
+      - "tests/test_safe_failure.py"
+    status: enforced
+
+  - id: 7
+    title: "DO_NOT present for CRITICAL on clinical devices"
+    text: |
+      For every alert with risk_tier=CRITICAL on a clinical device class
+      (ventilator, patient_monitor, infusion_pump), Layer 3 must include
+      a non-empty layer3_do_not clinical-safety constraint.
+    rationale: |
+      Clinical safety constraints are the floor of the recommendation.
+      "Do not disconnect ventilator" must be visible regardless of role
+      or LLM behaviour.
+    serves_rqs: [2, 3]
+    severity: quality
+    enforced_by:
+      - "src/mve_generator.py: clinical_constraint preservation"
+    verification_method: pytest
+    test_files:
+      - "tests/test_step12_mve_faithfulness.py"
+      - "tests/test_step13_cross_role_consistency.py"
+    status: enforced
+
+  - id: 8
+    title: "Layer 2 severity string matches risk_tier"
+    text: |
+      The severity adjective in Layer 2 (e.g., "critical", "high",
+      "medium", "low") must lexically match the risk_tier of the alert.
+      Layer 2 text containing "low" for a CRITICAL alert is a violation.
+    rationale: |
+      Audience-appropriate explanation must not contradict the underlying
+      severity. Layer 2 is the role-invariant severity assertion.
+    serves_rqs: [2]
+    severity: quality
+    enforced_by:
+      - "src/mve_generator.py: build_layer2"
+    verification_method: pytest
+    test_files:
+      - "tests/test_step12_mve_faithfulness.py"
+    status: enforced
+
+  - id: 9
+    title: "Shared anchor identical across roles"
+    text: |
+      For one alert rendered to multiple roles, the shared anchor
+      (alert_id, risk_tier, device_class, timestamp_iso) must be
+      byte-identical across all role views. Only Layer 1 (vocabulary)
+      and Layer 3 (action) may vary.
+    rationale: |
+      During phone-based incident handling, two operators in different
+      roles must agree on what alert they are discussing. The shared
+      anchor is the unambiguous reference key.
+    serves_rqs: [2, 3]
+    severity: quality
+    enforced_by:
+      - "src/mve_generator.py: derive_role_view preserves anchor"
+    verification_method: pytest
+    test_files:
+      - "tests/test_step13_cross_role_consistency.py"
+    status: enforced

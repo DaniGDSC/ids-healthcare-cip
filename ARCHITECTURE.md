@@ -48,6 +48,8 @@ The codebase is organized as a 7-stage flow:
    - `module6_evaluation.py` — builds evaluation artifacts; routes alerts through `_src_adapter`
    - `_src_adapter.py` — bridges `evaluation_alerts.json` records into `src.risk_scorer.score_alert()` with safe defaults (`patchable=True`, `event_context=None`)
    - `compute_rq1_metrics.py` — reads test split scores, outputs `results/rq1_metrics.json` (FNR_critical, sensitivity, specificity, confusion matrix). **Renamed from `compute_rq2_metrics.py`**: the script computes detection metrics, which belong to RQ1 in the current research-question framing.
+   - `compute_rq2_metrics.py` — **canonical RQ2 MVE aggregator** (distinct from the historical detection-metrics file of the same name; that one is now `compute_rq1_metrics.py`). Pulls every Track 1-5 sub-file (faithfulness, MITRE grounding, compliance, user study, failure catalog) into `results/rq2_metrics.json` with per-block `_status` and a flat `targets` namespace. Read-only on sub-files; no model inference.
+   - `make_rq2_figures.py` — paper-ready PDF generator for RQ2 (5 figures: SHAP stability, MVE-SHAP alignment, MITRE grounding, user study per role × condition, failure-category counts). CLI: `--only <id>`, `--list`. Outputs `results/figures/rq2_*.pdf`.
    - `curate_demo_alerts.py` — reads `demo_scores.npz`, performs stratified sampling across (risk_tier, fusion_class, attack_class), outputs `evaluation_alerts.json` (~20 alerts for user study)
    - `study_loader.py` — loads 20 `AlertScenario` objects per participant; MD5-seeded deterministic shuffle; counterbalanced A/B assignment
    - `study_analysis.py` — reads `survey/study_responses_*.json`, computes M5 via Mann-Whitney U, outputs `survey/m5_result.yaml`

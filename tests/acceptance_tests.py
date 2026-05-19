@@ -11,6 +11,7 @@ Usage:
     results = run_acceptance_tests(mve_outputs, ground_truths,
                                    baseline_results, adaptive_results)
 """
+
 from __future__ import annotations
 
 import re
@@ -21,8 +22,13 @@ from src.data_models import AlertGroundTruth, MVEOutput
 # ── Constants ────────────────────────────────────────────────────────────
 
 L1_REQUIRED = ["baseline_behavior", "deviation_description", "confidence_indicator"]
-L2_REQUIRED = ["affected_system", "patient_care_impact", "phi_exposure", "severity_label",
-               "severity_rationale"]
+L2_REQUIRED = [
+    "affected_system",
+    "patient_care_impact",
+    "phi_exposure",
+    "severity_label",
+    "severity_rationale",
+]
 L3_REQUIRED = ["immediate_action", "clinical_constraint", "escalation_path", "timeframe"]
 
 VALID_SEVERITY = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
@@ -49,6 +55,7 @@ PATIENT_IMPACT_PATTERNS = re.compile(
 
 
 # ── M1: MVE Completeness ─────────────────────────────────────────────────
+
 
 def test_mve_completeness(outputs: List[MVEOutput]) -> float:
     """Claim C7: MVE contains 3 layers with all required elements.
@@ -90,6 +97,7 @@ def test_mve_completeness(outputs: List[MVEOutput]) -> float:
 
 
 # ── M2: Clinical Relevance ───────────────────────────────────────────────
+
 
 def test_clinical_relevance(
     outputs: List[MVEOutput],
@@ -142,6 +150,7 @@ def test_clinical_relevance(
 
 # ── M3: Actionability ────────────────────────────────────────────────────
 
+
 def test_actionability(outputs: List[MVEOutput]) -> float:
     """Claim C3: Layer 3 provides specific executable action, not vague advice.
 
@@ -177,6 +186,7 @@ def test_actionability(outputs: List[MVEOutput]) -> float:
 
 # ── M4: Clinical Constraint Awareness ────────────────────────────────────
 
+
 def test_clinical_constraint_awareness(outputs: List[MVEOutput]) -> float:
     """Claim C3: Layer 3 includes 'DO NOT' statement for clinical-system alerts.
 
@@ -193,7 +203,7 @@ def test_clinical_constraint_awareness(outputs: List[MVEOutput]) -> float:
     """
     clinical_alerts = [m for m in outputs if m.alert_involves_clinical_system]
     if not clinical_alerts:
-        return 1.0   # no clinical alerts in dataset
+        return 1.0  # no clinical alerts in dataset
 
     has_constraint = 0
     for mve in clinical_alerts:
@@ -212,6 +222,7 @@ def test_clinical_constraint_awareness(outputs: List[MVEOutput]) -> float:
 
 
 # ── M8: Severity Label Accuracy ──────────────────────────────────────────
+
 
 def test_severity_label_accuracy(
     outputs: List[MVEOutput],
@@ -251,18 +262,16 @@ def test_severity_label_accuracy(
 
     exact_rate = exact / len(outputs)
     assert catastrophic == 0, (
-        f"M8 HARD FAIL: {catastrophic} CRITICAL<->LOW mismatch(es) — "
-        "catastrophic severity error"
+        f"M8 HARD FAIL: {catastrophic} CRITICAL<->LOW mismatch(es) — catastrophic severity error"
     )
-    assert exact_rate >= 0.70, (
-        f"M8 Severity accuracy {exact_rate:.1%} below minimum 70%"
-    )
+    assert exact_rate >= 0.70, f"M8 Severity accuracy {exact_rate:.1%} below minimum 70%"
     if exact_rate < 0.80:
         print(f"  WARN M8: severity accuracy {exact_rate:.1%} below target 80%")
     return exact_rate
 
 
 # ── M1b: Layer 1 Length Constraint ───────────────────────────────────────
+
 
 def test_layer1_length_constraint(outputs: List[MVEOutput]) -> float:
     """MVE spec: Layer 1 <= 60 words, total output <= 150 words.
@@ -283,9 +292,7 @@ def test_layer1_length_constraint(outputs: List[MVEOutput]) -> float:
     within_limit = 0
     violations = []
     for i, mve in enumerate(outputs):
-        l1_words = sum(
-            len(mve.layer_1.get(f, "").split()) for f in L1_REQUIRED
-        )
+        l1_words = sum(len(mve.layer_1.get(f, "").split()) for f in L1_REQUIRED)
         total = mve.total_word_count
         if l1_words <= MAX_L1_WORDS and total <= MAX_TOTAL_WORDS:
             within_limit += 1
@@ -294,8 +301,7 @@ def test_layer1_length_constraint(outputs: List[MVEOutput]) -> float:
 
     rate = within_limit / len(outputs)
     assert rate >= 0.90, (
-        f"M1b Length compliance {rate:.1%} below minimum 90% "
-        f"(violations: {violations[:3]})"
+        f"M1b Length compliance {rate:.1%} below minimum 90% (violations: {violations[:3]})"
     )
     if rate < 0.95:
         print(f"  WARN M1b: length compliance {rate:.1%} below target 95%")
@@ -303,6 +309,7 @@ def test_layer1_length_constraint(outputs: List[MVEOutput]) -> float:
 
 
 # ── M7: Risk-Adaptive Threshold Behavior ────────────────────────────────
+
 
 def test_risk_adaptive_threshold() -> bool:
     """Claim C2: Unpatchable CRITICAL devices have lower (more sensitive)
@@ -335,6 +342,7 @@ def test_risk_adaptive_threshold() -> bool:
 
     # Verify 30% reduction requirement for CRITICAL + unpatchable
     from src.risk_scorer import DEFAULT_THRESHOLD
+
     actual_reduction = (DEFAULT_THRESHOLD - crit_unpatchable) / DEFAULT_THRESHOLD
     assert actual_reduction >= 0.30, (
         f"M7 FAIL: CRITICAL+unpatchable threshold reduction is {actual_reduction:.1%} "
@@ -359,6 +367,7 @@ def _load_shap_stubs() -> dict[str, dict[str, Any]]:
     """Load tests/fixtures/shap_stubs.yaml → dict[stub_key, stub_dict]."""
     import yaml
     from pathlib import Path
+
     path = Path(__file__).resolve().parent / "fixtures" / "shap_stubs.yaml"
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f).get("stubs", {})
@@ -388,9 +397,8 @@ def test_shap_narrative_alignment(
     # re-load sample_alerts here to avoid coupling to harness internals.
     import yaml
     from pathlib import Path
-    sample_path = (
-        Path(__file__).resolve().parent / "fixtures" / "sample_alerts.yaml"
-    )
+
+    sample_path = Path(__file__).resolve().parent / "fixtures" / "sample_alerts.yaml"
     with open(sample_path, encoding="utf-8") as f:
         alerts_by_id = {a["alert_id"]: a for a in yaml.safe_load(f)["alerts"]}
 
@@ -413,9 +421,7 @@ def test_shap_narrative_alignment(
             event_context=alert.get("event_context"),
         )
 
-        layer1_text = " ".join(
-            mve.layer_1.get(f, "") for f in L1_REQUIRED
-        ).lower()
+        layer1_text = " ".join(mve.layer_1.get(f, "") for f in L1_REQUIRED).lower()
         category = str(stub.get("top_category", "")).lower()
         features = [str(f).lower() for f in stub.get("top_features", [])]
 
@@ -439,6 +445,7 @@ def test_shap_narrative_alignment(
 
 # ── M6: False Positive Rate Reduction ───────────────────────────────────
 
+
 def test_false_positive_rate(
     baseline_results: List[dict[str, Any]],
     adaptive_results: List[dict[str, Any]],
@@ -460,11 +467,9 @@ def test_false_positive_rate(
     Returns:
         FP reduction fraction [0.0, 1.0].
     """
+
     def calc_fp_rate(results: List[dict[str, Any]], gts: List[AlertGroundTruth]) -> float:
-        surfaced = [
-            (r, g) for r, g in zip(results, gts)
-            if r.get("surfaced", False)
-        ]
+        surfaced = [(r, g) for r, g in zip(results, gts) if r.get("surfaced", False)]
         if not surfaced:
             return 0.0
         fp = sum(1 for r, g in surfaced if g.true_label != "true_positive")
@@ -492,6 +497,7 @@ def test_false_positive_rate(
 
 # ── Runner ───────────────────────────────────────────────────────────────
 
+
 def run_acceptance_tests(
     mve_outputs: List[MVEOutput],
     ground_truths: List[AlertGroundTruth],
@@ -511,15 +517,15 @@ def run_acceptance_tests(
         {metric_id, metric_name, result_value, target, minimum, pass_fail, detail}
     """
     METRICS = [
-        ("M1",  "test_mve_completeness",            0.95, 0.85),
-        ("M2",  "test_clinical_relevance",           0.90, 0.75),
-        ("M3",  "test_actionability",                0.85, 0.70),
-        ("M4",  "test_clinical_constraint_awareness",0.90, 0.80),
-        ("M8",  "test_severity_label_accuracy",      0.80, 0.70),
-        ("M1b", "test_layer1_length_constraint",     0.95, 0.90),
-        ("M5",  "test_shap_narrative_alignment",     0.85, 0.75),
-        ("M7",  "test_risk_adaptive_threshold",      1.00, 1.00),
-        ("M6",  "test_false_positive_rate",          0.40, 0.20),
+        ("M1", "test_mve_completeness", 0.95, 0.85),
+        ("M2", "test_clinical_relevance", 0.90, 0.75),
+        ("M3", "test_actionability", 0.85, 0.70),
+        ("M4", "test_clinical_constraint_awareness", 0.90, 0.80),
+        ("M8", "test_severity_label_accuracy", 0.80, 0.70),
+        ("M1b", "test_layer1_length_constraint", 0.95, 0.90),
+        ("M5", "test_shap_narrative_alignment", 0.85, 0.75),
+        ("M7", "test_risk_adaptive_threshold", 1.00, 1.00),
+        ("M6", "test_false_positive_rate", 0.40, 0.20),
     ]
 
     results = []
@@ -539,18 +545,24 @@ def run_acceptance_tests(
             elif metric_id == "M1b":
                 val = float(test_layer1_length_constraint(mve_outputs))
             elif metric_id == "M5":
-                val = float(test_shap_narrative_alignment(
-                    mve_outputs, ground_truths,
-                ))
+                val = float(
+                    test_shap_narrative_alignment(
+                        mve_outputs,
+                        ground_truths,
+                    )
+                )
             elif metric_id == "M7":
                 test_risk_adaptive_threshold()
                 val = 1.0
             elif metric_id == "M6":
-                val = float(test_false_positive_rate(
-                    baseline_results, adaptive_results,
-                    # M6 uses all-alerts ground truth, not just surfaced
-                    ground_truths,
-                ))
+                val = float(
+                    test_false_positive_rate(
+                        baseline_results,
+                        adaptive_results,
+                        # M6 uses all-alerts ground truth, not just surfaced
+                        ground_truths,
+                    )
+                )
             else:
                 val = 0.0
                 detail = "unknown metric"
@@ -571,20 +583,23 @@ def run_acceptance_tests(
             pf = "FAIL"
             detail = f"ERROR: {exc}"
 
-        results.append({
-            "metric_id": metric_id,
-            "metric_name": metric_name,
-            "result_value": round(val, 4),
-            "target": target,
-            "minimum": minimum,
-            "pass_fail": pf,
-            "detail": detail,
-        })
+        results.append(
+            {
+                "metric_id": metric_id,
+                "metric_name": metric_name,
+                "result_value": round(val, 4),
+                "target": target,
+                "minimum": minimum,
+                "pass_fail": pf,
+                "detail": detail,
+            }
+        )
 
     return results
 
 
 # ── RQ1_pipeline.md §5.3 — RQ1 targets CI assertion ────────────────────
+
 
 def test_rq1_targets_met():
     """Asserts RQ1 headline metrics meet defense targets.
@@ -610,30 +625,23 @@ def test_rq1_targets_met():
     s = m["surfacing_summary"]
 
     assert h["fnr_critical_pass"], (
-        f"FNR_critical = {h['fnr_critical']:.4f} >= "
-        f"{h['fnr_critical_target']} (target)"
+        f"FNR_critical = {h['fnr_critical']:.4f} >= {h['fnr_critical_target']} (target)"
     )
-    assert h["auc_track_a_pass"], (
-        f"AUC Track A = {h['auc_track_a']:.4f} <= 0.99"
-    )
-    assert h["sensitivity_pass"], (
-        f"Sensitivity = {h['sensitivity']:.4f} <= 0.90"
-    )
-    assert h["specificity_pass"], (
-        f"Specificity = {h['specificity']:.4f} <= 0.95"
-    )
+    assert h["auc_track_a_pass"], f"AUC Track A = {h['auc_track_a']:.4f} <= 0.99"
+    assert h["sensitivity_pass"], f"Sensitivity = {h['sensitivity']:.4f} <= 0.90"
+    assert h["specificity_pass"], f"Specificity = {h['specificity']:.4f} <= 0.95"
 
     inv = s["_invariant_check"]
     assert inv["invariant_1_dae_only_elevates"]["pass"], (
         "Invariant 1 violated: DAE suppressed Track A on some rows"
     )
     assert inv["invariant_2_safety_floor_tier_proxy"]["pass"], (
-        "Invariant 2 (proxy) violated: CRITICAL+unpatchable tiered "
-        "below CRITICAL"
+        "Invariant 2 (proxy) violated: CRITICAL+unpatchable tiered below CRITICAL"
     )
 
 
 # ── RQ2_userstudy.md §8 — RQ2.c artifact gate ───────────────────────────
+
 
 def test_rq2c_pipeline_outputs_exist():
     """RQ2.c (LLM-persona user-study) pipeline must produce all required
@@ -664,6 +672,7 @@ def test_rq2c_pipeline_outputs_exist():
 
 # ── RQ2_failure.md §8 — RQ2.d failure-catalog artifact gate ─────────────
 
+
 def test_rq2d_failure_catalog_outputs_exist():
     """RQ2.d failure-mode catalog must produce all required artifacts.
 
@@ -689,6 +698,7 @@ def test_rq2d_failure_catalog_outputs_exist():
 
 # ── RQ2_Doc.md §7 — RQ2 targets + failure-catalog framing gates ─────────
 
+
 def test_rq2_targets_met():
     """Assert every actively-failed RQ2 target is met.
 
@@ -699,8 +709,7 @@ def test_rq2_targets_met():
     import json
     from pathlib import Path
 
-    metrics_path = (Path(__file__).resolve().parents[1]
-                    / "results" / "rq2_metrics.json")
+    metrics_path = Path(__file__).resolve().parents[1] / "results" / "rq2_metrics.json"
     assert metrics_path.exists(), (
         "results/rq2_metrics.json missing — run "
         "`python -m module6_evaluation.compute_rq2_metrics` first."
@@ -708,14 +717,12 @@ def test_rq2_targets_met():
     m = json.loads(metrics_path.read_text(encoding="utf-8"))
     targets = m.get("targets") or {}
     failures = [
-        {"target": tid, "value": t.get("value"),
-         "target_value": t.get("target")}
+        {"target": tid, "value": t.get("value"), "target_value": t.get("target")}
         for tid, t in targets.items()
         if t.get("pass") is False
     ]
     assert not failures, (
-        f"RQ2 targets failed: {failures}. "
-        "Inspect results/rq2_metrics.json for details."
+        f"RQ2 targets failed: {failures}. Inspect results/rq2_metrics.json for details."
     )
 
 
@@ -729,16 +736,17 @@ def test_rq2_failure_catalog_framing():
     import json
     from pathlib import Path
 
-    metrics_path = (Path(__file__).resolve().parents[1]
-                    / "results" / "rq2_metrics.json")
+    metrics_path = Path(__file__).resolve().parents[1] / "results" / "rq2_metrics.json"
     if not metrics_path.exists():
         import pytest
+
         pytest.skip("results/rq2_metrics.json missing — aggregator not run.")
 
     m = json.loads(metrics_path.read_text(encoding="utf-8"))
     catalog_block = m.get("failure_catalog") or {}
     if catalog_block.get("_status") == "pending":
         import pytest
+
         pytest.skip("failure_catalog pending — nothing to assert yet.")
 
     disclosure = catalog_block.get("disclosure") or {}
@@ -748,4 +756,78 @@ def test_rq2_failure_catalog_framing():
     )
     assert disclosure.get("iteration_performed") is False, (
         "iteration_performed must be False — no iteration was done in scope."
+    )
+
+
+# ── RQ3_INVARIANT_EVIDENCE_SPEC.md §5+§8 — invariant evidence gates ─────
+
+def test_invariant_manifest_valid():
+    """STRICT-GATE: invariant manifest must validate structurally."""
+    import json
+    import subprocess
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    out = repo / "results" / "rq3_invariant_manifest_validation.json"
+    if not out.exists():
+        subprocess.run(
+            ["python", "-m", "analysis.validate_invariant_manifest"],
+            check=True, cwd=str(repo),
+        )
+    audit = json.loads(out.read_text())
+    assert audit["headline"]["validation_pass"], (
+        f"Invariant manifest validation failed: "
+        f"{audit['headline']['n_fail']} check(s). See {out} for details."
+    )
+
+
+def test_invariant_evidence_complete():
+    """STRICT-GATE: all enforced invariants must pass their tests.
+
+    Pending and documented invariants are acceptable but reported.
+    """
+    import json
+    from pathlib import Path
+
+    import pytest
+
+    repo = Path(__file__).resolve().parents[1]
+    p = repo / "results" / "rq3_invariant_evidence.json"
+    if not p.exists():
+        pytest.skip(
+            "Run: pytest --json-report --json-report-file=tests/_report.json "
+            "&& python -m analysis.compile_invariant_evidence"
+        )
+    data = json.loads(p.read_text())
+    failures = [i for i in data["invariants"]
+                if i["_overall_status"] == "fail"]
+    assert not failures, (
+        f"{len(failures)} invariant(s) failing: "
+        f"{[(i['id'], i['title']) for i in failures]}"
+    )
+
+
+def test_no_orphan_invariants():
+    """STRICT-GATE: no safety-critical invariant may be missing test results.
+
+    `unknown` and `no_tests_found` are not acceptable for safety-critical
+    invariants — those need either a passing test or an explicit
+    `documented`/`pending` status in the manifest.
+    """
+    import json
+    from pathlib import Path
+
+    import pytest
+
+    repo = Path(__file__).resolve().parents[1]
+    p = repo / "results" / "rq3_invariant_evidence.json"
+    if not p.exists():
+        pytest.skip("Run compile_invariant_evidence first")
+    data = json.loads(p.read_text())
+    orphans = [i for i in data["invariants"]
+               if i["severity"] == "safety_critical"
+               and i["_overall_status"] in {"unknown", "no_tests_found"}]
+    assert not orphans, (
+        f"{len(orphans)} safety-critical invariant(s) with no test results: "
+        f"{[i['id'] for i in orphans]}"
     )
