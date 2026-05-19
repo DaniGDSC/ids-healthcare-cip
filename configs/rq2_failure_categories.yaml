@@ -1,0 +1,101 @@
+# configs/rq2_failure_categories.yaml
+# Taxonomy of MVE failure modes for RQ2.d (rescoped to future work).
+#
+# Honest preregistration disclosure: this taxonomy was authored in
+# RQ2_failure.md (the planning spec) and locked here on the date below.
+# Upstream Track 1-3 evaluation data was collected before this file was
+# committed. Defense framing therefore relies on the rescoping disclosure
+# (no iteration claim, observation-only) rather than on strict pre-data
+# preregistration. See _disclosure block in the generated catalog.
+
+schema_version: "1.0"
+taxonomy_locked_on: "2026-05-19"
+taxonomy_predates_data: false
+taxonomy_source: "RQ2_failure.md spec §4.1"
+rescope_note: |
+  RQ2.d (iteration on failure modes) was rescoped to future work in thesis
+  Section 7.2.3 after the decision to use a single-round evaluation. The
+  catalog produced from this manifest records observations only; no
+  iteration has been performed. Each entry's recommended_iteration field
+  describes what future work would do.
+
+categories:
+  - id: TECHNICAL_LAYER_1
+    name: "Layer 1 too technical for non-technical roles"
+    description: |
+      MVE Layer 1 (the WHY layer) uses jargon or feature names that
+      non-technical operators (nurses, biomed engineers) cannot parse.
+      Operationalised as low SHAP-feature surface rate in Layer 1
+      (all_3_present in rq2_mve_shap_alignment.json) and as qualitative
+      themes mentioning vocabulary/jargon.
+    sources:
+      - "results/rq2_mve_shap_alignment.json (by_fusion_class.*.all_3_present)"
+      - "survey/qualitative_themes.yaml (confusion_patterns mentioning vocabulary/jargon)"
+    impact_metric: "User study confidence score (RQ2.c per-role confidence)"
+    recommended_iteration: |
+      Simplify vocabulary post-Mode-A generation; map raw feature names to
+      role-appropriate phrasings (e.g., 'fwd_pkts_tot' → 'outbound data
+      volume' for nurses). Re-run alignment metric to verify SHAP features
+      still surface in simplified form. Round 2 evaluation required.
+
+  - id: MITRE_NOT_REFERENCED
+    name: "MITRE technique not referenced or not understood"
+    description: |
+      Layer 1 fails to reference the mapped MITRE technique (T-ID or human
+      name), or references it without sufficient context for the reader to
+      understand what it means.
+    sources:
+      - "results/rq2_mitre_grounding.json (failure_examples)"
+      - "survey/qualitative_themes.yaml (confusion_patterns mentioning MITRE/T-ID)"
+    impact_metric: "MITRE grounding rate (rq2_mitre_grounding.json::headline.grounded_pct)"
+    recommended_iteration: |
+      Add plain-language gloss alongside T-IDs (e.g., 'T1071 (command-and-
+      control communication)'). Strengthen Mode A prompt to require both
+      T-ID and human name. Re-run grounding metric.
+
+  - id: DO_NOT_IGNORED
+    name: "DO_NOT clinical-safety actions ignored or under-emphasized"
+    description: |
+      Layer 3 DO_NOT constraints (e.g., 'do not disconnect ventilator')
+      are present but not visually emphasized; operator overlooks them in
+      study or skips the constraint when reporting action_taken.
+    sources:
+      - "tests/test_step13_cross_role_consistency.py (Invariant 7)"
+      - "survey/qualitative_themes.yaml (themes mentioning DO_NOT skipping)"
+    impact_metric: "User study accuracy on CRITICAL+clinical-device alerts (RQ2.c per-role accuracy)"
+    recommended_iteration: |
+      Visual emphasis in UI for DO_NOT (red badge, separate block, required
+      acknowledgement before submission). UI change, not generator change.
+      Re-run study with new UI.
+
+  - id: ROLE_VIEW_MISMATCH
+    name: "Role view inappropriate for participant background"
+    description: |
+      A participant assigned a role view (per self-selection or assignment)
+      reports the explanation didn't match their actual operational mental
+      model — or two participants in different roles disagree about what
+      the alert means despite a shared anchor.
+    sources:
+      - "tests/test_step13_cross_role_consistency.py (Layer 3 differentiation)"
+      - "survey/qualitative_themes.yaml (themes mentioning role mismatch)"
+    impact_metric: "User study per-role differentiation (RQ2.c per-role accuracy gap)"
+    recommended_iteration: |
+      Better role inference at study signup (e.g., short skill survey
+      instead of self-selection). For deployment: integrate with hospital
+      identity provider to derive role from job title. Re-run study with
+      better role assignment.
+
+  - id: OTHER
+    name: "Unclassified failure observations"
+    description: |
+      Observations that do not fit the four fixed categories. The size of
+      this bucket is itself diagnostic — if it is large or growing across
+      runs, the taxonomy needs revision.
+    sources:
+      - "results/rq2_word_budget_audit.json (violations)"
+      - "results/rq2_shap_stability.json (NOVEL_ANOMALY low-stability cluster)"
+      - "any source not mapped to the four fixed categories"
+    impact_metric: "Varies by observation; documented per-entry"
+    recommended_iteration: |
+      Triage each entry. If a pattern emerges, propose a new fixed
+      category for the next iteration of the taxonomy.

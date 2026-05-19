@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "generated_at": "2026-05-18T19:10:22.402136+00:00",
+    "generated_by": "analysis/audit_study_data.py",
+    "data_source": "LLM-persona simulation (gpt-4o-mini); not human study",
+    "n_participant_files": 100,
+    "n_excluded": 0,
+    "exclusion_rules": {
+      "EX-3": "Schema validation failed OR zero successful rows",
+      "EX-1_attention_check": "N/A \u2014 LLM personas have no attention check",
+      "EX-2_duration_outlier": "N/A \u2014 LLM personas have no response timing"
+    }
+  },
+  "exclusions": []
+}

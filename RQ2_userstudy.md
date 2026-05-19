@@ -2,8 +2,40 @@
 
 **Project:** XAI-IDS-Healthcare
 **Scope:** RQ2.c — Does MVE differentiate triage support across stakeholder roles?
-**Purpose:** Single, self-contained spec for the user study analysis pipeline: schema validation, M5 Mann-Whitney per role × metric, exclusion criteria, effect sizes, manual qualitative coding, paper-ready outputs. Hand to Claude Code.
-**Status of design:** All decisions locked. Six `DO NOT GUESS` checkpoints (study_loader.py contents, AlertScenario schema, participant JSON schema, attention check mechanism, existing analysis output format, role enum values).
+**Purpose:** Single, self-contained spec for the user study analysis pipeline: schema validation, Mann-Whitney per role × metric, effect sizes, manual qualitative coding, paper-ready outputs.
+**Status of implementation:** **Path C — implemented 2026-05-19.** The corrections in §0.1 below override the original body where they conflict.
+
+---
+
+## 0.1 Path C corrections (read these first)
+
+The original spec was written assuming a **human** user study. The actual data is **LLM-persona simulation** (100 personas × 20 alerts, gpt-4o-mini, Method 1 in [survey/m5_multi_role_result.yaml](survey/m5_multi_role_result.yaml)). The pipeline below has been implemented in the Path C variant, which adapts every assumption to that reality.
+
+| Original assumption | Path C reality | Where |
+|---|---|---|
+| Participants are humans | LLM personas (gpt-4o-mini) | survey/study_responses_*.json |
+| Top-level JSON: `participant_id, role, group, responses[]` | `persona_id, n_alerts, rows[]` | the data |
+| Per-response: `action_taken, decision_time_sec, is_attention_check, attention_check_passed` | `{alert_id, condition, correct_action, response:{action, severity_assessment, confidence, rationale}, error}` | the data |
+| `decision_time_sec` exists | Absent | 9-cell × 3-metric table → 6-cell × 2-metric (accuracy, confidence) |
+| Attention-check mechanism exists | N/A for personas | EX-1 dropped |
+| Duration outlier exclusion | N/A for personas | EX-2 dropped |
+| Role enum: `IT_GENERALIST / BIOMED_ENGINEER / NURSE_MANAGER` | `biomed_engineer / IT_generalist / nurse_manager` (recovered from `persona_id` via [`_role_from_pid`](analysis/audit_study_data.py)) | filenames + code |
+| `AlertScenario.reasonable_alternatives` field | Added, defaults to empty (strict accuracy) | [study_loader.py:23](module6_evaluation/study_loader.py#L23) |
+| `study_analysis.py` produces `m5_result.yaml` overall-only | [compute_rq2.py:464-570 `compute_rq2_4()`](analysis/compute_rq2.py#L464) already does row-level per-role; spec wrapper recomputes at **persona** level for proper independence | analysis/outputs/rq2c_per_role.json |
+| `RQ2_expected_outputs.md` referenced | Does not exist; coverage map (§12) is the authoritative outputs list | this file |
+
+### Implemented artifacts (run in order)
+
+```bash
+python -m analysis.audit_study_data          # → survey/study_data_audit.json, survey/rq2c_exclusions.json
+python -m analysis.compute_rq2c_per_role     # → analysis/outputs/rq2c_per_role.json
+python -m analysis.extract_qualitative_rationales  # → survey/qualitative_rationales_for_review.json
+# then code themes by hand into survey/qualitative_themes.yaml
+pytest tests/test_study_data_schema.py tests/test_rq2c_per_role.py tests/test_qualitative_themes.py -v
+pytest tests/acceptance_tests.py::test_rq2c_pipeline_outputs_exist -v
+```
+
+Headline result (re-derivable): n_A=50, n_B=50; condition B (with MVE) Cliff's δ = −0.65 (large), p ≈ 1.2e-8 on accuracy. Per-role: IT_generalist δ=−1.0 (perfect separation, p≈8e-10), biomed_engineer δ=−0.49 (p=0.008), nurse_manager δ=−0.28 (p=0.30, n=10/10 — flagged underpowered).
 
 ---
 
@@ -32,20 +64,21 @@
 
 ---
 
-## 2. Locked design decisions
+## 2. Locked design decisions (Path C)
 
 | Decision | Resolution |
 |---|---|
-| Role assignment | Self-select at signup; role is a field in each participant's JSON |
-| Multiple comparisons | Report raw p-values, no correction; document in methodology_notes |
-| Sample size threshold | Report all cells regardless of N; flag low-N (<10) with `n_warning: true` |
-| Decision accuracy | Pre-recorded ground truth + reasonable alternatives per AlertScenario |
-| Effect size | Cliff's delta (primary); also report direction and magnitude |
-| Qualitative analysis | Manual theme coding written into YAML manifest |
-| Participant exclusion | Attention check fail OR duration outlier (<30s or >30min total) |
-| Counterbalancing | Existing MD5 seeding in `study_loader.py` — not modified |
-| Statistical test | Mann-Whitney U (two-sided), as already implemented in `study_analysis.py` |
-| Methodology transparency | Mandatory `methodology_notes` block in every output JSON listing all choices |
+| Data source | LLM-persona simulation (gpt-4o-mini); not human study. Role baked into `persona_id` at generation time |
+| Multiple comparisons | Report raw p-values, no correction; disclose in methodology_notes |
+| Sample size threshold | Report all cells; flag low-N (<10) with `n_warning: true` |
+| Aggregation | Persona-level (one composite per persona) → Mann-Whitney across personas, to preserve independence |
+| Decision accuracy | Pre-recorded `correct_action` per AlertScenario; strict match. `reasonable_alternatives` field exists (empty default) |
+| Effect size | Cliff's delta (primary); magnitude (negligible/small/medium/large) + direction reported per cell |
+| Qualitative analysis | Manual single-coder thematic analysis of LLM rationales; disclose that themes describe model behaviour |
+| Persona exclusion | EX-3 only: schema invalid OR zero successful rows. EX-1 (attention) and EX-2 (duration) not applicable to LLM personas |
+| Counterbalancing | Existing MD5 seeding in [study_loader.py](module6_evaluation/study_loader.py) — not modified |
+| Statistical test | Mann-Whitney U (two-sided) + Cliff's delta |
+| Methodology transparency | Mandatory `methodology_notes` + `limitations` blocks in `rq2c_per_role.json` |
 
 ---
 
@@ -1249,18 +1282,16 @@ In the aggregator: `out["user_study"] = _load_user_study_subfiles()`.
 
 ---
 
-## 11. Open questions to surface (DO NOT GUESS)
+## 11. Open questions — resolved during Path C implementation (2026-05-19)
 
-Claude Code must pause and ask:
-
-1. **Phase 0 — `AlertScenario` schema.** Does the class have `correct_action` and `reasonable_alternatives` fields? If not, who maintains the ground truth table?
-2. **Phase 0 — Per-participant JSON schema.** Confirm the exact top-level field names. Spec assumes `participant_id`, `role`, `group`, `responses`.
-3. **Phase 0 — Per-response record schema.** Confirm `alert_id`, `action_taken`, `decision_time_sec`, `confidence`, `rationale`, `is_attention_check`, `attention_check_passed` field names.
-4. **Phase 0 — Attention check mechanism.** Is there one? If so, how is failure flagged?
-5. **Phase 0 — Existing `study_analysis.py` output format.** Does `m5_result.yaml` have per-role breakdown? Does it report effect sizes?
-6. **Phase 0 — Role enum values.** Exact strings: `IT_GENERALIST` vs `IT Generalist` vs other.
-7. **Phase 2 — Ground truth loader path.** Where does `_load_ground_truth()` import from?
-8. **Phase 3 — Single-coder vs second coder for qualitative.** Spec assumes single coder (you). If a second coder is available, inter-rater reliability section is needed.
+1. **`AlertScenario` schema** — resolved. Has `correct_action`; `reasonable_alternatives` field added with empty default at [study_loader.py:23](module6_evaluation/study_loader.py#L23). Strict accuracy used until alternatives are populated.
+2. **Per-participant JSON schema** — resolved. Real schema is `{persona_id, n_alerts, rows[]}`, not `{participant_id, role, group, responses[]}`. Role recovered from `persona_id` suffix; group is the `condition` field on each row.
+3. **Per-response record schema** — resolved. Real shape is `{alert_id, condition, correct_action, response:{action, severity_assessment, confidence, rationale}, error}`. No `decision_time_sec`, no `is_attention_check`, no `attention_check_passed`.
+4. **Attention check mechanism** — resolved. None exists; not applicable to LLM personas.
+5. **Existing `study_analysis.py` / `m5_result.yaml`** — resolved. The current `m5_result.yaml` is now produced by [`compute_rq2_4()`](analysis/compute_rq2.py#L464) at row-level. The Path C wrapper recomputes at persona-level and writes the spec-shaped JSON to `analysis/outputs/rq2c_per_role.json`. The older row-level YAML is kept as an alias for thesis compatibility.
+6. **Role enum values** — resolved. `biomed_engineer`, `IT_generalist`, `nurse_manager`.
+7. **Ground truth loader path** — resolved. `correct_action` is recorded **per row** in each `study_responses_*.json`, so no scenario lookup is needed for accuracy scoring. [`study_loader.load_study_alerts()`](module6_evaluation/study_loader.py) reads from `results/reports/evaluation_alerts.json` if a scenario-level lookup is later required.
+8. **Single-coder qualitative** — open and accepted as a limitation. Inter-rater reliability is future work; disclosed in [qualitative_themes.yaml](survey/qualitative_themes.yaml) methodology.
 
 ---
 
@@ -1282,24 +1313,31 @@ Every numbered RQ2.c item is traceable to a phase except §3.4 (bedside nurse), 
 
 ---
 
-## 13. Defense talking points this enables
+## 13. Defense talking points (Path C — LLM-persona variant)
 
-When a defense reviewer asks RQ2.c questions, you can answer:
+- **"Who are your participants?"**
+  *"LLM personas (gpt-4o-mini, 100 personas × 20 alerts) — not human clinicians. This is Method 1 in our two-method evaluation; it complements but does not replace the human user study. The LLM-persona caveat is disclosed in both `methodology_notes` and `limitations` blocks of `analysis/outputs/rq2c_per_role.json`."*
 
 - **"How do you handle multiple comparisons?"**
-  *"We report raw p-values across all 9 cells (3 roles × 3 metrics) and explicitly disclose this in the methodology notes embedded in the output JSON. With α=0.05 and no correction, ~0.45 false positives are expected by chance. Findings are framed as exploratory. The decision to skip correction was deliberate: it lets reviewers apply their own preferred correction (Bonferroni divides by 9; Holm-Bonferroni provides sequential rejection)."*
+  *"We report raw p-values across all 6 role × metric cells (3 roles × {accuracy, confidence}) and explicitly disclose absence of correction in the methodology notes. With α=0.05 and no correction, ~0.30 false positives expected under the null. Findings are framed as exploratory. Reviewers can apply their preferred correction (Bonferroni divides by 6)."*
+
+- **"Why only two metrics, not three?"**
+  *"Decision-time was in the original protocol but is absent from LLM-persona responses (no wall-clock for a stateless API call). We collapsed to a 6-cell table and disclosed the gap in `limitations`."*
 
 - **"How do you handle low-N cells?"**
-  *"Every cell with n<10 per group is flagged with `n_warning: true` in the JSON. Cliff's delta gives a magnitude interpretation independent of statistical significance, so even low-N cells provide directional evidence without inflating false-positive risk through bare p-values."*
+  *"Every cell with n<10 per group is flagged with `n_warning: true`. Nurse_manager cells (n=10/10) sit at the threshold and are noted; their accuracy p=0.30 reflects genuine underpower, not a null effect."*
 
 - **"Who decided which actions count as correct?"**
-  *"Each AlertScenario has a pre-recorded `correct_action` plus a list of `reasonable_alternatives`. Both count as accurate. The full ground truth table is in `module6_evaluation/study_loader.py`; no post-hoc judgment of individual responses."*
+  *"Each AlertScenario has a pre-recorded `correct_action`. `reasonable_alternatives` field exists but is empty, so accuracy is strict-match. No post-hoc judgment of individual responses. Adding curated alternatives is future work."*
 
-- **"What about participants who didn't pay attention?"**
-  *"Pre-registered exclusion criteria: failed attention check, or total duration <30s or >30min. All exclusions are logged in `survey/rq2c_exclusions.json` with explicit reasons. The exclusion rate is reported alongside the analysis."*
+- **"What about persona exclusions?"**
+  *"EX-3 only: schema-invalid files OR zero-successful-row personas (all API errors). All 100 personas passed in the current data. EX-1 (attention check) and EX-2 (duration outliers) are inapplicable to LLM personas and disclosed as such."*
 
 - **"Did you do qualitative analysis?"**
-  *"Yes, single-coder thematic analysis of free-text rationales, bundled by role × group. Themes are documented in `survey/qualitative_themes.yaml`. We acknowledge the single-coder limitation; second-coder inter-rater reliability is future work."*
+  *"Yes — single-coder thematic analysis of LLM rationales, bundled by role × condition. Themes describe model behaviour, not human reasoning, and the manifest discloses this. Inter-rater reliability is future work."*
+
+- **"Is the persona-level aggregation correct?"**
+  *"Yes — we aggregate to one accuracy and one confidence value per persona, then run Mann-Whitney between conditions. This satisfies independence; running the test on raw rows would treat 20 correlated decisions per persona as independent observations."*
 
 ---
 

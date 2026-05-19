@@ -631,3 +631,57 @@ def test_rq1_targets_met():
         "Invariant 2 (proxy) violated: CRITICAL+unpatchable tiered "
         "below CRITICAL"
     )
+
+
+# ── RQ2_userstudy.md §8 — RQ2.c artifact gate ───────────────────────────
+
+def test_rq2c_pipeline_outputs_exist():
+    """RQ2.c (LLM-persona user-study) pipeline must produce all required
+    artifacts before defense.
+
+    Run, in order:
+      python -m analysis.audit_study_data
+      python -m analysis.compute_rq2c_per_role
+      python -m analysis.extract_qualitative_rationales
+      (then code survey/qualitative_themes.yaml by hand)
+    """
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    required = [
+        "survey/study_data_audit.json",
+        "survey/rq2c_exclusions.json",
+        "analysis/outputs/rq2c_per_role.json",
+        "survey/qualitative_themes.yaml",
+    ]
+    missing = [p for p in required if not (repo / p).exists()]
+    assert not missing, (
+        "Missing RQ2.c artifact(s): "
+        + ", ".join(missing)
+        + ". Run the analysis/* scripts named in RQ2_userstudy.md §9."
+    )
+
+
+# ── RQ2_failure.md §8 — RQ2.d failure-catalog artifact gate ─────────────
+
+def test_rq2d_failure_catalog_outputs_exist():
+    """RQ2.d failure-mode catalog must produce all required artifacts.
+
+    Run, in order:
+      python -m analysis.compile_failure_modes
+      python -m analysis.render_failure_catalog_markdown
+    """
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    required = [
+        "configs/rq2_failure_categories.yaml",
+        "results/rq2_failure_mode_catalog.json",
+        "results/rq2_failure_mode_catalog.md",
+    ]
+    missing = [p for p in required if not (repo / p).exists()]
+    assert not missing, (
+        "Missing RQ2.d artifact(s): "
+        + ", ".join(missing)
+        + ". Run the analysis/* scripts named in RQ2_failure.md §8."
+    )
