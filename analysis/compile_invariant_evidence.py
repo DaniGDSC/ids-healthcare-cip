@@ -142,15 +142,23 @@ def _determine_overall_status(inv: dict, test_results: Optional[dict],
     if manifest_status == "documented":
         return "documented"
 
+    # partial_skip = no failures + at least one passed + remainder skipped.
+    # Treated as "pass" because the invariant's tests are designed to skip
+    # when the data preconditions aren't met (e.g. HIPAA gate skips on
+    # LLM-persona-only study data).
+    PYTEST_PASS_OUTCOMES = {"pass", "partial_skip"}
+
     method = inv.get("verification_method", "pytest")
     if method == "pytest":
-        return ("pass" if test_results and test_results["outcome"] == "pass"
+        return ("pass"
+                if test_results and test_results["outcome"] in PYTEST_PASS_OUTCOMES
                 else "fail")
     if method == "grep":
         return ("pass" if grep_results and grep_results["outcome"] == "pass"
                 else "fail")
     if method == "grep_and_pytest":
-        pytest_ok = bool(test_results and test_results["outcome"] == "pass")
+        pytest_ok = bool(test_results
+                         and test_results["outcome"] in PYTEST_PASS_OUTCOMES)
         grep_ok = bool(grep_results and grep_results["outcome"] == "pass")
         return "pass" if (pytest_ok and grep_ok) else "fail"
     return "unknown"

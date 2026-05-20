@@ -81,15 +81,23 @@ invariants:
     enforced_by:
       - "module5_responses/ (recommend-only pipeline)"
       - "ResponseRecommendation.operator_decision_required = True always"
-    # Verification is grep-only. tests/negative_tests.py exists and defines
-    # test_no_automated_blocking + sibling functions, but they accept
-    # positional system-state arguments (orchestrator-style invocation via
-    # run_negative_tests), so pytest's auto-collection cannot execute them.
-    # The grep audit is the canonical structural enforcement.
-    verification_method: grep
+    # Triple-layer defense (RQ3_NO_AUTO_EXECUTION_SPEC.md):
+    #   Layer A: Invariant 3 documented in ARCHITECTURE.md
+    #   Layer B: configs/no_auto_exec_scope.yaml +
+    #            analysis/audit_no_auto_execution.py (categorized grep
+    #            with docstring stripping + # noqa: no-auto-exec opt-out)
+    #   Layer C: pytest-collectible runtime gates:
+    #            - tests/negative_tests.py::test_no_automated_blocking_audit_clean
+    #              (wraps Layer B at CI time)
+    #            - tests/test_response_recommendation_no_exec.py:
+    #              ResponseRecommendation default check + __post_init__
+    #              refusal + PolicyEngine.recommend() subprocess-mock end-to-end
+    verification_method: grep_and_pytest
     grep_audit:
+      # Inline patterns kept as a fallback for the Track 1 verifier; the
+      # authoritative scope + pattern list lives in
+      # configs/no_auto_exec_scope.yaml (Layer B).
       target_dirs:
-        # Phase 0 confirmed: module5_responses/ exists; pipeline/module5_response/ does not.
         - "module5_responses/"
       forbidden_patterns:
         - 'subprocess'
@@ -106,8 +114,9 @@ invariants:
       forbidden_imports:
         - "^import subprocess"
         - "^from subprocess"
-    # negative_tests.py listed for traceability only; not pytest-collected.
-    test_files: []
+    test_files:
+      - "tests/test_response_recommendation_no_exec.py"
+      - "tests/negative_tests.py"
     status: enforced
 
   - id: 4

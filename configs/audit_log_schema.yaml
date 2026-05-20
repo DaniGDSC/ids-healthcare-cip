@@ -1,0 +1,94 @@
+# configs/audit_log_schema.yaml
+# Audit log entry schema for XAI-IDS-Healthcare. Read by
+# analysis/audit_log_schema_completeness.py.
+#
+# Schema adapted to the real wire format of
+# module5_responses.module5_pipeline.AuditLogger (Path-C-style spec
+# adaptation; differs from RQ3_AUDIT_INTEGRITY_SPEC.md template names).
+# Field naming:
+#   - hash chain: prev_hash / integrity_hash (NOT previous_hash / entry_hash)
+#   - signature envelope: signature / signing_key_id / signature_alg
+#   - mve reproducibility: mve_audit.{mve_mode, mve_text_shown,
+#     shap_top_features, shap_stability, llm_*}
+#   - forward-compat (Steps 17/18): ground_truth_label,
+#     decision_quality, feedback_loop_consumed
+
+schema_version: "1.0"
+taxonomy_locked_on: "2026-05-19"
+taxonomy_predates_data: false
+taxonomy_source: |
+  RQ3_AUDIT_INTEGRITY_SPEC.md §6.1, adapted to the real audit record
+  produced by module5_responses.module5_pipeline.AuditLogger. Field
+  naming follows the writer's wire format; semantic claims match the
+  spec.
+last_updated: "2026-05-19"
+
+# Per-section required-field declarations. Each entry is one of:
+#   {field: NAME, type: STRING_OR_LIST, ...optional checks}
+# Optional checks: enum (list), range ([lo, hi]), length (int),
+# pattern (regex), format (hint only — not enforced).
+sections:
+  alert_context:
+    required_always:
+      - {field: alert_id, type: string}
+
+  decision_capture:
+    # The real writer accepts arbitrary action keys; we only require the
+    # presence of an action label. Caller-supplied measurements
+    # (decision_time_seconds, operator_confidence, operator_rationale)
+    # are optional — the writer does not synthesize them.
+    required_always:
+      - {field: action, type: string}
+
+  forward_compat:
+    # Step [17] outcome tracking + Step [18] feedback loop slots.
+    # The writer ALWAYS auto-fills these via setdefault, so every
+    # record must have them present (value may be null/False).
+    required_always:
+      - {field: ground_truth_label,
+         type: [string, "null"]}
+      - {field: decision_quality,
+         type: [string, "null"]}
+      - {field: feedback_loop_consumed,
+         type: boolean}
+
+  tamper_evidence:
+    required_always:
+      - {field: prev_hash, type: string,
+         length: 64, pattern: "^[0-9a-f]{64}$"}
+      - {field: integrity_hash, type: string,
+         length: 64, pattern: "^[0-9a-f]{64}$"}
+
+  signature_envelope:
+    # Optional when AuditLogger is constructed with sign=False or when
+    # cryptography is unavailable. When ANY signature field is present,
+    # all three must be present.
+    required_when_signed:
+      - {field: signature, type: string}
+      - {field: signing_key_id, type: string}
+      - {field: signature_alg, type: string, enum: [ECDSA_P256_SHA256]}
+
+  mve_audit:
+    # The mve_audit block is present only when the caller passed
+    # mve_audit to AuditLogger.log(). When present, base fields are
+    # required; Mode A additionally requires the LLM reproducibility
+    # fields (Step [16] requirement).
+    required_when_present:
+      - {field: mve_mode, type: string, enum: [A_llm, B_rule]}
+      - {field: mve_text_shown, type: string}
+      - {field: shap_top_features, type: array}
+      - {field: shap_stability, type: [number, "null"]}
+    required_when_mode_a_llm:
+      - {field: llm_provider, type: string}
+      - {field: llm_model_version, type: string}
+      - {field: llm_full_prompt, type: string}
+      - {field: llm_full_response, type: string}
+
+  reviewer:
+    # Optional block — present only when at least one reviewer field
+    # was supplied to log(). When present, all four are required.
+    required_when_present:
+      - {field: reviewer_id, type: [string, "null"]}
+      - {field: reviewer_role, type: [string, "null"]}
+      - {field: review_timestamp, type: [string, "null"]}
+      - {field: review_action, type: [string, "null"]}

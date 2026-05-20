@@ -1,34 +1,176 @@
 {
-  "provenance": {
-    "generated_at": "2026-05-16T10:09:26Z",
-    "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
-    "random_seed": 42,
+  "_meta": {
     "schema_version": "1.0",
-    "code_version": "thesis-v1.0",
-    "python_version": "3.10.20",
-    "input_files": {
-      "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
-      "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
-      "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
-      "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
-      "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
-      "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
-      "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+    "generated_at": "2026-05-19T15:13:50.234291+00:00",
+    "generated_by": "analysis/audit_no_auto_execution.py",
+    "config_path": "configs/no_auto_exec_scope.yaml",
+    "taxonomy_locked_on": "2026-05-19",
+    "_framing": "Static-analysis Layer B of the no-auto-execution three-layer defense (Invariant 3). Production code MUST contain zero matches; test code may use subprocess for attack simulation; analysis scripts are skipped."
+  },
+  "headline": {
+    "audit_pass": true,
+    "n_violations_production": 0,
+    "n_findings_test_info_only": 21,
+    "n_findings_unclassified": 0,
+    "n_files_scanned": {
+      "production": 46,
+      "test": 52,
+      "analysis_skipped": 35,
+      "unclassified": 64,
+      "excluded": 13
     }
   },
-  "results": {
-    "grep_check": {
-      "command": "grep -rnE subprocess|os\\.system|iptables|netcat|\\bnc\\b|\\bcurl\\b|\\bwget\\b|\\bssh\\b|\\bsudo\\b|\\beval\\(|\\bexec\\( /home/un1/project/ids-healthcare-cip/module5_responses",
-      "matches": [],
-      "n_matches": 0,
-      "status": "PASSED"
+  "violations_by_category": {},
+  "test_dir_findings": [
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_step15_role_consistency.py",
+      "line": 131,
+      "content": "r\"\\bsubprocess\\b\","
     },
-    "import_check": {
-      "command": "grep -rnE ^import subprocess|^from subprocess /home/un1/project/ids-healthcare-cip/module5_responses",
-      "matches": [],
-      "n_matches": 0,
-      "status": "PASSED"
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 88,
+      "content": "def test_policy_engine_recommend_never_invokes_subprocess():"
     },
-    "overall_verdict": "PASSED \u2014 No auto-execution verified"
-  }
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 98,
+      "content": "subprocess_mock = MagicMock()"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 102,
+      "content": "with patch(\"subprocess.run\", subprocess_mock), \\"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 103,
+      "content": "patch(\"subprocess.Popen\", subprocess_mock), \\"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 104,
+      "content": "patch(\"subprocess.call\", subprocess_mock), \\"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 105,
+      "content": "patch(\"subprocess.check_output\", subprocess_mock), \\"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 106,
+      "content": "patch(\"subprocess.check_call\", subprocess_mock), \\"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 117,
+      "content": "assert subprocess_mock.call_count == 0, ("
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 118,
+      "content": "f\"subprocess invoked {subprocess_mock.call_count} time(s) during \""
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_response_recommendation_no_exec.py",
+      "line": 119,
+      "content": "f\"recommend(). calls: {subprocess_mock.mock_calls[:5]}\""
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_step16_audit_integrity.py",
+      "line": 204,
+      "content": "import subprocess"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_step16_audit_integrity.py",
+      "line": 205,
+      "content": "subprocess.run("
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_step16_audit_integrity.py",
+      "line": 227,
+      "content": "import subprocess"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_step16_audit_integrity.py",
+      "line": 228,
+      "content": "subprocess.run("
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_layer6_v4_routing.py",
+      "line": 25,
+      "content": "import subprocess"
+    },
+    {
+      "category": "forbidden_imports",
+      "pattern": "^import subprocess",
+      "file": "tests/test_layer6_v4_routing.py",
+      "line": 25,
+      "content": "import subprocess"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/test_layer6_v4_routing.py",
+      "line": 224,
+      "content": "(\"subprocess\",        r\"\\bsubprocess\\b\"),"
+    },
+    {
+      "category": "shell_commands",
+      "pattern": "\\biptables\\b",
+      "file": "tests/test_layer6_v4_routing.py",
+      "line": 226,
+      "content": "(\"iptables\",          r\"\\biptables\\b\"),"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/acceptance_tests.py",
+      "line": 767,
+      "content": "import subprocess"
+    },
+    {
+      "category": "subprocess",
+      "pattern": "subprocess",
+      "file": "tests/acceptance_tests.py",
+      "line": 773,
+      "content": "subprocess.run("
+    }
+  ],
+  "test_dir_findings_total": 21,
+  "unclassified_findings": [],
+  "unclassified_findings_total": 0
 }

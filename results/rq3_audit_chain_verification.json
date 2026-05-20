@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-19T15:00:18.449278+00:00",
+    "generated_by": "analysis/verify_audit_log_integrity.py",
+    "log_path": "logs/llm_audit.jsonl",
+    "canonicalization_module": "common.audit_canonicalization",
+    "hash_algorithm": "SHA256",
+    "genesis_prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "wire_format_note": "Hash chain uses prev_hash + integrity_hash field names (real wire format of module5_responses.module5_pipeline.AuditLogger), not the previous_hash + entry_hash names from the spec.",
+    "log_sha256": "852f3e3460750080838cdc204119616792bbbb54612860635aa5e65e3b7e82a5",
+    "n_entries_scanned": 5
+  },
+  "headline": {
+    "chain_intact": true,
+    "n_entries": 5,
+    "n_breaks": 0,
+    "n_parse_errors": 0,
+    "first_entry_timestamp": null,
+    "last_entry_timestamp": null,
+    "verification_complete": true,
+    "tamper_evidence_claim": "tamper-evident (detection); not tamper-resistant (prevention)"
+  },
+  "breaks": [],
+  "parse_errors": [],
+  "segments": [
+    {
+      "start_line": 1,
+      "n_entries": 5,
+      "end_line": 5
+    }
+  ]
+}

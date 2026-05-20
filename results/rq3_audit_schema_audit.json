@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-19T15:00:18.490773+00:00",
+    "generated_by": "analysis/audit_log_schema_completeness.py",
+    "log_path": "logs/llm_audit.jsonl",
+    "schema_path": "configs/audit_log_schema.yaml",
+    "taxonomy_locked_on": "2026-05-19"
+  },
+  "headline": {
+    "all_entries_pass_schema": true,
+    "n_entries_validated": 5,
+    "n_entries_failing": 0,
+    "by_mode": {
+      "A_llm": {
+        "n_validated": 1,
+        "n_failing": 0
+      },
+      "B_rule": {
+        "n_validated": 1,
+        "n_failing": 0
+      },
+      "_no_mve_audit": {
+        "n_validated": 3,
+        "n_failing": 0
+      }
+    }
+  },
+  "failures": [],
+  "failures_truncated_at": 50,
+  "failures_total_count": 0
+}

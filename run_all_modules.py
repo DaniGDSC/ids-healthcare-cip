@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import argparse
 import logging
-import subprocess
+# Top-level dev orchestrator: invokes each Module's CLI in turn for
+# local-build reproducibility. Does NOT execute mitigation actions.
+import subprocess  # noqa: no-auto-exec
 import sys
 import time
 from pathlib import Path
@@ -76,7 +78,7 @@ def run_module(module: dict) -> bool:
     logger.info(sep)
 
     t0 = time.perf_counter()
-    result = subprocess.run(
+    result = subprocess.run(  # noqa: no-auto-exec
         [sys.executable, module["script"]],
         cwd=str(PROJECT_ROOT),
     )

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0",
-    "generated_at": "2026-05-19T14:47:35.985033+00:00",
+    "generated_at": "2026-05-19T15:13:38.012819+00:00",
     "generated_by": "analysis/validate_invariant_manifest.py",
     "manifest_path": "configs/invariants_manifest.yaml"
   },
@@ -173,7 +173,10 @@
       "severity": "PASS",
       "description": "Inv 3 has at least one test_file or grep_audit",
       "details": {
-        "test_files": [],
+        "test_files": [
+          "tests/test_response_recommendation_no_exec.py",
+          "tests/negative_tests.py"
+        ],
         "has_grep_audit": true
       }
     },

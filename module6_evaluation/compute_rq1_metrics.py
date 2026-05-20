@@ -59,9 +59,11 @@ def _sha256_file(path: Path) -> str:
 
 def _git_commit() -> str | None:
     """Best-effort short commit SHA; ``None`` if git is unavailable."""
-    import subprocess
+    # Provenance helper: reads `git rev-parse HEAD` to record the commit
+    # hash in result metadata. Does NOT execute any mitigation action.
+    import subprocess  # noqa: no-auto-exec
     try:
-        out = subprocess.run(
+        out = subprocess.run(  # noqa: no-auto-exec
             ["git", "rev-parse", "HEAD"],
             cwd=REPO_ROOT, check=True, capture_output=True, text=True,
         )

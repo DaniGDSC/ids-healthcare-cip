@@ -164,3 +164,108 @@ def test_decision_time_seconds_semantics_documented():
     # Basic doc presence sanity (the doc-required field name is in
     # callers, not in __init__ — this just locks the contract).
     assert isinstance(e, str)
+
+
+# ── RQ3_AUDIT_INTEGRITY_SPEC.md §9 — verifier/auditor script gates ───
+
+# These tests cover the analysis/ scripts that consume the audit log
+# AFTER it is written. Skip-safe when no canonical audit log exists at
+# logs/llm_audit.jsonl (acceptable: no Mode A runs yet).
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def test_canonicalization_module_importable():
+    """Hard dependency: read-side hash helpers must be importable and
+    produce a 64-char hex digest from the canonical body of a record."""
+    from common.audit_canonicalization import (
+        GENESIS_PREV_HASH,
+        compute_integrity_hash,
+        verify_entry_hash,
+    )
+
+    assert GENESIS_PREV_HASH == "0" * 64
+    body = {"prev_hash": GENESIS_PREV_HASH, "alert_id": "smoke"}
+    h = compute_integrity_hash(body)
+    assert len(h) == 64
+    int(h, 16)
+    entry = dict(body, integrity_hash=h)
+    assert verify_entry_hash(entry, GENESIS_PREV_HASH)["is_valid"]
+
+
+def test_audit_chain_intact_via_verifier_script():
+    """analysis/verify_audit_log_integrity.py must produce a result
+    JSON; if a canonical audit log exists, the chain must be intact."""
+    repo = _repo_root()
+    out = repo / "results" / "rq3_audit_chain_verification.json"
+    if not out.exists():
+        import subprocess
+        subprocess.run(
+            ["python", "-m", "analysis.verify_audit_log_integrity"],
+            check=True, cwd=str(repo),
+        )
+    result = json.loads(out.read_text())
+    h = result["headline"]
+    if h.get("n_entries", 0) == 0:
+        pytest.skip("No canonical audit log entries to verify yet.")
+    assert h["chain_intact"], (
+        f"Audit log chain BROKEN: {h.get('n_breaks')} break(s), "
+        f"{h.get('n_parse_errors', 0)} parse error(s). "
+        f"See {out} for forensic context."
+    )
+
+
+def test_audit_schema_complete_via_auditor_script():
+    """analysis/audit_log_schema_completeness.py must produce a result
+    JSON; if a canonical audit log exists, every entry must satisfy
+    its mode-conditional schema."""
+    repo = _repo_root()
+    out = repo / "results" / "rq3_audit_schema_audit.json"
+    if not out.exists():
+        import subprocess
+        subprocess.run(
+            ["python", "-m", "analysis.audit_log_schema_completeness"],
+            check=True, cwd=str(repo),
+        )
+    result = json.loads(out.read_text())
+    h = result["headline"]
+    if h.get("n_entries_validated", 0) == 0:
+        pytest.skip("No canonical audit log entries to validate yet.")
+    assert h["all_entries_pass_schema"], (
+        f"{h['n_entries_failing']}/{h['n_entries_validated']} entries "
+        f"violate schema. See {out}."
+    )
+
+
+def test_audit_log_exists_when_study_present():
+    """HIPAA-ADJACENT: if non-LLM-persona study response files exist,
+    the audit log must exist too. Catches silent logger failure.
+
+    Path C note: LLM-persona study responses (filename prefix
+    'study_responses_LLM_') do NOT require AuditLogger entries — they
+    are not operator-decision events. The gate fires only for
+    human-operator study artifacts.
+    """
+    repo = _repo_root()
+    study_dir = repo / "survey"
+    study_files = (list(study_dir.glob("study_responses_*.json"))
+                   if study_dir.exists() else [])
+    if not study_files:
+        pytest.skip("No study response files — audit log gate inactive.")
+
+    non_persona = [p for p in study_files
+                   if not p.name.startswith("study_responses_LLM_")]
+    if not non_persona:
+        pytest.skip(
+            "Only LLM-persona study files present; AuditLogger gate "
+            "applies to human-operator runs only."
+        )
+
+    audit_log = repo / "logs" / "llm_audit.jsonl"
+    assert audit_log.exists() and audit_log.stat().st_size > 0, (
+        f"Human-operator study data present ({len(non_persona)} files) "
+        f"but audit log missing or empty at {audit_log}. Mode A runs "
+        "without audit logging is a compliance violation."
+    )

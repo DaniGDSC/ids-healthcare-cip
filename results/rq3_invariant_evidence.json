@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0",
-    "generated_at": "2026-05-19T14:47:36.038416+00:00",
+    "generated_at": "2026-05-19T15:13:38.207124+00:00",
     "generated_by": "analysis/compile_invariant_evidence.py",
     "manifest_path": "configs/invariants_manifest.yaml",
     "taxonomy_locked_on": "2026-05-19",
@@ -73,8 +73,18 @@
         3
       ],
       "status_manifest": "enforced",
-      "verification_method": "grep",
-      "test_results": null,
+      "verification_method": "grep_and_pytest",
+      "test_results": {
+        "test_files": [
+          "tests/test_response_recommendation_no_exec.py",
+          "tests/negative_tests.py"
+        ],
+        "n_tests_total": 4,
+        "n_tests_passed": 4,
+        "n_tests_failed": 0,
+        "n_tests_skipped": 0,
+        "outcome": "pass"
+      },
       "grep_results": {
         "target_dirs": [
           "module5_responses"
@@ -100,11 +110,11 @@
         "test_files": [
           "tests/test_step16_audit_integrity.py"
         ],
-        "n_tests_total": 9,
-        "n_tests_passed": 9,
+        "n_tests_total": 13,
+        "n_tests_passed": 12,
         "n_tests_failed": 0,
-        "n_tests_skipped": 0,
-        "outcome": "pass"
+        "n_tests_skipped": 1,
+        "outcome": "partial_skip"
       },
       "grep_results": null,
       "_overall_status": "pass"

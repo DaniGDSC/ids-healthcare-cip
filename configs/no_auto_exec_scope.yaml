@@ -1,0 +1,82 @@
+# configs/no_auto_exec_scope.yaml
+# Declares which directories are subject to the no-auto-execution audit.
+#
+# Defense framing: production code is forbidden from auto-execution;
+# test code is explicitly authorized to simulate attacks; analysis
+# scripts are skipped (they may invoke subprocess for verification —
+# this audit itself does).
+#
+# Edits to this file are version-controlled and reviewable. There is
+# NO env-var override and NO warn-only mode in the audit script.
+
+schema_version: "1.0"
+taxonomy_locked_on: "2026-05-19"
+taxonomy_predates_data: false
+taxonomy_source: |
+  RQ3_NO_AUTO_EXECUTION_SPEC.md §4.1, adapted to actual repo layout
+  (Phase 0 confirmed module4_xai/ and pipeline/module5_response/ do
+  not exist; module4_explanations/ replaces the former).
+
+# Production: must contain ZERO forbidden patterns.
+# Audit fails on any match.
+production_dirs:
+  - module5_responses/
+  - src/
+  - common/
+  - module3_risk_scoring/
+  - module4_explanations/
+  - module6_evaluation/
+
+# Test directories: allowed to use subprocess for attack simulation,
+# negative-test orchestration, or testing the audit itself. Audit
+# reports findings here as INFO, not FAIL.
+test_dirs:
+  - tests/
+
+# Analysis / scripts: skipped entirely. These directories legitimately
+# invoke grep / subprocess to verify other directories.
+analysis_dirs:
+  - analysis/
+  - scripts/
+
+# Explicitly excluded paths (never scanned even if encountered).
+excluded_paths:
+  - .git/
+  - __pycache__/
+  - .venv/
+  - venv/
+  - node_modules/
+  - data/
+  - results/
+  - logs/
+  - survey/
+  - .pytest_cache/
+  - .mypy_cache/
+  - .ruff_cache/
+
+# Forbidden pattern catalogue. Each pattern is a Python regex compiled
+# with re.MULTILINE. Patterns are grouped by category so the report
+# can be triaged.
+forbidden_patterns:
+  subprocess:
+    - 'subprocess'
+    - '\bsubprocess\.\w+\('
+  os_system:
+    - 'os\.system\('
+    - 'os\.popen\('
+  shell_commands:
+    - '\biptables\b'
+    - '\bnetcat\b'
+    - '\bnc\s+-'        # netcat short form
+    - '\bcurl\s'
+    - '\bwget\s'
+    - '\bssh\s'
+    - '\bsudo\s'
+  python_exec:
+    - '\beval\('
+    - '\bexec\('
+    - '\b__import__\('
+  forbidden_imports:
+    - '^import subprocess'
+    - '^from subprocess'
+    - '^from os import system'

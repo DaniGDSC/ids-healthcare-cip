@@ -284,3 +284,37 @@ def run_negative_tests(
         test_severity_uses_clinical_not_cvss(mve_dicts),
         test_no_model_internals_exposed(mve_dicts),
     ]
+
+
+# ── RQ3_NO_AUTO_EXECUTION_SPEC.md §7.1 — Layer C CI wrapper ───────────
+#
+# The functions above are orchestrator-style (positional args, invoked
+# by run_negative_tests). The sibling below is pytest-collectible: it
+# runs the static-grep audit script as a subprocess and asserts a clean
+# result. Same Layer C purpose as test_no_automated_blocking, but
+# usable directly from pytest / CI.
+
+
+def test_no_automated_blocking_audit_clean() -> None:
+    """Layer C of the no-auto-execution defense (pytest-collectible).
+
+    Invokes analysis/audit_no_auto_execution.py via subprocess; asserts
+    the audit exits 0 (production code contains no forbidden execution
+    patterns).
+    """
+    import subprocess  # noqa: no-auto-exec
+    import sys
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    result = subprocess.run(  # noqa: no-auto-exec
+        [sys.executable, "-m", "analysis.audit_no_auto_execution"],
+        capture_output=True, text=True, cwd=str(repo),
+    )
+    assert result.returncode == 0, (
+        f"No-auto-execution audit FAILED (exit {result.returncode}).\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}\n"
+        "Run `python -m analysis.audit_no_auto_execution --list-violations` "
+        "for human-readable detail."
+    )
