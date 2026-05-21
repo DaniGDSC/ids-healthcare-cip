@@ -831,3 +831,156 @@ def test_no_orphan_invariants():
         f"{len(orphans)} safety-critical invariant(s) with no test results: "
         f"{[i['id'] for i in orphans]}"
     )
+
+
+# ── RQ3_TRUTH_TABLE_SPEC.md §7 — Track 4 artifact gate ─────────────────
+
+
+def test_rq3_truth_table_artifacts_exist():
+    """RQ3 Track 4: verification JSON + Appendix B markdown must exist.
+
+    Run, in order:
+      pytest tests/test_rq3_truth_table_completeness.py  (writes JSON)
+      python -m analysis.render_rq3_appendix_b           (writes MD)
+    """
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    required = [
+        "results/rq3_truth_table_reference.json",
+        "results/rq3_truth_table_appendix_b.md",
+    ]
+    missing = [p for p in required if not (repo / p).exists()]
+    assert not missing, (
+        "Missing RQ3 Track 4 artifact(s): "
+        + ", ".join(missing)
+        + ". See RQ3_TRUTH_TABLE_SPEC.md §7."
+    )
+
+
+# ── RQ3_USER_STUDY_SPEC.md §7.2 — Track 5 artifact gate ────────────────
+
+
+def test_rq3_user_study_outputs_exist():
+    """RQ3 Track 5: escalation taxonomy YAML + analysis JSONs must exist.
+
+    Run, in order:
+      python -m analysis.compute_rq3_escalation
+      python -m analysis.compute_rq3_per_role
+    """
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    required = [
+        "configs/rq3_escalation_definition.yaml",
+        "analysis/outputs/rq3_escalation.json",
+        "analysis/outputs/rq3_user_study.json",
+    ]
+    missing = [p for p in required if not (repo / p).exists()]
+    assert not missing, (
+        "Missing RQ3 Track 5 artifact(s): "
+        + ", ".join(missing)
+        + ". See RQ3_USER_STUDY_SPEC.md §8."
+    )
+
+
+# ── RQ3_MERGE_AND_FIGURES_SPEC.md §6.1 — final RQ3 CI gates ────────────
+
+
+def test_rq3_targets_met():
+    """Aggregate RQ3 CI gate: every present target must pass.
+
+    Pending targets (e.g. Track 5 user study before data lands) do NOT
+    fail this test.
+    """
+    import json
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    metrics_path = repo / "results" / "rq3_metrics.json"
+    assert metrics_path.exists(), (
+        "Run `python -m module6_evaluation.compute_rq3_metrics` first."
+    )
+    m = json.loads(metrics_path.read_text())
+    targets = m.get("targets") or {}
+    failures = [
+        {"target": tid, "value": t.get("value"),
+         "target_value": t.get("target"),
+         "rationale": t.get("rationale")}
+        for tid, t in targets.items()
+        if isinstance(t, dict) and t.get("pass") is False
+    ]
+    assert not failures, (
+        f"RQ3 targets failed: {failures}. "
+        f"Inspect {metrics_path.relative_to(repo)} for details."
+    )
+
+
+def test_rq3_defense_critical_targets():
+    """DEFENSE-CRITICAL gate: defense-critical targets MUST be PASS.
+
+    Pending defense-critical targets are failures here (in contrast to
+    test_rq3_targets_met which allows pending). The architectural defense
+    cannot rest on artifacts that haven't been produced yet.
+    """
+    import json
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    metrics_path = repo / "results" / "rq3_metrics.json"
+    assert metrics_path.exists(), (
+        "Run `python -m module6_evaluation.compute_rq3_metrics` first."
+    )
+    m = json.loads(metrics_path.read_text())
+    targets = m.get("targets") or {}
+    defense_critical = [
+        (tid, t) for tid, t in targets.items()
+        if isinstance(t, dict) and t.get("is_defense_critical")
+    ]
+    assert defense_critical, (
+        "No defense-critical targets found - manifest may be malformed"
+    )
+    failures = [(tid, t) for tid, t in defense_critical
+                if t.get("pass") is not True]
+    assert not failures, (
+        f"{len(failures)} defense-critical target(s) not in PASS state:\n"
+        + "\n".join(
+            f"  - {tid}: pass={t.get('pass')} value={t.get('value')} "
+            f"({t.get('rationale', 'no rationale')})"
+            for tid, t in failures
+        )
+    )
+
+
+def test_rq3_defense_summary_complete():
+    """Meta-test: defense_summary block must carry all required keys.
+
+    Guards against a future refactor silently dropping summary fields.
+    """
+    import json
+    from pathlib import Path
+
+    import pytest
+
+    repo = Path(__file__).resolve().parents[1]
+    p = repo / "results" / "rq3_metrics.json"
+    if not p.exists():
+        pytest.skip("Run compute_rq3_metrics.py first")
+    m = json.loads(p.read_text())
+    summary = m.get("defense_summary") or {}
+    required = [
+        "no_auto_execution",
+        "audit_tamper_evident",
+        "safety_floor_invariant",
+        "architectural_invariants",
+        "distributed_responsibility_empirical",
+    ]
+    missing = [k for k in required if k not in summary]
+    assert not missing, (
+        f"defense_summary block missing required keys: {missing}"
+    )
+    for k in required:
+        val = summary[k]
+        assert isinstance(val, str) and val.strip(), (
+            f"defense_summary[{k}] is empty or non-string"
+        )

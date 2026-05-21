@@ -1,0 +1,45 @@
+# configs/rq3_escalation_definition.yaml
+# Pre-registered escalation taxonomy for RQ3 Track 5.
+#
+# DEFENSE-CRITICAL: locked before the Chi-square is computed.
+# Honest disclosure: under Path C (LLM-persona simulation), this
+# taxonomy was authored during implementation, not strictly before
+# data collection. Defense framing relies on the definition being
+# operationally severity-aware (ground-truth-derived).
+
+schema_version: "1.0"
+taxonomy_locked_on: "2026-05-21"
+taxonomy_predates_data: false
+taxonomy_source: |
+  RQ3_USER_STUDY_SPEC.md §4.1, derived from RQ3_pipeline.md §10
+  (Chi-square for escalation rate). Phase 0 inventory confirmed the
+  real action vocabulary: response.action ∈ {investigate, monitor,
+  isolate, escalate, restrict}; correct_action ∈ {isolate, dismiss,
+  investigate, monitor}. escalate_clinical absent from data and
+  dropped. restrict dropped (correct_action never matches; inclusion
+  is mathematically inert under the conjunction rule).
+
+# Action codes that count as "escalation-class" responses.
+escalation_actions:
+  - escalate
+  - isolate
+
+# Per-row "appropriate escalation" rule:
+#   row.response.action IS escalation-class AND
+#   row.correct_action  IS escalation-class
+#
+# Note: under the real vocabulary, only correct_action == "isolate"
+# satisfies the right-hand side, so the rule effectively reduces to
+# "correct_action is isolate AND persona action is in {escalate, isolate}".
+appropriate_escalation_rule: |
+  persona_action in escalation_actions AND
+  correct_action in escalation_actions
+
+# Per-persona aggregation threshold: a persona is flagged
+# `escalated_appropriately` overall if they met the per-row rule on
+# at least this fraction of their escalation-warranted rows.
+min_appropriate_escalation_proportion: 0.5
+
+# Sample-size guards.
+chi_square_min_expected_cell_count: 5
+n_warning_threshold: 10

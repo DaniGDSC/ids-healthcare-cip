@@ -1,0 +1,126 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-21T10:09:53.502396+00:00",
+    "generated_by": "analysis/compute_rq3_escalation.py",
+    "taxonomy_path": "configs/rq3_escalation_definition.yaml",
+    "taxonomy_locked_on": "2026-05-21",
+    "data_source": "LLM-persona simulation (gpt-4o-mini); not human study",
+    "escalation_actions": [
+      "escalate",
+      "isolate"
+    ],
+    "min_appropriate_escalation_proportion": 0.5,
+    "inputs": {
+      "n_persona_files": 100,
+      "n_excluded": 0,
+      "n_included_with_warranted_rows": 100,
+      "n_no_warranted_rows": 0,
+      "exclusion_source": "survey/rq2c_exclusions.json"
+    }
+  },
+  "methodology_notes": [
+    "Appropriate escalation = persona action AND correct_action both in ['escalate', 'isolate']. Pre-registered in configs/rq3_escalation_definition.yaml.",
+    "Chi-square 2x2 per role; Fisher's exact fallback when any expected cell count < 5.",
+    "Persona-level aggregation: escalated_appropriately = (n_appropriate / n_warranted) >= 0.5.",
+    "Raw p-values; NO multiple-comparisons correction across the 3 role tests.",
+    "Cramer's V (= |phi| for 2x2) reported as effect size; observed cell rates + odds ratio also reported.",
+    "Data source: LLM-persona simulation; behavioural fidelity to human operators not established."
+  ],
+  "limitations": [
+    "Persona simulation, not human study.",
+    "Small per-cell N (typical ~10-25); Chi-square assumptions marginally satisfied.",
+    "Single dimension of escalation (containment-class actions). Future work: graded escalation severity.",
+    "Multiple-comparisons inflation across 3 role tests (~0.15 false positives at alpha=0.05 under null)."
+  ],
+  "overall": {
+    "_scope": "All included personas (3 roles collapsed)",
+    "n_A": 50,
+    "n_B": 50,
+    "contingency_2x2": {
+      "A_escalated": 0,
+      "A_not": 50,
+      "B_escalated": 40,
+      "B_not": 10
+    },
+    "test": "chi_square",
+    "statistic": 66.6667,
+    "p_value": 3.215262727387118e-16,
+    "cramers_v": 0.8165,
+    "odds_ratio": 0.0,
+    "rate_A": 0.0,
+    "rate_B": 0.8,
+    "n_warning": false,
+    "fisher_fallback": false
+  },
+  "per_role": {
+    "biomed_engineer": {
+      "_scope": "role=biomed_engineer",
+      "n_A": 15,
+      "n_B": 15,
+      "contingency_2x2": {
+        "A_escalated": 0,
+        "A_not": 15,
+        "B_escalated": 15,
+        "B_not": 0
+      },
+      "test": "chi_square",
+      "statistic": 30.0,
+      "p_value": 4.3204630578274955e-08,
+      "cramers_v": 1.0,
+      "odds_ratio": 0.0,
+      "rate_A": 0.0,
+      "rate_B": 1.0,
+      "n_warning": false,
+      "fisher_fallback": false
+    },
+    "IT_generalist": {
+      "_scope": "role=IT_generalist",
+      "n_A": 25,
+      "n_B": 25,
+      "contingency_2x2": {
+        "A_escalated": 0,
+        "A_not": 25,
+        "B_escalated": 25,
+        "B_not": 0
+      },
+      "test": "chi_square",
+      "statistic": 50.0,
+      "p_value": 1.537459794428033e-12,
+      "cramers_v": 1.0,
+      "odds_ratio": 0.0,
+      "rate_A": 0.0,
+      "rate_B": 1.0,
+      "n_warning": false,
+      "fisher_fallback": false
+    },
+    "nurse_manager": {
+      "_scope": "role=nurse_manager",
+      "n_A": 10,
+      "n_B": 10,
+      "contingency_2x2": {
+        "A_escalated": 0,
+        "A_not": 10,
+        "B_escalated": 0,
+        "B_not": 10
+      },
+      "test": "fisher_exact",
+      "statistic": NaN,
+      "p_value": 1.0,
+      "cramers_v": null,
+      "odds_ratio": null,
+      "rate_A": 0.0,
+      "rate_B": 0.0,
+      "n_warning": false,
+      "fisher_fallback": true
+    }
+  },
+  "cell_diagnostics": {
+    "_description": "Per-role cell sizes (persona counts in each condition).",
+    "min_n_per_cell": 10,
+    "max_n_per_cell": 25,
+    "cells_with_warning": 0,
+    "fisher_fallback_count": 1,
+    "warning_threshold": 10
+  }
+}

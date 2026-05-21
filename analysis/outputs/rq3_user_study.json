@@ -1,0 +1,260 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-21T10:10:33.284684+00:00",
+    "generated_by": "analysis/compute_rq3_per_role.py",
+    "research_question": "RQ3 \u2014 Does the system support distributed security responsibility across hospital roles while preserving clinical safety constraints?",
+    "rq3_lens": "Reframes RQ2.c per-role accuracy/confidence + adds the RQ3-specific 'appropriate escalation rate' Chi-square. Same data, different framings; RQ2.c asks about explanation quality, RQ3 asks about distributed action.",
+    "data_source": "LLM-persona simulation (gpt-4o-mini); not human study",
+    "inputs": {
+      "rq2c_per_role_path": "analysis/outputs/rq2c_per_role.json",
+      "rq3_escalation_path": "analysis/outputs/rq3_escalation.json"
+    }
+  },
+  "methodology_notes": [
+    "Per-role accuracy + confidence: inherited from RQ2.c (Mann-Whitney U + Cliff's delta, persona-level aggregation).",
+    "Per-role escalation: Chi-square 2x2 (Fisher's exact fallback when expected cell count < 5); Cramer's V effect size.",
+    "Path C data source: LLM-persona simulation; behavioural fidelity to human operators not established.",
+    "Multiple-comparisons policy: raw p-values, no correction. Disclosed in both inherited (RQ2.c) and new (RQ3 escalation) blocks."
+  ],
+  "limitations": [
+    "Multiple comparisons across 6 role \u00d7 metric cells inflates Type I error rate. With \u03b1=0.05 and no correction, ~0.30 false positives expected under the null. Findings are exploratory.",
+    "Participants are LLM personas, not humans. Behavioral fidelity to real clinicians/IT staff is not established. Generalization to human operators requires the parallel human user study.",
+    "Decision-time metric absent in LLM responses; the 9-cell \u00d7 3-metric table in the spec collapses to a 6-cell \u00d7 2-metric table here.",
+    "Self-selected role assignment is N/A for LLM personas; role is set at persona-generation time. Cell-size imbalance reflects the persona-generation budget, not recruitment bias.",
+    "Some persona \u00d7 alert calls failed with OpenAI 429 rate-limit errors; statistical analysis operates on successful rows only. Failures treated as MCAR per the rate-limit error class.",
+    "Escalation collapsed to a binary outcome (escalated_appropriately) at persona level via a >=0.5 rule. Graded escalation severity is future work.",
+    "Under the real correct_action vocabulary, only correct_action == 'isolate' satisfies the escalation-class set, so the appropriate-escalation rule effectively reduces to 'correct_action is isolate AND persona escalated/isolated'. Documented in configs/rq3_escalation_definition.yaml."
+  ],
+  "per_role_accuracy_confidence": {
+    "biomed_engineer": {
+      "n_A": 15,
+      "n_B": 15,
+      "n_warning": false,
+      "accuracy": {
+        "n_A": 15,
+        "n_B": 15,
+        "median_A": 0.05,
+        "median_B": 0.05,
+        "mean_A": 0.03666666666666667,
+        "mean_B": 0.05095586187691451,
+        "n_warning": false,
+        "mannwhitney_u": 57.0,
+        "p_value": 0.008075758397655647,
+        "cliffs_delta": -0.4933,
+        "magnitude": "large",
+        "direction": "B higher than A"
+      },
+      "confidence": {
+        "n_A": 15,
+        "n_B": 15,
+        "median_A": 4.0,
+        "median_B": 2.0,
+        "mean_A": 3.9900000000000007,
+        "mean_B": 2.0,
+        "n_warning": false,
+        "mannwhitney_u": 225.0,
+        "p_value": 2.484756677263702e-07,
+        "cliffs_delta": 1.0,
+        "magnitude": "large",
+        "direction": "A higher than B"
+      }
+    },
+    "IT_generalist": {
+      "n_A": 25,
+      "n_B": 25,
+      "n_warning": false,
+      "accuracy": {
+        "n_A": 25,
+        "n_B": 25,
+        "median_A": 0.05,
+        "median_B": 0.5625,
+        "mean_A": 0.05180949923829181,
+        "mean_B": 0.562339366515837,
+        "n_warning": false,
+        "mannwhitney_u": 0.0,
+        "p_value": 8.22355173364063e-10,
+        "cliffs_delta": -1.0,
+        "magnitude": "large",
+        "direction": "B higher than A"
+      },
+      "confidence": {
+        "n_A": 25,
+        "n_B": 25,
+        "median_A": 3.7,
+        "median_B": 2.0,
+        "mean_A": 3.701496130976007,
+        "mean_B": 2.0,
+        "n_warning": false,
+        "mannwhitney_u": 625.0,
+        "p_value": 4.935072493540308e-11,
+        "cliffs_delta": 1.0,
+        "magnitude": "large",
+        "direction": "A higher than B"
+      }
+    },
+    "nurse_manager": {
+      "n_A": 10,
+      "n_B": 10,
+      "n_warning": false,
+      "accuracy": {
+        "n_A": 10,
+        "n_B": 10,
+        "median_A": 0.06066176470588235,
+        "median_B": 0.06066176470588235,
+        "mean_A": 0.04866013071895424,
+        "mean_B": 0.05864675357322415,
+        "n_warning": false,
+        "mannwhitney_u": 36.0,
+        "p_value": 0.3001064857793556,
+        "cliffs_delta": -0.28,
+        "magnitude": "small",
+        "direction": "B higher than A"
+      },
+      "confidence": {
+        "n_A": 10,
+        "n_B": 10,
+        "median_A": 3.677083333333333,
+        "median_B": 2.0,
+        "mean_A": 3.6700163398692807,
+        "mean_B": 2.0,
+        "n_warning": false,
+        "mannwhitney_u": 100.0,
+        "p_value": 6.294387081562151e-05,
+        "cliffs_delta": 1.0,
+        "magnitude": "large",
+        "direction": "A higher than B"
+      }
+    }
+  },
+  "overall_accuracy_confidence": {
+    "_scope": "All included personas",
+    "n_A": 50,
+    "n_B": 50,
+    "accuracy": {
+      "n_A": 50,
+      "n_B": 50,
+      "median_A": 0.05,
+      "median_B": 0.25721153846153844,
+      "mean_A": 0.04663677576293676,
+      "mean_B": 0.3081857925356377,
+      "n_warning": false,
+      "mannwhitney_u": 440.5,
+      "p_value": 1.227248752408273e-08,
+      "cliffs_delta": -0.6476,
+      "magnitude": "large",
+      "direction": "B higher than A"
+    },
+    "confidence": {
+      "n_A": 50,
+      "n_B": 50,
+      "median_A": 3.7,
+      "median_B": 2.0,
+      "mean_A": 3.7817513334618598,
+      "mean_B": 2.0,
+      "n_warning": false,
+      "mannwhitney_u": 2500.0,
+      "p_value": 2.569617385518521e-20,
+      "cliffs_delta": 1.0,
+      "magnitude": "large",
+      "direction": "A higher than B"
+    }
+  },
+  "per_role_escalation": {
+    "biomed_engineer": {
+      "_scope": "role=biomed_engineer",
+      "n_A": 15,
+      "n_B": 15,
+      "contingency_2x2": {
+        "A_escalated": 0,
+        "A_not": 15,
+        "B_escalated": 15,
+        "B_not": 0
+      },
+      "test": "chi_square",
+      "statistic": 30.0,
+      "p_value": 4.3204630578274955e-08,
+      "cramers_v": 1.0,
+      "odds_ratio": 0.0,
+      "rate_A": 0.0,
+      "rate_B": 1.0,
+      "n_warning": false,
+      "fisher_fallback": false
+    },
+    "IT_generalist": {
+      "_scope": "role=IT_generalist",
+      "n_A": 25,
+      "n_B": 25,
+      "contingency_2x2": {
+        "A_escalated": 0,
+        "A_not": 25,
+        "B_escalated": 25,
+        "B_not": 0
+      },
+      "test": "chi_square",
+      "statistic": 50.0,
+      "p_value": 1.537459794428033e-12,
+      "cramers_v": 1.0,
+      "odds_ratio": 0.0,
+      "rate_A": 0.0,
+      "rate_B": 1.0,
+      "n_warning": false,
+      "fisher_fallback": false
+    },
+    "nurse_manager": {
+      "_scope": "role=nurse_manager",
+      "n_A": 10,
+      "n_B": 10,
+      "contingency_2x2": {
+        "A_escalated": 0,
+        "A_not": 10,
+        "B_escalated": 0,
+        "B_not": 10
+      },
+      "test": "fisher_exact",
+      "statistic": NaN,
+      "p_value": 1.0,
+      "cramers_v": null,
+      "odds_ratio": null,
+      "rate_A": 0.0,
+      "rate_B": 0.0,
+      "n_warning": false,
+      "fisher_fallback": true
+    }
+  },
+  "overall_escalation": {
+    "_scope": "All included personas (3 roles collapsed)",
+    "n_A": 50,
+    "n_B": 50,
+    "contingency_2x2": {
+      "A_escalated": 0,
+      "A_not": 50,
+      "B_escalated": 40,
+      "B_not": 10
+    },
+    "test": "chi_square",
+    "statistic": 66.6667,
+    "p_value": 3.215262727387118e-16,
+    "cramers_v": 0.8165,
+    "odds_ratio": 0.0,
+    "rate_A": 0.0,
+    "rate_B": 0.8,
+    "n_warning": false,
+    "fisher_fallback": false
+  },
+  "rq2c_cell_diagnostics": {
+    "_description": "Per-cell sample sizes across role \u00d7 condition cells",
+    "min_n_per_cell": 10,
+    "max_n_per_cell": 25,
+    "cells_with_warning": 0,
+    "warning_threshold": 10
+  },
+  "rq3_cell_diagnostics": {
+    "_description": "Per-role cell sizes (persona counts in each condition).",
+    "min_n_per_cell": 10,
+    "max_n_per_cell": 25,
+    "cells_with_warning": 0,
+    "fisher_fallback_count": 1,
+    "warning_threshold": 10
+  }
+}

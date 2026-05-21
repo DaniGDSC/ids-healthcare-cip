@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0",
-    "generated_at": "2026-05-19T15:13:38.207124+00:00",
+    "generated_at": "2026-05-21T10:12:26.526572+00:00",
     "generated_by": "analysis/compile_invariant_evidence.py",
     "manifest_path": "configs/invariants_manifest.yaml",
     "taxonomy_locked_on": "2026-05-19",

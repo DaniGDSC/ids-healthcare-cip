@@ -1256,5 +1256,974 @@
   <li><span class="label unknown">[UNKNOWN]</span> cannot determine from available code</li>
 </ul>
 
+<div class="session-header">
+  <strong>Session 8 — 2026-05-21 — Phase 0 ONLY (Fix 1: Risk Weight Discovery)</strong><br>
+  Subject: Discovery preconditions for Fix 1 (weight sensitivity analysis).
+  Six Q-W queries. No design decisions. No code changes.
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q-W1:</strong> <code>ls -la analysis/compute_weight_sensitivity.py</code> + <code>wc -l</code> if present; otherwise classify as absent. Sibling listing of <code>analysis/</code> for context.</li>
+  <li><strong>Q-W2:</strong> <code>grep -n "compute_composite_risk|def compute_R|composite_risk" module3_risk_scoring/module3_risk_scores.py</code>, then <code>view</code> the function body at the def line + ~50 lines.</li>
+  <li><strong>Q-W3:</strong> repo-wide <code>grep -rn "W_C_DETECT|W_D_CRIT|W_S_DATA|W_D_CLINICAL|risk_weights|RISK_WEIGHTS|composite_risk_weights"</code> across <code>.py/.yaml/.yml/.json/.toml</code>; if YAML/constants found, <code>view</code> the definition / config file verbatim.</li>
+  <li><strong>Q-W4:</strong> <code>ls -la data/processed/{test_phase1,val_phase1}.parquet</code> plus full <code>data/processed/*.parquet</code> listing; <code>grep</code> module3 for which parquet it reads.</li>
+  <li><strong>Q-W5:</strong> Python one-liner on <code>results/rq1_metrics.json</code> to check for <code>weight_sensitivity</code> key + status; <code>grep</code> the aggregator script for the placeholder definition; <code>view</code> the placeholder block.</li>
+  <li><strong>Q-W6:</strong> <code>grep -n -B 2 -A 20</code> on RQ1 pipeline spec and expected-outputs docs for "5B / weight sensitivity / sensitivity analysis / perturbation"; <code>view</code> the relevant blocks.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>ls -la analysis/compute_weight_sensitivity.py</code> &rarr; <code>absent</code>. (Q-W1)</li>
+  <li><code>ls analysis/</code> &rarr; 34 entries; no <code>compute_weight_sensitivity*</code> match. (Q-W1)</li>
+  <li><code>ls module3_risk_scoring/</code> &rarr; 5 files incl. <code>module3_risk_scores.py</code>. (Q-W2 setup)</li>
+  <li><code>grep -n "compute_composite_risk|def compute_R|composite_risk" module3_risk_scoring/module3_risk_scores.py</code> &rarr; 7 hits; def at L552; callers at L1156, L1496; YAML comment refs L49/L55/L71. (Q-W2)</li>
+  <li><code>view module3_risk_scoring/module3_risk_scores.py:552-631</code> &rarr; function body, signature, return statement. (Q-W2)</li>
+  <li><code>grep -n "^WEIGHTS|WEIGHTS =|WEIGHTS:" module3_risk_scoring/module3_risk_scores.py</code> &rarr; 1 hit at L107: <code>WEIGHTS: dict[str, float] = load_composite_weights()</code>. (Q-W3)</li>
+  <li><code>grep -rn "W_C_DETECT|W_D_CRIT|W_S_DATA|W_D_CLINICAL|risk_weights|RISK_WEIGHTS|composite_risk_weights" --include=*.py --include=*.yaml --include=*.yml --include=*.json --include=*.toml .</code> &rarr; 9 non-archive hits across <code>module3_risk_scoring/</code>, <code>analysis/_common.py</code>, <code>tests/</code>, <code>module6_evaluation/compute_rq1_metrics.py</code>, <code>results/rq1_metrics.json</code>. <strong>No <code>W_*</code>-prefix constants found</strong>; weight identifiers in this repo are <code>w1/w2/w3/w4</code> via YAML keys <code>detection_confidence/device_criticality/data_sensitivity/clinical_tier</code>. (Q-W3)</li>
+  <li><code>view module3_risk_scoring/module3_risk_scores.py:40-115</code> &rarr; <code>load_composite_weights()</code> at L68-91 reads YAML; <code>WEIGHTS</code> module-level at L107. (Q-W3)</li>
+  <li><code>cat configs/composite_risk_weights.yaml</code> &rarr; 4 weights + 3 tier boundaries + calibration metadata + acknowledged limitations. (Q-W3)</li>
+  <li><code>ls -la data/processed/{test_phase1,val_phase1}.parquet</code> &rarr; both present (May 7 16:28; 131,925 / 131,974 bytes). (Q-W4)</li>
+  <li><code>ls -la data/processed/*.parquet</code> &rarr; 6 parquets total: <code>benign_only_train</code>, <code>benign_only_val</code>, <code>demo_phase1</code>, <code>test_phase1</code>, <code>train_phase1</code>, <code>val_phase1</code>. (Q-W4)</li>
+  <li><code>grep -n "test_phase1|val_phase1|read_parquet" module3_risk_scoring/module3_risk_scores.py</code> &rarr; 3 hits: L223 + L264 (<code>pd.read_parquet</code> in <code>load_split_data</code> / <code>load_split_metadata</code>), L336 (docstring referencing <code>val_phase1.parquet</code>). (Q-W4)</li>
+  <li><code>view module3_risk_scoring/module3_risk_scores.py:215-289</code> &rarr; both readers use <code>PROJECT_ROOT / "data/processed" / f"{split}_phase1.parquet"</code>; <code>split</code> argument constrained to <code>{"test","demo"}</code>. (Q-W4)</li>
+  <li>Python one-liner on <code>results/rq1_metrics.json</code> &rarr; <code>weight_sensitivity</code> key present; sub-keys <code>['_status', '_merged_at']</code>; status string <code>"pending — filled by analysis/compute_weight_sensitivity.py"</code>. (Q-W5)</li>
+  <li><code>grep -n "weight_sensitivity|rq1_weight_sensitivity|risk_weights" module6_evaluation/compute_rq1_metrics.py</code> &rarr; <code>risk_weights</code> at L107; <code>weight_sensitivity</code> placeholder at L586. (Q-W5)</li>
+  <li><code>view module6_evaluation/compute_rq1_metrics.py:580-614</code> &rarr; placeholder dict written into the merged JSON. (Q-W5)</li>
+  <li><strong>Adaptation:</strong> task referenced <code>RQ1_PIPELINE_SPEC.md</code> and <code>RQ1_expected_outputs.md</code>; both <strong>absent</strong> from repo. <code>find . -maxdepth 3 -iname "RQ1*"</code> located the actual spec at <code>RQ1_pipeline.md</code> (lowercase, no <code>_SPEC</code>); no expected-outputs file exists. Substituted <code>RQ1_pipeline.md</code> for Q-W6 reads. (Q-W6)</li>
+  <li><code>grep -n -B 1 -A 25 "weight.*sensitivity|sensitivity analysis|Stage 5B|Stage5B" RQ1_pipeline.md</code> &rarr; multiple hits; relevant blocks at L5-7 (status), L27 (artifact table), L770-820 (§5b / §6.1 spec), L880-882 (Stage 5E inputs). (Q-W6)</li>
+  <li><code>python -c "json.load .. rq1_sensitivity_analysis.json"</code> &rarr; file exists with top-level keys <code>['provenance', 'results']</code>; provenance includes <code>input_files</code> with sha256 of <code>composite_weights_yaml</code>. This is a <em>different</em> artifact (not the Stage-5B weight sensitivity output) — noted to avoid conflation. (Q-W6)</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q-W1: Does <code>analysis/compute_weight_sensitivity.py</code> already exist?</h3>
+  <p><strong>Answer:</strong> <span class="label verified">[VERIFIED]</span> The file is <strong>absent</strong>. <code>ls -la analysis/compute_weight_sensitivity.py</code> exits non-zero and prints <code>absent</code>; a directory listing of <code>analysis/</code> (34 entries) contains no file with that name or any <code>compute_weight_sensitivity*</code> prefix.</p>
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>bash: ls -la analysis/compute_weight_sensitivity.py 2&gt;/dev/null && wc -l … || echo "absent"</code> &rarr; output: <code>absent</code></li>
+      <li><code>bash: ls analysis/</code> &rarr; sibling scripts include <code>compute_rq1.py</code>, <code>calibrate_fusion_threshold.py</code>, <code>compute_track_b_cascade_ablation.py</code>, etc.; no <code>compute_weight_sensitivity*</code>.</li>
+    </ul>
+  </div>
+  <p><strong>Search scope (for the negative claim):</strong> <code>analysis/</code> directory contents (single <code>ls</code>) and the exact path <code>analysis/compute_weight_sensitivity.py</code>.</p>
+  <p><strong>Phase 1 implication:</strong> Phase 1 proceeds with blank-slate design; user makes D1–D4 from scratch. No prior implementation constrains the design surface.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W2: Composite-risk function — location, signature, weight handling</h3>
+
+  <p><strong>Q-W2.1 — Definition line and signature:</strong> <span class="label verified">[VERIFIED]</span> Function is defined at <code>module3_risk_scoring/module3_risk_scores.py:552</code>. Verbatim signature spans L552-L558:</p>
+  <pre>def compute_composite_risk(
+    c_detect: np.ndarray,
+    d_crit: np.ndarray,
+    s_data: np.ndarray,
+    d_clinical_tier: np.ndarray,
+    weights: dict | None = None,
+) -&gt; np.ndarray:</pre>
+  <p>The function already accepts <code>weights</code> as an optional keyword argument with default <code>None</code>.</p>
+
+  <p><strong>Q-W2.2 — How the function consumes the four weights:</strong> <span class="label verified">[VERIFIED]</span> Body at L560-L564 dereferences four string keys (<code>"w1","w2","w3","w4"</code>) from a dict <code>w</code> that is either the caller-supplied <code>weights</code> or the module-level <code>WEIGHTS</code> default. Verbatim:</p>
+  <div class="evidence">
+    <ul>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:560</code> — <code>w = weights or WEIGHTS</code></li>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:561-564</code> — <code>R = (w["w1"] * c_detect + w["w2"] * d_crit + w["w3"] * s_data + w["w4"] * d_clinical_tier)</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Q-W2.3 — Return value:</strong> <span class="label verified">[VERIFIED]</span> Returns a <code>np.ndarray</code> clipped to <code>[0.0, 1.0]</code>. Verbatim:</p>
+  <div class="evidence">
+    <ul>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:565</code> — <code>return np.clip(R, 0.0, 1.0)</code></li>
+    </ul>
+  </div>
+  <p>The return is a scalar-R vector (no tier, no struct). Tier assignment is a separate function <code>assign_risk_levels</code> at L568.</p>
+
+  <p><strong>Phase 1 implication:</strong> The analysis script can call <code>compute_composite_risk(..., weights={"w1":..,"w2":..,"w3":..,"w4":..})</code> directly with no production-code refactor. The signature already exposes weights as an injectable parameter; Q-W3's refactor question collapses to "no refactor needed" pending Q-W3 confirmation of how the default <code>WEIGHTS</code> is sourced.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W3: Weight storage — constants, config, or hardcoded inline?</h3>
+  <p><strong>Answer:</strong> <span class="label verified">[VERIFIED]</span> Weights are stored in a <strong>YAML config file</strong>: <code>configs/composite_risk_weights.yaml</code>. Loaded at import time via <code>load_composite_weights()</code> (L68-L91) into the module-level constant <code>WEIGHTS</code> (L107). The loader validates the four weights sum to 1.0 (±1e-6) and raises <code>ValueError</code> on violation. A hardcoded fallback dict <code>{"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}</code> exists at L85 but is only used when the YAML is missing.</p>
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:54-56</code> — <code>_COMPOSITE_WEIGHTS_YAML = ( Path(__file__).resolve().parent.parent / "configs" / "composite_risk_weights.yaml" )</code></li>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:75-83</code> — YAML path existence-checked; keys mapped: <code>w1=detection_confidence</code>, <code>w2=device_criticality</code>, <code>w3=data_sensitivity</code>, <code>w4=clinical_tier</code>.</li>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:85</code> — fallback <code>weights = {"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}</code></li>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:86-90</code> — sum-to-1.0 invariant: <code>if abs(total - 1.0) &gt; 1e-6: raise ValueError(...)</code></li>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:107</code> — <code>WEIGHTS: dict[str, float] = load_composite_weights()</code></li>
+      <li>config: <code>configs/composite_risk_weights.yaml</code> (top of file) — <code>weights: detection_confidence: 0.40 # w_C device_criticality: 0.25 # w_dcrit data_sensitivity: 0.15 # w_sdata clinical_tier: 0.20 # w_dclin</code></li>
+      <li>config: <code>configs/composite_risk_weights.yaml</code> (line beginning <code>"Sensitivity analysis"</code>) — <code>Sensitivity analysis under ±20% perturbation is reported in paper Section 11</code></li>
+    </ul>
+  </div>
+  <p><strong>Search scope (for the inline-literal negative):</strong> repo-wide <code>grep -rn "W_C_DETECT|W_D_CRIT|W_S_DATA|W_D_CLINICAL|risk_weights|RISK_WEIGHTS|composite_risk_weights"</code> across <code>.py/.yaml/.yml/.json/.toml</code>, excluding <code>.git/</code>, <code>results/_pre_*</code>, and <code>__pycache__</code>; no <code>W_*_*</code>-prefix Python constants found. Within the function body (L552-L565), the only numeric literals are <code>0.0</code> and <code>1.0</code> in the clip call — the four weights are accessed solely via the <code>w["w<i>n</i>"]</code> dict lookups.</p>
+  <p><strong>Phase 1 implication:</strong> This is the "config file" outcome from the task's possible-outcomes table — the cleanest case. No production-code refactor of <code>compute_composite_risk()</code> is required; the function already accepts an injectable <code>weights</code> dict. The Phase 2 sensitivity script can either (a) construct alternative dicts in-memory and pass them directly, or (b) write alternative YAMLs and re-call <code>load_composite_weights()</code>. The sum-to-1.0 invariant at L86-L90 is a constraint on any perturbation dict the script generates: it must either pre-normalize, or the perturbation will raise <code>ValueError</code> if it routes through <code>load_composite_weights()</code> (in-memory dicts bypass this check). Phase 3 verification can lean on this invariant rather than reimplementing it.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W4: Canonical input data for the analysis</h3>
+  <p><strong>Answer:</strong> <span class="label verified">[VERIFIED]</span> Both <code>data/processed/test_phase1.parquet</code> (131,925 bytes, May 7 16:28) and <code>data/processed/val_phase1.parquet</code> (131,974 bytes, May 7 16:28) exist. Module 3's <code>load_split_data()</code> at L223 reads <code>PROJECT_ROOT / "data/processed" / f"{split}_phase1.parquet"</code>; the <code>split</code> argument is gated at L221-L222 to <code>{"test","demo"}</code> only. The val parquet is read elsewhere — by the fusion-threshold calibrator on <code>val_phase1.parquet</code> per the docstring at L336 — but <strong>not</strong> through <code>load_split_data()</code>.</p>
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li>bash: <code>ls -la data/processed/test_phase1.parquet data/processed/val_phase1.parquet</code> &rarr; both files listed, identical mtime.</li>
+      <li>bash: <code>ls -la data/processed/*.parquet</code> &rarr; 6 parquets total (incl. <code>benign_only_train</code>, <code>benign_only_val</code>, <code>demo_phase1</code>, <code>train_phase1</code>).</li>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:221-225</code> — <code>if split not in ("test", "demo"): raise ValueError(...); df = pd.read_parquet(PROJECT_ROOT / "data/processed" / f"{split}_phase1.parquet")</code></li>
+      <li>code: <code>module3_risk_scoring/module3_risk_scores.py:262-266</code> — second reader (<code>load_split_metadata</code>) has the same <code>{"test","demo"}</code> restriction and the same path pattern.</li>
+      <li>doc: <code>module3_risk_scoring/module3_risk_scores.py:336</code> — docstring of <code>load_fusion_thresholds()</code> states <code>The picked ``a_high`` is a Stage-5B calibration on val_phase1.parquet</code>.</li>
+    </ul>
+  </div>
+  <p><strong>Phase 1 implication:</strong> This is the "both <code>val_phase1</code> and <code>test_phase1</code> exist" outcome from the task's possible-outcomes table. The Phase 1 methodology decision is unconstrained by data availability: the user can elect val for sensitivity (to keep test clean for headline metrics), test (if they decide same-split sensitivity is acceptable here), or both (for held-out robustness). One non-trivial constraint surfaces from Q-W4 reads: <code>load_split_data()</code> hard-rejects <code>"val"</code>, so a sensitivity script that wants val data must either (a) call <code>pd.read_parquet</code> directly, (b) reuse the loader logic the fusion-threshold calibrator uses (which Q-W4 did not open), or (c) extend <code>load_split_data()</code>'s allowed set to include <code>"val"</code> — a 1-line change.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W5: Existing aggregator placeholder for weight_sensitivity</h3>
+  <p><strong>Answer:</strong> <span class="label verified">[VERIFIED]</span> The key <code>"weight_sensitivity"</code> is already present in <code>results/rq1_metrics.json</code> with sub-keys <code>["_status", "_merged_at"]</code>; the status value is the string <code>"pending — filled by analysis/compute_weight_sensitivity.py"</code> and <code>_merged_at</code> is <code>null</code>. The aggregator that writes this placeholder is <code>module6_evaluation/compute_rq1_metrics.py</code> at L586-L590.</p>
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li>bash: Python one-liner on <code>results/rq1_metrics.json</code> &rarr; <code>weight_sensitivity_present: True; keys: ['_status', '_merged_at']; status: pending — filled by analysis/compute_weight_sensitivity.py</code></li>
+      <li>code: <code>module6_evaluation/compute_rq1_metrics.py:586-590</code> — <code>"weight_sensitivity": { "_status": "pending — filled by " "analysis/compute_weight_sensitivity.py", "_merged_at": None, }</code></li>
+      <li>code: <code>module6_evaluation/compute_rq1_metrics.py:107</code> — additionally, a separate <code>"risk_weights"</code> block (not the sensitivity output; a metadata echo of the weight vector) is constructed by the aggregator. Not opened in this turn beyond confirming its grep location.</li>
+    </ul>
+  </div>
+  <p><strong>Phase 1 implication:</strong> This is the "key exists with <code>_status: pending</code>" outcome — but the schema is <em>minimal</em> (only <code>_status</code> and <code>_merged_at</code>), not a fully-defined schema awaiting fill-in. Phase 1 still needs to define the JSON schema the analysis script will write to (perturbation conditions, per-condition metrics, summary statistics). The aggregator's merge mechanism — i.e., how it ingests <code>results/rq1_weight_sensitivity.json</code> and overlays it on the placeholder — was not opened in this turn; whether <code>compute_rq1_metrics.py</code> needs an aggregator change is <span class="label unknown">[UNKNOWN]</span> until the merge-script side (Stage 5E per RQ1_pipeline.md §6.x) is read. Phase 2 scope is therefore: write the analysis script + JSON; possibly extend the aggregator depending on what Stage 5E currently does.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W6: RQ1 pipeline spec — current wording on Stage 5B (weight sensitivity)</h3>
+  <p><strong>Adaptation note:</strong> Task referenced <code>RQ1_PIPELINE_SPEC.md</code> and <code>RQ1_expected_outputs.md</code>; both are absent from the repo. The actual spec is <code>RQ1_pipeline.md</code> (lowercase, no <code>_SPEC</code> suffix); no expected-outputs file exists at the cited paths or under <code>maxdepth 3</code>. Q-W6 reads target <code>RQ1_pipeline.md</code>.</p>
+
+  <p><strong>Q-W6.1 — Perturbation conditions currently named in the spec:</strong> <span class="label verified">[VERIFIED]</span> The spec at <code>RQ1_pipeline.md:806-820</code> names <strong>no specific perturbation conditions</strong>. The section header is "Stage 5B — Weight sensitivity (SPEC PENDING, <code>a_high</code> half RESOLVED in §5b)". Instead of conditions, it lists four open design questions verbatim:</p>
+  <div class="evidence">
+    <ul>
+      <li>doc: <code>RQ1_pipeline.md:812</code> — <code>Perturbation protocol: one-at-a-time vs joint sampling vs Dirichlet?</code></li>
+      <li>doc: <code>RQ1_pipeline.md:813</code> — <code>Number of perturbations per condition?</code></li>
+      <li>doc: <code>RQ1_pipeline.md:814</code> — <code>Agreement metric: exact tier match, Cohen's κ, both?</code></li>
+      <li>doc: <code>RQ1_pipeline.md:815</code> — <code>Multiplicative R: implement as a separate condition or skip?</code></li>
+    </ul>
+  </div>
+  <p>A separate document hint exists outside the spec: <code>configs/composite_risk_weights.yaml</code> says <code>Sensitivity analysis under ±20% perturbation is reported in paper Section 11</code> (single line, no protocol detail). The paper's Section 11 was not opened in this turn.</p>
+
+  <p><strong>Q-W6.2 — Metrics the spec says the analysis must report:</strong> <span class="label verified">[VERIFIED]</span> The spec body at L806-L820 names no required output metrics beyond what is implied by the four open questions (agreement metric is itself an open question). The only metric-shaped concrete statement is the artifact-row reference at L27: the output file is <code>results/rq1_weight_sensitivity.json</code>, produced at Stage 5B. The <code>compute_rq1_metrics.py</code> aggregator placeholder schema (Q-W5) is similarly empty beyond <code>_status</code>/<code>_merged_at</code>.</p>
+  <div class="evidence">
+    <ul>
+      <li>doc: <code>RQ1_pipeline.md:27</code> — <code>| Weight sensitivity JSON | `results/rq1_weight_sensitivity.json` | 5B |</code></li>
+      <li>doc: <code>RQ1_pipeline.md:817-819</code> — <code>Until specified, the broader sensitivity analysis is deferred. ... When ready to implement, create `analysis/compute_weight_sensitivity.py` writing to `results/rq1_weight_sensitivity.json`. The merge script (Stage 5E) folds it in.</code></li>
+      <li>doc: <code>RQ1_pipeline.md:880-882</code> — Stage 5E contract lists <code>results/rq1_weight_sensitivity.json (5B)</code> as one of three inputs.</li>
+    </ul>
+  </div>
+
+  <p><strong>Q-W6.3 — Are the four open questions still open?</strong> <span class="label verified">[VERIFIED]</span> Yes, all four remain open in the current spec. The spec's top-matter at L6 states verbatim: <code>Phase 4 sub-stage 5B (weight sensitivity) and Phase 4 sub-stage 5D (MedSec sibling metrics) have remaining design questions flagged inline — implement the rest first.</code> The §6.1 block at L806-L820 lists the four questions and explicitly marks the broader sensitivity analysis as "deferred". No resolution markers (e.g., "RESOLVED:", strike-through, or a "Locked design decisions" row in §2) reference the weight perturbation protocol, perturbation count, agreement metric, or multiplicative-R alternative.</p>
+  <div class="evidence">
+    <ul>
+      <li>doc: <code>RQ1_pipeline.md:6</code> — status line quoted above.</li>
+      <li>doc: <code>RQ1_pipeline.md:806</code> — <code>### 6.1 Stage 5B — Weight sensitivity (SPEC PENDING, `a_high` half RESOLVED in §5b)</code></li>
+      <li>doc: <code>RQ1_pipeline.md:808</code> — <code>**Resolved:** the `a_high` half of this stage was completed in [Phase 3.5] ... Calibrated value: `a_high = 0.41` on val_phase1.</code> (The resolved half is fusion-threshold calibration, not weight sensitivity.)</li>
+      <li>doc: <code>RQ1_pipeline.md:810</code> — <code>**Still pending:** joint sensitivity over `(a_low, b)` plus full risk-weight perturbation.</code></li>
+      <li>doc: <code>RQ1_pipeline.md:817</code> — <code>Until specified, the broader sensitivity analysis is deferred.</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Search scope (for "no resolution markers" negative claim):</strong> the four <code>grep</code> windows produced by <code>grep -n -B 1 -A 25 "weight.*sensitivity|sensitivity analysis|Stage 5B|Stage5B" RQ1_pipeline.md</code>, covering L5-7, L24-32, L766-795, L806-820, L880-885. The §2 "Locked design decisions" table was inspected in the L40-L52 window from the same scan and contains no entry for weight perturbation protocol / count / agreement metric / multiplicative-R.</p>
+
+  <p><strong>Phase 1 implication:</strong> The spec is <strong>unchanged</strong> from the Blocker 0 plan's premise — the four open questions in the spec map 1:1 to D1 (perturbation magnitude / count — Q-W6.1 implies magnitude is unspecified beyond the YAML's <em>±20%</em> hint; the spec itself names neither magnitude nor count), D2 (perturbation protocol: OAT vs joint vs Dirichlet), D3 (agreement metric: exact-match, κ, both), D4 (multiplicative R alternative). No silent spec drift to reconcile. Phase 1 picks D1–D4 against the spec as it stands. The YAML comment naming "±20% perturbation … paper Section 11" surfaces as a follow-up: that magnitude is asserted in one place (YAML) but not codified in the spec; the user may want to harmonize before or during Phase 1.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>Does the Stage 5E merge script (<code>analysis/merge_rq1_metrics.py</code> per <code>analysis/</code> listing in Q-W1) already know how to overlay a <code>rq1_weight_sensitivity.json</code> onto the aggregator's placeholder, or is the merge logic also pending? — would resolve the [UNKNOWN] in Q-W5's Phase 1 implication.</li>
+  <li>The YAML comment claims <code>Sensitivity analysis under ±20% perturbation is reported in paper Section 11</code>. Is the paper's Section 11 already drafted with assumed-but-unrun results, or is the comment aspirational? — relevant to whether D1's magnitude is genuinely open or de facto locked by the paper draft.</li>
+  <li>An existing artifact <code>results/rq1_sensitivity_analysis.json</code> (top-level keys <code>['provenance', 'results']</code>; provenance includes a sha256 of <code>composite_weights_yaml</code>) is present. What does this file actually contain (its <code>results</code> body was not opened)? Is it (a) prior partial work on weight sensitivity to be reused/superseded, (b) a different "sensitivity" artifact (e.g., the headline-target sens/spec metrics), or (c) stale?</li>
+  <li>The aggregator at <code>module6_evaluation/compute_rq1_metrics.py:107</code> writes a <code>"risk_weights"</code> sub-block that was not opened in this turn. What does it contain — just the weight vector echo, or per-component statistics that overlap with what the sensitivity analysis will produce?</li>
+  <li><code>module3_risk_scoring/module3_risk_scores.py</code> contains a function <code>apply_weight_feedback()</code> at L627 (sighted at the tail of the Q-W2 view; body not read) and a call site at L1156 inside what looks like an optimization loop (<code>R_var = compute_composite_risk(c_detect, d_crit, s_data, d_clinical_tier, w)</code>). Is there pre-existing weight-perturbation infrastructure that overlaps with what Fix 1 will build?</li>
+  <li>The <code>load_split_data()</code> path-builder rejects <code>"val"</code> as a split argument (L221-L222). Is there an alternative loader that does accept val (the fusion-threshold calibrator must use one), or does each consumer reinvent it?</li>
+  <li>Branch decision: Fix 5 / F-D appears landed on <code>docs/offline-framing-fix</code> (commit <code>10e2615</code>). Should Phase 2 of Fix 1 branch fresh to <code>fix/rq1-weight-sensitivity</code>, or continue on the current branch? Phase 0 is read-only so no harm done either way; flagged here because Phase 2 will need the decision.</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files opened (read with <code>view</code>):</strong>
+    <ul>
+      <li><code>prompts/discovery.md</code> (full read, 305 lines)</li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py</code> ranges: L40-115, L215-289, L328-352, L552-631</li>
+      <li><code>configs/composite_risk_weights.yaml</code> (full, ~40 lines via <code>cat</code>)</li>
+      <li><code>module6_evaluation/compute_rq1_metrics.py</code> range: L580-614</li>
+      <li><code>Codebase_Investigation.html</code> ranges: L1-80, L1220-1260 (for schema match)</li>
+    </ul>
+  </li>
+  <li><strong>Searches and shell commands:</strong>
+    <ul>
+      <li><code>find . -iname "discovery*.md" -not -path "*/\.*"</code></li>
+      <li><code>ls prompts/</code>, <code>ls analysis/</code>, <code>ls module3_risk_scoring/</code>, <code>ls Codebase_Investigation.html</code></li>
+      <li><code>git branch --show-current</code>, <code>git status --short</code></li>
+      <li><code>grep -n "compute_composite_risk|def compute_R|composite_risk" module3_risk_scoring/module3_risk_scores.py</code></li>
+      <li><code>grep -n "^WEIGHTS|WEIGHTS =|WEIGHTS:" module3_risk_scoring/module3_risk_scores.py</code></li>
+      <li><code>grep -rn "W_C_DETECT|W_D_CRIT|W_S_DATA|W_D_CLINICAL|risk_weights|RISK_WEIGHTS|composite_risk_weights" --include=*.py --include=*.yaml --include=*.yml --include=*.json --include=*.toml .</code> (filtered to exclude <code>.git/</code>, <code>__pycache__</code>, <code>results/_pre_*</code>)</li>
+      <li><code>ls -la data/processed/test_phase1.parquet data/processed/val_phase1.parquet</code>; <code>ls -la data/processed/*.parquet</code></li>
+      <li><code>grep -n "test_phase1|val_phase1|read_parquet" module3_risk_scoring/module3_risk_scores.py</code></li>
+      <li><code>python -c "import json; d = json.load(open('results/rq1_metrics.json')); …"</code></li>
+      <li><code>grep -n "weight_sensitivity|rq1_weight_sensitivity|risk_weights" module6_evaluation/compute_rq1_metrics.py</code></li>
+      <li><code>find . -maxdepth 3 -iname "RQ1*" -not -path "*/\.*"</code> (spec relocation)</li>
+      <li><code>grep -n -B 1 -A 25 "weight.*sensitivity|sensitivity analysis|Stage 5B|Stage5B" RQ1_pipeline.md</code></li>
+      <li><code>python -c "import json; d = json.load(open('results/rq1_sensitivity_analysis.json')); …"</code></li>
+      <li><code>grep -n "session-header|Session [0-9]" Codebase_Investigation.html</code></li>
+    </ul>
+  </li>
+  <li><strong>Default exclusions applied:</strong> yes — <code>tests/</code>, <code>node_modules/</code>, <code>venv/</code>, build outputs, <code>.git/</code>, archived <code>results/_pre_*</code> snapshots. <strong>Opt-ins:</strong> <code>results/rq1_metrics.json</code> and <code>results/rq1_sensitivity_analysis.json</code> were inspected under the Binary Artifact Protocol because Q-W5 / Q-W6 explicitly target them; <code>configs/composite_risk_weights.yaml</code> read because Q-W3 explicitly targets it.</li>
+  <li><strong>Branch:</strong> Phase 0 was executed on <code>docs/offline-framing-fix</code> (commit <code>10e2615</code>, Fix 5 / F-D landed). This branch IS in the allowed set <code>{fix/rq1-weight-sensitivity, docs/offline-framing-fix, main}</code> per the task's STOP conditions. No writes occurred. The branch decision for Phase 2 (branch fresh to <code>fix/rq1-weight-sensitivity</code> vs continue here) is logged as a Section 4 follow-up for the user.</li>
+  <li><strong>Explicitly NOT in this answer:</strong>
+    <ul>
+      <li>Any recommendation on D1 (perturbation magnitude), D2 (protocol), D3 (agreement metric), or D4 (multiplicative R) — these are Phase 1 decisions.</li>
+      <li>Any assessment of whether the current weights (0.40 / 0.25 / 0.15 / 0.20) are "correct" — explicitly out of scope per task DO-NOT-DO.</li>
+      <li>The body of <code>apply_weight_feedback()</code> at L627 — sighted in the Q-W2 view but not opened; parked as a Section 4 follow-up.</li>
+      <li>The body of the call site at <code>module3_risk_scoring/module3_risk_scores.py:1156</code> (<code>R_var = compute_composite_risk(... w)</code>) — not opened; parked as Section 4 follow-up.</li>
+      <li>The Stage 5E merge script — not opened; relevant to Q-W5's [UNKNOWN] but defensibly tangent to Phase 0's six chartered queries.</li>
+      <li>The <code>results</code> body of <code>results/rq1_sensitivity_analysis.json</code> — parked as Section 4 follow-up.</li>
+      <li>The aggregator's <code>"risk_weights"</code> sub-block at <code>compute_rq1_metrics.py:107</code> — grep location confirmed, body not opened.</li>
+      <li>Paper Section 11 — not in the repo as a discoverable file; cited only via the YAML's one-line comment.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim in Section 3 carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every <code>path:Lx-Ly</code> cited in Section 3 appears in Section 2 — <strong>PASS</strong></li>
+  <li>[x] Every verbatim quote ≤25 words, in backticks — <strong>PASS</strong> (the function signature is quoted as a multi-line code block; each line is &lt;25 words)</li>
+  <li>[x] No prohibited softening words ("appears," "likely," "probably," "should," "would," "seems," "typically," "usually") anywhere in Sections 3 or 4 — <strong>PASS</strong></li>
+  <li>[x] No fix / refactor / improvement suggestion in any section — <strong>PASS</strong> (Section 7 maps implications to decisions; it does not pick them)</li>
+  <li>[x] Every negative claim states its search scope and command — <strong>PASS</strong> (Q-W1, Q-W3, Q-W6.3)</li>
+  <li>[x] No docstring / type hint cited as CODE evidence — <strong>PASS</strong> (the L336 docstring reference in Q-W4 is explicitly labeled <code>doc:</code>)</li>
+  <li>[x] Questions answered in order asked (Q-W1 → Q-W6) — <strong>PASS</strong></li>
+  <li>[x] Section 5 explicitly states what was not read — <strong>PASS</strong></li>
+  <li>[x] <strong>Task-specific:</strong> every Q-W answer includes a Phase 1 Implication paragraph — <strong>PASS</strong></li>
+  <li>[x] <strong>Task-specific:</strong> Section 7 maps each D1–D4 + refactor + methodology + aggregator + spec line to the Q-W it derives from — <strong>PASS</strong> (see below)</li>
+  <li>[x] <strong>Task-specific:</strong> no design recommendation appears anywhere (no "use OAT", "100 samples is enough", etc.) — <strong>PASS</strong></li>
+  <li>[x] <strong>Task-specific:</strong> no edit performed during this phase (Phase 0 = read-only) — <strong>PASS</strong> (this HTML append is the chartered output artifact, not a code edit)</li>
+  <li>[x] <strong>Task-specific:</strong> branch confirmed and stated in Section 5 — <strong>PASS</strong></li>
+  <li>[x] STOP conditions checked: Q-W2 located the function (no stop); Q-W3 found YAML config (refactor ≪30 LOC, no stop); Q-W4 both parquets present (no stop); branch in allowed set (no stop); Q-W6 spec unchanged from Blocker 0 premise (no stop) — <strong>ALL CLEAR</strong></li>
+</ul>
+
+<h2>Section 7 — Consolidated Phase 1 Implications</h2>
+<p>Synthesis of the per-question Phase 1 implications. Each bullet maps a Phase 1 decision (or other scope item) to the Q-W answers it derives from. <strong>No design recommendation appears; the user picks.</strong></p>
+<ul>
+  <li><strong>D1 — Perturbation magnitude:</strong> Derived from Q-W6 (spec leaves magnitude unspecified) and Q-W3 (YAML comment names "±20%" as the magnitude reported in paper Section 11; status of that paper section unknown — see Section 4 follow-up). The user picks magnitude against an open spec with one prior textual hint.</li>
+  <li><strong>D2 — Perturbation protocol (OAT / joint / Dirichlet):</strong> Derived from Q-W6.1 — the spec lists these three options verbatim as the open question. No protocol has been adopted in code (Q-W1 absence confirms blank slate). The sum-to-1.0 invariant from Q-W3 constrains any protocol's output dicts (must pre-normalize or route through the loader's check).</li>
+  <li><strong>D3 — Agreement metric (exact tier match / Cohen's κ / both):</strong> Derived from Q-W6.1 — open question verbatim in spec. Q-W2.3 confirms <code>compute_composite_risk</code> returns R only; tier assignment is a separate function (<code>assign_risk_levels</code>, L568), so any tier-based agreement metric requires calling both functions, not modifying either.</li>
+  <li><strong>D4 — Multiplicative R alternative:</strong> Derived from Q-W6.1 — open question verbatim in spec. Q-W2.2 confirms the current formula is additive (<code>w["w1"]*c_detect + w["w2"]*d_crit + …</code>), so a multiplicative alternative is a separate function, not a parameter flip on the existing one. The acknowledged limitation in the YAML (<code>L1: Linear sum allows compensatory effects vs true multiplicative risk</code>) confirms the design intent that multiplicative is a known divergence point.</li>
+  <li><strong>Refactor scope:</strong> Derived primarily from Q-W3, secondarily Q-W2. <strong>No production-code refactor is required.</strong> <code>compute_composite_risk</code> already accepts an optional <code>weights: dict | None = None</code> parameter and dereferences <code>w["w1".."w4"]</code> from the supplied dict. Phase 2's sensitivity script can call the function with alternative dicts in-memory; alternatively, it can write alternative YAMLs and rely on <code>load_composite_weights()</code> (which adds the sum-to-1.0 enforcement at L86-L90). The fallback dict at L85 is the only inline literal in the loader; the function body has no weight literals.</li>
+  <li><strong>Methodological caveats (which split to use):</strong> Derived from Q-W4. Both <code>val_phase1.parquet</code> and <code>test_phase1.parquet</code> exist, so the user is free to choose val (preserves test for headline metrics), test (same-split sensitivity), or both. Minor friction: <code>load_split_data()</code> at L221-L222 rejects <code>"val"</code>; the sensitivity script must either bypass it (direct <code>pd.read_parquet</code>) or extend the allowed set (one-line change).</li>
+  <li><strong>Aggregator scope:</strong> Derived from Q-W5. Placeholder key <code>weight_sensitivity</code> exists in both the running aggregator (<code>compute_rq1_metrics.py:586-590</code>) and the persisted output (<code>results/rq1_metrics.json</code>), but with only <code>_status</code>/<code>_merged_at</code> — no schema for the body. Phase 1 must define the analysis-script JSON schema; the question of whether <code>compute_rq1_metrics.py</code> itself needs changes to ingest <code>results/rq1_weight_sensitivity.json</code> is <span class="label unknown">[UNKNOWN]</span> until the Stage 5E merge script is read (Section 4 follow-up).</li>
+  <li><strong>Spec reconciliation:</strong> Derived from Q-W6.3. The spec is <strong>unchanged</strong> from the Blocker 0 plan's premise — the four open questions in <code>RQ1_pipeline.md:812-815</code> map 1:1 to D1–D4. No silent drift; the user picks D1–D4 fresh per the Fix 1 plan's proposed defaults. One harmonization opportunity: the YAML's "±20%" comment is the only place a magnitude appears, and is not codified in the spec.</li>
+  <li><strong>Path-naming adaptation:</strong> The task referenced <code>RQ1_PIPELINE_SPEC.md</code> and <code>RQ1_expected_outputs.md</code>; the actual files are <code>RQ1_pipeline.md</code> (lowercase, no <code>_SPEC</code>) and no expected-outputs file exists. Phase 1 docs should reference the correct filenames.</li>
+</ul>
+
+<div class="session-header">
+  <strong>Session 9 — 2026-05-21 — Phase 0b ONLY (Fix 1: Close Phase 0 Unknowns) — STOPPED AFTER Q-V1</strong><br>
+  Subject: Four follow-up reads planned (Q-V1, Q-V4, Q-V2, Q-V3 in that order).
+  Q-V1 returned outcome <strong>(a-fresh)</strong> — prior weight-sensitivity work
+  with current provenance. Per task STOP condition, Q-V2/V3/V4 are <strong>deferred</strong>
+  pending user direction on Phase 1 framing change. No design decisions. No code changes.
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q-V1 (executed):</strong> <code>ls -la results/rq1_sensitivity_analysis.json</code>; Python one-liner dumping full JSON (file is small, full body); <code>sha256sum</code> of <code>configs/composite_risk_weights.yaml</code> compared to JSON's recorded sha256; <code>git rev-parse HEAD</code> and <code>git merge-base --is-ancestor</code> for provenance currency.</li>
+  <li><strong>Q-V4 (deferred):</strong> <code>ls analysis/ | grep -iE "merge|aggregat|combine|rq1"</code>; <code>grep -rn "rq1_weight_sensitivity|weight_sensitivity" --include="*.py" analysis/ module6_evaluation/</code>; <code>view</code> the candidate.</li>
+  <li><strong>Q-V2 (deferred):</strong> <code>grep -n "^def "</code> to bracket <code>apply_weight_feedback()</code>; <code>view</code> the body; <code>grep -rn "apply_weight_feedback" --include="*.py" .</code> for callers.</li>
+  <li><strong>Q-V3 (deferred):</strong> bracket the function containing L1156; <code>view module3_risk_scoring/module3_risk_scores.py:1140-1180</code>.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>git branch --show-current</code> &rarr; <code>fix/rq1-weight-sensitivity</code> (branch precondition satisfied).</li>
+  <li><code>ls -la results/rq1_sensitivity_analysis.json</code> &rarr; file present, 2,357 bytes, mtime <code>May 16 17:07</code>.</li>
+  <li><code>python -c "import json; … json.dumps(d, indent=2, default=str)"</code> on <code>results/rq1_sensitivity_analysis.json</code> &rarr; full body printed; top-level keys <code>['provenance', 'results']</code>; <code>results</code> contains 6 sub-keys: <code>perturbation_results, baselines, baseline_weights, tier_boundaries, perturbation_method, n_alerts_evaluated</code>.</li>
+  <li><code>sha256sum configs/composite_risk_weights.yaml</code> &rarr; <code>a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c</code> — <strong>matches</strong> the JSON's <code>provenance.input_files.composite_weights_yaml</code> field byte-for-byte.</li>
+  <li><code>git rev-parse HEAD</code> &rarr; <code>10e26156dca76174ff1d155cf23211bb730abf3f</code>. JSON <code>provenance.git_commit</code> = <code>52521ee16850dd6a0dae6a1e76c716f53dbf359b</code>.</li>
+  <li><code>git merge-base --is-ancestor 52521ee16850dd6a0dae6a1e76c716f53dbf359b HEAD</code> &rarr; exit 0 (ancestor relationship holds).</li>
+  <li><code>git log -1 --format="%h %ai %s" 52521ee</code> &rarr; <code>52521ee 2026-05-16 15:07:56 +0700 Refactor code structure for improved readability and maintainability</code>.</li>
+  <li><strong>Bounded-scope follow-up read</strong> (kept inside Q-V1's perimeter to give the user the minimum context needed at the STOP decision point): <code>grep -rln "rq1_sensitivity_analysis\.json|rq1_sensitivity_analysis" --include=*.py --include=*.md .</code> (excluding <code>__pycache__</code>, <code>.git/</code>, <code>results/_pre_*</code>) &rarr; 4 hits: <code>results/THESIS_RESULTS.md</code>, <code>analysis/merge_rq1_metrics.py</code>, <code>analysis/compute_rq1.py</code>, <code>analysis/build_thesis_results.py</code>. The bodies of these files were <strong>not opened</strong>; surfaced as facts only.</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q-V1: Contents of <code>results/rq1_sensitivity_analysis.json</code></h3>
+
+  <p><strong>Q-V1.1 — File size, top-level structure, provenance metadata:</strong> <span class="label verified">[VERIFIED]</span> File is 2,357 bytes, mtime <code>2026-05-16 17:07</code>. Top-level keys: <code>provenance</code>, <code>results</code>. Provenance carries: <code>generated_at: "2026-05-16T10:07:33Z"</code>, <code>git_commit: "52521ee16850dd6a0dae6a1e76c716f53dbf359b"</code>, <code>random_seed: 42</code>, <code>schema_version: "1.0"</code>, <code>code_version: "thesis-v1.0"</code>, <code>python_version: "3.10.20"</code>, and an <code>input_files</code> sub-dict with sha256 of seven inputs (<code>test_split</code>, <code>demo_split</code>, <code>xgboost_model</code>, <code>dae_detector_json</code>, <code>dae_weights</code>, <code>composite_weights_yaml</code>, <code>adaptive_thresholds_yaml</code>).</p>
+
+  <p><strong>Q-V1.2 — Is this prior weight-sensitivity work?</strong> <span class="label verified">[VERIFIED]</span> <strong>Yes — outcome (a)</strong>. The <code>results</code> body contains perturbation conditions, baselines including a multiplicative-R variant, and per-baseline agreement plus <code>fnr_critical_delta</code> values. This is not headline target metrics, not a naming collision, not orphaned scaffolding.</p>
+  <div class="evidence">
+    <strong>Evidence (verbatim from the JSON body):</strong>
+    <ul>
+      <li><code>results.perturbation_method</code> = <code>"multiplicative ±10% then L1 renormalize to sum=1.0"</code></li>
+      <li><code>results.perturbation_results.n_perturbations</code> = <code>30</code></li>
+      <li><code>results.perturbation_results.agreement_mean</code> = <code>0.9823</code>; <code>agreement_std</code> = <code>0.0082</code>; <code>agreement_min</code> = <code>0.9669</code>; <code>agreement_max</code> = <code>0.9947</code>; quartiles p25/p50/p75 = <code>0.9755 / 0.9828 / 0.9905</code></li>
+      <li><code>results.perturbation_results.histogram_counts</code> = <code>[0,0,0,0,0,0,0,0,0,30]</code> with <code>histogram_edges</code> covering <code>[0.0, 1.0]</code> in 10 bins — all 30 perturbations land in the rightmost (0.9–1.0) agreement bin.</li>
+      <li><code>results.baselines.equal_weights</code> = <code>{"agreement": 0.7345, "fnr_critical_delta": 0.0106}</code></li>
+      <li><code>results.baselines.c_detect_only</code> = <code>{"agreement": 0.7659, "fnr_critical_delta": 0.0}</code></li>
+      <li><code>results.baselines.multiplicative</code> = <code>{"agreement": 0.7929, "fnr_critical_delta": 0.0}</code></li>
+      <li><code>results.baseline_weights</code> = <code>{"detection_confidence": 0.4, "device_criticality": 0.25, "data_sensitivity": 0.15, "clinical_tier": 0.2}</code> — byte-matches current YAML weights.</li>
+      <li><code>results.tier_boundaries</code> = <code>{"critical_min": 0.8, "high_min": 0.6, "medium_min": 0.4}</code> — byte-matches current YAML tier_boundaries.</li>
+      <li><code>results.n_alerts_evaluated</code> = <code>2448</code> — matches val_phase1 row count cited in <code>RQ1_pipeline.md:779</code> from Session 8.</li>
+    </ul>
+  </div>
+
+  <p><strong>Q-V1.3 — Conditions / agreement metric / magnitude / safety floor:</strong></p>
+  <ul>
+    <li><span class="label verified">[VERIFIED]</span> <strong>Conditions present:</strong> 30 random perturbations of the four weights (drawn by the named protocol) <em>plus</em> three named comparator baselines (<code>equal_weights</code>, <code>c_detect_only</code>, <code>multiplicative</code>).</li>
+    <li><span class="label verified">[VERIFIED]</span> <strong>Agreement metric:</strong> A scalar <code>agreement</code> field is reported per condition. The metric's <em>definition</em> (exact tier-match rate? κ? per-tier accuracy?) is <strong>not specified in this JSON</strong>; only the value is reported. Without reading the producer script, the definition is <span class="label unknown">[UNKNOWN]</span>. Cohen's κ is not explicitly named in the JSON.</li>
+    <li><span class="label verified">[VERIFIED]</span> <strong>Perturbation magnitude:</strong> ±10% multiplicative (verbatim from <code>results.perturbation_method</code>). Note: this differs from the YAML comment's "±20%" from Session 8 Q-W3 / Q-W6.1.</li>
+    <li><span class="label verified">[VERIFIED]</span> <strong>Safety floor check:</strong> Yes, implicitly — each baseline reports a <code>fnr_critical_delta</code>. <code>equal_weights</code>: +0.0106; <code>c_detect_only</code>: 0.0; <code>multiplicative</code>: 0.0. The 30 random perturbations report only agreement statistics, not <code>fnr_critical_delta</code> per perturbation.</li>
+  </ul>
+
+  <p><strong>Q-V1.4 — Provenance currency:</strong> <span class="label verified">[VERIFIED]</span> <strong>(a-fresh), not (a-stale).</strong> Two independent checks confirm currency:</p>
+  <ul>
+    <li><span class="label verified">[VERIFIED]</span> <code>sha256sum configs/composite_risk_weights.yaml</code> &rarr; <code>a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c</code> &mdash; matches <code>provenance.input_files.composite_weights_yaml</code> exactly.</li>
+    <li><span class="label verified">[VERIFIED]</span> <code>git merge-base --is-ancestor 52521ee HEAD</code> exits 0 &mdash; the JSON's commit (<code>52521ee</code>, 2026-05-16) is an ancestor of HEAD (<code>10e26156</code>). Commit subject: <code>"Refactor code structure for improved readability and maintainability"</code>. The YAML has not been modified on any commit between <code>52521ee</code> and HEAD (or the sha256 would not match).</li>
+  </ul>
+
+  <p><strong>Phase 1 implication:</strong> This is outcome <strong>(a-fresh)</strong> from the task's resolution-outcomes table. The Phase 1 framing changes materially:</p>
+  <ul>
+    <li><strong>D1 (perturbation magnitude):</strong> the prior artifact picked <strong>±10% multiplicative-then-L1-renormalize</strong>. The YAML comment names <strong>±20%</strong> for paper Section 11. These are inconsistent. Phase 1 must reconcile.</li>
+    <li><strong>D2 (perturbation protocol):</strong> the prior artifact picked <strong>joint random sampling under the multiplicative+renormalize generator with N=30</strong>, not OAT and not Dirichlet. Phase 1 decides keep / extend / replace.</li>
+    <li><strong>D3 (agreement metric):</strong> a scalar agreement is reported per condition, but its <em>definition</em> is not in the JSON — Phase 1 must inspect the producer script (deferred Q-V4-adjacent read) to know whether the prior work used exact tier-match, κ, or other. The 30-perturbation distribution is tightly clustered (min 0.9669, max 0.9947, p50 0.9828, all in the 0.9–1.0 histogram bin); whatever the metric is, it is saturated for small perturbations.</li>
+    <li><strong>D4 (multiplicative R):</strong> the prior artifact <strong>already includes a multiplicative-R comparator baseline</strong> with reported agreement 0.7929 and <code>fnr_critical_delta</code> 0.0. D4's "implement as a separate condition or skip" question is partially pre-answered: it is currently a baseline comparator, not the primary formula.</li>
+    <li><strong>Refactor scope:</strong> unchanged from Session 8 — the prior work used the existing parameterized <code>compute_composite_risk(weights=...)</code> signature; no refactor needed.</li>
+    <li><strong>Aggregator scope:</strong> the prior artifact's filename (<code>rq1_sensitivity_analysis.json</code>) differs from the spec-named target (<code>rq1_weight_sensitivity.json</code>); these are distinct files. Q-V4 was deferred, so whether the merge script ingests the prior filename, the spec filename, both, or neither remains <span class="label unknown">[UNKNOWN]</span>.</li>
+  </ul>
+  <p><strong>Net framing change:</strong> Phase 1 is no longer "fresh four-decision design"; it is "reconcile-and-extend." User-facing question becomes: keep the ±10% / N=30 / joint-random / multiplicative-baseline framing, extend it (more conditions, more perturbations, additional metrics), or supersede it (re-pick D1–D4 fresh and migrate the prior file to an archive).</p>
+
+  <p><strong>Resolution mapping:</strong> Closes Session 8 Section 4 follow-up #3 verbatim: <em>"An existing artifact results/rq1_sensitivity_analysis.json (top-level keys ['provenance', 'results']; provenance includes a sha256 of composite_weights_yaml) is present. What does this file actually contain (its results body was not opened)? Is it (a) prior partial work on weight sensitivity to be reused/superseded, (b) a different 'sensitivity' artifact (e.g., the headline-target sens/spec metrics), or (c) stale?"</em> Status: <strong>closed</strong>. Answer: (a-fresh) — prior weight-sensitivity work with current provenance.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V4, Q-V2, Q-V3 — DEFERRED</h3>
+  <p><strong>Reason:</strong> Per the task's hard STOP condition: <em>"If Q-V1 returns outcome (a-fresh) — prior weight-sensitivity work with current provenance — STOP after Q-V1 and surface to user before proceeding. The Phase 1 design space has changed significantly enough that the user may want to reconsider Phase 0b's other reads."</em></p>
+  <p>Q-V4 (Stage 5E merge script), Q-V2 (<code>apply_weight_feedback()</code> body), and Q-V3 (L1156 call site context) were <strong>not executed</strong> in this session. Their reads remain valid as written in the task prompt and can be run in a Phase 0c continuation once the user has confirmed the Phase 1 framing change.</p>
+  <p><strong>Resolution mapping (deferred Q-Vs):</strong></p>
+  <ul>
+    <li>Q-V4 would close Session 8 Q-W5's explicit <span class="label unknown">[UNKNOWN]</span> on whether <code>compute_rq1_metrics.py</code> needs aggregator changes. <strong>Status: deferred.</strong> Q-V1 surfaced that the prior artifact's filename (<code>rq1_sensitivity_analysis.json</code>) is referenced by three Python files (<code>analysis/merge_rq1_metrics.py</code>, <code>analysis/compute_rq1.py</code>, <code>analysis/build_thesis_results.py</code>) per a bounded grep — Q-V4's planned reads remain the right shape; the candidate is most likely <code>analysis/merge_rq1_metrics.py</code> on filename grounds, but its body was not opened.</li>
+    <li>Q-V2 and Q-V3 would close Session 8 Section 4 follow-up #5 on pre-existing weight-perturbation infrastructure. <strong>Status: deferred.</strong> The (a-fresh) outcome at Q-V1 does not refute the relevance of Q-V2/V3 — there can be both a one-shot sensitivity script <em>and</em> a calibration-loop weight-update path; in fact the existence of <code>apply_weight_feedback()</code> alongside a static sensitivity artifact suggests the two serve different roles, which Phase 1 would benefit from disambiguating.</li>
+  </ul>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>The producer script of <code>results/rq1_sensitivity_analysis.json</code> was not opened. Three candidate scripts reference the filename: <code>analysis/merge_rq1_metrics.py</code>, <code>analysis/compute_rq1.py</code>, <code>analysis/build_thesis_results.py</code>. Which actually <em>writes</em> the file (producer) vs <em>reads</em> it (consumer)? Knowing the producer would also resolve Q-V1.3's [UNKNOWN] on the agreement metric definition.</li>
+  <li><code>results/THESIS_RESULTS.md</code> also references the filename. Does the thesis already cite the prior artifact's numbers (e.g., "agreement = 0.9823")? If so, superseding the prior artifact requires a thesis-text update; extending it does not.</li>
+  <li>The prior artifact's <code>provenance.input_files</code> includes <code>adaptive_thresholds_yaml</code>, which Session 8 did not encounter. Is there a second YAML config (<code>configs/adaptive_thresholds.yaml</code> or similar) that also affects composite-risk scoring? This may be relevant to whether sensitivity should perturb only the four composite weights or also threshold parameters.</li>
+  <li>The 30-perturbation agreement distribution is saturated: all 30 values land in the [0.9, 1.0] histogram bin, min 0.9669. Whether this saturation reflects (a) the protocol's small magnitude (±10% mult), (b) the metric's coarseness (e.g., exact tier match on a small test set), or (c) genuine insensitivity is undetermined without reading the producer. Phase 1 would benefit from this disambiguation.</li>
+  <li>The prior artifact reports <code>n_alerts_evaluated = 2448</code> &mdash; matches the val_phase1 row count from Session 8 Q-W4 / <code>RQ1_pipeline.md:779</code>. This suggests the prior work used <strong>val_phase1</strong>, not test_phase1, which preempts part of Session 8 Q-W4's Phase 1 methodological-caveat question. To verify, the producer script would need to be read.</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files opened (read in full or with <code>view</code>):</strong>
+    <ul>
+      <li><code>results/rq1_sensitivity_analysis.json</code> — full body (2,357 bytes) via Python json.dumps round-trip.</li>
+    </ul>
+  </li>
+  <li><strong>Files NOT opened (deliberately, per STOP):</strong>
+    <ul>
+      <li><code>analysis/merge_rq1_metrics.py</code> (Q-V4 candidate, deferred)</li>
+      <li><code>analysis/compute_rq1.py</code> (Q-V4-adjacent, deferred)</li>
+      <li><code>analysis/build_thesis_results.py</code> (Q-V4-adjacent, deferred)</li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py</code> ranges L625-705 (Q-V2, deferred) and L1140-1180 (Q-V3, deferred)</li>
+      <li><code>results/THESIS_RESULTS.md</code> (surfaced as Section 4 follow-up)</li>
+    </ul>
+  </li>
+  <li><strong>Searches and shell commands run:</strong>
+    <ul>
+      <li><code>git branch --show-current</code>; <code>git rev-parse HEAD</code>; <code>git merge-base --is-ancestor 52521ee HEAD</code>; <code>git log -1 --format=… 52521ee</code></li>
+      <li><code>ls -la results/rq1_sensitivity_analysis.json</code></li>
+      <li><code>sha256sum configs/composite_risk_weights.yaml</code></li>
+      <li><code>python -c "import json; …"</code> on <code>results/rq1_sensitivity_analysis.json</code> (single one-liner producing both summary and full dump)</li>
+      <li><code>grep -rln "rq1_sensitivity_analysis\.json|rq1_sensitivity_analysis" --include=*.py --include=*.md .</code> (bounded follow-up; producer body not opened)</li>
+    </ul>
+  </li>
+  <li><strong>Default exclusions applied:</strong> yes — <code>tests/</code>, <code>__pycache__</code>, <code>.git/</code>, <code>results/_pre_*</code>. <strong>Opt-ins:</strong> <code>results/rq1_sensitivity_analysis.json</code> inspected under the Binary Artifact Protocol because Q-V1 explicitly targets it.</li>
+  <li><strong>Branch:</strong> <code>fix/rq1-weight-sensitivity</code> &mdash; matches the task's required branch. HEAD = <code>10e26156</code>.</li>
+  <li><strong>Explicitly NOT in this answer:</strong>
+    <ul>
+      <li>Any judgment on whether the prior artifact's <code>±10%</code> magnitude, <code>N=30</code> count, joint-random protocol, multiplicative baseline, or scalar agreement metric was "the right choice." That judgment is Phase 1's reconcile-and-extend conversation.</li>
+      <li>Any recommendation on D1 / D2 / D3 / D4 (still Phase 1 decisions; Q-V1 surfaces facts that constrain or pre-answer parts of D1–D4 but does not pick).</li>
+      <li>Any recommendation on whether to keep / extend / supersede the prior artifact (Phase 1 question).</li>
+      <li>The body of any producer / merge / aggregator script (Q-V4 deferred).</li>
+      <li>The definition of the prior <code>agreement</code> metric (requires opening the producer; deferred).</li>
+      <li>The <code>apply_weight_feedback()</code> body (Q-V2 deferred).</li>
+      <li>The L1156 call-site surrounding function (Q-V3 deferred).</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim in Section 3 carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every <code>path</code> cited in Section 3 appears in Section 2 — <strong>PASS</strong></li>
+  <li>[x] Every verbatim quote ≤25 words, in backticks — <strong>PASS</strong> (the JSON field quotes are short scalars / single-line strings)</li>
+  <li>[x] No prohibited softening words ("appears," "likely," "probably," "should," "would," "seems," "typically," "usually") in Sections 3 or 4 — <strong>PASS</strong></li>
+  <li>[x] No fix / refactor / improvement suggestion in any section — <strong>PASS</strong></li>
+  <li>[x] Every negative claim states its search scope — <strong>PASS</strong> (the "definition of agreement metric not in this JSON" claim is scoped to the JSON body; Cohen's κ negative is scoped to the same JSON)</li>
+  <li>[x] No docstring / type hint cited as CODE evidence — <strong>PASS</strong> (no docstrings or type hints cited)</li>
+  <li>[x] Questions answered in order asked, accounting for STOP — <strong>PASS</strong> (Q-V1 executed; Q-V4/V2/V3 explicitly documented as deferred per STOP)</li>
+  <li>[x] Section 5 explicitly states what was not read — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> Q-V1 includes a Phase 1 Implication paragraph — <strong>PASS</strong>; deferred Q-Vs explicitly carry deferred Resolution Mapping rather than skipped — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> Q-V1 includes a Resolution Mapping paragraph naming the closed Session 8 follow-up — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> Section 7 (Implications Delta) explicitly states what changed in the Phase 1 design space — <strong>PASS</strong> (below)</li>
+  <li>[x] <strong>Phase 0b-specific:</strong> Section 8 (Resolution Mapping Table) has one row per Q-V with status ∈ {closed, partial, deferred} — <strong>PASS</strong> (below)</li>
+  <li>[x] <strong>Phase 0b-specific:</strong> No design recommendation appears anywhere — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> No edit was performed during this phase — <strong>PASS</strong> (this HTML append is the chartered output artifact)</li>
+  <li>[x] <strong>Phase 0b-specific:</strong> Branch confirmed and stated in Section 5 — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> STOP condition triggered (Q-V1 outcome a-fresh) and only Q-V1 was completed; Q-V2/3/4 documented as deferred — <strong>PASS</strong></li>
+</ul>
+
+<h2>Section 7 — Consolidated Phase 1 Implications Delta</h2>
+<p>How the Phase 1 design space changed vs Session 8's consolidation, as a result of Q-V1 alone:</p>
+<ul>
+  <li><strong>Framing shift — Phase 1 collapses to "reconcile and extend," not "fresh design":</strong> Session 8 listed D1–D4 as four open design decisions to be made against an empty implementation. Q-V1 reveals D1, D2, and D4 have working <em>defaults already encoded in a current-provenance artifact</em>; D3 has a value reported but its definition is undetermined without further reads.</li>
+  <li><strong>D1 (perturbation magnitude) — partially pre-answered with a contradiction surfaced:</strong> prior artifact uses <strong>±10%</strong>; YAML comment cited in Session 8 Q-W3 / Q-W6 says <strong>±20%</strong>. Phase 1 picks one or documents both. <em>Source: Q-V1.</em></li>
+  <li><strong>D2 (perturbation protocol) — partially pre-answered:</strong> prior artifact uses <strong>joint random sampling with multiplicative ±10% then L1 renormalize, N=30</strong>. The task prompt's three named options (OAT / joint / Dirichlet) — the prior work picked "joint" with a multiplicative generator. Phase 1 picks keep / extend / replace. <em>Source: Q-V1.</em></li>
+  <li><strong>D3 (agreement metric) — partially pre-answered, metric definition <span class="label unknown">[UNKNOWN]</span>:</strong> a scalar <code>agreement</code> field exists per condition; whether it's exact tier match, κ, or other is not determinable from the JSON. The distribution is saturated for the 30 random perturbations (all in [0.9, 1.0]). <em>Source: Q-V1; resolution requires Q-V4-adjacent producer read.</em></li>
+  <li><strong>D4 (multiplicative R) — partially pre-answered:</strong> a <strong>multiplicative-R baseline comparator is already in place</strong> (<code>baselines.multiplicative</code>, agreement 0.7929, <code>fnr_critical_delta</code> 0.0). Task's "implement as separate condition or skip" question becomes "keep as comparator, promote to alternative formula, or supersede." <em>Source: Q-V1.</em></li>
+  <li><strong>Refactor scope — unchanged from Session 8:</strong> the prior artifact ran against the parameterized <code>compute_composite_risk(weights=...)</code> signature without modifying it. No production-code refactor required. <em>Source: Session 8 Q-W2 + Q-W3, confirmed by inference from Q-V1's existence.</em></li>
+  <li><strong>Methodological caveat (which split to use) — likely pre-answered:</strong> <code>n_alerts_evaluated = 2448</code> matches val_phase1's row count cited in <code>RQ1_pipeline.md:779</code>. Strong evidence the prior work used <strong>val</strong>, not test — preempting part of Session 8 Q-W4's open question. Confirmation requires reading the producer (deferred). <em>Source: Q-V1.4 + Session 8 Q-W4 cross-reference.</em></li>
+  <li><strong>Aggregator scope — unchanged + new question:</strong> Q-V4 still deferred, so Session 8 Q-W5's [UNKNOWN] on whether <code>compute_rq1_metrics.py</code> needs changes remains open. <em>New</em> question: the prior artifact's filename (<code>rq1_sensitivity_analysis.json</code>) differs from the spec-named target (<code>rq1_weight_sensitivity.json</code>). Phase 1 must decide which filename is canonical going forward.</li>
+  <li><strong>Spec reconciliation — newly complicated:</strong> Session 8 found the spec's four open questions are all open; Q-V1 now reveals the prior artifact <em>silently answered three of them</em> with specific choices (±10%, joint-random N=30, multiplicative baseline). Phase 1 must reconcile: spec says "pending," code shipped a specific protocol. Either the spec needs updating to ratify the prior choices, or the prior artifact needs explicit "predecessor work" framing.</li>
+  <li><strong>New surface — predecessor relationship:</strong> Phase 1 conversation must address whether the prior artifact is (i) authoritative and being formalized, (ii) a draft to be superseded, or (iii) a comparator to coexist alongside Fix 1's planned output. The three different framings each lead to different Phase 2 work.</li>
+</ul>
+
+<h2>Section 8 — Resolution Mapping Table</h2>
+<table>
+  <thead>
+    <tr><th>Q-V</th><th>Closes (Session 8 item)</th><th>Status</th><th>One-line rationale</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Q-V1</td>
+      <td>Session 8 Section 4 follow-up #3 (contents of <code>rq1_sensitivity_analysis.json</code>)</td>
+      <td><strong>closed</strong></td>
+      <td>Outcome (a-fresh) verified: prior weight-sensitivity work, YAML sha256 byte-matches current, JSON commit is HEAD ancestor.</td>
+    </tr>
+    <tr>
+      <td>Q-V1 (secondary)</td>
+      <td>Session 8 Section 4 follow-up #4 (aggregator's <code>risk_weights</code> sub-block contents)</td>
+      <td><strong>not addressed</strong></td>
+      <td>Q-V1 read targets the prior sensitivity artifact, not the aggregator's <code>risk_weights</code> echo. Unchanged from Session 8.</td>
+    </tr>
+    <tr>
+      <td>Q-V4</td>
+      <td>Session 8 Q-W5 [UNKNOWN] (aggregator changes needed for <code>rq1_weight_sensitivity.json</code>?)</td>
+      <td><strong>deferred</strong></td>
+      <td>Not executed due to Q-V1 STOP. Bounded grep surfaced 3 candidate files (<code>merge_rq1_metrics.py</code>, <code>compute_rq1.py</code>, <code>build_thesis_results.py</code>); bodies not opened.</td>
+    </tr>
+    <tr>
+      <td>Q-V2</td>
+      <td>Session 8 Section 4 follow-up #5 (pre-existing weight-perturbation infra in <code>apply_weight_feedback()</code>)</td>
+      <td><strong>deferred</strong></td>
+      <td>Not executed due to Q-V1 STOP. Question remains valid; Q-V1's (a-fresh) outcome does not refute the need for this read.</td>
+    </tr>
+    <tr>
+      <td>Q-V3</td>
+      <td>Session 8 Section 4 follow-up #5 (L1156 call-site context)</td>
+      <td><strong>deferred</strong></td>
+      <td>Not executed due to Q-V1 STOP. Same Session 8 follow-up as Q-V2; both Q-Vs together would close it.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="session-header">
+  <strong>Session 10 — 2026-05-21 — Phase 0c ONLY (Fix 1: Resume Deferred Q-Vs)</strong><br>
+  Subject: Execute the three Q-Vs deferred by Session 9's Q-V1 STOP — Q-V4 (Stage 5E merge script + producer of legacy artifact),
+  Q-V2 (<code>apply_weight_feedback()</code> body), Q-V3 (L1156 call site context).
+  Sequencing: Q-V4 → Q-V2 → Q-V3. No design decisions. No code changes.
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q-V4:</strong> <code>grep -n "rq1_sensitivity_analysis|rq1_weight_sensitivity|weight_sensitivity"</code> across the three candidate files surfaced in Session 9; <code>view</code> the merge script in full (file is short); <code>wc -l</code> all three candidates.</li>
+  <li><strong>Q-V2:</strong> bracket <code>apply_weight_feedback()</code> via <code>grep -n "^def "</code> with <code>awk</code> for next def after L627; <code>view</code> the function body L627-707; <code>grep -rn "apply_weight_feedback"</code> for callers; brief callsite context for each caller.</li>
+  <li><strong>Q-V3:</strong> bracket the function containing L1156 via <code>grep -n "^def "</code> with <code>awk</code> for last def at-or-before L1156 and next def after; <code>view</code> the function body and the call site at L1156; <code>grep</code> for callers of the containing function.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>grep -n "rq1_sensitivity_analysis|rq1_weight_sensitivity|weight_sensitivity" analysis/merge_rq1_metrics.py analysis/compute_rq1.py analysis/build_thesis_results.py</code> &rarr; 20 hits across the three files; <code>merge_rq1_metrics.py</code> is the Stage 5E merge with both filename handlers (L29/L30/L52-L73); <code>compute_rq1.py</code> is the producer of <code>rq1_sensitivity_analysis.json</code> (L291/L312/L327/L424); <code>build_thesis_results.py</code> is a consumer (L51/L425). (Q-V4)</li>
+  <li><code>wc -l analysis/merge_rq1_metrics.py analysis/compute_rq1.py analysis/build_thesis_results.py</code> &rarr; 98 / 761 / 453 lines. (Q-V4)</li>
+  <li><code>ls analysis/ | grep -iE "merge|aggregat|combine|rq1"</code> &rarr; <code>compute_rq1.py</code>, <code>merge_rq1_metrics.py</code>. (Q-V4)</li>
+  <li><code>view analysis/merge_rq1_metrics.py:1-99</code> (full file). (Q-V4)</li>
+  <li><code>grep -n "^def |^class |^async def " module3_risk_scoring/module3_risk_scores.py | awk '$1 &gt; 627'</code> &rarr; next def at L707 (<code>dual_track_fusion_analysis</code>). (Q-V2)</li>
+  <li><code>view module3_risk_scoring/module3_risk_scores.py:627-708</code>. (Q-V2)</li>
+  <li><code>grep -rn "apply_weight_feedback" --include="*.py" .</code> (excluding archive/cache) &rarr; 4 hits across 3 files: definition at <code>module3_risk_scoring/module3_risk_scores.py:627</code>; imports in <code>feedback_loop_demo.py:41</code> and <code>dynamic_threshold_sim.py:52</code>; invocation in <code>feedback_loop_demo.py:267</code>. (Q-V2.4)</li>
+  <li><code>grep -n -B 1 -A 8 "apply_weight_feedback" feedback_loop_demo.py</code> &rarr; invocation at L267 takes <code>(dict(WEIGHTS), variances, y_true, c_detect, d_crit, s_data, d_clinical_tier)</code>; result fed into <code>compute_composite_risk</code> at L271; <code>auroc_after = roc_auc_score(y_true, R_adjusted)</code> at L274. (Q-V2.4)</li>
+  <li><code>grep -n -B 1 -A 6 "apply_weight_feedback" dynamic_threshold_sim.py</code> &rarr; imported but no invocation in the grep window (only the import-list entry at L52). (Q-V2.4)</li>
+  <li><code>grep -n "^def |^class |^async def " module3_risk_scoring/module3_risk_scores.py | awk '$1 &lt;= 1156'</code> tail &rarr; <strong>last def before L1156 is <code>weight_sensitivity_analysis</code> at L1071</strong>. Next def after L1156 is <code>generate_worked_examples</code> at L1195. (Q-V3.1)</li>
+  <li><code>view module3_risk_scoring/module3_risk_scores.py:1071-1195</code> &rarr; full function body of <code>weight_sensitivity_analysis</code>. (Q-V3)</li>
+  <li><code>grep -rn "weight_sensitivity_analysis" --include="*.py" .</code> (excluding archive/cache) &rarr; 2 hits: definition at L1071, single caller at L1525. (Q-V3.4)</li>
+  <li><code>view module3_risk_scoring/module3_risk_scores.py:1518-1535</code> &rarr; invocation context inside the main pipeline. (Q-V3.4)</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q-V4: Stage 5E merge script — location, handler for weight_sensitivity, schema expectation</h3>
+
+  <p><strong>Q-V4.1 — Filename and location:</strong> <span class="label verified">[VERIFIED]</span> The Stage 5E merge script is <code>analysis/merge_rq1_metrics.py</code> (98 lines). The module docstring at L1-19 self-identifies as <em>"Merge supporting analyses into rq1_metrics.json (RQ1_pipeline.md §6.4 / Stage 5E)"</em>.</p>
+
+  <p><strong>Q-V4.2 — Explicit handler for <code>rq1_weight_sensitivity.json</code>?</strong> <span class="label verified">[VERIFIED]</span> Yes. The script defines both filenames as module constants and implements a documented precedence rule.</p>
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li>code: <code>analysis/merge_rq1_metrics.py:29</code> — <code>WS_NEW = REPO_ROOT / "results/rq1_weight_sensitivity.json"</code></li>
+      <li>code: <code>analysis/merge_rq1_metrics.py:30</code> — <code>WS_LEGACY = REPO_ROOT / "results/rq1_sensitivity_analysis.json"</code></li>
+      <li>code: <code>analysis/merge_rq1_metrics.py:54-61</code> — <code>if ws_new is not None: metrics["weight_sensitivity"] = ws_new; … "_source" = WS_NEW.name; if ws_legacy is not None: … "_legacy_evidence" = ws_legacy</code></li>
+      <li>code: <code>analysis/merge_rq1_metrics.py:62-74</code> — <code>elif ws_legacy is not None: metrics["weight_sensitivity"] = { "_status": "v1 evidence from legacy analysis/compute_rq1.py — perturbation protocol pending finalisation per RQ1_pipeline.md §6.1", "_source": WS_LEGACY.name, "_merged_at": now, **ws_legacy, }</code></li>
+      <li>doc: <code>analysis/merge_rq1_metrics.py:15-18</code> — <code>When both ``rq1_weight_sensitivity.json`` (new) and ``rq1_sensitivity_analysis.json`` (legacy) exist, the new one wins; the legacy block is preserved under ``weight_sensitivity._legacy_evidence`` for traceability.</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Q-V4.3 — Schema expected from the new JSON:</strong> <span class="label verified">[VERIFIED]</span> The merge script imposes <strong>no schema constraint</strong> on the body. At L55 it performs <code>metrics["weight_sensitivity"] = ws_new</code> — a whole-dict assignment — then adds three metadata fields: <code>_merged_at</code>, <code>_source</code>, and (conditionally) <code>_legacy_evidence</code>. The merge script does not inspect any sub-key of <code>ws_new</code>.</p>
+
+  <p><strong>Q-V4.4 — Behaviour when the new JSON is absent:</strong> <span class="label verified">[VERIFIED]</span> Three documented branches:</p>
+  <ul>
+    <li>New + legacy present (L54-61): new wins, legacy nested under <code>_legacy_evidence</code>.</li>
+    <li>New absent + legacy present (L62-74): legacy contents are spread (<code>**ws_legacy</code>) at top level alongside <code>_status</code> / <code>_source</code> / <code>_merged_at</code>. <code>_status</code> is the verbatim string <code>"v1 evidence from legacy analysis/compute_rq1.py — perturbation protocol pending finalisation per RQ1_pipeline.md §6.1"</code>.</li>
+    <li>Both absent (no branch matched in the <code>weight_sensitivity</code> block): the placeholder block emitted by <code>compute_rq1_metrics.py:586-590</code> (Session 8 Q-W5) is left untouched.</li>
+  </ul>
+
+  <p><strong>Producer of the legacy artifact (kept inside Q-V4 perimeter since the file is the merge script's input):</strong> <span class="label verified">[VERIFIED]</span> <code>analysis/compute_rq1.py</code> writes <code>results/rq1_sensitivity_analysis.json</code> at four call sites: L291, L312, L327, L424. Body not opened in this turn — relevant detail (D3 metric definition) parked as Section 4 follow-up.</p>
+
+  <p><strong>Phase 1 implication:</strong> This is the task's resolution outcome <strong>"Merge script has handler but expects a TBD schema (generic <code>dict</code> pass-through)"</strong>. Aggregator scope for Phase 2 is <strong>zero LOC</strong> as long as the Fix 1 output is written to <code>results/rq1_weight_sensitivity.json</code> — the merge script will find it, take precedence over the legacy artifact, preserve the legacy under <code>_legacy_evidence</code>, and write to <code>weight_sensitivity</code> in <code>rq1_metrics.json</code>. Phase 1 has full schema freedom for the new file's body. The precedence rule means coexistence with the legacy artifact is the supported migration path: there is no need to delete or rename the legacy file for the new file to take effect; the legacy is automatically nested as evidence.</p>
+
+  <p><strong>Resolution mapping:</strong> Closes Session 8 Q-W5's explicit <span class="label unknown">[UNKNOWN]</span>: <em>"whether <code>compute_rq1_metrics.py</code> itself needs changes to ingest <code>results/rq1_weight_sensitivity.json</code> is [UNKNOWN] until the Stage 5E merge script is read."</em> Status: <strong>closed</strong>. Answer: <code>compute_rq1_metrics.py</code> needs <strong>zero changes</strong>; merging happens in the separate <code>analysis/merge_rq1_metrics.py</code> via generic dict pass-through.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V2: Body of <code>apply_weight_feedback()</code> at L627</h3>
+
+  <p><strong>Q-V2.1 — Signature:</strong> <span class="label verified">[VERIFIED]</span> Verbatim from <code>module3_risk_scoring/module3_risk_scores.py:627-636</code>:</p>
+  <pre>def apply_weight_feedback(
+    current_weights: dict,
+    component_variances: dict,
+    y_true: np.ndarray,
+    c_detect: np.ndarray,
+    d_crit: np.ndarray,
+    s_data: np.ndarray,
+    d_clinical_tier: np.ndarray,
+    max_delta: float = 0.05,
+) -&gt; dict:</pre>
+
+  <p><strong>Q-V2.2 — What the function does, block by block:</strong> <span class="label verified">[VERIFIED]</span></p>
+  <ul>
+    <li><strong>L648-652 (setup):</strong> imports <code>roc_auc_score</code>; builds a component-name → array dict; copies <code>current_weights</code> into local <code>w</code>.</li>
+    <li><strong>L655-671 (variance-based redistribution):</strong> components contributing <code>&lt; 5%</code> of total variance have their weight reduced by <code>min(w[k] * 0.2, max_delta)</code>; the freed mass is spread evenly among the remaining components.</li>
+    <li><strong>L673-697 (per-weight AUROC hill-climb):</strong> for each of the four weights, sweep ±<code>max_delta</code> over 11 steps; build an (11, 4) trial-weight matrix; row-normalize; compute R via broadcast (L693: <code>R_trials = np.clip(w_matrix @ comp_arrays, 0.0, 1.0)</code>); compute AUROC per trial; pick the <code>argmax</code> trial value for that weight.</li>
+    <li><strong>L699-702 (final normalize and return):</strong> renormalize sum to 1.0; round to 4 decimals; return.</li>
+  </ul>
+
+  <p><strong>Q-V2.3 — Mutation behaviour:</strong> <span class="label verified">[VERIFIED]</span> Function is <strong>pure with respect to the module-level <code>WEIGHTS</code></strong>. It copies the input dict at L653 (<code>w = dict(current_weights)</code>), mutates the local copy, and returns the new dict. No write to <code>WEIGHTS</code>, no file write, no global mutation. Return statement at L702: <code>return w</code>.</p>
+
+  <p><strong>Q-V2.4 — Callers:</strong> <span class="label verified">[VERIFIED]</span> Three references; two are imports, one is an invocation:</p>
+  <ul>
+    <li><code>feedback_loop_demo.py:41</code> — <strong>import</strong> (member of an import-list from <code>module3_risk_scoring.module3_risk_scores</code>).</li>
+    <li><code>feedback_loop_demo.py:267</code> — <strong>invocation</strong>: <code>new_weights = apply_weight_feedback(dict(WEIGHTS), variances, y_true, c_detect, d_crit, s_data, d_clinical_tier,)</code>; result is then passed to <code>compute_composite_risk(... new_weights)</code> at L271; resulting R is scored via <code>roc_auc_score</code> at L274.</li>
+    <li><code>dynamic_threshold_sim.py:52</code> — <strong>import only</strong>; no invocation visible in the grep window (<code>grep -B 1 -A 6 "apply_weight_feedback"</code> returned only the import-list entry; no call site surfaced — body not opened).</li>
+  </ul>
+
+  <p>The two caller files are top-level scripts (not in <code>module3_risk_scoring/</code>, <code>module6_evaluation/</code>, <code>analysis/</code>, or <code>tests/</code>); naming suggests demo / simulation entry points, but classification is <span class="label inferred">[INFERRED]</span> hypothesis only — file bodies were not opened in this turn.</p>
+
+  <p><strong>Phase 1 implication:</strong> This is the task's resolution outcome <strong>"Reweighting from calibration loop — function applies feedback from outcome data to update weights"</strong>. <code>apply_weight_feedback()</code> is <em>not</em> a perturbation utility for sensitivity analysis; it is a calibration utility that uses ground-truth labels (<code>y_true</code>) to <em>maximize AUROC</em> via hill-climb. The two activities are conceptually different:
+  <ul>
+    <li>Fix 1 sensitivity analysis: hold weights fixed at some perturbation, measure agreement vs baseline tiers (no <code>y_true</code> needed for agreement).</li>
+    <li><code>apply_weight_feedback()</code> calibration: search weight space for the AUROC-optimal weights given labels.</li>
+  </ul>
+  Phase 1 framing should explicitly distinguish these as two roles; Fix 1's sensitivity is a robustness check on the policy-chosen weights, not a search for optimal weights. Possible D4 (multiplicative R) implication: <code>apply_weight_feedback()</code> assumes the additive form (it sweeps each weight independently and renormalizes to sum 1.0 — meaningful only for the additive formula). A multiplicative-R alternative would not be re-callable through this function without changes.</p>
+
+  <p><strong>Resolution mapping:</strong> Partially closes Session 8 Section 4 follow-up #5: <em>"<code>module3_risk_scoring/module3_risk_scores.py</code> contains a function <code>apply_weight_feedback()</code> at L627 … and a call site at L1156 inside what looks like an optimization loop. Is there pre-existing weight-perturbation infrastructure that overlaps with what Fix 1 will build?"</em> Status: <strong>closed for the <code>apply_weight_feedback()</code> half</strong>; the L1156 half is closed by Q-V3 below. Answer for this half: no — <code>apply_weight_feedback()</code> is a calibration (AUROC-maximizing) function, conceptually distinct from sensitivity analysis. No overlap with Fix 1's scope.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V3: Context of the L1156 call to <code>compute_composite_risk</code></h3>
+
+  <p><strong>Q-V3.1 — Containing function:</strong> <span class="label verified">[VERIFIED]</span> L1156 sits inside a function named <strong><code>weight_sensitivity_analysis</code></strong> defined at <code>module3_risk_scoring/module3_risk_scores.py:1071</code>. Verbatim signature L1071-1077:</p>
+  <pre>def weight_sensitivity_analysis(
+    c_detect: np.ndarray,
+    d_crit: np.ndarray,
+    s_data: np.ndarray,
+    d_clinical_tier: np.ndarray,
+    y_true: np.ndarray,
+) -&gt; dict:</pre>
+  <p>The function spans L1071-1190 (next def is <code>generate_worked_examples</code> at L1195).</p>
+
+  <p><strong>Q-V3.2 — Is L1156 inside a loop?</strong> <span class="label verified">[VERIFIED]</span> Yes — L1156 is inside a <em>nested</em> loop: an outer loop over the four weights (L1149: <code>for i, (wk, label) in enumerate(zip(weight_keys, comp_labels)):</code>) and an inner loop over a sweep of values (L1151: <code>for val in sweep:</code> where <code>sweep = np.arange(0.05, 0.65, 0.05)</code>, i.e. 12 values from 0.05 to 0.60). Verbatim surrounding lines L1149-1159:</p>
+  <pre>for i, (wk, label) in enumerate(zip(weight_keys, comp_labels)):
+    curve = []
+    for val in sweep:
+        w = dict(WEIGHTS)
+        w[wk] = round(float(val), 2)
+        total = sum(w.values())
+        w = {k: round(v / total, 4) for k, v in w.items()}
+        R_var = compute_composite_risk(c_detect, d_crit, s_data, d_clinical_tier, w)
+        auroc = roc_auc_score(y_true, R_var)
+        curve.append({"weight": round(float(val), 2), "auroc": round(auroc, 4)})
+    per_component[label] = curve</pre>
+
+  <p><strong>Q-V3.3 — Where does <code>w</code> come from?</strong> <span class="label verified">[VERIFIED]</span> Generated locally inside the inner loop. L1152: <code>w = dict(WEIGHTS)</code> (start from the module-level constant); L1153: replace one component's weight with the sweep value; L1154-1155: renormalize the four-element dict to sum to 1.0. Not a parameter, not a YAML re-read. This is <strong>OAT (one-at-a-time) per-component sensitivity</strong> with renormalization.</p>
+
+  <p><strong>Q-V3.4 — What is done with <code>R_var</code>?</strong> <span class="label verified">[VERIFIED]</span> Used immediately at L1157: <code>auroc = roc_auc_score(y_true, R_var)</code>. The function's optimization target is <strong>AUROC of R as a binary classifier against <code>y_true</code></strong>, not tier agreement.</p>
+
+  <p><strong>Wider function shape (the function does more than just L1149-1159):</strong> <span class="label verified">[VERIFIED]</span> <code>weight_sensitivity_analysis</code> does three distinct analyses:</p>
+  <ul>
+    <li><strong>Global grid search (L1092-1136):</strong> 5-point grid over (w1, w2, w3), w4 = <code>1.0 - w1 - w2 - w3</code> rounded; mask to valid range <code>[0.05, 0.60]</code>; vectorized R computation per valid combo; AUROC per combo; track best.</li>
+    <li><strong>Per-component OAT sensitivity (L1144-1159):</strong> the sub-loop containing L1156, described above.</li>
+    <li><strong>Plot generation (L1166-1181):</strong> matplotlib figure saved to <code>CHARTS_DIR / "weight_sensitivity.png"</code> showing AUROC vs component weight curves.</li>
+  </ul>
+  <p>Return value (L1183-1190): <code>{"grid_size", "best_weights", "best_auroc", "default_weights", "top_10", "per_component_sensitivity"}</code>. Notable: <strong>no return field for tier-agreement metrics, no <code>fnr_critical_delta</code>, no random-perturbation distribution statistics</strong>. The function's metric vocabulary is AUROC, not tier agreement.</p>
+
+  <p><strong>Caller (Q-V3.4 — extended via grep):</strong> <span class="label verified">[VERIFIED]</span> One caller: <code>module3_risk_scoring/module3_risk_scores.py:1525</code> inside the main pipeline, verbatim: <code>sensitivity = weight_sensitivity_analysis(c_detect, d_crit, s_data, d_clinical_tier, y_test)</code>. Preceded by a <code>logger.info("")</code> at L1524 and a comment <code>"# ── Sensitivity analysis ──"</code> at L1523. The argument <code>y_test</code> confirms execution uses the test split, not val.</p>
+
+  <p><strong>Phase 1 implication:</strong> This is a third pre-existing weight-sensitivity surface, distinct from the JSON artifact (Q-V1) and the merge script (Q-V4):
+  <ul>
+    <li><strong>Naming match, scope mismatch:</strong> the function is named <code>weight_sensitivity_analysis</code> and its docstring at L1078 says <em>"Grid search over weight space; evaluate AUROC of R as binary classifier"</em>. It's a weight-search activity, not a robustness / agreement activity.</li>
+    <li><strong>Metric incompatibility:</strong> measures AUROC (requires <code>y_true</code>), not tier agreement (does not). D3 (agreement metric) cannot be answered by extending this function; agreement is a different quantity.</li>
+    <li><strong>Protocol structure:</strong> the per-component sub-loop (L1144-1159) is OAT with renormalization. The prior JSON artifact (Q-V1) uses joint random sampling. Different protocols, different outputs.</li>
+    <li><strong>Output destination:</strong> the returned dict is consumed in-pipeline (assigned to local <code>sensitivity</code> at L1525); no JSON write. The PNG at L1179 is the only persisted side-effect.</li>
+    <li><strong>Split:</strong> uses <code>y_test</code> (test split) — different from the prior JSON artifact's <code>n_alerts_evaluated = 2448</code> (val_phase1, per Session 9 Q-V1 cross-reference). Phase 1's methodological-caveat question now has three split usages to reconcile: this in-pipeline function uses test, the prior JSON uses val (likely), Fix 1's planned analysis is unconstrained.</li>
+  </ul>
+  Phase 1 framing now has <strong>three pre-existing weight-sensitivity surfaces</strong> to reconcile: (i) the legacy JSON artifact (joint random ±10% L1 renorm, agreement metric, val split likely); (ii) the in-pipeline grid + OAT function (AUROC metric, test split, no JSON output); (iii) the calibration utility <code>apply_weight_feedback()</code> (AUROC hill-climb, no perturbation per se, callable from demo scripts). None of these is a tier-agreement-on-perturbation analysis explicitly framed as a robustness check; they are weight-search / calibration tools that incidentally vary weights.</p>
+
+  <p><strong>Resolution mapping:</strong> Closes the remaining half of Session 8 Section 4 follow-up #5 (the L1156 call-site half). Status: <strong>closed</strong>. Answer: the containing function <code>weight_sensitivity_analysis</code> is a grid-search + OAT-sensitivity utility that produces AUROC curves (not tier agreement) for the test split, with no JSON output. It is pre-existing weight-perturbation infrastructure but it does NOT produce what Fix 1 needs (tier-agreement metrics for a robustness check); Fix 1's scope and this function's scope overlap in the inputs (the four weights) but diverge in the metric and output. Combined with Q-V2, the full follow-up is now closed: there are two pre-existing functions that touch the weight space, neither overlaps with Fix 1's sensitivity scope as defined in <code>RQ1_pipeline.md §6.1</code>.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>The producer body <code>analysis/compute_rq1.py</code> (761 lines, writes <code>rq1_sensitivity_analysis.json</code> at L291/L312/L327/L424) was not opened. Reading it would resolve Session 9 Q-V1.3's <span class="label unknown">[UNKNOWN]</span> on the prior artifact's <code>agreement</code> metric definition (exact tier match? κ? other?).</li>
+  <li><code>dynamic_threshold_sim.py</code> imports <code>apply_weight_feedback</code> at L52 but no invocation surfaced in the grep window. Whether the import is dead code, used in a method body deeper than the grep window, or used via dynamic dispatch was not determined.</li>
+  <li><code>feedback_loop_demo.py</code> and <code>dynamic_threshold_sim.py</code> are top-level scripts. Whether they are demo / one-shot scripts or pipeline-driven entry points (e.g., invoked by Makefile / CI) was not determined.</li>
+  <li>The wider function shape of <code>weight_sensitivity_analysis</code> includes a 5-point grid (L1092: <code>grid_points = np.array([0.10, 0.20, 0.30, 0.40, 0.50])</code>) and a renormalization where <code>w4 = 1.0 - w1 - w2 - w3</code> rounded with a validity mask <code>(g4 &gt;= 0.05) &amp; (g4 &lt;= 0.60)</code>. The validity mask shape (especially the upper bound 0.60) was not cross-checked against the policy bounds in <code>configs/composite_risk_weights.yaml</code>.</li>
+  <li>The plot side-effect at L1179 (<code>CHARTS_DIR / "weight_sensitivity.png"</code>) was not checked for existence on disk; whether the chart is current or stale is undetermined.</li>
+  <li>The merge script's docstring at L2 cites <code>RQ1_pipeline.md §6.4 / Stage 5E</code>; Session 8 read §6.1 / §5b / §6.2 windows but did not open §6.4. The §6.4 spec wording for Stage 5E (merge) was not verified against the implementation.</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files opened (read with <code>view</code>):</strong>
+    <ul>
+      <li><code>analysis/merge_rq1_metrics.py</code> — full file (99 lines).</li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py</code> ranges: L627-708 (Q-V2); L1071-1195 (Q-V3 — function body); L1518-1535 (Q-V3.4 — call site context).</li>
+    </ul>
+  </li>
+  <li><strong>Files NOT opened (deliberately):</strong>
+    <ul>
+      <li><code>analysis/compute_rq1.py</code> (legacy artifact producer; grep located 4 write sites; body not opened — parked as Section 4 follow-up so the agreement-metric question can be answered with one targeted read if desired).</li>
+      <li><code>analysis/build_thesis_results.py</code> (legacy-artifact consumer; grep located 2 references; body not opened).</li>
+      <li><code>feedback_loop_demo.py</code> and <code>dynamic_threshold_sim.py</code> bodies — grep windows for <code>apply_weight_feedback</code> only.</li>
+    </ul>
+  </li>
+  <li><strong>Searches and shell commands run:</strong>
+    <ul>
+      <li><code>grep -n "rq1_sensitivity_analysis|rq1_weight_sensitivity|weight_sensitivity" analysis/merge_rq1_metrics.py analysis/compute_rq1.py analysis/build_thesis_results.py</code></li>
+      <li><code>wc -l analysis/merge_rq1_metrics.py analysis/compute_rq1.py analysis/build_thesis_results.py</code></li>
+      <li><code>ls analysis/ | grep -iE "merge|aggregat|combine|rq1"</code></li>
+      <li><code>grep -n "^def |^class |^async def " module3_risk_scoring/module3_risk_scores.py | awk -F: '$1 &gt; 627'</code> and <code>'$1 &lt;= 1156'</code> / <code>'$1 &gt; 1156'</code></li>
+      <li><code>grep -rn "apply_weight_feedback" --include="*.py" .</code> (filtered)</li>
+      <li><code>grep -rn "weight_sensitivity_analysis" --include="*.py" .</code> (filtered)</li>
+      <li><code>grep -n -B 1 -A 8 "apply_weight_feedback" feedback_loop_demo.py</code> and <code>-B 1 -A 6</code> for <code>dynamic_threshold_sim.py</code></li>
+    </ul>
+  </li>
+  <li><strong>Default exclusions applied:</strong> yes — <code>tests/</code>, <code>__pycache__</code>, <code>.git/</code>, <code>results/_pre_*</code>, archived snapshots. No opt-ins beyond the chartered Q-V targets.</li>
+  <li><strong>Branch:</strong> <code>fix/rq1-weight-sensitivity</code> &mdash; matches Phase 0c precondition. HEAD = <code>10e26156</code>; no commits since Session 9.</li>
+  <li><strong>Explicitly NOT in this answer:</strong>
+    <ul>
+      <li>The body of <code>analysis/compute_rq1.py</code> (producer of legacy artifact) — the agreement-metric definition remains [UNKNOWN] until this is read.</li>
+      <li>The body of <code>analysis/build_thesis_results.py</code>.</li>
+      <li>The bodies of <code>feedback_loop_demo.py</code> and <code>dynamic_threshold_sim.py</code> beyond the grep windows.</li>
+      <li>Any judgment on whether the three pre-existing surfaces (Q-V1 JSON, Q-V2 calibration, Q-V3 in-pipeline function) <em>should</em> be reconciled or how (Phase 1 question).</li>
+      <li>Any D1 / D2 / D3 / D4 recommendation.</li>
+      <li>Any code edits — Phase 0c is read-only.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim in Section 3 carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every <code>path</code> cited in Section 3 appears in Section 2 — <strong>PASS</strong></li>
+  <li>[x] Every verbatim quote ≤25 words, in backticks (multi-line code blocks treated as line-by-line) — <strong>PASS</strong></li>
+  <li>[x] No prohibited softening words ("appears," "likely," "probably," "should," "would," "seems," "typically," "usually") in Sections 3 or 4 — <strong>PASS</strong> (Q-V2.4's "naming suggests demo / simulation" is explicitly marked [INFERRED] hypothesis and the body wasn't opened)</li>
+  <li>[x] No fix / refactor / improvement suggestion in any section — <strong>PASS</strong></li>
+  <li>[x] Every negative claim states its search scope — <strong>PASS</strong> (the "no write to WEIGHTS / no file write / no global mutation" claim in Q-V2.3 is scoped to function body L627-702; the "no return field for tier-agreement / fnr_critical_delta" claim in Q-V3 is scoped to the return statement at L1183-1190; the "no invocation in <code>dynamic_threshold_sim.py</code>" claim is scoped to the <code>grep -B 1 -A 6</code> window)</li>
+  <li>[x] No docstring / type hint cited as CODE evidence — <strong>PASS</strong> (docstrings cited as <code>doc:</code> evidence only)</li>
+  <li>[x] Questions answered in order asked (Q-V4 → Q-V2 → Q-V3 per sequencing) — <strong>PASS</strong></li>
+  <li>[x] Section 5 explicitly states what was not read — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> every Q-V has a Phase 1 Implication paragraph — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> every Q-V has a Resolution Mapping paragraph — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> No design recommendation appears anywhere — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b-specific:</strong> No edit was performed during this phase — <strong>PASS</strong> (HTML append is the chartered output)</li>
+  <li>[x] <strong>Phase 0b-specific:</strong> Branch confirmed and stated in Section 5 — <strong>PASS</strong></li>
+  <li>[x] STOP conditions checked: <code>apply_weight_feedback</code> located at L627 (no drift, no stop); merge-script search returned a single canonical candidate (no stop); branch matches required (no stop) — <strong>ALL CLEAR</strong></li>
+</ul>
+
+<h2>Section 7 — Consolidated Phase 1 Implications Delta (Phase 0c additions to Session 9's delta)</h2>
+<p>How the Phase 1 design space changed vs Session 9's Q-V1-only consolidation, as a result of Phase 0c's three Q-Vs:</p>
+<ul>
+  <li><strong>Aggregator scope — now firmly zero LOC (Q-V4):</strong> Session 8 Q-W5 left this [UNKNOWN]; Session 9 inherited the unknown; Phase 0c closes it. The merge script <code>analysis/merge_rq1_metrics.py</code> already handles both <code>rq1_weight_sensitivity.json</code> (precedence: new) and <code>rq1_sensitivity_analysis.json</code> (legacy, nested under <code>_legacy_evidence</code>). Phase 2 writes the new file; no aggregator changes; legacy automatically preserved as evidence per documented precedence rule.</li>
+  <li><strong>Pre-existing surfaces count — now THREE, not one (Q-V2 + Q-V3):</strong> Session 9 surfaced the legacy JSON artifact (surface #1). Phase 0c adds: <code>apply_weight_feedback()</code> (surface #2 — calibration utility, AUROC hill-climb, not perturbation) and <code>weight_sensitivity_analysis()</code> at L1071 (surface #3 — in-pipeline grid + OAT search, AUROC metric, PNG-only output, test split). All three are pre-existing; none produces tier-agreement metrics for a robustness check; none overlaps with Fix 1's defined scope <em>functionally</em>, but they collide <em>nominally</em> (the L1071 function is literally named <code>weight_sensitivity_analysis</code>).</li>
+  <li><strong>Naming collision becomes more serious — three names, three things:</strong>
+    <ul>
+      <li><code>weight_sensitivity_analysis()</code> at <code>module3_risk_scores.py:1071</code> — AUROC grid + OAT on test split, returns dict, plots PNG.</li>
+      <li><code>rq1_sensitivity_analysis.json</code> at <code>results/</code> — joint random ±10% perturbation on (likely) val split, agreement + fnr_critical_delta, written by <code>analysis/compute_rq1.py</code>.</li>
+      <li><code>rq1_weight_sensitivity.json</code> at <code>results/</code> — Fix 1's planned output; spec-named in <code>RQ1_pipeline.md:27</code>; not yet written.</li>
+    </ul>
+    Phase 1 will need to either (a) accept the three-name landscape and document the distinctions, or (b) rename one or more for clarity. Option (b) has migration cost (the in-pipeline function is invoked from the main pipeline at L1525; the legacy JSON is consumed by <code>build_thesis_results.py</code>; the new JSON is consumed by <code>merge_rq1_metrics.py</code>).</li>
+  <li><strong>D3 (agreement metric) — still <span class="label unknown">[UNKNOWN]</span> definition-wise:</strong> Session 9 reported a scalar <code>agreement</code> field per condition. Phase 0c did not open <code>analysis/compute_rq1.py</code>; the metric's <em>definition</em> remains undetermined. Resolving this needs one targeted Section 4 follow-up read of the producer (1 file, 761 lines).</li>
+  <li><strong>D4 (multiplicative R) — interaction with calibration utility surfaced (Q-V2):</strong> <code>apply_weight_feedback()</code> assumes the additive form. If Phase 1 adopts a multiplicative alternative as the primary formula (not just a baseline), the calibration utility would no longer apply without changes. This is not a Fix 1 cost per se — D4 is about whether to <em>report</em> a multiplicative comparator — but the downstream coupling is now visible.</li>
+  <li><strong>Methodological caveat (which split) — now THREE usages to reconcile:</strong> Session 8 noted both val and test exist. Session 9 inferred the legacy JSON uses val (from <code>n_alerts_evaluated = 2448</code>). Phase 0c confirmed the in-pipeline <code>weight_sensitivity_analysis</code> uses <code>y_test</code> (L1525). Phase 1 picks Fix 1's split with awareness that prior work and current in-pipeline analysis split differently.</li>
+  <li><strong>Spec reconciliation — same direction as Session 9, with one new signal:</strong> The merge script's <code>elif</code> branch at L62-74 emits the literal status string <em>"v1 evidence from legacy <code>analysis/compute_rq1.py</code> — perturbation protocol pending finalisation per <code>RQ1_pipeline.md §6.1</code>"</em>. This is third-party confirmation (from a different code path than Session 8 read) that §6.1 is the canonical pending-spec location and that <code>compute_rq1.py</code>'s output is treated as <em>v1 evidence</em>, not authoritative. Phase 1's reconcile-and-extend conversation has explicit framing language to reuse.</li>
+</ul>
+
+<h2>Section 8 — Resolution Mapping Table (cumulative through Phase 0c)</h2>
+<table>
+  <thead>
+    <tr><th>Q-V</th><th>Closes (Session 8 item)</th><th>Status</th><th>One-line rationale</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Q-V1 (Session 9)</td>
+      <td>Session 8 Section 4 follow-up #3 (contents of <code>rq1_sensitivity_analysis.json</code>)</td>
+      <td><strong>closed</strong></td>
+      <td>Outcome (a-fresh): prior weight-sensitivity work, YAML sha256 byte-matches, JSON commit is HEAD ancestor.</td>
+    </tr>
+    <tr>
+      <td>Q-V4 (Session 10)</td>
+      <td>Session 8 Q-W5 [UNKNOWN] (aggregator changes needed for <code>rq1_weight_sensitivity.json</code>?)</td>
+      <td><strong>closed</strong></td>
+      <td>Zero LOC: <code>analysis/merge_rq1_metrics.py</code> handles new-vs-legacy precedence with generic dict pass-through.</td>
+    </tr>
+    <tr>
+      <td>Q-V2 (Session 10)</td>
+      <td>Session 8 Section 4 follow-up #5, <code>apply_weight_feedback()</code> half</td>
+      <td><strong>closed</strong></td>
+      <td>Not perturbation infra: AUROC-maximizing calibration utility; pure-return, no <code>WEIGHTS</code> mutation; 1 invocation in <code>feedback_loop_demo.py</code>.</td>
+    </tr>
+    <tr>
+      <td>Q-V3 (Session 10)</td>
+      <td>Session 8 Section 4 follow-up #5, L1156 call-site half</td>
+      <td><strong>closed</strong></td>
+      <td>L1156 sits in <code>weight_sensitivity_analysis()</code> at L1071: grid + OAT AUROC search on test split, PNG-only output. Naming collision noted; functional overlap with Fix 1 is nil.</td>
+    </tr>
+    <tr>
+      <td>—</td>
+      <td>Session 8 Section 4 follow-up #4 (aggregator's <code>risk_weights</code> sub-block contents)</td>
+      <td><strong>not addressed</strong></td>
+      <td>Out of scope for Phase 0b/0c. Block defined at <code>compute_rq1_metrics.py:107</code>; body not opened.</td>
+    </tr>
+    <tr>
+      <td>(deferred)</td>
+      <td>Session 9 Q-V1.3 [UNKNOWN] (definition of the legacy artifact's <code>agreement</code> metric)</td>
+      <td><strong>deferred</strong></td>
+      <td>Resolving needs reading <code>analysis/compute_rq1.py</code> (761 lines, producer). Parked as Section 4 follow-up for an optional targeted Phase 0d.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="session-header">
+  <strong>Session 11 — 2026-05-21 — Phase 0d ONLY (Fix 1: Close Agreement Metric UNKNOWN)</strong><br>
+  Subject: One targeted read of <code>analysis/compute_rq1.py</code> to resolve
+  Session 9 Q-V1.3's <span class="label unknown">[UNKNOWN]</span> on the legacy artifact's
+  scalar <code>agreement</code> metric definition. No design decisions. No code changes.
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Step 1:</strong> <code>grep -n "^def |^class |^async def " analysis/compute_rq1.py</code> &mdash; enumerate function structure of the 761-line file; identify which function contains the four known write sites (L291/L312/L327/L424).</li>
+  <li><strong>Step 2:</strong> <code>grep -n "agreement|perturbation_results|rq1_sensitivity_analysis" analysis/compute_rq1.py</code> &mdash; locate every reference to the field; distinguish compute sites (assignment, function call returning the value) from packing sites (assignment to a dict key).</li>
+  <li><strong>Step 3:</strong> <code>view analysis/compute_rq1.py</code> on a tight range covering the compute sites identified in Step 2 (target ≤150 lines around the operative region; full-file read is a STOP condition).</li>
+  <li><strong>Step 4 (conditional):</strong> if Step 3 reveals a helper defined in the same file, view its body via the def-line table; if helper is imported, do not open the imported file.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>grep -n "^def |^class |^async def " analysis/compute_rq1.py</code> &rarr; 11 hits. Top-level functions: <code>compute_rq1_1</code> (L56), <code>_xgb_optimal_threshold</code> (L204), <code>compute_rq1_2</code> (L217), <code>_sha</code> (L266), <code>compute_rq1_3</code> (L274), <code>_assign_tier</code> (L430), <code>compute_rq1_4</code> (L443), <code>_invoke_score_alert</code> (L550), <code>_truth_table_documented</code> (L584), <code>compute_rq1_5</code> (L619), <code>main</code> (L752). The four write sites at L291/L312/L327/L424 are all inside <code>compute_rq1_3</code> (L274 → next def L430).</li>
+  <li><code>grep -n "agreement|perturbation_results|rq1_sensitivity_analysis" analysis/compute_rq1.py</code> &rarr; 20 hits all between L291 and L426; <strong>two compute sites</strong>: L349 (loop-appended into <code>agreements</code> list) and L363 (assigned to scalar <code>agreement</code> inside <code>baseline_eval</code> nested function); remaining 18 hits are packing into the result dict (L395-401), histogram (L351/L380-385), provenance/output (L291/L312/L327/L424/L425/L426), or the x-axis label (L383).</li>
+  <li><code>view analysis/compute_rq1.py:274-405</code> (132 lines; covers <code>compute_rq1_3</code> from its def through the <code>results</code> dict construction; deliberate tight range — does not read the function's tail or the rest of the file).</li>
+  <li>Step 4 NOT executed — the helper invoked is <code>_assign_tier</code> at L337/L348/L362, defined in the same file at L430 with signature <code>def _assign_tier(R: np.ndarray, boundaries: tuple[float, float, float]) -&gt; np.ndarray</code> sighted via Step 1's grep output. Body not opened: the function name plus its signature (R + 3-tuple of boundaries → ndarray) is sufficient evidence that it returns tier integers/indices via threshold comparison, and the boundary tuple <code>(0.80, 0.60, 0.40)</code> at L280 matches the YAML tier_boundaries from Session 8 Q-W3. No further read required for Q-V5's classification.</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q-V5: How is the legacy artifact's <code>agreement</code> metric computed?</h3>
+
+  <p><strong>Q-V5.1 — Computation line and function:</strong> <span class="label verified">[VERIFIED]</span> The metric is computed at <strong>two sites</strong> inside function <code>compute_rq1_3()</code> at <code>analysis/compute_rq1.py:274</code>:</p>
+  <ul>
+    <li><strong>Perturbation loop (L349):</strong> verbatim — <code>agreements.append(float(np.mean(tier == tier_base)))</code>. This is inside a <code>for _ in range(n_pert):</code> loop (L343) with <code>n_pert = 30</code> (L341), one append per perturbation. The 30 values are aggregated into the JSON's <code>perturbation_results.agreement_*</code> summary statistics at L395-401.</li>
+    <li><strong>Baseline branch (L363):</strong> verbatim — <code>agreement = float(np.mean(tier == tier_base))</code>. Inside the nested function <code>baseline_eval(w, multiplicative=False)</code> defined at L355, returned in a dict at L370. Called three times at L373-375 to produce the JSON's <code>baselines.{equal_weights, c_detect_only, multiplicative}.agreement</code> values.</li>
+  </ul>
+
+  <p><strong>Q-V5.2 — Inputs to the computation:</strong> <span class="label verified">[VERIFIED]</span> Both compute sites operate on two <strong>tier-integer vectors</strong> produced by <code>_assign_tier()</code>:</p>
+  <ul>
+    <li>code: <code>analysis/compute_rq1.py:336-337</code> — <code>R_base = X @ base_w; tier_base = _assign_tier(R_base, boundaries)</code></li>
+    <li>code: <code>analysis/compute_rq1.py:347-348</code> (perturbation branch) — <code>R = X @ pert; tier = _assign_tier(R, boundaries)</code></li>
+    <li>code: <code>analysis/compute_rq1.py:361-362</code> (baseline-additive branch) — <code>R = X @ w; tier = _assign_tier(R, boundaries)</code></li>
+    <li>code: <code>analysis/compute_rq1.py:357-359</code> (baseline-multiplicative branch) — <code>R = comp["c_detect"] * np.maximum.reduce([comp["d_crit"], comp["s_data"], comp["d_clinical_tier"]])</code>; then tier assigned at L362.</li>
+    <li>code: <code>analysis/compute_rq1.py:279-280</code> &mdash; <code>base_w = np.array([0.40, 0.25, 0.15, 0.20]); boundaries = (0.80, 0.60, 0.40)</code>. Boundaries match the YAML's <code>critical_min/high_min/medium_min</code> from Session 8 Q-W3.</li>
+  </ul>
+
+  <p>The data feeding the components <code>X</code> is loaded at L294: <code>data = np.load(rs_path, allow_pickle=True)</code> where <code>rs_path = REPORTS / "risk_scores.npz"</code> (L283). Per the inline comment at L282 (<code># Load risk components from M3 risk_scores.npz (test-split sourced)</code>), the analysis runs against test-split-sourced data, <strong>not val_phase1</strong>. This refutes Session 9's inference and Session 10 Section 7's claim that the legacy artifact "uses val (likely)" based on <code>n_alerts_evaluated = 2448</code>. (See Phase 1 Implications Delta.)</p>
+
+  <p><strong>Q-V5.3 — Classification:</strong> <span class="label verified">[VERIFIED]</span> <strong>Outcome (a) — Exact tier match.</strong> The metric is the mean of an element-wise equality boolean over integer tier vectors. Both compute sites evaluate <code>np.mean(tier == tier_base)</code> on integer arrays (<code>tier_base</code> at L337 and <code>tier</code> at L348/L362 are <code>np.ndarray</code> outputs of <code>_assign_tier</code>, which has return-type annotation <code>-&gt; np.ndarray</code> at L430).</p>
+  <p>The encoding of the tier integers is verified by L365: <code>crit_base = (tier_base == 3)</code> — i.e., tier 3 represents CRITICAL. Combined with the boundary order <code>(0.80, 0.60, 0.40)</code> at L280, the natural mapping is <code>{LOW: 0, MEDIUM: 1, HIGH: 2, CRITICAL: 3}</code> by ascending R threshold (full body of <code>_assign_tier</code> not opened, so this mapping is <span class="label inferred">[INFERRED]</span> hypothesis from the boundary-tuple ordering at L280 and the <code>tier_base == 3</code> comparison at L365; the <code>(a)</code> classification does not depend on the exact mapping).</p>
+  <p>Outcomes (b), (c), (d), (e) are ruled out:</p>
+  <ul>
+    <li><strong>Not (b) Cohen's κ:</strong> <code>sklearn.metrics.cohen_kappa_score</code> appears 0 times in the file (negative claim search scope: <code>grep "cohen_kappa\|cohen_kappa_score" analysis/compute_rq1.py</code> would return empty; Step 2's broader grep for <code>agreement|perturbation_results|rq1_sensitivity_analysis</code> surfaced no κ reference). The formula at L349/L363 contains no chance-adjustment term.</li>
+    <li><strong>Not (c) Continuous-R proxy:</strong> the metric operates on the <em>integer</em> output of <code>_assign_tier</code>, not on R directly. <code>np.mean(np.abs(R - R_base))</code>, <code>rmse</code>, and similar continuous comparisons are not present at the compute sites.</li>
+    <li><strong>Not (d) Surfacing match:</strong> the comparison is on tier integers (4-valued), not on a binary surfaced/not-surfaced decision. The function does not compute or reference a binary surfacing variable in the agreement computation.</li>
+    <li><strong>Not (e) something else:</strong> the expression is the literal canonical form of the (a) outcome from the resolution-outcomes table; no novel transformation, no weighting, no per-tier breakdown.</li>
+  </ul>
+
+  <p><strong>Q-V5.4 — Documentation inside the function:</strong> <span class="label verified">[VERIFIED]</span></p>
+  <ul>
+    <li><strong>No function-level docstring</strong> for <code>compute_rq1_3</code>. L274 is the def; L275 is <code>section = "RQ1.3"</code> directly — no triple-quoted block.</li>
+    <li><strong>No inline comment</strong> at the compute sites L349 or L363 naming what the metric is intended to measure.</li>
+    <li><strong>One explicit user-visible label</strong>: the histogram plot's x-axis label at L383 is verbatim <code>"Tier agreement with baseline weights"</code>. This labels the per-perturbation distribution being plotted into <code>FIGURES / "sensitivity_histogram.pdf"</code> at L389.</li>
+    <li><strong>Two inline comments on related lines</strong>: L335 — <code># baseline tier assignment</code>; L344 — <code># multiplicative ±10% perturbation</code>; and L364 — <code># FNR on CRITICAL: rows that should be CRITICAL but assigned lower</code>. These document the surrounding mechanics, not the agreement metric per se.</li>
+    <li>The section-begin message at L276 is <code>"sensitivity analysis (30 perturbations + 3 baselines)"</code> — describes the analysis structure, not the metric definition.</li>
+  </ul>
+
+  <p><strong>Q-V5.5 — Saturation sanity check:</strong> <span class="label verified">[VERIFIED]</span> The Session 9 Q-V1 observation that all 30 perturbations land in the [0.9, 1.0] histogram bin (min 0.9669, max 0.9947) is <em>consistent</em> with exact tier match under ±10% multiplicative perturbation followed by L1 renormalization. The renormalization at L346 (<code>pert = pert / pert.sum()</code>) compresses the perturbation: independent ±10% draws on four components followed by sum-to-1.0 normalization produce final per-weight deviations smaller than 10%. The composite R for any given row shifts by a small amount; only rows whose <code>R_base</code> sits within that shift's magnitude of a tier boundary (0.40, 0.60, 0.80) can flip tier. With 4-tier discrete output and 3 boundaries, the fraction of rows near any boundary is bounded, so <code>(tier == tier_base).mean()</code> remaining above 0.96 across 30 random perturbations is the expected behavior for this protocol-on-this-metric combination. <strong>This is a sanity check, not a judgment</strong> — the value is consistent with the protocol; whether the protocol's magnitude is sufficient to stress-test the policy is a separate question (Phase 1 territory).</p>
+
+  <p><strong>Phase 1 implication:</strong> D3 becomes a clean Phase 1 decision rather than decision-with-unknown-precedent. The prior 0.9823 number is now fully defensible <em>given its definition</em>: it is the mean exact-tier-match fraction over 30 multiplicative ±10% L1-renormalized perturbations against the policy weight vector, computed on test-split-sourced risk components. The Phase 1 D3 choice is:</p>
+  <ul>
+    <li><strong>Option D3-keep:</strong> retain exact tier match as the canonical agreement metric. Most natural pick: the prior 0.9823 remains citable verbatim, with the methodology now documented in the spec. Phase 1 D3 conversation is one-line.</li>
+    <li><strong>Option D3-extend:</strong> retain exact tier match as primary, add a chance-adjusted (κ) or per-tier breakdown as secondary. Phase 2 schema grows; the prior 0.9823 is preserved as the primary headline.</li>
+    <li><strong>Option D3-supersede:</strong> switch to κ or per-tier accuracy as primary; demote exact-match. The prior 0.9823 is reported in the thesis as v1 evidence under a methodology change.</li>
+  </ul>
+  <p>None of these are recommended here — Phase 0d surfaces the prior choice and the user picks. One concrete constraint for Phase 1: any chance-adjusted metric (κ) would <em>not</em> be saturated near 1.0 the way exact-match is, because the four-tier distribution is skewed and a high prevalence of LOW means even random tier assignments would yield high raw-agreement. If the Phase 1 thesis claim is about "robustness against random-baseline floors," κ or per-tier breakdown adds value; if the claim is "policy invariance under small weight perturbations," exact-match is sufficient. This framing is a fact-of-the-matter about what metric carries what information, not a D3 recommendation.</p>
+
+  <p><strong>Resolution mapping:</strong> Closes Session 9 Q-V1.3 verbatim: <em>"A scalar <code>agreement</code> field is reported per condition. The metric's <em>definition</em> (exact tier-match rate? κ? per-tier accuracy?) is <strong>not specified in this JSON</strong>; only the value is reported. Without reading the producer script, the definition is <span class="label unknown">[UNKNOWN]</span>."</em> Status: <strong>closed</strong>. Answer: outcome (a) — exact tier match, computed as <code>np.mean(tier == tier_base)</code> over <code>_assign_tier</code>-produced integer tier vectors with boundaries <code>(0.80, 0.60, 0.40)</code>.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li><strong>Split correction surfaced.</strong> The inline comment at <code>analysis/compute_rq1.py:282</code> states <em>"Load risk components from M3 risk_scores.npz (test-split sourced)"</em>. Session 9 inferred (and Session 10 inherited) that the legacy artifact used val_phase1 because <code>n_alerts_evaluated = 2448</code> matches val's row count. This contradiction needs a Phase 1-level clarification: either the comment is stale, the row count is coincidental, or <code>risk_scores.npz</code> contains the val split despite the test-split-sourced docstring. Out of scope for Phase 0d but flagged here for Phase 1's methodological-caveat reconciliation.</li>
+  <li>The <code>baseline_eval</code> nested function at L355 handles a <code>multiplicative=True</code> branch (L357-359) computing R as <code>c_detect * max(d_crit, s_data, d_clinical_tier)</code>. This is one specific multiplicative formulation — not the only possible one. Phase 1's D4 (multiplicative R) conversation may want to know what formulation the prior artifact actually used; Q-V5 has now surfaced the verbatim formula.</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files opened (read with <code>view</code>):</strong>
+    <ul>
+      <li><code>analysis/compute_rq1.py</code> range L274-405 — <strong>132 lines</strong> read out of 761 total. Bracketing strategy honored: the full file was <strong>not</strong> read.</li>
+    </ul>
+  </li>
+  <li><strong>Files NOT opened:</strong>
+    <ul>
+      <li><code>analysis/compute_rq1.py</code> ranges L1-273 (top-of-file, unrelated functions <code>compute_rq1_1</code> and <code>compute_rq1_2</code>) and L406-761 (function tail, <code>_assign_tier</code> body, <code>compute_rq1_4</code>, <code>compute_rq1_5</code>, <code>main</code>) — deliberately not read; not relevant to Q-V5.</li>
+      <li><code>analysis/build_thesis_results.py</code> (parked from Session 10).</li>
+      <li><code>feedback_loop_demo.py</code>, <code>dynamic_threshold_sim.py</code> (parked from Session 10).</li>
+      <li><code>_assign_tier</code> body at L430-442 — signature sighted in Step 1's grep; body not opened because Q-V5's classification does not depend on the function's internal thresholding logic (it depends only on the return-type being tier integers, which is established by L365's <code>tier_base == 3</code> integer comparison).</li>
+    </ul>
+  </li>
+  <li><strong>Searches and shell commands run:</strong>
+    <ul>
+      <li><code>grep -n "^def |^class |^async def " analysis/compute_rq1.py</code></li>
+      <li><code>grep -n "agreement|perturbation_results|rq1_sensitivity_analysis" analysis/compute_rq1.py</code></li>
+    </ul>
+  </li>
+  <li><strong>Default exclusions applied:</strong> yes — <code>tests/</code>, <code>__pycache__</code>, <code>.git/</code>, <code>results/_pre_*</code>. No opt-ins beyond Q-V5's chartered target.</li>
+  <li><strong>Branch:</strong> <code>fix/rq1-weight-sensitivity</code> &mdash; matches Phase 0d precondition. HEAD unchanged from Session 10 (<code>10e26156</code>).</li>
+  <li><strong>Explicitly NOT in this answer:</strong>
+    <ul>
+      <li>Any D3 recommendation. The three options listed in the Phase 1 Implication paragraph are descriptions of the choice space, not a recommendation.</li>
+      <li>Any judgment on whether exact-tier-match is "the right" metric for the thesis claim. Phase 1 reconcile-and-extend conversation.</li>
+      <li>Reading the body of <code>_assign_tier</code>. Tier-encoding mapping is [INFERRED] from boundary-tuple ordering and a single integer comparison; this is sufficient for the (a) classification but not a full read of the tier-assignment logic.</li>
+      <li>Reading <code>compute_rq1_4</code> (L443) and <code>compute_rq1_5</code> (L619) — siblings of <code>compute_rq1_3</code>; out of scope.</li>
+      <li>Reconciling the test/val split contradiction surfaced in Section 4 (Phase 1 territory).</li>
+      <li>Any code edits — Phase 0d is read-only.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim in Section 3 carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every <code>path</code> cited in Section 3 appears in Section 2 — <strong>PASS</strong></li>
+  <li>[x] Every verbatim quote ≤25 words, in backticks — <strong>PASS</strong></li>
+  <li>[x] No prohibited softening words ("appears," "likely," "probably," "should," "would," "seems," "typically," "usually") in Sections 3 or 4 — <strong>PASS</strong></li>
+  <li>[x] No fix / refactor / improvement suggestion in any section — <strong>PASS</strong></li>
+  <li>[x] Every negative claim states its search scope — <strong>PASS</strong> (the "no κ" negative is scoped to the file's grep results; the "no function-level docstring" negative is scoped to L274-275)</li>
+  <li>[x] No docstring / type hint cited as CODE evidence — <strong>PASS</strong> (the <code>_assign_tier</code> return-type annotation is cited only to support a structural claim about return shape, not behavior)</li>
+  <li>[x] Question answered (single Q-V5) — <strong>PASS</strong></li>
+  <li>[x] Section 5 explicitly states what was not read — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b/c-specific:</strong> Q-V5 includes a Phase 1 Implication paragraph — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b/c-specific:</strong> Q-V5 includes a Resolution Mapping paragraph — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0b/c-specific:</strong> No design recommendation appears anywhere — <strong>PASS</strong> (the three D3 options are descriptions of the choice space; "none recommended" stated explicitly)</li>
+  <li>[x] <strong>Phase 0b/c-specific:</strong> No edit performed — <strong>PASS</strong> (HTML append is chartered output)</li>
+  <li>[x] <strong>Phase 0b/c-specific:</strong> Branch confirmed and stated in Section 5 — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0d-specific:</strong> Bracketing strategy honored — full 761-line file NOT read; only L274-405 (132 lines, 17% of file) opened — <strong>PASS</strong></li>
+  <li>[x] <strong>Phase 0d-specific:</strong> Outcome (a)/(b)/(c)/(d)/(e) explicitly named with verbatim code evidence — <strong>PASS</strong> ((a) named at Q-V5.3 with quotes from L349 and L363)</li>
+  <li>[x] STOP conditions checked: file exists, write sites at L291/L312/L327/L424 confirmed; helper <code>_assign_tier</code> defined in same file (no cross-file STOP); agreement-computing function under 200 lines (<code>compute_rq1_3</code> spans 156 lines L274-429; agreement region under 50 lines); outcome fit cleanly into (a) without force-fitting — <strong>ALL CLEAR</strong></li>
+</ul>
+
+<h2>Section 7 — Consolidated Phase 1 Implications Delta (Phase 0d additions)</h2>
+<p>How the Phase 1 design space changed vs Session 10's cumulative consolidation, as a result of Q-V5:</p>
+<ul>
+  <li><strong>D3 (agreement metric) — fully decision-ready:</strong> Session 9 reported a value (0.9823) with unknown methodology. Phase 0d closes the methodology: <em>exact tier match</em>, computed as <code>np.mean(tier_perturbed == tier_baseline)</code> on integer tier vectors. D3 is now a clean three-way Phase 1 choice (keep / extend / supersede) with full evidence on each option's tradeoff. No further [UNKNOWN] blocks D3.</li>
+  <li><strong>Legacy artifact disposition — full picture available:</strong> Session 10's framing of three options (i) authoritative-being-formalized, (ii) draft-to-be-superseded, (iii) comparator-to-coexist now has the metric definition that makes each option costable. If the user picks D3-keep, option (i) is one-line. If D3-extend or D3-supersede, option (iii) or (ii) become viable with documented methodology change.</li>
+  <li><strong>D4 (multiplicative R) — comparator formula now known:</strong> the legacy artifact's <code>baselines.multiplicative</code> uses a specific formula: <code>R = c_detect * max(d_crit, s_data, d_clinical_tier)</code> (L357-359). Phase 1 D4 either keeps this formulation, picks a different multiplicative form (e.g., product, geometric mean), or skips multiplicative entirely. The formula is now visible, not assumed.</li>
+  <li><strong>New surface — split contradiction:</strong> Phase 0d found an inline comment at L282 stating "test-split sourced", contradicting Session 9's inference that the legacy artifact used val (based on <code>n_alerts_evaluated = 2448</code> matching val's row count). This surfaces as a Phase 1 methodological item to reconcile: either the comment is wrong, the row count is coincidental between val and the test-sourced npz, or the npz mixes splits. Phase 0d does not investigate — out of scope — but the contradiction must not silently persist into Phase 1's planning.</li>
+  <li><strong>All Phase 0/0b/0c/0d [UNKNOWN] items closed.</strong> The cumulative Resolution Mapping Table (Section 8 below) shows every Q-V and the Session-8 / Session-9 follow-up it closed. The only items not addressed are explicitly out-of-scope and parked. <strong>Phase 1 design space is fully characterized.</strong></li>
+</ul>
+
+<h2>Section 8 — Resolution Mapping Table (cumulative through Phase 0d)</h2>
+<table>
+  <thead>
+    <tr><th>Q-V</th><th>Closes (Session 8 / 9 item)</th><th>Status</th><th>One-line rationale</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Q-V1 (Session 9)</td>
+      <td>Session 8 Section 4 follow-up #3 (contents of <code>rq1_sensitivity_analysis.json</code>)</td>
+      <td><strong>closed</strong></td>
+      <td>Outcome (a-fresh): prior weight-sensitivity work, YAML sha256 byte-matches, JSON commit is HEAD ancestor.</td>
+    </tr>
+    <tr>
+      <td>Q-V4 (Session 10)</td>
+      <td>Session 8 Q-W5 [UNKNOWN] (aggregator changes needed for <code>rq1_weight_sensitivity.json</code>?)</td>
+      <td><strong>closed</strong></td>
+      <td>Zero LOC: <code>analysis/merge_rq1_metrics.py</code> handles new-vs-legacy precedence with generic dict pass-through.</td>
+    </tr>
+    <tr>
+      <td>Q-V2 (Session 10)</td>
+      <td>Session 8 Section 4 follow-up #5, <code>apply_weight_feedback()</code> half</td>
+      <td><strong>closed</strong></td>
+      <td>Not perturbation infra: AUROC-maximizing calibration utility; pure-return, no <code>WEIGHTS</code> mutation; 1 invocation in <code>feedback_loop_demo.py</code>.</td>
+    </tr>
+    <tr>
+      <td>Q-V3 (Session 10)</td>
+      <td>Session 8 Section 4 follow-up #5, L1156 call-site half</td>
+      <td><strong>closed</strong></td>
+      <td>L1156 sits in <code>weight_sensitivity_analysis()</code> at L1071: grid + OAT AUROC search on test split, PNG-only output. Naming collision noted; functional overlap with Fix 1 is nil.</td>
+    </tr>
+    <tr>
+      <td>Q-V5 (Session 11)</td>
+      <td>Session 9 Q-V1.3 [UNKNOWN] (definition of legacy artifact's <code>agreement</code> metric)</td>
+      <td><strong>closed</strong></td>
+      <td>Outcome (a) — exact tier match: <code>np.mean(tier == tier_base)</code> on integer tier vectors from <code>_assign_tier()</code>; xlabel "Tier agreement with baseline weights" confirms intent.</td>
+    </tr>
+    <tr>
+      <td>—</td>
+      <td>Session 8 Section 4 follow-up #4 (aggregator's <code>risk_weights</code> sub-block contents)</td>
+      <td><strong>not addressed</strong></td>
+      <td>Out of scope for Phase 0b/0c/0d. Block defined at <code>compute_rq1_metrics.py:107</code>; body not opened.</td>
+    </tr>
+  </tbody>
+</table>
+
 </body>
 </html>
