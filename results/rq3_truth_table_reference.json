@@ -1,0 +1,404 @@
+{
+  "_meta": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-20T07:21:33.928180+00:00",
+    "generated_by": "tests/test_rq3_truth_table_completeness.py",
+    "source_csv": "results/rq1_tier_surfacing_truth_table.csv",
+    "rq3_section_reference": "RQ3_expected_outputs.md \u00a74.2 (via RQ3_TRUTH_TABLE_SPEC.md \u00a74.1)",
+    "_cross_reference_note": "Track 4 verifies the 8 critical rows from RQ3 \u00a74.2 against the canonical truth table produced by RQ1 Phase 7. The full table lives in results/rq1_tier_surfacing_truth_table.csv (16 rows: one per (tier, patchable, maintenance_active) triple).",
+    "_encoding_note": "Real CSV uses 'True'/'False' for both patchable and maintenance_active. _find_row maps spec's 'active'/'inactive' semantics to these via _normalize_bool."
+  },
+  "headline": {
+    "verification_pass": true,
+    "n_claims_total": 16,
+    "n_pass": 6,
+    "n_depends_ok": 10,
+    "n_fail": 0
+  },
+  "results": [
+    {
+      "claim": {
+        "tier": "CRITICAL",
+        "patchable": "False",
+        "maintenance": "active",
+        "expected_surface": "TRUE",
+        "expected_reason_prefix": "safety_floor",
+        "source_claim": "CRITICAL|False|active"
+      },
+      "matched_row": {
+        "risk_tier": "CRITICAL",
+        "patchable": "False",
+        "maintenance_active": "True",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.85",
+        "adjusted_score": "0.425",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "True",
+        "reason": "safety_floor"
+      },
+      "status": "pass",
+      "details": null
+    },
+    {
+      "claim": {
+        "tier": "CRITICAL",
+        "patchable": "False",
+        "maintenance": "inactive",
+        "expected_surface": "TRUE",
+        "expected_reason_prefix": "safety_floor",
+        "source_claim": "CRITICAL|False|inactive"
+      },
+      "matched_row": {
+        "risk_tier": "CRITICAL",
+        "patchable": "False",
+        "maintenance_active": "False",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.85",
+        "adjusted_score": "1.0",
+        "threshold": "0.35",
+        "risk_multiplier": "1.5",
+        "should_surface": "True",
+        "reason": "safety_floor"
+      },
+      "status": "pass",
+      "details": null
+    },
+    {
+      "claim": {
+        "tier": "CRITICAL",
+        "patchable": "True",
+        "maintenance": "active",
+        "expected_surface": "FALSE",
+        "expected_reason_prefix": "suppressed_maintenance",
+        "source_claim": "CRITICAL|True|active"
+      },
+      "matched_row": {
+        "risk_tier": "CRITICAL",
+        "patchable": "True",
+        "maintenance_active": "True",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.85",
+        "adjusted_score": "0.425",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "False",
+        "reason": "suppressed_maintenance"
+      },
+      "status": "pass",
+      "details": null
+    },
+    {
+      "claim": {
+        "tier": "CRITICAL",
+        "patchable": "True",
+        "maintenance": "inactive",
+        "expected_surface": "TRUE",
+        "expected_reason_prefix": null,
+        "source_claim": "CRITICAL|True|inactive"
+      },
+      "matched_row": {
+        "risk_tier": "CRITICAL",
+        "patchable": "True",
+        "maintenance_active": "False",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.85",
+        "adjusted_score": "1.0",
+        "threshold": "0.475",
+        "risk_multiplier": "1.3",
+        "should_surface": "True",
+        "reason": "above_threshold"
+      },
+      "status": "pass",
+      "details": null
+    },
+    {
+      "claim": {
+        "tier": "HIGH",
+        "patchable": "True",
+        "maintenance": "active",
+        "expected_surface": "FALSE",
+        "expected_reason_prefix": "suppressed_maintenance",
+        "source_claim": "HIGH|*|active"
+      },
+      "matched_row": {
+        "risk_tier": "HIGH",
+        "patchable": "True",
+        "maintenance_active": "True",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.65",
+        "adjusted_score": "0.325",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "False",
+        "reason": "suppressed_maintenance"
+      },
+      "status": "pass",
+      "details": null
+    },
+    {
+      "claim": {
+        "tier": "HIGH",
+        "patchable": "False",
+        "maintenance": "active",
+        "expected_surface": "FALSE",
+        "expected_reason_prefix": "suppressed_maintenance",
+        "source_claim": "HIGH|*|active"
+      },
+      "matched_row": {
+        "risk_tier": "HIGH",
+        "patchable": "False",
+        "maintenance_active": "True",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.65",
+        "adjusted_score": "0.325",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "False",
+        "reason": "suppressed_maintenance"
+      },
+      "status": "pass",
+      "details": null
+    },
+    {
+      "claim": {
+        "tier": "HIGH",
+        "patchable": "True",
+        "maintenance": "inactive",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "normal",
+        "source_claim": "HIGH|*|inactive"
+      },
+      "matched_row": {
+        "risk_tier": "HIGH",
+        "patchable": "True",
+        "maintenance_active": "False",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.65",
+        "adjusted_score": "0.715",
+        "threshold": "0.475",
+        "risk_multiplier": "1.1",
+        "should_surface": "True",
+        "reason": "above_threshold"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (True) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "HIGH",
+        "patchable": "False",
+        "maintenance": "inactive",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "normal",
+        "source_claim": "HIGH|*|inactive"
+      },
+      "matched_row": {
+        "risk_tier": "HIGH",
+        "patchable": "False",
+        "maintenance_active": "False",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.65",
+        "adjusted_score": "0.78",
+        "threshold": "0.35",
+        "risk_multiplier": "1.2",
+        "should_surface": "True",
+        "reason": "above_threshold"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (True) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "MEDIUM",
+        "patchable": "True",
+        "maintenance": "active",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "normal",
+        "source_claim": "MEDIUM|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "MEDIUM",
+        "patchable": "True",
+        "maintenance_active": "True",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.45",
+        "adjusted_score": "0.225",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "False",
+        "reason": "suppressed_maintenance"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (False) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "MEDIUM",
+        "patchable": "True",
+        "maintenance": "inactive",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "normal",
+        "source_claim": "MEDIUM|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "MEDIUM",
+        "patchable": "True",
+        "maintenance_active": "False",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.45",
+        "adjusted_score": "0.45",
+        "threshold": "0.475",
+        "risk_multiplier": "1.0",
+        "should_surface": "False",
+        "reason": "below_threshold"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (False) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "MEDIUM",
+        "patchable": "False",
+        "maintenance": "active",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "normal",
+        "source_claim": "MEDIUM|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "MEDIUM",
+        "patchable": "False",
+        "maintenance_active": "True",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.45",
+        "adjusted_score": "0.225",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "False",
+        "reason": "suppressed_maintenance"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (False) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "MEDIUM",
+        "patchable": "False",
+        "maintenance": "inactive",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "normal",
+        "source_claim": "MEDIUM|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "MEDIUM",
+        "patchable": "False",
+        "maintenance_active": "False",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.45",
+        "adjusted_score": "0.4725",
+        "threshold": "0.35",
+        "risk_multiplier": "1.05",
+        "should_surface": "True",
+        "reason": "above_threshold"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (True) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "LOW",
+        "patchable": "True",
+        "maintenance": "active",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "below_threshold",
+        "source_claim": "LOW|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "LOW",
+        "patchable": "True",
+        "maintenance_active": "True",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.2",
+        "adjusted_score": "0.1",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "False",
+        "reason": "suppressed_maintenance"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (False) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "LOW",
+        "patchable": "True",
+        "maintenance": "inactive",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "below_threshold",
+        "source_claim": "LOW|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "LOW",
+        "patchable": "True",
+        "maintenance_active": "False",
+        "device_class": "ehr_workstation",
+        "anomaly_score": "0.2",
+        "adjusted_score": "0.2",
+        "threshold": "0.475",
+        "risk_multiplier": "1.0",
+        "should_surface": "False",
+        "reason": "below_threshold"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (False) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "LOW",
+        "patchable": "False",
+        "maintenance": "active",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "below_threshold",
+        "source_claim": "LOW|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "LOW",
+        "patchable": "False",
+        "maintenance_active": "True",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.2",
+        "adjusted_score": "0.1",
+        "threshold": "0.5",
+        "risk_multiplier": "0.5",
+        "should_surface": "False",
+        "reason": "suppressed_maintenance"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (False) is non-binary per \u00a74.2."
+    },
+    {
+      "claim": {
+        "tier": "LOW",
+        "patchable": "False",
+        "maintenance": "inactive",
+        "expected_surface": "DEPENDS",
+        "expected_reason_prefix": "below_threshold",
+        "source_claim": "LOW|*|*"
+      },
+      "matched_row": {
+        "risk_tier": "LOW",
+        "patchable": "False",
+        "maintenance_active": "False",
+        "device_class": "infusion_pump",
+        "anomaly_score": "0.2",
+        "adjusted_score": "0.2",
+        "threshold": "0.35",
+        "risk_multiplier": "1.0",
+        "should_surface": "False",
+        "reason": "below_threshold"
+      },
+      "status": "depends_ok",
+      "details": "Row present; outcome (False) is non-binary per \u00a74.2."
+    }
+  ]
+}

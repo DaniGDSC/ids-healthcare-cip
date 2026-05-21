@@ -166,7 +166,7 @@ data/processed/demo_phase1.parquet
 └─────────────────────────────────────┘
                     │
                     ▼
-┌──────────────────────── ONLINE INFERENCE (per alert) ────────────────────────┐
+┌────────────────────── PER-RECORD INFERENCE (per alert) ──────────────────────┐
 │                                                                              │
 │  ╔══════════════════════════════════════════════════════════════════╗        │
 │  ║                  Network Flow Record (raw 25 features)            ║        │
@@ -1202,3 +1202,27 @@ The typical workflow is batch-first with strict separation between paper-metrics
 6. **Analysis**: post-collection RQ3 analysis (`analyze_rq3.py`) reads `survey/study_responses_*.json`.
 
 The Streamlit app is a presentation and study layer on top of the offline-computed demo artifacts, never the primary computation engine. Test split records do not appear in the dashboard at any point.
+
+## Operational model: per-record specification, batch execution
+
+The pipeline distinguishes two orthogonal properties:
+
+1. **Per-record (alert-independent) semantics — a correctness property.**
+   Steps [5]–[16] in the canonical workflow operate independently per
+   alert: no temporal state is shared across alerts, the score of alert
+   N does not depend on alerts 1..N-1, and the per-alert objects
+   (`SHAPContext`, `MVEOutput`) are designed for load-once + call-many.
+   This is what `module4_online_explainer.py`'s docstring means by
+   "online-capable."
+
+2. **Batch execution — an operational property.** The implemented
+   entrypoint runs the per-record sequence in batch over the test split
+   (`module4_online_explainer.py::main`).
+   The per-call latency profile
+   (`results/reports/online_latency_profile.json`, n=677) is
+   opportunistic timing collected inside the batch run.
+
+All thesis claims about detection, explanation, and clinical
+adaptation derive from this batch execution. The per-record semantics
+make the pipeline implementable as a streaming runtime — that
+implementation is future work, not a claim made in this thesis.

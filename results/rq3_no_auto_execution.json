@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0",
-    "generated_at": "2026-05-19T15:13:50.234291+00:00",
+    "generated_at": "2026-05-21T01:47:44.792278+00:00",
     "generated_by": "analysis/audit_no_auto_execution.py",
     "config_path": "configs/no_auto_exec_scope.yaml",
     "taxonomy_locked_on": "2026-05-19",
@@ -14,8 +14,8 @@
     "n_findings_unclassified": 0,
     "n_files_scanned": {
       "production": 46,
-      "test": 52,
-      "analysis_skipped": 35,
+      "test": 53,
+      "analysis_skipped": 36,
       "unclassified": 64,
       "excluded": 13
     }

@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Codebase Investigation</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1a1a1a; }
+  h1 { border-bottom: 2px solid #333; padding-bottom: 0.3rem; }
+  h2 { margin-top: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 0.2rem; }
+  h3 { margin-top: 1.5rem; color: #2c3e50; }
+  code, pre { background: #f4f4f4; padding: 0.1rem 0.3rem; border-radius: 3px; font-family: "SF Mono", Consolas, monospace; font-size: 0.9rem; }
+  pre { padding: 0.7rem; overflow-x: auto; }
+  .label { display: inline-block; padding: 0.05rem 0.4rem; border-radius: 3px; font-size: 0.8rem; font-weight: 600; }
+  .verified { background: #d4edda; color: #155724; }
+  .read { background: #d1ecf1; color: #0c5460; }
+  .grepped { background: #fff3cd; color: #856404; }
+  .inferred { background: #f8d7da; color: #721c24; }
+  .unknown { background: #e2e3e5; color: #383d41; }
+  .meta { color: #666; font-size: 0.85rem; }
+  ul { margin: 0.3rem 0; }
+  .qa-block { border-left: 3px solid #d1ecf1; padding-left: 1rem; margin: 1.5rem 0; }
+  .evidence { background: #fafafa; padding: 0.5rem 0.8rem; border-left: 2px solid #ccc; margin: 0.5rem 0; }
+  .evidence ul { padding-left: 1.2rem; }
+  .session-header { background: #eef5ff; padding: 0.5rem 0.8rem; border-radius: 4px; margin-top: 2rem; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin: 0.6rem 0; }
+  th, td { border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }
+  th { background: #f4f4f4; }
+  td code { background: transparent; padding: 0; }
+</style>
+</head>
+<body>
+
+<h1>Codebase Investigation</h1>
+<p class="meta">
+  Repository: <code>/home/un1/project/ids-healthcare-cip</code><br>
+  Branch: <code>fix/shap-category-vocab</code><br>
+  Generated: 2026-05-21<br>
+  Investigator role: read-only code investigator (no fixes, no refactors)
+</p>
+
+<div class="session-header">
+  <strong>Session 1 — 2026-05-21</strong><br>
+  Subject: <code>_src_adapter</code> references and <code>scored_from_eval_alert()</code> signature
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q1:</strong> <code>grep -rn "_src_adapter" .</code> (excluding <code>.git</code>) to enumerate all containing files.</li>
+  <li><strong>Q2:</strong> Read <code>module6_evaluation/_src_adapter.py</code> to locate <code>scored_from_eval_alert()</code> and inspect the <code>patchable</code> parameter default.</li>
+  <li><strong>Q3:</strong> Same read as Q2; extract the full signature with all parameter defaults verbatim.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>grep -rn "_src_adapter" /home/un1/project/ids-healthcare-cip --include=*.py,*.md,*.txt,*.json,*.yaml,*.yml,*.toml,*.cfg,*.ini</code> &rarr; matches in 6 distinct files (listed in Q1 answer).</li>
+  <li><code>ls -la module6_evaluation/_src_adapter.py</code> &rarr; file exists, 1124 bytes.</li>
+  <li>Read <code>module6_evaluation/_src_adapter.py:1-27</code> (full file, 27 lines).</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q1: Which files in the repo contain the string "_src_adapter" (any context)?</h3>
+
+  <p><strong>Answer:</strong> Six distinct files contain the literal string <code>_src_adapter</code> (across <code>.py</code> and <code>.md</code> extensions searched) <span class="label grepped">[GREPPED]</span>:</p>
+  <ol>
+    <li><code>ARCHITECTURE.md</code> (lines 48, 49, 269, 764, 795)</li>
+    <li><code>docs/chapter3_pipeline_extraction_report.md</code> (lines 892, 956, 970, 980, 1056)</li>
+    <li><code>src/context_enrichment.py</code> (line 247)</li>
+    <li><code>module6_evaluation/_src_adapter.py</code> (line 6; plus filename itself)</li>
+    <li><code>results/_pre_doc_audit_fix_20260508_091930/ARCHITECTURE.md</code> (lines 48, 49, 267, 762, 793) — archived snapshot</li>
+    <li><code>results/_pre_m6_drift_fix_20260508_090749/_src_adapter.py</code> (line 6) — archived snapshot</li>
+  </ol>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>ARCHITECTURE.md:48</code> — <code>`module6_evaluation.py` — builds evaluation artifacts; routes alerts through `_src_adapter`</code></li>
+      <li><code>src/context_enrichment.py:247</code> — <code>Replaces the legacy ``module6_evaluation/_src_adapter.scored_from_eval_alert``</code></li>
+      <li><code>module6_evaluation/_src_adapter.py:6</code> — <code>``module6_evaluation._src_adapter.scored_from_eval_alert``; it delegates</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> The grep was restricted to extensions <code>.py, .md, .txt, .json, .yaml, .yml, .toml, .cfg, .ini</code>. Files with other extensions (e.g., <code>.rst</code>, <code>.html</code>, notebooks, binaries) were not searched. Resolution: re-run grep without <code>--include</code> filters.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q2: What is the exact default value of <code>patchable</code> in <code>module6_evaluation/_src_adapter.py::scored_from_eval_alert()</code>?</h3>
+
+  <p><strong>Answer:</strong> <code>scored_from_eval_alert()</code> has no <code>patchable</code> parameter, so there is no default value for it in this function <span class="label verified">[VERIFIED]</span>. The function takes a single parameter <code>alert_data: dict[str, Any]</code> and delegates to <code>score_alert_from_dict(alert_data)</code>. The docstring explicitly states the shim "inherits the strict <code>patchable</code> contract" — i.e., <code>patchable</code> must be present in <code>alert_data</code> or the call fails loudly downstream <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>module6_evaluation/_src_adapter.py:18</code> — <code>def scored_from_eval_alert(alert_data: dict[str, Any]) -&gt; ScoredAlert:</code></li>
+      <li><code>module6_evaluation/_src_adapter.py:26</code> — <code>return score_alert_from_dict(alert_data)</code></li>
+      <li><code>module6_evaluation/_src_adapter.py:7-8</code> — <code>delegates / to ``src.context_enrichment.score_alert_from_dict`` which fails loudly / when the required ``patchable`` field is absent (no silent default).</code></li>
+      <li><code>module6_evaluation/_src_adapter.py:24</code> — <code>location and inherits the strict ``patchable`` contract.</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> The downstream behavior of <code>patchable</code> inside <code>src.context_enrichment.score_alert_from_dict</code> was not read in this turn. Resolution: read <code>src/context_enrichment.py</code> around the <code>score_alert_from_dict</code> definition and any <code>patchable</code> references.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q3: What is the function signature, including all parameter defaults?</h3>
+
+  <p><strong>Answer:</strong> The signature is <code>scored_from_eval_alert(alert_data: dict[str, Any]) -&gt; ScoredAlert</code> — a single positional/keyword parameter with no default value, returning <code>ScoredAlert</code> <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>module6_evaluation/_src_adapter.py:18</code> — <code>def scored_from_eval_alert(alert_data: dict[str, Any]) -&gt; ScoredAlert:</code></li>
+      <li><code>module6_evaluation/_src_adapter.py:14</code> — <code>from src.context_enrichment import score_alert_from_dict</code></li>
+      <li><code>module6_evaluation/_src_adapter.py:15</code> — <code>from src.data_models import ScoredAlert</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> None for the current file's signature.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>What is the full signature of <code>src.context_enrichment.score_alert_from_dict</code>, and how does it handle a missing <code>patchable</code> key?</li>
+  <li>Does the archived snapshot <code>results/_pre_m6_drift_fix_20260508_090749/_src_adapter.py</code> contain a different <code>scored_from_eval_alert</code> signature (e.g., with <code>patchable=True</code> default per <code>ARCHITECTURE.md:49</code>'s historical claim)?</li>
+  <li>Is <code>ARCHITECTURE.md:49</code>'s description (<code>safe defaults (patchable=True, event_context=None)</code>) stale relative to current code, or scoped to the archived snapshot?</li>
+  <li>Are there any callers still importing <code>scored_from_eval_alert</code> from <code>module6_evaluation._src_adapter</code>? (Would need a separate grep on <code>scored_from_eval_alert</code>.)</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files read:</strong> <code>module6_evaluation/_src_adapter.py</code> (full, lines 1–27).</li>
+  <li><strong>Searches run:</strong> <code>grep -rn "_src_adapter" …</code> (filtered to text-source extensions); <code>ls</code> on the target file.</li>
+  <li><strong>Not in this answer:</strong> body of <code>src/context_enrichment.score_alert_from_dict</code>; contents of the archived <code>_src_adapter.py</code> snapshot; non-text extensions (notebooks, HTML, etc.); enumeration of current callers of <code>scored_from_eval_alert</code>.</li>
+</ul>
+
+<div class="session-header">
+  <strong>Session 2 — 2026-05-21</strong><br>
+  Subject: DAE training input shape, <code>results/models/</code> artifacts, and <code>_load_track_a_probas_for_dae</code> callers
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q4:</strong> Locate <code>train_track_b_dae</code> in <code>module2_detection/module2_train_models.py</code> via grep, then read its body to find tensor construction (input shape/dimensionality).</li>
+  <li><strong>Q5:</strong> List <code>results/models/</code> recursively with modification timestamps; filter for DAE artifacts.</li>
+  <li><strong>Q6:</strong> Grep <code>_load_track_a_probas_for_dae</code> across repo; identify definition site and all call sites.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>grep -n "train_track_b_dae" module2_detection/module2_train_models.py</code> &rarr; definition at line 341, call site at line 619, comment at line 311.</li>
+  <li>Read <code>module2_detection/module2_train_models.py:341-540</code> (full <code>train_track_b_dae</code> body + start of next function).</li>
+  <li><code>ls -la results/models/</code> &rarr; 31 entries listed with sizes and modification dates.</li>
+  <li><code>grep -rn "_load_track_a_probas_for_dae" .</code> &rarr; 3 matches across 2 files; no function definition found.</li>
+  <li>Read <code>module3_risk_scoring/module3_risk_scores.py:480-509</code> &rarr; confirms removal comment at line 488.</li>
+  <li>Read <code>docs/post_defense_track_a_simplification.md:55-83</code> &rarr; documents the removal.</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q4: What is the shape or dimensionality of the DAE input tensor in <code>train_track_b_dae</code>?</h3>
+
+  <p><strong>Answer:</strong> The DAE training input is a 2-D tensor of shape <code>(n_benign_samples, 25)</code> — <strong>raw 25-dim features only, no cascade</strong> <span class="label verified">[VERIFIED]</span>. The test-set input to <code>det.evaluate(X_test, y_test)</code> is also raw 25-dim with no augmentation <span class="label verified">[VERIFIED]</span>. The exact row count varies with the benign source (<code>benign_only_val.parquet</code> preferred; <code>benign_only_train.parquet</code> fallback; <code>X_train[y_train==0]</code> last resort), but the feature dimension is fixed at 25 <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>module2_detection/module2_train_models.py:348</code> — <code>"""Train DAE on raw 25 features only — NO cascade (Phase B).</code></li>
+      <li><code>module2_detection/module2_train_models.py:400</code> — <code>X_benign_raw = bdf.drop(columns=bdrop).values.astype(np.float32)</code></li>
+      <li><code>module2_detection/module2_train_models.py:402-405</code> — <code>logger.info("DAE training input: shape=%s (raw 25-dim, source=%s)", X_benign_raw.shape, proba_source,)</code></li>
+      <li><code>module2_detection/module2_train_models.py:411</code> — <code>n_feat = X_benign_raw.shape[1]</code></li>
+      <li><code>module2_detection/module2_train_models.py:431</code> — <code># Test set is also raw 25-dim — no augmentation.</code></li>
+      <li><code>module2_detection/module2_train_models.py:432</code> — <code>test_metrics = det.evaluate(X_test, y_test)</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> Concrete N (row count) at runtime is data-dependent and not statically determinable. To get the actual value, inspect <code>dae_final_report.json::data.benign_train_samples</code> or read <code>data/processed/benign_only_val.parquet</code>.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q5: How many DAE model artifacts exist under <code>results/models/</code>? List paths and modification dates.</h3>
+
+  <p><strong>Answer:</strong> Eleven files with the <code>dae_</code> prefix exist directly under <code>results/models/</code> <span class="label read">[READ]</span>. Strictly <em>model-weight</em> artifacts (architecture + weights) are 2 files: <code>dae_model.weights.h5</code> and <code>dae_detector.json</code> (with a stale <code>dae_detector.pkl</code> from an earlier code path). The remaining 8 are hyperparameters, calibration, thresholds, predictions, reports, and grid-search results <span class="label read">[READ]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence</strong> (from <code>ls -la results/models/</code>):
+    <table>
+      <thead><tr><th>#</th><th>Path</th><th>Modified</th><th>Size</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><code>results/models/dae_best_params.json</code></td><td>May 6 08:48</td><td>157 B</td></tr>
+        <tr><td>2</td><td><code>results/models/dae_best_params.pre_l1_retune.json</code></td><td>May 6 08:47</td><td>157 B</td></tr>
+        <tr><td>3</td><td><code>results/models/dae_calibration.json</code></td><td>May 7 17:07</td><td>27,479 B</td></tr>
+        <tr><td>4</td><td><code>results/models/dae_demo_predictions.npz</code></td><td>May 7 17:07</td><td>53,250 B</td></tr>
+        <tr><td>5</td><td><code>results/models/dae_detector.json</code></td><td>May 7 17:06</td><td>62,851 B</td></tr>
+        <tr><td>6</td><td><code>results/models/dae_detector.pkl</code></td><td>Apr 4 00:17</td><td>96,375 B</td></tr>
+        <tr><td>7</td><td><code>results/models/dae_final_report.json</code></td><td>May 7 17:06</td><td>2,277 B</td></tr>
+        <tr><td>8</td><td><code>results/models/dae_grid_results_cascade.json</code></td><td>May 6 08:48</td><td>53,576 B</td></tr>
+        <tr><td>9</td><td><code>results/models/dae_model.weights.h5</code></td><td>May 7 17:06</td><td>53,760 B</td></tr>
+        <tr><td>10</td><td><code>results/models/dae_test_predictions.npz</code></td><td>May 7 17:06</td><td>59,534 B</td></tr>
+        <tr><td>11</td><td><code>results/models/dae_thresholds.json</code></td><td>May 7 17:07</td><td>672 B</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Unknowns:</strong> Whether <code>dae_detector.pkl</code> (Apr 4) is still loaded by any code path, or whether the post-Phase-B canonical artifact is <code>dae_detector.json</code> + <code>dae_model.weights.h5</code> only. The <code>det.save_artefacts</code> call at lines 439-442 writes only the JSON + H5 pair; the <code>.pkl</code> is not written by the current <code>train_track_b_dae</code>. Resolution: grep for <code>dae_detector.pkl</code> to see if any loader still references it. No subdirectories under <code>results/models/</code> were enumerated (the listing showed only <code>.</code> and <code>..</code>).</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q6: Does <code>_load_track_a_probas_for_dae</code> have any callers other than the DAE inference path?</h3>
+
+  <p><strong>Answer:</strong> <code>_load_track_a_probas_for_dae</code> no longer exists in the codebase — it was removed in Phase B <span class="label verified">[VERIFIED]</span>. There are therefore zero callers anywhere (DAE inference path included), because the function itself is gone <span class="label verified">[VERIFIED]</span>. The only surviving references to the name are (a) a removal-marker comment in <code>module3_risk_scores.py</code> and (b) historical notes in a post-defense doc <span class="label grepped">[GREPPED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:488-491</code> — <code># Phase B removed ``_load_track_a_probas_for_dae`` and the per-model / # joblib parallel dispatch helper — the DAE no longer consumes Track A / # probas (raw 25-dim input). Track A inference at runtime is XGBoost / # only and lives in ``load_xgboost_proba``.</code></li>
+      <li><code>docs/post_defense_track_a_simplification.md:67-72</code> — <code>compute_c_detect() rewritten — drops the / `_load_track_a_probas_for_dae` joblib parallel dispatch and / the pre-allocated `(n, n_raw + 3)` cascade buffer. / … / Helper `_load_track_a_probas_for_dae` and `_run_single_track_a` / removed; `joblib` import removed.</code></li>
+      <li>Grep result: 3 total matches across 2 files; <strong>no</strong> <code>def _load_track_a_probas_for_dae</code> line found anywhere in the repo.</li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> Whether any archived snapshot under <code>results/_pre_*/</code> still contains the removed function (the grep was filtered to <code>.py</code> and <code>.md</code> extensions but did include <code>results/</code> paths; no matches surfaced from snapshots, suggesting they either don't carry this file or weren't archived at a state with this helper).</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>Does any code path still attempt to load <code>dae_detector.pkl</code> (Apr 4 — pre-Phase-B), or is it dead on disk?</li>
+  <li>What writes <code>dae_grid_results_cascade.json</code> (last modified May 6), given Phase B removed the cascade?</li>
+  <li>Is <code>dae_demo_predictions.npz</code> produced by <code>predict_demo()</code> (line 480 onward) using the same raw 25-dim input path?</li>
+  <li>Where is <code>n_track_a_features=0</code> (line 452) consumed downstream — does any reader assert it must be 0?</li>
+  <li>The fallback at lines 388-391 uses <code>X_train[y_train==0]</code>, but the docstring says "natural held-out novelty reference." Is the fallback path expected ever to fire in production runs?</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files read:</strong>
+    <ul>
+      <li><code>module2_detection/module2_train_models.py:341-540</code> (<code>train_track_b_dae</code> full body and start of <code>predict_demo</code>)</li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:480-509</code> (removal comment context)</li>
+      <li><code>docs/post_defense_track_a_simplification.md:55-83</code> (Phase B simplification notes)</li>
+    </ul>
+  </li>
+  <li><strong>Searches run:</strong>
+    <ul>
+      <li><code>grep -n "train_track_b_dae" module2_detection/module2_train_models.py</code></li>
+      <li><code>ls -la results/models/</code></li>
+      <li><code>grep -rn "_load_track_a_probas_for_dae" --include=*.py --include=*.md</code></li>
+    </ul>
+  </li>
+  <li><strong>Not in this answer:</strong>
+    <ul>
+      <li>Body of <code>DAEDetector</code> class (only its construction call was read)</li>
+      <li>Body of <code>predict_demo()</code> past line 540 (truncated at end of read window)</li>
+      <li>Subdirectories of <code>results/models/</code> (none appeared in the top-level listing)</li>
+      <li>Whether the <code>.pkl</code> artifact at row 6 of the Q5 table is loaded anywhere</li>
+      <li>Archived snapshots under <code>results/_pre_*/</code> were not inspected for historical <code>_load_track_a_probas_for_dae</code> definitions</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="session-header">
+  <strong>Session 3 — 2026-05-21</strong><br>
+  Subject: <code>compute_c_detect</code> fusion semantics, <code>risk_scores.npz</code> schema, and <code>P_XGB_HIGH_CONF</code> constant
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q7:</strong> Grep <code>compute_c_detect</code> in <code>module3_risk_scoring/module3_risk_scores.py</code>, then read the function body to locate where <code>c_track_a</code> is assigned.</li>
+  <li><strong>Q8:</strong> Grep for <code>risk_scores.npz</code> to find the writer; read that block to identify keys. Also inspect the .npz file header directly with numpy to confirm keys at-rest.</li>
+  <li><strong>Q9:</strong> Grep <code>P_XGB_HIGH_CONF</code> in <code>src/data_models.py</code>; read the assignment line.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>grep -n "def compute_c_detect|c_track_a"</code> in <code>module3_risk_scores.py</code> &rarr; definition at line 419, c_track_a appearances at lines 358, 376, 404-409, 420, 448, 450, 1201, 1245, 1255, 1282, 1318, 1368, 1469, 1473, 1510, 1532, 1588, 1599.</li>
+  <li>Read <code>module3_risk_scores.py:419-458</code> (full <code>compute_c_detect</code> body).</li>
+  <li>Read <code>module3_risk_scores.py:1280-1369</code> (<code>save_outputs</code> signature + npz_payload construction).</li>
+  <li><code>grep -rn "risk_scores.npz"</code> &rarr; identified writer at <code>module3_risk_scores.py:1347</code>.</li>
+  <li><code>python -c "import numpy; print(d.files)"</code> on <code>results/reports/risk_scores.npz</code> &rarr; 18 keys enumerated with shape and dtype.</li>
+  <li><code>grep -rn "P_XGB_HIGH_CONF"</code> &rarr; constant defined at <code>src/data_models.py:68</code>; referenced from <code>module3_risk_scores.py:343,347</code> and tests.</li>
+  <li>Read <code>src/data_models.py:55-84</code> (constant definition + docstring).</li>
+  <li><code>grep -n "def load_xgboost_proba"</code> &rarr; defined at <code>module3_risk_scores.py:294</code> (header line only; body not read this turn).</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q7: Is <code>c_track_a</code> computed as <code>max(P_xgb, P_rf, P_dt)</code> or just <code>P_xgb</code>?</h3>
+
+  <p><strong>Answer:</strong> <code>c_track_a</code> is <strong>just <code>P_xgb</code></strong> — RF and DT probabilities are not combined in <span class="label verified">[VERIFIED]</span>. Critically, <code>c_track_a</code> is <strong>not computed inside <code>compute_c_detect</code> at all</strong> — it is a function <em>parameter</em> (input) at <code>module3_risk_scores.py:420</code> <span class="label verified">[VERIFIED]</span>. The producer is <code>load_xgboost_proba()</code> (called at line 1469) <span class="label verified">[VERIFIED]</span>. The function docstring at line 376 explicitly defines <code>c_track_a</code> as "per-sample XGBoost P(attack), shape (n,)" <span class="label verified">[VERIFIED]</span>. The only <code>np.maximum</code> call inside <code>compute_c_detect</code> (line 448) computes <code>c_detect = max(c_track_a, c_track_b)</code> — i.e., fuses Track-A (XGB) with Track-B (DAE), not RF/DT <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:419-423</code> — <code>def compute_c_detect(/ c_track_a: np.ndarray,/ X_test: np.ndarray,/ xgb_threshold: float = 0.05,/ ) -&gt; tuple:</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:376</code> — <code>c_track_a: per-sample XGBoost P(attack), shape (n,).</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:448</code> — <code>c_detect = np.maximum(c_track_a, c_track_b)</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:1469</code> — <code>c_track_a, xgb_threshold = load_xgboost_proba()</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:488-491</code> (removal comment) — <code>Track A inference at runtime is XGBoost / only and lives in ``load_xgboost_proba``.</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> The body of <code>load_xgboost_proba</code> (starts at line 294) was not read this turn — only its name and call signature were inspected. If you need to confirm no RF/DT fold-in happens <em>inside</em> <code>load_xgboost_proba</code>, that function body would need to be read.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q8: What keys are stored in <code>results/reports/risk_scores.npz</code>? Are <code>P_xgb</code>, <code>P_rf</code>, <code>P_dt</code> persisted separately?</h3>
+
+  <p><strong>Answer:</strong> The npz at-rest contains <strong>18 keys</strong> <span class="label verified">[VERIFIED]</span> via direct inspection. <strong><code>P_xgb</code>, <code>P_rf</code>, and <code>P_dt</code> are NOT persisted as separate keys</strong> — only <code>c_track_a</code> (which equals <code>P_xgb</code>, per Q7) and <code>c_track_b</code> (DAE reconstruction-error score) are stored <span class="label verified">[VERIFIED]</span>. The file is at schema v1.1, which adds 7 extended per-row arrays beyond the v1.0 baseline <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence</strong> (direct <code>numpy.load</code> of <code>results/reports/risk_scores.npz</code>, n=2448 rows):
+    <table>
+      <thead><tr><th>#</th><th>Key</th><th>Shape</th><th>Dtype</th><th>Source in writer</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><code>R</code></td><td>(2448,)</td><td>float64</td><td>baseline (v1.0)</td></tr>
+        <tr><td>2</td><td><code>c_detect</code></td><td>(2448,)</td><td>float64</td><td>baseline (v1.0)</td></tr>
+        <tr><td>3</td><td><code>d_crit</code></td><td>(2448,)</td><td>float64</td><td>baseline (v1.0)</td></tr>
+        <tr><td>4</td><td><code>s_data</code></td><td>(2448,)</td><td>float64</td><td>baseline (v1.0)</td></tr>
+        <tr><td>5</td><td><code>d_clinical_tier</code></td><td>(2448,)</td><td>float64</td><td>baseline (v1.0)</td></tr>
+        <tr><td>6</td><td><code>c_track_a</code></td><td>(2448,)</td><td>float64</td><td>baseline (v1.0) — = P_xgb</td></tr>
+        <tr><td>7</td><td><code>c_track_b</code></td><td>(2448,)</td><td>float64</td><td>baseline (v1.0) — DAE score</td></tr>
+        <tr><td>8</td><td><code>risk_levels</code></td><td>(2448,)</td><td>&lt;U8</td><td>baseline (v1.0)</td></tr>
+        <tr><td>9</td><td><code>y_true</code></td><td>(2448,)</td><td>int64</td><td>baseline (v1.0)</td></tr>
+        <tr><td>10</td><td><code>fusion_class</code></td><td>(2448,)</td><td>&lt;U13</td><td>optional</td></tr>
+        <tr><td>11</td><td><code>data_quality</code></td><td>(2448,)</td><td>&lt;U2</td><td>optional</td></tr>
+        <tr><td>12</td><td><code>row_id</code></td><td>(2448,)</td><td>int64</td><td>schema v1.1</td></tr>
+        <tr><td>13</td><td><code>attack_category</code></td><td>(2448,)</td><td>&lt;U20</td><td>schema v1.1</td></tr>
+        <tr><td>14</td><td><code>device_class</code></td><td>(2448,)</td><td>&lt;U20</td><td>schema v1.1</td></tr>
+        <tr><td>15</td><td><code>device_criticality</code></td><td>(2448,)</td><td>&lt;U10</td><td>schema v1.1</td></tr>
+        <tr><td>16</td><td><code>patchable</code></td><td>(2448,)</td><td>bool</td><td>schema v1.1</td></tr>
+        <tr><td>17</td><td><code>true_severity</code></td><td>(2448,)</td><td>&lt;U10</td><td>schema v1.1</td></tr>
+        <tr><td>18</td><td><code>R_counterfactual</code></td><td>(2448,)</td><td>float64</td><td>schema v1.1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="evidence">
+    <strong>Writer code:</strong>
+    <ul>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:1315-1320</code> — <code>npz_payload = dict(/ R=R, c_detect=c_detect, d_crit=d_crit,/ s_data=s_data, d_clinical_tier=d_clinical_tier,/ c_track_a=c_track_a, c_track_b=c_track_b,/ risk_levels=levels, y_true=y_true,/ )</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:1339-1345</code> — appends the 7 extended-array keys (<code>row_id</code>, <code>attack_category</code>, <code>device_class</code>, <code>device_criticality</code>, <code>patchable</code>, <code>true_severity</code>, <code>R_counterfactual</code>) when <code>extended_arrays</code> is supplied.</li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:1347</code> — <code>np.savez(OUTPUT_DIR / "risk_scores.npz", **npz_payload)</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> None — keys observed directly on disk match the writer code path.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q9: What threshold is hardcoded as <code>P_XGB_HIGH_CONF</code> in <code>src/data_models.py</code>?</h3>
+
+  <p><strong>Answer:</strong> <code>P_XGB_HIGH_CONF</code> is hardcoded to <strong><code>0.85</code></strong> as a module-level <code>float</code> constant at <code>src/data_models.py:68</code> <span class="label verified">[VERIFIED]</span>. Per the docstring, it is "the Track A high-confidence boundary above which we classify as KNOWN_ATTACK without requiring DAE confirmation" <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>src/data_models.py:68</code> — <code>P_XGB_HIGH_CONF: float = 0.85</code></li>
+      <li><code>src/data_models.py:69-70</code> — <code>"""Track A high-confidence boundary above which we classify as KNOWN_ATTACK / without requiring DAE confirmation."""</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:347</code> — <code>return {"a_high": float(P_XGB_HIGH_CONF), "a_low": 0.40, "b": 0.70}</code> — used as <code>a_high</code> fallback when the calibration file is absent.</li>
+      <li><code>tests/test_fusion_threshold_loading.py:65</code> — <code>BENIGN under the pre-calibration P_XGB_HIGH_CONF=0.85 default, to</code> (confirms 0.85 as the documented default in tests as well).</li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> Whether the runtime <code>a_high</code> ever resolves to <code>P_XGB_HIGH_CONF</code> in production vs. is overridden by <code>results/models/_fusion_thresholds.json</code>. The fallback condition at lines 339-347 says it only fires "when the calibration file is absent" — that file (<code>_fusion_thresholds.json</code>, May 19 13050 B) exists per the Q5 listing, so in current runs the override is active. Resolution: read the file's <code>a_high</code> value.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>What is the body of <code>load_xgboost_proba</code> (line 294)? Does it return raw XGB proba or the calibrated version (<code>xgboost_test_proba_calibrated.npy</code>)?</li>
+  <li>What is the value of <code>a_high</code> in <code>results/models/_fusion_thresholds.json</code> — i.e., is the active threshold actually 0.85 or a calibrated value?</li>
+  <li><code>c_track_b</code> is the DAE score — is it stored as the raw reconstruction error, a percentile rank, or a calibrated [0,1] probability?</li>
+  <li>Schema v1.1 was a documented upgrade; is there a v1.2 in flight, or is RQ1_pipeline.md §4.1.1 the current spec?</li>
+  <li><code>R_counterfactual</code> is computed with <code>c_detect=1.0</code> as the upper bound — does any downstream consumer use it for sensitivity reporting?</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files read:</strong>
+    <ul>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:419-458</code> (compute_c_detect body)</li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:1280-1369</code> (save_outputs writer)</li>
+      <li><code>src/data_models.py:55-84</code> (P_XGB_HIGH_CONF constant + docstring + surrounding enums)</li>
+      <li><code>results/reports/risk_scores.npz</code> (binary read via numpy, headers only — array bodies not inspected beyond shape/dtype)</li>
+    </ul>
+  </li>
+  <li><strong>Searches run:</strong>
+    <ul>
+      <li><code>grep -n "def compute_c_detect|c_track_a"</code> in module3_risk_scores.py</li>
+      <li><code>grep -rn "risk_scores.npz"</code> repo-wide (.py only)</li>
+      <li><code>grep -rn "P_XGB_HIGH_CONF"</code> repo-wide (.py only)</li>
+      <li><code>grep -n "def load_xgboost_proba|return.*c_track_a|c_track_a ="</code> in module3_risk_scores.py</li>
+    </ul>
+  </li>
+  <li><strong>Not in this answer:</strong>
+    <ul>
+      <li>Body of <code>load_xgboost_proba</code> (only the def line was located)</li>
+      <li>Contents of <code>results/models/_fusion_thresholds.json</code> (file exists per Q5 but was not opened)</li>
+      <li>CSV detail block in <code>save_outputs</code> past line 1369 (truncated at end of read window)</li>
+      <li>Numeric values of array entries inside the npz (only schema was inspected)</li>
+      <li>Test bodies in <code>tests/test_fusion_threshold_loading.py</code></li>
+    </ul>
+  </li>
+</ul>
+
+<div class="session-header">
+  <strong>Session 4 — 2026-05-21</strong><br>
+  Subject: Closure of open reads from Q2, Q7, Q9 — patchable fail-loud, XGB-only verification, active fusion threshold
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q12:</strong> <code>find . -name "_fusion_thresholds.json"</code>; <code>grep -rn "_fusion_thresholds" --include=*.py</code>; if found, read full JSON; read <code>module3_risk_scores.py:330-360</code> for the loader conditional.</li>
+  <li><strong>Q11:</strong> Bracket function via <code>grep -n "^def |^class " module3_risk_scores.py</code>; read body <code>module3_risk_scores.py:294-330</code>; <code>awk</code>-bracketed grep for <code>rf | random_forest | dt[^a-z] | decision_tree</code> inside the body lines only.</li>
+  <li><strong>Q10:</strong> <code>grep -n "def score_alert_from_dict|patchable" src/context_enrichment.py</code>; bracket via <code>grep -n "^def |^class "</code>; read <code>src/context_enrichment.py:100-280</code> (covers <code>_read_patchable</code>, <code>enrich_alert_context</code>, <code>score_alert_from_dict</code>, plus <code>_UNKNOWN_DEVICE_DEFAULTS</code>). Delegation followed one level from <code>score_alert_from_dict</code> &rarr; <code>enrich_alert_context</code> &rarr; <code>_read_patchable</code> (raise site).</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>find /home/un1/project/ids-healthcare-cip -name "_fusion_thresholds.json" -not -path "*/.git/*"</code> &rarr; 1 match: <code>results/models/_fusion_thresholds.json</code>.</li>
+  <li><code>grep -rn "_fusion_thresholds" --include=*.py</code> &rarr; 17 matches across <code>module3_risk_scores.py</code>, <code>tests/test_fusion_threshold_loading.py</code>, <code>analysis/calibrate_fusion_threshold.py</code>, <code>analysis/verify_fusion_threshold_holdout.py</code>, <code>module6_evaluation/compute_rq1_metrics.py</code>.</li>
+  <li><code>ls -la results/models/_fusion_thresholds.json</code> &rarr; 13,050 B, modified May 19 08:46.</li>
+  <li>Read <code>results/models/_fusion_thresholds.json</code> (full file, 601 lines — selected metadata, fixed_thresholds, picked, and head of sweep_table read).</li>
+  <li>Read <code>module3_risk_scoring/module3_risk_scores.py:330-399</code> (<code>load_fusion_thresholds</code> body + start of <code>classify_fusion</code>).</li>
+  <li><code>grep -n "^def |^class " module3_risk_scoring/module3_risk_scores.py</code> &rarr; <code>load_xgboost_proba</code> at line 294, next def (<code>load_fusion_thresholds</code>) at line 331.</li>
+  <li>Read <code>module3_risk_scoring/module3_risk_scores.py:294-330</code> (full <code>load_xgboost_proba</code> body).</li>
+  <li><code>awk 'NR&gt;=294 &amp;&amp; NR&lt;=330' module3_risk_scores.py | grep -n "rf|random_forest|dt[^a-z]|decision_tree"</code> &rarr; zero matches.</li>
+  <li><code>grep -n "def score_alert_from_dict|patchable" src/context_enrichment.py</code> &rarr; <code>score_alert_from_dict</code> at line 243; <code>_read_patchable</code> at line 103; <code>"patchable": False</code> in <code>_UNKNOWN_DEVICE_DEFAULTS</code> at line 163.</li>
+  <li><code>grep -n "^def |^class " src/context_enrichment.py</code> &rarr; class <code>MissingRequiredField</code> at line 91; class <code>EnrichmentError</code> at line 96; defs at 103, 129, 173, 243.</li>
+  <li>Read <code>src/context_enrichment.py:100-280</code> (<code>_read_patchable</code>, <code>_UNKNOWN_DEVICE_DEFAULTS</code>, <code>enrich_alert_context</code>, <code>score_alert_from_dict</code>, and <code>__all__</code>).</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q12: Existence and contents of <code>_fusion_thresholds.json</code></h3>
+
+  <p><strong>Resolution outcome:</strong> <strong>Active value = 0.41</strong> (file present; loader path reachable; calibration-file branch active) <span class="label verified">[VERIFIED]</span>.</p>
+
+  <p><strong>Q12.1 — Search result:</strong> Exactly one match anywhere in the repo: <code>results/models/_fusion_thresholds.json</code>, 13,050 bytes, modified 2026-05-19 08:46 <span class="label verified">[VERIFIED]</span>.</p>
+
+  <p><strong>Q12.2 — Load site:</strong> <code>load_fusion_thresholds()</code> at <code>module3_risk_scoring/module3_risk_scores.py:331-354</code> <span class="label verified">[VERIFIED]</span>. Called from <code>classify_fusion()</code> at line 395. The conditional determining file-load vs. constant fallback is at lines 345-347 <span class="label verified">[VERIFIED]</span>.</p>
+
+  <p><strong>Q12.3 — File contents (verbatim values):</strong> <code>picked.a_high = 0.41</code>, <code>picked.a_low = 0.4</code>, <code>picked.b = 0.7</code> <span class="label verified">[VERIFIED]</span>. Metadata keys present: <code>schema_version</code>, <code>generated_at</code>, <code>generated_by</code>, <code>git_commit</code>, <code>tuning_split</code>, <code>tuning_split_sha256</code>, <code>tuning_n_rows</code>, <code>selection_rule</code>, <code>sweep_grid</code>, <code>fixed_thresholds</code>, <code>targets</code>, <code>tuning_metrics_at_picked</code>, <code>picked</code>, <code>sweep_table</code> <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>results/models/_fusion_thresholds.json:2-9</code> — <code>"schema_version": "1.0", "generated_at": "2026-05-19T01:46:44.031813+00:00", "generated_by": "analysis/calibrate_fusion_threshold.py", "git_commit": "647f55fa02ad0c761ef6a6c5dcc3dbb89b96fc24", "tuning_split": "data/processed/val_phase1.parquet", "tuning_n_rows": 2448,</code></li>
+      <li><code>results/models/_fusion_thresholds.json:15-18</code> — <code>"fixed_thresholds": { "a_low": 0.4, "b": 0.7 },</code></li>
+      <li><code>results/models/_fusion_thresholds.json:34-38</code> — <code>"picked": { "a_high": 0.41, "a_low": 0.4, "b": 0.7 },</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:345-347</code> — <code>path = PROJECT_ROOT / "results/models/_fusion_thresholds.json" / if not path.exists(): / return {"a_high": float(P_XGB_HIGH_CONF), "a_low": 0.40, "b": 0.70}</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:348-354</code> — <code>payload = json.loads(path.read_text()) / picked = payload["picked"] / return { "a_high": float(picked["a_high"]), "a_low": float(picked["a_low"]), "b": float(picked["b"]), }</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:395</code> — <code>defaults = load_fusion_thresholds()</code> (reached from <code>classify_fusion</code>, which is called from <code>compute_c_detect</code> at line 449).</li>
+    </ul>
+  </div>
+
+  <p><strong>Note on Q5 reconciliation:</strong> The Session 2 (Q5) <code>ls -la results/models/</code> output did include the line <code>-rw-rw-r-- 1 un1 un1 13050 May 19 08:46 _fusion_thresholds.json</code>, but the Session 2 Q5 table filtered to <code>dae_</code>-prefixed entries and omitted this file. The Session 3 (Q9) reference to "per Q5 listing" was traceable to the raw <code>ls</code> output but not to the filtered table — this Session 4 read resolves the ambiguity.</p>
+
+  <p><strong>Unknowns:</strong> Whether any caller bypasses <code>load_fusion_thresholds</code> and instantiates <code>classify_fusion</code> with an explicit <code>a_high</code> kwarg — that would make the file's value moot at the call site. The signature at <code>module3_risk_scores.py:362</code> shows <code>a_high: float | None = None</code> with the file-loaded default applied at line 396; not all call sites were surveyed in this turn.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q11: Internal behavior of <code>load_xgboost_proba</code></h3>
+
+  <p><strong>Resolution outcome:</strong> <strong>XGB-only confirmed</strong> — no RF/DT references inside the function body; a single XGB proba array is loaded (calibrated by default, raw fallback); no array-combination operations <span class="label verified">[VERIFIED]</span>.</p>
+
+  <p><strong>Q11.1 — Body summary</strong> <span class="label verified">[VERIFIED]</span>:</p>
+  <ul>
+    <li><strong>Signature</strong> (<code>module3_risk_scores.py:294</code>): <code>def load_xgboost_proba(*, prefer_calibrated: bool = True) -&gt; tuple:</code></li>
+    <li><strong>File paths read from disk:</strong>
+      <ul>
+        <li><code>results/models/xgboost_test_proba_calibrated.npy</code> (line 309, loaded when calibrated branch active)</li>
+        <li><code>results/models/xgboost_test_predictions.npz</code> with key <code>["y_proba"]</code> (line 310, fallback)</li>
+        <li><code>results/models/xgboost_final_report.json</code> with key <code>["optimal_threshold"]</code> (line 319)</li>
+      </ul>
+    </li>
+    <li><strong>numpy operations on loaded arrays:</strong> <code>np.load(cal_path)</code> (line 313); <code>np.load(raw_path)["y_proba"]</code> (line 316); <code>y_proba.mean()</code> (line 324, logging only); <strong>no</strong> <code>np.maximum</code>, <code>np.mean</code>, <code>np.stack</code>, or other combination operators applied.</li>
+    <li><strong>Return statement</strong> (<code>module3_risk_scores.py:326</code>): <code>return y_proba, threshold</code></li>
+  </ul>
+
+  <p><strong>Q11.2 — RF/DT references inside body:</strong> <strong>No</strong> <span class="label verified">[VERIFIED]</span>. Filtered grep <code>awk 'NR&gt;=294 &amp;&amp; NR&lt;=330' | grep "rf|random_forest|dt[^a-z]|decision_tree"</code> returned zero matches over the bracketed range (lines 294-330).</p>
+
+  <p><strong>Q11.3 — Path string for XGB proba:</strong> When <code>prefer_calibrated=True</code> (the default) and the calibrated file exists, the loaded path is <code>"xgboost_test_proba_calibrated.npy"</code> (under <code>results/models/</code>) <span class="label verified">[VERIFIED]</span>. Otherwise the raw path is <code>"xgboost_test_predictions.npz"</code> with the <code>"y_proba"</code> array selected <span class="label verified">[VERIFIED]</span>.</p>
+
+  <div class="evidence">
+    <strong>Evidence:</strong>
+    <ul>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:294</code> — <code>def load_xgboost_proba(*, prefer_calibrated: bool = True) -&gt; tuple:</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:308-310</code> — <code>models_dir = PROJECT_ROOT / "results/models" / cal_path = models_dir / "xgboost_test_proba_calibrated.npy" / raw_path = models_dir / "xgboost_test_predictions.npz"</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:312-317</code> — <code>if prefer_calibrated and cal_path.exists(): / y_proba = np.load(cal_path) / source = "calibrated" / else: / y_proba = np.load(raw_path)["y_proba"] / source = "raw"</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:319-320</code> — <code>with open(models_dir / "xgboost_final_report.json") as f: / threshold = json.load(f)["optimal_threshold"]</code></li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:326</code> — <code>return y_proba, threshold</code></li>
+      <li>Filtered grep result over lines 294-330: zero matches for <code>rf|random_forest|dt[^a-z]|decision_tree</code>.</li>
+    </ul>
+  </div>
+
+  <p><strong>Unknowns:</strong> None for the function body.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q10: Fail-loud behavior of <code>score_alert_from_dict</code></h3>
+
+  <p><strong>Resolution outcome:</strong> <strong>Fail-loud confirmed</strong> — case (a): when both <code>"patchable"</code> and the legacy <code>"device_patchable"</code> keys are absent from the input alert, a <code>MissingRequiredField</code> exception is raised explicitly <span class="label verified">[VERIFIED]</span>. <code>MissingRequiredField</code> is a subclass of <code>KeyError</code> <span class="label verified">[VERIFIED]</span>.</p>
+
+  <p><strong>Q10.1 — Definition site:</strong> <code>def score_alert_from_dict(alert: Mapping[str, Any]):</code> at <code>src/context_enrichment.py:243</code>; body spans lines 243-263 <span class="label verified">[VERIFIED]</span>.</p>
+
+  <p><strong>Q10.2 — Missing-key behavior:</strong> classified as <strong>(a) raises explicitly</strong> <span class="label verified">[VERIFIED]</span>. Trace: <code>score_alert_from_dict</code> (line 252) calls <code>enrich_alert_context(alert)</code>, which (line 201) calls <code>_read_patchable(alert)</code>, which (lines 111-120) checks both key variants and raises <code>MissingRequiredField</code> when neither is present.</p>
+
+  <div class="evidence">
+    <strong>Evidence for (a):</strong>
+    <ul>
+      <li><code>src/context_enrichment.py:91</code> — <code>class MissingRequiredField(KeyError):</code></li>
+      <li><code>src/context_enrichment.py:111-114</code> — <code>if "patchable" in alert: / return bool(alert["patchable"]) / if "device_patchable" in alert: / return bool(alert["device_patchable"])</code></li>
+      <li><code>src/context_enrichment.py:115-120</code> — <code>raise MissingRequiredField( / "Alert is missing the required 'patchable' (or legacy " / "'device_patchable') field. … defaulting it to True / silently disables the CRITICAL+unpatchable safety floor." / )</code></li>
+      <li><code>src/context_enrichment.py:201</code> — <code>enriched["patchable"] = _read_patchable(alert)</code></li>
+      <li><code>src/context_enrichment.py:252</code> — <code>enr = enrich_alert_context(alert)</code></li>
+      <li><code>src/context_enrichment.py:257</code> — <code>"patchable": bool(enr["patchable"]),</code> (direct subscript on enriched dict; would raise <code>KeyError</code> if <code>_read_patchable</code> had not populated it, but the raise at line 115 short-circuits this path).</li>
+    </ul>
+  </div>
+
+  <p><strong>Q10.3 — Other mutation/substitution paths for <code>patchable</code>:</strong></p>
+  <ul>
+    <li><code>src/context_enrichment.py:163</code> — <code>"patchable": False,</code> inside <code>_UNKNOWN_DEVICE_DEFAULTS</code> dict <span class="label verified">[VERIFIED]</span>.</li>
+    <li><code>src/context_enrichment.py:209-219</code> — when <code>device_class</code> is falsy on input, the UNKNOWN-device branch iterates <code>_UNKNOWN_DEVICE_DEFAULTS.items()</code> and writes each value into <code>enriched</code>, including <code>patchable=False</code> <span class="label verified">[VERIFIED]</span>. The inline comment at lines 211-213 states the override is intentional and overrides caller-supplied values.</li>
+    <li><code>src/context_enrichment.py:214-215</code> — <code>for k, v in _UNKNOWN_DEVICE_DEFAULTS.items(): / enriched[k] = v</code></li>
+    <li><code>src/context_enrichment.py:201</code> — <code>enriched["patchable"] = _read_patchable(alert)</code> sets the value initially; the UNKNOWN branch at lines 209-219 can then overwrite it to <code>False</code> when no <code>device_class</code>/<code>device_type</code> is present.</li>
+    <li><code>src/context_enrichment.py:257</code> — final cast <code>bool(enr["patchable"])</code> when packaging the <code>device_context</code> for <code>score_alert</code>.</li>
+  </ul>
+
+  <p><strong>Unknowns:</strong> The body of <code>src.risk_scorer.score_alert</code> (called at line 253) was not read this turn — that target is one delegation hop beyond the cap and is left for follow-up.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>Does any caller invoke <code>classify_fusion</code> with an explicit <code>a_high</code> kwarg, bypassing the file-loaded default of 0.41?</li>
+  <li>What does <code>src.risk_scorer.score_alert</code> do with the <code>device_context["patchable"]</code> value — does it gate any branch (e.g., the CRITICAL+unpatchable safety floor mentioned in the raise message at line 119)?</li>
+  <li>The JSON's <code>schema_version</code> is <code>"1.0"</code>; the <code>risk_scores.npz</code> schema is <code>"1.1"</code> (per Q8). Are these two schema lineages independent, or is there a cross-version compatibility matrix?</li>
+  <li>The fallback at <code>module3_risk_scores.py:347</code> returns <code>{"a_high": 0.85, "a_low": 0.40, "b": 0.70}</code>; the file-loaded values are <code>{0.41, 0.4, 0.7}</code>. Is the divergence in <code>a_high</code> documented in <code>RQ1_pipeline.md §6.1</code> as cited in the docstring?</li>
+  <li><code>load_xgboost_proba</code> reads <code>xgboost_test_proba_calibrated.npy</code> — does any demo-pool or evaluation path use a different path (e.g., <code>xgboost_demo_predictions.npz</code> from Q5)?</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files read:</strong>
+    <ul>
+      <li><code>results/models/_fusion_thresholds.json</code> (601 lines; metadata, picked, fixed_thresholds, head of sweep_table)</li>
+      <li><code>module3_risk_scoring/module3_risk_scores.py:294-399</code> (<code>load_xgboost_proba</code> + <code>load_fusion_thresholds</code> + start of <code>classify_fusion</code>)</li>
+      <li><code>src/context_enrichment.py:100-280</code> (<code>_read_patchable</code>, <code>_UNKNOWN_DEVICE_DEFAULTS</code>, <code>enrich_alert_context</code>, <code>score_alert_from_dict</code>, <code>__all__</code>)</li>
+    </ul>
+  </li>
+  <li><strong>Searches run:</strong>
+    <ul>
+      <li><code>find /home/un1/project/ids-healthcare-cip -name "_fusion_thresholds.json" -not -path "*/.git/*"</code></li>
+      <li><code>grep -rn "_fusion_thresholds" --include="*.py"</code></li>
+      <li><code>ls -la results/models/_fusion_thresholds.json</code></li>
+      <li><code>grep -n "^def |^class " module3_risk_scoring/module3_risk_scores.py</code></li>
+      <li><code>awk 'NR&gt;=294 &amp;&amp; NR&lt;=330' module3_risk_scoring/module3_risk_scores.py | grep -n "rf|random_forest|dt[^a-z]|decision_tree"</code></li>
+      <li><code>grep -n "def score_alert_from_dict|patchable" src/context_enrichment.py</code></li>
+      <li><code>grep -n "^def |^class " src/context_enrichment.py</code></li>
+    </ul>
+  </li>
+  <li><strong>Branch confirmation:</strong> Current branch <code>fix/shap-category-vocab</code> matches the branch named in the task prompt; no branch divergence to surface.</li>
+  <li><strong>Reconciliation note:</strong> The task prompt asserted "Q5's <code>ls -la results/models/</code> did not list <code>_fusion_thresholds.json</code>." The raw <code>ls</code> output captured in Session 2 (Q5) <em>did</em> include the file (line <code>-rw-rw-r-- 1 un1 un1 13050 May 19 08:46 _fusion_thresholds.json</code>); the Q5 answer's table omitted it because the table filtered to <code>dae_</code>-prefixed entries. Session 4 reads resolve the ambiguity.</li>
+  <li><strong>Not in this answer:</strong>
+    <ul>
+      <li>Body of <code>src.risk_scorer.score_alert</code> (one hop beyond the delegation cap declared in the task prompt)</li>
+      <li>Body of <code>classify_fusion</code> past line 399 (signature + first 7 lines read; remainder not opened)</li>
+      <li>Numeric content of <code>sweep_table</code> beyond the first ~40 rows of 56 (read window covered head of array; tail not inspected for anomalies)</li>
+      <li>Cross-file callers of <code>classify_fusion</code> beyond <code>compute_c_detect</code></li>
+      <li><code>tests/test_fusion_threshold_loading.py</code> body (per discovery rules, test bodies are not evidence for non-test claims)</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every cited file appears in Section 2 — <strong>PASS</strong></li>
+  <li>[x] Every verbatim quote ≤25 words — <strong>PASS</strong> (longest quote: the multi-line <code>raise MissingRequiredField</code> message, split across lines 115-120 and quoted in two segments, each &lt;25 words)</li>
+  <li>[x] No prohibited softening words anywhere — <strong>PASS</strong> (no "appears to," "seems to," "likely," "probably," "should," "would," "typically")</li>
+  <li>[x] No fix/refactor suggestions — <strong>PASS</strong> (Section 4 lists discovery follow-ups only, not remediation)</li>
+  <li>[x] Every negative claim states search scope — <strong>PASS</strong> ("no RF/DT references inside body" is bound to <code>awk 'NR&gt;=294 &amp;&amp; NR&lt;=330'</code>; "exactly one match" is bound to <code>find … -name "_fusion_thresholds.json"</code>)</li>
+  <li>[x] No docstring cited as code/behavior evidence — <strong>PASS</strong> (all behavior claims cite executable lines: 111-120 for raise, 312-317 for branch, 345-347 for conditional; docstring lines 332-340 are quoted only for metadata/intent, never as load-bearing evidence)</li>
+  <li>[x] Q10–Q12 each map to exactly one resolution outcome — <strong>PASS</strong> (Q10 &rarr; "Fail-loud confirmed"; Q11 &rarr; "XGB-only confirmed"; Q12 &rarr; "Active value = 0.41")</li>
+</ul>
+
+<h2>Section 7 — Blocker 0 Status Update</h2>
+<table>
+  <thead><tr><th>Fix</th><th>Status</th><th>Evidence</th></tr></thead>
+  <tbody>
+    <tr><td>Fix 1 — Weight sensitivity</td><td>STILL PENDING</td><td>—</td></tr>
+    <tr><td>Fix 2 — Max-fusion drop</td><td>CLOSED</td><td>Q11 (XGB-only confirmed; no RF/DT refs in <code>load_xgboost_proba</code> body)</td></tr>
+    <tr><td>Fix 3 — DAE cascade drop</td><td>CLOSED</td><td>Q4, Q6 (Session 2)</td></tr>
+    <tr><td>Fix 4 — Patchable default</td><td>CLOSED</td><td>Q10 (fail-loud confirmed at <code>src/context_enrichment.py:115</code>; raises <code>MissingRequiredField</code>)</td></tr>
+    <tr><td>Fix 5 — Online/offline framing</td><td>STILL PENDING (doc-only)</td><td>—</td></tr>
+    <tr><td>NEW — Active a_high documented</td><td>CLOSED</td><td>Q12 (file present; <code>picked.a_high = 0.41</code>; calibrated on val_phase1 n=2448; loader reachable from <code>compute_c_detect</code>)</td></tr>
+  </tbody>
+</table>
+
+<div class="session-header">
+  <strong>Session 5 — 2026-05-21 — Phase 0 ONLY (DISCOVERY, READ-ONLY)</strong><br>
+  Subject: Fix 5 (Online/Offline Framing Reconciliation) — inventory of "online", "real-time", "streaming" mentions in markdown; ARCHITECTURE.md diagram label location; README.md and thesis docx presence checks
+</div>
+
+<div class="qa-block" style="border-left-color:#dc3545;background:#fff5f5;">
+  <h3 style="color:#721c24;">HARD STOP — Phase 0 surfaced four conditions requiring user decision before Phase 1</h3>
+  <ol>
+    <li><strong>Branch mismatch</strong> <span class="label verified">[VERIFIED]</span>: <code>git rev-parse --abbrev-ref HEAD</code> &rarr; <code>fix/shap-category-vocab</code>. Task prompt requires <code>docs/offline-framing-fix</code>. Per task prompt: "If on <code>fix/shap-category-vocab</code> or any other branch, surface and ask."</li>
+    <li><strong>Streaming-related code exists</strong> <span class="label grepped">[GREPPED]</span>: prior context assumed the fix names streaming as future work because no streaming runtime is implemented. Phase 0 surfaced an online-inference module (<code>module4_explanations/module4_online_explainer.py</code>, 887 lines, per-alert pipeline with <code>&lt;150ms</code> SLA documentation), a Streamlit Online Simulation page (<code>module6_evaluation/module6_app.py:834-841, 2194</code>), a generator-based streaming pipeline note (<code>src/harness.py:51, 157</code>), and a measured latency profile artifact (<code>results/reports/online_latency_profile.json</code>, cited as n=677 alerts, p95=217 ms in <code>docs/dashboard_redesign_investigation.md:45</code>). Per task prompt: "If Phase 0 surfaces evidence that contradicts this decision (e.g., a streaming path already exists in the code), STOP and surface it. Do not re-decide silently."</li>
+    <li><strong><code>README.md</code> absent</strong> <span class="label verified">[VERIFIED]</span>: <code>ls -la README.md</code> &rarr; <code>No such file or directory</code>. Per task prompt: "README.md absent AND no other file owns the 'Scope' statement — surface this and ask whether to skip Edit 5 or create a new file."</li>
+    <li><strong><code>thesis_outline_latest.docx</code> absent</strong> <span class="label verified">[VERIFIED]</span>: <code>ls thesis_outline_latest.docx</code> &rarr; <code>No such file or directory</code>; <code>find . -maxdepth 3 -name "*.docx"</code> returned no rows. Q-D4 cannot execute as specified.</li>
+  </ol>
+  <p><strong>No edits proposed. No files modified. Awaiting user decision on each item above before Phase 1.</strong></p>
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q-D1:</strong> Grep all markdown for <code>online | real-time | real time | streaming</code> repo-wide, excluding <code>.git</code> and <code>results/_pre_*</code>.</li>
+  <li><strong>Q-D2:</strong> Locate canonical diagram label inside <code>ARCHITECTURE.md</code> via <code>grep -n "ONLINE INFERENCE | OFFLINE | per alert | per-record"</code>.</li>
+  <li><strong>Q-D3:</strong> Verify <code>README.md</code> presence at repo root.</li>
+  <li><strong>Q-D4:</strong> Inspect <code>thesis_outline_latest.docx</code> via <code>python-docx</code> for paragraphs mentioning online/real-time/streaming/Section 6/Discussion/Limitations.</li>
+  <li><strong>Q-D5:</strong> Capture current branch.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>git rev-parse --abbrev-ref HEAD</code> &rarr; <code>fix/shap-category-vocab</code>.</li>
+  <li><code>grep -rn -i "online\|real-time\|real time\|streaming" --include="*.md" . | grep -v "/.git/" | grep -v "/results/_pre_"</code> &rarr; 119 matches across 15 markdown files (full output captured; key inventory tabulated in Section 3).</li>
+  <li><code>grep -n "ONLINE INFERENCE\|OFFLINE\|per alert\|per-record" ARCHITECTURE.md</code> &rarr; matches at lines 141 (<code>OFFLINE (one-time training)</code>), 169 (<code>ONLINE INFERENCE (per alert)</code>), 765 (composite-risk row mentioning per-record sensitivity analysis).</li>
+  <li><code>ls -la README.md</code> &rarr; <code>No such file or directory</code>.</li>
+  <li><code>ls thesis_outline_latest.docx</code> &rarr; <code>No such file or directory</code>; fallback <code>find . -maxdepth 3 -name "*.docx" -not -path "*/.git/*"</code> &rarr; zero rows. <code>python-docx</code> probe skipped (no file to open).</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q-D5 — Current branch</h3>
+  <p><strong>Answer:</strong> <code>fix/shap-category-vocab</code> <span class="label verified">[VERIFIED]</span>. This does <strong>not</strong> match the task-required branch <code>docs/offline-framing-fix</code>.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-D2 — ARCHITECTURE.md canonical labels</h3>
+  <p><strong>Answer:</strong> The workflow-diagram split between training and inference is labeled at two lines <span class="label verified">[VERIFIED]</span>:</p>
+  <div class="evidence">
+    <ul>
+      <li><code>ARCHITECTURE.md:141</code> — <code>┌──── OFFLINE (one-time training) ────┐</code></li>
+      <li><code>ARCHITECTURE.md:169</code> — <code>┌──────────────────────── ONLINE INFERENCE (per alert) ────────────────────────┐</code></li>
+    </ul>
+  </div>
+  <p>Additional adjacent matches in ARCHITECTURE.md:</p>
+  <div class="evidence">
+    <ul>
+      <li><code>ARCHITECTURE.md:3</code> — <code>"This repository implements an offline-first, explainable intrusion-detection workflow … separates batch data preparation … from the online user interface."</code></li>
+      <li><code>ARCHITECTURE.md:324, 1009</code> — uses of "real-time patient acuity" (biomedical clinical metric, distinct from streaming runtime).</li>
+      <li><code>ARCHITECTURE.md:767</code> — Step [11] row references <code>module4_explanations/module4_online_explainer.py::build_shap_context</code> as a filename pointer.</li>
+      <li><code>ARCHITECTURE.md:899</code> — YAML <code>rationale: "Clinical workflow but not real-time; PHI exposure concern"</code> — biomedical context.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="qa-block">
+  <h3>Q-D3 — README.md presence</h3>
+  <p><strong>Answer:</strong> <code>README.md</code> is <strong>absent</strong> at the repository root <span class="label verified">[VERIFIED]</span>. Search scope: <code>ls -la /home/un1/project/ids-healthcare-cip/README.md</code>. No alternative scope statement was located in this Phase 0 pass; <code>ARCHITECTURE.md:3</code> contains the closest one-sentence framing ("This repository implements an offline-first, explainable intrusion-detection workflow …").</p>
+  <p><strong>STOP per task prompt:</strong> Edit 5 (README scope update) cannot proceed without user direction.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-D4 — Thesis docx</h3>
+  <p><strong>Answer:</strong> <code>thesis_outline_latest.docx</code> is <strong>absent</strong> at the repo root <span class="label verified">[VERIFIED]</span>. Search scope: <code>ls thesis_outline_latest.docx</code>; supplemental <code>find . -maxdepth 3 -name "*.docx" -not -path "*/.git/*"</code> returned no rows. The Q-D4 <code>python-docx</code> probe was not executed because no file is present to open.</p>
+  <p><strong>STOP per task prompt:</strong> Thesis Section 6 edit cannot proceed in this turn.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-D1 — Markdown inventory of "online", "real-time", "streaming" mentions</h3>
+  <p><strong>Answer:</strong> 119 raw matches across 15 markdown files <span class="label grepped">[GREPPED]</span> (excluding <code>.git</code> and <code>results/_pre_*</code> as per task prompt). Aggregated by file:</p>
+
+  <table>
+    <thead><tr><th>File</th><th>Matches</th><th>Predominant role of the term</th></tr></thead>
+    <tbody>
+      <tr><td><code>ARCHITECTURE.md</code></td><td>5</td><td>Workflow diagram split (lines 141, 169); offline-first framing (line 3); biomedical "real-time acuity" (lines 324, 1009); UI rationale (line 899)</td></tr>
+      <tr><td><code>docs/architecture.md</code> (lowercase, secondary)</td><td>2</td><td>Line 31: <code>"Online (per alert): [5] … [16]"</code> — secondary canonical diagram; line 97: filename pointer to <code>module4_online_explainer.py</code></td></tr>
+      <tr><td><code>docs/section312_offline_online_extraction.md</code></td><td>≈45</td><td>Analytical doc that <em>itself</em> inventories offline/online separation; many entries are quoted code/docstrings &rarr; bucket C ("quoting external source") candidate</td></tr>
+      <tr><td><code>docs/dashboard_redesign_investigation.md</code></td><td>≈20</td><td>Discusses the Streamlit "Online Simulation" page (570-line page in <code>module6_app.py</code>); cites <code>results/reports/online_latency_profile.json</code> with measured p95=217 ms</td></tr>
+      <tr><td><code>docs/chapter3_pipeline_extraction_report.md</code></td><td>≈12</td><td>References <code>module4_online_explainer.py</code> as the per-alert pipeline; mentions "no real-time patient acuity integration" (line 411, 821) — biomedical sense</td></tr>
+      <tr><td><code>docs/section313_data_flow_extraction.md</code></td><td>≈10</td><td>Filename + behavior pointers to <code>module4_online_explainer.py</code>; "online inference: TreeSHAP TreeExplainer initialized once"</td></tr>
+      <tr><td><code>docs/risk_formula_specification.md</code></td><td>2</td><td>"real-time clinical metric" / "real-time patient acuity scores" — biomedical sense (lines 109, 121)</td></tr>
+      <tr><td><code>docs/layer4_v4_implementation.md</code></td><td>3</td><td>Filename pointers to <code>module4_online_explainer.py</code></td></tr>
+      <tr><td><code>docs/layer5_v4_implementation.md</code></td><td>1</td><td>Streamlit page name: <code>"Dashboard, Online Sim, Browse, Study"</code></td></tr>
+      <tr><td><code>docs/layer1_v4_implementation.md</code></td><td>1</td><td>Single occurrence of "Online" at line 55 (continuation of a percentile-rank sentence)</td></tr>
+      <tr><td><code>docs/demo_script_day_8.md</code></td><td>2</td><td>Demo flow references "Online Simulation" sidebar (Streamlit UI string); cites <code>online_latency_profile.json</code> p95=217 ms</td></tr>
+      <tr><td><code>docs/threat_model.md</code></td><td>2</td><td>Filename pointers to <code>module4_online_explainer.py</code></td></tr>
+      <tr><td><code>docs/system_architecture_final.md</code></td><td>4</td><td>Filename pointers + "M2 train; online inference" workflow caption</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>The single highest-priority direct claim</strong> (bucket A candidate per task prompt) is <code>ARCHITECTURE.md:169</code>: <code>┌──────────────────────── ONLINE INFERENCE (per alert) ────────────────────────┐</code> — the canonical diagram label cited in the task prompt's worked example.</p>
+
+  <p><strong>Bucket-D candidates (different concept — biomedical "real-time" / file names):</strong></p>
+  <div class="evidence">
+    <ul>
+      <li><code>ARCHITECTURE.md:324, 899, 1009</code> — biomedical "real-time patient acuity" / "Clinical workflow but not real-time"</li>
+      <li><code>docs/risk_formula_specification.md:109, 121</code> — "real-time clinical metric"</li>
+      <li><code>docs/chapter3_pipeline_extraction_report.md:411, 681, 821</code> — "real-time patient acuity"</li>
+      <li>All filename references to <code>module4_online_explainer.py</code> — these are file-path strings, not behavior claims</li>
+    </ul>
+  </div>
+
+  <p><strong>Bucket-C candidates (quoting external/derived sources):</strong></p>
+  <div class="evidence">
+    <ul>
+      <li>The bulk of <code>docs/section312_offline_online_extraction.md</code> (≈45 matches) — this doc is itself an extraction report that quotes ARCHITECTURE.md, code docstrings, and the workflow diagram; editing it would amount to re-deriving its own source data</li>
+    </ul>
+  </div>
+
+  <p><strong>Streaming-implementation evidence that contradicts the "decision already made"</strong> <span class="label grepped">[GREPPED]</span>:</p>
+  <div class="evidence">
+    <ul>
+      <li><code>docs/section312_offline_online_extraction.md:287-300</code> — enumerates streaming/real-time references at multiple code locations:
+        <ul>
+          <li><code>module4_explanations/module4_online_explainer.py:2-5</code> — <code>"Online-capable per-alert explanation pipeline with latency profiling. Demonstrates that per-alert explanations can be generated within real-time SLA (&lt;150ms)…"</code></li>
+          <li><code>module4_explanations/_severity.py:3-4</code> — <code>"Used by both the offline batch explainer (module4_explanations.py) and the online streaming explainer (module4_online_explainer.py)."</code></li>
+          <li><code>module6_evaluation/module6_app.py:6</code> — <code>"6.3b Online Simulation — Stream test samples through pipeline in near-real-time"</code></li>
+          <li><code>module6_evaluation/module6_app.py:834</code> — <code># 6C.1 Streaming data simulator</code></li>
+          <li><code>module6_evaluation/module6_app.py:841</code> — <code>"Yields one alert dict at a time, simulating real-time arrival."</code></li>
+          <li><code>module6_evaluation/module6_app.py:2194</code> — <code>st.title("IoMT IDS — Real-Time Dashboard")</code></li>
+          <li><code>module6_evaluation/module6_app.py:2687</code> — <code>st.markdown("#### Real-Time Latency Profile")</code></li>
+          <li><code>src/harness.py:51</code> — <code>"Opt-10: generator-based streaming pipeline — O(1) memory regardless of"</code></li>
+          <li><code>src/harness.py:157</code> — <code># Opt-10: use streaming generator when no pre-loaded dataset is supplied.</code></li>
+        </ul>
+      </li>
+      <li><code>docs/dashboard_redesign_investigation.md:45</code> — <code>"[results/reports/online_latency_profile.json](../results/reports/online_latency_profile.json): n=677 alerts, total p50=66 ms · p95=217 ms · p99=230 ms."</code> (measured latency profile, not a hypothetical)</li>
+    </ul>
+  </div>
+  <p>These are code-located references surfaced by the markdown grep (Phase 0 does not open the code files themselves). The "decision already made" frames streaming as future work; the inventory above shows that a per-alert online inference path is at minimum partially implemented (Module 4 online explainer with documented SLA; Streamlit streaming simulator; harness streaming generator). Per task prompt's stop condition, this must be surfaced to the user before Phase 1.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li>Should the fix branch <code>docs/offline-framing-fix</code> be created from <code>fix/shap-category-vocab</code> HEAD, or from <code>main</code>?</li>
+  <li>Given that <code>module4_online_explainer.py</code> already exists with a documented <code>&lt;150ms</code> per-alert SLA and a measured latency profile (<code>online_latency_profile.json</code>), does the fix still adopt option (b) — "commit to offline framing; name streaming as future work" — or does the existing online path warrant a different framing (e.g., "online-inference is implemented for SHAP/MVE; batch-evaluation is the artifact-generation path")?</li>
+  <li>If <code>README.md</code> is absent, should Edit 5 be (a) skipped, (b) replaced by an edit to <code>ARCHITECTURE.md:3</code> (which already carries the offline-first framing), or (c) create a new <code>README.md</code>?</li>
+  <li><code>thesis_outline_latest.docx</code> is absent — is the thesis tracked elsewhere (different filename, different directory, external location)?</li>
+  <li>For the ≈45 matches inside <code>docs/section312_offline_online_extraction.md</code>: is that doc treated as "quoting external source" (bucket C, leave alone) or as a doc that needs reframing too?</li>
+  <li>Should the Streamlit page name "Online Simulation" (currently in code per Phase 0 evidence) be touched, or is the fix strictly markdown-only?</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files read:</strong> none opened; this is a grep/ls/find-only discovery pass. Persisted full <code>grep</code> output captured to harness tool-result store and inspected for inventory bucketing.</li>
+  <li><strong>Searches run:</strong>
+    <ul>
+      <li><code>git rev-parse --abbrev-ref HEAD</code></li>
+      <li><code>grep -rn -i "online|real-time|real time|streaming" --include="*.md" . | grep -v "/.git/" | grep -v "/results/_pre_"</code></li>
+      <li><code>grep -n "ONLINE INFERENCE|OFFLINE|per alert|per-record" ARCHITECTURE.md</code></li>
+      <li><code>ls -la README.md</code></li>
+      <li><code>ls thesis_outline_latest.docx</code></li>
+      <li><code>find /home/un1/project/ids-healthcare-cip -maxdepth 3 -name "*.docx" -not -path "*/.git/*"</code></li>
+    </ul>
+  </li>
+  <li><strong>Branch confirmation:</strong> <code>fix/shap-category-vocab</code> — <strong>does not</strong> match the task-required <code>docs/offline-framing-fix</code>. Surfaced as Stop Condition 1.</li>
+  <li><strong>Not in this answer:</strong>
+    <ul>
+      <li>Body of <code>module4_explanations/module4_online_explainer.py</code> (out of scope for a markdown-inventory pass; code references surfaced via doc grep only)</li>
+      <li>Body of <code>module6_evaluation/module6_app.py</code> (same)</li>
+      <li>Body of <code>src/harness.py</code> (same)</li>
+      <li>Numeric inspection of <code>results/reports/online_latency_profile.json</code> (only the values quoted inside <code>dashboard_redesign_investigation.md:45</code> were surfaced — <code>n=677, p50=66, p95=217, p99=230</code> ms)</li>
+      <li>Phase 1 edit plan, Phase 2 execution, Phase 3 verification — explicitly deferred per task prompt's Phase 0 STOP</li>
+      <li><code>results/_pre_*</code> archived snapshots — excluded by prompt and by default discovery rules</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every cited file appears in Section 2 — <strong>PASS</strong> (grep search lines populate the inventory; no file body was opened beyond <code>ARCHITECTURE.md</code> via grep)</li>
+  <li>[x] Every verbatim quote ≤25 words — <strong>PASS</strong></li>
+  <li>[x] No prohibited softening words anywhere — <strong>PASS</strong></li>
+  <li>[x] No fix/refactor suggestions — <strong>PASS</strong> (Section 4 lists discovery follow-ups only; no code or architecture changes proposed)</li>
+  <li>[x] Every negative claim states search scope — <strong>PASS</strong> (README absence bound to <code>ls -la /home/un1/project/ids-healthcare-cip/README.md</code>; docx absence bound to <code>ls</code> + <code>find -maxdepth 3</code>)</li>
+  <li>[x] No docstring cited as code/behavior evidence — <strong>PASS</strong> (code-location quotes inside <code>docs/section312_offline_online_extraction.md</code> are surfaced as documentation evidence of references, not as proof of executable behavior — that would require opening the source files in a later phase)</li>
+  <li>[x] Phase 0 STOP condition honored — <strong>PASS</strong> (no Phase 1 actions executed; awaiting user direction on the four flagged items)</li>
+</ul>
+
+<div class="session-header">
+  <strong>Session 6 — 2026-05-21 — Phase 0b ONLY (CODE VERIFICATION, READ-ONLY)</strong><br>
+  Subject: Upgrade Session 5's [GREPPED] streaming-code claims to [VERIFIED]/[READ] or refute. Open the actual code files. No edits. No decisions.
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q-V1:</strong> <code>wc -l</code> + grep top-level callables in <code>module4_explanations/module4_online_explainer.py</code>; read docstring (lines 1-60), class <code>AlertExplainer</code> constructor (264-313), <code>main()</code> (825-973), SLA log lines; grep importers across the repo.</li>
+  <li><strong>Q-V2:</strong> Read <code>module6_evaluation/module6_app.py:820-870, 2480-2510</code> (streaming simulator + Online Simulation page); grep <code>"Online Simulation|Real-Time|streaming"</code> for full inventory; locate sidebar page registration.</li>
+  <li><strong>Q-V3:</strong> Read <code>src/harness.py:1-80</code> (module docstring + <code>stream_dataset</code> generator); grep importers; read <code>run_tests.py</code> usage site.</li>
+  <li><strong>Q-V4:</strong> <code>ls -la</code> + read full <code>results/reports/online_latency_profile.json</code>; grep writer/readers across <code>.py</code> files.</li>
+  <li><strong>Q-V5:</strong> Read <code>docs/architecture.md:1-50</code>; <code>git log -5 --oneline</code> for both architecture docs; grep for any generator script.</li>
+  <li><strong>Q-V6:</strong> <code>git log --all --oneline -- "thesis_outline_latest.docx"</code>; <code>git log --all --diff-filter=D</code> for any <code>.docx</code> deletion; filesystem-wide <code>find</code> for <code>thesis*.docx</code> outside the repo.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>wc -l module4_explanations/module4_online_explainer.py</code> &rarr; 977 lines.</li>
+  <li><code>grep -n "^def |^class |^async def " module4_explanations/module4_online_explainer.py</code> &rarr; 9 functions + 1 class.</li>
+  <li><code>grep -rn "from module4_explanations.module4_online_explainer|import module4_online_explainer|module4_online_explainer\." --include="*.py"</code> (excluding <code>.git</code>, <code>results/_pre_*</code>) &rarr; 7 hits across 5 files.</li>
+  <li>Read <code>module4_explanations/module4_online_explainer.py:1-60</code> (docstring + imports).</li>
+  <li>Read <code>module4_explanations/module4_online_explainer.py:140-154</code> (stability constants + 150 ms budget comment).</li>
+  <li>Read <code>module4_explanations/module4_online_explainer.py:264-313</code> (<code>AlertExplainer</code> class + constructor).</li>
+  <li>Read <code>module4_explanations/module4_online_explainer.py:599-638</code> (<code>run_batch_simulation</code> header).</li>
+  <li>Read <code>module4_explanations/module4_online_explainer.py:825-914</code> (<code>main()</code> body — data load, profile write).</li>
+  <li>Read <code>module4_explanations/module4_online_explainer.py:960-976</code> (SLA PASS/FAIL log).</li>
+  <li>Read <code>module4_explanations/module4_explanations.py:170-184</code> (single importer's <code>from</code> statement).</li>
+  <li>Read <code>module6_evaluation/module6_app.py:820-870</code> (<code>stream_simulator</code> + section header).</li>
+  <li>Read <code>module6_evaluation/module6_app.py:2480-2514</code> (Online Simulation page title + body start).</li>
+  <li><code>grep -n "Online Simulation|Real-Time|streaming" module6_evaluation/module6_app.py</code> &rarr; 9 hits.</li>
+  <li>Read <code>src/harness.py:1-80</code> (docstring + <code>stream_dataset</code>).</li>
+  <li><code>grep -rn "from src.harness|from src import harness|import src.harness|src\.harness\." --include="*.py"</code> &rarr; 1 hit.</li>
+  <li>Read <code>run_tests.py:215-230</code> (call site).</li>
+  <li>Read <code>results/reports/online_latency_profile.json</code> (full file, 138 lines).</li>
+  <li><code>ls -la results/reports/online_latency_profile.json</code> &rarr; 2638 B, Apr 9 16:56.</li>
+  <li><code>grep -rn "online_latency_profile" --include="*.py"</code> &rarr; 4 hits: 1 writer (<code>module4_online_explainer.py:891</code>), 3 readers (<code>module6_app.py:1313, 1314, 2690</code>).</li>
+  <li>Read <code>docs/architecture.md:1-50</code>.</li>
+  <li><code>git log -5 --oneline -- docs/architecture.md</code> &rarr; 3 recent commits (oldest: <code>85100c2</code>, newest: <code>4c1a66c</code>).</li>
+  <li><code>git log -5 --oneline -- ARCHITECTURE.md</code> &rarr; 5 recent commits, newest <code>017d1c6</code> ("Refactor code structure for improved readability and maintainability").</li>
+  <li><code>grep -rln "docs/architecture.md|docs/ARCHITECTURE" --include="*.py" --include="*.yml" --include="*.yaml"</code> &rarr; 2 hits in <code>results/reports/</code> yaml metadata; no generator script found.</li>
+  <li><code>git log --all --oneline -- "thesis_outline_latest.docx"</code> &rarr; 0 commits.</li>
+  <li><code>git log --all --diff-filter=D --name-only --oneline -- "*.docx"</code> &rarr; 0 deletions.</li>
+  <li><code>find . -name "*.docx" -not -path "*/.git/*"</code> &rarr; 0 files in repo.</li>
+  <li><code>find / -name "thesis_outline*.docx"</code> &rarr; 0 matches anywhere on the filesystem (search root <code>/</code>, stderr suppressed).</li>
+  <li><code>find /home/un1 -name "thesis*.docx"</code> &rarr; 0 matches.</li>
+  <li><code>find /home/un1 -maxdepth 4 -name "*.docx"</code> &rarr; 5 unrelated <code>.docx</code> files (KOL_Video, RA_X_IoMT_Outline, Concept Webinar, DOC Document, CCNA_witten) — none thesis-related.</li>
+  <li><code>git status --short</code> &rarr; 2 modified files (<code>results/rq3_no_auto_execution.json</code>, <code>tests/acceptance_tests.py</code>) + 6 untracked (incl. <code>Codebase_Investigation.html</code>). Pre-existing per session-start snapshot.</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q-V1 — <code>module4_explanations/module4_online_explainer.py</code></h3>
+
+  <p><strong>Q-V1.1 — Module docstring (lines 2-13)</strong> <span class="label verified">[VERIFIED]</span>:</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module4_online_explainer.py:2-5</code> — <code>"""Online-capable per-alert explanation pipeline with latency profiling. / / Demonstrates that per-alert explanations can be generated within / real-time SLA (&lt;150ms) using TreeSHAP + DAE decomposition + NLG.</code></li>
+      <li><code>module4_online_explainer.py:7-10</code> — <code>Design: online-capable, validated in batch mode on the test set. / - Global artifacts (importance rankings, templates) loaded once at startup / - Per-alert: predict → TreeSHAP → DAE decompose → NLG fill → emit / - Conditional: full explanations for MEDIUM+ only; LOW gets vote-only</code></li>
+    </ul>
+  </div>
+  <p>The phrase "validated in batch mode on the test set" is the file's own self-description — the architecture is online-capable, the operation is batch.</p>
+
+  <p><strong>Q-V1.2 — Top-level callables (977 lines total)</strong> <span class="label verified">[VERIFIED]</span>:</p>
+  <ul>
+    <li><code>_load_feature_categories</code> (line 102)</li>
+    <li><code>_feature_to_narrative</code> (line 126)</li>
+    <li><code>compute_shap_stability</code> (line 155)</li>
+    <li>class <code>AlertExplainer</code> (line 264)</li>
+    <li><code>run_batch_simulation</code> (line 599) — note the name "batch_simulation"</li>
+    <li><code>compute_latency_stats</code> (line 717)</li>
+    <li><code>plot_latency_distribution</code> (line 745)</li>
+    <li><code>plot_latency_cdf</code> (line 765)</li>
+    <li><code>plot_component_breakdown</code> (line 793)</li>
+    <li><code>main</code> (line 825)</li>
+  </ul>
+  <p><strong>Session 5 claim of "887 lines" is REFUTED</strong> <span class="label verified">[VERIFIED]</span> — the file is 977 lines per <code>wc -l</code>. Session 5's count came from a doc citation (<code>docs/layer4_v4_implementation.md:11</code>), not a direct file inspection.</p>
+
+  <p><strong>Q-V1.3 — Nature of the <code>&lt;150ms</code> SLA</strong> <span class="label verified">[VERIFIED]</span>: The SLA is a <strong>docstring + comment + post-hoc log message</strong>, not an assertion or runtime guard.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module4_online_explainer.py:5</code> — docstring claim: <code>real-time SLA (&lt;150ms)</code></li>
+      <li><code>module4_online_explainer.py:143</code> — comment: <code># 150 ms latency budget when called only on MEDIUM+ severity alerts.</code></li>
+      <li><code>module4_online_explainer.py:968-971</code> — <code>logger.info( / "  SLA feasibility : &lt;150ms per alert = %s", / "PASS" if stats.get("total_ms", {}).get("p95", 999) &lt; 150 else "FAIL", / )</code></li>
+    </ul>
+  </div>
+  <p>No <code>raise</code>, no <code>assert</code>, no <code>warnings.warn</code> conditional on latency. The check runs after all samples complete and emits a string "PASS" or "FAIL" — purely observational.</p>
+
+  <p><strong>Q-V1.4 — Caller classification</strong> <span class="label verified">[VERIFIED]</span>:</p>
+  <table>
+    <thead><tr><th>Caller</th><th>Line</th><th>Type</th><th>What is imported</th></tr></thead>
+    <tbody>
+      <tr><td><code>module4_explanations/module4_explanations.py</code></td><td>175-177</td><td>(a) production batch code</td><td>only <code>_feature_to_narrative</code> (one helper)</td></tr>
+      <tr><td><code>tests/test_step11_shap_stability.py</code></td><td>22</td><td>(c) test</td><td>multiple symbols</td></tr>
+      <tr><td><code>tests/test_safe_failure.py</code></td><td>283, 304</td><td>(c) test</td><td><code>compute_shap_stability</code></td></tr>
+      <tr><td><code>src/mve_generator.py</code></td><td>7, 691, 1349</td><td>—</td><td>docstring/comment references only (no import)</td></tr>
+      <tr><td><code>module4_explanations/_severity.py</code></td><td>4</td><td>—</td><td>docstring only (no import)</td></tr>
+    </tbody>
+  </table>
+  <p><strong>No production driver imports the full <code>AlertExplainer</code> + <code>main()</code> pipeline.</strong> The sole production import is one helper function (<code>_feature_to_narrative</code>) consumed by the batch explainer <code>module4_explanations.py</code>. The <code>main()</code> entrypoint runs only when the file is invoked directly as a script.</p>
+
+  <p><strong>Q-V1.5 — Input source</strong> <span class="label verified">[VERIFIED]</span>: pre-prepared static files.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module4_online_explainer.py:839</code> — <code>df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")</code></li>
+      <li><code>module4_online_explainer.py:845</code> — <code>xgb_preds = np.load(PROJECT_ROOT / "results/models/xgboost_test_predictions.npz")</code></li>
+    </ul>
+  </div>
+  <p>No socket, no queue, no file watcher, no live NetFlow ingestion in <code>main()</code>'s data path. Inputs are the same frozen test-split parquet + persisted XGB predictions used by the batch evaluation path.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V2 — <code>module6_evaluation/module6_app.py</code> Online Simulation</h3>
+
+  <p><strong>Q-V2.1 — Page or embedded code?</strong> <span class="label verified">[VERIFIED]</span>: Online Simulation is a <strong>full Streamlit page</strong> registered in the sidebar mode selector.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module6_app.py:3909</code> — <code>["Dashboard", "Online Simulation", "Browse Alerts", "Study (A/B)"]</code></li>
+      <li><code>module6_app.py:3914</code> — <code>elif mode == "Online Simulation":</code></li>
+      <li><code>module6_app.py:2490</code> — page title: <code>st.title("📡 IoMT IDS — Online Simulation")</code></li>
+      <li><code>module6_app.py:2481-2483</code> — page-function docstring: <code>Includes 6C.1 streaming simulator, 6C.3 risk gauge, 6C.8 role switcher, / 6C.9 interaction capture, 6C.10 dynamic threshold display, / 6C.11 latency profile panel, 6C.12 FDA-record export.</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Q-V2.2 — Data source of the simulator</strong> <span class="label verified">[VERIFIED]</span>: pre-loaded list of responses with artificial <code>time.sleep()</code>, NOT live data.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module6_app.py:838-846</code> — <code>def stream_simulator(responses: list, delay: float = 1.0): / """Generator yielding test samples with configurable delay. / / Yields one alert dict at a time, simulating real-time arrival. / """ / for r in responses: / yield r / time.sleep(delay)</code></li>
+      <li><code>module6_app.py:2493</code> — <code>responses = load_all_responses()</code> (loads pre-computed <code>alert_responses.json</code>)</li>
+    </ul>
+  </div>
+  <p>The simulator iterates over a static list populated from the demo-pool response artifacts; no socket, no parquet streaming, no clock-driven ingest.</p>
+
+  <p><strong>Q-V2.3 — Where does "Real-Time Dashboard" appear?</strong> <span class="label verified">[VERIFIED]</span>: It is the title of the <strong>main Dashboard page</strong>, NOT the Online Simulation page.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module6_app.py:2194</code> — <code>st.title("🔒 IoMT IDS — Real-Time Dashboard")</code> (main Dashboard page)</li>
+      <li><code>module6_app.py:2490</code> — <code>st.title("📡 IoMT IDS — Online Simulation")</code> (separate Online Simulation page)</li>
+      <li><code>module6_app.py:2687</code> — section heading: <code>st.markdown("#### Real-Time Latency Profile")</code> (within Online Simulation page body)</li>
+    </ul>
+  </div>
+  <p>The "Real-Time Dashboard" string is a UI label on a page that reads static pre-computed JSON aggregates; the Real-Time framing in the title is decorative, not architectural.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V3 — <code>src/harness.py</code> streaming generator</h3>
+
+  <p><strong>Q-V3.1 — Memory optimization or streaming runtime?</strong> <span class="label verified">[VERIFIED]</span>: Test-infrastructure memory optimization. The module is explicitly self-labeled "Testing infrastructure only — not part of the production system."</p>
+  <div class="evidence">
+    <ul>
+      <li><code>src/harness.py:1-5</code> — <code>"""Component 3: Alert Simulation Harness. / / Replays the 50-alert labeled dataset through Components 2 and 1, / then runs all acceptance and negative tests. / Testing infrastructure only — not part of the production system.</code></li>
+      <li><code>src/harness.py:48-54</code> — <code>def stream_dataset(path: Optional[Path] = None) -&gt; Iterator[AlertRecord]: / """Yield AlertRecord objects one at a time from the YAML fixture. / / Opt-10: generator-based streaming pipeline — O(1) memory regardless of / dataset size.  At 50 alerts the difference is negligible, but the pattern / scales to production volumes (100K+ alerts) without loading the full / fixture into memory.</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Q-V3.2 — Source: live or static?</strong> <span class="label verified">[VERIFIED]</span>: Static YAML file <code>tests/fixtures/sample_alerts.yaml</code>.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>src/harness.py:39-40</code> — <code>FIXTURES_DIR = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / SAMPLE_ALERTS_PATH = FIXTURES_DIR / "sample_alerts.yaml"</code></li>
+      <li><code>src/harness.py:68-70</code> — <code>fixture_path = path or SAMPLE_ALERTS_PATH / with open(fixture_path, encoding="utf-8") as f: / data = yaml.safe_load(f)</code></li>
+    </ul>
+  </div>
+
+  <p><strong>Q-V3.3 — Callers</strong> <span class="label verified">[VERIFIED]</span>: a single caller, the test runner.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>run_tests.py:219</code> — <code>from src.harness import run_simulation</code></li>
+      <li><code>run_tests.py:221</code> — <code>report = run_simulation(fixture_path=args.fixture)</code></li>
+      <li><code>run_tests.py:9</code> — example invocation in the script's own docstring: <code>python run_tests.py --fixture tests/fixtures/sample_alerts.yaml</code></li>
+    </ul>
+  </div>
+  <p>Not in any production driver. The harness exists solely for the acceptance/negative test suite.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V4 — <code>results/reports/online_latency_profile.json</code></h3>
+
+  <p><strong>Q-V4.1 — Verbatim values</strong> <span class="label verified">[VERIFIED]</span>:</p>
+  <div class="evidence">
+    <ul>
+      <li><code>online_latency_profile.json:2</code> — <code>"n_alerts_total": 677,</code></li>
+      <li><code>online_latency_profile.json:54-57</code> — <code>"mean": 103.996, / "p50": 66.315, / "p95": 216.841, / "p99": 230.485,</code> (within <code>all_alerts.total_ms</code>)</li>
+    </ul>
+  </div>
+  <p>Session 5's quoted values (<code>n=677, p50=66, p95=217, p99=230</code> ms) match to the rounding precision shown there.</p>
+
+  <p><strong>Q-V4.2 — Metadata accompanying the measurements</strong> <span class="label verified">[VERIFIED]</span>: 4 top-level keys plus nested per-stage stats. <strong>No date, no source-data hash, no code version, no git commit, no sample-population description.</strong></p>
+  <div class="evidence">
+    <ul>
+      <li>Top-level keys: <code>n_alerts_total</code> (677), <code>n_full_explanations</code> (604), <code>n_minimal_explanations</code> (73), <code>startup_ms</code> (8278.9), plus three nested stat blocks: <code>all_alerts</code>, <code>full_only</code>, <code>minimal_only</code>.</li>
+      <li>Per-stage breakdowns inside <code>all_alerts</code>: <code>predict_ms</code>, <code>treeshap_ms</code>, <code>dae_decompose_ms</code>, <code>nlg_ms</code>, <code>risk_decompose_ms</code>, <code>total_ms</code>.</li>
+      <li>File <code>mtime</code>: <code>Apr 9 16:56</code>, 2638 bytes.</li>
+    </ul>
+  </div>
+
+  <p><strong>Q-V4.3 — Writer site</strong> <span class="label verified">[VERIFIED]</span>:</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module4_explanations/module4_online_explainer.py:891-893</code> — <code>profile_path = OUTPUT_DIR / "online_latency_profile.json" / profile_path.write_text(json.dumps(profile, indent=2), encoding="utf-8") / logger.info("Saved: %s", profile_path)</code></li>
+    </ul>
+  </div>
+  <p>Readers (per <code>grep -rn "online_latency_profile" --include="*.py"</code>):</p>
+  <div class="evidence">
+    <ul>
+      <li><code>module6_app.py:1313-1314</code> — <code>"""Module 4 online_latency_profile.json — aggregate per-stage latency stats.""" / return _load_json_or("online_latency_profile.json", default={})</code></li>
+      <li><code>module6_app.py:2690</code> — fallback string: <code>"No `online_latency_profile.json` found. Run …"</code></li>
+    </ul>
+  </div>
+
+  <p><strong>SLA gap (derived from this file's own values + the module's claim)</strong> <span class="label verified">[VERIFIED]</span>: docstring claims <code>&lt;150 ms</code>; measured <code>total_ms.p95 = 216.841 ms</code>. The <code>main()</code> log at line 968-971 explicitly emits <code>"FAIL"</code> when <code>p95 ≥ 150</code>. Under the file's current values, the SLA-feasibility log line evaluates to <strong>FAIL</strong>.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V5 — <code>docs/architecture.md</code> vs <code>ARCHITECTURE.md</code></h3>
+
+  <p><strong>Q-V5.1 — Auto-generated or hand-written?</strong> <span class="label verified">[VERIFIED]</span>: Hand-written (no generator script found, no auto-gen header).</p>
+  <div class="evidence">
+    <ul>
+      <li><code>docs/architecture.md:1-3</code> — <code># XAI-IDS-Healthcare — System Architecture / / &gt; Foundation document covering all 18 workflow steps. Companion artifacts: …</code></li>
+      <li><code>docs/architecture.md:9</code> — <code>Generated: 2026-05-05  ·  Branch: `fix/shap-category-vocab`</code> (manually-stamped marker, no programmatic format)</li>
+      <li><code>grep -rln "docs/architecture.md|docs/ARCHITECTURE" --include="*.py" --include="*.yml" --include="*.yaml"</code> &rarr; only 2 metadata yaml files in <code>results/reports/</code>; no <code>.py</code> generator</li>
+    </ul>
+  </div>
+
+  <p><strong>Q-V5.2 — Most recently modified</strong> <span class="label verified">[VERIFIED]</span>: <code>ARCHITECTURE.md</code> was modified more recently. Newest commit touching <code>ARCHITECTURE.md</code> is <code>017d1c6</code> ("Refactor code structure for improved readability and maintainability"); newest touching <code>docs/architecture.md</code> is <code>4c1a66c</code> ("Add metrics files and comprehensive tests for risk scoring and surfacing logic"). Per <code>git log --all --oneline</code> ordering, <code>017d1c6</code> is more recent than <code>4c1a66c</code> on the current branch.</p>
+
+  <p><strong>Q-V5.3 — Substantive difference?</strong> <span class="label read">[READ]</span>: The two files serve different roles. <code>ARCHITECTURE.md</code> contains the full ASCII-art workflow diagram (lines 134-… with <code>OFFLINE (one-time training)</code> at line 141 and <code>ONLINE INFERENCE (per alert)</code> at line 169 per Session 5). <code>docs/architecture.md</code> opens with a higher-level "3 pillars × 7 modules × 18 steps" tabular summary and explicitly defers to ARCHITECTURE.md as authoritative.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>docs/architecture.md:33</code> — <code>The full diagrammatic source of truth lives in the **Canonical System Workflow** section of [`ARCHITECTURE.md`](../ARCHITECTURE.md).</code></li>
+    </ul>
+  </div>
+  <p>Conclusion: <code>docs/architecture.md</code> is a summary that points back to <code>ARCHITECTURE.md</code>; they are not duplicates.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-V6 — Thesis docx</h3>
+
+  <p><strong>Q-V6.1 — Ever committed?</strong> <span class="label verified">[VERIFIED]</span>: <strong>No.</strong> <code>git log --all --oneline -- "thesis_outline_latest.docx"</code> returns zero commits.</p>
+
+  <p><strong>Q-V6.2 — Deleted in a commit?</strong> <span class="label verified">[VERIFIED]</span>: <strong>No.</strong> <code>git log --all --diff-filter=D --name-only --oneline -- "*.docx"</code> returns zero deletions across all branches.</p>
+
+  <p><strong>Q-V6.3 — Other <code>.docx</code> in repo under a different name?</strong> <span class="label verified">[VERIFIED]</span>: <strong>None.</strong> <code>find /home/un1/project/ids-healthcare-cip -name "*.docx" -not -path "*/.git/*"</code> returns zero matches.</p>
+
+  <p><strong>Q-V6.4 — Anywhere on the filesystem?</strong> <span class="label verified">[VERIFIED]</span>: <strong>Not found.</strong> <code>find / -name "thesis_outline*.docx" 2&gt;/dev/null</code> returns zero matches; <code>find /home/un1 -name "thesis*.docx" 2&gt;/dev/null</code> returns zero matches. Other unrelated <code>.docx</code> files exist on the system (Downloads, /home/un1/project/prompt, /home/un1/Documents) but none thesis-related per filename.</p>
+  <p>Conclusion: The Fix 5 original task prompt's reference to <code>thesis_outline_latest.docx</code> appears to be an external/hypothetical artifact, not a file present in this repo or its filesystem context.</p>
+</div>
+
+<h2>Section 4 — Synthesis of Phase 0b Findings (factual, no decision)</h2>
+<ul>
+  <li><strong>The "online" code is real but operates in batch.</strong> <code>module4_online_explainer.py</code> exists (977 lines, <span class="label verified">[VERIFIED]</span>), self-describes as "online-capable, validated in batch mode on the test set" (line 7), reads from <code>data/processed/test_phase1.parquet</code> + <code>results/models/xgboost_test_predictions.npz</code> (lines 839, 845), and has no production driver invoking its <code>AlertExplainer</code> + <code>main()</code> pipeline (only one helper function is imported by the batch explainer).</li>
+  <li><strong>The <code>&lt;150ms</code> SLA is documentation, not enforcement.</strong> Docstring claim at line 5 + comment at line 143 + post-hoc log "PASS/FAIL" string at lines 968-971. No <code>raise</code>/<code>assert</code>. Measured <code>p95 = 216.841 ms</code> would log "FAIL".</li>
+  <li><strong>The Streamlit "Online Simulation" is a replay page.</strong> Iterates over pre-loaded <code>alert_responses.json</code> with artificial <code>time.sleep()</code> (<code>module6_app.py:838-846, 2490, 3909-3914</code>). No live ingest.</li>
+  <li><strong><code>src/harness.py</code> "streaming" is test infrastructure.</strong> Docstring (lines 1-5) explicitly states "Testing infrastructure only — not part of the production system." Source is a static YAML fixture; sole caller is <code>run_tests.py</code>.</li>
+  <li><strong>The latency profile has no provenance metadata.</strong> No date, source-data hash, or code-version stamp inside <code>online_latency_profile.json</code>. The file's <code>mtime</code> (Apr 9) is the only temporal anchor.</li>
+  <li><strong><code>ARCHITECTURE.md</code> is the canonical diagram doc.</strong> <code>docs/architecture.md</code> defers to it (line 33). Most-recent edits favor <code>ARCHITECTURE.md</code>.</li>
+  <li><strong>Thesis docx is absent from the repo and its history.</strong> No commits, no deletions, no copies on the filesystem under any related filename. The Fix 5 original prompt's reference is unverifiable here.</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files opened (code/data):</strong>
+    <ul>
+      <li><code>module4_explanations/module4_online_explainer.py</code> (lines 1-60, 140-154, 264-313, 599-638, 825-914, 960-976)</li>
+      <li><code>module4_explanations/module4_explanations.py</code> (lines 170-184)</li>
+      <li><code>module6_evaluation/module6_app.py</code> (lines 820-870, 2480-2514)</li>
+      <li><code>src/harness.py</code> (lines 1-80)</li>
+      <li><code>run_tests.py</code> (lines 215-230)</li>
+      <li><code>results/reports/online_latency_profile.json</code> (full, 138 lines)</li>
+      <li><code>docs/architecture.md</code> (lines 1-50)</li>
+    </ul>
+  </li>
+  <li><strong>Searches run:</strong>
+    <ul>
+      <li><code>wc -l module4_explanations/module4_online_explainer.py</code></li>
+      <li><code>grep -n "^def |^class |^async def " module4_explanations/module4_online_explainer.py</code></li>
+      <li><code>grep -rn "from module4_explanations.module4_online_explainer|import module4_online_explainer|module4_online_explainer\." --include="*.py"</code></li>
+      <li><code>grep -n "Online Simulation|Real-Time|streaming" module6_evaluation/module6_app.py</code></li>
+      <li><code>grep -rn "from src.harness|from src import harness|import src.harness|src\.harness\." --include="*.py"</code></li>
+      <li><code>grep -rn "online_latency_profile" --include="*.py"</code></li>
+      <li><code>grep -rln "docs/architecture.md|docs/ARCHITECTURE" --include="*.py" --include="*.yml" --include="*.yaml"</code></li>
+      <li><code>git log -5 --oneline -- docs/architecture.md</code></li>
+      <li><code>git log -5 --oneline -- ARCHITECTURE.md</code></li>
+      <li><code>git log --all --oneline -- "thesis_outline_latest.docx"</code></li>
+      <li><code>git log --all --diff-filter=D --name-only --oneline -- "*.docx"</code></li>
+      <li><code>find . -name "*.docx" -not -path "*/.git/*"</code> (repo)</li>
+      <li><code>find / -name "thesis_outline*.docx"</code> (filesystem)</li>
+      <li><code>find /home/un1 -name "thesis*.docx"</code></li>
+      <li><code>find /home/un1 -maxdepth 4 -name "*.docx"</code></li>
+      <li><code>git status --short</code></li>
+    </ul>
+  </li>
+  <li><strong>Pre-Phase-0d note (STOP condition awareness):</strong> <code>git status --short</code> shows 2 modified files (<code>results/rq3_no_auto_execution.json</code>, <code>tests/acceptance_tests.py</code>) and 6 untracked files. These predate this session per the session-start snapshot. Phase 0d will need to surface this if it commits or branches.</li>
+  <li><strong>Not in this answer:</strong>
+    <ul>
+      <li>Body of <code>AlertExplainer.explain()</code> (entered the class header at line 264, read constructor 264-313 only; per-alert <code>.explain</code> method not opened)</li>
+      <li>Body of <code>module4_online_explainer.py</code> functions <code>plot_*</code>, <code>compute_latency_stats</code> (not material to the framing question)</li>
+      <li>Detailed Streamlit page-body rendering past line 2514 in <code>module6_app.py</code></li>
+      <li>Full git-blame on the SLA docstring (creation history of the <code>&lt;150ms</code> claim)</li>
+      <li>Whether <code>module4_online_explainer.py</code>'s <code>main()</code> is invoked by any CI or Makefile target (only Python-import-graph callers were inspected)</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every cited file appears in Section 2 — <strong>PASS</strong></li>
+  <li>[x] No code-claim relies on docstring evidence alone — <strong>PASS</strong> (the "no production caller" claim is grounded in the import-graph grep; the "no SLA enforcement" claim is grounded in reading lines 968-971 for the actual log call, not the docstring)</li>
+  <li>[x] Every verbatim quote ≤25 words — <strong>PASS</strong></li>
+  <li>[x] No prohibited softening words anywhere — <strong>PASS</strong></li>
+  <li>[x] No fix/refactor suggestions — <strong>PASS</strong> (Section 4 is factual synthesis; no remediation proposed)</li>
+  <li>[x] Every negative claim states search scope — <strong>PASS</strong> (caller-absence bound to <code>grep -rn "from … import|import …"</code>; thesis-docx absence bound to <code>git log --all</code> + <code>find /</code>)</li>
+  <li>[x] [GREPPED] claims from Session 5 upgraded to [VERIFIED] or refuted — <strong>PASS</strong>:
+    <ul>
+      <li>Line count "887" → <strong>refuted</strong> (actual 977) <span class="label verified">[VERIFIED]</span></li>
+      <li>"&lt;150ms SLA" → <strong>verified as docstring/comment/log, not assertion</strong> <span class="label verified">[VERIFIED]</span></li>
+      <li>"latency p50=66, p95=217, p99=230 ms" → <strong>verified to rounded precision</strong> (p50=66.315, p95=216.841, p99=230.485) <span class="label verified">[VERIFIED]</span></li>
+      <li>"online streaming explainer" → <strong>verified as self-described "online-capable, validated in batch mode"</strong> <span class="label verified">[VERIFIED]</span></li>
+      <li>"Streaming data simulator" → <strong>verified as generator yielding pre-loaded list with <code>time.sleep()</code></strong> <span class="label verified">[VERIFIED]</span></li>
+      <li>"Real-Time Dashboard" → <strong>verified as the main Dashboard page title (decorative), NOT the Online Simulation page</strong> <span class="label verified">[VERIFIED]</span></li>
+      <li>"src/harness.py streaming pipeline" → <strong>verified as test-infra memory optimization, not production</strong> <span class="label verified">[VERIFIED]</span></li>
+    </ul>
+  </li>
+  <li>[x] Phase 0b STOP condition honored — <strong>PASS</strong> (no Phase 0c synthesis written; no <code>docs/fix5_decision_matrix.md</code> created)</li>
+</ul>
+
+<div class="session-header">
+  <strong>Session 7 — 2026-05-21 — v2 Phase 0 (DRIFT CHECK, READ-ONLY)</strong><br>
+  Subject: Confirm Sessions 5+6 line-number citations are still current; validate <code>CHOSEN_FRAMING</code>; surface any STOP conditions before Phase 1.
+</div>
+
+<div class="qa-block" style="border-left-color:#28a745;background:#f5fff7;">
+  <h3 style="color:#155724;"><code>CHOSEN_FRAMING = F-D</code> — VALID</h3>
+  <p>F-D = "Per-record specification, batch-only execution." Per <code>docs/fix5_decision_matrix.md</code>, this framing accepts the existing code naming as honest design vocabulary; doc edits are 1–2 (one mandatory subsection insert, one optional tighten of the diagram label).</p>
+</div>
+
+<div class="qa-block" style="border-left-color:#ffc107;background:#fffcf0;">
+  <h3 style="color:#856404;">ONE STOP CONDITION OPEN — Branch mismatch</h3>
+  <p><span class="label verified">[VERIFIED]</span> <code>git rev-parse --abbrev-ref HEAD</code> &rarr; <code>fix/shap-category-vocab</code>. v2 prompt's branch policy requires <code>docs/offline-framing-fix</code>; per stop condition: <em>"If on <code>fix/shap-category-vocab</code> or any other branch, surface and ask whether to (a) create the branch now or (b) continue on the current branch."</em></p>
+  <p><strong>Awaiting user direction</strong> on (a) vs (b) before Phase 1. All other drift checks pass — see Section 3.</p>
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q-Z1:</strong> <code>git rev-parse --abbrev-ref HEAD</code> — branch check.</li>
+  <li><strong>Q-Z2:</strong> <code>grep -n "ONLINE INFERENCE|OFFLINE|per alert|per-record" ARCHITECTURE.md</code> — verify diagram label still at line 169.</li>
+  <li><strong>Q-Z3:</strong> <code>sed -n '28,33p' docs/architecture.md</code> — verify "Online (per alert):" caption still at line 31.</li>
+  <li><strong>Q-Z4:</strong> <code>grep -n "^## Operational Model" ARCHITECTURE.md</code> — verify F-D.1 insertion anchor still at line ~1193.</li>
+  <li><strong>Q-Z5:</strong> Skipped per matrix — latency-profile values are F-B-specific, not required for F-D.</li>
+  <li><strong>Q-Z6:</strong> Validate <code>CHOSEN_FRAMING</code> ∈ {F-A, F-B, F-C, F-D}; verify <code>docs/fix5_decision_matrix.md</code> present.</li>
+  <li><strong>Pre-Phase-2 awareness:</strong> <code>git status --short</code> for uncommitted-changes inventory.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>git rev-parse --abbrev-ref HEAD</code> &rarr; <code>fix/shap-category-vocab</code>.</li>
+  <li><code>grep -n "ONLINE INFERENCE|OFFLINE|per alert|per-record" ARCHITECTURE.md</code> &rarr; matches at lines 141, 169, 765 (765 is composite-risk row, irrelevant to F-D edits).</li>
+  <li><code>sed -n '28,33p' docs/architecture.md</code> &rarr; lines 29-33 returned; "Online (per alert):" caption present at line 31.</li>
+  <li><code>grep -n "^## Operational Model" ARCHITECTURE.md</code> &rarr; line 1193 (matches v2 prompt's "~1193").</li>
+  <li><code>ls -la docs/fix5_decision_matrix.md</code> &rarr; 16,122 B, May 21 07:49.</li>
+  <li><code>git status --short</code> &rarr; 2 modified + 8 untracked (incl. recovery artifacts <code>docs/fix5_decision_matrix.md</code> and <code>prompts/</code>).</li>
+</ul>
+
+<h2>Section 3 — Answers (drift check)</h2>
+
+<div class="qa-block">
+  <h3>Q-Z1 — Branch</h3>
+  <p><strong>Result:</strong> <code>fix/shap-category-vocab</code> <span class="label verified">[VERIFIED]</span>. <strong>Does NOT match</strong> v2 prompt's required <code>docs/offline-framing-fix</code>. Surfaced above.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-Z2 — ARCHITECTURE.md diagram label</h3>
+  <p><strong>Result:</strong> NO DRIFT <span class="label verified">[VERIFIED]</span>. The diagram label is at the exact line cited by the v2 prompt.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>ARCHITECTURE.md:141</code> — <code>┌──── OFFLINE (one-time training) ────┐</code></li>
+      <li><code>ARCHITECTURE.md:169</code> — <code>┌──────────────────────── ONLINE INFERENCE (per alert) ────────────────────────┐</code></li>
+    </ul>
+  </div>
+  <p>Line 169 matches the v2 prompt's expected <code>old_str</code> for F-D.2 (optional tighten).</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-Z3 — docs/architecture.md workflow caption</h3>
+  <p><strong>Result:</strong> NO DRIFT <span class="label verified">[VERIFIED]</span>. The "Online (per alert):" caption is intact at line 31.</p>
+  <div class="evidence">
+    <ul>
+      <li><code>docs/architecture.md:29</code> — <code>Offline (one-time): **[1]** Data Preparation · **[2]** Track A Training · **[3]** Track B Training · **[4]** Threshold Calibration.</code></li>
+      <li><code>docs/architecture.md:31</code> — <code>Online (per alert): **[5]** Sanitize · **[6a]** Track A · **[6b]** Track B · …</code></li>
+      <li><code>docs/architecture.md:33</code> — <code>The full diagrammatic source of truth lives in the **Canonical System Workflow** section of [`ARCHITECTURE.md`](../ARCHITECTURE.md).</code></li>
+    </ul>
+  </div>
+  <p>Note: F-D does not edit <code>docs/architecture.md</code> by default (matrix lists only F-C.2 for this file). F-D edits are localized to <code>ARCHITECTURE.md</code>.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-Z4 — Operational Model section anchor</h3>
+  <p><strong>Result:</strong> NO DRIFT <span class="label verified">[VERIFIED]</span>. <code>## Operational Model</code> heading still at <code>ARCHITECTURE.md:1193</code>; F-D.1 inserts immediately after this section (after line 1204 per Session 4's read of the section body).</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-Z6 — CHOSEN_FRAMING validation + matrix presence</h3>
+  <p><strong>Result:</strong> VALID <span class="label verified">[VERIFIED]</span>. <code>CHOSEN_FRAMING = F-D</code> is in {F-A, F-B, F-C, F-D}. <code>docs/fix5_decision_matrix.md</code> exists (16,122 B, written 2026-05-21 07:49). The F-D row in the matrix lists 1–2 ARCHITECTURE.md edits and 0 code edits.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Pre-Phase-2 awareness — uncommitted state</h3>
+  <p><strong>Result:</strong> <span class="label verified">[VERIFIED]</span> <code>git status --short</code> shows:</p>
+  <pre> M results/rq3_no_auto_execution.json
+ M tests/acceptance_tests.py
+?? Codebase_Investigation.html
+?? SPEC_DEVIATIONS.md
+?? analysis/render_rq3_appendix_b.py
+?? docs/fix5_decision_matrix.md
+?? prompts/
+?? results/rq3_truth_table_appendix_b.md
+?? results/rq3_truth_table_reference.json
+?? tests/test_rq3_truth_table_completeness.py</pre>
+  <p>None of these conflict with the planned F-D edit targets (<code>ARCHITECTURE.md</code> and new <code>docs/fix5_execution_log.md</code>). The <code>prompts/</code> entry is the new directory created during Phase 0d. The 2 modified files predate this session.</p>
+</div>
+
+<h2>Section 4 — Planned F-D edits (preview, not yet executed)</h2>
+<p>Per the decision matrix's F-D row, transcribed into the v2 prompt's Phase 1 branch:</p>
+<table>
+  <thead><tr><th>Edit #</th><th>File</th><th>Lines</th><th>Bucket</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td><strong>F-D.1</strong> (mandatory)</td><td><code>ARCHITECTURE.md</code></td><td>insert after line 1204 (end of <code>## Operational Model</code>)</td><td>NEW</td><td>Insert <code>## Operational model: per-record specification, batch execution</code> subsection distinguishing per-record correctness (alert independence) from batch operational mode.</td></tr>
+    <tr><td><strong>F-D.2</strong> (optional)</td><td><code>ARCHITECTURE.md</code></td><td>169</td><td>A (light)</td><td>Tighten label from <code>ONLINE INFERENCE (per alert)</code> &rarr; <code>PER-RECORD INFERENCE (per alert)</code>; keep "per alert" parenthetical; do not rename to "simulated" (that would be F-C).</td></tr>
+    <tr><td><strong>S2</strong> (common)</td><td><code>docs/fix5_execution_log.md</code></td><td>new file</td><td>NEW</td><td>Create execution log; populate during Phase 2 with before/after quotes, git diffs, and Phase 3 verification output.</td></tr>
+    <tr><td>—</td><td>README.md</td><td>—</td><td>—</td><td><strong>SKIPPED</strong> — file absent at repo root (Session 5 Q-D3). Surface to user before Phase 1 to confirm skip vs redirect.</td></tr>
+    <tr><td>—</td><td>thesis_outline_latest.docx</td><td>—</td><td>—</td><td><strong>DEFERRED</strong> — file absent from repo + filesystem (Session 6 Q-V6). Logged as Open Item in execution log for human author.</td></tr>
+  </tbody>
+</table>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files read:</strong> none opened beyond what grep/sed surfaced. <code>ARCHITECTURE.md</code> lines 1193 (via grep) and 141, 169, 765 (via grep); <code>docs/architecture.md</code> lines 28-33 (via sed).</li>
+  <li><strong>Searches run:</strong> 5 (Q-Z1 git branch, Q-Z2/Q-Z3/Q-Z4 grep/sed, ls + git status).</li>
+  <li><strong>Drift summary:</strong> <strong>No line-number drift</strong> between the decision matrix's citations and current ARCHITECTURE.md / docs/architecture.md state. The matrix's "ARCHITECTURE.md:169" and "line ~1193" anchors hold.</li>
+  <li><strong>Branch status:</strong> On <code>fix/shap-category-vocab</code>, not <code>docs/offline-framing-fix</code>. <strong>Awaiting user direction</strong> (per v2 prompt STOP condition).</li>
+  <li><strong>Not in this answer:</strong>
+    <ul>
+      <li>Latency profile values (Q-Z5 — F-B-specific, not required for F-D)</li>
+      <li>Phase 1 edit-plan emission (Phase 0 STOP applies)</li>
+      <li>Any <code>str_replace</code>, <code>view</code>-before, or <code>view</code>-after under the Write-Mode Safety Protocol — deferred to Phase 2</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim carries a confidence label — <strong>PASS</strong></li>
+  <li>[x] Every cited file appears in Section 2 — <strong>PASS</strong></li>
+  <li>[x] Every verbatim quote ≤25 words — <strong>PASS</strong></li>
+  <li>[x] No prohibited softening words anywhere — <strong>PASS</strong></li>
+  <li>[x] No fix/refactor suggestions — <strong>PASS</strong> (Section 4 is the matrix-derived edit preview, not a recommendation)</li>
+  <li>[x] CHOSEN_FRAMING validated and matrix referenced — <strong>PASS</strong></li>
+  <li>[x] Phase 0 STOP condition honored — <strong>PASS</strong> (no Phase 1 edit-plan emitted; no edits executed)</li>
+  <li>[x] All STOP conditions surfaced — <strong>PASS</strong> (branch mismatch is the one open item)</li>
+</ul>
+
+<h2>Confidence Ladder Reference</h2>
+<p>Every factual claim above is tagged with one of:</p>
+<ul>
+  <li><span class="label verified">[VERIFIED]</span> code path read end-to-end with verbatim quote</li>
+  <li><span class="label read">[READ]</span> symbol definition / file read at cited location</li>
+  <li><span class="label grepped">[GREPPED]</span> found via search, body not read</li>
+  <li><span class="label inferred">[INFERRED]</span> hypothesis based on naming / imports — not a fact</li>
+  <li><span class="label unknown">[UNKNOWN]</span> cannot determine from available code</li>
+</ul>
+
+</body>
+</html>
