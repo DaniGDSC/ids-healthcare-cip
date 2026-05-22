@@ -183,7 +183,9 @@ def grid_search(
     keys = list(HP_GRID.keys())
     combos = [dict(zip(keys, vals)) for vals in itertools.product(*HP_GRID.values())]
     n = len(combos)
-    max_workers = min(n, os.cpu_count() or 4)
+    env_cap = os.environ.get("DAE_MAX_WORKERS")
+    cpu_cap = int(env_cap) if env_cap else (os.cpu_count() or 4)
+    max_workers = min(n, max(1, cpu_cap))
     logger.info(
         "DAE grid search: %d configurations, %d parallel workers "
         "(selection on train-only val slice)",

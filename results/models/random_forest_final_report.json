@@ -1,0 +1,56 @@
+{
+  "model_type": "random_forest",
+  "stage": "final_training",
+  "best_params": {
+    "n_estimators": 500,
+    "min_samples_split": 5,
+    "min_samples_leaf": 1,
+    "max_features": 0.5,
+    "max_depth": null,
+    "criterion": "gini",
+    "class_weight": "balanced"
+  },
+  "optimal_threshold": 0.3265952380952381,
+  "test_metrics": {
+    "attack_f1": 0.7705382436260623,
+    "attack_f2": 0.8358942839582053,
+    "weighted_f1": 0.9374087910567013,
+    "macro_f1": 0.8659373795695944,
+    "auc_roc": 0.9658771586841061,
+    "optimal_threshold": 0.3265952380952381
+  },
+  "data": {
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "train_samples": 9790,
+    "test_samples": 2448,
+    "train_attack_rate": 0.1253
+  },
+  "elapsed_seconds": 8.5
+}

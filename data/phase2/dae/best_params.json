@@ -1,0 +1,10 @@
+{
+  "encoding_dims": [
+    16,
+    8,
+    16
+  ],
+  "noise_rate": 0.05,
+  "learning_rate": 0.001,
+  "threshold_percentile": 90.0
+}

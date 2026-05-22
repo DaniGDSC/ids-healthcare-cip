@@ -1,0 +1,128 @@
+{
+  "model_type": "Denoising Autoencoder (DAE)",
+  "architecture": {
+    "encoding_dims": [
+      16,
+      8,
+      16
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "clip_percentile": 1.0
+  },
+  "training": {
+    "epochs_run": 100,
+    "final_loss": 0.006319246254861355,
+    "final_val_loss": null
+  },
+  "threshold": 2.2546945879291872e-08,
+  "threshold_percentile": 90.0,
+  "test_metrics": {
+    "attack_f1": 0.5114285714285715,
+    "attack_f2": 0.5521283158544109,
+    "weighted_f1": 0.8674443647811841,
+    "macro_f1": 0.7149611875255346,
+    "auc_roc": 0.7628509311761833,
+    "threshold": 2.2546945879291872e-08,
+    "mean_benign_error": 11.071182098042812,
+    "mean_attack_error": 213.0561639667999
+  },
+  "feature_weights": [
+    0.21935400020092258,
+    6.384023383983276e-08,
+    0.010776896378567083,
+    0.0009745841071987263,
+    4.9543881689669454e-08,
+    2.2173392753496133e-07,
+    3.423519837537884e-08,
+    5.674063653774439e-08,
+    0.0011948293487977753,
+    0.01715002363104682,
+    0.574345009500145,
+    0.004109358315217389,
+    9.764052510982775e-08,
+    0.047623793898440965,
+    8.266361985195512e-08,
+    0.12311569315030069,
+    0.0013551843516852538,
+    4.7733820934221044e-09,
+    5.513074915936341e-10,
+    4.344457940979535e-09,
+    1.0656571018374652e-09,
+    7.634918873468562e-09,
+    1.3625736935728647e-09,
+    5.814042654900165e-10,
+    4.059531466602052e-10
+  ],
+  "best_hyperparameters": {
+    "encoding_dims": [
+      16,
+      8,
+      16
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0
+  },
+  "grid_search": {
+    "n_configurations": 81,
+    "hp_grid": {
+      "encoding_dims": [
+        "[16, 8, 16]",
+        "[20, 12, 20]",
+        "[32, 16, 32]"
+      ],
+      "noise_rate": [
+        "0.05",
+        "0.1",
+        "0.2"
+      ],
+      "learning_rate": [
+        "0.0001",
+        "0.001",
+        "0.005"
+      ],
+      "threshold_percentile": [
+        "90.0",
+        "95.0",
+        "99.0"
+      ]
+    }
+  },
+  "data": {
+    "train_parquet": "/home/un1/project/ids-healthcare-cip/data/processed/train_phase1.parquet",
+    "test_parquet": "/home/un1/project/ids-healthcare-cip/data/processed/test_phase1.parquet",
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "benign_train_samples": 8563,
+    "attack_train_samples": 1227,
+    "test_samples": 2448
+  },
+  "elapsed_seconds": 878.5
+}
