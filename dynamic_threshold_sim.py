@@ -110,7 +110,7 @@ def load_stream_data() -> dict:
         "c_detect": risk_npz["c_detect"],
         "d_crit": risk_npz["d_crit"],
         "s_data": risk_npz["s_data"],
-        "a_patient": risk_npz["a_patient"],
+        "d_clinical_tier": risk_npz["d_clinical_tier"],
     }
 
 
@@ -476,7 +476,7 @@ def run_combined(
     c_detect: np.ndarray,
     d_crit: np.ndarray,
     s_data: np.ndarray,
-    a_patient: np.ndarray,
+    d_clinical_tier: np.ndarray,
     W: int = DEFAULT_WINDOW,
     n_feedback_iters: int = 3,
 ) -> dict:
@@ -733,7 +733,7 @@ def main() -> None:
     comparison = run_combined(
         data["R"], data["y_true"],
         data["c_detect"], data["d_crit"],
-        data["s_data"], data["a_patient"],
+        data["s_data"], data["d_clinical_tier"],
         W=DEFAULT_WINDOW,
     )
     for approach in ["static", "adaptive", "feedback", "combined"]:

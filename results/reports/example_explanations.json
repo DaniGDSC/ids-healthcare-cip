@@ -1,0 +1,432 @@
+[
+  {
+    "sample_index": 425,
+    "ground_truth": "attack",
+    "attack_category": "Spoofing",
+    "views": {
+      "clinician": {
+        "role": "clinician",
+        "format": "text",
+        "content": "CRITICAL SECURITY ALERT \u2014 Immediate action required.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +15.562).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +6.786). Clinical review of this vital sign is recommended.\n\nSource Port showed abnormal source port used (SHAP contribution: +4.715).\n\nFlow Duration showed unusually brief connection (SHAP contribution: -1.780).\n\nPatient Systolic Blood Pressure showed elevated systolic BP (hypertension) (SHAP contribution: +1.444). Clinical review of this vital sign is recommended.\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response."
+      },
+      "analyst": {
+        "role": "analyst",
+        "format": "json",
+        "content": {
+          "sample_index": 425,
+          "severity": "CRITICAL",
+          "consensus": "4/4 models flagged",
+          "top_features_shap": [
+            {
+              "feature": "Flgs",
+              "shap_value": 15.561818,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Temp",
+              "shap_value": 6.786421,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Sport",
+              "shap_value": 4.71507,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Dur",
+              "shap_value": -1.780248,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "SYS",
+              "shap_value": 1.443658,
+              "direction": "increases_risk"
+            }
+          ],
+          "dae_top_features": [
+            {
+              "feature": "dMaxPktSz",
+              "weighted_error": 7.4e-07,
+              "pct_contribution": 19.3
+            },
+            {
+              "feature": "TotBytes",
+              "weighted_error": 6.5e-07,
+              "pct_contribution": 17.1
+            },
+            {
+              "feature": "SIntPktAct",
+              "weighted_error": 6.2e-07,
+              "pct_contribution": 16.2
+            }
+          ],
+          "risk_score": 0.0,
+          "risk_components": {},
+          "charts": [
+            "waterfall_xgboost_sample_0425.png",
+            "force_xgboost_sample_0425.png"
+          ]
+        }
+      },
+      "administrator": {
+        "role": "administrator",
+        "format": "json",
+        "content": {
+          "sample_index": 425,
+          "severity": "CRITICAL",
+          "risk_score": 0.0,
+          "risk_level": "CRITICAL",
+          "action_required": true,
+          "global_charts": [
+            "global_importance_xgboost.png",
+            "beeswarm_xgboost.png"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "sample_index": 393,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "views": {
+      "clinician": {
+        "role": "clinician",
+        "format": "text",
+        "content": "CRITICAL SECURITY ALERT \u2014 Immediate action required.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +13.990).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +4.862).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +2.580). Clinical review of this vital sign is recommended.\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.470).\n\nSource Inter-Packet Gap showed abnormal packet timing (slow) (SHAP contribution: +2.032).\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response."
+      },
+      "analyst": {
+        "role": "analyst",
+        "format": "json",
+        "content": {
+          "sample_index": 393,
+          "severity": "CRITICAL",
+          "consensus": "4/4 models flagged",
+          "top_features_shap": [
+            {
+              "feature": "Flgs",
+              "shap_value": 13.990293,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "DIntPkt",
+              "shap_value": 4.862231,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Temp",
+              "shap_value": 2.579648,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Dur",
+              "shap_value": 2.469706,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "SIntPkt",
+              "shap_value": 2.031957,
+              "direction": "increases_risk"
+            }
+          ],
+          "dae_top_features": [
+            {
+              "feature": "SIntPktAct",
+              "weighted_error": 3.25e-06,
+              "pct_contribution": 25.5
+            },
+            {
+              "feature": "TotBytes",
+              "weighted_error": 3.12e-06,
+              "pct_contribution": 24.5
+            },
+            {
+              "feature": "SrcBytes",
+              "weighted_error": 2.52e-06,
+              "pct_contribution": 19.7
+            }
+          ],
+          "risk_score": 0.0,
+          "risk_components": {},
+          "charts": [
+            "waterfall_xgboost_sample_0393.png",
+            "force_xgboost_sample_0393.png"
+          ]
+        }
+      },
+      "administrator": {
+        "role": "administrator",
+        "format": "json",
+        "content": {
+          "sample_index": 393,
+          "severity": "CRITICAL",
+          "risk_score": 0.0,
+          "risk_level": "CRITICAL",
+          "action_required": true,
+          "global_charts": [
+            "global_importance_xgboost.png",
+            "beeswarm_xgboost.png"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "sample_index": 20,
+    "ground_truth": "attack",
+    "attack_category": "Spoofing",
+    "views": {
+      "clinician": {
+        "role": "clinician",
+        "format": "text",
+        "content": "MODERATE ALERT \u2014 Flagged for review.\n\nThe intrusion detection system flagged this network flow with 2/4 models flagged using a confidence of 100%.\n\nSource Port showed abnormal source port used (SHAP contribution: +7.550).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +3.659). Clinical review of this vital sign is recommended.\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -3.070).\n\nDest Inter-Packet Gap showed unusually fast responses (SHAP contribution: -2.157).\n\nFlow Duration showed unusually brief connection (SHAP contribution: -1.241).\n\nPatient vitals are within normal ranges.\n\nRecommended: Enable enhanced monitoring. Queue for security team review."
+      },
+      "analyst": {
+        "role": "analyst",
+        "format": "json",
+        "content": {
+          "sample_index": 20,
+          "severity": "MEDIUM",
+          "consensus": "2/4 models flagged",
+          "top_features_shap": [
+            {
+              "feature": "Sport",
+              "shap_value": 7.549739,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Temp",
+              "shap_value": 3.658745,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Flgs",
+              "shap_value": -3.069843,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "DIntPkt",
+              "shap_value": -2.157209,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "Dur",
+              "shap_value": -1.240519,
+              "direction": "decreases_risk"
+            }
+          ],
+          "dae_top_features": [
+            {
+              "feature": "SIntPktAct",
+              "weighted_error": 2.23e-06,
+              "pct_contribution": 45.7
+            },
+            {
+              "feature": "dMaxPktSz",
+              "weighted_error": 7.7e-07,
+              "pct_contribution": 15.7
+            },
+            {
+              "feature": "DstBytes",
+              "weighted_error": 5.2e-07,
+              "pct_contribution": 10.6
+            }
+          ],
+          "risk_score": 0.0,
+          "risk_components": {},
+          "charts": [
+            "waterfall_xgboost_sample_0020.png",
+            "force_xgboost_sample_0020.png"
+          ]
+        }
+      },
+      "administrator": {
+        "role": "administrator",
+        "format": "json",
+        "content": {
+          "sample_index": 20,
+          "severity": "MEDIUM",
+          "risk_score": 0.0,
+          "risk_level": "MEDIUM",
+          "action_required": false,
+          "global_charts": [
+            "global_importance_xgboost.png",
+            "beeswarm_xgboost.png"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "sample_index": 5,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "views": {
+      "clinician": {
+        "role": "clinician",
+        "format": "text",
+        "content": "CRITICAL SECURITY ALERT \u2014 Immediate action required.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +12.188).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +3.889).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.030).\n\nDestination Load showed normal destination load (SHAP contribution: -1.109).\n\nPatient Pulse Rate showed low heart rate (bradycardia) (SHAP contribution: -1.034). Clinical review of this vital sign is recommended.\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response."
+      },
+      "analyst": {
+        "role": "analyst",
+        "format": "json",
+        "content": {
+          "sample_index": 5,
+          "severity": "CRITICAL",
+          "consensus": "4/4 models flagged",
+          "top_features_shap": [
+            {
+              "feature": "Flgs",
+              "shap_value": 12.187801,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "DIntPkt",
+              "shap_value": 3.889036,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Dur",
+              "shap_value": 2.029648,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "DstLoad",
+              "shap_value": -1.108603,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "Pulse_Rate",
+              "shap_value": -1.03449,
+              "direction": "decreases_risk"
+            }
+          ],
+          "dae_top_features": [
+            {
+              "feature": "TotBytes",
+              "weighted_error": 4.2e-06,
+              "pct_contribution": 27.4
+            },
+            {
+              "feature": "SIntPktAct",
+              "weighted_error": 2.45e-06,
+              "pct_contribution": 16.0
+            },
+            {
+              "feature": "pSrcLoss",
+              "weighted_error": 2.43e-06,
+              "pct_contribution": 15.9
+            }
+          ],
+          "risk_score": 0.0,
+          "risk_components": {},
+          "charts": [
+            "waterfall_xgboost_sample_0005.png",
+            "force_xgboost_sample_0005.png"
+          ]
+        }
+      },
+      "administrator": {
+        "role": "administrator",
+        "format": "json",
+        "content": {
+          "sample_index": 5,
+          "severity": "CRITICAL",
+          "risk_score": 0.0,
+          "risk_level": "CRITICAL",
+          "action_required": true,
+          "global_charts": [
+            "global_importance_xgboost.png",
+            "beeswarm_xgboost.png"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "sample_index": 1389,
+    "ground_truth": "benign",
+    "attack_category": "normal",
+    "views": {
+      "clinician": {
+        "role": "clinician",
+        "format": "text",
+        "content": "LOW PRIORITY \u2014 Logged for audit.\n\nThe intrusion detection system flagged this network flow with 1/4 models flagged using a confidence of 0%.\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -3.129).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +2.046).\n\nSource Port showed standard port range (SHAP contribution: -1.735).\n\nSource Load showed normal source load (SHAP contribution: -1.730).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +1.260). Clinical review of this vital sign is recommended.\n\nPatient vitals are within normal ranges.\n\nRecommended: No immediate action. Review at next security audit."
+      },
+      "analyst": {
+        "role": "analyst",
+        "format": "json",
+        "content": {
+          "sample_index": 1389,
+          "severity": "LOW",
+          "consensus": "1/4 models flagged",
+          "top_features_shap": [
+            {
+              "feature": "Flgs",
+              "shap_value": -3.128692,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "DIntPkt",
+              "shap_value": 2.045975,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Sport",
+              "shap_value": -1.734898,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "SrcLoad",
+              "shap_value": -1.730062,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "Temp",
+              "shap_value": 1.260372,
+              "direction": "increases_risk"
+            }
+          ],
+          "dae_top_features": [
+            {
+              "feature": "SrcBytes",
+              "weighted_error": 1e-08,
+              "pct_contribution": 43.6
+            },
+            {
+              "feature": "SIntPktAct",
+              "weighted_error": 1e-08,
+              "pct_contribution": 30.1
+            },
+            {
+              "feature": "dMaxPktSz",
+              "weighted_error": 0.0,
+              "pct_contribution": 8.5
+            }
+          ],
+          "risk_score": 0.0,
+          "risk_components": {},
+          "charts": [
+            "waterfall_xgboost_sample_1389.png",
+            "force_xgboost_sample_1389.png"
+          ]
+        }
+      },
+      "administrator": {
+        "role": "administrator",
+        "format": "json",
+        "content": {
+          "sample_index": 1389,
+          "severity": "LOW",
+          "risk_score": 0.0,
+          "risk_level": "LOW",
+          "action_required": false,
+          "global_charts": [
+            "global_importance_xgboost.png",
+            "beeswarm_xgboost.png"
+          ]
+        }
+      }
+    }
+  }
+]

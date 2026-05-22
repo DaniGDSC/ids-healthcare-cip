@@ -23,9 +23,11 @@ import time
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Patch
@@ -109,7 +111,11 @@ ESCALATION_ROUTING = {
         "secondary": "Charge Nurse",
         "tertiary": "On-call Physician",
         "rationale": "Data alteration may corrupt biometric readings — clinical verification required",
-        "attack_specific_actions": ["isolate_device", "forensic_snapshot", "escalate_clinical"],
+        "attack_specific_actions": [
+            "isolate_device",
+            "forensic_snapshot",
+            "escalate_clinical",
+        ],
     },
     "normal": {
         "primary": None,
@@ -162,7 +168,12 @@ DEFAULT_DEVICE_TIER = "vital_monitoring"
 BASE_PROTOCOL = {
     "CRITICAL": {
         "priority": 1,
-        "base_actions": ["isolate_device", "escalate_incident", "forensic_snapshot", "escalate_clinical"],
+        "base_actions": [
+            "isolate_device",
+            "escalate_incident",
+            "forensic_snapshot",
+            "escalate_clinical",
+        ],
         "max_response_min": 5,
     },
     "HIGH": {
@@ -190,10 +201,10 @@ BASE_PROTOCOL = {
 
 # ── Data loading ────────────────────────────────────────────────────────
 
+
 def load_risk_scores() -> dict:
     """Load Module 3 risk scores."""
-    data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
-                   allow_pickle=True)
+    data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz", allow_pickle=True)
     return {k: data[k] for k in data.files}
 
 
@@ -207,12 +218,14 @@ def load_explanations() -> tuple:
 
 
 def load_attack_categories() -> np.ndarray:
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet",
-                         columns=["Attack Category"])
+    df = pd.read_parquet(
+        PROJECT_ROOT / "data/processed/test_phase1.parquet", columns=["Attack Category"]
+    )
     return df["Attack Category"].values
 
 
 # ── Adaptive response selection ────────────────────────────────────────
+
 
 def select_adaptive_response(
     risk_level: str,
@@ -233,14 +246,18 @@ def select_adaptive_response(
             actions.append("isolate_device")
         if "forensic_snapshot" not in actions:
             actions.append("forensic_snapshot")
-        rationale_parts.append(f"Escalated: R={risk_score:.2f} exceeds 0.70 magnitude threshold")
+        rationale_parts.append(
+            f"Escalated: R={risk_score:.2f} exceeds 0.70 magnitude threshold"
+        )
     elif risk_score < 0.30 and risk_level in ("MEDIUM", "HIGH"):
         # Demote: replace isolate with restrict
         if "isolate_device" in actions:
             actions.remove("isolate_device")
             if "restrict_traffic" not in actions:
                 actions.append("restrict_traffic")
-            rationale_parts.append(f"Demoted: R={risk_score:.2f} below 0.30, restrict instead of isolate")
+            rationale_parts.append(
+                f"Demoted: R={risk_score:.2f} below 0.30, restrict instead of isolate"
+            )
 
     # 2. Attack-category-specific actions
     routing = ESCALATION_ROUTING.get(attack_category, DEFAULT_ROUTING)
@@ -248,7 +265,9 @@ def select_adaptive_response(
         if action not in actions:
             actions.append(action)
     if routing["attack_specific_actions"]:
-        rationale_parts.append(f"Attack-specific ({attack_category}): added {routing['attack_specific_actions']}")
+        rationale_parts.append(
+            f"Attack-specific ({attack_category}): added {routing['attack_specific_actions']}"
+        )
 
     # 3. Device constraints
     tier_info = DEVICE_TIERS.get(device_tier, DEVICE_TIERS["vital_monitoring"])
@@ -275,7 +294,9 @@ def select_adaptive_response(
     # 4. Clinical escalation for biometric-involved alerts
     if biometric_in_top_features and "escalate_clinical" not in actions:
         actions.append("escalate_clinical")
-        rationale_parts.append("Biometric features in top SHAP contributors — clinical escalation added")
+        rationale_parts.append(
+            "Biometric features in top SHAP contributors — clinical escalation added"
+        )
 
     # Ensure log_event always present
     if "log_event" not in actions:
@@ -303,6 +324,7 @@ def select_adaptive_response(
 
 # ── Audit trail ────────────────────────────────────────────────────────
 
+
 def build_audit_record(
     idx: int,
     risk_score: float,
@@ -316,7 +338,10 @@ def build_audit_record(
     timestamp = datetime(2026, 4, 3, 12, 0, 0) + timedelta(seconds=idx)
 
     # Simulate outcome based on ground truth + action taken
-    has_isolate = "isolate_device" in response["actions"] or "restrict_traffic" in response["actions"]
+    has_isolate = (
+        "isolate_device" in response["actions"]
+        or "restrict_traffic" in response["actions"]
+    )
     is_true_attack = ground_truth == "attack"
 
     if is_true_attack and has_isolate:
@@ -365,11 +390,14 @@ def build_audit_record(
 
 # ── Effectiveness analysis ─────────────────────────────────────────────
 
+
 def compute_effectiveness(audit_records: list) -> dict:
     """Compute action effectiveness metrics from simulated outcomes."""
     # M5-4: defaultdict removes per-action guard; outcome_counts reused for
     # over/under response so the record list is scanned only once.
-    action_stats: dict = defaultdict(lambda: {"true_attacks": 0, "false_positives": 0, "total": 0})
+    action_stats: dict = defaultdict(
+        lambda: {"true_attacks": 0, "false_positives": 0, "total": 0}
+    )
     outcome_counts: dict = defaultdict(int)
 
     for rec in audit_records:
@@ -390,12 +418,16 @@ def compute_effectiveness(audit_records: list) -> dict:
     for action, stats in action_stats.items():
         t = stats["total"]
         stats["precision"] = round(stats["true_attacks"] / t, 4) if t > 0 else 0
-        stats["false_positive_rate"] = round(stats["false_positives"] / t, 4) if t > 0 else 0
+        stats["false_positive_rate"] = (
+            round(stats["false_positives"] / t, 4) if t > 0 else 0
+        )
 
     # Proportionality: costly actions should have higher precision
-    costly_actions = sorted(action_stats.keys(),
-                            key=lambda a: MITIGATION_ACTIONS.get(a, {}).get("cost", 0),
-                            reverse=True)
+    costly_actions = sorted(
+        action_stats.keys(),
+        key=lambda a: MITIGATION_ACTIONS.get(a, {}).get("cost", 0),
+        reverse=True,
+    )
     proportionality = [
         {
             "action": a,
@@ -416,12 +448,17 @@ def compute_effectiveness(audit_records: list) -> dict:
         "proportionality_analysis": proportionality,
         "over_response_count": over_response,
         "under_response_count": under_response,
-        "over_response_rate": round(over_response / len(audit_records), 4) if audit_records else 0,
-        "under_response_rate": round(under_response / len(audit_records), 4) if audit_records else 0,
+        "over_response_rate": round(over_response / len(audit_records), 4)
+        if audit_records
+        else 0,
+        "under_response_rate": round(under_response / len(audit_records), 4)
+        if audit_records
+        else 0,
     }
 
 
 # ── Build all records ──────────────────────────────────────────────────
+
 
 def build_all_records(
     risk_data: dict,
@@ -486,7 +523,7 @@ def build_all_records(
                 "C_track_b": round(float(risk_data["c_track_b"][idx]), 4),
                 "D_crit": round(float(risk_data["d_crit"][idx]), 4),
                 "S_data": round(float(risk_data["s_data"][idx]), 4),
-                "A_patient": round(float(risk_data["a_patient"][idx]), 4),
+                "D_clinical_tier": round(float(risk_data["d_clinical_tier"][idx]), 4),
             },
             "response": response,
             "explanation": {
@@ -498,7 +535,13 @@ def build_all_records(
 
         # Audit record
         audit = build_audit_record(
-            idx, float(R[idx]), level, cat, gt, response, clin_summary,
+            idx,
+            float(R[idx]),
+            level,
+            cat,
+            gt,
+            response,
+            clin_summary,
         )
         audit_trail.append(audit)
 
@@ -506,6 +549,7 @@ def build_all_records(
 
 
 # ── Statistics ─────────────────────────────────────────────────────────
+
 
 def compute_response_stats(records: list) -> dict:
     """Aggregate response statistics."""
@@ -542,10 +586,13 @@ def compute_response_stats(records: list) -> dict:
 
 # ── Visualizations ─────────────────────────────────────────────────────
 
+
 def plot_response_distribution(records: list) -> None:
     """Bar chart of response actions by risk level."""
     levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
-    all_actions = sorted(MITIGATION_ACTIONS.keys(), key=lambda a: MITIGATION_ACTIONS[a]["cost"])
+    all_actions = sorted(
+        MITIGATION_ACTIONS.keys(), key=lambda a: MITIGATION_ACTIONS[a]["cost"]
+    )
     colors_list = plt.cm.Set2(np.linspace(0, 1, len(all_actions)))
 
     action_by_level = {l: {a: 0 for a in all_actions} for l in levels}
@@ -563,8 +610,14 @@ def plot_response_distribution(records: list) -> None:
     for i, action in enumerate(all_actions):
         vals = [action_by_level[l][action] for l in levels]
         if max(vals) > 0:
-            ax.bar(x + i * width, vals, width, label=action.replace("_", " "),
-                   color=colors_list[i], alpha=0.85)
+            ax.bar(
+                x + i * width,
+                vals,
+                width,
+                label=action.replace("_", " "),
+                color=colors_list[i],
+                alpha=0.85,
+            )
 
     ax.set_xticks(x + width * len(all_actions) / 2)
     ax.set_xticklabels(levels)
@@ -609,15 +662,31 @@ def plot_escalation_funnel(stats: dict) -> None:
     """Horizontal funnel of alert volumes per tier."""
     levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
     counts = [stats["alerts_by_level"].get(l, 0) for l in levels]
-    colors_map = {"LOW": "#2ecc71", "MEDIUM": "#f1c40f", "HIGH": "#e74c3c", "CRITICAL": "#8e44ad"}
+    colors_map = {
+        "LOW": "#2ecc71",
+        "MEDIUM": "#f1c40f",
+        "HIGH": "#e74c3c",
+        "CRITICAL": "#8e44ad",
+    }
     sla = [480, 60, 15, 5]
 
     fig, ax = plt.subplots(figsize=(12, 5))
-    bars = ax.barh(levels, counts, color=[colors_map[l] for l in levels],
-                   alpha=0.8, edgecolor="black", linewidth=0.5)
+    bars = ax.barh(
+        levels,
+        counts,
+        color=[colors_map[l] for l in levels],
+        alpha=0.8,
+        edgecolor="black",
+        linewidth=0.5,
+    )
     for bar, level, count, s in zip(bars, levels, counts, sla):
-        ax.text(bar.get_width() + 5, bar.get_y() + bar.get_height() / 2,
-                f"n={count} | SLA ≤{s}min", va="center", fontsize=9)
+        ax.text(
+            bar.get_width() + 5,
+            bar.get_y() + bar.get_height() / 2,
+            f"n={count} | SLA ≤{s}min",
+            va="center",
+            fontsize=9,
+        )
     ax.set_xlabel("Number of Alerts")
     ax.set_title("Response Escalation Funnel")
     plt.tight_layout()
@@ -638,14 +707,27 @@ def plot_effectiveness_by_action(effectiveness: dict) -> None:
     costs = [p["cost"] for p in prop]
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    bars = ax.bar(names, precs, color=plt.cm.RdYlGn_r([c for c in costs]), alpha=0.85,
-                  edgecolor="black", linewidth=0.5)
+    bars = ax.bar(
+        names,
+        precs,
+        color=plt.cm.RdYlGn_r([c for c in costs]),
+        alpha=0.85,
+        edgecolor="black",
+        linewidth=0.5,
+    )
     ax.set_ylabel("Precision (true attack rate)")
-    ax.set_title("Response Proportionality — Costly Actions Should Have Higher Precision")
+    ax.set_title(
+        "Response Proportionality — Costly Actions Should Have Higher Precision"
+    )
     ax.set_ylim(0, 1.05)
     for bar, p in zip(bars, prop):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
-                f"n={p['total']}", ha="center", fontsize=8)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.02,
+            f"n={p['total']}",
+            ha="center",
+            fontsize=8,
+        )
     plt.tight_layout()
     plt.savefig(CHARTS_DIR / "effectiveness_by_action.png", dpi=150)
     plt.close(fig)
@@ -687,10 +769,14 @@ def plot_response_sankey(audit_records: list) -> None:
 
     for i, outcome in enumerate(outcomes):
         vals = [level_outcome[(level, outcome)] for level in levels]
-        ax.bar(x + i * width, vals, width,
-               label=outcome.replace("_", " "),
-               color=outcome_colors.get(outcome, "#999"),
-               alpha=0.85)
+        ax.bar(
+            x + i * width,
+            vals,
+            width,
+            label=outcome.replace("_", " "),
+            color=outcome_colors.get(outcome, "#999"),
+            alpha=0.85,
+        )
 
     ax.set_xticks(x + width * len(outcomes) / 2)
     ax.set_xticklabels(levels)
@@ -704,6 +790,7 @@ def plot_response_sankey(audit_records: list) -> None:
 
 
 # ── Main ────────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     logging.basicConfig(
@@ -727,13 +814,20 @@ def main() -> None:
     attack_cats = load_attack_categories()
 
     n_samples = len(risk_data["R"])
-    logger.info("Loaded: %d samples, %d analyst alerts, %d clinician summaries",
-                n_samples, len(analyst_by_idx), len(clinician_by_idx))
+    logger.info(
+        "Loaded: %d samples, %d analyst alerts, %d clinician summaries",
+        n_samples,
+        len(analyst_by_idx),
+        len(clinician_by_idx),
+    )
 
     # Build adaptive records + audit trail
     logger.info("Building adaptive response records...")
     records, audit_trail = build_all_records(
-        risk_data, attack_cats, analyst_by_idx, clinician_by_idx,
+        risk_data,
+        attack_cats,
+        analyst_by_idx,
+        clinician_by_idx,
     )
     logger.info("  Generated %d alert-response records", len(records))
 
@@ -746,8 +840,9 @@ def main() -> None:
         prec = stats["precision_by_level"].get(level, 0)
         tp = stats["true_positives_by_level"].get(level, 0)
         fp = stats["false_positives_by_level"].get(level, 0)
-        logger.info("  %-10s %4d alerts (TP=%d, FP=%d, prec=%.2f)",
-                    level, n, tp, fp, prec)
+        logger.info(
+            "  %-10s %4d alerts (TP=%d, FP=%d, prec=%.2f)", level, n, tp, fp, prec
+        )
     logger.info("  Actions: %s", stats["actions_triggered"])
 
     # Effectiveness analysis
@@ -755,27 +850,34 @@ def main() -> None:
     logger.info("── Effectiveness Analysis ──")
     effectiveness = compute_effectiveness(audit_trail)
     logger.info("  Outcomes: %s", effectiveness["outcome_distribution"])
-    logger.info("  Over-response (FP isolated): %d (%.1f%%)",
-                effectiveness["over_response_count"],
-                effectiveness["over_response_rate"] * 100)
-    logger.info("  Under-response (attack only logged): %d (%.1f%%)",
-                effectiveness["under_response_count"],
-                effectiveness["under_response_rate"] * 100)
+    logger.info(
+        "  Over-response (FP isolated): %d (%.1f%%)",
+        effectiveness["over_response_count"],
+        effectiveness["over_response_rate"] * 100,
+    )
+    logger.info(
+        "  Under-response (attack only logged): %d (%.1f%%)",
+        effectiveness["under_response_count"],
+        effectiveness["under_response_rate"] * 100,
+    )
 
     # Save outputs
     logger.info("")
     logger.info("Saving outputs...")
 
     (OUTPUT_DIR / "alert_responses.json").write_text(
-        json.dumps(records, indent=2), encoding="utf-8")
+        json.dumps(records, indent=2), encoding="utf-8"
+    )
     logger.info("  Saved: alert_responses.json (%d records)", len(records))
 
     (OUTPUT_DIR / "audit_trail.json").write_text(
-        json.dumps(audit_trail, indent=2), encoding="utf-8")
+        json.dumps(audit_trail, indent=2), encoding="utf-8"
+    )
     logger.info("  Saved: audit_trail.json (%d records)", len(audit_trail))
 
     (OUTPUT_DIR / "effectiveness_analysis.json").write_text(
-        json.dumps(effectiveness, indent=2), encoding="utf-8")
+        json.dumps(effectiveness, indent=2), encoding="utf-8"
+    )
     logger.info("  Saved: effectiveness_analysis.json")
 
     report = {
@@ -784,31 +886,37 @@ def main() -> None:
         "total_alerts": len(records),
         "statistics": stats,
         "effectiveness": effectiveness,
-        "mitigation_catalogue": {k: v["description"] for k, v in MITIGATION_ACTIONS.items()},
-        "escalation_routing": {k: {kk: vv for kk, vv in v.items()
-                                   if kk != "attack_specific_actions"}
-                               for k, v in ESCALATION_ROUTING.items()},
+        "mitigation_catalogue": {
+            k: v["description"] for k, v in MITIGATION_ACTIONS.items()
+        },
+        "escalation_routing": {
+            k: {kk: vv for kk, vv in v.items() if kk != "attack_specific_actions"}
+            for k, v in ESCALATION_ROUTING.items()
+        },
         "device_constraints": DEVICE_TIERS,
     }
     (OUTPUT_DIR / "response_report.json").write_text(
-        json.dumps(report, indent=2), encoding="utf-8")
+        json.dumps(report, indent=2), encoding="utf-8"
+    )
     logger.info("  Saved: response_report.json")
 
     # CSV
     rows = []
     for rec in records:
-        rows.append({
-            "sample_index": rec["sample_index"],
-            "ground_truth": rec["ground_truth"],
-            "attack_category": rec["attack_category"],
-            "risk_score": rec["risk_score"],
-            "risk_level": rec["risk_level"],
-            "actions": "|".join(rec["response"]["actions"]),
-            "max_response_min": rec["response"]["max_response_min"],
-            "escalation_primary": rec["response"]["escalation_chain"]["primary"],
-            "device_constraint": rec["response"]["device_constraint_applied"],
-            "rationale": rec["response"]["rationale"][:100],
-        })
+        rows.append(
+            {
+                "sample_index": rec["sample_index"],
+                "ground_truth": rec["ground_truth"],
+                "attack_category": rec["attack_category"],
+                "risk_score": rec["risk_score"],
+                "risk_level": rec["risk_level"],
+                "actions": "|".join(rec["response"]["actions"]),
+                "max_response_min": rec["response"]["max_response_min"],
+                "escalation_primary": rec["response"]["escalation_chain"]["primary"],
+                "device_constraint": rec["response"]["device_constraint_applied"],
+                "rationale": rec["response"]["rationale"][:100],
+            }
+        )
     pd.DataFrame(rows).to_csv(OUTPUT_DIR / "alert_responses_detail.csv", index=False)
     logger.info("  Saved: alert_responses_detail.csv")
 

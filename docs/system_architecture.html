@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDS-Healthcare-CIP — System Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0F12;
+    --surface-1: #16181D;
+    --surface-2: #1D2026;
+    --surface-3: #24272F;
+    --border-subtle: #1F2229;
+    --border: #262A33;
+    --border-strong: #353944;
+    --text-primary: #E8E9EB;
+    --text-secondary: #9CA0AB;
+    --text-tertiary: #6A6F7B;
+    --text-quaternary: #4A4F5A;
+    --tier-low: #5B8FB9;
+    --tier-medium: #D4A445;
+    --tier-high: #E07A5F;
+    --tier-critical: #C53030;
+    --accent: #7BA7BC;
+    --accent-bg: rgba(123, 167, 188, 0.12);
+    --success: #5F9E7B;
+    --success-bg: rgba(95, 158, 123, 0.10);
+  }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .font-display { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--text-primary); }
+
+  /* Layout */
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  header.page-head {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  header.page-head h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 3rem;
+    margin: 0 0 8px;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  header.page-head .sub {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 720px;
+  }
+  header.page-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 12px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header.page-head .meta span::before { content: "· "; color: var(--text-quaternary); }
+  header.page-head .meta span:first-child::before { content: ""; }
+
+  /* Section */
+  section { margin-top: 48px; }
+  section > h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.875rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  section > .section-intro {
+    color: var(--text-secondary);
+    margin: 0 0 24px;
+    max-width: 720px;
+  }
+
+  /* Pipeline diagram */
+  .pipeline {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 32px 28px;
+    position: relative;
+  }
+  .pipeline-grid {
+    display: grid;
+    grid-template-columns: 64px 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  /* Phase label column */
+  .phase-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 18px;
+  }
+  .phase-tick {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* Module card */
+  .module {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 14px 12px;
+    position: relative;
+    transition: border-color 120ms ease;
+  }
+  .module:hover { border-color: var(--accent); }
+  .module .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-quaternary);
+    letter-spacing: 0.12em;
+  }
+  .module .title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.125rem;
+    line-height: 1.15;
+    margin: 2px 0 4px;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .module .path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    word-break: break-all;
+  }
+  .module .role {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.45;
+  }
+  .module .io {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+  }
+  .module .io .row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .module .io .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    width: 30px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 1px;
+  }
+  .module .io .val {
+    color: var(--text-secondary);
+    word-break: break-all;
+  }
+  .module .io .val code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-primary);
+    background: transparent;
+    padding: 0;
+  }
+
+  /* Inputs/outputs row colors */
+  .module.m0 { border-left: 2px solid #6A6F7B; }
+  .module.m1 { border-left: 2px solid var(--tier-low); }
+  .module.m2 { border-left: 2px solid var(--tier-medium); }
+  .module.m3 { border-left: 2px solid var(--tier-high); }
+  .module.m4 { border-left: 2px solid var(--accent); }
+  .module.m5 { border-left: 2px solid var(--tier-critical); }
+  .module.m6 { border-left: 2px solid var(--success); }
+
+  /* Arrow row connecting modules */
+  .arrow-row {
+    grid-column: 2 / -1;
+    height: 22px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+    margin: 6px 0 4px;
+  }
+  .arrow {
+    position: relative;
+    height: 22px;
+  }
+  .arrow::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 12px;
+    top: 50%;
+    height: 1px;
+    background: var(--border-strong);
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid var(--accent);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+  .arrow .label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -2px;
+    background: var(--surface-1);
+    padding: 0 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  /* Cross-cutting concerns row */
+  .crosscut {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px dashed var(--border-subtle);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .cc-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 14px 14px 12px;
+  }
+  .cc-card .cc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .cc-card .cc-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+  }
+  .cc-card .cc-body {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .cc-card .cc-body code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--accent);
+    background: transparent;
+  }
+
+  /* Data-flow detail tables */
+  table.df {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 12.5px;
+  }
+  table.df th, table.df td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+  }
+  table.df th {
+    background: var(--surface-2);
+    color: var(--text-tertiary);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  table.df tr:last-child td { border-bottom: none; }
+  table.df td code, table.df td .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: transparent;
+    padding: 0;
+  }
+  table.df td.dir {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    width: 80px;
+  }
+  table.df td .src { color: var(--text-secondary); }
+
+  /* Audit chain visual */
+  .audit-chain {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 24px 28px;
+  }
+  .audit-chain h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.25rem;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .audit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .audit-sink {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px;
+  }
+  .audit-sink .sname {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .audit-sink .stitle {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .audit-sink .sbody {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+  .audit-sink.signed { border-left-color: var(--success); }
+  .audit-sink.signed .sname { color: var(--success); }
+
+  /* Footer / artifact list */
+  .artifacts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .art-group {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .art-group h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 8px;
+  }
+  .art-group ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+  }
+  .art-group li {
+    color: var(--text-secondary);
+  }
+  .art-group li code { color: var(--text-primary); background: transparent; }
+
+  /* Footer note */
+  .footnote {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    line-height: 1.6;
+  }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .pipeline-grid {
+      grid-template-columns: 1fr;
+    }
+    .phase-col { display: none; }
+    .arrow-row { display: none; }
+    .crosscut { grid-template-columns: 1fr; }
+    .audit-grid { grid-template-columns: 1fr; }
+    .artifacts { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="page-head">
+    <h1>System Architecture</h1>
+    <p class="sub">
+      Healthcare IoMT Intrusion Detection &mdash; thesis-grade pipeline from raw
+      packet captures through detection, risk scoring, explanation, response
+      generation, and operator-facing presentation. Built around two
+      contributions (C1: dual-track detection, C2: role-adaptive MVE) and a
+      C3 invariant (no-auto-execution, audit-first, no-silent-suppression).
+    </p>
+    <div class="meta">
+      <span>repo&nbsp;<code>ids-healthcare-cip</code></span>
+      <span>branch&nbsp;<code>feature/dashboard-design</code></span>
+      <span>dataset&nbsp;<code>WUSTL-EHMS-2020 + MedSec-25</code></span>
+      <span>16,318 rows · 60:15:15:10 split</span>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN PIPELINE DIAGRAM
+       ============================================================ -->
+  <section>
+    <h2>Pipeline overview</h2>
+    <p class="section-intro">
+      Seven modules in a directed flow. Modules 0&ndash;1 are run once per
+      dataset; Modules 2&ndash;5 are orchestrated by
+      <code class="font-mono">run_all_modules.py</code> (starts at Module 2);
+      Module 6 is the Streamlit dashboard that consumes everything downstream.
+      Each card shows the module's path, role, primary inputs, and outputs.
+    </p>
+
+    <div class="pipeline">
+      <div class="pipeline-grid">
+
+        <div class="phase-col"><span class="phase-tick">Pipeline · raw &rarr; presented</span></div>
+
+        <!-- Module 0 -->
+        <div class="module m0">
+          <div class="num">MODULE 0</div>
+          <div class="title">Exploratory Data Analysis</div>
+          <div class="path">module0_analysis/</div>
+          <div class="role">
+            Loads raw CSV, verifies signed SHA-256 baseline, computes
+            descriptive stats / correlations / outliers, emits Markdown
+            reports for the thesis chapter.
+          </div>
+          <div class="io">
+            <div class="row"><span class="label">in</span><span class="val"><code>data/raw/WUSTL-EHMS/*.csv</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>results/phase0_analysis/stats_report.json</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>high_correlations.csv</code> (|r| &ge; 0.95)</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>report_section_quality.md</code></span></div>
+          </div>
+        </div>
+
+        <!-- Module 1 -->
+        <div class="module m1">
+          <div class="num">MODULE 1</div>
+          <div class="title">Preprocessing &amp; Split</div>
+          <div class="path">module1_preprocessing/phase1/</div>
+          <div class="role">
+            HIPAA strip &rarr; encoding &rarr; missing-value cleaning &rarr;
+            variance/redundancy filter &rarr; <strong>leakage barrier</strong> &rarr;
+            4-way 60:15:15:10 stratified split &rarr; RobustScaler fit on train.
+          </div>
+          <div class="io">
+            <div class="row"><span class="label">in</span><span class="val"><code>data/raw/WUSTL-EHMS/*.csv</code> + <code>high_correlations.csv</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>{train,val,test,demo}_phase1.parquet</code> (60/15/15/10)</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>benign_only_{train,val}.parquet</code> (Track B)</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>split_metadata.yaml</code> + <code>split_artifact_manifest.txt</code></span></div>
+          </div>
+        </div>
+
+        <!-- Module 2 -->
+        <div class="module m2">
+          <div class="num">MODULE 2</div>
+          <div class="title">Detection (Dual Track)</div>
+          <div class="path">module2_detection/</div>
+          <div class="role">
+            <strong>Track A</strong>: XGBoost / RF / DT trained on
+            supervised splits with SMOTE inside CV.
+            <strong>Track B</strong>: DAE trained on benign-only data
+            (novelty detection by reconstruction error).
+          </div>
+          <div class="io">
+            <div class="row"><span class="label">in</span><span class="val"><code>train_phase1.parquet</code> + <code>benign_only_train.parquet</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>results/models/{xgboost,rf,dt}.pkl</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val">DAE checkpoint + threshold</span></div>
+          </div>
+        </div>
+
+        <!-- Module 3 -->
+        <div class="module m3">
+          <div class="num">MODULE 3</div>
+          <div class="title">Composite Risk Scoring</div>
+          <div class="path">module3_risk_scoring/</div>
+          <div class="role">
+            <span class="font-mono" style="color:var(--text-primary);">
+              R = w<sub>1</sub>&middot;C<sub>detect</sub> + w<sub>2</sub>&middot;D<sub>crit</sub>
+              + w<sub>3</sub>&middot;S<sub>data</sub> + w<sub>4</sub>&middot;A<sub>patient</sub>
+            </span><br>
+            Weights from <code class="font-mono">configs/composite_risk_weights.yaml</code>
+            (0.40 / 0.25 / 0.15 / 0.20). Tier boundaries 0.40 / 0.60 / 0.80.
+          </div>
+          <div class="io">
+            <div class="row"><span class="label">in</span><span class="val"><code>test_phase1.parquet</code> + models</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>results/reports/risk_scores.npz</code> (test)</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>demo_scores.npz</code> (demo split, frozen)</span></div>
+          </div>
+        </div>
+
+        <!-- Module 4 -->
+        <div class="module m4">
+          <div class="num">MODULE 4</div>
+          <div class="title">Explanations (TreeSHAP + DAE + MVE)</div>
+          <div class="path">module4_explanations/</div>
+          <div class="role">
+            Batch: TreeSHAP top-N + DAE feature decomposition + global
+            importance plots. Online: per-alert MVE with p95 &lt; 150&nbsp;ms
+            SLA. MVE provider chain: OpenAI &rarr; Anthropic &rarr; rule-based.
+          </div>
+          <div class="io">
+            <div class="row"><span class="label">in</span><span class="val"><code>risk_scores.npz</code> + models + raw features</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>results/charts/waterfall_*_sample_*.png</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>global_importance_*.json</code> + <code>dae_feature_errors.npz</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>online_latency_profile.json</code> (p50/p95/p99)</span></div>
+          </div>
+        </div>
+
+        <!-- Module 5 -->
+        <div class="module m5">
+          <div class="num">MODULE 5</div>
+          <div class="title">Response &amp; Audit</div>
+          <div class="path">module5_responses/</div>
+          <div class="role">
+            Per-alert response policy (escalation chain, max-response-min,
+            rationale, clinical constraints). Signed ECDSA-P256 audit chain.
+            Closed-loop feedback via reviewer confirm/reject.
+          </div>
+          <div class="io">
+            <div class="row"><span class="label">in</span><span class="val">explanations + risk scores + device tier</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>alert_responses.json</code> (4,896 records)</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>audit_trail.{json,jsonl}</code> + signed <code>audit_log.jsonl</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>effectiveness_analysis.json</code> + <code>response_policy.json</code></span></div>
+          </div>
+        </div>
+
+        <!-- Module 6 -->
+        <div class="module m6">
+          <div class="num">MODULE 6</div>
+          <div class="title">Evaluation Dashboard</div>
+          <div class="path">module6_evaluation/</div>
+          <div class="role">
+            Streamlit app with 5 modes: <strong>Triage</strong> (Sentinel 3-col
+            view, test split), Online Simulation (replay, demo split),
+            Browse Alerts, Study (A/B for RQ3), PCAP Replay (stub).
+            Triple-sink audit fan-out on every operator action.
+          </div>
+          <div class="io">
+            <div class="row"><span class="label">in</span><span class="val"><code>results/reports/*</code> + <code>charts/*</code> + parquet replay</span></div>
+            <div class="row"><span class="label">out</span><span class="val">Operator UI · <code>streamlit run module6_evaluation/module6_app.py</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val">RQ3 study responses &rarr; <code>study_responses_*.json</code></span></div>
+          </div>
+        </div>
+
+        <!-- Arrow row -->
+        <div class="arrow-row">
+          <div class="arrow"><span class="label">stats/corr</span></div>
+          <div class="arrow"><span class="label">parquets</span></div>
+          <div class="arrow"><span class="label">models</span></div>
+          <div class="arrow"><span class="label">scores</span></div>
+          <div class="arrow"><span class="label">explanations</span></div>
+          <div class="arrow"><span class="label">responses</span></div>
+          <div class="arrow"><span class="label">render</span></div>
+        </div>
+      </div>
+
+      <!-- Cross-cutting concerns -->
+      <div class="crosscut">
+        <div class="cc-card">
+          <div class="cc-label">cross-cutting · security</div>
+          <div class="cc-title">Signed integrity + path validation</div>
+          <div class="cc-body">
+            <code>module0_analysis/security.py</code> provides
+            <code>IntegrityVerifier</code> (signed SHA-256 baseline; refuses
+            to run without one), <code>PathValidator</code> (workspace
+            containment), <code>ColumnAllowlist</code>, and
+            <code>log_phase0_event</code> (routes audit events into Module 5's
+            signed chain). Module 1 uses these inline at ingest with a
+            TOCTOU-safe single-pass hash-and-parse.
+          </div>
+        </div>
+        <div class="cc-card">
+          <div class="cc-label">cross-cutting · audit</div>
+          <div class="cc-title">Hash-chained audit fan-out</div>
+          <div class="cc-body">
+            Three sinks per operator action:
+            <code>online_interactions.jsonl</code> (buffered),
+            <code>audit_trail.jsonl</code> (hash-chained),
+            <code>audit_log.jsonl</code> (ECDSA P256 signed).
+            <code>HardenedAuditLogger</code> in
+            <code>module5_responses/module5_pipeline.py</code> is the single
+            authority; Module 6 routes through it on every dashboard click.
+          </div>
+        </div>
+        <div class="cc-card">
+          <div class="cc-label">cross-cutting · standalone</div>
+          <div class="cc-title">Operational simulators</div>
+          <div class="cc-body">
+            Three top-level scripts run outside the orchestrator:
+            <code>drift_detection.py</code> (PSI / KS over temporal stream),
+            <code>dynamic_threshold_sim.py</code> (static vs adaptive
+            thresholds), <code>feedback_loop_demo.py</code> (closed-loop
+            iteration with AUROC reweighting). Outputs feed Module 6's System
+            Health panels.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DATA FLOW DETAIL
+       ============================================================ -->
+  <section>
+    <h2>Data flow</h2>
+    <p class="section-intro">
+      All persistent inter-module communication is via files on disk &mdash; no
+      sockets, no shared memory. The frozen splits (test, demo) carry an
+      explicit invariant: never seen by any model during training.
+    </p>
+    <table class="df">
+      <thead><tr>
+        <th>Producer</th><th class="dir">Dir</th><th>Artifact</th><th>Consumer(s)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Module 0</td><td class="dir">&rarr;</td><td><code>results/phase0_analysis/stats_report.json</code></td><td>Module 1 (Phase0ArtifactReader)</td></tr>
+        <tr><td>Module 0</td><td class="dir">&rarr;</td><td><code>results/phase0_analysis/high_correlations.csv</code></td><td>Module 1 (RedundancyRemover)</td></tr>
+        <tr><td>Module 0</td><td class="dir">&rarr;</td><td><code>module0_analysis/dataset_integrity.json</code> (signed)</td><td>Module 1 (IntegrityVerifier on ingest)</td></tr>
+        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/train_phase1.parquet</code> (60%)</td><td>Module 2 Track A · Module 3</td></tr>
+        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/val_phase1.parquet</code> (15%)</td><td>Module 2 (threshold calibration)</td></tr>
+        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/test_phase1.parquet</code> (15%, <strong>FROZEN</strong>)</td><td>Module 3 · Triage view · paper metrics</td></tr>
+        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/demo_phase1.parquet</code> (10%, <strong>FROZEN</strong>)</td><td>Module 6 Online Sim · Study A/B (curated YAML scenarios use this pool indirectly)</td></tr>
+        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/benign_only_train.parquet</code></td><td>Module 2 Track B (DAE)</td></tr>
+        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>split_metadata.yaml</code> + <code>split_artifact_manifest.txt</code></td><td>Defense audit · <code>tests/test_split_contract.py</code></td></tr>
+        <tr><td>Module 2</td><td class="dir">&rarr;</td><td><code>results/models/{xgboost,rf,dt}.pkl</code></td><td>Module 3 · Module 4</td></tr>
+        <tr><td>Module 2</td><td class="dir">&rarr;</td><td>DAE checkpoint + adaptive threshold</td><td>Module 3 · Module 4 · drift_detection.py</td></tr>
+        <tr><td>Module 3</td><td class="dir">&rarr;</td><td><code>results/reports/risk_scores.npz</code> (test)</td><td>Module 4 · Module 5 · Module 6 Triage</td></tr>
+        <tr><td>Module 3</td><td class="dir">&rarr;</td><td><code>results/reports/demo_scores.npz</code> (demo)</td><td>Module 6 Online Simulation (intended)</td></tr>
+        <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>results/charts/waterfall_*.png</code> · <code>force_*.png</code></td><td>Module 6 (Browse / Online Sim / Triage)</td></tr>
+        <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>global_importance_{xgboost,rf,dt}.json</code></td><td>Module 6 Dashboard global SHAP panel</td></tr>
+        <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>online_latency_profile.json</code> (p50/p95/p99)</td><td>Module 6 status strip + System Health</td></tr>
+        <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>clinician_summaries.json</code> · <code>analyst_report.json</code></td><td>Module 6 role-adaptive MVE</td></tr>
+        <tr><td>Module 5</td><td class="dir">&rarr;</td><td><code>alert_responses.json</code> (4,896 rec · val+test)</td><td>Module 6 (filtered to test-only in Triage)</td></tr>
+        <tr><td>Module 5</td><td class="dir">&rarr;</td><td><code>response_policy.json</code> · <code>effectiveness_analysis.json</code></td><td>Module 6</td></tr>
+        <tr><td>Module 5</td><td class="dir">&rarr;</td><td><code>audit_log.jsonl</code> (ECDSA-P256 signed chain)</td><td>Module 6 dashboard actions append here</td></tr>
+        <tr><td>Module 6</td><td class="dir">&larr;</td><td>Operator interactions (Confirm / Acknowledge / Escalate / Dismiss)</td><td>Module 5 audit chain (closed loop)</td></tr>
+        <tr><td>Module 6</td><td class="dir">&larr;</td><td>RQ3 study participant responses</td><td><code>results/reports/study_responses_*.json</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       AUDIT CHAIN DETAIL
+       ============================================================ -->
+  <section>
+    <h2>Audit chain</h2>
+    <p class="section-intro">
+      C3 invariant: <em>no auto-execution, audit-first, no silent suppression</em>.
+      Every operator action and every system event flows through a three-sink
+      fan-out. The signed chain is the trust anchor for thesis defense and any
+      future regulatory review.
+    </p>
+
+    <div class="audit-chain">
+      <h3>Triple-sink fan-out (single <code class="font-mono" style="color:var(--accent);">capture_interaction()</code> call &rarr; 3 writes)</h3>
+      <div class="audit-grid">
+        <div class="audit-sink">
+          <div class="sname">sink 1 · buffered</div>
+          <div class="stitle">online_interactions.jsonl</div>
+          <div class="sbody">
+            Flat per-interaction log, buffered with <code class="font-mono">_FLUSH_AFTER = 10</code>.
+            Owner: <code class="font-mono">_online_writer</code> (<code class="font-mono">AuditTrailWriter</code>
+            instance at <code class="font-mono">module6_app.py:403</code>).
+            Optimized for high-frequency render events; not the trust anchor.
+          </div>
+        </div>
+        <div class="audit-sink">
+          <div class="sname">sink 2 · hash-chained</div>
+          <div class="stitle">audit_trail.jsonl</div>
+          <div class="sbody">
+            SHA-256 hash-chained append-only log via
+            <code class="font-mono">AuditTrailWriter</code>
+            (<code class="font-mono">module6_app.py:353</code>).
+            Each record carries <code class="font-mono">prev_hash</code> +
+            <code class="font-mono">integrity_hash</code> &mdash; tampering
+            is detectable on replay.
+          </div>
+        </div>
+        <div class="audit-sink signed">
+          <div class="sname">sink 3 · ECDSA-P256 signed</div>
+          <div class="stitle">audit_log.jsonl</div>
+          <div class="sbody">
+            <code class="font-mono">HardenedAuditLogger</code> in
+            <code class="font-mono">module5_responses/module5_pipeline.py</code>.
+            Each entry signed with the project's ECDSA-P256 key
+            (<code class="font-mono">results/reports/audit_signing_key.pub.pem</code>).
+            Reviewer attribution bound from <code class="font-mono">st.session_state["participant_id"]</code> /
+            <code class="font-mono">["sim_role"]</code>. The trust anchor.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ARTIFACT INVENTORY
+       ============================================================ -->
+  <section>
+    <h2>Artifact inventory</h2>
+    <p class="section-intro">
+      All inter-module communication is file-based. This is the canonical
+      list of artifacts under <code class="font-mono">results/</code> and
+      <code class="font-mono">data/processed/</code> grouped by phase.
+    </p>
+    <div class="artifacts">
+      <div class="art-group">
+        <h4>data/processed/  · Module 1 outputs</h4>
+        <ul>
+          <li><code>train_phase1.parquet</code> &mdash; 9,790 × 25 (60%)</li>
+          <li><code>val_phase1.parquet</code> &mdash; 2,448 × 25 (15%)</li>
+          <li><code>test_phase1.parquet</code> &mdash; 2,448 × 25 (15%, frozen)</li>
+          <li><code>demo_phase1.parquet</code> &mdash; 1,632 × 25 (10%, frozen)</li>
+          <li><code>benign_only_train.parquet</code> &mdash; 8,563 × 25 (Track B)</li>
+          <li><code>benign_only_val.parquet</code> &mdash; 2,141 × 25 (Track B)</li>
+          <li><code>split_metadata.yaml</code> &mdash; Strategy 1 audit record</li>
+          <li><code>split_artifact_manifest.txt</code> &mdash; SHA-256 anchor</li>
+          <li><code>categorical_encoder.json</code> &mdash; deterministic mappings</li>
+          <li><code>robust_scaler.pkl</code> · <code>benign_medians.json</code></li>
+        </ul>
+      </div>
+
+      <div class="art-group">
+        <h4>results/phase0_analysis/  · Module 0 outputs</h4>
+        <ul>
+          <li><code>stats_report.json</code> &mdash; descriptive + missing + class dist</li>
+          <li><code>high_correlations.csv</code> &mdash; |r| &ge; 0.95 pairs</li>
+          <li><code>correlation_matrix.parquet</code></li>
+          <li><code>report_section_quality.md</code> &mdash; thesis chapter</li>
+          <li><code>dataset_integrity.json</code> &mdash; signed baseline</li>
+        </ul>
+      </div>
+
+      <div class="art-group">
+        <h4>results/models/  · Module 2 outputs</h4>
+        <ul>
+          <li><code>xgboost.pkl</code> · <code>random_forest.pkl</code> · <code>decision_tree.pkl</code></li>
+          <li>DAE checkpoint + threshold</li>
+          <li>Per-model hyperparameters (committed under <code>module2_detection/tuning/</code>)</li>
+        </ul>
+      </div>
+
+      <div class="art-group">
+        <h4>results/reports/  · Modules 3–5 outputs</h4>
+        <ul>
+          <li><code>risk_scores.npz</code> · <code>demo_scores.npz</code> (Module 3)</li>
+          <li><code>evaluation_alerts.json</code> (Module 4 batch)</li>
+          <li><code>online_latency_profile.json</code> (Module 4 online)</li>
+          <li><code>clinician_summaries.json</code> · <code>analyst_report.json</code></li>
+          <li><code>global_importance_{xgboost,rf,dt}.json</code></li>
+          <li><code>alert_responses.json</code> · <code>response_policy.json</code> (Module 5)</li>
+          <li><code>effectiveness_analysis.json</code> · <code>feedback_*.json</code></li>
+          <li><code>audit_trail.{json,jsonl}</code> · <code>audit_log.jsonl</code> (signed)</li>
+          <li><code>audit_signing_key.pub.pem</code> &mdash; ECDSA-P256 public key</li>
+          <li><code>drift_detection_results.json</code> · <code>dynamic_threshold_results.json</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SUPPORTING CODE
+       ============================================================ -->
+  <section>
+    <h2>Shared library &amp; supporting code</h2>
+    <p class="section-intro">
+      Cross-module concerns that don't fit a single phase live in
+      <code class="font-mono">src/</code> or as top-level scripts.
+    </p>
+    <table class="df">
+      <thead><tr><th>Path</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>src/mve_generator.py</code></td><td>3-layer MVE provider chain: OpenAI &rarr; Anthropic &rarr; rule-based templates. Shared by Module 4 online + Module 6 (role-adaptive MVE).</td></tr>
+        <tr><td><code>src/risk_scorer.py</code></td><td>Composite-risk formula primitive used by Module 3 + the dashboard's preview path.</td></tr>
+        <tr><td><code>src/data_models.py</code></td><td>Typed dataclasses (<code>MVEOutput</code>, alert schemas) shared across modules.</td></tr>
+        <tr><td><code>src/harness.py</code></td><td>Reproducibility harness — seed pinning, environment capture for thesis §3.4.</td></tr>
+        <tr><td><code>drift_detection.py</code></td><td>PSI + KS over temporal stream; outputs feed Module 6 System Health panels.</td></tr>
+        <tr><td><code>dynamic_threshold_sim.py</code></td><td>Static vs adaptive threshold comparison; F1 + threshold-over-time PNG.</td></tr>
+        <tr><td><code>feedback_loop_demo.py</code></td><td>Closed-loop iteration — single + multi-iteration AUROC reweighting; demonstrates C.3–C.6.</td></tr>
+        <tr><td><code>run_all_modules.py</code></td><td>Orchestrator — starts at Module 2 by default (Modules 0 + 1 are standalone). Sequential <code>subprocess.run()</code> per module with elapsed-time logging.</td></tr>
+        <tr><td><code>module6_evaluation/sentinel_theme.py</code></td><td>Sentinel design-system injection (Phase 3 of dashboard refactor) — emits the prototype's full <code>:root</code> token block + Google Fonts + component class definitions.</td></tr>
+        <tr><td><code>module6_evaluation/components.py</code></td><td>HTML-string helpers for the Triage view (tier glyphs, calibration bars, factor rows, audit timeline, status strip).</td></tr>
+        <tr><td><code>tests/test_split_contract.py</code></td><td>16-test pytest suite locking the 4-way 60:15:15:10 split. Re-runs the splitter against the raw CSV and verifies n + attack_rate + Attack Category counts per split.</td></tr>
+        <tr><td><code>configs/composite_risk_weights.yaml</code></td><td>Risk-formula weights + tier boundaries (signed SHA-256 baseline).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       INVARIANTS & THESIS CLAIMS
+       ============================================================ -->
+  <section>
+    <h2>Defense-grade invariants</h2>
+    <p class="section-intro">
+      Properties that hold across the whole pipeline. Each is enforced in code
+      and verifiable from the artifacts alone &mdash; no human attestation
+      required.
+    </p>
+    <table class="df">
+      <thead><tr><th style="width:25%">Invariant</th><th>Enforcement</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Frozen test + demo</strong></td>
+          <td>
+            <code>split_metadata.yaml</code> declares the invariant; Module 1
+            writes 4 disjoint parquets; <code>test_split_contract.py</code>
+            re-validates on every CI run; Module 2 (future work) refuses to
+            load <code>demo_phase1.parquet</code> via
+            <code>_assert_no_demo_leakage</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Deterministic split</strong></td>
+          <td>
+            <code>random_state=42</code> validated against canonical
+            allowlist <code>{0, 7, 42}</code> by
+            <code>Phase1Config._random_state_canonical</code>. WARN on
+            deviation. Stratification on <code>Attack Category</code>
+            (multi-class), not binary Label.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Hash-chained audit</strong></td>
+          <td>
+            Every operator action through
+            <code>capture_interaction()</code> fans out to 3 sinks; sink 3
+            is ECDSA-P256 signed with reviewer attribution. Tampering on any
+            sink is detectable; the signed chain is unforgeable without the
+            private key.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>No auto-execution</strong></td>
+          <td>
+            Dashboard exposes Acknowledge / Escalate / Dismiss buttons; none
+            execute network or device actions. The clinical-constraint field
+            in every MVE Layer 3 starts with "DO NOT" for CRITICAL/HIGH/MEDIUM
+            alerts — enforced in <code>mve_generator.py</code> by the system
+            prompt and rule-based templates alike.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>No silent suppression</strong></td>
+          <td>
+            Dismiss flow is gated by a required-rationale modal
+            (<code>_dismiss_dialog</code> in <code>module6_app.py</code>).
+            Empty rationale &rarr; <code>st.error</code> + early return
+            without writing. Every dismissal is signed with category +
+            rationale in the audit log.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>TOCTOU-safe ingest</strong></td>
+          <td>
+            Module 1's <code>_ingest_with_integrity()</code> hashes and
+            parses each CSV from the same in-memory bytes — no re-open
+            between hash and read. Multi-file bypass closed: every CSV in
+            the input dir is hashed against the signed baseline.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>p95 latency &lt; 150 ms (Module 4 online)</strong></td>
+          <td>
+            Recorded in <code>online_latency_profile.json</code>; surfaced in
+            the dashboard's status strip. Per-stage breakdown
+            (DAE / TreeSHAP / MVE) lets you defend the SLA bound during viva.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Role-adaptive MVE (C2)</strong></td>
+          <td>
+            Three render functions in <code>module6_app.py</code>:
+            <code>render_analyst</code> (L633), <code>render_clinician</code> (L677),
+            <code>render_admin</code> (L713). Same alert, different surface:
+            SOC sees SHAP top-features + DAE indicators; Clinician sees plain-
+            language summary + patient-safety note; Admin sees aggregate
+            tier breakdown.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="footnote">
+    Architecture review &middot; generated from a read of all 6 modules + <code>src/</code> + standalone scripts<br>
+    Path conventions: all module roots are at repo top-level (post-A3 flatten, commit <code>898e7c7</code>)<br>
+    Render: open this file directly in any browser &mdash; self-contained, no build step, fonts loaded from Google Fonts CDN
+  </div>
+
+</div>
+</body>
+</html>

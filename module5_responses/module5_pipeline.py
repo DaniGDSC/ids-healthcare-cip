@@ -82,6 +82,12 @@ DEFAULT_PUBLIC_KEY_PATH = OUTPUT_DIR / "audit_signing_key.pub.pem"
 
 SIGNATURE_ALG = "ECDSA_P256_SHA256"
 
+# Make project root importable when invoked as `python module5_responses/module5_pipeline.py`
+# (Python only adds the script's directory to sys.path, not the project root).
+_PROJECT_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[1]
+if str(_PROJECT_ROOT_FOR_IMPORT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT_FOR_IMPORT))
+
 from common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
 
@@ -1096,7 +1102,7 @@ def run_worked_examples(
         idx = int(np.where(mask)[0][np.argmax(R[mask])])
         cat = str(attack_cats[idx])
         gt = "attack" if y_true[idx] == 1 else "benign"
-        a_pat = float(risk_data["a_patient"][idx])
+        a_pat = float(risk_data["d_clinical_tier"][idx])
 
         # Step 1: Policy recommendation
         rec = engine.recommend(
@@ -1133,7 +1139,7 @@ def run_worked_examples(
                 "C_detect": round(float(risk_data["c_detect"][idx]), 4),
                 "D_crit": round(float(risk_data["d_crit"][idx]), 4),
                 "S_data": round(float(risk_data["s_data"][idx]), 4),
-                "A_patient": round(float(risk_data["a_patient"][idx]), 4),
+                "D_clinical_tier": round(float(risk_data["d_clinical_tier"][idx]), 4),
             },
             "policy_recommendation": rec,
             "execution_result": exec_result,
@@ -1213,7 +1219,7 @@ def main() -> None:
 
         cat = str(attack_cats[idx])
         gt = "attack" if y_true[idx] == 1 else "benign"
-        a_pat = float(risk_data["a_patient"][idx])
+        a_pat = float(risk_data["d_clinical_tier"][idx])
 
         rec = engine.recommend(tier, "vital_monitoring", cat, a_pat)
         ts = datetime(2026, 4, 3, 12, 0, 0) + timedelta(seconds=idx)

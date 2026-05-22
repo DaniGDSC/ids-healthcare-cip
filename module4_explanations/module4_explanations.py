@@ -145,6 +145,11 @@ TRACK_A_MODELS = {
     },
 }
 
+# Models for which TreeSHAP is actually computed.  Predictions for all
+# TRACK_A_MODELS are still loaded for the consensus/severity scale; the
+# subset here just controls the (expensive) SHAP step.
+SHAP_MODELS = ("xgboost",)
+
 CLINICIAN_TEMPLATES = {
     "CRITICAL": (
         "CRITICAL ALERT (Sample {idx}): The system detected a likely intrusion "
@@ -182,7 +187,7 @@ from module4_explanations.module4_online_explainer import (
 def load_test_data() -> tuple:
     """Load test parquet and return X, y, attack categories, feature names."""
     df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
-    drop_cols = ["Label", "Attack Category"]
+    drop_cols = ["Label", "Attack Category", "row_id", "device_class"]
     feat_names = [c for c in df.columns if c not in drop_cols]
     X_test = df[feat_names].values.astype(np.float32)
     y_test = df["Label"].values
@@ -271,29 +276,40 @@ def save_global_importance(model_name: str, importance: list) -> None:
 # ── Track B: DAE per-feature error ─────────────────────────────────────
 
 def compute_dae_feature_errors(
-    dae_json_path: Path,
-    dae_weights_path: Path,
     X_test: np.ndarray,
     feat_names: list,
 ) -> tuple:
     """Decompose DAE reconstruction error into per-feature contributions.
 
-    The DAE detector is loaded via ``DAEDetector.from_artefacts``:
-    a JSON sidecar plus a Keras weights file. Loading is pickle-free,
-    so this code path can never invoke arbitrary Python from a
-    tampered model file. See Phase 2 finding #3b.
+    Uses :class:`detection_engine.DetectionEngine` to build the cascaded
+    input ``[raw_features || Track_A_probas]`` — there is exactly one
+    place that constructs that vector, and this is not it.
+
+    Returns ``(sq_err, weighted_err, feat_weights)`` sliced to the raw
+    feature width so downstream code keyed on the raw ``feat_names``
+    list stays consistent. The proba columns the DAE consumed are kept
+    inside the engine and not exposed here.
     """
     logger.info("Computing DAE per-feature error decomposition...")
-    from module2_detection.models.DAE import DAEDetector
-    det = DAEDetector.from_artefacts(dae_json_path, dae_weights_path)
+    from detection_engine import DetectionEngine
 
-    X_norm = det._normalise(X_test)
-    recon = det._forward(X_norm)  # M4-2: direct Keras call, avoids predict() overhead
-    sq_err = (X_norm - recon) ** 2
-    weighted_err = sq_err * det._feat_weights  # per-feature contribution
+    engine = DetectionEngine()
+    X_aug = engine.build_augmented(X_test)
+    det = engine._dae  # registry-cached, already loaded by build_augmented
 
-    logger.info("  DAE decomposition done: shape=%s", weighted_err.shape)
-    return sq_err, weighted_err, det._feat_weights
+    X_norm = det._normalise(X_aug)
+    recon = det._forward(X_norm)
+    sq_err_full = (X_norm - recon) ** 2
+    weighted_err_full = sq_err_full * det._feat_weights
+
+    n_raw = X_test.shape[1]
+    sq_err = sq_err_full[:, :n_raw]
+    weighted_err = weighted_err_full[:, :n_raw]
+    feat_weights = det._feat_weights[:n_raw]
+
+    logger.info("  DAE decomposition done: shape=%s (sliced from %s)",
+                weighted_err.shape, weighted_err_full.shape)
+    return sq_err, weighted_err, feat_weights
 
 
 def save_dae_errors(
@@ -635,11 +651,15 @@ def build_analyst_report(
             pred = int(all_preds[name]["y_pred"][idx])
             if pred == 1:
                 models_flagged.append(name)
-            entry["models"][name] = {
+            model_entry = {
                 "prediction": pred,
                 "confidence": round(float(all_preds[name]["y_proba"][idx]), 4),
-                "top_features": _top_features_shap(all_shap[name][idx], feat_names),
             }
+            if name in all_shap:
+                model_entry["top_features"] = _top_features_shap(
+                    all_shap[name][idx], feat_names,
+                )
+            entry["models"][name] = model_entry
 
         # Track B
         dae_pred = int(dae_preds["y_pred"][idx])
@@ -874,7 +894,7 @@ NLG_TEMPLATES = {
         "Components — detection confidence: {c_detect:.2f}, "
         "device criticality: {d_crit:.2f}, "
         "data sensitivity: {s_data:.2f}, "
-        "patient acuity: {a_patient:.2f}."
+        "clinical tier: {d_clinical_tier:.2f}."
     ),
     "acuity_note_normal": "Patient vitals are within normal ranges.",
     "acuity_note_abnormal": (
@@ -908,7 +928,7 @@ def generate_clinician_alert(
     consensus: str,
     risk_score: float = 0.0,
     risk_components: dict | None = None,
-    a_patient_val: float = 0.0,
+    d_clinical_tier_val: float = 0.0,
 ) -> str:
     """6-step NLG assembly for clinician-facing alert."""
     parts = []
@@ -944,9 +964,9 @@ def generate_clinician_alert(
             risk_score=risk_score, risk_level=severity, **risk_components,
         ))
 
-    # Step 5: Patient acuity note
-    if a_patient_val > 0:
-        n_abnormal = int(round(a_patient_val * 8))
+    # Step 5: Clinical-tier note
+    if d_clinical_tier_val > 0:
+        n_abnormal = int(round(d_clinical_tier_val * 8))
         parts.append(NLG_TEMPLATES["acuity_note_abnormal"].format(n_abnormal=n_abnormal))
     else:
         parts.append(NLG_TEMPLATES["acuity_note_normal"])
@@ -969,7 +989,7 @@ def route_explanation(
     consensus: str,
     risk_score: float,
     risk_components: dict,
-    a_patient_val: float,
+    d_clinical_tier_val: float,
     dae_top_features: list,
 ) -> dict:
     """Route alert to correct stakeholder view."""
@@ -979,7 +999,7 @@ def route_explanation(
             "format": "text",
             "content": generate_clinician_alert(
                 idx, sv_row, feat_names, severity, confidence, consensus,
-                risk_score, risk_components, a_patient_val,
+                risk_score, risk_components, d_clinical_tier_val,
             ),
         }
     elif stakeholder_role == "analyst":
@@ -1085,9 +1105,9 @@ def generate_example_explanations(
                 "c_detect": float(risk_data["c_detect"][idx]),
                 "d_crit": float(risk_data["d_crit"][idx]),
                 "s_data": float(risk_data["s_data"][idx]),
-                "a_patient": float(risk_data["a_patient"][idx]),
+                "d_clinical_tier": float(risk_data["d_clinical_tier"][idx]),
             }
-        a_pat = float(risk_data["a_patient"][idx]) if "a_patient" in risk_data else 0.0
+        a_pat = float(risk_data["d_clinical_tier"][idx]) if "d_clinical_tier" in risk_data else 0.0
 
         example = {
             "sample_index": int(idx),
@@ -1128,7 +1148,8 @@ def validate_consistency(
     results = {}
 
     from common import loads_signed
-    for name, cfg in TRACK_A_MODELS.items():
+    for name in SHAP_MODELS:
+        cfg = TRACK_A_MODELS[name]
         obj = loads_signed(PROJECT_ROOT / cfg["pipeline"])
         clf = obj.named_steps["classifier"] if hasattr(obj, "named_steps") else obj
 
@@ -1192,7 +1213,7 @@ def validate_perturbation(
     classifiers = get_track_a_classifiers()
     thresholds = get_track_a_thresholds()
 
-    for name in TRACK_A_MODELS:
+    for name in SHAP_MODELS:
         clf = classifiers[name]
 
         # Baseline predictions
@@ -1334,6 +1355,13 @@ def main() -> None:
     global_importances = {}
 
     for name, cfg in TRACK_A_MODELS.items():
+        preds = load_predictions(PROJECT_ROOT / cfg["predictions"])
+        all_preds[name] = preds
+
+        if name not in SHAP_MODELS:
+            logger.info("Skipping TreeSHAP for %s (not in SHAP_MODELS)", name)
+            continue
+
         sv, expected = compute_tree_shap(
             name, PROJECT_ROOT / cfg["pipeline"], X_test, feat_names,
         )
@@ -1344,9 +1372,6 @@ def main() -> None:
         global_importances[name] = importance
 
         plot_global_importance_bar(name, importance)
-
-        preds = load_predictions(PROJECT_ROOT / cfg["predictions"])
-        all_preds[name] = preds
         all_shap[name] = sv
 
         plot_waterfalls(name, sv, expected, X_test, feat_names,
@@ -1360,9 +1385,8 @@ def main() -> None:
         plot_per_category_importance(name, sv, y_test, attack_cats, feat_names)
 
     # ── Track B: DAE ──
-    dae_path = PROJECT_ROOT / "results/models/dae_detector.pkl"
     sq_err, weighted_err, feat_weights = compute_dae_feature_errors(
-        dae_path, X_test, feat_names,
+        X_test, feat_names,
     )
     save_dae_errors(sq_err, weighted_err, feat_weights, feat_names)
     plot_dae_global_weights(feat_weights, feat_names)
@@ -1410,7 +1434,8 @@ def main() -> None:
     logger.info("EXPLANATIONS COMPLETE — %.1fs", elapsed)
     logger.info(sep)
     logger.info("  Output dir    : %s", OUTPUT_DIR)
-    logger.info("  SHAP files    : %d models", len(TRACK_A_MODELS))
+    logger.info("  SHAP files    : %d models (%s)",
+                len(SHAP_MODELS), ", ".join(SHAP_MODELS))
     logger.info("  DAE errors    : dae_feature_errors.npz")
     logger.info("  Analyst alerts: %d", len(alerts))
     logger.info("  Charts        : %s", CHARTS_DIR)

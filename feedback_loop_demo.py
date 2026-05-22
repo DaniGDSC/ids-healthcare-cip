@@ -62,7 +62,7 @@ def _load_data() -> dict:
         "c_detect":  npz["c_detect"],
         "d_crit":    npz["d_crit"],
         "s_data":    npz["s_data"],
-        "a_patient": npz["a_patient"],
+        "d_clinical_tier": npz["d_clinical_tier"],
         "y_true":    npz["y_true"],
         "R":         npz["R"],
     }
@@ -244,7 +244,7 @@ def weight_adjustment(data: dict) -> dict:
     c_detect  = data["c_detect"]
     d_crit    = data["d_crit"]
     s_data    = data["s_data"]
-    a_patient = data["a_patient"]
+    d_clinical_tier = data["d_clinical_tier"]
     y_true    = data["y_true"]
 
     # Component variances (weighted)
@@ -253,23 +253,23 @@ def weight_adjustment(data: dict) -> dict:
         "w1": float(np.var(w["w1"] * c_detect)),
         "w2": float(np.var(w["w2"] * d_crit)),
         "w3": float(np.var(w["w3"] * s_data)),
-        "w4": float(np.var(w["w4"] * a_patient)),
+        "w4": float(np.var(w["w4"] * d_clinical_tier)),
     }
     logger.info("  Weighted variances: %s",
                 {k: round(v, 6) for k, v in variances.items()})
 
     # AUROC with default weights
-    R_default = compute_composite_risk(c_detect, d_crit, s_data, a_patient)
+    R_default = compute_composite_risk(c_detect, d_crit, s_data, d_clinical_tier)
     auroc_before = roc_auc_score(y_true, R_default)
     logger.info("  AUROC (default weights): %.6f", auroc_before)
 
     # Apply weight feedback
     new_weights = apply_weight_feedback(
         dict(WEIGHTS), variances,
-        y_true, c_detect, d_crit, s_data, a_patient,
+        y_true, c_detect, d_crit, s_data, d_clinical_tier,
     )
     R_adjusted = compute_composite_risk(
-        c_detect, d_crit, s_data, a_patient, new_weights,
+        c_detect, d_crit, s_data, d_clinical_tier, new_weights,
     )
     auroc_after = roc_auc_score(y_true, R_adjusted)
     logger.info("  AUROC (adjusted weights): %.6f", auroc_after)
@@ -316,7 +316,7 @@ def export_adjusted_config(
 ) -> Path:
     """Write risk_config_adjusted.json with updated parameters."""
     cfg = {
-        "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
+        "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
         "fusion": "C_detect = max(Track_A_proba, Track_B_normalized_RE)",
         "weights": weights,
         "thresholds": thresholds,

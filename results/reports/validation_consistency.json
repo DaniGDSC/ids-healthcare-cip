@@ -1,0 +1,27 @@
+{
+  "xgboost": {
+    "native_top5": [
+      "Flgs",
+      "DIntPkt",
+      "Sport",
+      "Temp",
+      "Pulse_Rate"
+    ],
+    "shap_top5": [
+      "Flgs",
+      "Temp",
+      "DIntPkt",
+      "Sport",
+      "Dur"
+    ],
+    "top5_overlap": [
+      "DIntPkt",
+      "Flgs",
+      "Sport",
+      "Temp"
+    ],
+    "top5_overlap_count": 4,
+    "spearman_rho": 0.8754,
+    "spearman_p_value": 0.0
+  }
+}

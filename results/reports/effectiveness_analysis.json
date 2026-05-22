@@ -1,0 +1,107 @@
+{
+  "outcome_distribution": {
+    "benign_logged": 2077,
+    "threat_contained": 307,
+    "false_positive_isolated": 64,
+    "threat_logged_not_mitigated": 0
+  },
+  "per_action_stats": {
+    "log_event": {
+      "true_attacks": 307,
+      "false_positives": 2141,
+      "total": 2448,
+      "precision": 0.1254,
+      "false_positive_rate": 0.8746
+    },
+    "enhanced_monitoring": {
+      "true_attacks": 270,
+      "false_positives": 2141,
+      "total": 2411,
+      "precision": 0.112,
+      "false_positive_rate": 0.888
+    },
+    "escalate_clinical": {
+      "true_attacks": 263,
+      "false_positives": 248,
+      "total": 511,
+      "precision": 0.5147,
+      "false_positive_rate": 0.4853
+    },
+    "forensic_snapshot": {
+      "true_attacks": 285,
+      "false_positives": 18,
+      "total": 303,
+      "precision": 0.9406,
+      "false_positive_rate": 0.0594
+    },
+    "isolate_device": {
+      "true_attacks": 285,
+      "false_positives": 18,
+      "total": 303,
+      "precision": 0.9406,
+      "false_positive_rate": 0.0594
+    },
+    "re_authenticate": {
+      "true_attacks": 169,
+      "false_positives": 0,
+      "total": 169,
+      "precision": 1.0,
+      "false_positive_rate": 0.0
+    },
+    "restrict_traffic": {
+      "true_attacks": 169,
+      "false_positives": 46,
+      "total": 215,
+      "precision": 0.786,
+      "false_positive_rate": 0.214
+    }
+  },
+  "proportionality_analysis": [
+    {
+      "action": "isolate_device",
+      "cost": 0.8,
+      "precision": 0.9406,
+      "total": 303
+    },
+    {
+      "action": "escalate_clinical",
+      "cost": 0.7,
+      "precision": 0.5147,
+      "total": 511
+    },
+    {
+      "action": "restrict_traffic",
+      "cost": 0.5,
+      "precision": 0.786,
+      "total": 215
+    },
+    {
+      "action": "forensic_snapshot",
+      "cost": 0.4,
+      "precision": 0.9406,
+      "total": 303
+    },
+    {
+      "action": "re_authenticate",
+      "cost": 0.3,
+      "precision": 1.0,
+      "total": 169
+    },
+    {
+      "action": "enhanced_monitoring",
+      "cost": 0.2,
+      "precision": 0.112,
+      "total": 2411
+    },
+    {
+      "action": "log_event",
+      "cost": 0.1,
+      "precision": 0.1254,
+      "total": 2448
+    }
+  ],
+  "over_response_count": 64,
+  "under_response_count": 0,
+  "over_response_rate": 0.0261,
+  "under_response_rate": 0.0
+}

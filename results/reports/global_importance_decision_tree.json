@@ -1,0 +1,130 @@
+{
+  "model": "decision_tree",
+  "features": [
+    {
+      "rank": 1,
+      "feature": "Flgs",
+      "mean_abs_shap": 0.17624
+    },
+    {
+      "rank": 2,
+      "feature": "DIntPkt",
+      "mean_abs_shap": 0.153439
+    },
+    {
+      "rank": 3,
+      "feature": "SrcLoad",
+      "mean_abs_shap": 0.019869
+    },
+    {
+      "rank": 4,
+      "feature": "pDstLoss",
+      "mean_abs_shap": 0.000416
+    },
+    {
+      "rank": 5,
+      "feature": "Sport",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 6,
+      "feature": "SrcBytes",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 7,
+      "feature": "DstBytes",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 8,
+      "feature": "DstLoad",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 9,
+      "feature": "SIntPkt",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 10,
+      "feature": "SIntPktAct",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 11,
+      "feature": "sMaxPktSz",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 12,
+      "feature": "dMaxPktSz",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 13,
+      "feature": "sMinPktSz",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 14,
+      "feature": "Dur",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 15,
+      "feature": "TotBytes",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 16,
+      "feature": "Load",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 17,
+      "feature": "pSrcLoss",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 18,
+      "feature": "Temp",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 19,
+      "feature": "SpO2",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 20,
+      "feature": "Pulse_Rate",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 21,
+      "feature": "SYS",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 22,
+      "feature": "DIA",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 23,
+      "feature": "Heart_rate",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 24,
+      "feature": "Resp_Rate",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "rank": 25,
+      "feature": "ST",
+      "mean_abs_shap": 0.0
+    }
+  ]
+}

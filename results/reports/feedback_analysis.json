@@ -1,0 +1,28 @@
+{
+  "total_evaluated": 1513,
+  "true_positives": 293,
+  "false_positives": 64,
+  "false_negatives": 14,
+  "fpr": 0.0423,
+  "fnr": 0.0093,
+  "mean_fp_risk_score": 0.5608,
+  "mean_tp_risk_score": 0.7328,
+  "current_thresholds": {
+    "CRITICAL": 0.8,
+    "HIGH": 0.6,
+    "MEDIUM": 0.4
+  },
+  "suggested_threshold_change": {
+    "CRITICAL": 0.8,
+    "HIGH": 0.6,
+    "MEDIUM": 0.4
+  },
+  "adjustments": [
+    {
+      "metric": "calibrated",
+      "current_value": null,
+      "target": null,
+      "direction": "none"
+    }
+  ]
+}

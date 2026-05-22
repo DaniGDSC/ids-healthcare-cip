@@ -2,9 +2,9 @@
 """Module 3 — Composite Risk Scores (RQ2/RO2).
 
 Combines dual-track detection into a fused confidence score, then merges
-with device criticality, data sensitivity, and patient acuity:
+with device criticality, data sensitivity, and clinical tier:
 
-    R = w1·C_detect + w2·D_crit + w3·S_data + w4·A_patient
+    R = 0.40·C_detect + 0.25·D_crit + 0.15·S_data + 0.20·D_clinical_tier
 
 where C_detect uses cascaded Track A → Track B fusion: the DAE receives
 [raw_features || Track_A_probabilities] as input, making spoofing attacks
@@ -32,7 +32,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Patch
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -44,7 +43,7 @@ CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 # ── Configuration ──────────────────────────────────────────────────────
 
-# Composite formula: R = w1·C_detect + w2·D_crit + w3·S_data + w4·A_patient
+# Composite formula: R = w1·C_detect + w2·D_crit + w3·S_data + w4·D_clinical_tier
 WEIGHTS = {"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}
 
 # Risk level thresholds — 3 boundaries, 4 tiers
@@ -60,7 +59,7 @@ SIGMA_THRESHOLD = 1.5
 # ── Pre-computed feature indices (Opt-6) ───────────────────────────────
 # WUSTL-EHMS-2020 feature order is stable across pipeline runs.
 # Pre-computing indices once at module load avoids O(n_feat × n_bio)
-# list.index() scans inside compute_s_data() and compute_a_patient().
+# list.index() scans inside compute_s_data() and compute_d_clinical_tier().
 # These are populated lazily on first call to _get_bio_idx().
 
 _BIO_IDX_CACHE: np.ndarray | None = None
@@ -152,7 +151,7 @@ RESPONSE_MAPPING = {
 def load_test_data() -> tuple:
     """Load test parquet → X_test, y_test, attack_cats, feat_names."""
     df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
-    drop_cols = ["Label", "Attack Category"]
+    drop_cols = ["Label", "Attack Category", "row_id", "device_class"]
     feat_names = [c for c in df.columns if c not in drop_cols]
     X_test = df[feat_names].values.astype(np.float32)
     y_test = df["Label"].values
@@ -170,92 +169,11 @@ def load_xgboost_proba() -> tuple:
 
 # ── Component computation ──────────────────────────────────────────────
 
-def compute_c_detect(
-    c_track_a: np.ndarray,
-    X_test: np.ndarray,
-) -> tuple:
-    """Fused detection confidence: cascaded Track A → Track B.
-
-    The DAE (Track B) receives ``[raw_features || Track_A_probas]`` so it
-    learns what "normal" looks like in the joint feature-prediction space.
-    Spoofing attacks that are invisible to reconstruction error on raw
-    features alone become detectable because Track A's elevated
-    probabilities are far outside the DAE's benign training distribution.
-
-    Fusion: ``C_detect = max(Track_A, Track_B)`` — the DAE can elevate
-    but never suppress Track A.
-
-    Optimisations applied (Opt-1, Opt-7, Opt-8, Opt-11):
-      - Model registry: Track A + DAE loaded once per process (Opt-1)
-      - Parallel Track A inference via joblib threading backend (Opt-7)
-      - Pre-allocated augmented matrix — avoids np.column_stack copy (Opt-11)
-    """
-    from common.model_registry import get_dae, get_track_a_classifiers
-
-    # Opt-1 + Opt-7: classifiers from registry, parallel inference
-    track_a_probas = _load_track_a_probas_for_dae(X_test)
-
-    # Opt-11: pre-allocate augmented buffer — single contiguous allocation,
-    # no column_stack copy.
-    n, n_raw = X_test.shape
-    X_augmented = np.empty((n, n_raw + 3), dtype=np.float32)
-    X_augmented[:, :n_raw] = X_test
-    X_augmented[:, n_raw:] = track_a_probas
-
-    # Opt-1: DAE from registry — already loaded, no disk I/O
-    det = get_dae()
-    c_track_b = det.predict_proba(X_augmented)
-
-    # Fusion: DAE elevates, never suppresses
-    c_detect = np.maximum(c_track_a, c_track_b)
-    return np.clip(c_detect, 0.0, 1.0), c_track_b
-
-
-def _sanitise_features(X: np.ndarray) -> np.ndarray:
-    """Replace NaN/Inf with zeros to prevent model crashes (OOD-05 fix).
-
-    GradientBoostingClassifier raises ValueError on NaN input.
-    This guard ensures a malformed flow record degrades gracefully
-    (produces a zero-feature sample that the DAE will flag as anomalous)
-    rather than crashing the entire pipeline.
-    """
-    # M3-7: single np.isfinite pass — avoids separate isnan + isinf scans.
-    finite_mask = np.isfinite(X)
-    if not finite_mask.all():
-        logger.warning("NaN/Inf detected in features — replacing with zeros")
-        X = np.where(finite_mask, X, 0.0)
-    return X
-
-
-def _run_single_track_a(
-    name: str,
-    clf,
-    X_clean: np.ndarray,
-) -> np.ndarray:
-    """Predict P(attack) for one Track A model — designed for joblib dispatch."""
-    return clf.predict_proba(X_clean)[:, 1]
-
-
-def _load_track_a_probas_for_dae(X_test: np.ndarray) -> np.ndarray:
-    """Compute Track A model probabilities for DAE cascaded input.
-
-    Optimisations (Opt-1, Opt-7):
-      - Models loaded from registry (one disk read per process, cached).
-      - All three classifiers run in parallel using joblib threading backend.
-        sklearn/XGBoost/DT all release the GIL during predict_proba, so
-        threading avoids pickling overhead while still achieving true
-        parallelism.  Wall time ≈ max(T_xgb, T_rf, T_dt) instead of sum.
-    """
-    from common.model_registry import get_track_a_classifiers
-
-    X_clean = _sanitise_features(X_test)
-    classifiers = get_track_a_classifiers()
-
-    probas = joblib.Parallel(n_jobs=3, backend="threading")(
-        joblib.delayed(_run_single_track_a)(name, clf, X_clean)
-        for name, clf in classifiers.items()
-    )
-    return np.column_stack(probas)
+# C_detect (cascaded Track A → Track B fusion) is produced by
+# detection_engine.DetectionEngine — Module 3 just consumes c_detect,
+# c_track_a, and c_track_b from the engine result. The augmented-input
+# construction lives in one place there; this module focuses on risk
+# composition (D_crit + S_data + D_clinical_tier + composite R).
 
 
 def compute_d_crit(attack_cats: np.ndarray) -> np.ndarray:
@@ -301,7 +219,7 @@ def compute_s_data(X_test: np.ndarray, feat_names: list) -> np.ndarray:
     return np.clip(s_data, 0.0, 1.0)
 
 
-def compute_a_patient(X_test: np.ndarray, feat_names: list) -> np.ndarray:
+def compute_d_clinical_tier(X_test: np.ndarray, feat_names: list) -> np.ndarray:
     """Patient acuity: fraction of biometric features exceeding 1.5 sigma.
 
     Optimisation (Opt-6): uses _get_bio_idx() for cached feature index lookup.
@@ -316,15 +234,15 @@ def compute_composite_risk(
     c_detect: np.ndarray,
     d_crit: np.ndarray,
     s_data: np.ndarray,
-    a_patient: np.ndarray,
+    d_clinical_tier: np.ndarray,
     weights: dict | None = None,
 ) -> np.ndarray:
-    """R = w1·C_detect + w2·D_crit + w3·S_data + w4·A_patient."""
+    """R = w1·C_detect + w2·D_crit + w3·S_data + w4·D_clinical_tier."""
     w = weights or WEIGHTS
     R = (w["w1"] * c_detect +
          w["w2"] * d_crit +
          w["w3"] * s_data +
-         w["w4"] * a_patient)
+         w["w4"] * d_clinical_tier)
     return np.clip(R, 0.0, 1.0)
 
 
@@ -394,7 +312,7 @@ def apply_weight_feedback(
     c_detect: np.ndarray,
     d_crit: np.ndarray,
     s_data: np.ndarray,
-    a_patient: np.ndarray,
+    d_clinical_tier: np.ndarray,
     max_delta: float = 0.05,
 ) -> dict:
     """Adjust Module 3 weights using AUROC as the optimization target.
@@ -411,7 +329,7 @@ def apply_weight_feedback(
     from sklearn.metrics import roc_auc_score
 
     components = {
-        "w1": c_detect, "w2": d_crit, "w3": s_data, "w4": a_patient,
+        "w1": c_detect, "w2": d_crit, "w3": s_data, "w4": d_clinical_tier,
     }
     w = dict(current_weights)
 
@@ -437,7 +355,7 @@ def apply_weight_feedback(
     # Each weight is swept over 11 steps; trial R vectors are stacked into a
     # (11, N) matrix and computed in one broadcast instead of 11 serial calls.
     steps = np.linspace(-max_delta, max_delta, 11)
-    comp_arrays = np.array([c_detect, d_crit, s_data, a_patient])  # (4, N)
+    comp_arrays = np.array([c_detect, d_crit, s_data, d_clinical_tier])  # (4, N)
     wkeys = ["w1", "w2", "w3", "w4"]
 
     for wi, wk in enumerate(wkeys):
@@ -540,14 +458,14 @@ def component_contribution_analysis(
     c_detect: np.ndarray,
     d_crit: np.ndarray,
     s_data: np.ndarray,
-    a_patient: np.ndarray,
+    d_clinical_tier: np.ndarray,
     levels: np.ndarray,
 ) -> dict:
     """Analyze which component dominates per risk level."""
-    comp_names = ["C_detect", "D_crit", "S_data", "A_patient"]
+    comp_names = ["C_detect", "D_crit", "S_data", "D_clinical_tier"]
     w = [WEIGHTS["w1"], WEIGHTS["w2"], WEIGHTS["w3"], WEIGHTS["w4"]]
     weighted = np.column_stack([
-        w[0] * c_detect, w[1] * d_crit, w[2] * s_data, w[3] * a_patient,
+        w[0] * c_detect, w[1] * d_crit, w[2] * s_data, w[3] * d_clinical_tier,
     ])
 
     # Dominant component per sample
@@ -618,7 +536,7 @@ def plot_risk_distribution(R: np.ndarray, levels: np.ndarray) -> None:
 
 def plot_component_breakdown(contributions: dict) -> None:
     """Stacked bar of mean weighted contributions per risk level."""
-    comp_names = ["C_detect", "D_crit", "S_data", "A_patient"]
+    comp_names = ["C_detect", "D_crit", "S_data", "D_clinical_tier"]
     colors = ["#C44E52", "#3274A1", "#55A868", "#CCB974"]
     level_order = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
@@ -810,7 +728,7 @@ def export_config_jsons() -> None:
 
     # 3.8 Risk scoring config
     risk_cfg = {
-        "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
+        "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
         "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
         "weights": WEIGHTS,
         "thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
@@ -835,7 +753,7 @@ def weight_sensitivity_analysis(
     c_detect: np.ndarray,
     d_crit: np.ndarray,
     s_data: np.ndarray,
-    a_patient: np.ndarray,
+    d_clinical_tier: np.ndarray,
     y_true: np.ndarray,
 ) -> dict:
     """Grid search over weight space; evaluate AUROC of R as binary classifier.
@@ -870,7 +788,7 @@ def weight_sensitivity_analysis(
     C = c_detect[np.newaxis, :]   # (1, n_samples)
     D = d_crit[np.newaxis, :]
     S = s_data[np.newaxis, :]
-    A = a_patient[np.newaxis, :]
+    A = d_clinical_tier[np.newaxis, :]
 
     R_all = (
         w1_v[:, np.newaxis] * C +
@@ -905,7 +823,7 @@ def weight_sensitivity_analysis(
 
     # Per-component sensitivity: fix others, vary one
     per_component = {}
-    comp_labels = ["C_detect", "D_crit", "S_data", "A_patient"]
+    comp_labels = ["C_detect", "D_crit", "S_data", "D_clinical_tier"]
     weight_keys = ["w1", "w2", "w3", "w4"]
     sweep = np.arange(0.05, 0.65, 0.05)
 
@@ -916,7 +834,7 @@ def weight_sensitivity_analysis(
             w[wk] = round(float(val), 2)
             total = sum(w.values())
             w = {k: round(v / total, 4) for k, v in w.items()}
-            R_var = compute_composite_risk(c_detect, d_crit, s_data, a_patient, w)
+            R_var = compute_composite_risk(c_detect, d_crit, s_data, d_clinical_tier, w)
             auroc = roc_auc_score(y_true, R_var)
             curve.append({"weight": round(float(val), 2), "auroc": round(auroc, 4)})
         per_component[label] = curve
@@ -960,7 +878,7 @@ def generate_worked_examples(
     c_detect: np.ndarray,
     d_crit: np.ndarray,
     s_data: np.ndarray,
-    a_patient: np.ndarray,
+    d_clinical_tier: np.ndarray,
     c_track_a: np.ndarray,
     c_track_b: np.ndarray,
     levels: np.ndarray,
@@ -976,7 +894,7 @@ def generate_worked_examples(
         idx = int(np.where(attack_mask)[0][np.argmax(R[attack_mask])])
         examples.append(_build_example(
             "Highest-risk true attack", idx,
-            R, c_detect, d_crit, s_data, a_patient,
+            R, c_detect, d_crit, s_data, d_clinical_tier,
             c_track_a, c_track_b, levels, y_true, attack_cats,
         ))
 
@@ -985,7 +903,7 @@ def generate_worked_examples(
         idx = int(np.where(attack_mask)[0][np.argmin(R[attack_mask])])
         examples.append(_build_example(
             "Lowest-risk true attack (potential under-triage)", idx,
-            R, c_detect, d_crit, s_data, a_patient,
+            R, c_detect, d_crit, s_data, d_clinical_tier,
             c_track_a, c_track_b, levels, y_true, attack_cats,
         ))
 
@@ -995,7 +913,7 @@ def generate_worked_examples(
         idx = int(np.where(benign_mask)[0][np.argmax(R[benign_mask])])
         examples.append(_build_example(
             "Highest-risk benign sample (false alarm analysis)", idx,
-            R, c_detect, d_crit, s_data, a_patient,
+            R, c_detect, d_crit, s_data, d_clinical_tier,
             c_track_a, c_track_b, levels, y_true, attack_cats,
         ))
 
@@ -1004,7 +922,7 @@ def generate_worked_examples(
 
 def _build_example(
     title: str, idx: int,
-    R, c_detect, d_crit, s_data, a_patient,
+    R, c_detect, d_crit, s_data, d_clinical_tier,
     c_track_a, c_track_b, levels, y_true, attack_cats,
 ) -> dict:
     """Build a single worked example with full numerical trace."""
@@ -1020,13 +938,13 @@ def _build_example(
             "C_detect (fused)": round(float(c_detect[idx]), 6),
             "D_crit": round(float(d_crit[idx]), 6),
             "S_data": round(float(s_data[idx]), 6),
-            "A_patient": round(float(a_patient[idx]), 6),
+            "D_clinical_tier": round(float(d_clinical_tier[idx]), 6),
         },
         "weighted_contributions": {
             f"w1({w['w1']})×C_detect": round(float(w["w1"] * c_detect[idx]), 6),
             f"w2({w['w2']})×D_crit": round(float(w["w2"] * d_crit[idx]), 6),
             f"w3({w['w3']})×S_data": round(float(w["w3"] * s_data[idx]), 6),
-            f"w4({w['w4']})×A_patient": round(float(w["w4"] * a_patient[idx]), 6),
+            f"w4({w['w4']})×D_clinical_tier": round(float(w["w4"] * d_clinical_tier[idx]), 6),
         },
         "R": round(float(R[idx]), 6),
         "risk_level": str(levels[idx]),
@@ -1041,7 +959,7 @@ def save_outputs(
     c_detect: np.ndarray,
     d_crit: np.ndarray,
     s_data: np.ndarray,
-    a_patient: np.ndarray,
+    d_clinical_tier: np.ndarray,
     c_track_a: np.ndarray,
     c_track_b: np.ndarray,
     levels: np.ndarray,
@@ -1057,7 +975,7 @@ def save_outputs(
     np.savez(
         OUTPUT_DIR / "risk_scores.npz",
         R=R, c_detect=c_detect, d_crit=d_crit,
-        s_data=s_data, a_patient=a_patient,
+        s_data=s_data, d_clinical_tier=d_clinical_tier,
         c_track_a=c_track_a, c_track_b=c_track_b,
         risk_levels=levels, y_true=y_true,
     )
@@ -1068,7 +986,7 @@ def save_outputs(
         "R": R, "risk_level": levels, "y_true": y_true,
         "attack_category": attack_cats,
         "c_detect": c_detect, "c_track_a": c_track_a, "c_track_b": c_track_b,
-        "d_crit": d_crit, "s_data": s_data, "a_patient": a_patient,
+        "d_crit": d_crit, "s_data": s_data, "d_clinical_tier": d_clinical_tier,
     })
     df.to_csv(OUTPUT_DIR / "risk_scores_detail.csv", index_label="sample_index")
     logger.info("  Saved: risk_scores_detail.csv")
@@ -1084,7 +1002,7 @@ def save_outputs(
         }
 
     report = {
-        "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
+        "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
         "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
         "weights": WEIGHTS,
         "risk_thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
@@ -1157,10 +1075,14 @@ def main() -> None:
     # ── Compute components ──
     logger.info("Computing risk components...")
 
-    c_track_a, xgb_threshold = load_xgboost_proba()
+    _, xgb_threshold = load_xgboost_proba()
     logger.info("  Track A: XGBoost proba, threshold=%.3f", xgb_threshold)
 
-    c_detect, c_track_b = compute_c_detect(c_track_a, X_test)
+    from detection_engine import DetectionEngine
+    det_result = DetectionEngine().predict(X_test)
+    c_track_a = det_result.c_track_a
+    c_track_b = det_result.c_track_b
+    c_detect = det_result.c_detect
     logger.info("  C_detect (cascaded fusion): range [%.4f, %.4f]",
                 c_detect.min(), c_detect.max())
 
@@ -1171,12 +1093,12 @@ def main() -> None:
     s_data = compute_s_data(X_test, feat_names)
     logger.info("  S_data: range [%.4f, %.4f]", s_data.min(), s_data.max())
 
-    a_patient = compute_a_patient(X_test, feat_names)
-    logger.info("  A_patient: %.1f%% samples have abnormal biometrics",
-                (a_patient > 0).mean() * 100)
+    d_clinical_tier = compute_d_clinical_tier(X_test, feat_names)
+    logger.info("  D_clinical_tier: %.1f%% samples have abnormal biometrics",
+                (d_clinical_tier > 0).mean() * 100)
 
     # ── Composite risk ──
-    R = compute_composite_risk(c_detect, d_crit, s_data, a_patient)
+    R = compute_composite_risk(c_detect, d_crit, s_data, d_clinical_tier)
     levels = assign_risk_levels(R)
     logger.info("")
     logger.info("Composite risk R: mean=%.4f, median=%.4f, std=%.4f",
@@ -1201,17 +1123,17 @@ def main() -> None:
                     qdata.get("attack_categories", ""))
 
     # ── Component contribution ──
-    contributions = component_contribution_analysis(c_detect, d_crit, s_data, a_patient, levels)
+    contributions = component_contribution_analysis(c_detect, d_crit, s_data, d_clinical_tier, levels)
 
     # ── Sensitivity analysis ──
     logger.info("")
-    sensitivity = weight_sensitivity_analysis(c_detect, d_crit, s_data, a_patient, y_test)
+    sensitivity = weight_sensitivity_analysis(c_detect, d_crit, s_data, d_clinical_tier, y_test)
 
     # ── Worked examples ──
     logger.info("")
     logger.info("Generating worked examples...")
     worked_examples = generate_worked_examples(
-        R, c_detect, d_crit, s_data, a_patient,
+        R, c_detect, d_crit, s_data, d_clinical_tier,
         c_track_a, c_track_b, levels, y_test, attack_cats,
     )
     for ex in worked_examples:
@@ -1221,7 +1143,7 @@ def main() -> None:
     # ── Save ──
     logger.info("")
     logger.info("Saving outputs...")
-    save_outputs(R, c_detect, d_crit, s_data, a_patient, c_track_a, c_track_b,
+    save_outputs(R, c_detect, d_crit, s_data, d_clinical_tier, c_track_a, c_track_b,
                  levels, y_test, attack_cats, fusion, contributions,
                  sensitivity, worked_examples)
 
@@ -1244,7 +1166,7 @@ def main() -> None:
     logger.info(sep)
     logger.info("RISK SCORING COMPLETE — %.1fs", elapsed)
     logger.info(sep)
-    logger.info("  Formula   : R = %.2f·C_detect + %.2f·D_crit + %.2f·S_data + %.2f·A_patient",
+    logger.info("  Formula   : R = %.2f·C_detect + %.2f·D_crit + %.2f·S_data + %.2f·D_clinical_tier",
                 WEIGHTS["w1"], WEIGHTS["w2"], WEIGHTS["w3"], WEIGHTS["w4"])
     logger.info("  Fusion    : C_detect = cascaded(Track_A → Track_B)")
     logger.info("  Output    : %s", OUTPUT_DIR)

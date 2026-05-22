@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDS-Healthcare-CIP — Data Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0F12;
+    --surface-1: #16181D;
+    --surface-2: #1D2026;
+    --surface-3: #24272F;
+    --border-subtle: #1F2229;
+    --border: #262A33;
+    --border-strong: #353944;
+    --text-primary: #E8E9EB;
+    --text-secondary: #9CA0AB;
+    --text-tertiary: #6A6F7B;
+    --text-quaternary: #4A4F5A;
+    --tier-low: #5B8FB9;
+    --tier-medium: #D4A445;
+    --tier-high: #E07A5F;
+    --tier-critical: #C53030;
+    --accent: #7BA7BC;
+    --accent-bg: rgba(123, 167, 188, 0.12);
+    --success: #5F9E7B;
+    --success-bg: rgba(95, 158, 123, 0.10);
+    --frozen-bg: rgba(91, 143, 185, 0.10);
+  }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .font-display { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--text-primary); }
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Header */
+  header.page-head {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  header.page-head h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 3rem;
+    margin: 0 0 8px;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  header.page-head .sub {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 760px;
+  }
+  header.page-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 12px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header.page-head .meta span::before { content: "· "; color: var(--text-quaternary); }
+  header.page-head .meta span:first-child::before { content: ""; }
+
+  /* Section */
+  section { margin-top: 48px; }
+  section > h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.875rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  section > .section-intro {
+    color: var(--text-secondary);
+    margin: 0 0 24px;
+    max-width: 760px;
+  }
+
+  /* Stage cards (vertical flow) */
+  .stages {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .stage {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 20px 24px 18px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .stage .stage-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .stage .stage-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stage .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-quaternary);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .stage .title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+  .stage .source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    margin-top: 4px;
+    word-break: break-all;
+  }
+  .stage .vol {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .stage .vol .vol-key { color: var(--text-tertiary); }
+  .stage .vol .vol-val { color: var(--text-primary); }
+
+  .stage .transforms,
+  .stage .schema-delta {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 12px 14px 10px;
+  }
+  .stage .panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .stage .transforms ol {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+  .stage .transforms li {
+    line-height: 1.55;
+    margin-bottom: 4px;
+  }
+  .stage .transforms li:last-child { margin-bottom: 0; }
+  .stage .transforms li code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-primary);
+    background: transparent;
+    padding: 0;
+  }
+  .schema-delta .delta-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+  .schema-delta .delta-row:last-child { margin-bottom: 0; }
+  .schema-delta .delta-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    width: 60px;
+    padding-top: 2px;
+  }
+  .schema-delta .delta-tag.drop { color: var(--tier-high); }
+  .schema-delta .delta-tag.add  { color: var(--success); }
+  .schema-delta .delta-tag.keep { color: var(--text-tertiary); }
+  .schema-delta .delta-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-secondary);
+    word-break: break-word;
+  }
+
+  /* Stage tier-coloring */
+  .stage.s0 { border-left: 2px solid #6A6F7B; }
+  .stage.s1 { border-left: 2px solid var(--tier-low); }
+  .stage.s2 { border-left: 2px solid var(--tier-medium); }
+  .stage.s3 { border-left: 2px solid var(--tier-high); }
+  .stage.s4 { border-left: 2px solid var(--accent); }
+  .stage.s5 { border-left: 2px solid var(--tier-critical); }
+  .stage.s6 { border-left: 2px solid var(--success); }
+
+  /* Vertical connector */
+  .connector {
+    height: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+  .connector .line {
+    width: 1px;
+    background: var(--border-strong);
+    height: 100%;
+  }
+  .connector .arrow {
+    position: absolute;
+    top: 100%;
+    margin-top: -8px;
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid var(--accent);
+  }
+  .connector .label {
+    position: absolute;
+    background: var(--bg);
+    padding: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  /* Tables (lineage, artifacts) */
+  table.df {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 12.5px;
+  }
+  table.df th, table.df td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+  }
+  table.df th {
+    background: var(--surface-2);
+    color: var(--text-tertiary);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  table.df tr:last-child td { border-bottom: none; }
+  table.df td code, table.df td .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--accent);
+    background: transparent;
+    padding: 0;
+  }
+  table.df td.dim { color: var(--text-tertiary); }
+  table.df td.drop { color: var(--tier-high); }
+  table.df td.add { color: var(--success); }
+
+  /* Split diagram */
+  .split-diagram {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 24px 28px 24px;
+  }
+  .split-bar {
+    display: grid;
+    grid-template-columns: 60fr 15fr 15fr 10fr;
+    gap: 4px;
+    height: 60px;
+    margin: 12px 0 24px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .split-bar > div {
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+  }
+  .split-bar > div .seg-name {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .split-bar > div .seg-meta {
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+  .split-bar .seg-train { background: rgba(91, 143, 185, 0.20); border-left: 2px solid var(--tier-low); }
+  .split-bar .seg-val   { background: rgba(212, 164, 69, 0.20); border-left: 2px solid var(--tier-medium); }
+  .split-bar .seg-test  { background: rgba(95, 158, 123, 0.18); border-left: 2px solid var(--success); }
+  .split-bar .seg-demo  { background: rgba(123, 167, 188, 0.18); border-left: 2px solid var(--accent); }
+  .split-bar .frozen-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--success);
+    margin-top: 2px;
+    letter-spacing: 0.06em;
+  }
+
+  .split-routing {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .route-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .route-card .rname {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .route-card.train .rname { color: var(--tier-low); }
+  .route-card.val .rname { color: var(--tier-medium); }
+  .route-card.test .rname { color: var(--success); }
+  .route-card.demo .rname { color: var(--accent); }
+
+  /* Risk formula card */
+  .risk-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 24px 28px;
+  }
+  .risk-formula {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem;
+    text-align: center;
+    margin: 20px 0;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .risk-formula .w {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .risk-formula sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+  }
+  .risk-comp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .risk-comp {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 12px;
+  }
+  .risk-comp .cname {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 2px;
+  }
+  .risk-comp .cweight {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin: 4px 0;
+  }
+  .risk-comp .cdesc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+  .tier-bar {
+    margin-top: 18px;
+    height: 18px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    position: relative;
+    border: 1px solid var(--border-subtle);
+  }
+  .tier-bar .tier-marker {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 1px;
+    background: var(--border-strong);
+  }
+  .tier-bar .tier-label {
+    position: absolute;
+    top: 22px;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+  .tier-bar .tier-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+
+  /* Schema lineage table */
+  table.lineage th {
+    text-align: center;
+    font-size: 10.5px;
+  }
+  table.lineage th.stage-h {
+    border-left: 1px solid var(--border-subtle);
+  }
+  table.lineage td.cell {
+    text-align: center;
+    font-size: 16px;
+    width: 100px;
+    border-left: 1px solid var(--border-subtle);
+    color: var(--text-tertiary);
+  }
+  table.lineage td.cell.in { color: var(--success); }
+  table.lineage td.cell.out { color: var(--tier-high); }
+  table.lineage td.cell.added { color: var(--accent); }
+  table.lineage td.feat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-primary);
+  }
+  table.lineage td.note {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Invariants section */
+  .inv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .inv-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .inv-card .inv-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .inv-card .inv-where {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+  }
+  .inv-card .inv-body {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .inv-card .inv-body code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+    background: transparent;
+  }
+  .inv-card.frozen { border-left-color: var(--success); }
+  .inv-card.security { border-left-color: var(--tier-critical); }
+
+  /* Footnote */
+  .footnote {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    line-height: 1.6;
+  }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .stage .stage-row { grid-template-columns: 1fr; }
+    .split-routing { grid-template-columns: 1fr 1fr; }
+    .risk-comp-grid { grid-template-columns: 1fr 1fr; }
+    .inv-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="page-head">
+    <h1>Data Workflow</h1>
+    <p class="sub">
+      End-to-end data lifecycle &mdash; from raw IoMT packet captures
+      through preprocessing, four-way splitting, model training,
+      composite risk scoring, explanation, response generation, and
+      operator presentation. Every stage records its volume change,
+      schema delta, and the invariants that protect downstream model
+      integrity.
+    </p>
+    <div class="meta">
+      <span>raw rows&nbsp;<code>16,318</code></span>
+      <span>split&nbsp;<code>60 : 15 : 15 : 10</code></span>
+      <span>stratify&nbsp;<code>Attack Category</code></span>
+      <span>seed&nbsp;<code>42</code></span>
+      <span>frozen&nbsp;<code>test &amp; demo</code></span>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       STAGE-BY-STAGE LIFECYCLE
+       ============================================================ -->
+  <section>
+    <h2>Stage-by-stage lifecycle</h2>
+    <p class="section-intro">
+      Seven stages, top-down. Each card shows the data state at that
+      stage (volume + schema + provenance), the transforms applied, and
+      the schema delta vs the previous stage.
+    </p>
+
+    <div class="stages">
+
+      <!-- ───────────────────────── Stage 0 ───────────────────────── -->
+      <div class="stage s0">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 0 · INGEST</div>
+            <div class="title">Raw IoMT capture</div>
+            <div class="source">data/raw/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv</div>
+            <div class="vol">
+              <span class="vol-key">rows</span> <span class="vol-val">16,318</span><br>
+              <span class="vol-key">cols</span> <span class="vol-val">45</span> (35 net + 8 bio + Label + Attack Category)<br>
+              <span class="vol-key">attack rate</span> <span class="vol-val">12.55%</span> (2,049 attack / 14,269 normal)<br>
+              <span class="vol-key">categories</span> <span class="vol-val">Spoofing</span>, <span class="vol-val">Data Alteration</span>, <span class="vol-val">normal</span>
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Transforms (none — raw)</div>
+            <ol>
+              <li>WUSTL-EHMS-2020 testbed: real packet captures from medical IoT devices (infusion pumps, patient monitors, vital signs hubs) with 8 biometric streams interleaved with 35 network-flow features.</li>
+              <li>Loaded by <code>module0_analysis</code> via <code>DataLoader.load()</code> with integrity check against signed SHA-256 baseline (<code>dataset_integrity.json</code>).</li>
+              <li>Refuses to read without a baseline; refuses to read on hash mismatch — no auto-bootstrap footgun.</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">Schema · 45 columns</div>
+            <div class="delta-row"><span class="delta-tag keep">net 35</span><span class="delta-val">Dir, Flgs, SrcAddr, DstAddr, Sport, Dport, SrcBytes, DstBytes, SrcLoad, DstLoad, SrcGap, DstGap, SIntPkt, DIntPkt, SIntPktAct, DIntPktAct, SrcJitter, DstJitter, sMaxPktSz, dMaxPktSz, sMinPktSz, dMinPktSz, Dur, Trans, TotPkts, TotBytes, Load, Loss, pLoss, pSrcLoss, pDstLoss, Rate, SrcMac, DstMac, Packet_num</span></div>
+            <div class="delta-row"><span class="delta-tag keep">bio 8</span><span class="delta-val">Temp, SpO2, Pulse_Rate, SYS, DIA, Heart_rate, Resp_Rate, ST</span></div>
+            <div class="delta-row"><span class="delta-tag keep">labels</span><span class="delta-val">Attack Category, Label</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span class="line"></span><span class="label">Module 0 EDA · Module 1 ingest</span></div>
+
+      <!-- ───────────────────────── Stage 1 ───────────────────────── -->
+      <div class="stage s1">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 1 · CLEAN &amp; FILTER</div>
+            <div class="title">Pre-split transforms</div>
+            <div class="source">module1_preprocessing/phase1/pipeline.py (Steps 1–4)</div>
+            <div class="vol">
+              <span class="vol-key">rows</span> <span class="vol-val">16,318</span> (unchanged — column-only)<br>
+              <span class="vol-key">cols</span> <span class="vol-val">25 features</span> + Label + Attack Category<br>
+              <span class="vol-key">scaling</span> <span class="vol-val">not yet</span> (fit-on-train deferred)<br>
+              <span class="vol-key">dtype</span> <span class="vol-val">float32</span> for all features
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Transforms (Steps 1–4, before leakage barrier)</div>
+            <ol>
+              <li><strong>HIPAA sanitization</strong> — drop identifier columns flagged in <code>identifier_removal.remove_columns</code> (MAC/IP addresses, Packet_num sequential index).</li>
+              <li><strong>Categorical encoding</strong> — Dir/Flgs label-encoded alphabetically (NOT pandas LabelEncoder; deterministic). Sport string→numeric with <code>-99999</code> sentinel.</li>
+              <li><strong>Missing-value handling</strong> — biometric: ffill (refused without <code>session_column</code>, prevents cross-patient leakage); network: fill_zero with WARN (attacker-induced capture-loss is a known primitive).</li>
+              <li><strong>Variance filter</strong> — drops zero-variance + near-unary columns.</li>
+              <li><strong>Redundancy removal</strong> — reads <code>high_correlations.csv</code> from Module 0; drops feature_b of every pair with |r| &ge; 0.95. Refuses to drop Label or Attack Category even if listed.</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">Schema delta · -18 net cols / -2 bio cols → +2 added</div>
+            <div class="delta-row"><span class="delta-tag drop">−hipaa</span><span class="delta-val">SrcAddr, DstAddr, SrcMac, DstMac, Packet_num</span></div>
+            <div class="delta-row"><span class="delta-tag drop">−leakage</span><span class="delta-val">Dir, Dport</span></div>
+            <div class="delta-row"><span class="delta-tag drop">−variance</span><span class="delta-val">Trans</span></div>
+            <div class="delta-row"><span class="delta-tag drop">−redundant</span><span class="delta-val">DIntPktAct, SrcGap, DstGap, DstJitter, SrcJitter, Rate, Loss, pLoss, TotPkts, dMinPktSz</span></div>
+            <div class="delta-row"><span class="delta-tag add">+meta</span><span class="delta-val">row_id (sequential), device_class (derived from Attack Category)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span class="line"></span><span class="label">LEAKAGE BARRIER — pipeline.py:79</span></div>
+
+      <!-- ───────────────────────── Stage 2 ───────────────────────── -->
+      <div class="stage s1">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 2 · 4-WAY STRATIFIED SPLIT</div>
+            <div class="title">Train / Val / Test / Demo</div>
+            <div class="source">module1_preprocessing/phase1/splitter.py · DataSplitter</div>
+            <div class="vol">
+              <span class="vol-key">strategy</span> <span class="vol-val">Strategy 1 — Frozen Test + Demo Pool</span><br>
+              <span class="vol-key">stratify</span> <span class="vol-val">Attack Category</span> (multi-class, NOT binary Label)<br>
+              <span class="vol-key">seed</span> <span class="vol-val">random_state = 42</span><br>
+              <span class="vol-key">audit</span> <span class="vol-val">split_metadata.yaml</span> + <span class="vol-val">split_artifact_manifest.txt</span>
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Three nested StratifiedShuffleSplit calls</div>
+            <ol>
+              <li><strong>Step 5.a</strong> — full (16,318) → <em>demo (10%)</em> + rest (90%). Stratified on Attack Category.</li>
+              <li><strong>Step 5.b</strong> — rest (14,686) → <em>test (15% of total = 16.67% of rest)</em> + trainval (75% of total).</li>
+              <li><strong>Step 5.c</strong> — trainval (12,238) → <em>val (15% of total = 20% of trainval)</em> + <em>train (60% of total)</em>.</li>
+              <li>All three calls use the same <code>random_state=42</code> for byte-equivalent reproducibility.</li>
+              <li>Locked by <code>tests/test_split_contract.py</code> (16 pytest checks: n, attack_rate, per-category counts).</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">Per-split rows · attack rate · categories</div>
+            <div class="delta-row"><span class="delta-tag keep">train</span><span class="delta-val">9,790 · 12.53% · {Spoofing 673, Data Alteration 554, normal 8,563}</span></div>
+            <div class="delta-row"><span class="delta-tag keep">val</span><span class="delta-val">2,448 · 12.54% · {Spoofing 169, Data Alteration 138, normal 2,141}</span></div>
+            <div class="delta-row"><span class="delta-tag keep">test</span><span class="delta-val">2,448 · 12.54% · {Spoofing 169, Data Alteration 138, normal 2,141} <strong style="color:var(--success);">FROZEN</strong></span></div>
+            <div class="delta-row"><span class="delta-tag keep">demo</span><span class="delta-val">1,632 · 12.56% · {Spoofing 113, Data Alteration 92, normal 1,427} <strong style="color:var(--success);">FROZEN</strong></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span class="line"></span><span class="label">Step 6 · RobustScaler fit-on-train</span></div>
+
+      <!-- ───────────────────────── Stage 3 ───────────────────────── -->
+      <div class="stage s2">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 3 · SCALE &amp; TRACK B</div>
+            <div class="title">Scaled splits + benign subsets</div>
+            <div class="source">module1_preprocessing/phase1/{scaler,exporter}.py</div>
+            <div class="vol">
+              <span class="vol-key">artifact A</span> <span class="vol-val">{train,val,test,demo}_phase1.parquet</span><br>
+              <span class="vol-key">artifact B</span> <span class="vol-val">benign_only_{train,val}.parquet</span> (Track B)<br>
+              <span class="vol-key">scaler</span> <span class="vol-val">models/scalers/robust_scaler.pkl</span><br>
+              <span class="vol-key">audit</span> <span class="vol-val">split_metadata.yaml</span> · <span class="vol-val">split_artifact_manifest.txt</span> · <span class="vol-val">categorical_encoder.json</span>
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Transforms (Step 6 — after the leakage barrier)</div>
+            <ol>
+              <li><strong>Fit RobustScaler on train only</strong> — uses median + IQR; chosen over StandardScaler because Phase 0 EDA flagged heavy-tailed distributions on multiple network features. No test/val/demo data touches the fit.</li>
+              <li><strong>Transform val + test + demo</strong> with the fitted scaler.</li>
+              <li><strong>Track B benign subset</strong> — filter train to <code>Label == 0</code> (8,563 rows) for DAE training. Plus a val-benign (2,141 rows) for threshold tuning.</li>
+              <li>Export all 6 parquets, signed/exported scaler pickle, deterministic encoder mappings as JSON sidecar, and the split-metadata YAML.</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">No schema change · row counts preserved</div>
+            <div class="delta-row"><span class="delta-tag keep">scaled</span><span class="delta-val">25 features · float32 · median/IQR-normalised (Track A input)</span></div>
+            <div class="delta-row"><span class="delta-tag add">+track B</span><span class="delta-val">benign_only_train (8,563 × 25) — DAE input</span></div>
+            <div class="delta-row"><span class="delta-tag add">+track B</span><span class="delta-val">benign_only_val (2,141 × 25) — DAE threshold calibration</span></div>
+            <div class="delta-row"><span class="delta-tag add">+sidecars</span><span class="delta-val">robust_scaler.pkl, categorical_encoder.json, benign_medians.json, selected_features.json</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span class="line"></span><span class="label">Module 2 training</span></div>
+
+      <!-- ───────────────────────── Stage 4 ───────────────────────── -->
+      <div class="stage s3">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 4 · TRAIN MODELS</div>
+            <div class="title">Track A supervised + Track B novelty</div>
+            <div class="source">module2_detection/module2_train_models.py · models/{XGBoost,RandomForest,DecisionTree,DAE}.py</div>
+            <div class="vol">
+              <span class="vol-key">track A</span> <span class="vol-val">3 supervised models</span> trained on train_phase1<br>
+              <span class="vol-key">track B</span> <span class="vol-val">1 DAE</span> trained on benign_only_train<br>
+              <span class="vol-key">hyperparams</span> from <span class="vol-val">module2_detection/tuning/</span> (pre-tuned, not re-tuned here)<br>
+              <span class="vol-key">signing</span> ECDSA-P256 — refuses to load unsigned pickles
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Track A + Track B</div>
+            <ol>
+              <li><strong>Track A · supervised</strong>: XGBoost, RandomForest, DecisionTree. SMOTE applied <em>inside CV pipeline</em>, not during preprocessing (would otherwise leak synthetic samples into val).</li>
+              <li><strong>Track B · novelty</strong>: Denoising Autoencoder trained on benign-only train. Threshold calibrated against benign-only val.</li>
+              <li><strong>Cascaded DAE input</strong>: DAE trained on <code>[raw_25_features || track_a_OOF_probas (3 floats)]</code>. Closes train-inference skew on joint feature-prediction space.</li>
+              <li>All model pickles signed with the Module-5 ECDSA key; <code>common.model_registry.loads_signed</code> refuses tampered or unsigned files.</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">Artifacts</div>
+            <div class="delta-row"><span class="delta-tag add">model</span><span class="delta-val">results/models/xgboost.pkl, random_forest.pkl, decision_tree.pkl</span></div>
+            <div class="delta-row"><span class="delta-tag add">model</span><span class="delta-val">DAE checkpoint (encoder/decoder weights) + threshold</span></div>
+            <div class="delta-row"><span class="delta-tag add">per-model</span><span class="delta-val">Threshold (operating point) calibrated against val (NOT train, NOT test)</span></div>
+            <div class="delta-row"><span class="delta-tag keep">invariant</span><span class="delta-val">No model sees test_phase1 or demo_phase1 at training time</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span class="line"></span><span class="label">Module 3 risk scoring</span></div>
+
+      <!-- ───────────────────────── Stage 5 ───────────────────────── -->
+      <div class="stage s4">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 5 · COMPOSITE RISK</div>
+            <div class="title">Per-alert scoring</div>
+            <div class="source">module3_risk_scoring/module3_risk_scores.py</div>
+            <div class="vol">
+              <span class="vol-key">scope</span> <span class="vol-val">test_phase1.parquet</span> (2,448 alerts)<br>
+              <span class="vol-key">demo</span> <span class="vol-val">demo_phase1.parquet</span> (1,632 alerts, parallel run)<br>
+              <span class="vol-key">formula</span> R = w<sub>1</sub>·C<sub>detect</sub> + w<sub>2</sub>·D<sub>crit</sub> + w<sub>3</sub>·S<sub>data</sub> + w<sub>4</sub>·D<sub>clinical_tier</sub><br>
+              <span class="vol-key">weights</span> <span class="vol-val">0.40 / 0.25 / 0.15 / 0.20</span>
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Composite formula assembly</div>
+            <ol>
+              <li>Per-alert run all 4 models (3 Track A + DAE) on the alert's feature vector — get 4 probabilities/scores.</li>
+              <li><code>C_detect</code> — fused detector signal (consensus across XGBoost/RF/DT/DAE). <code>C_track_a</code> + <code>C_track_b</code> retained as ancillary diagnostics in risk_components.</li>
+              <li><code>D_crit</code> — device criticality from device-tier lookup (default: <code>vital_monitoring</code> for WUSTL-EHMS).</li>
+              <li><code>S_data</code> — data sensitivity (binary biometric exposure / PHI scope).</li>
+              <li><code>D_clinical_tier</code> — clinical-tier weight (active-care context).</li>
+              <li>Composite R clamped to [0, 1]; mapped to tier via boundaries 0.40 / 0.60 / 0.80.</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">Output → risk_scores.npz, demo_scores.npz</div>
+            <div class="delta-row"><span class="delta-tag add">fields</span><span class="delta-val">row_id, y_true, c_detect, c_track_a, c_track_b, d_crit, s_data, d_clinical_tier, R, risk_levels, fusion_class, data_quality, attack_category</span></div>
+            <div class="delta-row"><span class="delta-tag keep">tier</span><span class="delta-val">CRITICAL (R≥0.80) · HIGH (0.60–0.80) · MEDIUM (0.40–0.60) · LOW (R&lt;0.40)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span class="line"></span><span class="label">Module 4 explain</span></div>
+
+      <!-- ───────────────────────── Stage 6 ───────────────────────── -->
+      <div class="stage s5">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 6 · EXPLAIN &amp; RESPOND</div>
+            <div class="title">SHAP + MVE + response policy</div>
+            <div class="source">module4_explanations/ · module5_responses/</div>
+            <div class="vol">
+              <span class="vol-key">batch</span> <span class="vol-val">module4_explanations.py</span> — TreeSHAP per Track-A model on flagged samples<br>
+              <span class="vol-key">online</span> <span class="vol-val">module4_online_explainer.py</span> — p95 &lt; 150 ms per alert<br>
+              <span class="vol-key">MVE</span> chain: OpenAI → Anthropic → rule-based templates<br>
+              <span class="vol-key">response</span> <span class="vol-val">module5_responses.py</span> — escalation chain + clinical constraints
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Per-alert 6-stage explanation pipeline (online)</div>
+            <ol>
+              <li><strong>Predict</strong> — 4-vote Track-A + cascaded-DAE (augmented with Track-A probas).</li>
+              <li><strong>Severity</strong> — n_flagged: ≥4 CRIT, 3 HIGH, 2 MED, ≤1 LOW. LOW short-circuits.</li>
+              <li><strong>TreeSHAP</strong> — top-3 per model via <code>np.argpartition</code> (O(F)); RandomForest skipped (90% of treeshap_ms baseline).</li>
+              <li><strong>DAE decompose</strong> — top-3 per-feature reconstruction error (reused from Step 1 forward pass).</li>
+              <li><strong>NLG</strong> — clinician_summary via templates + feature-category narratives.</li>
+              <li><strong>Risk decompose</strong> — flagging_models, confidence spread, dae_contributes.</li>
+              <li><strong>MVE 3-layer</strong> — generated by <code>src/mve_generator.py</code> with shap_context input. Layer 3 starts with "DO NOT" for CRITICAL/HIGH/MEDIUM (clinical-constraint invariant).</li>
+              <li><strong>Response policy</strong> — escalation chain (Biomed → Security → Charge Nurse for IoMT critical); max_response_min; clinical-constraint text; rationale.</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">Output artifacts</div>
+            <div class="delta-row"><span class="delta-tag add">evidence</span><span class="delta-val">results/charts/waterfall_*.png, force_*.png (per-alert TreeSHAP)</span></div>
+            <div class="delta-row"><span class="delta-tag add">summary</span><span class="delta-val">clinician_summaries.json, analyst_report.json, global_importance_*.json</span></div>
+            <div class="delta-row"><span class="delta-tag add">latency</span><span class="delta-val">online_latency_profile.json (p50/p95/p99 per stage)</span></div>
+            <div class="delta-row"><span class="delta-tag add">responses</span><span class="delta-val">alert_responses.json (per-alert response + escalation + rationale)</span></div>
+            <div class="delta-row"><span class="delta-tag add">policy</span><span class="delta-val">response_policy.json, effectiveness_analysis.json</span></div>
+            <div class="delta-row"><span class="delta-tag add">audit</span><span class="delta-val">audit_log.jsonl (ECDSA-P256 signed, hash-chained)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span class="line"></span><span class="label">Module 6 dashboard</span></div>
+
+      <!-- ───────────────────────── Stage 7 ───────────────────────── -->
+      <div class="stage s6">
+        <div class="stage-row">
+          <div class="stage-header">
+            <div class="num">STAGE 7 · PRESENT &amp; AUDIT-WRITE</div>
+            <div class="title">Operator dashboard + RQ3 study</div>
+            <div class="source">module6_evaluation/module6_app.py — Streamlit</div>
+            <div class="vol">
+              <span class="vol-key">launch</span> <span class="vol-val">streamlit run module6_evaluation/module6_app.py</span><br>
+              <span class="vol-key">modes</span> <span class="vol-val">Triage</span> · Online Sim · Browse · Study (A/B) · PCAP-stub<br>
+              <span class="vol-key">data scope</span> Triage → test only · Online Sim → demo only (intended)<br>
+              <span class="vol-key">audit</span> three-sink fan-out on every operator action
+            </div>
+          </div>
+          <div class="transforms">
+            <div class="panel-label">Read &amp; render &amp; write</div>
+            <ol>
+              <li><strong>Triage view</strong> — three-column Sentinel layout (queue / investigation / actions). Filtered to <code>sample_index ≥ _TEST_SPLIT_OFFSET (2,448)</code> to enforce test-only display.</li>
+              <li><strong>Role-adaptive MVE</strong> — SOC / Clinical / Admin pills dispatch to <code>render_analyst</code> / <code>render_clinician</code> / <code>render_admin</code> with same underlying alert but different surface (C2 contribution).</li>
+              <li><strong>Action buttons</strong> — Acknowledge / Escalate / Dismiss. Dismiss requires reason + rationale (C3 no-silent-suppression).</li>
+              <li><strong>Study A/B</strong> — 20 hand-curated YAML scenarios; counterbalanced Latin-square (seeded by md5(participant_id)).</li>
+              <li><strong>Triple-sink audit</strong> on every action: online_interactions.jsonl (buffered), audit_trail.jsonl (hash-chained), audit_log.jsonl (signed).</li>
+            </ol>
+          </div>
+          <div class="schema-delta">
+            <div class="panel-label">Reads + writes</div>
+            <div class="delta-row"><span class="delta-tag keep">read</span><span class="delta-val">alert_responses.json · clinician_summaries.json · audit_trail.json · online_latency_profile.json · charts/*.png · drift_detection_results.json · dynamic_threshold_results.json</span></div>
+            <div class="delta-row"><span class="delta-tag keep">read replay</span><span class="delta-val">test_phase1.parquet (Online Simulation source)</span></div>
+            <div class="delta-row"><span class="delta-tag add">write</span><span class="delta-val">audit_log.jsonl (operator actions, signed)</span></div>
+            <div class="delta-row"><span class="delta-tag add">write</span><span class="delta-val">study_responses_&lt;pid&gt;.json (RQ3 participant data)</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SPLIT DIAGRAM
+       ============================================================ -->
+  <section>
+    <h2>4-way stratified split routing</h2>
+    <p class="section-intro">
+      The split is the workflow's pivotal data event &mdash; everything downstream
+      reads one or more of these four parquets. Test and demo are frozen
+      (never seen by any model in training).
+    </p>
+
+    <div class="split-diagram">
+      <div class="split-bar">
+        <div class="seg-train">
+          <span class="seg-name">train · 60%</span>
+          <span class="seg-meta">9,790 rows · attack 12.53%</span>
+        </div>
+        <div class="seg-val">
+          <span class="seg-name">val · 15%</span>
+          <span class="seg-meta">2,448 rows · attack 12.54%</span>
+        </div>
+        <div class="seg-test">
+          <span class="seg-name">test · 15%</span>
+          <span class="seg-meta">2,448 · 12.54%</span>
+          <span class="frozen-mark">▣ FROZEN</span>
+        </div>
+        <div class="seg-demo">
+          <span class="seg-name">demo · 10%</span>
+          <span class="seg-meta">1,632 · 12.56%</span>
+          <span class="frozen-mark">▣ FROZEN</span>
+        </div>
+      </div>
+
+      <div class="split-routing">
+        <div class="route-card train">
+          <div class="rname">train_phase1.parquet</div>
+          Track A: XGBoost · RandomForest · DecisionTree (with SMOTE inside CV)<br>
+          Track B: → benign_only_train.parquet (8,563 rows, Label==0)<br>
+          → DAE training (autoencoder)
+        </div>
+        <div class="route-card val">
+          <div class="rname">val_phase1.parquet</div>
+          Track A: threshold calibration (operating-point selection)<br>
+          Track B: DAE-cascade OOF-proba generation → benign_only_val.parquet<br>
+          Threshold tuning &amp; DAE input augmentation
+        </div>
+        <div class="route-card test">
+          <div class="rname">test_phase1.parquet · FROZEN</div>
+          Module 3: composite risk scoring → risk_scores.npz<br>
+          Module 4: TreeSHAP + DAE decompose<br>
+          Module 5: alert_responses.json<br>
+          Module 6 Triage view (operator UI) — display only
+        </div>
+        <div class="route-card demo">
+          <div class="rname">demo_phase1.parquet · FROZEN</div>
+          Module 3: parallel risk scoring → demo_scores.npz<br>
+          Module 6 Online Simulation (intended replay source)<br>
+          Module 6 user study A/B uses YAML fixtures derived from this pool
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SCHEMA LINEAGE TABLE
+       ============================================================ -->
+  <section>
+    <h2>Feature lineage: raw → preprocessed</h2>
+    <p class="section-intro">
+      45 raw columns &rarr; 27 preprocessed (25 features + Label + Attack Category)
+      + 2 metadata = 29 columns total. Color key:
+      <span style="color:var(--success);">green = kept</span> ·
+      <span style="color:var(--tier-high);">red = dropped</span> ·
+      <span style="color:var(--accent);">blue = added</span>.
+    </p>
+    <table class="df lineage">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Source group</th>
+          <th class="stage-h">In raw?</th>
+          <th class="stage-h">After Module 1?</th>
+          <th class="stage-h">Why dropped / added</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="feat">SrcAddr, DstAddr, Sport, Dport, SrcMac, DstMac</td><td>network — identifiers</td><td class="cell in">✓</td><td class="cell out">✗</td><td class="note">HIPAA strip — MAC perfectly separates normal/attack in labeling (leakage source)</td></tr>
+        <tr><td class="feat">Dir, Flgs</td><td>network — flags</td><td class="cell in">✓</td><td class="cell">Flgs only</td><td class="note">Dir dropped (redundant); Flgs label-encoded alphabetically</td></tr>
+        <tr><td class="feat">Packet_num</td><td>network — sequence</td><td class="cell in">✓</td><td class="cell out">✗</td><td class="note">Sequential index → temporal leakage</td></tr>
+        <tr><td class="feat">Trans</td><td>network — counter</td><td class="cell in">✓</td><td class="cell out">✗</td><td class="note">Variance filter — near-unary on benign rows</td></tr>
+        <tr><td class="feat">SrcGap, DstGap, SrcJitter, DstJitter, DIntPktAct, Loss, pLoss, Rate, TotPkts, dMinPktSz</td><td>network — flow stats</td><td class="cell in">✓</td><td class="cell out">✗</td><td class="note">Redundancy removal — |r| ≥ 0.95 with another retained feature</td></tr>
+        <tr><td class="feat">SrcBytes, DstBytes, SrcLoad, DstLoad, SIntPkt, DIntPkt, SIntPktAct, sMaxPktSz, dMaxPktSz, sMinPktSz, Dur, TotBytes, Load, pSrcLoss, pDstLoss</td><td>network — flow stats</td><td class="cell in">✓</td><td class="cell in">✓</td><td class="note">15 retained network features (post-filter)</td></tr>
+        <tr><td class="feat">Temp, SpO2, Pulse_Rate, SYS, DIA, Heart_rate, Resp_Rate, ST</td><td>biometric (8)</td><td class="cell in">✓</td><td class="cell in">✓</td><td class="note">All 8 biometrics retained — clinical signal for Track B and risk Component D_clinical_tier</td></tr>
+        <tr><td class="feat">Label, Attack Category</td><td>labels</td><td class="cell in">✓</td><td class="cell in">✓</td><td class="note">Binary + multi-class label; multi-class used for stratification (NOT binary)</td></tr>
+        <tr><td class="feat">row_id</td><td>metadata</td><td class="cell">—</td><td class="cell added">+</td><td class="note">Added in Module 1 — within-split sequential index (NOT raw CSV row index)</td></tr>
+        <tr><td class="feat">device_class</td><td>metadata</td><td class="cell">—</td><td class="cell added">+</td><td class="note">Added in Module 1 — derived from Attack Category for device-criticality lookup downstream</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       RISK FORMULA DETAIL
+       ============================================================ -->
+  <section>
+    <h2>Composite risk formula</h2>
+    <p class="section-intro">
+      Module 3 reduces the per-alert ML output + device + clinical context
+      into a single composite risk score in [0, 1] and maps it to a 4-tier
+      label.
+    </p>
+
+    <div class="risk-card">
+      <div class="risk-formula">
+        R = <span class="w">w<sub>1</sub></span>·C<sub>detect</sub>
+        + <span class="w">w<sub>2</sub></span>·D<sub>crit</sub>
+        + <span class="w">w<sub>3</sub></span>·S<sub>data</sub>
+        + <span class="w">w<sub>4</sub></span>·D<sub>clinical_tier</sub>
+      </div>
+
+      <div class="risk-comp-grid">
+        <div class="risk-comp">
+          <div class="cname">C<sub>detect</sub></div>
+          <div class="cweight">w₁ = 0.40</div>
+          <div class="cdesc">Fused detector signal (consensus across 3 Track-A models + cascaded DAE). Highest weight — primary ML signal.</div>
+        </div>
+        <div class="risk-comp">
+          <div class="cname">D<sub>crit</sub></div>
+          <div class="cweight">w₂ = 0.25</div>
+          <div class="cdesc">Device criticality — life-sustaining (ventilator/infusion pump) = 1.0; vital monitoring = 0.85; clinical-support = 0.6; admin = 0.25.</div>
+        </div>
+        <div class="risk-comp">
+          <div class="cname">S<sub>data</sub></div>
+          <div class="cweight">w₃ = 0.15</div>
+          <div class="cdesc">Data sensitivity — PHI exposure scope of the alert. Lowest weight: a network-only signal without PHI scope is still actionable.</div>
+        </div>
+        <div class="risk-comp">
+          <div class="cname">D<sub>clinical_tier</sub></div>
+          <div class="cweight">w₄ = 0.20</div>
+          <div class="cdesc">Clinical-tier weight — captures the device's active-care context (life-sustaining / vital-monitoring / diagnostic / auxiliary) as a per-alert clinical-impact multiplier.</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <div class="panel-label" style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;">Tier boundaries</div>
+        <div class="tier-bar">
+          <div class="tier-fill" style="width: 40%; background: linear-gradient(to right, rgba(91,143,185,0.4) 0%, rgba(91,143,185,0.6) 100%);"></div>
+          <div class="tier-fill" style="width: 20%; position: absolute; left: 40%; top: 0; bottom: 0; background: linear-gradient(to right, rgba(212,164,69,0.4) 0%, rgba(212,164,69,0.6) 100%);"></div>
+          <div class="tier-fill" style="width: 20%; position: absolute; left: 60%; top: 0; bottom: 0; background: linear-gradient(to right, rgba(224,122,95,0.4) 0%, rgba(224,122,95,0.6) 100%);"></div>
+          <div class="tier-fill" style="width: 20%; position: absolute; left: 80%; top: 0; bottom: 0; background: linear-gradient(to right, rgba(197,48,48,0.4) 0%, rgba(197,48,48,0.6) 100%);"></div>
+          <div class="tier-marker" style="left: 40%;"></div>
+          <div class="tier-marker" style="left: 60%;"></div>
+          <div class="tier-marker" style="left: 80%;"></div>
+          <div class="tier-label" style="left: 20%;">LOW · R&lt;0.40</div>
+          <div class="tier-label" style="left: 50%;">MEDIUM · 0.40–0.60</div>
+          <div class="tier-label" style="left: 70%;">HIGH · 0.60–0.80</div>
+          <div class="tier-label" style="left: 90%;">CRITICAL · ≥0.80</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PRODUCER → CONSUMER MAP
+       ============================================================ -->
+  <section>
+    <h2>Producer → artifact → consumer map</h2>
+    <p class="section-intro">
+      Every persistent inter-module communication is via files. This is
+      the canonical lookup for "where does this data come from / where does
+      it go".
+    </p>
+    <table class="df">
+      <thead>
+        <tr>
+          <th>Artifact</th>
+          <th>Producer</th>
+          <th>Schema (cols/keys)</th>
+          <th>Consumed by</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>data/raw/WUSTL-EHMS/*.csv</code></td>
+          <td>(external dataset)</td>
+          <td class="dim">45 cols · 16,318 rows</td>
+          <td>Modules 0, 1</td>
+        </tr>
+        <tr>
+          <td><code>results/phase0_analysis/stats_report.json</code></td>
+          <td>Module 0</td>
+          <td class="dim">descriptive · missing · class_distribution</td>
+          <td>Module 1 (Phase0ArtifactReader)</td>
+        </tr>
+        <tr>
+          <td><code>results/phase0_analysis/high_correlations.csv</code></td>
+          <td>Module 0</td>
+          <td class="dim">feature_a, feature_b, correlation (|r|≥0.95)</td>
+          <td>Module 1 (RedundancyRemover)</td>
+        </tr>
+        <tr>
+          <td><code>module0_analysis/dataset_integrity.json</code> (signed)</td>
+          <td>Module 0 bootstrap</td>
+          <td class="dim">SHA-256 per CSV · signature · signing_key_id</td>
+          <td>Module 1 (IntegrityVerifier on every ingest)</td>
+        </tr>
+        <tr>
+          <td><code>data/processed/train_phase1.parquet</code> · 60%</td>
+          <td>Module 1</td>
+          <td class="dim">25 features (float32) + Label + Attack Category + row_id + device_class</td>
+          <td>Module 2 Track A · Track B (filtered to benign)</td>
+        </tr>
+        <tr>
+          <td><code>data/processed/val_phase1.parquet</code> · 15%</td>
+          <td>Module 1</td>
+          <td class="dim">same schema as train</td>
+          <td>Module 2 threshold calibration · DAE OOF probas</td>
+        </tr>
+        <tr>
+          <td><code>data/processed/test_phase1.parquet</code> · 15% <strong style="color:var(--success);">FROZEN</strong></td>
+          <td>Module 1</td>
+          <td class="dim">same schema</td>
+          <td>Module 3 (risk_scores.npz) · Module 6 Triage</td>
+        </tr>
+        <tr>
+          <td><code>data/processed/demo_phase1.parquet</code> · 10% <strong style="color:var(--success);">FROZEN</strong></td>
+          <td>Module 1</td>
+          <td class="dim">same schema</td>
+          <td>Module 3 (demo_scores.npz) · Module 6 Online Sim (intended)</td>
+        </tr>
+        <tr>
+          <td><code>data/processed/split_metadata.yaml</code></td>
+          <td>Module 1</td>
+          <td class="dim">strategy · ratios · n · attack_rate · per-category counts · invariants</td>
+          <td><code>tests/test_split_contract.py</code> · defense audit</td>
+        </tr>
+        <tr>
+          <td><code>data/processed/split_artifact_manifest.txt</code></td>
+          <td>Module 1</td>
+          <td class="dim">SHA-256 of all 4 parquets</td>
+          <td>Byte-level audit anchor</td>
+        </tr>
+        <tr>
+          <td><code>results/models/{xgboost,rf,dt}.pkl</code> (signed)</td>
+          <td>Module 2 Track A</td>
+          <td class="dim">sklearn classifier · ECDSA signature in pickle metadata</td>
+          <td>Module 3 · Module 4 (TreeSHAP) · drift_detection.py</td>
+        </tr>
+        <tr>
+          <td>DAE checkpoint + threshold</td>
+          <td>Module 2 Track B</td>
+          <td class="dim">Keras weights · threshold (float) · feature space [25 raw + 3 track-A probas]</td>
+          <td>Module 3 · Module 4 (DAE decompose) · drift_detection.py</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/risk_scores.npz</code></td>
+          <td>Module 3 (test)</td>
+          <td class="dim">row_id · y_true · c_detect · c_track_a · c_track_b · d_crit · s_data · d_clinical_tier · R · risk_levels · attack_category</td>
+          <td>Module 4 · Module 5 · Module 6 Triage</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/demo_scores.npz</code></td>
+          <td>Module 3 (demo)</td>
+          <td class="dim">same schema</td>
+          <td>Module 6 Online Simulation (intended)</td>
+        </tr>
+        <tr>
+          <td><code>results/charts/waterfall_{model}_sample_{N:04d}.png</code></td>
+          <td>Module 4 (batch)</td>
+          <td class="dim">per-alert TreeSHAP waterfall plot</td>
+          <td>Module 6 Browse / Triage / Online Sim — image rendering</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/global_importance_{model}.json</code></td>
+          <td>Module 4 (batch)</td>
+          <td class="dim">feature → SHAP magnitude rank</td>
+          <td>Module 6 System Health · thesis figures</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/clinician_summaries.json</code></td>
+          <td>Module 4</td>
+          <td class="dim">sample_index → severity · summary · biometric_note</td>
+          <td>Module 6 Clinical-role MVE</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/online_latency_profile.json</code></td>
+          <td>Module 4 online</td>
+          <td class="dim">per-stage p50/p95/p99 · startup_ms · n_alerts_total</td>
+          <td>Module 6 status strip · System Health</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/alert_responses.json</code></td>
+          <td>Module 5</td>
+          <td class="dim">sample_index · ground_truth · attack_category · risk_score · risk_level · risk_components · response · explanation</td>
+          <td>Module 6 (all modes)</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/audit_log.jsonl</code> (signed)</td>
+          <td>Module 5 (and Module 6 writes back)</td>
+          <td class="dim">event_type · alert_id · reviewer · prev_hash · integrity_hash · signature · signing_key_id</td>
+          <td>Defense audit · operator action history</td>
+        </tr>
+        <tr>
+          <td><code>results/reports/study_responses_&lt;pid&gt;.json</code></td>
+          <td>Module 6 Study A/B</td>
+          <td class="dim">per-alert: condition (with_mve/without_mve) · severity · action · composite_score · decision_time_sec</td>
+          <td>RQ3 analysis</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================
+       INVARIANTS
+       ============================================================ -->
+  <section>
+    <h2>Data invariants</h2>
+    <p class="section-intro">
+      Properties verifiable from the data alone &mdash; no test runs required,
+      no human attestation. Each is enforced in code at the point where it
+      could otherwise be violated.
+    </p>
+
+    <div class="inv-grid">
+      <div class="inv-card frozen">
+        <div class="inv-title">Test &amp; demo are frozen</div>
+        <div class="inv-where">split_metadata.yaml · invariants block</div>
+        <div class="inv-body">
+          No model sees <code>test_phase1.parquet</code> or
+          <code>demo_phase1.parquet</code> during training. Enforced by:
+          (a) Module 2 reads <em>train_phase1</em> + benign_only, never test/demo;
+          (b) <code>_assert_no_demo_leakage</code> guard in Module 2 raises
+          RuntimeError on any read of <code>demo_phase1.parquet</code>.
+        </div>
+      </div>
+
+      <div class="inv-card frozen">
+        <div class="inv-title">Splits are disjoint</div>
+        <div class="inv-where">tests/test_split_contract.py · test_splits_disjoint_by_row_count</div>
+        <div class="inv-body">
+          train ∩ val ∩ test ∩ demo = ∅. Verified by row-count sum =
+          n_total exactly. The splitter uses sequential
+          <code>StratifiedShuffleSplit</code> on disjoint pools, so set
+          disjointness is structurally guaranteed.
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-title">Stratification &le; ±2%</div>
+        <div class="inv-where">stratify="Attack Category" · multi-class</div>
+        <div class="inv-body">
+          Spoofing, Data Alteration, normal counts preserved within ±2%
+          across all 4 splits. Stratification is on the multi-class label,
+          not the binary one — binary stratify would have skewed
+          Spoofing vs Data Alteration proportions.
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-title">Deterministic via random_state</div>
+        <div class="inv-where">Phase1Config._random_state_canonical</div>
+        <div class="inv-body">
+          <code>random_state ∈ {0, 7, 42}</code> canonical allowlist.
+          Anything else triggers a WARN (research-integrity signal: an
+          attacker who can edit the YAML cannot pin to a favourable seed
+          silently).
+        </div>
+      </div>
+
+      <div class="inv-card security">
+        <div class="inv-title">TOCTOU-safe ingest</div>
+        <div class="inv-where">module1_preprocessing/phase1/pipeline.py · _ingest_with_integrity</div>
+        <div class="inv-body">
+          Each raw CSV is hashed AND parsed from the same in-memory
+          bytes. Closes the TOCTOU window where a previous flow hashed
+          one file then re-opened it for pd.read_csv. Multi-file bypass
+          also closed: every CSV in the input dir gets hashed.
+        </div>
+      </div>
+
+      <div class="inv-card security">
+        <div class="inv-title">No identifier features survive Stage 1</div>
+        <div class="inv-where">HIPAASanitizer · identifier_removal.remove_columns</div>
+        <div class="inv-body">
+          MAC + IP addresses, sequential indices dropped before any
+          modelling. <code>SrcMac</code> in particular perfectly
+          separated normal/attack in the raw labels — a leakage source
+          flagged in the dataset README and removed at Stage 1.
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-title">Fit-on-train scaling</div>
+        <div class="inv-where">RobustScalerTransformer.scale_both</div>
+        <div class="inv-body">
+          Scaler fits only on <code>X_train</code>; val / test / demo
+          are transformed but never seen by the fit. Median + IQR
+          chosen over StandardScaler because Phase 0 EDA flagged
+          heavy-tailed distributions.
+        </div>
+      </div>
+
+      <div class="inv-card security">
+        <div class="inv-title">Signed model pickles</div>
+        <div class="inv-where">common.model_registry · loads_signed</div>
+        <div class="inv-body">
+          Every Track-A classifier pickle is ECDSA-P256 signed at
+          training time. Module 4 / 6 refuse to load unsigned or
+          tampered pickles &mdash; closes the pickle-RCE attack surface.
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-title">Composite weights sum to 1.0</div>
+        <div class="inv-where">module3_risk_scoring · WEIGHTS · _ratios_sum_to_one</div>
+        <div class="inv-body">
+          w₁ + w₂ + w₃ + w₄ = 0.40 + 0.25 + 0.15 + 0.20 = 1.00. Composite
+          R is therefore bounded in [0, 1] when each component is in [0, 1],
+          which the tier-mapping logic at 0.40 / 0.60 / 0.80 assumes.
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-title">Layer-3 MVE starts with "DO NOT"</div>
+        <div class="inv-where">src/mve_generator.py · system prompt + rule-based templates</div>
+        <div class="inv-body">
+          For CRITICAL/HIGH/MEDIUM alerts, the MVE's clinical-constraint
+          field MUST start with "DO NOT" — preventing the LLM from
+          recommending a clinical action that could harm a patient. The
+          rule-based templates enforce this structurally; the LLM
+          system prompt enforces it via instruction + post-validation.
+        </div>
+      </div>
+
+      <div class="inv-card security">
+        <div class="inv-title">Hash-chained audit fan-out</div>
+        <div class="inv-where">HardenedAuditLogger · capture_interaction</div>
+        <div class="inv-body">
+          Every operator action writes to 3 sinks. Sink 3
+          (<code>audit_log.jsonl</code>) is ECDSA-P256 signed with
+          prev_hash chaining — tampering is detectable on replay; the
+          signed chain is unforgeable without the private key.
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-title">Dashboard test-only filter</div>
+        <div class="inv-where">module6_evaluation/module6_app.py · _TEST_SPLIT_OFFSET</div>
+        <div class="inv-body">
+          Triage view filters <code>alert_responses.json</code> to
+          <code>sample_index ≥ 2,448</code>, displaying only test-split
+          alerts to operators. Prevents val-set data (used for
+          hyperparameter tuning) from leaking into the operator-facing
+          queue.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footnote">
+    Data workflow review &middot; verified against on-disk state + git HEAD on <code>feature/dashboard-design</code><br>
+    Row counts measured live · schema deltas computed by diffing raw CSV header against <code>test_phase1.parquet</code><br>
+    Render: self-contained HTML — open directly in any modern browser
+  </div>
+
+</div>
+</body>
+</html>

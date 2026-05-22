@@ -347,14 +347,10 @@ class AlertExplainer:
             pred = int(proba >= self.thresholds[name])
             votes[name] = {"prediction": pred, "confidence": round(proba, 4)}
 
-        # Cascaded DAE prediction: augment input with Track A probabilities.
-        # The DAE was trained on [raw_features || Track_A_OOF_probas],
-        # so inference must provide the same augmented input.
-        track_a_probas = np.array([[
-            votes[name]["confidence"]
-            for name in self.classifiers
-        ]])  # shape (1, 3)
-        x_augmented = np.column_stack([x_2d, track_a_probas])
+        # Cascaded DAE input is built by the central detection engine so
+        # the [raw || Track_A_probas] construction stays in one place.
+        from detection_engine import DetectionEngine
+        x_augmented = DetectionEngine().build_augmented(x_2d)
 
         dae_error_arr, dae_per_feature = self.dae.reconstruction_error_decomposed(x_augmented)
         dae_error = float(dae_error_arr[0])
@@ -494,9 +490,8 @@ def run_batch_simulation(
 
     # ── Batch DAE reconstruction (all alerts at once) ──
     t_dae = time.perf_counter()
-    # Augment with Track A probas: shape (k, n_raw + 3)
-    track_a_probas = np.column_stack([batch_votes[n] for n in explainer.classifiers])
-    X_aug = np.column_stack([X_alerts, track_a_probas])
+    from detection_engine import DetectionEngine
+    X_aug = DetectionEngine().build_augmented(X_alerts)
     dae_errors, dae_per_feature = explainer.dae.reconstruction_error_decomposed(X_aug)
     dae_ms = round((time.perf_counter() - t_dae) * 1000, 3)
 
@@ -682,7 +677,7 @@ def main() -> None:
 
     # Load test data
     df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
-    drop_cols = ["Label", "Attack Category"]
+    drop_cols = ["Label", "Attack Category", "row_id", "device_class"]
     feat_names = [c for c in df.columns if c not in drop_cols]
     X_test = df[feat_names].values.astype(np.float32)
 

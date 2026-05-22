@@ -38,7 +38,7 @@ MODULES = [
         "id": 3,
         "name": "Composite Risk Scores",
         "script": "module3_risk_scoring/module3_risk_scores.py",
-        "description": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*A_patient",
+        "description": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
     },
     {
         "id": 4,

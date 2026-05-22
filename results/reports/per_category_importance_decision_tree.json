@@ -1,0 +1,259 @@
+{
+  "model": "decision_tree",
+  "categories": {
+    "Data Alteration": [
+      {
+        "rank": 1,
+        "feature": "Flgs",
+        "mean_abs_shap": 0.445119
+      },
+      {
+        "rank": 2,
+        "feature": "DIntPkt",
+        "mean_abs_shap": 0.053794
+      },
+      {
+        "rank": 3,
+        "feature": "pDstLoss",
+        "mean_abs_shap": 0.000776
+      },
+      {
+        "rank": 4,
+        "feature": "SrcLoad",
+        "mean_abs_shap": 0.000311
+      },
+      {
+        "rank": 5,
+        "feature": "Sport",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 6,
+        "feature": "SrcBytes",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 7,
+        "feature": "DstBytes",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 8,
+        "feature": "DstLoad",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 9,
+        "feature": "SIntPkt",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 10,
+        "feature": "SIntPktAct",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 11,
+        "feature": "sMaxPktSz",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 12,
+        "feature": "dMaxPktSz",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 13,
+        "feature": "sMinPktSz",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 14,
+        "feature": "Dur",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 15,
+        "feature": "TotBytes",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 16,
+        "feature": "Load",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 17,
+        "feature": "pSrcLoss",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 18,
+        "feature": "Temp",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 19,
+        "feature": "SpO2",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 20,
+        "feature": "Pulse_Rate",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 21,
+        "feature": "SYS",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 22,
+        "feature": "DIA",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 23,
+        "feature": "Heart_rate",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 24,
+        "feature": "Resp_Rate",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 25,
+        "feature": "ST",
+        "mean_abs_shap": 0.0
+      }
+    ],
+    "Spoofing": [
+      {
+        "rank": 1,
+        "feature": "Flgs",
+        "mean_abs_shap": 0.183812
+      },
+      {
+        "rank": 2,
+        "feature": "DIntPkt",
+        "mean_abs_shap": 0.121392
+      },
+      {
+        "rank": 3,
+        "feature": "SrcLoad",
+        "mean_abs_shap": 0.022975
+      },
+      {
+        "rank": 4,
+        "feature": "pDstLoss",
+        "mean_abs_shap": 0.00013
+      },
+      {
+        "rank": 5,
+        "feature": "Sport",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 6,
+        "feature": "SrcBytes",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 7,
+        "feature": "DstBytes",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 8,
+        "feature": "DstLoad",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 9,
+        "feature": "SIntPkt",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 10,
+        "feature": "SIntPktAct",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 11,
+        "feature": "sMaxPktSz",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 12,
+        "feature": "dMaxPktSz",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 13,
+        "feature": "sMinPktSz",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 14,
+        "feature": "Dur",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 15,
+        "feature": "TotBytes",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 16,
+        "feature": "Load",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 17,
+        "feature": "pSrcLoss",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 18,
+        "feature": "Temp",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 19,
+        "feature": "SpO2",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 20,
+        "feature": "Pulse_Rate",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 21,
+        "feature": "SYS",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 22,
+        "feature": "DIA",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 23,
+        "feature": "Heart_rate",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 24,
+        "feature": "Resp_Rate",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "rank": 25,
+        "feature": "ST",
+        "mean_abs_shap": 0.0
+      }
+    ]
+  }
+}

@@ -1272,7 +1272,7 @@ def _triage_investigation_column(selected, ui):
         ("Detection confidence", "C_detect",  "--accent",        "calibrated"),
         ("Device criticality",   "D_crit",    "--tier-critical", "life-critical" if components.get("D_crit", 0) >= 0.9 else "device class"),
         ("Data sensitivity",     "S_data",    "--tier-medium",   "data scope"),
-        ("Patient acuity",       "A_patient", "--tier-high",     "active-care"),
+        ("Clinical tier",        "D_clinical_tier", "--tier-high",     "active-care"),
     ):
         v = float(components.get(key, 0.0))
         metric_grid += ui.render_metric_with_bar(
@@ -1301,7 +1301,7 @@ def _triage_investigation_column(selected, ui):
         ("C_track_b", "Track-B consistency",    "behavior vs device self-baseline"),
         ("D_crit",    "Device criticality",     "device-class weight"),
         ("S_data",    "Data sensitivity",       "what this device touches"),
-        ("A_patient", "Patient acuity",         "active-care weight"),
+        ("D_clinical_tier", "Clinical tier",          "active-care weight"),
     )
     for key, label, sub in component_labels:
         v = float(components.get(key, 0.0))
