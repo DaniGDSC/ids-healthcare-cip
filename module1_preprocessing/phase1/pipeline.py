@@ -1,3 +1,19 @@
+"""Preprocessing pipeline orchestrator.
+
+Pipeline (matches canonical diagram):
+  Step 1:  Identifier sanitization (remove MAC/address columns)
+  Step 2:  Encode non-numeric features
+  Step 3:  Data cleaning (missing data, outliers)
+  Step 4a: Remove unary (zero-variance) features
+  Step 4b: Correlation-based redundancy check
+  ═══════ LEAKAGE BARRIER ═══════
+  Step 5:  Train–test split (stratified 70/30)
+  Step 6:  Scaling (fit on train, transform test)
+  ═══════ DUAL-TRACK BRANCH ═══════
+  Track A: Supervised — SMOTE inside CV pipeline (config exported, not applied)
+  Track B: Novelty — benign-only training subset exported
+"""
+
 from __future__ import annotations
 
 import io
@@ -10,7 +26,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from module0_analysis.security import (
+from module0_analysis.phase0.security import (
     IntegrityError,
     IntegrityVerifier,
     PathValidator,
@@ -28,6 +44,11 @@ from .scaler import RobustScalerTransformer
 from .splitter import DataSplitter
 from .variance import VarianceFilter
 
+# Hard cap on a single CSV file before pandas attempts to parse it.
+# 200 MB comfortably accommodates the WUSTL-EHMS-2020 dataset (~25 MB)
+# and pads for future captures, while preventing a hostile or accidental
+# multi-gigabyte file from OOMing the host. See finding #11 in the
+# Phase 1 security review.
 _MAX_INPUT_BYTES: int = 200 * 1024 * 1024
 
 logger = logging.getLogger(__name__)
@@ -81,27 +102,42 @@ class PreprocessingPipeline:
         feat_names = df.columns.tolist()
         X = df.values.astype(np.float32)
 
-        # ── Step 5: Train–test split ──
+        # ── Step 5: 4-way Stratified Split (Strategy 1) ──
+        # train (60%) + val (15%) + test (15%) + demo (10%).
+        # Test and demo are frozen — never seen by any model during training.
         splitter = DataSplitter(
+            train_ratio=cfg.train_ratio,
+            val_ratio=cfg.val_ratio,
             test_ratio=cfg.test_ratio,
+            demo_ratio=cfg.demo_ratio,
             random_state=cfg.random_state,
             label_column=cfg.label_column,
             multi_label_column=cfg.multi_label_column,
         )
-        # Reassemble DataFrame with labels for DataSplitter
         split_df = pd.DataFrame(X, columns=feat_names)
         split_df[cfg.label_column] = y_binary
         if y_multi is not None:
             split_df[cfg.multi_label_column] = y_multi
 
-        X_train, X_test, y_train, y_test, feat_names, y_multi_train, y_multi_test = (
-            splitter.split(split_df)
+        sout = splitter.split(split_df)
+        X_train, X_val, X_test, X_demo = (
+            sout.X_train, sout.X_val, sout.X_test, sout.X_demo,
         )
+        y_train, y_val, y_test, y_demo = (
+            sout.y_train, sout.y_val, sout.y_test, sout.y_demo,
+        )
+        y_multi_train = sout.y_multi_train
+        y_multi_val = sout.y_multi_val
+        y_multi_test = sout.y_multi_test
+        y_multi_demo = sout.y_multi_demo
+        feat_names = sout.feature_names
         self._report["split"] = splitter.get_report()
 
-        # ── Step 6: Scaling (fit on TRAIN, transform TEST) ──
+        # ── Step 6: Scaling (fit on TRAIN, transform VAL + TEST + DEMO) ──
         scaler = RobustScalerTransformer(method=cfg.scaling_method)
         X_train, X_test = scaler.scale_both(X_train, X_test)
+        X_val = scaler.transform(X_val)
+        X_demo = scaler.transform(X_demo)
         self._report["scaling"] = scaler.get_report()
 
         # ── Dual-track branch & export ──
@@ -109,15 +145,11 @@ class PreprocessingPipeline:
         self._report["random_state"] = cfg.random_state
         self._build_track_reports(y_train, cfg)
         self._export(
-            X_train,
-            X_test,
-            y_train,
-            y_test,
-            y_multi_train,
-            y_multi_test,
-            feat_names,
-            scaler,
-            cfg,
+            X_train, X_test, y_train, y_test,
+            y_multi_train, y_multi_test,
+            feat_names, scaler, cfg,
+            X_val=X_val, y_val=y_val, y_multi_val=y_multi_val,
+            X_demo=X_demo, y_demo=y_demo, y_multi_demo=y_multi_demo,
         )
 
         self._log_summary()
@@ -226,8 +258,7 @@ class PreprocessingPipeline:
         }
         logger.info(
             "Track B — Benign-only train: %d samples (%.1f%% of train)",
-            benign_mask.sum(),
-            benign_mask.mean() * 100,
+            benign_mask.sum(), benign_mask.mean() * 100,
         )
         self._report["track_a"] = {
             "smote_enabled": cfg.smote_enabled,
@@ -251,31 +282,39 @@ class PreprocessingPipeline:
         feat_names: List[str],
         scaler: RobustScalerTransformer,
         cfg: Phase1Config,
+        X_val: np.ndarray,
+        y_val: np.ndarray,
+        y_multi_val: np.ndarray,
+        X_demo: np.ndarray,
+        y_demo: np.ndarray,
+        y_multi_demo: np.ndarray,
     ) -> None:
-        """Write all pipeline artifacts to disk."""
+        """Write all pipeline artifacts to disk (4-way Strategy 1)."""
         output_dir = self._root / cfg.output_dir
         scaler_dir = self._root / "models" / "scalers"
         exporter = PreprocessingExporter(
-            output_dir,
-            scaler_dir,
-            cfg.label_column,
-            cfg.multi_label_column,
+            output_dir, scaler_dir, cfg.label_column, cfg.multi_label_column,
         )
 
+        # ── 4-way scaled feature parquets ──
         exporter.export_parquet(
-            X_train_s,
-            y_train,
-            feat_names,
-            cfg.train_parquet,
+            X_train_s, y_train, feat_names, cfg.train_parquet,
             y_multi=y_multi_train,
         )
         exporter.export_parquet(
-            X_test_s,
-            y_test,
-            feat_names,
-            cfg.test_parquet,
+            X_val, y_val, feat_names, cfg.val_parquet,
+            y_multi=y_multi_val,
+        )
+        exporter.export_parquet(
+            X_test_s, y_test, feat_names, cfg.test_parquet,
             y_multi=y_multi_test,
         )
+        exporter.export_parquet(
+            X_demo, y_demo, feat_names, cfg.demo_parquet,
+            y_multi=y_multi_demo,
+        )
+
+        # ── Track B benign-only subsets ──
         if cfg.track_b_enabled:
             benign_mask = y_train == 0
             exporter.export_parquet(
@@ -284,8 +323,27 @@ class PreprocessingPipeline:
                 feat_names,
                 cfg.train_benign_parquet,
             )
+            val_benign_mask = y_val == 0
+            exporter.export_parquet(
+                X_val[val_benign_mask],
+                np.zeros(int(val_benign_mask.sum()), dtype=int),
+                feat_names,
+                cfg.val_benign_parquet,
+            )
 
         exporter.export_scaler(scaler, cfg.scaler_file)
+
+        # ── split_metadata.yaml: provenance for the 4-way split ──
+        # Single source of truth for downstream consumers / reviewers.
+        self._export_split_metadata(
+            output_dir / cfg.split_metadata_file,
+            cfg=cfg,
+            feat_names=feat_names,
+            y_train=y_train, y_multi_train=y_multi_train,
+            y_val=y_val,     y_multi_val=y_multi_val,
+            y_test=y_test,   y_multi_test=y_multi_test,
+            y_demo=y_demo,   y_multi_demo=y_multi_demo,
+        )
 
         # Persist the deterministic categorical-encoder mappings as a
         # JSON sidecar so downstream inference can reproduce the same
@@ -310,14 +368,101 @@ class PreprocessingPipeline:
         # names — a Phase 1 file with biometric column names in a
         # table header would have tripped it. See finding #20.
         md_path = (
-            self._root
-            / "results"
-            / "phase1_preprocessing"
+            self._root / "results" / "phase1_preprocessing"
             / "report_section_preprocessing.md"
         )
         md_path.parent.mkdir(parents=True, exist_ok=True)
         md_path.write_text(md, encoding="utf-8")
         logger.info("Thesis report → %s", md_path)
+
+    # ------------------------------------------------------------------
+    # split_metadata.yaml — provenance for the 4-way Strategy 1 split
+    # ------------------------------------------------------------------
+
+    def _export_split_metadata(
+        self,
+        path: Path,
+        *,
+        cfg: Phase1Config,
+        feat_names: List[str],
+        y_train: np.ndarray, y_multi_train: np.ndarray,
+        y_val: np.ndarray,   y_multi_val: np.ndarray,
+        y_test: np.ndarray,  y_multi_test: np.ndarray,
+        y_demo: np.ndarray,  y_multi_demo: np.ndarray,
+    ) -> None:
+        """Write ``split_metadata.yaml`` documenting the 4-way split.
+
+        Captures everything a reviewer / downstream consumer needs to
+        reproduce or audit the partition: random_state, sample counts,
+        attack-class distributions, feature names, pre-split drops, and
+        the SHA-256 of the source dataset (Phase 0 baseline).
+        """
+        import yaml
+
+        def _attack_dist(y_multi: np.ndarray) -> Dict[str, int]:
+            if y_multi is None or y_multi.size == 0:
+                return {}
+            uniq, counts = np.unique(y_multi.astype(str), return_counts=True)
+            return {str(k): int(v) for k, v in zip(uniq, counts)}
+
+        def _section(y: np.ndarray, y_multi: np.ndarray) -> Dict[str, Any]:
+            return {
+                "n": int(len(y)),
+                "attack_rate": round(float(y.mean()), 6) if len(y) else 0.0,
+                "label_counts": {
+                    "0": int((y == 0).sum()),
+                    "1": int((y == 1).sum()),
+                },
+                "attack_category_counts": _attack_dist(y_multi),
+            }
+
+        n_total = int(len(y_train) + len(y_val) + len(y_test) + len(y_demo))
+
+        integrity_section = self._report.get("integrity", {})
+        # ``integrity`` is a list of per-file digests when populated by
+        # ``_ingest_with_integrity``; pull the first entry's hash if any.
+        source_sha256 = ""
+        if isinstance(integrity_section, list) and integrity_section:
+            source_sha256 = integrity_section[0].get("sha256", "") or ""
+        elif isinstance(integrity_section, dict):
+            source_sha256 = integrity_section.get("sha256", "") or ""
+
+        payload: Dict[str, Any] = {
+            "format": "phase1.split_metadata.v1",
+            "strategy": "Strategy 1 — Frozen Test + Demo Pool (4-way stratified)",
+            "random_state": int(cfg.random_state),
+            "stratified_on": cfg.multi_label_column,
+            "ratios": {
+                "train": float(cfg.train_ratio),
+                "val":   float(cfg.val_ratio),
+                "test":  float(cfg.test_ratio),
+                "demo":  float(cfg.demo_ratio),
+            },
+            "n_total": n_total,
+            "n_features": len(feat_names),
+            "feature_names": list(feat_names),
+            "source_dataset_sha256": source_sha256,
+            "splits": {
+                "train": _section(y_train, y_multi_train),
+                "val":   _section(y_val,   y_multi_val),
+                "test":  _section(y_test,  y_multi_test),
+                "demo":  _section(y_demo,  y_multi_demo),
+            },
+            "invariants": [
+                "train ∩ val ∩ test ∩ demo = ∅",
+                "train ∪ val ∪ test ∪ demo = full dataset post-filter",
+                "test and demo are FROZEN — never seen by any model in training",
+                "stratification preserves Attack Category proportions within ±2%",
+                "deterministic in random_state — same seed → byte-identical splits",
+            ],
+        }
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            yaml.safe_dump(payload, sort_keys=False, allow_unicode=True),
+            encoding="utf-8",
+        )
+        logger.info("split_metadata sidecar → %s", path)
 
     # ------------------------------------------------------------------
     # Ingestion & integrity (single in-memory pass per file)
@@ -394,47 +539,38 @@ class PreprocessingPipeline:
                 # Make sure the failure leaves a visible mark in the
                 # report rather than a half-populated dict.
                 self._report["integrity"] = {
-                    "verified": False,
+                    "verified":   False,
                     "failure_at": path.name,
                 }
                 raise
 
             df = pd.read_csv(io.BytesIO(data), low_memory=False)
-            logger.info(
-                "  Loaded %s: %d × %d (sha256=%s…)",
-                path.name,
-                df.shape[0],
-                df.shape[1],
-                digest[:16],
-            )
+            logger.info("  Loaded %s: %d × %d (sha256=%s…)",
+                        path.name, df.shape[0], df.shape[1], digest[:16])
             frames.append(df)
-            per_file_integrity.append(
-                {
-                    "file": path.name,
-                    "sha256": digest,
-                    "rows": int(df.shape[0]),
-                }
-            )
+            per_file_integrity.append({
+                "file":   path.name,
+                "sha256": digest,
+                "rows":   int(df.shape[0]),
+            })
 
         combined = (
             pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
         )
         self._report["ingestion"] = {
             "files_loaded": len(csv_files),
-            "raw_rows": int(combined.shape[0]),
-            "raw_columns": int(combined.shape[1]),
+            "raw_rows":     int(combined.shape[0]),
+            "raw_columns":  int(combined.shape[1]),
         }
         # Only populated when every file actually verified — see (6).
         self._report["integrity"] = {
-            "verified": True,
+            "verified":         True,
             "n_files_verified": len(per_file_integrity),
-            "files": per_file_integrity,
+            "files":            per_file_integrity,
         }
         logger.info(
             "Ingestion: %d rows × %d cols across %d verified file(s)",
-            combined.shape[0],
-            combined.shape[1],
-            len(csv_files),
+            combined.shape[0], combined.shape[1], len(csv_files),
         )
         return combined
 
@@ -457,33 +593,21 @@ class PreprocessingPipeline:
         logger.info(sep)
         logger.info("PHASE 1 — PREPROCESSING SUMMARY")
         logger.info(sep)
-        logger.info(
-            "  Ingestion    : %d files → %d × %d",
-            ing.get("files_loaded", 0),
-            ing.get("raw_rows", 0),
-            ing.get("raw_columns", 0),
-        )
+        logger.info("  Ingestion    : %d files → %d × %d",
+                     ing.get("files_loaded", 0), ing.get("raw_rows", 0),
+                     ing.get("raw_columns", 0))
         logger.info("  Identifiers  : %d columns dropped", idr.get("n_dropped", 0))
-        logger.info(
-            "  Cleaning     : %d bio cells filled, %d rows dropped",
-            cl.get("biometric_cells_filled", 0),
-            cl.get("rows_dropped", 0),
-        )
-        logger.info("  Variance     : %d features dropped", var.get("n_dropped", 0))
-        logger.info(
-            "  Redundancy   : %d features dropped (|r| ≥ %.2f)",
-            red.get("n_dropped", 0),
-            red.get("threshold", 0),
-        )
-        logger.info(
-            "  Split        : train=%d, test=%d",
-            spl.get("train_samples", 0),
-            spl.get("test_samples", 0),
-        )
+        logger.info("  Cleaning     : %d bio cells filled, %d rows dropped",
+                     cl.get("biometric_cells_filled", 0), cl.get("rows_dropped", 0))
+        logger.info("  Variance     : %d features dropped",
+                     var.get("n_dropped", 0))
+        logger.info("  Redundancy   : %d features dropped (|r| ≥ %.2f)",
+                     red.get("n_dropped", 0), red.get("threshold", 0))
+        logger.info("  Split        : train=%d, test=%d",
+                     spl.get("train_samples", 0), spl.get("test_samples", 0))
         logger.info("  Track A      : SMOTE inside CV pipeline")
-        logger.info(
-            "  Track B      : %d benign-only samples", tb.get("benign_train_samples", 0)
-        )
+        logger.info("  Track B      : %d benign-only samples",
+                     tb.get("benign_train_samples", 0))
         logger.info("  Features     : %d", out.get("n_features", 0))
         logger.info("  Elapsed      : %.2f s", self._report.get("elapsed_seconds", 0))
         logger.info(sep)
@@ -493,7 +617,7 @@ class PreprocessingPipeline:
 # Entry Point
 # ======================================================================
 
-PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent.parent
+PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 
 
 def main() -> None:

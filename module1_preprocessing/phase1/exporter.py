@@ -47,6 +47,8 @@ class PreprocessingExporter:
         feature_names: List[str],
         filename: str,
         y_multi: np.ndarray | None = None,
+        row_id: np.ndarray | None = None,
+        device_class: np.ndarray | List[str] | None = None,
     ) -> Path:
         """Export a scaled partition as a Parquet file (atomic write).
 
@@ -61,6 +63,14 @@ class PreprocessingExporter:
             feature_names: Ordered column names.
             filename: Output file name.
             y_multi: Optional multi-class label array.
+            row_id: Optional stable row identifier (closes GAP-PB-1 — used
+                downstream to join Module 2 predictions with the test
+                parquet for per-device-class metrics). Falls back to a
+                positional 0..N-1 index if omitted.
+            device_class: Optional per-row device-class label (closes
+                GAP-A7). When omitted, derived in-place from the biometric
+                heuristic in common.device_class.derive_device_class_array
+                so downstream consumers always see a populated column.
 
         Returns:
             Absolute path to the written file.
@@ -71,10 +81,26 @@ class PreprocessingExporter:
         df[self._label_col] = y
         if y_multi is not None and len(y_multi) > 0:
             df[self._multi_label_col] = y_multi
+        if row_id is None:
+            row_id = np.arange(len(df), dtype=np.int64)
+        df.insert(0, "row_id", row_id)
+
+        # GAP-A7: derive (or accept) per-row device_class. Heuristic by
+        # default; replace with an authoritative inventory join when
+        # available without changing the parquet schema.
+        if device_class is None:
+            from common.device_class import derive_device_class_array
+            device_class = derive_device_class_array(X, feature_names)
+        df["device_class"] = list(device_class)
+
         tmp = path.with_suffix(path.suffix + ".tmp")
         df.to_parquet(tmp, index=False)
         os.replace(tmp, path)
-        logger.info("Exported %s: %d rows × %d cols", path.name, *df.shape)
+        logger.info(
+            "Exported %s: %d rows × %d cols (device_class breakdown: %s)",
+            path.name, *df.shape,
+            df["device_class"].value_counts().to_dict(),
+        )
         return path
 
     def export_scaler(self, scaler: Any, filename: str) -> Path:
