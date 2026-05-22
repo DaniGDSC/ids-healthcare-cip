@@ -966,6 +966,22 @@ If default weighted does not outperform alternatives by meaningful margin on pri
 **D_crit vs D_clinical_tier correlation analysis:**
 Computed correlation r between D_crit and D_clinical_tier across device inventory; reported in paper. High correlation acknowledges double-counting of "device importance" (combined weight 0.45 > C_detect's 0.40); low correlation supports separation as semantically distinct.
 
+### Risk weights as policy parameters
+
+The four composite-risk weights (`detection_confidence`, `device_criticality`, `data_sensitivity`, `clinical_tier`) are **hospital-tunable policy parameters** set via `configs/composite_risk_weights.yaml`, not values learned from outcome data. The YAML's own framing (lines 7-8 verbatim): *"These are POLICY parameters — set by hospital security/clinical leadership, NOT learned from data. Reviewed annually."*
+
+The robustness of this design is demonstrated empirically at Stage 5B (`analysis/compute_weight_sensitivity.py` → `results/rq1_weight_sensitivity.json`). The analysis perturbs each weight via N=30 joint random multiplicative perturbations at ±10% and ±20% magnitudes, measures tier-assignment agreement against the policy baseline, and reports `fnr_critical_delta` per condition to verify safety-floor preservation. The merge script (`analysis/merge_rq1_metrics.py`, Stage 5E) folds the result into `results/rq1_metrics.json::weight_sensitivity` and preserves the prior artifact at `weight_sensitivity._legacy_evidence` for traceability.
+
+### Three weight-sensitivity surfaces (disambiguation)
+
+The codebase contains three closely-named entities; each serves a distinct purpose:
+
+1. **`weight_sensitivity_analysis()`** at `module3_risk_scoring/module3_risk_scores.py:1071` — an AUROC-driven 5-point grid + 12-point OAT search invoked once per main-pipeline run. Output: PNG chart at `CHARTS_DIR/weight_sensitivity.png`. Purpose: diagnostic inspection of the AUROC landscape.
+
+2. **`results/rq1_sensitivity_analysis.json`** (legacy, v1 evidence) — N=30 joint random ±10% multiplicative perturbations with three named baselines. Produced by `analysis/compute_rq1.py`. Preserved as `_legacy_evidence` per the merge script's documented precedence rule.
+
+3. **`results/rq1_weight_sensitivity.json`** (Fix 1, canonical Stage 5B output) — N=30 joint random perturbations at both ±10% and ±20% magnitudes, three named baselines, `fnr_critical_delta` tracked per condition. Produced by `analysis/compute_weight_sensitivity.py`. Supersedes the legacy via the merge script's precedence rule.
+
 ### Other pipeline configuration files
 
 In addition to the three Step 8 enrichment configs above, the pipeline reads five downstream configuration files. All policy parameters are externalized to YAML for deployment-time review.

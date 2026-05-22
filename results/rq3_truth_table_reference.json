@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0",
-    "generated_at": "2026-05-21T10:31:00.336505+00:00",
+    "generated_at": "2026-05-21T17:50:53.807241+00:00",
     "generated_by": "tests/test_rq3_truth_table_completeness.py",
     "source_csv": "results/rq1_tier_surfacing_truth_table.csv",
     "rq3_section_reference": "RQ3_expected_outputs.md \u00a74.2 (via RQ3_TRUTH_TABLE_SPEC.md \u00a74.1)",

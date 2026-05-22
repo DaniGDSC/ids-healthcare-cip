@@ -1,0 +1,125 @@
+{
+  "provenance": {
+    "generated_at": "2026-05-21T17:45:41.212585+00:00",
+    "random_seed": 42,
+    "schema_version": "2.0",
+    "code_version": "fix-1-weight-sensitivity",
+    "python_version": "3.10.20",
+    "split_label": "val_phase1",
+    "split_label_note": "Provenance label only. Component arrays were loaded from results/reports/risk_scores.npz; the npz's underlying split is ambiguous per Codebase_Investigation.html Session 11 section 4 (inline comment says 'test-split sourced'; row count = 2448 matches val_phase1). Pending Phase 0e.",
+    "input_files": {
+      "composite_weights_yaml": "a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+      "risk_scores_npz": "a707de7a876b9e599b1186454148991931226222e036ccaf141c7e3c4c209c03",
+      "compute_weight_sensitivity_py": "b9e28d0b98f309f61bf6ced57628584fcb541bf51b6bef2762bde311c4368c78"
+    }
+  },
+  "results": {
+    "perturbation_method": "multiplicative +/- magnitude then L1 renormalize to sum=1.0; magnitudes per by_magnitude keys",
+    "perturbation_results": {
+      "by_magnitude": {
+        "0.10": {
+          "n_perturbations": 30,
+          "agreement_mean": 0.9823,
+          "agreement_std": 0.0082,
+          "agreement_min": 0.9673,
+          "agreement_max": 0.9939,
+          "agreement_p25": 0.9757,
+          "agreement_p50": 0.983,
+          "agreement_p75": 0.9903,
+          "histogram_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30
+          ],
+          "histogram_edges": [
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1.0
+          ],
+          "fnr_critical_delta_max": 0.0086,
+          "fnr_critical_delta_mean": 0.0028,
+          "magnitude": 0.1
+        },
+        "0.20": {
+          "n_perturbations": 30,
+          "agreement_mean": 0.964,
+          "agreement_std": 0.0167,
+          "agreement_min": 0.9154,
+          "agreement_max": 0.9918,
+          "agreement_p25": 0.9536,
+          "agreement_p50": 0.9653,
+          "agreement_p75": 0.9751,
+          "histogram_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30
+          ],
+          "histogram_edges": [
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1.0
+          ],
+          "fnr_critical_delta_max": 0.0106,
+          "fnr_critical_delta_mean": 0.0038,
+          "magnitude": 0.2
+        }
+      }
+    },
+    "baselines": {
+      "equal_weights": {
+        "agreement": 0.7341,
+        "fnr_critical_delta": 0.0106
+      },
+      "c_detect_only": {
+        "agreement": 0.7667,
+        "fnr_critical_delta": 0.0
+      },
+      "multiplicative": {
+        "agreement": 0.7937,
+        "fnr_critical_delta": 0.0
+      }
+    },
+    "baseline_weights": {
+      "detection_confidence": 0.4,
+      "device_criticality": 0.25,
+      "data_sensitivity": 0.15,
+      "clinical_tier": 0.2
+    },
+    "tier_boundaries": {
+      "critical_min": 0.8,
+      "high_min": 0.6,
+      "medium_min": 0.4
+    },
+    "n_alerts_evaluated": 2448
+  }
+}

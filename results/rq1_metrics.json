@@ -117,8 +117,179 @@
   },
   "track_b_ablation": {
     "cascade": {
-      "_status": "pending \u2014 filled by analysis/compute_track_b_cascade_ablation.py",
-      "_merged_at": null
+      "_meta": {
+        "schema_version": "1.0",
+        "generated_at": "2026-05-18T17:39:23.671106+00:00",
+        "generated_by": "analysis/compute_track_b_cascade_ablation.py",
+        "source_yamls": {
+          "ehms_2020": "results/reports/dae_ablation_loo.yaml",
+          "medsec_25": "results/reports/dae_ablation_loo_medsec25.yaml"
+        },
+        "note": "Cascade vs raw AUCs aggregated from Module 2's LOO ablation YAMLs.  No retraining performed."
+      },
+      "results": {
+        "ehms_2020": {
+          "configs": {
+            "DAE-raw": {
+              "auc_mean": 0.7727,
+              "auc_min": 0.5491,
+              "auc_max": 0.9964,
+              "n_folds": 2
+            },
+            "DAE-cascade": {
+              "auc_mean": 0.7624,
+              "auc_min": 0.5285,
+              "auc_max": 0.9964,
+              "n_folds": 2
+            },
+            "DAE-probas-only": {
+              "auc_mean": 0.6084,
+              "auc_min": 0.4994,
+              "auc_max": 0.7175,
+              "n_folds": 2
+            }
+          },
+          "delta_cascade_minus_raw": -0.0103,
+          "per_fold": [
+            {
+              "holdout_class": "Data Alteration",
+              "config": "DAE-raw",
+              "auc": 0.9963780884468104,
+              "n_test_novel": 277
+            },
+            {
+              "holdout_class": "Data Alteration",
+              "config": "DAE-cascade",
+              "auc": 0.9963764022682474,
+              "n_test_novel": 277
+            },
+            {
+              "holdout_class": "Data Alteration",
+              "config": "DAE-probas-only",
+              "auc": 0.7174571752799479,
+              "n_test_novel": 277
+            },
+            {
+              "holdout_class": "Spoofing",
+              "config": "DAE-raw",
+              "auc": 0.5490820036118345,
+              "n_test_novel": 337
+            },
+            {
+              "holdout_class": "Spoofing",
+              "config": "DAE-cascade",
+              "auc": 0.5285121487089008,
+              "n_test_novel": 337
+            },
+            {
+              "holdout_class": "Spoofing",
+              "config": "DAE-probas-only",
+              "auc": 0.49938151145433857,
+              "n_test_novel": 337
+            }
+          ]
+        },
+        "medsec_25": {
+          "configs": {
+            "DAE-raw": {
+              "auc_mean": 0.8794,
+              "auc_min": 0.8333,
+              "auc_max": 0.9275,
+              "n_folds": 4
+            },
+            "DAE-cascade": {
+              "auc_mean": 0.6876,
+              "auc_min": 0.4932,
+              "auc_max": 0.7952,
+              "n_folds": 4
+            },
+            "DAE-probas-only": {
+              "auc_mean": 0.9965,
+              "auc_min": 0.9938,
+              "auc_max": 0.9988,
+              "n_folds": 4
+            }
+          },
+          "delta_cascade_minus_raw": -0.1918,
+          "per_fold": [
+            {
+              "holdout_class": "Exfiltration",
+              "config": "DAE-raw",
+              "auc": 0.8520459329007136,
+              "n_test_novel": 2591
+            },
+            {
+              "holdout_class": "Exfiltration",
+              "config": "DAE-cascade",
+              "auc": 0.7952373288415052,
+              "n_test_novel": 2591
+            },
+            {
+              "holdout_class": "Exfiltration",
+              "config": "DAE-probas-only",
+              "auc": 0.9959570422062044,
+              "n_test_novel": 2591
+            },
+            {
+              "holdout_class": "Initial access",
+              "config": "DAE-raw",
+              "auc": 0.9049795310401277,
+              "n_test_novel": 10209
+            },
+            {
+              "holdout_class": "Initial access",
+              "config": "DAE-cascade",
+              "auc": 0.7914532029569845,
+              "n_test_novel": 10209
+            },
+            {
+              "holdout_class": "Initial access",
+              "config": "DAE-probas-only",
+              "auc": 0.9974488256174693,
+              "n_test_novel": 10209
+            },
+            {
+              "holdout_class": "Lateral movement",
+              "config": "DAE-raw",
+              "auc": 0.8332936032388664,
+              "n_test_novel": 1250
+            },
+            {
+              "holdout_class": "Lateral movement",
+              "config": "DAE-cascade",
+              "auc": 0.6705120647773278,
+              "n_test_novel": 1250
+            },
+            {
+              "holdout_class": "Lateral movement",
+              "config": "DAE-probas-only",
+              "auc": 0.9937570850202428,
+              "n_test_novel": 1250
+            },
+            {
+              "holdout_class": "Reconnaissance",
+              "config": "DAE-raw",
+              "auc": 0.9274629467826369,
+              "n_test_novel": 40169
+            },
+            {
+              "holdout_class": "Reconnaissance",
+              "config": "DAE-cascade",
+              "auc": 0.49317016173468714,
+              "n_test_novel": 40169
+            },
+            {
+              "holdout_class": "Reconnaissance",
+              "config": "DAE-probas-only",
+              "auc": 0.9988169921353537,
+              "n_test_novel": 40169
+            }
+          ]
+        }
+      },
+      "verdict": "Cascade rejected \u2014 generalisation regression on MedSec-25 (EHMS \u0394=-0.0103, MedSec \u0394=-0.1918). DAE on raw 25-dim input retained as production configuration (Phase B).",
+      "_merged_at": "2026-05-21T17:51:45.066227+00:00",
+      "_source": "rq1_cascade_ablation.json"
     }
   },
   "fusion_classes": {
@@ -194,8 +365,214 @@
     }
   },
   "weight_sensitivity": {
-    "_status": "pending \u2014 filled by analysis/compute_weight_sensitivity.py",
-    "_merged_at": null
+    "provenance": {
+      "generated_at": "2026-05-21T17:45:41.212585+00:00",
+      "random_seed": 42,
+      "schema_version": "2.0",
+      "code_version": "fix-1-weight-sensitivity",
+      "python_version": "3.10.20",
+      "split_label": "val_phase1",
+      "split_label_note": "Provenance label only. Component arrays were loaded from results/reports/risk_scores.npz; the npz's underlying split is ambiguous per Codebase_Investigation.html Session 11 section 4 (inline comment says 'test-split sourced'; row count = 2448 matches val_phase1). Pending Phase 0e.",
+      "input_files": {
+        "composite_weights_yaml": "a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+        "risk_scores_npz": "a707de7a876b9e599b1186454148991931226222e036ccaf141c7e3c4c209c03",
+        "compute_weight_sensitivity_py": "b9e28d0b98f309f61bf6ced57628584fcb541bf51b6bef2762bde311c4368c78"
+      }
+    },
+    "results": {
+      "perturbation_method": "multiplicative +/- magnitude then L1 renormalize to sum=1.0; magnitudes per by_magnitude keys",
+      "perturbation_results": {
+        "by_magnitude": {
+          "0.10": {
+            "n_perturbations": 30,
+            "agreement_mean": 0.9823,
+            "agreement_std": 0.0082,
+            "agreement_min": 0.9673,
+            "agreement_max": 0.9939,
+            "agreement_p25": 0.9757,
+            "agreement_p50": 0.983,
+            "agreement_p75": 0.9903,
+            "histogram_counts": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30
+            ],
+            "histogram_edges": [
+              0.0,
+              0.1,
+              0.2,
+              0.3,
+              0.4,
+              0.5,
+              0.6,
+              0.7,
+              0.8,
+              0.9,
+              1.0
+            ],
+            "fnr_critical_delta_max": 0.0086,
+            "fnr_critical_delta_mean": 0.0028,
+            "magnitude": 0.1
+          },
+          "0.20": {
+            "n_perturbations": 30,
+            "agreement_mean": 0.964,
+            "agreement_std": 0.0167,
+            "agreement_min": 0.9154,
+            "agreement_max": 0.9918,
+            "agreement_p25": 0.9536,
+            "agreement_p50": 0.9653,
+            "agreement_p75": 0.9751,
+            "histogram_counts": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30
+            ],
+            "histogram_edges": [
+              0.0,
+              0.1,
+              0.2,
+              0.3,
+              0.4,
+              0.5,
+              0.6,
+              0.7,
+              0.8,
+              0.9,
+              1.0
+            ],
+            "fnr_critical_delta_max": 0.0106,
+            "fnr_critical_delta_mean": 0.0038,
+            "magnitude": 0.2
+          }
+        }
+      },
+      "baselines": {
+        "equal_weights": {
+          "agreement": 0.7341,
+          "fnr_critical_delta": 0.0106
+        },
+        "c_detect_only": {
+          "agreement": 0.7667,
+          "fnr_critical_delta": 0.0
+        },
+        "multiplicative": {
+          "agreement": 0.7937,
+          "fnr_critical_delta": 0.0
+        }
+      },
+      "baseline_weights": {
+        "detection_confidence": 0.4,
+        "device_criticality": 0.25,
+        "data_sensitivity": 0.15,
+        "clinical_tier": 0.2
+      },
+      "tier_boundaries": {
+        "critical_min": 0.8,
+        "high_min": 0.6,
+        "medium_min": 0.4
+      },
+      "n_alerts_evaluated": 2448
+    },
+    "_merged_at": "2026-05-21T17:51:45.066227+00:00",
+    "_source": "rq1_weight_sensitivity.json",
+    "_legacy_evidence": {
+      "provenance": {
+        "generated_at": "2026-05-16T10:07:33Z",
+        "git_commit": "52521ee16850dd6a0dae6a1e76c716f53dbf359b",
+        "random_seed": 42,
+        "schema_version": "1.0",
+        "code_version": "thesis-v1.0",
+        "python_version": "3.10.20",
+        "input_files": {
+          "test_split": "sha256:8c8f9d092d53d01bb055306e88637900b91284a64218c18251c30e8f2d1954c9",
+          "demo_split": "sha256:c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+          "xgboost_model": "sha256:e94fc3abe3b671ab2c6ef37a7f01c6a10c800577f506e1391bc689ebfd4f8e95",
+          "dae_detector_json": "sha256:fc2abb68d18747a5d09468987f77f9c28a9d20e0ec7a2a5096bf041377842448",
+          "dae_weights": "sha256:f70fd7d8585389be253165f0303505ff009729add690f70d7022450cd9ef3a60",
+          "composite_weights_yaml": "sha256:a8c5bb9da926620415f0d6754524a466a064085acbec9d412c0194a6cb78081c",
+          "adaptive_thresholds_yaml": "sha256:db48533c17b14d8367e40b371998e84e9cd32887e5bd35eb6ddc1e18b0e55c37"
+        }
+      },
+      "results": {
+        "perturbation_results": {
+          "n_perturbations": 30,
+          "agreement_mean": 0.9823,
+          "agreement_std": 0.0082,
+          "agreement_min": 0.9669,
+          "agreement_max": 0.9947,
+          "agreement_p25": 0.9755,
+          "agreement_p50": 0.9828,
+          "agreement_p75": 0.9905,
+          "histogram_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30
+          ],
+          "histogram_edges": [
+            0.0,
+            0.1,
+            0.2,
+            0.30000000000000004,
+            0.4,
+            0.5,
+            0.6000000000000001,
+            0.7000000000000001,
+            0.8,
+            0.9,
+            1.0
+          ]
+        },
+        "baselines": {
+          "equal_weights": {
+            "agreement": 0.7345,
+            "fnr_critical_delta": 0.0106
+          },
+          "c_detect_only": {
+            "agreement": 0.7659,
+            "fnr_critical_delta": 0.0
+          },
+          "multiplicative": {
+            "agreement": 0.7929,
+            "fnr_critical_delta": 0.0
+          }
+        },
+        "baseline_weights": {
+          "detection_confidence": 0.4,
+          "device_criticality": 0.25,
+          "data_sensitivity": 0.15,
+          "clinical_tier": 0.2
+        },
+        "tier_boundaries": {
+          "critical_min": 0.8,
+          "high_min": 0.6,
+          "medium_min": 0.4
+        },
+        "perturbation_method": "multiplicative \u00b110% then L1 renormalize to sum=1.0",
+        "n_alerts_evaluated": 2448
+      }
+    }
   },
   "documented_failure_modes": [
     {

@@ -803,11 +803,21 @@ Before Phase 3.5, `a_high` was hard-coded to `P_XGB_HIGH_CONF = 0.85` in [src/da
 
 ## 6. Phase 4 — Supporting analyses (independent, parallel-safe)
 
-### 6.1 Stage 5B — Weight sensitivity (SPEC PENDING, `a_high` half RESOLVED in §5b)
+### 6.1 Stage 5B — Weight sensitivity (RESOLVED in Fix 1 Design Memo, 2026-05-21)
 
-**Resolved:** the `a_high` half of this stage was completed in [Phase 3.5](#5b-phase-35--fusion-threshold-calibration-a_high) and persisted to `results/models/_fusion_thresholds.json`. Calibrated value: `a_high = 0.41` on val_phase1.
+**Resolved (Fix 1, 2026-05-21):** see `docs/fix1_design_memo.md` for full rationale.
 
-**Still pending:** joint sensitivity over `(a_low, b)` plus full risk-weight perturbation. Open questions for the developer before implementation:
+- D1 (magnitude): ±10% and ±20% multiplicative + L1 renormalize.
+- D2 (protocol): joint random sampling, N=30 per magnitude.
+- D3 (agreement metric): exact tier match (`np.mean(tier == tier_base)`).
+- D4 (multiplicative R): retained as named baseline comparator; primary formula remains additive.
+- R1 (naming): three sensitivity surfaces documented in ARCHITECTURE.md.
+- R3 (legacy disposition): supersede via merge script precedence rule; legacy preserved under `_legacy_evidence`.
+- R2 (split): pending Phase 0e parquet-row-count check; script ran with `--split=val_phase1` as a provenance label (component arrays come from `results/reports/risk_scores.npz` regardless of label).
+
+**Resolved (a_high, prior):** the `a_high` half of this stage was completed in [Phase 3.5](#5b-phase-35--fusion-threshold-calibration-a_high) and persisted to `results/models/_fusion_thresholds.json`. Calibrated value: `a_high = 0.41` on val_phase1.
+
+**Still pending:** joint sensitivity over `(a_low, b)` (separate item from the weight-perturbation work that Fix 1 closed). Open questions for the developer before implementation:
 
 - Perturbation protocol: one-at-a-time vs joint sampling vs Dirichlet?
 - Number of perturbations per condition?
