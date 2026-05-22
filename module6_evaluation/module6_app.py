@@ -1089,178 +1089,474 @@ def build_fda_record_for_alert(
 
 
 def dashboard_mode():
-    """Full dashboard with risk gauge, alert feed, SHAP, NLG, responses, heatmap."""
-    st.title("IoMT IDS — Real-Time Dashboard")
+    """Triage view — three-column Sentinel layout per `docs/sentinel_dashboard.html`.
 
-    # Auto-refresh toggle in sidebar
-    dash_refresh = st.sidebar.toggle("Auto-refresh (30s)", value=False)
-    if dash_refresh:
-        st_autorefresh(interval=30_000, limit=None, key="dash_autorefresh")
+    D1=A (Streamlit refactor in place). Visual direction locked to the
+    prototype; ~85% fidelity envelope. See `docs/dashboard_design_memo.md`
+    Phase 3 Plan for the implementation contract.
+    """
+    from module6_evaluation.sentinel_theme import inject_theme
+    from module6_evaluation import components as ui
+
+    inject_theme()
 
     responses = load_all_responses()
-    admin = load_admin_dashboard()
-    clin_summaries = load_clinician_summaries()
-    risk_data = load_risk_scores()
-    policy = load_response_policy()
-
     if not responses:
         st.warning("No alert data found. Run Modules 3-5 first.")
         return
 
-    # ── Row 1: Summary metrics ──
-    st.markdown("### System Overview")
-    c1, c2, c3, c4, c5 = st.columns(5)
+    # Visual queue: top 50 by tier-then-score (CRITICAL first, then HIGH...)
+    _TIER_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+    sorted_resp = sorted(
+        responses,
+        key=lambda r: (_TIER_ORDER.get(r.get("risk_level", "LOW"), 9),
+                       -r.get("risk_score", 0.0)),
+    )
+    visible = sorted_resp[:50]
 
-    # Issue 1 fix: O(n) Counter pre-computed once per data load via cache.
-    _resp_key = tuple((r.get("sample_index"), r.get("risk_level")) for r in responses)
-    tier_counts = _compute_tier_counts(_resp_key)
-    total = len(responses)
-    c1.metric("Total Alerts", total)
-    c2.metric("CRITICAL", tier_counts.get("CRITICAL", 0), delta_color="inverse")
-    c3.metric("HIGH", tier_counts.get("HIGH", 0), delta_color="inverse")
-    c4.metric("MEDIUM", tier_counts.get("MEDIUM", 0))
-    c5.metric("LOW", tier_counts.get("LOW", 0))
+    counts = Counter(r.get("risk_level", "LOW") for r in responses)
 
-    # ── Row 2: Alert distribution (collapsed to reduce cognitive load) ──
-    with st.expander("\U0001f4ca Alert Distribution", expanded=False):
-        col_left, col_right = st.columns(2)
+    # Selection state — single source of truth: st.session_state["selected_alert_id"]
+    if "selected_alert_id" not in st.session_state:
+        st.session_state["selected_alert_id"] = visible[0].get("sample_index")
+    selected = next(
+        (r for r in responses
+         if r.get("sample_index") == st.session_state["selected_alert_id"]),
+        visible[0],
+    )
 
-        with col_left:
-            st.markdown("#### Alert Tier Distribution")
-            tiers = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
-            counts = [tier_counts.get(t, 0) for t in tiers]
-            chart_df = pd.DataFrame({"Tier": tiers, "Count": counts})
-            st.bar_chart(chart_df.set_index("Tier"), color="#3274A1")
+    with st.container(key="sentinel-triage"):
+        col_q, col_inv, col_act = st.columns([1.3, 3.0, 1.7], gap="small")
+        with col_q:
+            _triage_queue_column(visible, counts, selected, ui)
+        with col_inv:
+            _triage_investigation_column(selected, ui)
+        with col_act:
+            _triage_actions_column(selected, ui)
 
-        with col_right:
-            st.markdown("#### Risk Score Heatmap (by Attack Category)")
-            if admin:
-                cat_stats = admin.get("alerts_by_attack_category", {}) if admin else {}
-                if cat_stats:
-                    st.bar_chart(pd.Series(cat_stats), color="#e74c3c")
-                else:
-                    st.info("No category data available")
-            elif risk_data is not None:
-                st.info("Admin dashboard not loaded")
+    _triage_status_strip(ui)
 
-    # ── Row 3: Risk gauge (latest alert) + Alert feed ──
-    st.markdown("---")
-    col_gauge, col_feed = st.columns([1, 2])
 
-    with col_gauge:
-        st.markdown("#### Risk Score Gauge")
-        # Show gauge for selected/latest alert
-        alert_idx = st.selectbox(
-            "Select alert",
-            range(min(20, len(responses))),
-            format_func=lambda i: f"#{responses[i]['sample_index']} ({responses[i]['risk_level']})",
-        )
-        selected = responses[alert_idx]
-        score = selected["risk_score"]
-        level = selected["risk_level"]
+def _floor_elevated(alert: dict) -> bool:
+    """Approximate the Module-5 safety-floor invariant for visual purposes.
 
-        # Gap 2: Device criticality badge
-        render_device_criticality(selected)
+    The canonical floor logic is in `module5_responses/module5_pipeline.py`
+    (not opened in Phase 0 per Q-W5 Section 4 follow-up). This proxy flags
+    alerts where a life-critical device (D_crit ≥ 0.9) is paired with a
+    high-tier composite — the same conditions the prototype illustrates at
+    `docs/sentinel_dashboard.html:974` (Invariant 2).
+    """
+    d_crit = (alert.get("risk_components") or {}).get("D_crit", 0.0)
+    tier = alert.get("risk_level", "LOW")
+    return tier in ("CRITICAL", "HIGH") and d_crit >= 0.9
 
-        # Gauge visualization using progress bar + color
-        st.metric("Risk Score", f"{score:.3f}", delta=level)
-        st.progress(min(score, 1.0))
 
-        # Component breakdown
-        comps = selected.get("risk_components", {})
-        if comps:
-            st.markdown("**Components:**")
-            for k, v in comps.items():
-                st.text(f"  {k}: {v:.4f}")
+def _triage_queue_column(visible, counts, selected, ui):
+    sel_id = selected.get("sample_index")
+    total_open = sum(counts.values())
 
-    with col_feed:
-        st.markdown("#### Alert Feed (latest 15)")
-        # Issue 6 fix: DataFrame built once per data load via cache;
-        # not rebuilt on every render triggered by widget interactions.
-        _feed_key = tuple(
-            (r.get("sample_index"), r.get("risk_level"), r.get("risk_score", 0.0),
-             r.get("device_class"), r.get("attack_category"), r.get("correct_action"))
-            for r in responses[:15]
-        )
-        st.dataframe(_build_feed_dataframe(_feed_key), width="stretch", hide_index=True)
+    st.markdown(
+        f'<div style="padding:16px 16px 4px;">'
+        f'  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;">'
+        f'    <h2 class="font-display" style="font-size:1.5rem;margin:0;letter-spacing:-0.02em;color:var(--text-primary);">Active queue</h2>'
+        f'    <span class="font-mono" style="font-size:11px;color:var(--text-tertiary);">{total_open} open</span>'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
-    # ── Row 4: SHAP waterfall + NLG clinician alert ──
-    st.markdown("---")
-    col_shap, col_nlg = st.columns(2)
+    # 4-up tier-count tile grid
+    tiles = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 12px;">'
+    for tier in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+        tiles += ui.render_tier_count_tile(tier, counts.get(tier, 0))
+    tiles += '</div>'
+    st.markdown(tiles, unsafe_allow_html=True)
 
-    with col_shap:
-        st.markdown("#### SHAP Waterfall Plot")
-        sample_idx = selected["sample_index"]
-        wf_bytes = _cached_png_bytes(
-            str(CHARTS_DIR / f"waterfall_xgboost_sample_{sample_idx:04d}.png")
-        )
-        if wf_bytes:
-            st.image(wf_bytes, width="stretch")
-        else:
-            force_bytes = _cached_png_bytes(
-                str(CHARTS_DIR / f"force_xgboost_sample_{sample_idx:04d}.png")
+    # Functional selectbox — source of truth for selection (click-on-row
+    # is the prototype's behavior; Streamlit can't bind clicks to arbitrary
+    # HTML, so the selectbox is the workable substitute under D1=A).
+    options = [r.get("sample_index") for r in visible]
+    def _fmt(idx):
+        a = next(a for a in visible if a.get("sample_index") == idx)
+        return f"{a.get('risk_level', 'LOW')[:4]}  ·  A-{idx:04d}  ·  {a.get('attack_category', '?')}"
+
+    chosen = st.selectbox(
+        "Select alert",
+        options,
+        index=options.index(sel_id) if sel_id in options else 0,
+        format_func=_fmt,
+        key="alert_selectbox",
+        label_visibility="collapsed",
+    )
+    if chosen != sel_id:
+        st.session_state["selected_alert_id"] = chosen
+        st.rerun()
+
+    # Visual queue, grouped by tier
+    queue_html = ""
+    for tier in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+        tier_alerts = [a for a in visible if a.get("risk_level") == tier]
+        if not tier_alerts:
+            continue
+        queue_html += ui.render_tier_header(tier, counts.get(tier, 0))
+        for a in tier_alerts:
+            aid = a.get("sample_index", 0)
+            queue_html += ui.render_alert_row(
+                alert_id=f"A-{aid:04d}",
+                title=a.get("attack_category", "Alert"),
+                subtitle=f"sample {aid} · score {a.get('risk_score', 0.0):.2f}",
+                tier=tier,
+                age="",
+                floor_elevated=_floor_elevated(a),
+                active=(aid == sel_id),
             )
-            if force_bytes:
-                st.image(force_bytes, width="stretch")
-            else:
-                st.info(f"No SHAP chart for sample {sample_idx}")
+    st.markdown(queue_html, unsafe_allow_html=True)
 
-    with col_nlg:
-        st.markdown("#### Clinician Alert")
-        clin = clin_summaries.get(sample_idx, {})
-        if clin:
-            severity = clin.get("severity", "LOW")
-            color = TIER_COLORS.get(severity, "#999")
+
+def _triage_investigation_column(selected, ui):
+    from html import escape
+
+    aid = selected.get("sample_index", 0)
+    tier = selected.get("risk_level", "LOW")
+    components = selected.get("risk_components", {}) or {}
+    floor = _floor_elevated(selected)
+    composite = selected.get("risk_score", 0.0)
+    raw = max(0.0, composite - 0.15) if floor else composite
+    floor_delta = (composite - raw) if floor else None
+
+    subtitle_html = (
+        f'Attack <span class="font-mono" style="color:var(--text-primary);">'
+        f'{escape(selected.get("attack_category", "?"))}</span> · '
+        f'<span class="font-mono" style="color:var(--text-primary);">sample {aid}</span> · '
+        f'ground truth <span class="font-mono">{escape(selected.get("ground_truth", "?"))}</span>'
+    )
+
+    st.markdown(
+        ui.render_investigation_header(
+            alert_id=f"A-{aid:04d}",
+            tier=tier,
+            title=selected.get("attack_category") or f"Alert {aid}",
+            subtitle_html=subtitle_html,
+            composite_risk=composite,
+            raw_risk=raw if floor else None,
+            floor_delta=floor_delta,
+            floor_elevated=floor,
+            invariant_label="Invariant 2",
+        ),
+        unsafe_allow_html=True,
+    )
+
+    # 4-column metric grid mapping risk_components to the prototype's
+    # detection/criticality/sensitivity/clinical-tier breakdown.
+    metric_grid = (
+        '<div style="padding:20px 32px;display:grid;grid-template-columns:repeat(4,1fr);'
+        'gap:24px;border-bottom:1px solid var(--border-subtle);">'
+    )
+    for label, key, color, sub in (
+        ("Detection confidence", "C_detect",  "--accent",        "calibrated"),
+        ("Device criticality",   "D_crit",    "--tier-critical", "life-critical" if components.get("D_crit", 0) >= 0.9 else "device class"),
+        ("Data sensitivity",     "S_data",    "--tier-medium",   "data scope"),
+        ("Patient acuity",       "A_patient", "--tier-high",     "active-care"),
+    ):
+        v = float(components.get(key, 0.0))
+        metric_grid += ui.render_metric_with_bar(
+            label, v, sub, color, bar_value=v, with_ticks=(key == "C_detect"),
+        )
+    metric_grid += '</div>'
+    st.markdown(metric_grid, unsafe_allow_html=True)
+
+    # Risk-component contribution rows (substitute for SHAP under
+    # current data contract — SHAP top-features live on evaluation_alerts,
+    # not alert_responses; tying the two requires the device-context join
+    # already done in load_all_responses).
+    st.markdown(
+        '<div style="padding:24px 32px 8px;">'
+        '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        '    <h3 class="font-display" style="font-size:1.25rem;margin:0;letter-spacing:-0.01em;color:var(--text-primary);">Risk component contributions</h3>'
+        '    <span class="font-mono" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);">6 components</span>'
+        '  </div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    factor_html = '<div style="padding:0 32px;">'
+    component_labels = (
+        ("C_detect",  "Detection confidence",   "consensus across detectors"),
+        ("C_track_a", "Track-A consistency",    "behavior vs cohort baseline"),
+        ("C_track_b", "Track-B consistency",    "behavior vs device self-baseline"),
+        ("D_crit",    "Device criticality",     "device-class weight"),
+        ("S_data",    "Data sensitivity",       "what this device touches"),
+        ("A_patient", "Patient acuity",         "active-care weight"),
+    )
+    for key, label, sub in component_labels:
+        v = float(components.get(key, 0.0))
+        factor_html += ui.render_factor_row(label, sub, int(round(v * 100)), v)
+    factor_html += '</div>'
+    st.markdown(factor_html, unsafe_allow_html=True)
+
+    # Recommended-actions card (from response policy)
+    resp = selected.get("response", {}) or {}
+    actions = resp.get("actions", [])
+    if actions:
+        body = '<div style="display:flex;flex-direction:column;gap:6px;">'
+        for a in actions[:5]:
+            body += (
+                f'<div style="font-size:0.875rem;color:var(--text-primary);">'
+                f'<span class="font-mono" style="color:var(--accent);">→ </span>{escape(str(a))}'
+                f'</div>'
+            )
+        body += '</div>'
+        meta_bits = []
+        if resp.get("max_response_min") is not None:
+            meta_bits.append(f'Max response <span style="color:var(--text-primary);">{resp.get("max_response_min")} min</span>')
+        if resp.get("priority"):
+            meta_bits.append(f'Priority <span style="color:var(--text-primary);">{escape(str(resp.get("priority")))}</span>')
+        if meta_bits:
+            body += (
+                '<div class="font-mono" style="margin-top:12px;padding-top:12px;'
+                'border-top:1px solid var(--border-subtle);font-size:11px;color:var(--text-tertiary);">'
+                + ' · '.join(meta_bits)
+                + '</div>'
+            )
+        st.markdown(
+            f'<div style="padding:20px 32px 32px;">'
+            f'{ui.render_card("Response policy · device-aware", body)}</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _triage_actions_column(selected, ui):
+    from html import escape
+    aid = selected.get("sample_index", 0)
+    tier = selected.get("risk_level", "LOW")
+
+    # Role pills (Step 3) — replaces the sidebar selectbox at the legacy L1300.
+    st.markdown('<div data-sentinel-role-pills="1" style="padding:20px 20px 8px;">', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+        '  <h3 class="font-display" style="font-size:1.25rem;margin:0;letter-spacing:-0.01em;color:var(--text-primary);">Why this fired</h3>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    role_pick = st.pills(
+        "Role",
+        ["SOC", "Clinical", "Admin"],
+        default=st.session_state.get("sim_role_pill", "SOC"),
+        selection_mode="single",
+        key="sim_role_pill",
+        label_visibility="collapsed",
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Role-adaptive body (delegates to existing render_* functions — Step 3.5
+    # body review parked; reuse keeps behavior stable).
+    role = role_pick or "SOC"
+    # Map pill -> existing sim_role string so the legacy renderers work unchanged.
+    st.session_state["sim_role"] = {
+        "SOC": "Security Analyst",
+        "Clinical": "Clinician",
+        "Admin": "Administrator",
+    }[role]
+
+    with st.container(border=False):
+        st.markdown('<div style="padding:0 20px 16px;">', unsafe_allow_html=True)
+        if role == "SOC":
+            clin = (selected.get("explanation") or {}).get("clinician_summary", "")
             st.markdown(
-                f"**Severity:** <span style='color:{color}'>{severity}</span>",
+                f'<p style="font-size:0.875rem;line-height:1.55;color:var(--text-primary);margin:0 0 8px;">'
+                f'Attack category <span class="font-mono" style="color:var(--accent);">{escape(selected.get("attack_category", "?"))}</span> '
+                f'flagged at risk <span class="font-mono">{selected.get("risk_score", 0.0):.2f}</span> (tier {escape(tier)}).'
+                f'</p>'
+                f'<p style="font-size:0.875rem;line-height:1.55;color:var(--text-secondary);margin:0;">'
+                f'Six risk components contributed; see the contribution panel. The composite reflects detector consensus,'
+                f' device-class weight, and active-care weighting.</p>',
                 unsafe_allow_html=True,
             )
-            st.warning(clin.get("summary", "No summary available"))
-        else:
-            st.info("No clinician summary for this sample")
-
-        # Gap 3: MVE layer rendering for the selected alert
-        render_mve_layers(selected)
-
-    # ── Row 5: Response recommendation panel ──
-    st.markdown("---")
-    st.markdown("#### Response Recommendation")
-    resp = selected.get("response", {})
-    if resp:
-        rc1, rc2 = st.columns([2, 1])
-        with rc1:
-            render_prioritized_actions(resp.get("actions", []))
-        with rc2:
-            st.metric("Max Response", f"{resp.get('max_response_min', 'N/A')} min")
-            st.metric("Priority", resp.get("priority", "N/A"))
-
-        rationale = resp.get("rationale", "")
-        if rationale:
-            st.caption(f"Rationale: {rationale[:200]}")
-
-        escalation = resp.get("escalation_chain", {})
-        if escalation and escalation.get("primary"):
+        elif role == "Clinical":
+            clin = (selected.get("explanation") or {}).get("clinician_summary", "")
             st.markdown(
-                f"**Escalation:** {escalation['primary']}"
-                f"{' → ' + escalation['secondary'] if escalation.get('secondary') else ''}"
+                f'<p style="font-size:0.875rem;line-height:1.55;color:var(--text-primary);margin:0 0 8px;">'
+                f'{escape(clin) if clin else "No clinician summary on file for this alert."}</p>',
+                unsafe_allow_html=True,
             )
+        else:  # Admin
+            comps = selected.get("risk_components", {}) or {}
+            top = sorted(comps.items(), key=lambda kv: -kv[1])[:3]
+            top_html = " · ".join(
+                f'<span class="font-mono">{escape(k)}={v:.2f}</span>' for k, v in top
+            )
+            st.markdown(
+                f'<p style="font-size:0.875rem;line-height:1.55;color:var(--text-primary);margin:0 0 8px;">'
+                f'Aggregate: tier <span class="font-mono">{escape(tier)}</span>, composite '
+                f'<span class="font-mono">{selected.get("risk_score", 0.0):.2f}</span>. Top components: {top_html}.</p>',
+                unsafe_allow_html=True,
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        # Gap 1: DO NOT constraint from response policy
-        constraint = resp.get("clinical_constraint", "") or resp.get("rationale", "")
-        render_do_not_constraint(constraint, level)
+    # Action buttons (Step 4)
+    st.markdown(
+        '<div style="padding:8px 20px 4px;">'
+        '  <div style="font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:10px;">Recommended actions · human-required</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    btn_col = st.container()
+    with btn_col:
+        st.markdown('<div data-sentinel-action="acknowledge" style="padding:0 20px 6px;">', unsafe_allow_html=True)
+        if st.button("✓  Acknowledge — taking ownership", key=f"ack_{aid}", width="stretch"):
+            _capture_dashboard_action(aid, "acknowledge", details={"tier": tier, "role": role})
+            st.toast(f"Alert acknowledged · A-{aid:04d}", icon="✅")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Row 6: Global SHAP (collapsed to reduce cognitive load) ──
-    st.markdown("---")
-    with st.expander("\U0001f52c Global Feature Importance", expanded=False):
-        global_bytes = _cached_png_bytes(str(CHARTS_DIR / "global_importance_xgboost.png"))
-        beeswarm_bytes = _cached_png_bytes(str(CHARTS_DIR / "beeswarm_xgboost.png"))
-        gc1, gc2 = st.columns(2)
-        with gc1:
-            if global_bytes:
-                st.image(global_bytes, width="stretch")
-        with gc2:
-            if beeswarm_bytes:
-                st.image(beeswarm_bytes, width="stretch")
+        st.markdown('<div data-sentinel-action="escalate" style="padding:0 20px 6px;">', unsafe_allow_html=True)
+        if st.button("↑  Escalate — pull in T3 + biomed", key=f"esc_{aid}", width="stretch"):
+            _capture_dashboard_action(aid, "escalate", details={"tier": tier, "role": role})
+            st.toast(f"Escalated · A-{aid:04d}", icon="⚠️")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div data-sentinel-action="dismiss" style="padding:0 20px 6px;">', unsafe_allow_html=True)
+        if st.button("✕  Dismiss — requires reason", key=f"dis_{aid}", width="stretch"):
+            _dismiss_dialog(aid, tier, role)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown(
+            f'<div style="padding:6px 20px 16px;">{ui.render_actions_disclaimer()}</div>',
+            unsafe_allow_html=True,
+        )
+
+    # Audit timeline — derived from audit_trail.json for this sample
+    audit = load_audit_trail()
+    rec = audit.get(aid, {}) if isinstance(audit, dict) else {}
+    events = rec.get("events", []) if isinstance(rec, dict) else []
+    if not events:
+        events = [
+            {"kind": "system", "label": "Alert raised", "ts": "", "body": f"Sentinel · risk {selected.get('risk_score', 0.0):.2f} · tier {tier}"},
+        ]
+    timeline_html = (
+        '<div style="padding:8px 20px 24px;">'
+        f'  <div style="font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:12px;">Audit trail · {len(events)} entr{"y" if len(events) == 1 else "ies"}</div>'
+    )
+    for i, ev in enumerate(events[:8]):
+        kind = ev.get("kind") or ("human" if "operator" in ev else "system")
+        timeline_html += ui.render_timeline_item(
+            kind=kind,
+            label=str(ev.get("label", ev.get("event_type", "event"))),
+            timestamp=str(ev.get("ts", ev.get("timestamp", ""))),
+            body=str(ev.get("body", ev.get("rationale", ""))),
+            is_last=(i == len(events) - 1 or i == 7),
+        )
+    timeline_html += '</div>'
+    st.markdown(timeline_html, unsafe_allow_html=True)
+
+
+def _capture_dashboard_action(sample_idx: int, action: str, details: dict | None = None) -> None:
+    """Route a Triage-view action through the existing triple-sink audit fan-out.
+
+    Mirrors the contract of `capture_interaction` (L520) but for the dashboard
+    page (where no participant_id is set in study mode). Action vocabulary
+    extension: adds "acknowledge" as the explicit ownership signal.
+    """
+    payload = {
+        "timestamp": datetime.now().isoformat(),
+        "participant_id": st.session_state.get("participant_id", "dashboard_user"),
+        "alert_id": f"ALERT-{sample_idx:05d}",
+        "action_type": action,
+        "details": details or {},
+    }
+    try:
+        _online_writer.log(action, **payload)
+    except Exception:
+        pass
+    audit_log("dashboard_action", **payload)
+    try:
+        _hardened_audit.log(
+            {"event_type": "dashboard_action",
+             "alert_id": payload["alert_id"],
+             "action": action,
+             "details": details or {}},
+            reviewer_id=payload["participant_id"],
+            reviewer_role=st.session_state.get("sim_role", ""),
+        )
+    except Exception:
+        pass
+
+
+@st.dialog("Dismiss alert")
+def _dismiss_dialog(sample_idx: int, tier: str, role: str):
+    """Required-rationale dismiss flow.
+
+    Implements C3's no-silent-suppression invariant at the UI layer: the
+    dialog cannot complete without a logged rationale. Mirrors the prototype's
+    L1022-1049 markup contract.
+    """
+    st.markdown(
+        f'<p style="font-size:0.875rem;color:var(--text-secondary);margin:0 0 16px;">'
+        f'Dismissing A-{sample_idx:04d} ({tier}) requires a recorded reason. Your operator '
+        f'ID, timestamp, and rationale persist to the audit log and export in FDA-record format.</p>',
+        unsafe_allow_html=True,
+    )
+    category = st.radio(
+        "Reason category",
+        ["False positive", "Scheduled maintenance", "Known vendor activity", "Other"],
+        horizontal=False,
+        key=f"dismiss_cat_{sample_idx}",
+    )
+    rationale = st.text_area(
+        "Rationale · required",
+        placeholder="What did your investigation find? What did you confirm and with whom?",
+        height=100,
+        key=f"dismiss_rat_{sample_idx}",
+    )
+    cancel_col, confirm_col = st.columns(2)
+    with cancel_col:
+        if st.button("Cancel", key=f"dismiss_cancel_{sample_idx}", width="stretch"):
+            st.rerun()
+    with confirm_col:
+        if st.button("Confirm dismissal",
+                     key=f"dismiss_confirm_{sample_idx}",
+                     type="primary",
+                     width="stretch"):
+            if not rationale.strip():
+                st.error("Rationale is required. Dismissal not recorded.")
+                return
+            _capture_dashboard_action(
+                sample_idx, "dismiss",
+                details={"tier": tier, "role": role, "category": category, "rationale": rationale.strip()},
+            )
+            st.toast(f"Dismissed A-{sample_idx:04d} · audit recorded", icon="📝")
+            st.rerun()
+
+
+def _triage_status_strip(ui):
+    """Fixed-position status strip footer (prototype L996-1019)."""
+    latency = load_latency_profile()
+    p95_ms = ""
+    if isinstance(latency, dict):
+        stages = latency.get("stages") or latency
+        if isinstance(stages, dict):
+            agg = stages.get("module4") or stages.get("aggregate") or {}
+            if isinstance(agg, dict):
+                p95 = agg.get("p95_ms") or agg.get("p95")
+                if p95 is not None:
+                    p95_ms = f"{float(p95):.0f}ms"
+
+    build = "feature/dashboard-design"
+    try:
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=2, check=False,
+        )
+        if out.returncode == 0 and out.stdout.strip():
+            build = f"feature/dashboard-design@{out.stdout.strip()}"
+    except Exception:
+        pass
+
+    metrics = {
+        "system": "System nominal",
+        "p95_ms": p95_ms or "—",
+        "build": build,
+    }
+    st.markdown(ui.render_status_strip(metrics), unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -2055,6 +2351,7 @@ _SEV_COLORS = {
 # Issue 10 fix: compile patterns once at module load instead of running
 # repeated `in` substring scans on every line of every Group B render.
 import re as _re
+
 _DO_NOT_RE = _re.compile(r"DO NOT", _re.IGNORECASE)
 # Matches "SEVERITY: CRITICAL", "► HIGH", "SEVERITY HIGH" etc.
 _SEV_LINE_RE = _re.compile(

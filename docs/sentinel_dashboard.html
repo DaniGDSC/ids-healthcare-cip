@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel — IoMT Intrusion Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    /* Deep ink, slight blue undertone — calm, focused */
+    --bg: #0E0F12;
+    --surface-1: #16181D;
+    --surface-2: #1D2026;
+    --surface-3: #24272F;
+    --border-subtle: #1F2229;
+    --border: #262A33;
+    --border-strong: #353944;
+
+    /* Warm whites for text */
+    --text-primary: #E8E9EB;
+    --text-secondary: #9CA0AB;
+    --text-tertiary: #6A6F7B;
+    --text-quaternary: #4A4F5A;
+
+    /* Tier colors — restrained, not alarmist */
+    --tier-low: #5B8FB9;
+    --tier-low-bg: rgba(91, 143, 185, 0.08);
+    --tier-medium: #D4A445;
+    --tier-medium-bg: rgba(212, 164, 69, 0.08);
+    --tier-high: #E07A5F;
+    --tier-high-bg: rgba(224, 122, 95, 0.10);
+    --tier-critical: #C53030;
+    --tier-critical-bg: rgba(197, 48, 48, 0.10);
+
+    /* Accents */
+    --accent: #7BA7BC;
+    --accent-bg: rgba(123, 167, 188, 0.10);
+    --success: #5F9E7B;
+    --success-bg: rgba(95, 158, 123, 0.10);
+    --warning: #D4A445;
+    --neutral: #6A6F7B;
+  }
+
+  * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-feature-settings: "ss01", "ss02", "cv11";
+    overflow: hidden;
+  }
+
+  .font-display {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-feature-settings: "liga", "dlig";
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: "ss01", "zero", "tnum";
+  }
+
+  /* Subtle noise texture for depth */
+  .noise-bg {
+    position: relative;
+  }
+  .noise-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .noise-bg > * { position: relative; z-index: 1; }
+
+  /* Tier glyphs — colorblind-safe via shape */
+  .glyph {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+  }
+  .glyph-low {
+    background: var(--tier-low);
+    border-radius: 50%;
+  }
+  .glyph-medium {
+    background: var(--tier-medium);
+    transform: rotate(45deg);
+  }
+  .glyph-high {
+    background: var(--tier-high);
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    width: 11px;
+    height: 10px;
+  }
+  .glyph-critical {
+    background: var(--tier-critical);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    width: 12px;
+  }
+
+  /* Scrollbars — barely visible */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-quaternary); }
+
+  /* Alert row hover/active */
+  .alert-row {
+    transition: background 120ms ease, border-left-color 120ms ease;
+    border-left: 2px solid transparent;
+  }
+  .alert-row:hover {
+    background: var(--surface-2);
+  }
+  .alert-row.active {
+    background: var(--surface-2);
+    border-left-color: var(--accent);
+  }
+
+  /* Tier section header */
+  .tier-header {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  /* Calibrated confidence bar */
+  .calibration-bar {
+    position: relative;
+    height: 4px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .calibration-bar::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--border-strong);
+    z-index: 2;
+  }
+  .calibration-tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border-strong);
+  }
+  .calibration-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 300ms ease;
+  }
+
+  /* Subtle dividing lines */
+  .divider-h {
+    height: 1px;
+    background: var(--border-subtle);
+  }
+  .divider-v {
+    width: 1px;
+    background: var(--border-subtle);
+  }
+
+  /* Floor-elevated badge — makes safety invariant visible */
+  .floor-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: var(--accent-bg);
+    border: 1px solid rgba(123, 167, 188, 0.2);
+    border-radius: 3px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  /* Action buttons */
+  .btn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    padding: 8px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover {
+    background: var(--surface-3);
+    border-color: var(--text-quaternary);
+  }
+  .btn-acknowledge {
+    background: var(--success-bg);
+    border-color: rgba(95, 158, 123, 0.3);
+    color: var(--success);
+  }
+  .btn-acknowledge:hover {
+    background: rgba(95, 158, 123, 0.18);
+    border-color: var(--success);
+  }
+  .btn-escalate {
+    background: var(--tier-high-bg);
+    border-color: rgba(224, 122, 95, 0.3);
+    color: var(--tier-high);
+  }
+  .btn-escalate:hover {
+    background: rgba(224, 122, 95, 0.18);
+    border-color: var(--tier-high);
+  }
+  .btn-dismiss {
+    background: transparent;
+  }
+
+  /* Role toggle pill */
+  .role-toggle {
+    display: inline-flex;
+    background: var(--surface-3);
+    border-radius: 4px;
+    padding: 2px;
+    border: 1px solid var(--border);
+  }
+  .role-toggle button {
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    background: transparent;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 120ms ease;
+  }
+  .role-toggle button.active {
+    background: var(--surface-1);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* SHAP factor row */
+  .factor-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 60px;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .factor-row:last-child {
+    border-bottom: none;
+  }
+  .factor-bar {
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .factor-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .factor-bar-fill.negative {
+    background: var(--tier-high);
+  }
+
+  /* Audit timeline */
+  .timeline-item {
+    position: relative;
+    padding-left: 24px;
+    padding-bottom: 14px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    border: 2px solid var(--border-strong);
+    z-index: 1;
+  }
+  .timeline-item.system::before {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .timeline-item.human::before {
+    background: var(--success);
+    border-color: var(--success);
+  }
+  .timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 14px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* Subtle pulse for live indicator */
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .pulse-live {
+    animation: pulse-soft 2.4s ease-in-out infinite;
+  }
+
+  /* Stagger reveal on load */
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .reveal {
+    animation: slide-up 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    background: rgba(14, 15, 18, 0.7);
+    backdrop-filter: blur(6px);
+  }
+
+  /* Toast */
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .toast {
+    animation: toast-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Big stat number */
+  .stat-num {
+    font-family: 'Instrument Serif', serif;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  /* Decoration: grid backdrop on side panels */
+  .grid-faint {
+    background-image:
+      linear-gradient(var(--border-subtle) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+  }
+
+  /* Selectable text in alert detail */
+  .selectable { user-select: text; }
+</style>
+</head>
+<body class="h-screen flex flex-col">
+
+<!-- ============ COMMAND BAR ============ -->
+<header class="flex items-center justify-between h-12 px-5 border-b" style="border-color: var(--border); background: var(--surface-1);">
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-2.5">
+      <!-- Logo mark — geometric, calm -->
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 1 L17 5 V13 L9 17 L1 13 V5 Z" stroke="var(--accent)" stroke-width="1.4" fill="none"/>
+        <circle cx="9" cy="9" r="2.4" fill="var(--accent)"/>
+      </svg>
+      <span class="font-display text-lg" style="letter-spacing: -0.01em;">Sentinel</span>
+      <span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background: var(--surface-3); color: var(--text-tertiary);">v2.4</span>
+    </div>
+
+    <nav class="flex items-center gap-1 ml-4">
+      <button class="px-3 py-1.5 text-xs font-medium rounded" style="background: var(--surface-2); color: var(--text-primary);">Triage</button>
+      <button class="px-3 py-1.5 text-xs font-medium rounded hover:bg-opacity-50" style="color: var(--text-secondary);">Investigations</button>
+      <button class="px-3 py-1.5 text-xs font-medium rounded" style="color: var(--text-secondary);">Replay</button>
+      <button class="px-3 py-1.5 text-xs font-medium rounded" style="color: var(--text-secondary);">Audit</button>
+      <button class="px-3 py-1.5 text-xs font-medium rounded" style="color: var(--text-secondary);">System</button>
+    </nav>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <!-- Search -->
+    <div class="relative">
+      <input type="text" placeholder="Search alerts, devices, patients…"
+        class="font-mono text-xs px-3 py-1.5 rounded w-72 outline-none"
+        style="background: var(--surface-2); border: 1px solid var(--border); color: var(--text-primary);">
+      <span class="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-xs" style="color: var(--text-quaternary);">⌘K</span>
+    </div>
+
+    <!-- Time range -->
+    <button class="flex items-center gap-2 text-xs font-mono px-2 py-1.5 rounded" style="background: var(--surface-2); border: 1px solid var(--border); color: var(--text-secondary);">
+      <span class="w-1.5 h-1.5 rounded-full pulse-live" style="background: var(--success);"></span>
+      LIVE · last 4h
+    </button>
+
+    <!-- Operator -->
+    <div class="flex items-center gap-2 text-xs">
+      <div class="w-7 h-7 rounded-full flex items-center justify-center font-medium" style="background: var(--surface-3); color: var(--accent);">SR</div>
+      <div class="flex flex-col leading-tight">
+        <span class="font-medium" style="color: var(--text-primary);">S. Reyes</span>
+        <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">SOC · TIER-2</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MAIN LAYOUT ============ -->
+<div class="flex-1 flex overflow-hidden">
+
+  <!-- ============ ALERT QUEUE ============ -->
+  <aside class="w-[360px] flex-shrink-0 flex flex-col border-r overflow-hidden" style="border-color: var(--border); background: var(--surface-1);">
+
+    <!-- Queue header with counts -->
+    <div class="px-4 pt-4 pb-3 noise-bg">
+      <div class="flex items-baseline justify-between mb-3">
+        <h2 class="font-display text-2xl" style="letter-spacing: -0.02em;">Active queue</h2>
+        <span class="font-mono text-[11px]" style="color: var(--text-tertiary);">23 open</span>
+      </div>
+
+      <!-- Tier counts — visual hierarchy -->
+      <div class="grid grid-cols-4 gap-1.5 mb-2">
+        <div class="px-2 py-2 rounded text-center cursor-pointer transition-colors" style="background: var(--tier-critical-bg);">
+          <div class="stat-num text-2xl" style="color: var(--tier-critical);">3</div>
+          <div class="flex items-center justify-center gap-1 mt-0.5">
+            <span class="glyph glyph-critical" style="width: 8px; height: 8px;"></span>
+            <span class="text-[9px] font-medium tracking-wider uppercase" style="color: var(--tier-critical);">Crit</span>
+          </div>
+        </div>
+        <div class="px-2 py-2 rounded text-center cursor-pointer">
+          <div class="stat-num text-2xl" style="color: var(--tier-high);">7</div>
+          <div class="flex items-center justify-center gap-1 mt-0.5">
+            <span class="glyph glyph-high" style="width: 8px; height: 7px;"></span>
+            <span class="text-[9px] font-medium tracking-wider uppercase" style="color: var(--tier-high);">High</span>
+          </div>
+        </div>
+        <div class="px-2 py-2 rounded text-center cursor-pointer">
+          <div class="stat-num text-2xl" style="color: var(--tier-medium);">11</div>
+          <div class="flex items-center justify-center gap-1 mt-0.5">
+            <span class="glyph glyph-medium" style="width: 7px; height: 7px;"></span>
+            <span class="text-[9px] font-medium tracking-wider uppercase" style="color: var(--tier-medium);">Med</span>
+          </div>
+        </div>
+        <div class="px-2 py-2 rounded text-center cursor-pointer">
+          <div class="stat-num text-2xl" style="color: var(--tier-low);">2</div>
+          <div class="flex items-center justify-center gap-1 mt-0.5">
+            <span class="glyph glyph-low" style="width: 7px; height: 7px;"></span>
+            <span class="text-[9px] font-medium tracking-wider uppercase" style="color: var(--tier-low);">Low</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex items-center gap-1.5 text-[10px] font-medium" style="color: var(--text-tertiary);">
+        <button class="px-2 py-1 rounded uppercase tracking-wider" style="background: var(--surface-3); color: var(--text-primary);">All</button>
+        <button class="px-2 py-1 rounded uppercase tracking-wider">Unassigned</button>
+        <button class="px-2 py-1 rounded uppercase tracking-wider">Floor-elevated</button>
+      </div>
+    </div>
+
+    <!-- Alert list, scrollable -->
+    <div class="flex-1 overflow-y-auto" id="alert-list">
+      <!-- Critical group -->
+      <div class="tier-header px-4 pt-3 pb-1.5 flex items-center gap-2">
+        <span class="glyph glyph-critical" style="width: 8px; height: 8px;"></span>
+        <span>Critical · 3</span>
+        <div class="flex-1 h-px" style="background: var(--border);"></div>
+      </div>
+
+      <div class="alert-row active px-4 py-3 cursor-pointer" data-alert="A-1147">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-critical mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight" style="letter-spacing: -0.01em;">Anomalous TLS</span>
+              <span class="font-mono text-[10px] tabular-nums" style="color: var(--text-tertiary);">A-1147</span>
+            </div>
+            <div class="text-xs mb-1.5" style="color: var(--text-secondary);">Infusion Pump · ICU-3 · Bed 14</div>
+            <div class="flex items-center justify-between">
+              <div class="floor-badge">
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1L7 5H1L4 1Z" fill="currentColor"/></svg>
+                floor-elevated
+              </div>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">2m ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer" data-alert="A-1145">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-critical mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">Unauth control-plane</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1145</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">Patient Monitor · ER-2 · Bay 7</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">8m ago · S. Reyes</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer" data-alert="A-1138">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-critical mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">Lateral movement</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1138</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">Imaging gateway · Radiology</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">14m ago · M. Chen</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- High group -->
+      <div class="tier-header px-4 pt-4 pb-1.5 flex items-center gap-2">
+        <span class="glyph glyph-high" style="width: 8px; height: 7px;"></span>
+        <span>High · 7</span>
+        <div class="flex-1 h-px" style="background: var(--border);"></div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-high mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">Repeated auth fail</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1144</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">EHR proxy · Ward-4</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">11m ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-high mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">DNS exfiltration pattern</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1142</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">Vital signs hub · ICU-1</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">17m ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-high mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">Firmware drift</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1141</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">MRI-2 console · Radiology</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">22m ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-high mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">Unusual VPN egress</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1139</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">Pharmacy server · Pharmacy</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">28m ago · K. Patel</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medium group (truncated for brevity) -->
+      <div class="tier-header px-4 pt-4 pb-1.5 flex items-center gap-2">
+        <span class="glyph glyph-medium" style="width: 7px; height: 7px;"></span>
+        <span>Medium · 11</span>
+        <div class="flex-1 h-px" style="background: var(--border);"></div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-medium mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">Off-hours admin access</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1136</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">Backup controller · IT-Annex</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">41m ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-medium mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">SMB scan from clinical net</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1134</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">Network · ICU-VLAN-3</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">52m ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-row px-4 py-3 cursor-pointer">
+        <div class="flex items-start gap-2.5">
+          <span class="glyph glyph-medium mt-1.5"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2 mb-0.5">
+              <span class="font-display text-base leading-tight">Cert expiry imminent</span>
+              <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">A-1131</span>
+            </div>
+            <div class="text-xs mb-1" style="color: var(--text-secondary);">Ventilator · ICU-2 · Bed 9</div>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">1h 4m ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="h-8"></div>
+    </div>
+  </aside>
+
+  <!-- ============ INVESTIGATION WORKSPACE ============ -->
+  <main class="flex-1 flex flex-col overflow-hidden noise-bg" id="investigation" style="background: var(--bg);">
+
+    <!-- Alert header -->
+    <div class="px-8 pt-6 pb-5 border-b reveal" style="border-color: var(--border);">
+      <div class="flex items-start justify-between gap-6">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="glyph glyph-critical" style="width: 14px;"></span>
+            <span class="font-mono text-xs uppercase tracking-wider font-medium" style="color: var(--tier-critical);">Critical · floor-elevated</span>
+            <span class="font-mono text-[11px]" style="color: var(--text-tertiary);">·</span>
+            <span class="font-mono text-xs" style="color: var(--text-tertiary);">A-1147</span>
+            <div class="floor-badge ml-1">
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1L7 5H1L4 1Z" fill="currentColor"/></svg>
+              Invariant 2
+            </div>
+          </div>
+          <h1 class="font-display text-4xl mb-2 selectable" style="letter-spacing: -0.025em; line-height: 1.05;">
+            Anomalous TLS handshake to off-allowlist endpoint
+          </h1>
+          <p class="text-sm selectable" style="color: var(--text-secondary); max-width: 620px;">
+            Infusion pump <span class="font-mono" style="color: var(--text-primary);">BBraun-IP-2847</span> initiated outbound TLS to
+            <span class="font-mono" style="color: var(--text-primary);">198.51.100.42:8443</span> — destination unmatched against the device class allowlist for the last 90 days.
+          </p>
+        </div>
+
+        <!-- Risk numeric -->
+        <div class="text-right flex-shrink-0">
+          <div class="text-[10px] font-medium uppercase tracking-wider mb-1" style="color: var(--text-tertiary);">Composite risk</div>
+          <div class="stat-num text-6xl mb-1" style="color: var(--tier-critical);">0.87</div>
+          <div class="font-mono text-[11px]" style="color: var(--text-tertiary);">raw 0.72 · ↑0.15 floor</div>
+        </div>
+      </div>
+
+      <!-- Confidence bar -->
+      <div class="mt-5 pt-4 grid grid-cols-4 gap-6 border-t" style="border-color: var(--border-subtle);">
+        <div>
+          <div class="text-[10px] font-medium uppercase tracking-wider mb-1.5" style="color: var(--text-tertiary);">Detection confidence</div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <span class="font-mono text-lg font-medium tabular-nums">0.92</span>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">calibrated</span>
+          </div>
+          <div class="calibration-bar">
+            <div class="calibration-fill" style="width: 92%; background: var(--accent);"></div>
+            <div class="calibration-tick" style="left: 25%;"></div>
+            <div class="calibration-tick" style="left: 50%;"></div>
+            <div class="calibration-tick" style="left: 75%;"></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-medium uppercase tracking-wider mb-1.5" style="color: var(--text-tertiary);">Device criticality</div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <span class="font-mono text-lg font-medium tabular-nums">0.95</span>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">life-critical</span>
+          </div>
+          <div class="calibration-bar">
+            <div class="calibration-fill" style="width: 95%; background: var(--tier-critical);"></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-medium uppercase tracking-wider mb-1.5" style="color: var(--text-tertiary);">Data sensitivity</div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <span class="font-mono text-lg font-medium tabular-nums">0.40</span>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">device cmd</span>
+          </div>
+          <div class="calibration-bar">
+            <div class="calibration-fill" style="width: 40%; background: var(--tier-medium);"></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-medium uppercase tracking-wider mb-1.5" style="color: var(--text-tertiary);">Clinical tier</div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <span class="font-mono text-lg font-medium tabular-nums">0.85</span>
+            <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">post-surgical</span>
+          </div>
+          <div class="calibration-bar">
+            <div class="calibration-fill" style="width: 85%; background: var(--tier-high);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrollable detail body -->
+    <div class="flex-1 overflow-y-auto">
+      <div class="px-8 py-6 grid grid-cols-2 gap-8 reveal" style="animation-delay: 80ms;">
+
+        <!-- Left col: detection signal -->
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display text-xl" style="letter-spacing: -0.01em;">Detection signal</h3>
+            <span class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--text-tertiary);">TreeSHAP · top 6 / 47</span>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="text-sm">TLS-SNI not in device allowlist</div>
+              <div class="font-mono text-[10px] mt-0.5" style="color: var(--text-tertiary);">net.tls.sni · vs. 90d baseline</div>
+            </div>
+            <div class="factor-bar">
+              <div class="factor-bar-fill" style="width: 92%;"></div>
+            </div>
+            <span class="font-mono text-xs text-right tabular-nums">+0.31</span>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="text-sm">Destination ASN never observed</div>
+              <div class="font-mono text-[10px] mt-0.5" style="color: var(--text-tertiary);">net.asn · cohort scope</div>
+            </div>
+            <div class="factor-bar">
+              <div class="factor-bar-fill" style="width: 74%;"></div>
+            </div>
+            <span class="font-mono text-xs text-right tabular-nums">+0.25</span>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="text-sm">Outbound port 8443 anomaly</div>
+              <div class="font-mono text-[10px] mt-0.5" style="color: var(--text-tertiary);">net.port · device class</div>
+            </div>
+            <div class="factor-bar">
+              <div class="factor-bar-fill" style="width: 58%;"></div>
+            </div>
+            <span class="font-mono text-xs text-right tabular-nums">+0.20</span>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="text-sm">Connection initiated, not received</div>
+              <div class="font-mono text-[10px] mt-0.5" style="color: var(--text-tertiary);">net.direction · device baseline</div>
+            </div>
+            <div class="factor-bar">
+              <div class="factor-bar-fill" style="width: 47%;"></div>
+            </div>
+            <span class="font-mono text-xs text-right tabular-nums">+0.16</span>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="text-sm">Timing: 03:14 local</div>
+              <div class="font-mono text-[10px] mt-0.5" style="color: var(--text-tertiary);">temporal · off-shift</div>
+            </div>
+            <div class="factor-bar">
+              <div class="factor-bar-fill" style="width: 32%;"></div>
+            </div>
+            <span class="font-mono text-xs text-right tabular-nums">+0.11</span>
+          </div>
+
+          <div class="factor-row">
+            <div>
+              <div class="text-sm">Cert chain valid · LE</div>
+              <div class="font-mono text-[10px] mt-0.5" style="color: var(--text-tertiary);">net.tls.cert · mitigating</div>
+            </div>
+            <div class="factor-bar">
+              <div class="factor-bar-fill negative" style="width: 18%;"></div>
+            </div>
+            <span class="font-mono text-xs text-right tabular-nums" style="color: var(--tier-high);">−0.06</span>
+          </div>
+        </section>
+
+        <!-- Right col: context -->
+        <section>
+          <h3 class="font-display text-xl mb-4" style="letter-spacing: -0.01em;">Asset & patient context</h3>
+
+          <div class="space-y-4">
+            <div class="rounded p-4" style="background: var(--surface-1); border: 1px solid var(--border-subtle);">
+              <div class="text-[10px] font-medium uppercase tracking-wider mb-2" style="color: var(--text-tertiary);">Device</div>
+              <div class="font-mono text-sm">BBraun Infusomat Space</div>
+              <div class="grid grid-cols-2 gap-3 mt-3 text-xs">
+                <div><span style="color: var(--text-tertiary);">Asset ID</span><br><span class="font-mono">BBraun-IP-2847</span></div>
+                <div><span style="color: var(--text-tertiary);">Firmware</span><br><span class="font-mono">8.4.21 · cur</span></div>
+                <div><span style="color: var(--text-tertiary);">Network</span><br><span class="font-mono">VLAN-ICU-3</span></div>
+                <div><span style="color: var(--text-tertiary);">Last patched</span><br><span class="font-mono">14d ago</span></div>
+              </div>
+            </div>
+
+            <div class="rounded p-4" style="background: var(--surface-1); border: 1px solid var(--border-subtle);">
+              <div class="text-[10px] font-medium uppercase tracking-wider mb-2" style="color: var(--text-tertiary);">Clinical context · de-identified</div>
+              <div class="font-mono text-sm">Bed 14 · ICU-3 · post-surgical day 1</div>
+              <div class="grid grid-cols-2 gap-3 mt-3 text-xs">
+                <div><span style="color: var(--text-tertiary);">Current infusion</span><br><span>Norepinephrine 8 mcg/min</span></div>
+                <div><span style="color: var(--text-tertiary);">Patient stability</span><br><span style="color: var(--tier-medium);">monitored</span></div>
+                <div><span style="color: var(--text-tertiary);">On-call clinician</span><br><span>Dr. Park (paged)</span></div>
+                <div><span style="color: var(--text-tertiary);">Backup device</span><br><span>available · Bay 14b</span></div>
+              </div>
+            </div>
+
+            <div class="rounded p-4" style="background: var(--surface-1); border: 1px solid var(--border-subtle);">
+              <div class="text-[10px] font-medium uppercase tracking-wider mb-2" style="color: var(--text-tertiary);">Recent similar (7d)</div>
+              <div class="flex items-center justify-between text-sm">
+                <span>2 prior alerts, same device class</span>
+                <span class="font-mono text-xs" style="color: var(--text-tertiary);">both resolved</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Network trace excerpt — terminal-styled -->
+      <div class="px-8 pb-6 reveal" style="animation-delay: 160ms;">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display text-xl" style="letter-spacing: -0.01em;">Network trace excerpt</h3>
+          <span class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--text-tertiary);">10:34:11.092 – 10:34:11.847</span>
+        </div>
+        <pre class="font-mono text-[11px] p-4 rounded overflow-x-auto leading-relaxed selectable" style="background: var(--surface-1); border: 1px solid var(--border-subtle); color: var(--text-secondary);">
+<span style="color: var(--text-tertiary);">10:34:11.092</span>  SYN     192.168.40.84:51220 → 198.51.100.42:8443    <span style="color: var(--text-tertiary);">flow=NEW</span>
+<span style="color: var(--text-tertiary);">10:34:11.213</span>  SYN/ACK 198.51.100.42:8443 → 192.168.40.84:51220   <span style="color: var(--text-tertiary);">rtt=121ms</span>
+<span style="color: var(--text-tertiary);">10:34:11.214</span>  ACK     <span style="color: var(--accent);">established</span>
+<span style="color: var(--text-tertiary);">10:34:11.301</span>  TLS-CH  <span style="color: var(--tier-high);">sni=update.ind-svc.net</span>     <span style="color: var(--text-tertiary);">cipher=TLS_AES_256_GCM_SHA384</span>
+<span style="color: var(--text-tertiary);">10:34:11.487</span>  TLS-SH  <span style="color: var(--tier-medium);">cert=*.ind-svc.net  ca=ISRG Root X1</span>
+<span style="color: var(--text-tertiary);">10:34:11.624</span>  APP     <span style="color: var(--text-tertiary);">enc · 4.2 KB out</span>
+<span style="color: var(--text-tertiary);">10:34:11.847</span>  FIN     <span style="color: var(--tier-high);">connection closed by remote</span>
+        </pre>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ MVE + ACTIONS PANEL ============ -->
+  <aside class="w-[400px] flex-shrink-0 flex flex-col border-l overflow-hidden" style="border-color: var(--border); background: var(--surface-1);">
+
+    <!-- MVE card with role toggle -->
+    <div class="p-5 border-b reveal" style="border-color: var(--border); animation-delay: 120ms;">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-display text-xl" style="letter-spacing: -0.01em;">Why this fired</h3>
+        <div class="role-toggle">
+          <button class="active" data-role="soc">SOC</button>
+          <button data-role="clinical">Clinical</button>
+        </div>
+      </div>
+
+      <!-- SOC view -->
+      <div id="mve-soc" class="space-y-3">
+        <p class="text-sm leading-relaxed" style="color: var(--text-primary);">
+          Outbound TLS from an infusion pump to <span class="font-mono text-xs" style="color: var(--accent);">198.51.100.42</span>
+          — an endpoint never observed for this device class in 90 days.
+        </p>
+        <p class="text-sm leading-relaxed" style="color: var(--text-secondary);">
+          Three concurrent anomalies pushed raw risk to 0.72. The safety-floor invariant elevated to 0.87
+          because the device is life-critical and the connection initiated outbound (atypical for infusion telemetry).
+        </p>
+        <div class="pt-3 border-t" style="border-color: var(--border-subtle);">
+          <div class="text-[10px] font-medium uppercase tracking-wider mb-2" style="color: var(--text-tertiary);">Investigate</div>
+          <ul class="space-y-1.5 text-xs" style="color: var(--text-secondary);">
+            <li class="flex items-baseline gap-2">
+              <span class="font-mono" style="color: var(--accent);">→</span>
+              <span>Resolve <span class="font-mono">ind-svc.net</span> against vendor allowlist; verify chain of trust.</span>
+            </li>
+            <li class="flex items-baseline gap-2">
+              <span class="font-mono" style="color: var(--accent);">→</span>
+              <span>Check pump-mgmt console for scheduled update window.</span>
+            </li>
+            <li class="flex items-baseline gap-2">
+              <span class="font-mono" style="color: var(--accent);">→</span>
+              <span>Pull pcap for full session reconstruction.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Clinical view (hidden) -->
+      <div id="mve-clinical" class="space-y-3 hidden">
+        <p class="text-sm leading-relaxed" style="color: var(--text-primary);">
+          The infusion pump at <span style="color: var(--accent);">ICU-3, Bed 14</span> sent unusual outbound traffic to an unknown internet destination at 03:14.
+        </p>
+        <p class="text-sm leading-relaxed" style="color: var(--text-secondary);">
+          The pump is currently delivering norepinephrine (vasopressor) to a post-surgical patient. Therapy is stable. The risk is not a malfunction signal but a network behavior signal — the device may be compromised.
+        </p>
+        <div class="rounded p-3 mt-3" style="background: var(--tier-medium-bg); border: 1px solid rgba(212, 164, 69, 0.2);">
+          <div class="text-[10px] font-medium uppercase tracking-wider mb-1" style="color: var(--tier-medium);">Clinical decision</div>
+          <p class="text-xs leading-relaxed" style="color: var(--text-primary);">
+            <strong>Backup pump available</strong> at Bay 14b. Recommend transition before the SOC team takes the suspect device off-network.
+            Estimated transition window: 2 min. Dr. Park already paged.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested actions -->
+    <div class="px-5 py-4 border-b reveal" style="border-color: var(--border); animation-delay: 200ms;">
+      <div class="text-[10px] font-medium uppercase tracking-wider mb-3" style="color: var(--text-tertiary);">Recommended actions · human-required</div>
+      <div class="space-y-2">
+        <button class="btn btn-acknowledge w-full justify-start" onclick="showToast('Alert acknowledged · A-1147', 'success')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Acknowledge — taking ownership
+        </button>
+        <button class="btn btn-escalate w-full justify-start" onclick="showToast('Escalated to T3 · paging team lead', 'escalate')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 11V3M7 3L3 7M7 3L11 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Escalate — pull in T3 + biomed
+        </button>
+        <button class="btn btn-dismiss w-full justify-start" onclick="openDismissDialog()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3L11 11M11 3L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Dismiss — requires reason
+        </button>
+      </div>
+      <p class="font-mono text-[10px] mt-3 leading-relaxed" style="color: var(--text-quaternary);">
+        No action is auto-executed. Every decision is logged with operator, timestamp, and rationale.
+      </p>
+    </div>
+
+    <!-- Audit timeline -->
+    <div class="flex-1 px-5 py-4 overflow-y-auto reveal" style="animation-delay: 280ms;">
+      <div class="text-[10px] font-medium uppercase tracking-wider mb-3" style="color: var(--text-tertiary);">Audit trail · 4 entries</div>
+
+      <div class="timeline-item system">
+        <div class="flex items-baseline justify-between mb-0.5">
+          <span class="text-sm font-medium">Alert raised</span>
+          <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">10:34:11</span>
+        </div>
+        <p class="text-xs" style="color: var(--text-secondary);">Sentinel-v2.4 · raw 0.72 · floor +0.15</p>
+      </div>
+
+      <div class="timeline-item system">
+        <div class="flex items-baseline justify-between mb-0.5">
+          <span class="text-sm font-medium">Safety floor applied</span>
+          <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">10:34:11</span>
+        </div>
+        <p class="text-xs" style="color: var(--text-secondary);">Invariant 2 (device_criticality ≥ 0.9 AND connection initiated) → tier HIGH → CRITICAL</p>
+      </div>
+
+      <div class="timeline-item system">
+        <div class="flex items-baseline justify-between mb-0.5">
+          <span class="text-sm font-medium">Clinician paged</span>
+          <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">10:34:14</span>
+        </div>
+        <p class="text-xs" style="color: var(--text-secondary);">Dr. Park · on-call ICU-3 · sms+app</p>
+      </div>
+
+      <div class="timeline-item human">
+        <div class="flex items-baseline justify-between mb-0.5">
+          <span class="text-sm font-medium">S. Reyes opened</span>
+          <span class="font-mono text-[10px]" style="color: var(--text-tertiary);">10:36:02</span>
+        </div>
+        <p class="text-xs" style="color: var(--text-secondary);">SOC T2 · investigating</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ============ SYSTEM STATUS STRIP ============ -->
+<footer class="h-9 px-5 flex items-center justify-between border-t font-mono text-[11px]" style="border-color: var(--border); background: var(--surface-1); color: var(--text-tertiary);">
+  <div class="flex items-center gap-5">
+    <span class="flex items-center gap-1.5">
+      <span class="w-1.5 h-1.5 rounded-full pulse-live" style="background: var(--success);"></span>
+      <span>System nominal</span>
+    </span>
+    <span>·</span>
+    <span>Module 4 p95 <span style="color: var(--text-primary);">147ms</span></span>
+    <span>·</span>
+    <span>Active threshold a_high = <span style="color: var(--text-primary);">0.41</span></span>
+    <span>·</span>
+    <span>Model drift <span style="color: var(--success);">stable</span></span>
+    <span>·</span>
+    <span>Last calibration <span style="color: var(--text-primary);">14d ago</span></span>
+  </div>
+  <div class="flex items-center gap-5">
+    <span>n=<span style="color: var(--text-primary);">2,448</span> val set</span>
+    <span>·</span>
+    <span>FNR_crit_Δ_max = <span style="color: var(--text-primary);">0.0</span> over ±20%</span>
+    <span>·</span>
+    <span>Build <span style="color: var(--text-primary);">fix-1-weight-sensitivity</span></span>
+  </div>
+</footer>
+
+<!-- ============ DISMISS DIALOG ============ -->
+<div id="dismiss-dialog" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop">
+  <div class="rounded p-6 w-[480px]" style="background: var(--surface-1); border: 1px solid var(--border-strong); box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+    <h3 class="font-display text-2xl mb-1" style="letter-spacing: -0.02em;">Dismiss alert A-1147</h3>
+    <p class="text-sm mb-5" style="color: var(--text-secondary);">
+      Dismissing a critical alert requires a recorded reason. Your name, timestamp, and rationale will be persisted to the audit log and exported in FDA-record format.
+    </p>
+
+    <label class="block text-[10px] font-medium uppercase tracking-wider mb-2" style="color: var(--text-tertiary);">Reason category</label>
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <button class="px-3 py-2 text-xs rounded text-left" style="background: var(--surface-2); border: 1px solid var(--border);">False positive</button>
+      <button class="px-3 py-2 text-xs rounded text-left" style="background: var(--surface-2); border: 1px solid var(--border);">Scheduled maintenance</button>
+      <button class="px-3 py-2 text-xs rounded text-left" style="background: var(--surface-2); border: 1px solid var(--border);">Known vendor activity</button>
+      <button class="px-3 py-2 text-xs rounded text-left" style="background: var(--surface-2); border: 1px solid var(--border);">Other</button>
+    </div>
+
+    <label class="block text-[10px] font-medium uppercase tracking-wider mb-2" style="color: var(--text-tertiary);">Rationale · required</label>
+    <textarea class="w-full px-3 py-2 text-sm rounded outline-none mb-4"
+      style="background: var(--surface-2); border: 1px solid var(--border); color: var(--text-primary); min-height: 80px; font-family: inherit;"
+      placeholder="What did your investigation find? What action did you confirm with whom?"></textarea>
+
+    <div class="flex justify-end gap-2">
+      <button class="btn" onclick="closeDismissDialog()">Cancel</button>
+      <button class="btn" style="background: var(--tier-critical-bg); border-color: rgba(197,48,48,0.3); color: var(--tier-critical);" onclick="confirmDismiss()">
+        Confirm dismissal
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOASTS ============ -->
+<div id="toast-container" class="fixed bottom-12 right-5 z-40 space-y-2"></div>
+
+<script>
+  // ---------- Alert row selection ----------
+  document.querySelectorAll('.alert-row').forEach(row => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.alert-row').forEach(r => r.classList.remove('active'));
+      row.classList.add('active');
+    });
+  });
+
+  // ---------- Role toggle ----------
+  document.querySelectorAll('.role-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.role-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const role = btn.dataset.role;
+      document.getElementById('mve-soc').classList.toggle('hidden', role !== 'soc');
+      document.getElementById('mve-clinical').classList.toggle('hidden', role !== 'clinical');
+    });
+  });
+
+  // ---------- Dismiss dialog ----------
+  function openDismissDialog() {
+    const d = document.getElementById('dismiss-dialog');
+    d.classList.remove('hidden');
+    d.classList.add('flex');
+  }
+  function closeDismissDialog() {
+    const d = document.getElementById('dismiss-dialog');
+    d.classList.add('hidden');
+    d.classList.remove('flex');
+  }
+  function confirmDismiss() {
+    closeDismissDialog();
+    showToast('Dismissed A-1147 · audit recorded', 'neutral');
+  }
+
+  // ---------- Toasts ----------
+  function showToast(msg, kind) {
+    const container = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    const bg = kind === 'success' ? 'var(--success-bg)' :
+               kind === 'escalate' ? 'var(--tier-high-bg)' :
+               'var(--surface-2)';
+    const color = kind === 'success' ? 'var(--success)' :
+                  kind === 'escalate' ? 'var(--tier-high)' :
+                  'var(--text-primary)';
+    const border = kind === 'success' ? 'rgba(95,158,123,0.4)' :
+                   kind === 'escalate' ? 'rgba(224,122,95,0.4)' :
+                   'var(--border-strong)';
+    t.className = 'toast px-4 py-3 rounded text-sm flex items-center gap-3';
+    t.style.cssText = `background:${bg}; border:1px solid ${border}; color:${color}; min-width:280px; box-shadow:0 8px 24px rgba(0,0,0,0.4);`;
+    t.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/></svg><span>${msg}</span>`;
+    container.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transition = 'opacity 240ms';
+      setTimeout(() => t.remove(), 280);
+    }, 2800);
+  }
+
+  // ---------- Close dialog on backdrop click ----------
+  document.getElementById('dismiss-dialog').addEventListener('click', (e) => {
+    if (e.target.id === 'dismiss-dialog') closeDismissDialog();
+  });
+
+  // ---------- Esc to close ----------
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDismissDialog();
+  });
+</script>
+
+</body>
+</html>

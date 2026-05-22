@@ -2225,5 +2225,344 @@
   </tbody>
 </table>
 
+<div class="session-header">
+  <strong>Session 13 — 2026-05-22 — Phase 0 ONLY (Dashboard: Discovery, READ-ONLY)</strong><br>
+  Subject: Q-W1 through Q-W8 &mdash; eight discovery queries on the current
+  Streamlit dashboard surface in <code>module6_evaluation/</code>, the prototype
+  at <code>docs/sentinel_dashboard.html</code>, and the surrounding study-mode
+  / audit-trail / thesis-demonstration context. Phase 0 produces this Session
+  13 block; Phase 1 (separate deliverable) bootstraps the design memo
+  template at <code>docs/dashboard_design_memo.md</code>. No design picks. No
+  code changes. The prototype's visual direction is treated as locked; only
+  the architecture and data-flow translation are open.
+  <br><br>
+  <em>Numbering note:</em> Prior sessions in this file end at Session 11.
+  This block is labelled <strong>Session 13</strong> per task-spec verbatim
+  ("Append discovery findings as <strong>Session 13</strong>"); Session 12
+  was reserved by the task spec author and was not authored here.
+  <br><br>
+  <em>Path note:</em> The task spec referenced the prototype at the canonical
+  path <code>docs/design/sentinel_prototype.html</code>; the file on disk is
+  <code>docs/sentinel_dashboard.html</code>. Per user direction, the actual
+  path is used verbatim throughout Session 13 and the design memo; the
+  canonical path is not created.
+</div>
+
+<h2>Section 1 — Read Plan</h2>
+<ul>
+  <li><strong>Q-W1 (architecture):</strong> <code>ls -la module6_evaluation/</code>; <code>find module6_evaluation -name "*.py"</code>; <code>grep -rn "streamlit\|^import st\|^from st"</code>; <code>grep -rn "from fastapi\|from flask\|@app.route"</code>; <code>test -f module6_evaluation/module6_app.py</code>; <code>view</code> the entry-point head.</li>
+  <li><strong>Q-W2 (pages):</strong> <code>grep -n "def \(dashboard_mode\|simulation_mode\|browse_mode\|study_mode\|pcap_replay_stub\)"</code>; <code>ls module6_evaluation/pages/</code>; <code>grep -n "st.tabs\|st.subheader\|st.header"</code>.</li>
+  <li><strong>Q-W3 (data sources):</strong> <code>grep -n "def load_"</code>; <code>grep -n "pd.read_\|json.load\|np.load\|open("</code>; <code>grep -n "results/"</code>; <code>find . -name "*stream*.py"</code>; <code>ls results/reports/</code>.</li>
+  <li><strong>Q-W4 (role switcher):</strong> <code>grep -n "role\|persona\|SOC\|Clinical" ... | grep -iE "switch|select|toggle|radio|sidebar"</code>; <code>grep -n "MVE\|sim_role\|render_analyst\|render_clinician\|render_admin"</code>.</li>
+  <li><strong>Q-W5 (audit):</strong> <code>grep -n "AuditTrailWriter\|HardenedAuditLogger\|AuditLogger\|audit_trail\|audit_log"</code>; <code>ls module7_audit/ module7/</code>; <code>grep -n "dismiss\|acknowledge\|escalate"</code>.</li>
+  <li><strong>Q-W6 (A/B):</strong> <code>find . -name "*user_study*" -o -name "*ab_condition*"</code>; <code>ls docs/RQ3_USER_STUDY_SPEC.md</code>; <code>grep -n "condition\|Group A\|Group B\|study_mode\|assign_ab_conditions"</code>.</li>
+  <li><strong>Q-W7 (thesis demo):</strong> <code>find . -iname "thesis*"</code>; <code>grep -rln "dashboard\|demo\|screenshot\|deployment"</code> in <code>docs/</code>; <code>view docs/SYSTEM_WORKFLOW.md</code> (deployment / RBAC subsection).</li>
+  <li><strong>Q-W8 (design tokens):</strong> <code>find module6_evaluation -name "*.css" -o -name "*.scss" -o -name "*.toml"</code>; <code>ls .streamlit/</code>; <code>grep -n "unsafe_allow_html\|set_page_config\|font-family\|--color\|theme"</code>; <code>test -f docs/sentinel_dashboard.html</code>.</li>
+</ul>
+
+<h2>Section 2 — Reads Executed</h2>
+<ul>
+  <li><code>git branch --show-current</code> &rarr; <code>feature/dashboard-design</code> (branch precondition satisfied after branching from <code>main</code> per user direction; prior <code>fix/rq1-weight-sensitivity</code> WIP stashed).</li>
+  <li><code>git rev-parse --short HEAD</code> &rarr; <code>898e7c7</code> (subject: <em>refactor: flatten pipeline/ package &mdash; A3 layout</em>).</li>
+  <li><code>ls -la module6_evaluation/</code> &rarr; 5 Python files (<code>__init__.py</code>, <code>module6_app.py</code>, <code>module6_evaluation.py</code>, <code>_src_adapter.py</code>, <code>study_loader.py</code>, <code>study_analysis.py</code>) and a <code>__pycache__</code>. Total source: 3,795 lines.</li>
+  <li><code>grep -rn "streamlit\|^import st" module6_evaluation/</code> &rarr; <code>module6_evaluation/module6_app.py:11,28,29,32,33</code> &mdash; entry-point imports <code>streamlit as st</code> and <code>from streamlit_autorefresh import st_autorefresh</code>; launched via <code>streamlit run module6_evaluation/module6_app.py</code> (docstring L11).</li>
+  <li><code>grep -rn "from fastapi\|from flask\|@app.route" module6_evaluation/</code> &rarr; no output (no Flask / FastAPI).</li>
+  <li><code>view module6_evaluation/module6_app.py:2396-2419</code> &rarr; <code>def main():</code> at L2396 calls <code>st.set_page_config(page_title="IoMT IDS Dashboard", layout="wide")</code> at L2397, then a single <code>st.sidebar.radio</code> at L2401 with five modes; <code>if __name__ == "__main__": main()</code> at L2418-2419.</li>
+  <li><code>grep -n "^def \(dashboard_mode\|simulation_mode\|browse_mode\|study_mode\|pcap_replay_stub\)" module6_evaluation/module6_app.py</code> &rarr; <code>dashboard_mode</code> at L1091, <code>simulation_mode</code> at L1271, <code>browse_mode</code> at L1941, <code>study_mode</code> at L2108, <code>pcap_replay_stub</code> at L2368.</li>
+  <li><code>ls module6_evaluation/pages/</code> &rarr; "no pages/ dir" (single-file app; no Streamlit multipage routing).</li>
+  <li><code>grep -n "def load_" module6_evaluation/module6_app.py</code> &rarr; nine loaders: <code>load_alerts</code> (L744), <code>load_all_responses</code> (L754), <code>load_risk_scores</code> (L784), <code>load_admin_dashboard</code> (L792), <code>load_clinician_summaries</code> (L801), <code>load_response_policy</code> (L810), <code>load_audit_trail</code> (L835), <code>load_latency_profile</code> (L909), <code>load_live_stream_source</code> (L919).</li>
+  <li><code>view module6_evaluation/module6_app.py:744-942</code> &rarr; each loader reads from <code>EVAL_DIR = PROJECT_ROOT / "results/reports"</code> (defined L45) via <code>open(path); json.load(f)</code> or <code>np.load</code>; streaming source reads <code>data/processed/test_phase1.parquet</code> at L928, attaches synthetic <code>arrived_at</code> timestamps anchored at <code>datetime(2026, 4, 9, 8, 0, 0)</code> at L935.</li>
+  <li><code>ls results/reports/</code> &rarr; 56 files, including <code>evaluation_alerts.json</code>, <code>alert_responses.json</code>, <code>risk_scores.npz</code>, <code>admin_dashboard.json</code>, <code>clinician_summaries.json</code>, <code>response_policy.json</code>, <code>audit_trail.json</code>, <code>audit_trail.jsonl</code>, <code>audit_log.jsonl</code>, <code>online_latency_profile.json</code>, <code>audit_signing_key.pub.pem</code>.</li>
+  <li><code>find . -name "*stream*.py"</code> (excluding <code>.git</code>) &rarr; no top-level stream module file. The streaming simulator is the <code>simulation_mode</code> function and the <code>load_live_stream_source()</code> loader inside <code>module6_app.py</code>; there is no separate <code>module4_streaming.py</code> or similar in scope of this query.</li>
+  <li><code>view module6_evaluation/module6_app.py:1295-1320</code> &rarr; the role switcher is <code>st.sidebar.selectbox("View as:", ["Security Analyst", "Clinician", "Administrator"], key="sim_role")</code> at L1300-1304, under "## Stakeholder View" header (L1299), inside <code>simulation_mode()</code> only.</li>
+  <li><code>grep -n "def render_analyst\|def render_clinician\|def render_admin" module6_evaluation/module6_app.py</code> &rarr; <code>render_analyst</code> at L633, <code>render_clinician</code> at L677, <code>render_admin</code> at L713.</li>
+  <li><code>view module6_evaluation/module6_app.py:1700-1720</code> &rarr; dispatch is <code>if sim_role == "Security Analyst": render_analyst(alert_obj)</code> / <code>elif "Clinician": render_clinician(alert_obj)</code> / <code>else: render_admin(alert_obj)</code> at L1704-1709.</li>
+  <li><code>grep -n "AuditTrailWriter\|HardenedAuditLogger\|class.*Audit\|audit_trail\|audit_log" module6_evaluation/module6_app.py</code> &rarr; three sinks: <code>AuditTrailWriter</code> class defined at L353, instantiated as module-level singletons <code>_audit_writer</code> (L398) and <code>_online_writer</code> for <code>online_interactions.jsonl</code> (L403); <code>HardenedAuditLogger</code> imported at L42 from <code>module5_responses.module5_pipeline</code> and instantiated as <code>_hardened_audit</code> at L52; <code>audit_log()</code> helper at L406.</li>
+  <li><code>ls module7_audit/ module7/</code> &rarr; both absent. No dedicated audit module; audit code lives inside <code>module6_app.py</code> (L353-403) and <code>module5_responses/module5_pipeline.py</code>.</li>
+  <li><code>view module6_evaluation/module6_app.py:520-549</code> &rarr; the <code>capture_interaction()</code> function fan-outs to three sinks: <code>_online_writer.log()</code> (sink 1, buffered <code>online_interactions.jsonl</code>), <code>audit_log()</code> (sink 2, local hash-chained <code>audit_trail.jsonl</code> via <code>_audit_writer</code>), and <code>_hardened_audit.log()</code> (sink 3, signed Module 5 chain in <code>results/reports/audit_log.jsonl</code>).</li>
+  <li><code>grep -n "dismiss\|acknowledge\|escalate" module6_evaluation/module6_app.py</code> (head 15) &rarr; <code>ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]</code> at L55; per-severity action mapping <code>"CRITICAL": "isolate", "HIGH": "escalate", ...</code> at L591; Browse-mode action buttons emit literal strings at L1967, 1973-1974; study-mode answer strings <code>"Escalate to clinical staff / senior management"</code>, <code>"Dismiss &mdash; this is likely a false alarm"</code> at L2302, L2305.</li>
+  <li><code>ls docs/RQ3_USER_STUDY_SPEC.md</code> &rarr; "spec absent" (file not on this branch; the user picked branch-from-main, and the spec lives only on <code>fix/rq1-weight-sensitivity</code>).</li>
+  <li><code>find . -name "*user_study*"</code> &rarr; <code>tests/fixtures/user_study_alert_scenarios.yaml</code>, <code>tests/__pycache__/test_rq3_user_study.cpython-310-pytest-9.0.2.pyc</code> (compiled artifact only; the <code>.py</code> source is on the other branch), <code>results/figures/rq2_user_study_per_role.pdf</code>.</li>
+  <li><code>view module6_evaluation/module6_app.py:461-494</code> &rarr; <code>assign_ab_conditions(n_alerts, participant_id)</code> at L465: counterbalanced Latin-square assignment seeded by <code>md5(participant_id)</code>; conditions are boolean <code>True</code>/<code>False</code> ("with XAI" vs "without XAI"); even-PID participants get XAI-first, odd-PID get no-XAI-first; conditions shuffled within each half-block.</li>
+  <li><code>view module6_evaluation/module6_app.py:2108-2143</code> &rarr; <code>study_mode()</code> docstring (L2109-2113): <em>"Phase 2 User Study &mdash; A/B design validating C4. Group A: raw IDS output only. Group B: raw IDS + MVE (3-layer explanation)"</em>. Registration form at L2131-2154 captures participant ID, current role (4 IT-role options), years of experience, prior IDS/SIEM experience, consent checkbox. Imports <code>load_study_alerts, assign_ab_condition</code> from <code>module6_evaluation.study_loader</code>.</li>
+  <li><code>grep -n "dashboard\|demo\|user study\|deployment" docs/SYSTEM_WORKFLOW.md docs/DEPLOYMENT.md docs/VERIFICATION_CHECKLIST.md</code> &rarr; <code>SYSTEM_WORKFLOW.md:320</code>: <em>"This is a research evaluation interface, not a production RBAC dashboard. There is no LDAP, no SSO, no per-role authorization layer in the active code."</em>; <code>SYSTEM_WORKFLOW.md:345</code>: <em>"streamlit run pipeline/module6_evaluation/module6_app.py"</em>; <code>SYSTEM_WORKFLOW.md:354</code>: <em>"None of [the prior FastAPI + Streamlit RBAC dashboard + Docker Compose stack] lives in the active codebase."</em>; <code>DEPLOYMENT.md:11</code>: <em>"If you are looking for the previous 'production' deployment guide (FastAPI + Streamlit RBAC dashboard + Docker Compose + mTLS + LDAP + ...)"</em> (also explicitly out of scope).</li>
+  <li><code>find . -iname "thesis*"</code> (maxdepth 2) &rarr; no top-level thesis docx/pdf/md (no <code>thesis_outline_latest.docx</code>); <code>docs/</code> contents are <code>DEPLOYMENT.md</code>, <code>ENGINE_MAP.md</code>, <code>SYSTEM_WORKFLOW.md</code>, <code>VERIFICATION_CHECKLIST.md</code>, and the prototype <code>docs/sentinel_dashboard.html</code> &mdash; no <code>RQ3_pipeline.md</code> or <code>RQ3_USER_STUDY_SPEC.md</code> on this branch.</li>
+  <li><code>find module6_evaluation -name "*.css" -o -name "*.scss" -o -name "*.toml"</code> &rarr; no output. No CSS file, no SCSS file, no Streamlit theme TOML in the module.</li>
+  <li><code>ls .streamlit/</code> &rarr; "no .streamlit dir" (no project-level Streamlit theme).</li>
+  <li><code>grep -n "unsafe_allow_html\|set_page_config\|font-family" module6_evaluation/module6_app.py</code> &rarr; <code>set_page_config</code> at L2397; six occurrences of <code>unsafe_allow_html=True</code> at L145, 289, 1216, 1567, 2096, 2098. Only inline <code>style="background:&lt;hex&gt;;color:white;padding:...;border-radius:..."</code> attributes (e.g., L142-145, L2092-2098); no defined design tokens, no <code>--color</code> CSS variables, no font-family directives.</li>
+  <li><code>test -f docs/sentinel_dashboard.html</code> &rarr; "prototype OK at docs/sentinel_dashboard.html"; <code>test -f docs/design/sentinel_prototype.html</code> &rarr; "not at canonical". The prototype is at the actual path; the task-spec canonical path is empty.</li>
+  <li><code>view docs/sentinel_dashboard.html</code> (full 1,126-line file) &rarr; confirms: deep-ink palette (<code>--bg: #0E0F12</code>, <code>--surface-1: #16181D</code>, ..., <code>--tier-critical: #C53030</code> L12-45); Google Fonts <code>Instrument Serif + IBM Plex Sans + JetBrains Mono</code> (L9); Tailwind CDN (L10); three-column flex layout (queue 360px / investigation flex-1 / MVE+actions 400px, L433-993); tier glyphs as colorblind-safe shapes (circle/diamond/triangle/hex, L82-107); floor-elevated badge (L178-192); SOC/Clinical role toggle (L237-262, L879-933); audit timeline (L292-326, L957-992); status strip footer (L996-1019); dismiss-with-reason modal with required rationale textarea (L1021-1049); build string in footer reads <code>fix-1-weight-sensitivity</code> (L1017).</li>
+</ul>
+
+<h2>Section 3 — Answers</h2>
+
+<div class="qa-block">
+  <h3>Q-W1: Current dashboard architecture</h3>
+  <p><strong>Entry point / framework / launch:</strong> <span class="label verified">[VERIFIED]</span> Entry point is <code>module6_evaluation/module6_app.py</code> (2,419 lines). Framework is Streamlit (<code>import streamlit as st</code> at L28, <code>from streamlit_autorefresh import st_autorefresh</code> at L29). No Flask, no FastAPI (<code>grep -rn "from fastapi\|from flask\|@app.route"</code> returns empty). Launch command per docstring L11: <code>streamlit run module6_evaluation/module6_app.py</code>; <code>docs/SYSTEM_WORKFLOW.md:345</code> publishes the same command.</p>
+  <p><strong>Page routing:</strong> <span class="label verified">[VERIFIED]</span> Single-file app with sidebar-radio routing inside <code>main()</code> (L2396-2415): <code>st.sidebar.radio("Mode:", ["Dashboard", "Online Simulation", "Browse Alerts", "Study (A/B)", "PCAP Replay"])</code>. Five branches dispatch to five <code>def *_mode()</code> functions. No Streamlit multipage (<code>module6_evaluation/pages/</code> absent).</p>
+  <p><strong>Project root handling:</strong> <span class="label verified">[VERIFIED]</span> Because <code>streamlit run</code> treats the file as a script (not a package), <code>module6_app.py:34-36</code> manually prepends <code>Path(__file__).resolve().parents[1]</code> to <code>sys.path</code> to allow <code>from module5_responses.module5_pipeline import AuditLogger</code> (L42).</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W2: Current page structure</h3>
+  <p><strong>Verbatim page list:</strong> <span class="label verified">[VERIFIED]</span> Five sidebar-radio modes, in declaration order:</p>
+  <ul>
+    <li><code>Dashboard</code> &rarr; <code>dashboard_mode()</code> at <code>module6_app.py:1091</code> &mdash; docstring (L1092): <em>"Full dashboard with risk gauge, alert feed, SHAP, NLG, responses, heatmap."</em></li>
+    <li><code>Online Simulation</code> &rarr; <code>simulation_mode()</code> at <code>module6_app.py:1271</code> &mdash; docstring (L1272-1276): includes <em>"6C.1 streaming simulator, 6C.3 risk gauge, 6C.8 role switcher"</em>.</li>
+    <li><code>Browse Alerts</code> &rarr; <code>browse_mode()</code> at <code>module6_app.py:1941</code>.</li>
+    <li><code>Study (A/B)</code> &rarr; <code>study_mode()</code> at <code>module6_app.py:2108</code> &mdash; docstring (L2109-2113): <em>"Phase 2 User Study &mdash; A/B design validating C4. Group A: raw IDS output only. Group B: raw IDS + MVE (3-layer explanation)"</em>.</li>
+    <li><code>PCAP Replay</code> &rarr; <code>pcap_replay_stub()</code> at <code>module6_app.py:2368</code> &mdash; docstring (L2369): <em>"6C.10 &mdash; PCAP replay placeholder (optional, future work)"</em>; body renders only an <code>st.info</code> "Phase 3 Feature &mdash; Not yet implemented" (L2372-2378).</li>
+  </ul>
+  <p><strong>Sub-section structure:</strong> <span class="label grepped">[GREPPED]</span> <code>grep -n "st.tabs\|st.subheader\|st.header" module6_evaluation/module6_app.py</code> returns one match: L1962 (<code>st.subheader("⚡ Recommended Action")</code> inside <code>browse_mode</code>). No <code>st.tabs</code> usage anywhere; sub-sections are composed by direct widget calls within each <code>*_mode()</code> body.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W3: Data sources (per page)</h3>
+  <p><strong>Loader inventory:</strong> <span class="label verified">[VERIFIED]</span> Nine <code>@st.cache_data</code>-decorated loaders, all rooted at <code>EVAL_DIR = PROJECT_ROOT / "results/reports"</code> (L45). Loader &rarr; file mapping:</p>
+  <table>
+    <thead><tr><th>Loader (line)</th><th>File read</th><th>Method</th></tr></thead>
+    <tbody>
+      <tr><td><code>load_alerts</code> (L744)</td><td><code>evaluation_alerts.json</code></td><td><code>json.load</code></td></tr>
+      <tr><td><code>load_all_responses</code> (L754)</td><td><code>alert_responses.json</code> joined with <code>evaluation_alerts.json</code> for device-context fields</td><td><code>json.load</code></td></tr>
+      <tr><td><code>load_risk_scores</code> (L784)</td><td><code>risk_scores.npz</code></td><td><code>np.load(allow_pickle=True)</code></td></tr>
+      <tr><td><code>load_admin_dashboard</code> (L792)</td><td><code>admin_dashboard.json</code></td><td><code>json.load</code></td></tr>
+      <tr><td><code>load_clinician_summaries</code> (L801)</td><td><code>clinician_summaries.json</code></td><td><code>json.load</code></td></tr>
+      <tr><td><code>load_response_policy</code> (L810)</td><td><code>response_policy.json</code></td><td><code>json.load</code></td></tr>
+      <tr><td><code>load_audit_trail</code> (L835)</td><td><code>audit_trail.json</code></td><td><code>json.load</code></td></tr>
+      <tr><td><code>load_latency_profile</code> (L909)</td><td><code>online_latency_profile.json</code></td><td><code>json.load</code></td></tr>
+      <tr><td><code>load_live_stream_source</code> (L919)</td><td><code>data/processed/test_phase1.parquet</code></td><td><code>pd.read_parquet</code></td></tr>
+    </tbody>
+  </table>
+  <p><strong>Per-page consumption:</strong></p>
+  <ul>
+    <li><strong>Dashboard mode (L1091-1270):</strong> <code>load_all_responses()</code>, <code>load_admin_dashboard()</code>, <code>load_clinician_summaries()</code>, <code>load_risk_scores()</code>, <code>load_response_policy()</code> (sighted L1100-1104). All file-read; no live network or DB.</li>
+    <li><strong>Online Simulation (L1271-1939):</strong> <code>load_live_stream_source()</code> (parquet replay with synthetic <code>arrived_at</code> timestamps anchored at <code>2026-04-09 08:00:00</code>, L935); <code>load_audit_trail()</code> at L1289. Two ad-hoc <code>open()</code> reads at L1463 (<code>dyn_path</code>, dynamic threshold) and L1481 (<code>drift_path</code>).</li>
+    <li><strong>Browse / Study / PCAP:</strong> <code>load_all_responses</code> shared; <code>study_mode</code> additionally imports <code>load_study_alerts</code> from <code>module6_evaluation.study_loader</code> (L2114-2116). PCAP Replay reads no files (stub).</li>
+  </ul>
+  <p><strong>"Live" semantics:</strong> <span class="label verified">[VERIFIED]</span> No live network tap, no streaming socket. <code>load_live_stream_source</code> docstring (L919-927): <em>"Mock 'live data source' &mdash; reads the test parquet directly and attaches a synthetic arrival timestamp per row. This simulates a feature-extracted flow stream without requiring a real network TAP."</em></p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W4: HITL role-switching mechanism</h3>
+  <p><strong>Switcher UI:</strong> <span class="label verified">[VERIFIED]</span> <code>module6_app.py:1297-1304</code>:</p>
+  <div class="evidence">
+    <code># 6C.8 Role switcher</code><br>
+    <code>st.sidebar.markdown("---")</code><br>
+    <code>st.sidebar.markdown("## Stakeholder View")</code><br>
+    <code>sim_role = st.sidebar.selectbox("View as:", ["Security Analyst", "Clinician", "Administrator"], key="sim_role")</code>
+  </div>
+  <p>The switcher lives inside <code>simulation_mode()</code> only &mdash; not in Dashboard, Browse Alerts, Study (A/B), or PCAP Replay.</p>
+  <p><strong>Roles defined:</strong> <span class="label verified">[VERIFIED]</span> Three roles: <code>"Security Analyst"</code>, <code>"Clinician"</code>, <code>"Administrator"</code>. Prototype's role toggle exposes two ("SOC" / "Clinical", <code>docs/sentinel_dashboard.html:883-884</code>); the third (Administrator) is absent from the prototype.</p>
+  <p><strong>Render dispatch:</strong> <span class="label verified">[VERIFIED]</span> <code>module6_app.py:1704-1709</code> branches:</p>
+  <div class="evidence">
+    <code>if sim_role == "Security Analyst":  render_analyst(alert_obj)</code><br>
+    <code>elif sim_role == "Clinician":       render_clinician(alert_obj)</code><br>
+    <code>else:                                render_admin(alert_obj)</code>
+  </div>
+  <p>The three render functions are at <code>module6_app.py:633</code> (<code>render_analyst</code>), <code>L677</code> (<code>render_clinician</code>), <code>L713</code> (<code>render_admin</code>). The exact diff between the three render bodies (which fields shown, in which order) was <strong>not opened</strong>; surfaced as a Phase 2 read.</p>
+  <p><strong>Study-mode separate role:</strong> <span class="label verified">[VERIFIED]</span> <code>study_mode</code> registration form has its own role field (<code>module6_app.py:2137-2143</code>) with four IT-role options (<em>"IT Security Generalist"</em>, <em>"Network/System Administrator"</em>, <em>"Healthcare IT Support"</em>, <em>"Other IT Role"</em>) &mdash; this is participant demographics for RQ3 analysis, not a runtime view toggle.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W5: Audit trail surfacing</h3>
+  <p><strong>Three sinks:</strong> <span class="label verified">[VERIFIED]</span> <code>module6_app.py:520-549</code> documents and implements a fan-out to three audit sinks for every operator interaction:</p>
+  <ul>
+    <li><strong>Sink 1:</strong> <code>_online_writer</code> (<code>AuditTrailWriter</code> instance, L403) &rarr; <code>results/reports/online_interactions.jsonl</code>. Buffered; flushes after <code>_FLUSH_AFTER=10</code> events.</li>
+    <li><strong>Sink 2:</strong> <code>audit_log()</code> helper (L406) &rarr; <code>_audit_writer</code> (<code>AuditTrailWriter</code>, L398) &rarr; <code>results/reports/audit_trail.jsonl</code>. Local hash-chained.</li>
+    <li><strong>Sink 3:</strong> <code>_hardened_audit</code> (<code>HardenedAuditLogger</code>, L52) &rarr; <code>results/reports/audit_log.jsonl</code>. Signed, hash-chained; reviewer attribution bound from <code>st.session_state["participant_id"]</code> / <code>["participant_role"]</code> or <code>["sim_role"]</code> at L549-550.</li>
+  </ul>
+  <p><strong>Class definition:</strong> <span class="label verified">[VERIFIED]</span> <code>AuditTrailWriter</code> defined at <code>module6_app.py:353</code>; <code>HardenedAuditLogger</code> imported from <code>module5_responses.module5_pipeline</code> at L42 (aliased on import).</p>
+  <p><strong>No module7:</strong> <span class="label verified">[VERIFIED]</span> <code>ls module7_audit/ module7/</code> &rarr; both absent. Audit infrastructure lives in two locations only: <code>module6_evaluation/module6_app.py:353-549</code> and <code>module5_responses/module5_pipeline.py</code> (body of <code>HardenedAuditLogger</code>; not opened in this session).</p>
+  <p><strong>Surfacing back to UI:</strong> <span class="label verified">[VERIFIED]</span> <code>load_audit_trail()</code> at L835 reads <code>audit_trail.json</code> (note: <code>.json</code>, not <code>.jsonl</code> &mdash; a separate canonical Module-5 record, parsed by <code>alert_id</code> regex L843-852) and is consumed by <code>simulation_mode</code> at L1289 and by the FDA-record builder at L1716 (<code>build_fda_record_for_alert</code>, call site).</p>
+  <p><strong>Action vocabulary:</strong> <span class="label verified">[VERIFIED]</span> <code>ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]</code> at <code>module6_app.py:55</code>. The prototype's three buttons (<em>"Acknowledge"</em>, <em>"Escalate"</em>, <em>"Dismiss"</em>; <code>sentinel_dashboard.html:939-950</code>) overlap on <em>"escalate"</em> and <em>"dismiss"</em>; the prototype's <em>"acknowledge"</em> has no exact match in the current ACTIONS list (closest: <em>"monitor"</em>).</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W6: User study A/B mode</h3>
+  <p><strong>RQ3 spec status:</strong> <span class="label unknown">[UNKNOWN]</span> <code>docs/RQ3_USER_STUDY_SPEC.md</code> is absent on this branch (<code>feature/dashboard-design</code>, branched from <code>main</code>). The spec exists on <code>fix/rq1-weight-sensitivity</code> (per task-prompt prior-context paragraph), but the user picked branch-from-main, so the canonical spec is not readable here without a cross-branch read. <strong>Per task STOP-condition policy, this is recorded as [UNKNOWN] and Phase 1 must surface this as an Open Item rather than fabricate the spec's A/B conditions.</strong></p>
+  <p><strong>What the code actually implements:</strong> <span class="label verified">[VERIFIED]</span> Two A/B mechanisms exist in <code>module6_app.py</code>:</p>
+  <ul>
+    <li><strong>Counterbalanced assignment:</strong> <code>assign_ab_conditions(n_alerts, participant_id)</code> at L465-494. Latin-square: seed = <code>md5(participant_id) % 2**31</code>; even-PID gets XAI-first, odd-PID gets no-XAI-first; within each half-block, conditions are <code>rng.shuffle</code>'d. Returns a list of booleans (<code>True</code> = with XAI / <code>False</code> = without). Per-condition label in audit log at L1923: <code>"condition": "with_xai" if show_xai else "without_xai"</code>.</li>
+    <li><strong>Study mode flow:</strong> <code>study_mode()</code> at L2108-2367. Registration form (L2131-2154) collects participant ID, current IT role (4 options), years of experience, prior IDS/SIEM exposure, and consent checkbox. Imports <code>load_study_alerts</code> and <code>assign_ab_condition</code> from <code>module6_evaluation.study_loader</code>.</li>
+  </ul>
+  <p><strong>Groups per code docstring:</strong> <span class="label verified">[VERIFIED]</span> <code>module6_app.py:2110-2112</code>: <em>"Group A: raw IDS output only. Group B: raw IDS + MVE (3-layer explanation)"</em>. Whether this matches the (absent) RQ3 spec verbatim cannot be confirmed in this session.</p>
+  <p><strong>Adjacent fixtures:</strong> <span class="label verified">[VERIFIED]</span> <code>tests/fixtures/user_study_alert_scenarios.yaml</code> exists (Phase 2 read target). <code>tests/__pycache__/test_rq3_user_study.cpython-310-pytest-9.0.2.pyc</code> exists but the source <code>.py</code> is on the other branch &mdash; not openable here.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W7: Thesis demonstration plan</h3>
+  <p><strong>Stated demonstration shape:</strong> <span class="label verified">[VERIFIED]</span> Two unambiguous statements in repository docs:</p>
+  <ul>
+    <li><code>docs/SYSTEM_WORKFLOW.md:320</code>: <em>"This is a research evaluation interface, not a production RBAC dashboard. There is no LDAP, no SSO, no per-role authorization layer in the active code."</em></li>
+    <li><code>docs/SYSTEM_WORKFLOW.md:352-358</code>: <em>"The earlier project iteration described a streaming inference service with a CNN-BiLSTM-Attention model, FastAPI, mTLS, LDAP, Splunk/HL7 integration, Docker Compose, and a 6-panel RBAC dashboard. None of that lives in the active codebase. The relevant files are preserved under <code>_archive/</code> for reference but are not imported, tested, or executed by the current pipeline."</em></li>
+  </ul>
+  <p><strong>How the dashboard is launched:</strong> <span class="label verified">[VERIFIED]</span> <code>docs/SYSTEM_WORKFLOW.md:345</code>: <code>streamlit run pipeline/module6_evaluation/module6_app.py</code> (note: the docs say <code>pipeline/module6_evaluation/</code>, but actual code root is <code>module6_evaluation/</code> &mdash; surfaced as a documentation-vs-actual-path mismatch in Section 4, not corrected here).</p>
+  <p><strong>RQ3 user study as primary demonstration vehicle:</strong> <span class="label inferred">[INFERRED]</span> The presence of (a) a counterbalanced A/B assignment function, (b) participant-registration form with role/experience demographics, (c) consent checkbox, (d) audit logging keyed to <code>participant_id</code>, and (e) the docstring at L2109-2113 declaring <em>"Phase 2 User Study &mdash; A/B design validating C4"</em> together indicate the dashboard is intended to be a <em>deployable artifact for live user-study participants</em>, not a static screenshot reel. <strong>No verbatim repository document was found that names the demonstration mode (live demo / screenshots / recorded video).</strong> The Section-7 implication paragraph treats this as Phase 2 D1 input, not as a settled fact.</p>
+  <p><strong>No thesis docx:</strong> <span class="label verified">[VERIFIED]</span> <code>find . -maxdepth 2 -iname "thesis*"</code> &rarr; empty. No top-level <code>thesis_outline_latest.docx</code> or similar; <code>docs/</code> contents are four operational MDs and the prototype HTML.</p>
+</div>
+
+<div class="qa-block">
+  <h3>Q-W8: Existing design tokens and styling</h3>
+  <p><strong>Streamlit theme:</strong> <span class="label verified">[VERIFIED]</span> No <code>.streamlit/</code> directory at repo root (<code>ls .streamlit/</code> &rarr; "no .streamlit dir"). No <code>config.toml</code>, no theme TOML anywhere.</p>
+  <p><strong>CSS / SCSS:</strong> <span class="label verified">[VERIFIED]</span> <code>find module6_evaluation -name "*.css" -o -name "*.scss" -o -name "*.toml"</code> &rarr; empty. No external stylesheet file.</p>
+  <p><strong>Inline styling in the dashboard:</strong> <span class="label verified">[VERIFIED]</span> Six call sites of <code>st.markdown(..., unsafe_allow_html=True)</code> with inline <code>style="..."</code> attributes (L145, 289, 1216, 1567, 2096, 2098). Pattern is per-occurrence inline <code>background:#hex; color:white; padding:...; border-radius:...;</code> &mdash; no shared CSS variables, no font-family directives, no design-token system. <code>st.set_page_config</code> at L2397 uses only <code>page_title</code> and <code>layout="wide"</code> &mdash; no theme args.</p>
+  <p><strong>Prototype tokens (source of truth for visual direction):</strong> <span class="label verified">[VERIFIED]</span> <code>docs/sentinel_dashboard.html:12-45</code> defines a complete token set as CSS custom properties:</p>
+  <ul>
+    <li><strong>Surfaces:</strong> <code>--bg: #0E0F12</code>, <code>--surface-1: #16181D</code>, <code>--surface-2: #1D2026</code>, <code>--surface-3: #24272F</code></li>
+    <li><strong>Borders:</strong> <code>--border-subtle: #1F2229</code>, <code>--border: #262A33</code>, <code>--border-strong: #353944</code></li>
+    <li><strong>Text:</strong> <code>--text-primary: #E8E9EB</code>, <code>--text-secondary: #9CA0AB</code>, <code>--text-tertiary: #6A6F7B</code>, <code>--text-quaternary: #4A4F5A</code></li>
+    <li><strong>Tier colors (+ matching bg-alpha):</strong> <code>--tier-low: #5B8FB9</code>, <code>--tier-medium: #D4A445</code>, <code>--tier-high: #E07A5F</code>, <code>--tier-critical: #C53030</code></li>
+    <li><strong>Accents / semantic:</strong> <code>--accent: #7BA7BC</code>, <code>--success: #5F9E7B</code>, <code>--warning: #D4A445</code>, <code>--neutral: #6A6F7B</code></li>
+    <li><strong>Typography (L9):</strong> <code>Instrument Serif</code> (display), <code>IBM Plex Sans 400/500/600</code> (body), <code>JetBrains Mono 400/500/600</code> (code/numerics)</li>
+    <li><strong>Tailwind CDN at L10:</strong> <code>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</code> &mdash; utility classes used throughout markup.</li>
+  </ul>
+  <p><strong>Build-string artifact:</strong> <span class="label verified">[VERIFIED]</span> <code>docs/sentinel_dashboard.html:1017</code> &rarr; footer status strip displays <code>Build fix-1-weight-sensitivity</code>. The prototype was authored against the prior branch's work.</p>
+</div>
+
+<h2>Section 4 — Follow-up Questions Surfaced</h2>
+<ul>
+  <li><strong>RQ3 user-study spec absent on main.</strong> <code>docs/RQ3_USER_STUDY_SPEC.md</code> lives only on <code>fix/rq1-weight-sensitivity</code>. Phase 1's D6 (A/B mode) Options table must surface this gap as an Open Item; either the spec is brought forward to this branch (cherry-pick / merge) or the Phase 2 D6 pick is deferred until the spec is in scope. No fabrication of A/B conditions in the memo.</li>
+  <li><strong>Documented launch path vs actual path mismatch.</strong> <code>docs/SYSTEM_WORKFLOW.md:345</code> writes <code>streamlit run pipeline/module6_evaluation/module6_app.py</code> but actual file is at <code>module6_evaluation/module6_app.py</code> (no <code>pipeline/</code> prefix on this branch after the A3 layout flattening at <code>898e7c7</code>). Documentation is stale by one commit. Out of scope for Phase 0; flagged for the docs maintenance backlog.</li>
+  <li><strong>Three roles in code vs two in prototype.</strong> The current dashboard exposes Security Analyst / Clinician / Administrator. The prototype's role toggle exposes only SOC / Clinical. Phase 2 D4 must decide whether the Administrator view (a) is dropped, (b) is folded into a third toggle position, (c) becomes a separate page. Prototype does not cover this; surfaced as a Phase 2 design gap.</li>
+  <li><strong>Action vocabulary mismatch.</strong> Current ACTIONS list (<code>module6_app.py:55</code>) is <code>["dismiss", "monitor", "investigate", "isolate", "escalate"]</code>; prototype buttons are <em>Acknowledge / Escalate / Dismiss</em>. Three of the five current actions (<em>monitor / investigate / isolate</em>) are not in the prototype; the prototype's <em>Acknowledge</em> is not in ACTIONS. Phase 2 must reconcile or pick which vocabulary wins.</li>
+  <li><strong>Three audit sinks &mdash; chain-of-trust scope unread.</strong> Sink 3's <code>HardenedAuditLogger</code> body (in <code>module5_responses/module5_pipeline.py</code>) was not opened. The signing-key path <code>results/reports/audit_signing_key.pub.pem</code> was sighted in <code>ls</code> output but its production / rotation scheme was not investigated. Out of scope for Phase 0; flagged for Phase 2 D5 if the audit-persistence decision depends on which sink survives.</li>
+  <li><strong>Replay page not covered by prototype.</strong> Prototype's top-nav shows <em>Replay</em> (<code>sentinel_dashboard.html:400</code>) but no body markup is rendered for it. Current code's <code>pcap_replay_stub()</code> is explicitly a Phase 3 placeholder. Memo's Open Items must note that Phase 2 D2 picks involving Option C/D/E (which include Replay) require an additional prototype pass before implementation.</li>
+  <li><strong>Streaming source is mock, not live.</strong> <code>load_live_stream_source()</code> docstring at L920 names it "Mock 'live data source' &mdash; reads the test parquet directly". No real TAP, no socket reader. The prototype's "LIVE · last 4h" indicator (<code>sentinel_dashboard.html:418</code>) implies live; the implementation does not deliver it. Phase 2 D7 (live data integration) must pick between (a) keeping the mock, (b) wiring a real source, (c) marking the indicator as simulated.</li>
+  <li><strong>Render-function bodies not opened.</strong> The exact field-by-field divergence between <code>render_analyst</code> / <code>render_clinician</code> / <code>render_admin</code> (L633 / L677 / L713) was not read in this session. Phase 2 D4 (role mechanism) depends on whether the diff is meaningful (truly role-adaptive MVE) or cosmetic; the read is bounded (3 functions, ~80 lines total) and parked for Phase 2.</li>
+</ul>
+
+<h2>Section 5 — Coverage Statement</h2>
+<ul>
+  <li><strong>Files opened (read with <code>view</code>):</strong>
+    <ul>
+      <li><code>module6_evaluation/module6_app.py</code> &mdash; six bracketed windows: L1-50 (entry-point head), L140-155 (an unsafe_allow_html call site), L461-494 (assign_ab_conditions), L520-549 (capture_interaction triple sink), L744-942 (loader bodies), L1295-1320 (role switcher), L1700-1720 (role dispatch), L2090-2105 (a styled st.markdown call site), L2108-2143 (study_mode head), L2368-2387 (pcap_replay_stub), L2390-2419 (main). Bracketing strategy: 11 windows totalling ~570 lines out of 2,419 (~24% of file). Full file <strong>not</strong> read.</li>
+      <li><code>docs/sentinel_dashboard.html</code> &mdash; full 1,126-line file read (visual reference; entirely in scope of Q-W8).</li>
+      <li><code>docs/SYSTEM_WORKFLOW.md</code> &mdash; L315-358 (43 lines).</li>
+      <li><code>Codebase_Investigation.html</code> &mdash; partial reads of L1-45 (head/CSS), L1525-1604 (Session 9 structure as template), L2229 tail.</li>
+    </ul>
+  </li>
+  <li><strong>Files NOT opened (bodies sighted but not read):</strong>
+    <ul>
+      <li><code>module6_evaluation/module6_app.py</code> ranges: L51-460 (legacy ACTIONS / inline style helpers), L495-743 (render_analyst / render_clinician / render_admin bodies &mdash; flagged in Section 4), L943-1090 (cached helpers), L1092-1270 (dashboard_mode body), L1321-1700 (simulation_mode body), L1721-1940 (post-render hooks), L1941-2107 (browse_mode body), L2144-2367 (study_mode body), and other intervening ranges. Deliberate &mdash; Phase 0 question scope did not require these reads.</li>
+      <li><code>module6_evaluation/module6_evaluation.py</code> (961 lines), <code>_src_adapter.py</code>, <code>study_loader.py</code>, <code>study_analysis.py</code> &mdash; the off-app utility code. Not opened.</li>
+      <li><code>module5_responses/module5_pipeline.py</code> &mdash; <code>HardenedAuditLogger</code> class body. Flagged in Section 4.</li>
+      <li><code>docs/DEPLOYMENT.md</code>, <code>docs/ENGINE_MAP.md</code>, <code>docs/VERIFICATION_CHECKLIST.md</code> &mdash; grep-touched for the demonstration-mode question; bodies not fully read.</li>
+      <li><code>tests/fixtures/user_study_alert_scenarios.yaml</code> &mdash; sighted but not opened.</li>
+      <li><code>analysis/</code>, <code>pipeline/</code>, <code>configs/</code> &mdash; out of scope of the eight Q-Ws.</li>
+    </ul>
+  </li>
+  <li><strong>Searches and shell commands run:</strong>
+    <ul>
+      <li><code>git branch --show-current</code>; <code>git status --short</code>; <code>git fetch origin --quiet</code>; <code>git log main --oneline -5</code>; <code>git switch -c feature/dashboard-design main</code>; <code>git stash push</code> for two unrelated WIP files; <code>git checkout fix/rq1-weight-sensitivity -- Codebase_Investigation.html</code>.</li>
+      <li><code>ls -la module6_evaluation/</code>; <code>find module6_evaluation -name "*.py"</code>; <code>find . -name "*stream*.py"</code>; <code>find docs -name "RQ3*"</code>; <code>find . -maxdepth 2 -iname "thesis*"</code>; <code>find . -name "*user_study*" -o -name "*ab_condition*"</code>.</li>
+      <li><code>grep -rn "streamlit\|^import st" module6_evaluation/</code>; <code>grep -rn "from fastapi\|from flask\|@app.route" module6_evaluation/</code>; <code>grep -n "def load_" module6_evaluation/module6_app.py</code>; <code>grep -n "pd.read_\|json.load\|np.load\|open(" module6_evaluation/module6_app.py</code>; <code>grep -n "results/" module6_evaluation/module6_app.py</code>; <code>grep -n "role\|persona\|SOC\|Clinical" module6_evaluation/module6_app.py | grep -iE "switch|select|toggle|radio|sidebar"</code>; <code>grep -n "MVE\|sim_role" module6_evaluation/module6_app.py</code>; <code>grep -n "AuditTrailWriter\|HardenedAuditLogger\|AuditLogger\|audit_trail\|audit_log" module6_evaluation/module6_app.py</code>; <code>grep -n "dismiss\|acknowledge\|escalate" module6_evaluation/module6_app.py</code>; <code>grep -n "condition\|Group A\|Group B\|study_mode\|assign_ab_conditions" module6_evaluation/module6_app.py</code>; <code>grep -n "dashboard\|demo\|user study\|deployment" docs/DEPLOYMENT.md docs/SYSTEM_WORKFLOW.md docs/VERIFICATION_CHECKLIST.md</code>; <code>grep -n "unsafe_allow_html\|set_page_config\|font-family\|--color\|theme" module6_evaluation/module6_app.py</code>.</li>
+      <li><code>ls results/reports/</code>; <code>ls .streamlit/</code>; <code>ls module7_audit/ module7/</code>; <code>ls docs/</code>; <code>ls docs/RQ3_USER_STUDY_SPEC.md</code>; <code>test -f docs/sentinel_dashboard.html</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Default exclusions applied:</strong> yes &mdash; <code>tests/</code>, <code>__pycache__</code>, <code>.git/</code>, <code>results/_pre_*</code>, <code>_archive/</code>. No opt-ins beyond Q-W6's documented fixture sighting.</li>
+  <li><strong>Branch:</strong> <code>feature/dashboard-design</code>, HEAD = <code>898e7c7</code> (subject: <em>refactor: flatten pipeline/ package &mdash; A3 layout</em>). Branched from local <code>main</code>; <code>fix/rq1-weight-sensitivity</code> WIP (two files) stashed on prior branch before switch. <code>Codebase_Investigation.html</code> cherry-checked out from <code>fix/rq1-weight-sensitivity</code> to preserve the cumulative investigation log (the file did not yet exist on <code>main</code>).</li>
+  <li><strong>Explicitly NOT in this answer:</strong>
+    <ul>
+      <li>Any architecture pick (D1) or scope pick (D2). The memo's Pick / Rationale / Defense Q&amp;A cells stay empty pending Phase 2.</li>
+      <li>Any execution of the dashboard. <code>streamlit run</code> was not invoked; no rendered output observed.</li>
+      <li>Any edit to <code>module6_evaluation/*.py</code> or the prototype HTML. Phase 0/1 is read-only on the existing surface.</li>
+      <li>Any verdict on whether Streamlit's prototype fidelity is sufficient. That is Phase 2 D1's evidence-grounded judgment.</li>
+      <li>Any verdict on the documented "live" indicator vs the mock implementation. Surfaced as a Section-4 follow-up; no pick.</li>
+      <li>Reading the bodies of the three role-render functions. Bounded read parked for Phase 2.</li>
+      <li>Reading <code>HardenedAuditLogger</code>. Parked for Phase 2 D5.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Section 6 — Self-Grade</h2>
+<ul>
+  <li>[x] Every factual claim in Section 3 carries a confidence label &mdash; <strong>PASS</strong> (<span class="label verified">[VERIFIED]</span> for direct reads, <span class="label grepped">[GREPPED]</span> for grep-only evidence, <span class="label inferred">[INFERRED]</span> at Q-W7 for the demonstration-shape inference, <span class="label unknown">[UNKNOWN]</span> at Q-W6 for the absent RQ3 spec).</li>
+  <li>[x] Every <code>path</code> cited in Section 3 appears in Section 2 &mdash; <strong>PASS</strong></li>
+  <li>[x] Every verbatim quote &le;25 words, in backticks or evidence box &mdash; <strong>PASS</strong></li>
+  <li>[x] No prohibited softening words ("appears," "likely," "probably," "should," "would," "seems," "typically," "usually") in Sections 3 or 4 &mdash; <strong>PASS</strong></li>
+  <li>[x] No fix / refactor / improvement suggestion in any section &mdash; <strong>PASS</strong> (Section 4 surfaces gaps as facts; no recommended remediation)</li>
+  <li>[x] Every negative claim states its search scope &mdash; <strong>PASS</strong> (the "no FastAPI/Flask" is scoped to <code>module6_evaluation/</code>; the "no <code>.streamlit/</code>" is scoped to repo root; the "no stream module file" is scoped to <code>find . -name "*stream*.py"</code>)</li>
+  <li>[x] No docstring / type hint cited as CODE evidence &mdash; <strong>PASS</strong> (the <code>load_live_stream_source</code> docstring is cited only for the "mock" claim about its own semantics; the <code>study_mode</code> docstring is cited only for the "Group A / Group B" claim about its own behavior)</li>
+  <li>[x] Questions answered (Q-W1 through Q-W8) &mdash; <strong>PASS</strong> (Q-W6 partial: code half [VERIFIED], spec half [UNKNOWN] per task STOP-condition policy)</li>
+  <li>[x] Section 5 explicitly states what was not read &mdash; <strong>PASS</strong></li>
+  <li>[x] No design recommendation appears anywhere &mdash; <strong>PASS</strong> (the eight D-sections of the memo are not addressed here; the memo's Pick cells are left empty per Phase 1's chartered output)</li>
+  <li>[x] No edit performed on existing source &mdash; <strong>PASS</strong> (HTML append + new memo file are chartered output)</li>
+  <li>[x] Branch confirmed and stated in Section 5 &mdash; <strong>PASS</strong></li>
+  <li>[x] Confidence Ladder applied throughout &mdash; <strong>PASS</strong></li>
+  <li>[x] STOP conditions checked: <code>module6_evaluation/</code> present, <code>docs/sentinel_dashboard.html</code> present, <code>docs/RQ3_USER_STUDY_SPEC.md</code> absent &rarr; Q-W6 marked [UNKNOWN], proceeded per task spec &mdash; <strong>ALL CLEAR</strong></li>
+</ul>
+
+<h2>Section 7 — Phase 1 Implications (Dashboard memo bootstrap)</h2>
+<p>How Phase 1's design memo (<code>docs/dashboard_design_memo.md</code>) is shaped by the Q-W1&ndash;Q-W8 findings:</p>
+<ul>
+  <li><strong>D1 (architecture) &mdash; Verified evidence:</strong> the current dashboard is Streamlit, single-file, 2,419 LOC, with no React / Vite / Next presence anywhere in scope. The prototype uses Tailwind CDN + raw HTML + JS &mdash; not Streamlit-compatible without translation. D1's Options table reflects this verbatim. <strong>No Pick recorded.</strong></li>
+  <li><strong>D2 (scope) &mdash; Verified evidence:</strong> the current code surface is five modes (Dashboard, Online Simulation, Browse Alerts, Study A/B, PCAP Replay-stub). The prototype is a single Triage + Investigation + MVE/Actions view. D2's Options table reflects the gap; Phase 2 picks how many pages the new dashboard delivers.</li>
+  <li><strong>D3 (data flow) &mdash; Verified evidence:</strong> all current data is file-read from <code>results/reports/*</code>; no live API, no DB. The "live stream" is a parquet replay with synthetic timestamps. D3's Options reflect three modes (file-read keep / API-backed / dual). Phase 2 picks.</li>
+  <li><strong>D4 (role mechanism) &mdash; Verified evidence:</strong> three current roles (Analyst / Clinician / Admin) vs two in prototype (SOC / Clinical). Render dispatch is an in-app if/elif chain on <code>sim_role</code> session-state key. D4's Options span single-app toggle / URL-based / identity-bound; Phase 2 picks.</li>
+  <li><strong>D5 (audit persistence) &mdash; Verified evidence:</strong> three sinks today (online_interactions.jsonl buffered / audit_trail.jsonl hash-chained / audit_log.jsonl signed). No <code>module7_audit/</code>. D5's Options are JSONL (status-quo extension), SQLite (relational query), or route-through Module 5's <code>HardenedAuditLogger</code>. Phase 2 picks.</li>
+  <li><strong>D6 (A/B mode) &mdash; Partially-evidenced:</strong> the counterbalanced Latin-square assignment exists in code (<code>assign_ab_conditions</code> at L465); the canonical RQ3 spec is <strong>absent on this branch</strong>. D6's Options table is drafted around the code's behavior; the Open Items section flags the spec gap.</li>
+  <li><strong>D7 (live data) &mdash; Verified evidence:</strong> current source is mock-replay; prototype's "LIVE" indicator implies live; gap is real. D7's Options span read-existing-results / replay-parquet / synthetic-stream. Phase 2 picks based on D1 outcome.</li>
+  <li><strong>D8 (tokens transfer) &mdash; Verified evidence:</strong> prototype's complete token set (4 surface levels / 3 border levels / 4 text levels / 4 tier colors / 4 semantic accents / 3 fonts) is the source of truth; current dashboard has zero shared tokens (only inline per-call <code>style="..."</code>). D8's Options span copy-prototype-CSS / Tailwind / framework-native; gap is largest of all eight decisions.</li>
+</ul>
+<p><strong>Net framing:</strong> Phase 1 (memo bootstrap) is "evidence-table assembly only"; Phase 2 (decision execution) picks D1&ndash;D8 with the evidence already on the page. No fabrication of options. All Pick / Rationale / Defense Q&amp;A cells in the memo stay empty (literal marker <code>_TO BE FILLED IN PHASE 2 STEP &lt;n&gt;_</code>) until human decision.</p>
+
+<h2>Section 8 — Resolution Mapping Table (Dashboard track)</h2>
+<p>This is the first session of the dashboard-investigation track. There is no prior Q-W or Q-V to close on the dashboard surface. The mapping below records each Q-W's status and the deliverable it feeds, not a cross-reference to a prior session.</p>
+<table>
+  <thead>
+    <tr><th>Q-W</th><th>Status</th><th>Feeds memo section</th><th>One-line rationale</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Q-W1 (architecture)</td>
+      <td><strong>closed</strong></td>
+      <td>D1 Verified evidence</td>
+      <td>Streamlit, single-file (<code>module6_app.py</code> 2,419 LOC), sidebar-radio routing, <code>streamlit run</code>.</td>
+    </tr>
+    <tr>
+      <td>Q-W2 (pages)</td>
+      <td><strong>closed</strong></td>
+      <td>D2 Verified evidence</td>
+      <td>Five modes: Dashboard / Online Simulation / Browse Alerts / Study (A/B) / PCAP Replay-stub; line-numbered.</td>
+    </tr>
+    <tr>
+      <td>Q-W3 (data)</td>
+      <td><strong>closed</strong></td>
+      <td>D3 + D7 Verified evidence</td>
+      <td>Nine file-read loaders from <code>results/reports/*</code>; "live stream" is parquet replay with synthetic timestamps.</td>
+    </tr>
+    <tr>
+      <td>Q-W4 (role)</td>
+      <td><strong>closed</strong></td>
+      <td>D4 Verified evidence</td>
+      <td>Three roles (Analyst/Clinician/Admin) via <code>st.sidebar.selectbox</code> at L1300; three render functions at L633/L677/L713.</td>
+    </tr>
+    <tr>
+      <td>Q-W5 (audit)</td>
+      <td><strong>closed</strong></td>
+      <td>D5 Verified evidence</td>
+      <td>Three sinks (online_interactions.jsonl / audit_trail.jsonl / audit_log.jsonl); no <code>module7_audit/</code>.</td>
+    </tr>
+    <tr>
+      <td>Q-W6 (A/B)</td>
+      <td><strong>partial</strong></td>
+      <td>D6 Verified-evidence + Open Item</td>
+      <td>Code half [VERIFIED] (counterbalanced Latin-square at L465); spec half <span class="label unknown">[UNKNOWN]</span> (<code>RQ3_USER_STUDY_SPEC.md</code> absent on this branch).</td>
+    </tr>
+    <tr>
+      <td>Q-W7 (demo)</td>
+      <td><strong>closed</strong> (with [INFERRED] tag)</td>
+      <td>D1 + D2 narrative input</td>
+      <td>Repo docs say "research evaluation interface, not production RBAC"; user-study artifacts indicate deployable use; mode-of-demonstration not verbatim-documented.</td>
+    </tr>
+    <tr>
+      <td>Q-W8 (tokens)</td>
+      <td><strong>closed</strong></td>
+      <td>D8 Verified evidence</td>
+      <td>No CSS / no <code>.streamlit/</code> in current dashboard; prototype has complete token set + 3 fonts + Tailwind CDN.</td>
+    </tr>
+  </tbody>
+</table>
+
 </body>
 </html>
