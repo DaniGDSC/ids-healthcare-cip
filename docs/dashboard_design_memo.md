@@ -440,9 +440,173 @@ target and ~85% fidelity is the accepted envelope.
 
 - **Online Simulation (`simulation_mode` L1271):** rebrand the "LIVE" indicator as "REPLAY · synthetic ticks" (resolves the Section-4 follow-up surfaced in Session 13 — the prototype's "LIVE · last 4h" pill at `sentinel_dashboard.html:418` is rebranded to honestly reflect the parquet-replay reality). Layout preserved; restyled via `sentinel_theme.py` classes.
 - **Browse Alerts (`browse_mode` L1941):** restyle alert cards using `render_alert_row` from Step 1. No structural change.
-- **Study (A/B) (`study_mode` L2108):** minimal cosmetic restyle. Participant-facing UI deliberately preserved (registration form, Group A/B alert flow); changing it risks invalidating any pilot data and conflicts with the absent `RQ3_USER_STUDY_SPEC.md` constraint surfaced in Q-W6.
+- **Study (A/B) (`study_mode` L2108):** see **Step 6.S** below for the dedicated plan.
 - **PCAP Replay (`pcap_replay_stub` L2368):** unchanged. Already a Phase 3 placeholder; no point styling a stub.
 - **D2 gate:** Option A drops 4 of these 5 modes; Option B keeps Online Simulation; Options C/D/E add Replay / Audit / Admin pages requiring fresh markup (the prototype's top-nav at L397-403 advertises these tabs but no body markup exists — extension design needed).
+
+### Step 6.S — Study (A/B) page update plan
+
+The study page is the most sensitive surface in the dashboard: any change to the
+participant-facing presentation risks invalidating prior pilot data and conflicts
+with the absent `RQ3_USER_STUDY_SPEC.md`. This plan limits scope to **cosmetic
+restyle + additive instrumentation** — every behavioral contract is preserved.
+
+#### Data provenance (verified Session 13 + this turn)
+
+- `study_mode` reads scenarios from `tests/fixtures/user_study_alert_scenarios.yaml` via `study_loader.load_study_alerts()`. **Not from `alert_responses.json`** — so the val/test mixing issue described under "Data provenance correction" below does **not** affect this page.
+- The 20 YAML scenarios are hand-curated experimental stimuli with hardcoded `group_a.display` / `group_b.display` text per scenario, plus a scoring key (`correct_severity`, `correct_action`) per `alert_id`. Presentation order is fixed in the YAML.
+- A/B condition assignment: `study_loader.assign_ab_condition(participant_id, alert_index, n_alerts=20)` — counterbalanced Latin-square seeded by `md5(participant_id)`. Even-PID gets MVE-first, odd-PID gets no-MVE-first.
+
+#### Hard preserves (zero edits to any of these)
+
+| Preserve | Why |
+|---|---|
+| `study_loader.assign_ab_condition()` logic | Counterbalancing is the methodological core; changes invalidate prior pilot data |
+| `study_loader.load_study_alerts()` ordering | Presentation order is fixed for cross-participant comparability |
+| `tests/fixtures/user_study_alert_scenarios.yaml` content | Hand-curated stimuli; spec-controlled |
+| `display_alert()` Group A vs Group B contract at `module6_app.py:2153` | The Group-A-shows-only-score vs Group-B-shows-MVE+SHAP distinction IS the IV |
+| `likert_form()` fields | Likert scale items are spec-controlled |
+| `response_form()` output keys (`participant_id`, `condition`, `correct_action`, `decision_correct`, `decision_time_sec`, …) at L2210-2233 | Downstream RQ3 analysis (`study_analysis.py`) keys on these |
+| Q21 / Q22 wording at L2281-2343 | Proxy-validation questions are spec-controlled |
+| Audit-log event names (`response_submit`, `proxy_questions_submitted`) | Hash-chained; renaming breaks replay |
+| Consent + registration form fields (participant_id, role, years_exp, IDS exp, consent) at L2131-2154 | IRB-sensitive |
+
+#### In-scope changes
+
+- **S1. Theme injection.** `inject_theme()` at the top of `study_mode()` so the page inherits the Sentinel palette + fonts. No DOM structure change.
+- **S2. Tier rendering.** Replace inline `level_colors = {"CRITICAL": "red", "HIGH": "orange", …}` text rendering at `module6_app.py:2164-2167` with `components.render_tier_glyph(...)` — colorblind-safe shape coding from the prototype. Same severity word, better visual encoding.
+- **S3. Progress indicator.** Above the alert display, render a small "Alert N of 20 · condition: with/without MVE" header using the prototype's `font-mono` + `text-tertiary` styling. The condition label is **already visible elsewhere via the section header**; no new information leak.
+- **S4. Registration form polish.** Apply Sentinel surface/border styling to the form container. Keep all field labels, options, and `st.form` structure unchanged. Visual only.
+- **S5. Proxy-questions form polish.** Same scope as S4 applied to `_render_proxy_questions()` at L2281.
+- **S6. Sidebar participant strip.** Once registered, the sidebar shows `participant_id · role · session N min` in `font-mono` styling — additive, no behavior change. Lets the facilitator confirm participant state at a glance.
+- **S7. Completion-state styling.** When all 20 alerts + Q21/Q22 are done, show a Sentinel-styled "Session complete · responses captured to disk" card instead of the default `st.success`. Same downstream behavior; better visual close-out.
+
+#### Out of scope (deferred or refused)
+
+- ❌ **Three-column Triage layout for the study.** Study sessions need linear, single-focus presentation. The Triage layout would split attention and degrade response-time measurements.
+- ❌ **Role pill in study mode.** The participant's role is captured at registration and is a between-subjects variable; switching mid-session would break the design.
+- ❌ **Floor-elevated badge auto-application.** Floor-elevation is a real-system signal; surfacing it on YAML scenarios that don't carry that flag would introduce a confound.
+- ❌ **Dismiss-with-reason modal as the action picker.** The Likert form is the spec-controlled response capture; replacing it changes the dependent variable.
+- ❌ **Any change to the 20-scenario count, order, or wording without spec direction.**
+- ❌ **Cross-condition data leakage** (e.g., showing the SHAP plot under Group A) — explicitly guarded against by the existing `if show_xai:` branch at L2169; not touched.
+
+#### Open items requiring user / spec direction (not implemented in this turn)
+
+- **U1. Spec absent.** `docs/RQ3_USER_STUDY_SPEC.md` lives only on `fix/rq1-weight-sensitivity`. Need the user to cherry-pick / merge / paste the spec before any non-cosmetic change ships.
+- **U2. Action vocabulary.** `_ACTION_GUIDANCE` at L2260-2271 lists `dismiss / monitor / investigate / isolate / escalate`. Triage adopted `acknowledge` as a primary; study mode keeps the original five for now. If spec wants alignment, that's a separate change.
+- **U3. Test-set provenance.** The study page does **not** use `alert_responses.json`, so unaffected by the val/test mixing issue. But if a future variant of the study uses ML-output alerts (rather than YAML fixtures), the test-only filter from "Data provenance correction" below applies.
+
+#### Effort
+
+~0.5 day for S1-S7. No new files; ~50-80 line-edits within `study_mode()` and `_render_proxy_questions()`.
+
+#### Test plan
+
+- **AppTest smoke:** start the script with mode=`Study (A/B)`, complete the registration form, verify no exception, verify A/B condition flag is computed identically pre- and post-restyle (compare `assign_ab_condition` output for a fixed `participant_id`).
+- **Behavioral parity:** trigger a `response_submit` audit event and confirm the keys and values match the pre-restyle schema (one `participant_id`, one `condition`, one `decision_correct`, etc.). Schema diff = 0.
+- **Visual:** load the page in the browser, confirm dark palette + serif headings render as expected, confirm Likert form is functional, confirm Q21/Q22 form is functional.
+
+### Step 6.S++ — Study (A/B) page UI/UX plan
+
+Builds on Step 6.S (cosmetic chrome only, already shipped). Step 6.S++ adds
+deeper UX changes — information hierarchy, decision-support affordances,
+response-flow polish — while still preserving every experimental contract.
+Each candidate carries an explicit experimental-validity risk rating.
+
+#### Design principles (constrain the design space)
+
+1. **Equal-condition treatment.** Any added affordance must be visible to both Group A (no MVE) and Group B (with MVE) identically. The IV is *the MVE explanation itself*, not surrounding chrome.
+2. **No information leak across conditions.** Group A must not see anything that would be derivable from the MVE shown in Group B (severity, attack class, SHAP contributors).
+3. **Reduce non-IV confounds, do not introduce new ones.** Improvements should target *task-format literacy* (do participants understand what "isolate" means?) without leaking *task content* (which alert is malicious?).
+4. **Preserve response-time interpretability.** Decision-time-sec is a key DV; UX changes that add forced pauses or extra clicks invalidate cross-participant timing comparisons unless applied uniformly.
+5. **Researcher controls condition; participant never sees it.** No badge, hint, or sidebar that names "Group A" / "with MVE" / "without MVE" to the participant.
+
+#### Candidate inventory
+
+Grouped by intent. Risk: **L** = low (IV-safe), **M** = medium (uniform application required), **H** = high (likely invalidates prior pilot).
+
+##### A. Information hierarchy (helps participant orient)
+
+| # | Item | Why | Hard preserve | Risk |
+|---|---|---|---|---|
+| **A1** | Persistent scenario-context header card at top of the alert page (one fixed banner: hospital size, role, current task). Replaces the per-alert italic prefix repeated every screen. | Reduces re-reading the same prompt 20×; participant orients once. | Wording is the same as current italic prefix verbatim. | L |
+| A2 | Sidebar progress: "5 of 20 · est. 24 min remaining" (estimate based on current per-alert mean × remaining). | Time anxiety management; gives the participant a session-completion sense. | No time-pressure framing; estimate is informational, not target. | L |
+| A3 | Tier-stratified mini progress dots above the bar — 20 dots, each colored as the *previously answered* response severity tier. | Visual review of own pattern. | **Skip if spec disallows showing own-answer history** to participant mid-session — could bias subsequent responses. | M |
+
+##### B. Decision support (reduce non-IV confounds)
+
+| # | Item | Why | Hard preserve | Risk |
+|---|---|---|---|---|
+| **B1** | "What does each action mean?" expandable reference panel at the bottom of the response form. Action vocabulary (isolate/escalate/investigate/monitor/dismiss) with one-line each. **Shown to both groups identically.** | Isolates the IV from vocabulary literacy; a participant who picks "investigate" because it sounds safe is a confound, not an interaction effect. | Wording matches `_ACTION_GUIDANCE` at L2260-2271 verbatim; no severity hints in the reference text. | L |
+| **B2** | Inline form validation — submit button disabled until severity + action both selected. | Removes one click-and-error cycle; clearer affordance. | Same validation logic; just moves it from post-submit to pre-submit. | L |
+| B3 | Confidence scale visualization — 5 step indicators all visible with labels, instead of `select_slider` with on-hover labels. | All 5 anchors visible reduces hover-and-guess; better data quality on the confidence DV. | Same 5-point Likert; same labels verbatim. | L |
+| B4 | Tier-shape glyphs in **Group B only** alongside the severity word (`SEVERITY: CRITICAL ◆` etc.). | Colorblind-safe reinforcement of what's already shown in Group B's text. | Group A unchanged (no glyphs → no severity leak). | M (uniformity needs care: a glyph in B is fine because severity is already in B's text; introducing glyphs in A would be H) |
+
+##### C. Response-flow polish
+
+| # | Item | Why | Hard preserve | Risk |
+|---|---|---|---|---|
+| C1 | Post-submit toast: `Response captured · advancing to alert N+1` for ~1s before page transitions. | Gives the participant a sense of closure per alert; reduces "did my answer save?" anxiety. | Same audit event; toast is in addition to, not replacing, the audit log. | L |
+| C2 | Onboarding example: one labelled "**Example — does not count**" scenario before the 20 real ones. Walks the participant through the form once with a clearly trivial alert. | Removes task-format literacy as a confound on Alert 1. | Spec dependency: must check that adding a 21st screen (the example) doesn't blow the protocol's 30–40 min window; example scenario itself should be spec-defined (not invented). | **H without spec direction**; **L with spec confirmation** |
+| C3 | Mid-session "I want to take a 1-min break" button (idempotent — clicking it shows a static "paused" screen with a Resume button; clock continues counting). | Compassionate; some sessions go 40 min. | Pause-time tracked separately in audit log; doesn't reset `alert_start_time`. Decision-time-sec remains net-of-pause. | M (changes the timing semantics; needs spec OK or a documented decision) |
+| C4 | Completion debrief card showing aggregate stats: alerts reviewed, total time, condition assigned (now safe to reveal post-session), responses captured-to file. | Closure + transparency post-experiment. | Spec-controlled debrief text only; do not show per-alert correctness without spec approval. | L (post-session disclosure) |
+
+##### D. Researcher / facilitator affordances
+
+| # | Item | Why | Hard preserve | Risk |
+|---|---|---|---|---|
+| D1 | Sidebar "Session telemetry" panel (researcher-facing): per-alert decision times, current alert's audit chain head, on-demand "snapshot to file" button. | Live debugging of an in-progress session without interrupting the participant. | Hidden behind a researcher-only toggle to keep participant view clean. | L |
+| D2 | Pre-session "facilitator check" screen — confirms RQ3 spec version, pid format, timezone — before handing the laptop to the participant. | Reduces operator errors. | Off-thread; doesn't affect the participant session at all. | L |
+
+#### Recommended minimum cohesive set (ship as Step 6.S++ v1)
+
+**A1 + B1 + B2 + C1.** Rationale:
+- A1: replaces a repeated 20× distraction with a one-time header.
+- B1: directly isolates the IV from action-vocabulary literacy — the single biggest non-MVE confound.
+- B2: standard form UX; reduces submit-and-error cycles.
+- C1: gives per-alert closure with negligible task-time cost (<1s toast).
+
+All four items are risk **L**. Together they target the most defensible thesis-relevant improvement: making the *MVE explanation* (the IV) more isolatable as the explanatory factor, rather than letting action-vocabulary or task-format literacy soak up variance.
+
+#### Deferred (require spec direction)
+
+- A3 (own-answer history) — spec must rule on whether mid-session reflection is allowed.
+- B4 (tier glyphs in B) — pre-pilot vs post-pilot decision; uniformity check needed.
+- C2 (onboarding example) — protocol-time budget + spec-defined example needed.
+- C3 (pause button) — timing-semantics decision required.
+
+#### Out of scope (refused under this plan)
+
+- ❌ Conversational chat-style alert review (would change DV semantics entirely)
+- ❌ Auto-scoring feedback after each alert (changes the task into a training task, not an evaluation)
+- ❌ Persistent "your accuracy so far: X%" — guarantees response biasing
+- ❌ Adaptive difficulty / scenario reordering — invalidates between-subjects design
+- ❌ Streaming the live Triage queue into the study — the study uses curated YAML stimuli for a reason
+
+#### Effort (recommended set: A1 + B1 + B2 + C1)
+
+- A1: ~30 min (one new HTML block, rendered once per loop iteration)
+- B1: ~30 min (one expander, content lifted from `_ACTION_GUIDANCE`)
+- B2: ~15 min (radio + radio + slider preconditions wired to button disabled)
+- C1: ~15 min (one `st.toast` call before the existing `st.rerun`)
+- **~1.5 hours total. Zero new files.**
+
+#### Test plan (UI/UX-specific additions over Step 6.S)
+
+- A/B parity check unchanged: `assign_ab_condition` output identical pre/post.
+- Schema diff = 0 on the `response` dict written to `study_responses_*.json`.
+- Confirm B1 is shown identically to both conditions (set `show_mve=False` then `True`; the reference expander text should be byte-identical).
+- Confirm C1 toast does not change `decision_time_sec` measurement (toast fires *after* the time delta is computed, on the next-render path).
+
+### Data provenance correction (separate from Step 6.S, affects Triage view only)
+
+- **Verified:** `results/reports/alert_responses.json` contains 4,896 entries = `val_phase1[0..2447]` + `test_phase1[2448..4895]` concatenated. The Triage view (`dashboard_mode`) currently displays a queue drawn from **both splits combined** — val data is shown to operators.
+- **Fix:** add a single constant `_TEST_SPLIT_OFFSET = 2448` and filter `responses` in `dashboard_mode` and in the Browse/Online-Simulation modes to `sample_index >= _TEST_SPLIT_OFFSET`. Three call sites; one constant. No data regeneration required.
+- **Defense alternative:** re-run the pipeline writing `alert_responses_test.json` separately. Cleaner long-term but requires a Module-4/5 re-run. The filter-at-load approach is reversible and zero-cost; recommended as the immediate fix, with the cleaner separation as a Phase 4 polish item.
+- **Why this matters for the thesis:** an "Active queue" that includes val samples would let the operator inspect (and rate) examples the model used for hyperparameter tuning — a data-leakage story that's easy to get asked about in defense.
+- **Scope of this turn:** apply the filter to the Triage view (`dashboard_mode`). Other modes (Browse / Online Simulation / Study) addressed separately per their own contracts.
+
+
 
 ### Step 7 — Cleanup, polish, and accessibility (1 day, no D-gate)
 

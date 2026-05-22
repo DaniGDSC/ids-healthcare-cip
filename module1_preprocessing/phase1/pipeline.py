@@ -1,19 +1,3 @@
-"""Preprocessing pipeline orchestrator.
-
-Pipeline (matches canonical diagram):
-  Step 1:  Identifier sanitization (remove MAC/address columns)
-  Step 2:  Encode non-numeric features
-  Step 3:  Data cleaning (missing data, outliers)
-  Step 4a: Remove unary (zero-variance) features
-  Step 4b: Correlation-based redundancy check
-  ═══════ LEAKAGE BARRIER ═══════
-  Step 5:  Train–test split (stratified 70/30)
-  Step 6:  Scaling (fit on train, transform test)
-  ═══════ DUAL-TRACK BRANCH ═══════
-  Track A: Supervised — SMOTE inside CV pipeline (config exported, not applied)
-  Track B: Novelty — benign-only training subset exported
-"""
-
 from __future__ import annotations
 
 import io
@@ -26,7 +10,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from module0_analysis.phase0.security import (
+from module0_analysis.security import (
     IntegrityError,
     IntegrityVerifier,
     PathValidator,
@@ -44,11 +28,6 @@ from .scaler import RobustScalerTransformer
 from .splitter import DataSplitter
 from .variance import VarianceFilter
 
-# Hard cap on a single CSV file before pandas attempts to parse it.
-# 200 MB comfortably accommodates the WUSTL-EHMS-2020 dataset (~25 MB)
-# and pads for future captures, while preventing a hostile or accidental
-# multi-gigabyte file from OOMing the host. See finding #11 in the
-# Phase 1 security review.
 _MAX_INPUT_BYTES: int = 200 * 1024 * 1024
 
 logger = logging.getLogger(__name__)
@@ -130,9 +109,15 @@ class PreprocessingPipeline:
         self._report["random_state"] = cfg.random_state
         self._build_track_reports(y_train, cfg)
         self._export(
-            X_train, X_test, y_train, y_test,
-            y_multi_train, y_multi_test,
-            feat_names, scaler, cfg,
+            X_train,
+            X_test,
+            y_train,
+            y_test,
+            y_multi_train,
+            y_multi_test,
+            feat_names,
+            scaler,
+            cfg,
         )
 
         self._log_summary()
@@ -241,7 +226,8 @@ class PreprocessingPipeline:
         }
         logger.info(
             "Track B — Benign-only train: %d samples (%.1f%% of train)",
-            benign_mask.sum(), benign_mask.mean() * 100,
+            benign_mask.sum(),
+            benign_mask.mean() * 100,
         )
         self._report["track_a"] = {
             "smote_enabled": cfg.smote_enabled,
@@ -270,15 +256,24 @@ class PreprocessingPipeline:
         output_dir = self._root / cfg.output_dir
         scaler_dir = self._root / "models" / "scalers"
         exporter = PreprocessingExporter(
-            output_dir, scaler_dir, cfg.label_column, cfg.multi_label_column,
+            output_dir,
+            scaler_dir,
+            cfg.label_column,
+            cfg.multi_label_column,
         )
 
         exporter.export_parquet(
-            X_train_s, y_train, feat_names, cfg.train_parquet,
+            X_train_s,
+            y_train,
+            feat_names,
+            cfg.train_parquet,
             y_multi=y_multi_train,
         )
         exporter.export_parquet(
-            X_test_s, y_test, feat_names, cfg.test_parquet,
+            X_test_s,
+            y_test,
+            feat_names,
+            cfg.test_parquet,
             y_multi=y_multi_test,
         )
         if cfg.track_b_enabled:
@@ -315,7 +310,9 @@ class PreprocessingPipeline:
         # names — a Phase 1 file with biometric column names in a
         # table header would have tripped it. See finding #20.
         md_path = (
-            self._root / "results" / "phase1_preprocessing"
+            self._root
+            / "results"
+            / "phase1_preprocessing"
             / "report_section_preprocessing.md"
         )
         md_path.parent.mkdir(parents=True, exist_ok=True)
@@ -397,38 +394,47 @@ class PreprocessingPipeline:
                 # Make sure the failure leaves a visible mark in the
                 # report rather than a half-populated dict.
                 self._report["integrity"] = {
-                    "verified":   False,
+                    "verified": False,
                     "failure_at": path.name,
                 }
                 raise
 
             df = pd.read_csv(io.BytesIO(data), low_memory=False)
-            logger.info("  Loaded %s: %d × %d (sha256=%s…)",
-                        path.name, df.shape[0], df.shape[1], digest[:16])
+            logger.info(
+                "  Loaded %s: %d × %d (sha256=%s…)",
+                path.name,
+                df.shape[0],
+                df.shape[1],
+                digest[:16],
+            )
             frames.append(df)
-            per_file_integrity.append({
-                "file":   path.name,
-                "sha256": digest,
-                "rows":   int(df.shape[0]),
-            })
+            per_file_integrity.append(
+                {
+                    "file": path.name,
+                    "sha256": digest,
+                    "rows": int(df.shape[0]),
+                }
+            )
 
         combined = (
             pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
         )
         self._report["ingestion"] = {
             "files_loaded": len(csv_files),
-            "raw_rows":     int(combined.shape[0]),
-            "raw_columns":  int(combined.shape[1]),
+            "raw_rows": int(combined.shape[0]),
+            "raw_columns": int(combined.shape[1]),
         }
         # Only populated when every file actually verified — see (6).
         self._report["integrity"] = {
-            "verified":         True,
+            "verified": True,
             "n_files_verified": len(per_file_integrity),
-            "files":            per_file_integrity,
+            "files": per_file_integrity,
         }
         logger.info(
             "Ingestion: %d rows × %d cols across %d verified file(s)",
-            combined.shape[0], combined.shape[1], len(csv_files),
+            combined.shape[0],
+            combined.shape[1],
+            len(csv_files),
         )
         return combined
 
@@ -451,21 +457,33 @@ class PreprocessingPipeline:
         logger.info(sep)
         logger.info("PHASE 1 — PREPROCESSING SUMMARY")
         logger.info(sep)
-        logger.info("  Ingestion    : %d files → %d × %d",
-                     ing.get("files_loaded", 0), ing.get("raw_rows", 0),
-                     ing.get("raw_columns", 0))
+        logger.info(
+            "  Ingestion    : %d files → %d × %d",
+            ing.get("files_loaded", 0),
+            ing.get("raw_rows", 0),
+            ing.get("raw_columns", 0),
+        )
         logger.info("  Identifiers  : %d columns dropped", idr.get("n_dropped", 0))
-        logger.info("  Cleaning     : %d bio cells filled, %d rows dropped",
-                     cl.get("biometric_cells_filled", 0), cl.get("rows_dropped", 0))
-        logger.info("  Variance     : %d features dropped",
-                     var.get("n_dropped", 0))
-        logger.info("  Redundancy   : %d features dropped (|r| ≥ %.2f)",
-                     red.get("n_dropped", 0), red.get("threshold", 0))
-        logger.info("  Split        : train=%d, test=%d",
-                     spl.get("train_samples", 0), spl.get("test_samples", 0))
+        logger.info(
+            "  Cleaning     : %d bio cells filled, %d rows dropped",
+            cl.get("biometric_cells_filled", 0),
+            cl.get("rows_dropped", 0),
+        )
+        logger.info("  Variance     : %d features dropped", var.get("n_dropped", 0))
+        logger.info(
+            "  Redundancy   : %d features dropped (|r| ≥ %.2f)",
+            red.get("n_dropped", 0),
+            red.get("threshold", 0),
+        )
+        logger.info(
+            "  Split        : train=%d, test=%d",
+            spl.get("train_samples", 0),
+            spl.get("test_samples", 0),
+        )
         logger.info("  Track A      : SMOTE inside CV pipeline")
-        logger.info("  Track B      : %d benign-only samples",
-                     tb.get("benign_train_samples", 0))
+        logger.info(
+            "  Track B      : %d benign-only samples", tb.get("benign_train_samples", 0)
+        )
         logger.info("  Features     : %d", out.get("n_features", 0))
         logger.info("  Elapsed      : %.2f s", self._report.get("elapsed_seconds", 0))
         logger.info(sep)

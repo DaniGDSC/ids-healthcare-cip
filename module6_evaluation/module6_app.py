@@ -45,6 +45,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EVAL_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 MODELS_DIR = PROJECT_ROOT / "results/models"
+
+# alert_responses.json is val_phase1[0..N-1] + test_phase1[N..2N-1] concatenated.
+# Filtering `sample_index >= _TEST_SPLIT_OFFSET` keeps only test-split predictions —
+# val examples were used for hyperparameter tuning and must not be shown to
+# operators or study participants as if they were unseen test cases.
+_TEST_SPLIT_OFFSET = 2448
 # Singleton hardened logger for reviewer-attributed events. The existing
 # AuditTrailWriter (audit_trail.jsonl) is kept for backward compatibility
 # with offline study mode; reviewer-attributed alert decisions ALSO get
@@ -1103,6 +1109,16 @@ def dashboard_mode():
     responses = load_all_responses()
     if not responses:
         st.warning("No alert data found. Run Modules 3-5 first.")
+        return
+
+    # Filter to test split only. alert_responses.json is val[0..2447] +
+    # test[2448..4895] concatenated; without this filter the Triage queue
+    # would expose validation-set examples (used for hyperparameter tuning)
+    # to operators — a data-leakage story.
+    responses = [r for r in responses
+                 if r.get("sample_index", -1) >= _TEST_SPLIT_OFFSET]
+    if not responses:
+        st.warning("No test-split alerts found.")
         return
 
     # Visual queue: top 50 by tier-then-score (CRITICAL first, then HIGH...)
@@ -2283,11 +2299,18 @@ def _render_proxy_questions():
     Q21 + Q22: proxy validation for clinical staff
     and management stakeholders.
     Shown once after all 20 alerts are completed.
+
+    Sentinel restyle (S5): chrome only; Q21/Q22 wording and option text are
+    spec-controlled and unchanged.
     """
-    st.title("Two Final Questions")
     st.markdown(
-        "Based on the alerts you reviewed, "
-        "please answer these two questions."
+        '<div style="padding:24px 0 8px;">'
+        '<h1 class="font-display" style="font-size:2.25rem;margin:0 0 8px;'
+        'letter-spacing:-0.025em;color:var(--text-primary);">Two final questions</h1>'
+        '<p style="font-size:0.95rem;color:var(--text-secondary);margin:0;max-width:640px;">'
+        'Based on the alerts you reviewed, please answer these two questions.</p>'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
     with st.form("proxy_questions"):
@@ -2402,28 +2425,124 @@ def _render_group_b_highlighted(display_text: str) -> None:
     _flush_regular()
 
 
+def _render_scenario_context_header() -> None:
+    """A1: persistent scenario-context banner (Sentinel card style).
+
+    Replaces the per-alert italic prefix. Wording verbatim from the
+    original prompt; styling changed to a stable session banner so it
+    reads as orientation rather than per-alert filler.
+    """
+    role = st.session_state.get("participant_role", "")
+    role_html = (
+        f'<span class="font-mono" style="color:var(--accent);"> · role:</span> '
+        f'<span class="font-mono">{role}</span>'
+    ) if role else ""
+    st.markdown(
+        '<div style="background:var(--surface-1);border:1px solid var(--border-subtle);'
+        'border-left:2px solid var(--accent);border-radius:4px;padding:12px 16px;'
+        'margin-bottom:8px;">'
+        '<div style="font-size:10px;font-weight:500;letter-spacing:0.08em;'
+        'text-transform:uppercase;color:var(--text-tertiary);margin-bottom:4px;">Scenario context</div>'
+        '<p style="font-size:0.875rem;color:var(--text-primary);margin:0;line-height:1.5;">'
+        'You are the on-call IT security staff at a 300-bed hospital. Review the alert '
+        'below and decide how to respond.'
+        f'{role_html}'
+        '</p></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_action_reference_panel() -> None:
+    """B1: action-vocabulary reference shown identically to both conditions.
+
+    Isolates the IV (MVE explanation in Group B) from action-vocabulary
+    literacy. Content lifted verbatim from `_ACTION_GUIDANCE` at L2260-2271
+    of `browse_mode`. No severity hints in the reference text.
+    """
+    with st.expander("ⓘ What does each action mean? (reference)", expanded=False):
+        st.markdown(
+            '<div style="font-size:0.8125rem;line-height:1.55;color:var(--text-secondary);">'
+            '<p style="margin:0 0 6px;color:var(--text-tertiary);font-size:11px;'
+            'font-family:JetBrains Mono,monospace;">'
+            'Reference only — shown to all participants. Pick the action that matches '
+            'what you would do in real operations.</p>'
+            '<ul style="margin:8px 0 0;padding-left:20px;">'
+            '<li><strong style="color:var(--text-primary);">Isolate</strong> — block the '
+            'device/system from the network. Preserves clinical paths where possible.</li>'
+            '<li><strong style="color:var(--text-primary);">Escalate</strong> — notify security '
+            'lead and clinical engineering on-call. Hand off ownership.</li>'
+            '<li><strong style="color:var(--text-primary);">Investigate</strong> — gather '
+            'more information before acting. Check with biomed for scheduled maintenance.</li>'
+            '<li><strong style="color:var(--text-primary);">Monitor</strong> — no immediate '
+            'action. Watch for escalation; set an alert on threshold changes.</li>'
+            '<li><strong style="color:var(--text-primary);">Dismiss</strong> — expected '
+            'behavior. Verify with the asset owner; document the reason for dismissal.</li>'
+            '</ul></div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _study_sidebar_strip() -> None:
+    """S6: Sentinel-styled participant strip in the sidebar.
+
+    Additive only — shows participant_id, role, and session-elapsed minutes.
+    No behavioral change; lets the facilitator confirm participant state
+    at a glance.
+    """
+    pid = st.session_state.get("participant_id", "?")
+    role = st.session_state.get("participant_role", "?")
+    start = st.session_state.get("study_session_start")
+    elapsed_min = int((time.time() - start) / 60) if start else 0
+    st.sidebar.markdown(
+        f'<div style="padding:12px 8px;border-top:1px solid var(--border);margin-top:12px;">'
+        f'<div style="font-size:10px;font-weight:500;letter-spacing:0.08em;'
+        f'text-transform:uppercase;color:var(--text-tertiary);margin-bottom:6px;">Participant</div>'
+        f'<div class="font-mono" style="font-size:0.75rem;color:var(--text-primary);line-height:1.4;">'
+        f'{pid}<br>'
+        f'<span style="color:var(--text-tertiary);">{role}</span><br>'
+        f'<span style="color:var(--text-tertiary);">session {elapsed_min} min</span>'
+        f'</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
 def study_mode():
     """
     Phase 2 User Study — A/B design validating C4.
     Group A: raw IDS output only
     Group B: raw IDS + MVE (3-layer explanation)
+
+    Sentinel restyle (Phase 3 Step 6.S): cosmetic chrome only. All behavioral
+    contracts preserved — assign_ab_condition, load_study_alerts order, form
+    fields, scoring keys, audit event names. See
+    `docs/dashboard_design_memo.md` Step 6.S for the hard-preserve list.
     """
+    from module6_evaluation.sentinel_theme import inject_theme
     from module6_evaluation.study_loader import (
         load_study_alerts, assign_ab_condition
     )
 
+    inject_theme()  # S1: Sentinel palette + fonts inherited from theme module
+
+    # S6: Sidebar participant strip — additive once registered.
+    if st.session_state.get("study_started") and st.session_state.get("participant_id"):
+        _study_sidebar_strip()
+
     # ── Registration ──────────────────────────────────────────
     if not st.session_state.study_started:
-        st.title("Healthcare IDS Alert Evaluation Study")
-        st.markdown("""
-        **Purpose:** Evaluate how security alert information helps
-        IT staff make response decisions.
-
-        **Time required:** 30–40 minutes
-
-        **What you will do:** Review 20 security alerts and decide
-        how to respond to each one.
-        """)
+        # S4: registration card with Sentinel palette
+        st.markdown(
+            '<div style="padding:24px 0 8px;">'
+            '<h1 class="font-display" style="font-size:2.25rem;margin:0 0 8px;'
+            'letter-spacing:-0.025em;color:var(--text-primary);">'
+            'Healthcare IDS Alert Evaluation Study</h1>'
+            '<p style="font-size:0.95rem;color:var(--text-secondary);margin:0;max-width:640px;">'
+            'Evaluate how security alert information helps IT staff make response '
+            'decisions. Time required: 30–40 minutes. You will review 20 security '
+            'alerts and decide how to respond to each one.</p>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
         with st.form("registration"):
             pid = st.text_input(
@@ -2450,7 +2569,7 @@ def study_mode():
                 "and understand my responses will be anonymized."
             )
 
-            if st.form_submit_button("Begin Study") and pid and consent:
+            if st.form_submit_button("Begin Study", type="primary") and pid and consent:
                 st.session_state.participant_id = pid
                 st.session_state.participant_role = role
                 st.session_state.participant_years = years_exp
@@ -2459,6 +2578,7 @@ def study_mode():
                 st.session_state.current_alert = 0
                 st.session_state.responses = []
                 st.session_state.alert_start_time = time.time()
+                st.session_state.study_session_start = time.time()
                 st.session_state.study_alerts = load_study_alerts()
                 audit_log("study_start",
                          participant_id=pid,
@@ -2470,13 +2590,10 @@ def study_mode():
 
     # ── Study complete ─────────────────────────────────────────
     if st.session_state.study_complete:
-        st.title("Study Complete")
-        st.success(f"Thank you for participating!")
-
+        # S7: Sentinel completion card (replaces st.success / st.info)
         responses = st.session_state.responses
         n = len(responses)
 
-        # Save responses
         save_path = (
             PROJECT_ROOT / "results" / "reports" /
             f"study_responses_{st.session_state.participant_id}.json"
@@ -2486,9 +2603,24 @@ def study_mode():
             json.dumps(responses, indent=2), encoding="utf-8"
         )
 
-        st.metric("Alerts Reviewed", n)
-        st.info(f"Your responses have been saved. "
-                f"Results will be shared after the study concludes.")
+        st.markdown(
+            f'<div style="padding:48px 0 24px;text-align:center;">'
+            f'<h1 class="font-display" style="font-size:2.5rem;margin:0 0 8px;'
+            f'letter-spacing:-0.025em;color:var(--text-primary);">Session complete</h1>'
+            f'<p style="font-size:0.95rem;color:var(--text-secondary);margin:0 0 24px;">'
+            f'Thank you for participating. Your responses have been captured to disk; '
+            f'aggregate results will be shared after the study concludes.</p>'
+            f'<div style="display:inline-block;padding:20px 32px;background:var(--surface-1);'
+            f'border:1px solid var(--border-subtle);border-radius:4px;text-align:left;">'
+            f'<div style="font-size:10px;font-weight:500;letter-spacing:0.08em;'
+            f'text-transform:uppercase;color:var(--text-tertiary);margin-bottom:8px;">Session summary</div>'
+            f'<div class="font-mono" style="font-size:0.875rem;color:var(--text-primary);">'
+            f'participant <span style="color:var(--accent);">{st.session_state.participant_id}</span>'
+            f' · alerts reviewed <span style="color:var(--accent);">{n}</span>'
+            f' · responses captured to <span style="color:var(--text-tertiary);">'
+            f'{save_path.name}</span></div></div></div>',
+            unsafe_allow_html=True,
+        )
 
         audit_log("study_complete",
                  participant_id=st.session_state.participant_id,
@@ -2513,148 +2645,192 @@ def study_mode():
     pid = st.session_state.participant_id
     show_mve = assign_ab_condition(pid, current_idx, n_total)
 
-    # Progress bar
-    progress = current_idx / n_total
-    st.progress(progress,
-                text=f"Alert {current_idx + 1} of {n_total}")
-
-    # ── Alert display ──────────────────────────────────────────
-    st.markdown("---")
-    st.markdown(f"### Alert {current_idx + 1}")
+    # S3: Sentinel-styled progress strip. Behavior unchanged (same text;
+    # same N-of-20 numerator); only the chrome changes. The condition label
+    # (with/without MVE) is intentionally NOT shown to the participant —
+    # condition is between-subjects and revealing it could bias the
+    # response. Facilitator sees it via the audit log.
+    pct = int(round((current_idx / n_total) * 100))
     st.markdown(
-        "_You are the on-call IT security staff at a 300-bed hospital. "
-        "Review the alert below and decide how to respond._"
+        f'<div style="padding:12px 0 16px;">'
+        f'  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">'
+        f'    <span class="font-mono" style="font-size:11px;text-transform:uppercase;'
+        f'letter-spacing:0.08em;color:var(--text-tertiary);">Alert {current_idx + 1} of {n_total}</span>'
+        f'    <span class="font-mono" style="font-size:11px;color:var(--text-tertiary);">{pct}%</span>'
+        f'  </div>'
+        f'  <div style="height:3px;background:var(--surface-3);border-radius:2px;overflow:hidden;">'
+        f'    <div style="height:100%;width:{pct}%;background:var(--accent);transition:width 240ms ease;"></div>'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
     )
 
-    # Show Group A or Group B content
+    # ── A1: Persistent scenario-context header ──────────────────
+    # Replaces the per-alert italic prefix. Wording unchanged verbatim;
+    # styled as a Sentinel card so it reads as a stable session banner
+    # rather than per-alert filler.
+    _render_scenario_context_header()
+
+    # ── Alert display ──────────────────────────────────────────
+    st.markdown(
+        f'<h3 class="font-display" style="font-size:1.5rem;margin:16px 0 12px;'
+        f'letter-spacing:-0.02em;color:var(--text-primary);">Alert {current_idx + 1}</h3>',
+        unsafe_allow_html=True,
+    )
+
+    # Show Group A or Group B content (contract unchanged)
     if show_mve:
         _render_group_b_highlighted(alert.group_b_display)
     else:
         st.code(alert.group_a_display, language=None)
 
     # ── Response form ──────────────────────────────────────────
-    st.markdown("---")
-    st.markdown("#### Your Decision")
+    st.markdown(
+        '<div style="height:1px;background:var(--border-subtle);margin:20px 0 16px;"></div>'
+        '<h4 class="font-display" style="font-size:1.125rem;margin:0 0 12px;'
+        'letter-spacing:-0.01em;color:var(--text-primary);">Your decision</h4>',
+        unsafe_allow_html=True,
+    )
 
-    with st.form(f"alert_form_{current_idx}"):
+    # B2: bypass st.form so that the submit button can be disabled until
+    # both required selections are made. Widget keys are scoped per
+    # current_idx so values don't bleed across alerts.
+    severity = st.radio(
+        "1. How severe is this alert? *(select one)*",
+        ["CRITICAL — Respond immediately",
+         "HIGH — Respond within 1 hour",
+         "MEDIUM — Respond within 4 hours",
+         "LOW — Review within 24 hours"],
+        index=None,
+        key=f"sev_{current_idx}",
+    )
 
-        severity = st.radio(
-            "1. How severe is this alert? *(select one)*",
-            ["CRITICAL — Respond immediately",
-             "HIGH — Respond within 1 hour",
-             "MEDIUM — Respond within 4 hours",
-             "LOW — Review within 24 hours"],
-            index=None,
+    action = st.radio(
+        "2. What action would you take? *(select one)*",
+        ["Isolate the device/system from the network",
+         "Escalate to clinical staff / senior management",
+         "Investigate further before taking action",
+         "Monitor closely but no immediate action",
+         "Dismiss — this is likely a false alarm"],
+        index=None,
+        key=f"act_{current_idx}",
+    )
+
+    confidence = st.select_slider(
+        "3. How confident are you in this decision?",
+        options=[1, 2, 3, 4, 5],
+        value=3,
+        format_func=lambda x: {
+            1: "1 — Guessing",
+            2: "2 — Uncertain",
+            3: "3 — Somewhat confident",
+            4: "4 — Confident",
+            5: "5 — Very confident"
+        }[x],
+        key=f"conf_{current_idx}",
+    )
+
+    # B1: Action-vocabulary reference expander. Shown identically to both
+    # conditions to isolate the IV from action-vocabulary literacy.
+    _render_action_reference_panel()
+
+    # B2 (continued): inline validation — button stays disabled until both
+    # required radios are answered. The current value is `None` when the
+    # participant has not yet clicked an option (because index=None above).
+    ready = severity is not None and action is not None
+    submit_hint = (
+        '<p class="font-mono" style="font-size:10px;color:var(--text-tertiary);'
+        'margin:8px 0 0;text-align:right;">'
+        '— select a severity and an action to enable submission</p>'
+    ) if not ready else ""
+    if submit_hint:
+        st.markdown(submit_hint, unsafe_allow_html=True)
+
+    submitted = st.button(
+        "Submit & Next Alert →",
+        type="primary",
+        width="stretch",
+        disabled=not ready,
+        key=f"submit_{current_idx}",
+    )
+
+    if submitted and ready:
+        elapsed = round(time.time() - st.session_state.alert_start_time, 1)
+
+        # Map display values to scoring values (verbatim)
+        severity_map = {
+            "CRITICAL — Respond immediately": "CRITICAL",
+            "HIGH — Respond within 1 hour": "HIGH",
+            "MEDIUM — Respond within 4 hours": "MEDIUM",
+            "LOW — Review within 24 hours": "LOW",
+        }
+        action_map = {
+            "Isolate the device/system from the network": "isolate",
+            "Escalate to clinical staff / senior management": "escalate",
+            "Investigate further before taking action": "investigate",
+            "Monitor closely but no immediate action": "monitor",
+            "Dismiss — this is likely a false alarm": "dismiss",
+        }
+
+        chosen_severity = severity_map[severity]
+        chosen_action = action_map[action]
+
+        # Score response (logic unchanged)
+        severity_correct = (chosen_severity == alert.correct_severity)
+        action_correct = (chosen_action == alert.correct_action)
+
+        LEVEL = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "LOW": 0}
+        sev_diff = abs(
+            LEVEL.get(chosen_severity, -1) -
+            LEVEL.get(alert.correct_severity, -1)
         )
-
-        action = st.radio(
-            "2. What action would you take? *(select one)*",
-            ["Isolate the device/system from the network",
-             "Escalate to clinical staff / senior management",
-             "Investigate further before taking action",
-             "Monitor closely but no immediate action",
-             "Dismiss — this is likely a false alarm"],
-            index=None,
+        severity_score = 1.0 if sev_diff == 0 else (
+            0.5 if sev_diff == 1 else 0.0
         )
+        catastrophic = (sev_diff == 3)
 
-        confidence = st.select_slider(
-            "3. How confident are you in this decision?",
-            options=[1, 2, 3, 4, 5],
-            value=3,
-            format_func=lambda x: {
-                1: "1 — Guessing",
-                2: "2 — Uncertain",
-                3: "3 — Somewhat confident",
-                4: "4 — Confident",
-                5: "5 — Very confident"
-            }[x]
-        )
+        composite_score = (severity_score + (1.0 if action_correct else 0.0)) / 2
 
-        submitted = st.form_submit_button(
-            "Submit & Next Alert →",
-            type="primary",
-            use_container_width=True
-        )
+        response = {
+            "participant_id": pid,
+            "participant_role": st.session_state.participant_role,
+            "alert_id": alert.alert_id,
+            "alert_type": alert.alert_type,
+            "alert_index": current_idx,
+            "condition": "with_mve" if show_mve else "without_mve",
+            "chosen_severity": chosen_severity,
+            "correct_severity": alert.correct_severity,
+            "severity_correct": severity_correct,
+            "severity_score": severity_score,
+            "catastrophic_miss": catastrophic,
+            "chosen_action": chosen_action,
+            "correct_action": alert.correct_action,
+            "action_correct": action_correct,
+            "composite_score": composite_score,
+            "confidence": confidence,
+            "decision_time_sec": elapsed,
+            "ground_truth_label": alert.ground_truth_label,
+            "timestamp": datetime.now().isoformat(),
+        }
 
-        if submitted:
-            # Validate selections (FIX 7: no default → must select)
-            if severity is None or action is None:
-                if severity is None:
-                    st.error("Please select a severity level before submitting.")
-                if action is None:
-                    st.error("Please select an action before submitting.")
-                st.stop()
+        st.session_state.responses.append(response)
+        st.session_state.current_alert += 1
+        st.session_state.alert_start_time = time.time()
 
-            elapsed = round(time.time() - st.session_state.alert_start_time, 1)
+        audit_log("alert_response",
+                 participant_id=pid,
+                 alert_id=alert.alert_id,
+                 condition=response["condition"],
+                 composite_score=composite_score,
+                 decision_time=elapsed)
 
-            # Map display values to scoring values
-            severity_map = {
-                "CRITICAL — Respond immediately": "CRITICAL",
-                "HIGH — Respond within 1 hour": "HIGH",
-                "MEDIUM — Respond within 4 hours": "MEDIUM",
-                "LOW — Review within 24 hours": "LOW",
-            }
-            action_map = {
-                "Isolate the device/system from the network": "isolate",
-                "Escalate to clinical staff / senior management": "escalate",
-                "Investigate further before taking action": "investigate",
-                "Monitor closely but no immediate action": "monitor",
-                "Dismiss — this is likely a false alarm": "dismiss",
-            }
-
-            chosen_severity = severity_map[severity]
-            chosen_action = action_map[action]
-
-            # Score response
-            severity_correct = (chosen_severity == alert.correct_severity)
-            action_correct = (chosen_action == alert.correct_action)
-
-            # Partial credit for severity
-            LEVEL = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "LOW": 0}
-            sev_diff = abs(
-                LEVEL.get(chosen_severity, -1) -
-                LEVEL.get(alert.correct_severity, -1)
-            )
-            severity_score = 1.0 if sev_diff == 0 else (
-                0.5 if sev_diff == 1 else 0.0
-            )
-            catastrophic = (sev_diff == 3)  # CRITICAL↔LOW mismatch
-
-            composite_score = (severity_score + (1.0 if action_correct else 0.0)) / 2
-
-            response = {
-                "participant_id": pid,
-                "participant_role": st.session_state.participant_role,
-                "alert_id": alert.alert_id,
-                "alert_type": alert.alert_type,
-                "alert_index": current_idx,
-                "condition": "with_mve" if show_mve else "without_mve",
-                "chosen_severity": chosen_severity,
-                "correct_severity": alert.correct_severity,
-                "severity_correct": severity_correct,
-                "severity_score": severity_score,
-                "catastrophic_miss": catastrophic,
-                "chosen_action": chosen_action,
-                "correct_action": alert.correct_action,
-                "action_correct": action_correct,
-                "composite_score": composite_score,
-                "confidence": confidence,
-                "decision_time_sec": elapsed,
-                "ground_truth_label": alert.ground_truth_label,
-                "timestamp": datetime.now().isoformat(),
-            }
-
-            st.session_state.responses.append(response)
-            st.session_state.current_alert += 1
-            st.session_state.alert_start_time = time.time()
-
-            audit_log("alert_response",
-                     participant_id=pid,
-                     alert_id=alert.alert_id,
-                     condition=response["condition"],
-                     composite_score=composite_score,
-                     decision_time=elapsed)
-            st.rerun()
+        # C1: post-submit toast (st.toast survives one st.rerun by design)
+        next_n = current_idx + 2  # human-friendly next-alert number
+        if next_n <= n_total:
+            st.toast(f"Response captured · advancing to alert {next_n}", icon="✅")
+        else:
+            st.toast("All 20 alerts complete · loading final questions", icon="✅")
+        st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════

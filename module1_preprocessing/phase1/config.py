@@ -233,7 +233,7 @@ class Phase1Config(BaseModel):
         root = workspace_root or Path(__file__).resolve().parents[2]
         # Lazy import: keep config.py importable even if a developer
         # builds a venv without the Phase 0 package on the path.
-        from module0_analysis.phase0.security import PathValidator
+        from module0_analysis.security import PathValidator
 
         validator = PathValidator(root)
         # validate_input_path requires existence; data dirs may not
