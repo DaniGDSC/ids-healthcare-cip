@@ -3,12 +3,20 @@
 Produces a 3-layer Minimum Viable Explanation from a raw alert,
 device context, behavioral baseline, and optional user context.
 
-Design mirrors the two-track approach in
-module4_explanations/module4_online_explainer.py:
-  Option A (LLM) — Anthropic API with a structured JSON prompt if
-                   ANTHROPIC_API_KEY is set in the environment.
-  Option B (rule-based) — deterministic templates per alert type,
-                          always implemented as offline fallback.
+Provider chain (first available path wins; remaining paths skipped):
+  Option A1 (LLM, OpenAI)    — OpenAI API with JSON-mode if
+                               OPENAI_API_KEY is set.
+                               Model: OPENAI_MVE_MODEL or gpt-4o-mini.
+  Option A2 (LLM, Anthropic) — Anthropic API with a structured JSON
+                               prompt if ANTHROPIC_API_KEY is set.
+                               Model: ANTHROPIC_MVE_MODEL or claude-sonnet-4-6.
+  Option B  (rule-based)     — deterministic templates per alert type,
+                               always implemented as offline fallback.
+
+Both LLM paths enforce identical prompts and identical output validation,
+so the only difference between A1 and A2 is the provider. The rule-based
+fallback (Option B) is always callable and is what every test runs against
+unless a key is explicitly provided in the test environment.
 
 The explanation adapts the CLINICIAN_TEMPLATES concept from
 AlertExplainer._clinician_nlg() into the full 3-layer MVE structure
@@ -696,56 +704,13 @@ def _generate_rule_based(
 
 
 # ── Option A: LLM-based generation ─────────────────────────────────────
+#
+# Two LLM providers share the same prompt contract. The factored helpers
+# below build the system + user prompts once, validate one response, and
+# return a parsed MVEOutput (or None on any failure path). The provider-
+# specific functions only handle the SDK call.
 
-
-def _generate_llm(
-    raw_alert: dict[str, Any],
-    device_context: dict[str, Any],
-    baseline: dict[str, Any],
-    user_context: Optional[dict[str, Any]],
-    alert_type: str,
-) -> Optional[MVEOutput]:
-    """Attempt LLM-based MVE generation using the Anthropic API.
-
-    Falls back to None (caller uses rule-based) if:
-      - ANTHROPIC_API_KEY not set in environment
-      - anthropic package not installed
-      - API call fails for any reason
-
-    Prompt enforces 3-layer structure, word limits, clinical framing,
-    and explicitly prohibits SHAP values, CVSS scores, model internals,
-    and RF protocol claims.
-
-    Args:
-        raw_alert: Raw alert dict.
-        device_context: Device context dict.
-        baseline: Behavioral baseline dict.
-        user_context: User context or None.
-        alert_type: Alert type string (T1–T5).
-
-    Returns:
-        MVEOutput if successful, None if unavailable or failed.
-    """
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        return None
-
-    try:
-        import anthropic  # optional dependency
-    except ImportError:
-        logger.debug("anthropic package not installed; using rule-based fallback")
-        return None
-
-    # M-3: reuse a single client (and its HTTP connection pool) across all
-    # alerts in the process — avoids a new TLS handshake per surfaced alert.
-    @functools.lru_cache(maxsize=1)
-    def _client(key: str) -> "anthropic.Anthropic":
-        return anthropic.Anthropic(api_key=key)
-
-    criticality = str(device_context.get("criticality", "LOW")).upper()
-    is_clinical = _IS_CLINICAL.get(criticality, False)
-
-    system_prompt = """You are a clinical IDS explanation engine for hospital IT generalists.
+_LLM_SYSTEM_PROMPT = """You are a clinical IDS explanation engine for hospital IT generalists.
 Generate a 3-layer Minimum Viable Explanation (MVE) as JSON.
 Rules (non-negotiable):
 - layer_1 total words <= 60 (baseline_behavior + deviation_description + confidence_indicator)
@@ -761,7 +726,21 @@ Rules (non-negotiable):
 - DO NOT claim early ransomware detection capability
 Return only valid JSON with keys: layer_1, layer_2, layer_3."""
 
-    user_prompt = f"""Alert type: {alert_type}
+
+def _build_user_prompt(
+    raw_alert: dict[str, Any],
+    device_context: dict[str, Any],
+    baseline: dict[str, Any],
+    user_context: Optional[dict[str, Any]],
+    alert_type: str,
+) -> str:
+    """Construct the user prompt with alert payloads and the JSON schema.
+
+    Body is identical across OpenAI and Anthropic paths so that switching
+    providers does not perturb the output distribution beyond the
+    provider's own modelling differences.
+    """
+    return f"""Alert type: {alert_type}
 Raw alert: {json.dumps(raw_alert)}
 Device context: {json.dumps(device_context)}
 Behavioral baseline: {json.dumps(baseline)}
@@ -789,37 +768,191 @@ Return JSON with this exact structure:
   }}
 }}"""
 
-    try:
-        client = _client(api_key)
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=512,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
-        )
-        raw = response.content[0].text.strip()
-        # M-4: strip markdown fences with pre-compiled patterns
-        raw = _RE_FENCE_OPEN.sub("", raw)
-        raw = _RE_FENCE_CLOSE.sub("", raw)
-        data = json.loads(raw)
 
+def _parse_llm_json(raw_text: str, is_clinical: bool) -> Optional[MVEOutput]:
+    """Parse and validate an LLM response into MVEOutput.
+
+    Strips markdown code-fences (some providers wrap JSON despite
+    instructions), parses, validates the severity label, and returns
+    either a usable MVEOutput or None (causing the caller to fall back
+    to the next provider, ultimately rule-based).
+    """
+    raw = raw_text.strip()
+    # M-4: pre-compiled patterns; cheap to apply unconditionally
+    raw = _RE_FENCE_OPEN.sub("", raw)
+    raw = _RE_FENCE_CLOSE.sub("", raw)
+
+    try:
+        data = json.loads(raw)
+    except (json.JSONDecodeError, ValueError) as exc:
+        logger.warning(
+            "LLM returned non-JSON (%s); using next provider",
+            sanitize_for_log(exc),
+        )
+        return None
+
+    try:
         mve = MVEOutput(
             layer_1=data["layer_1"],
             layer_2=data["layer_2"],
             layer_3=data["layer_3"],
             alert_involves_clinical_system=is_clinical,
         )
-        # Validate severity label
-        if mve.layer_2.get("severity_label", "").upper() not in VALID_SEVERITY:
-            logger.warning("LLM returned invalid severity; using rule-based fallback")
-            return None
+    except (KeyError, TypeError) as exc:
+        logger.warning(
+            "LLM response missing required keys (%s); using next provider",
+            sanitize_for_log(exc),
+        )
+        return None
 
-        logger.debug("LLM MVE generated, %d words", mve.total_word_count)
+    if mve.layer_2.get("severity_label", "").upper() not in VALID_SEVERITY:
+        logger.warning("LLM returned invalid severity; using next provider")
+        return None
+
+    return mve
+
+
+def _generate_llm_openai(
+    raw_alert: dict[str, Any],
+    device_context: dict[str, Any],
+    baseline: dict[str, Any],
+    user_context: Optional[dict[str, Any]],
+    alert_type: str,
+) -> Optional[MVEOutput]:
+    """Attempt LLM-based MVE generation using the OpenAI API (primary path).
+
+    Falls back to None (caller tries the next provider) if:
+      - OPENAI_API_KEY not set in environment
+      - openai package not installed
+      - API call fails for any reason
+      - response is non-JSON, missing keys, or has invalid severity
+
+    Uses `response_format={"type": "json_object"}` to enforce JSON output.
+    Model is overridable via the OPENAI_MVE_MODEL env var (default
+    `gpt-4o-mini` — chosen for cost-per-call against this concise prompt).
+    Temperature is pinned to 0 for thesis reproducibility.
+
+    Returns:
+        MVEOutput on success, None on any failure.
+    """
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key:
+        return None
+
+    try:
+        import openai  # optional dependency
+    except ImportError:
+        logger.debug("openai package not installed; trying next provider")
+        return None
+
+    # M-3: reuse a single client (and its HTTP connection pool) across all
+    # alerts in the process — avoids a new TLS handshake per surfaced alert.
+    @functools.lru_cache(maxsize=1)
+    def _client(key: str) -> "openai.OpenAI":
+        return openai.OpenAI(api_key=key)
+
+    model = os.environ.get("OPENAI_MVE_MODEL", "gpt-4o-mini")
+    criticality = str(device_context.get("criticality", "LOW")).upper()
+    is_clinical = _IS_CLINICAL.get(criticality, False)
+
+    user_prompt = _build_user_prompt(
+        raw_alert, device_context, baseline, user_context, alert_type
+    )
+
+    try:
+        client = _client(api_key)
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=512,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": _LLM_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
+        raw_text = response.choices[0].message.content or ""
+        mve = _parse_llm_json(raw_text, is_clinical)
+        if mve is not None:
+            logger.debug(
+                "OpenAI MVE generated (%s, %d words)",
+                model,
+                mve.total_word_count,
+            )
         return mve
 
     except Exception as exc:
         logger.warning(
-            "LLM MVE failed (%s); using rule-based fallback",
+            "OpenAI MVE failed (%s); trying next provider",
+            sanitize_for_log(exc),
+        )
+        return None
+
+
+def _generate_llm_anthropic(
+    raw_alert: dict[str, Any],
+    device_context: dict[str, Any],
+    baseline: dict[str, Any],
+    user_context: Optional[dict[str, Any]],
+    alert_type: str,
+) -> Optional[MVEOutput]:
+    """Attempt LLM-based MVE generation using the Anthropic API (secondary path).
+
+    Tried only when OpenAI is unavailable. Falls back to None on:
+      - ANTHROPIC_API_KEY not set in environment
+      - anthropic package not installed
+      - API call fails for any reason
+      - response is non-JSON, missing keys, or has invalid severity
+
+    Model is overridable via the ANTHROPIC_MVE_MODEL env var (default
+    `claude-sonnet-4-6`).
+
+    Returns:
+        MVEOutput on success, None on any failure.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return None
+
+    try:
+        import anthropic  # optional dependency
+    except ImportError:
+        logger.debug("anthropic package not installed; using rule-based fallback")
+        return None
+
+    @functools.lru_cache(maxsize=1)
+    def _client(key: str) -> "anthropic.Anthropic":
+        return anthropic.Anthropic(api_key=key)
+
+    model = os.environ.get("ANTHROPIC_MVE_MODEL", "claude-sonnet-4-6")
+    criticality = str(device_context.get("criticality", "LOW")).upper()
+    is_clinical = _IS_CLINICAL.get(criticality, False)
+
+    user_prompt = _build_user_prompt(
+        raw_alert, device_context, baseline, user_context, alert_type
+    )
+
+    try:
+        client = _client(api_key)
+        response = client.messages.create(
+            model=model,
+            max_tokens=512,
+            system=_LLM_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_prompt}],
+        )
+        raw_text = response.content[0].text
+        mve = _parse_llm_json(raw_text, is_clinical)
+        if mve is not None:
+            logger.debug(
+                "Anthropic MVE generated (%s, %d words)",
+                model,
+                mve.total_word_count,
+            )
+        return mve
+
+    except Exception as exc:
+        logger.warning(
+            "Anthropic MVE failed (%s); using rule-based fallback",
             sanitize_for_log(exc),
         )
         return None
@@ -896,10 +1029,16 @@ def generate_mve(
 
     alert_type = _detect_alert_type(raw_alert, user_context)
 
-    # Try LLM first (Option A), fall back to rule-based (Option B)
-    mve = _generate_llm(
+    # Provider chain: A1 (OpenAI) → A2 (Anthropic) → B (rule-based).
+    # Each LLM helper returns None when its key is missing, its SDK is
+    # uninstalled, or the call fails — the next provider is then tried.
+    mve = _generate_llm_openai(
         raw_alert, device_context, baseline, user_context, alert_type
     )
+    if mve is None:
+        mve = _generate_llm_anthropic(
+            raw_alert, device_context, baseline, user_context, alert_type
+        )
     if mve is None:
         mve = _generate_rule_based(
             raw_alert, device_context, baseline, user_context, alert_type

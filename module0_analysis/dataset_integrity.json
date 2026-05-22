@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "entries": {
+    "/home/un1/project/ids-healthcare-cip/data/raw/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv": {
+      "sha256": "8359da96154fa60247df9d75e52d232077acb9886c09c36de2a0aaaee6cf2c25",
+      "size_bytes": 3946888,
+      "bootstrapped_at": "2026-05-22T08:35:58.379550+00:00"
+    }
+  },
+  "signature": "MEUCIQCIJvlRf1QPfdw0EO+ZjX5B+QacS6Jh3wJ6/j/OFWEDMwIgPUAjHAbVRm3LKSROsfgK3/j+CV5TsDA4AqXKCB/1E54=",
+  "signing_key_id": "ecdsa-p256-7e525c67544e3ecd",
+  "signature_alg": "ECDSA_P256_SHA256"
+}

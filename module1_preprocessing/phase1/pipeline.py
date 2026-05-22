@@ -7,8 +7,15 @@ Pipeline (matches canonical diagram):
   Step 4a: Remove unary (zero-variance) features
   Step 4b: Correlation-based redundancy check
   ═══════ LEAKAGE BARRIER ═══════
-  Step 5:  Train–test split (stratified 70/30)
-  Step 6:  Scaling (fit on train, transform test)
+  Step 5:  4-way stratified split (60:15:15:10) — Strategy 1
+            "Frozen Test + Demo Pool". Stratification on Attack Category.
+            Split contract recorded in data/processed/split_metadata.yaml
+            and locked by tests/test_split_contract.py. random_state=42.
+            train (60%)  — Track A + Track B model fitting
+            val   (15%)  — threshold calibration / DAE cascade input probas
+            test  (15%)  — FROZEN, paper metrics only (never seen by training)
+            demo  (10%)  — FROZEN, dashboard alerts + Phase-2 user study
+  Step 6:  Scaling (fit on train, transform val/test/demo)
   ═══════ DUAL-TRACK BRANCH ═══════
   Track A: Supervised — SMOTE inside CV pipeline (config exported, not applied)
   Track B: Novelty — benign-only training subset exported
@@ -26,7 +33,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from module0_analysis.phase0.security import (
+from module0_analysis.security import (
     IntegrityError,
     IntegrityVerifier,
     PathValidator,
@@ -57,9 +64,15 @@ logger = logging.getLogger(__name__)
 class PreprocessingPipeline:
     """Preprocessing pipeline for WUSTL-EHMS-2020.
 
-    Outputs scaled train/test sets ready for dual-track modelling:
+    Outputs scaled 4-way stratified splits (60:15:15:10) ready for
+    dual-track modelling:
       - Track A (supervised): X_train, y_train + SMOTE config
       - Track B (novelty): X_train_benign for autoencoder training
+
+    test_phase1.parquet and demo_phase1.parquet are FROZEN — never seen
+    by any model during training. Strategy + per-split provenance is
+    written to data/processed/split_metadata.yaml; the byte-level audit
+    anchor is data/processed/split_artifact_manifest.txt.
 
     Args:
         config: Validated Phase 1 configuration.
@@ -515,7 +528,7 @@ class PreprocessingPipeline:
         # without an existing signed baseline (no auto-bootstrap), so
         # we cannot reach the parse step on a missing or forged file.
         verifier = IntegrityVerifier(
-            metadata_dir=self._root / "module0_analysis/phase0",
+            metadata_dir=self._root / "module0_analysis",
         )
 
         frames: List[pd.DataFrame] = []

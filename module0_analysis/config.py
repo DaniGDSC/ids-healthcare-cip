@@ -141,7 +141,7 @@ class Phase0Config:
         # boundary check before any code reads them.
         from .security import PathValidator
 
-        root = workspace_root or Path(__file__).resolve().parents[2]
+        root = workspace_root or Path(__file__).resolve().parents[1]
         validator = PathValidator(root)
         # Note: data_path is validated for *containment* here but not
         # for existence (the dataset may not be present in CI runs that

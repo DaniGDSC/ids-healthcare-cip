@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 # Resolved once at import; loader instances re-derive the workspace
 # from this anchor so the security controls have a stable root.
-_WORKSPACE_ROOT: Path = Path(__file__).resolve().parents[2]
+_WORKSPACE_ROOT: Path = Path(__file__).resolve().parents[1]
 
 
 class DataLoader:
@@ -65,7 +65,7 @@ class DataLoader:
         # `bootstrap_integrity` CLI; verify_and_read() refuses to run
         # without an existing baseline.
         self._integrity = IntegrityVerifier(
-            metadata_dir=self._workspace_root / "module0_analysis/phase0",
+            metadata_dir=self._workspace_root / "module0_analysis",
         )
 
     # ------------------------------------------------------------------

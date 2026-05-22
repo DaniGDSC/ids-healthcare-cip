@@ -1,0 +1,251 @@
+{
+  "descriptive_statistics": {
+    "Dport": {
+      "mean": 1111.0,
+      "median": 1111.0,
+      "std": 0.0,
+      "min": 1111.0,
+      "max": 1111.0
+    },
+    "SrcBytes": {
+      "mean": 496.650264,
+      "median": 496.0,
+      "std": 28.584642,
+      "min": 310.0,
+      "max": 2298.0
+    },
+    "DstBytes": {
+      "mean": 187.077706,
+      "median": 186.0,
+      "std": 18.688525,
+      "min": 120.0,
+      "max": 882.0
+    },
+    "SrcLoad": {
+      "mean": 211840.633005,
+      "median": 236679.0,
+      "std": 79429.880071,
+      "min": 0.0,
+      "max": 1134000.0
+    },
+    "DstLoad": {
+      "mean": 71024.35494,
+      "median": 78893.0,
+      "std": 45308.106133,
+      "min": 507.447,
+      "max": 3938000.0
+    },
+    "SrcGap": {
+      "mean": 0.0,
+      "median": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "DstGap": {
+      "mean": 0.0,
+      "median": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "SIntPkt": {
+      "mean": 10.946755,
+      "median": 4.191333,
+      "std": 101.230484,
+      "min": 0.875,
+      "max": 9497.338
+    },
+    "DIntPkt": {
+      "mean": 8.515423,
+      "median": 2.56225,
+      "std": 52.50456,
+      "min": 0.7305,
+      "max": 2445.732
+    },
+    "SIntPktAct": {
+      "mean": 1.286918,
+      "median": 0.0,
+      "std": 62.123452,
+      "min": 0.0,
+      "max": 3002.812
+    },
+    "DIntPktAct": {
+      "mean": 0.0,
+      "median": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "SrcJitter": {
+      "mean": 32.025841,
+      "median": 3.053852,
+      "std": 1266.374694,
+      "min": 0.0,
+      "max": 66099.19414
+    },
+    "DstJitter": {
+      "mean": 8.546796,
+      "median": 2.50575,
+      "std": 49.667244,
+      "min": 0.6755,
+      "max": 2268.882
+    },
+    "sMaxPktSz": {
+      "mean": 310.000429,
+      "median": 310.0,
+      "std": 0.020708,
+      "min": 310.0,
+      "max": 311.0
+    },
+    "dMaxPktSz": {
+      "mean": 65.999632,
+      "median": 66.0,
+      "std": 0.04697,
+      "min": 60.0,
+      "max": 66.0
+    },
+    "sMinPktSz": {
+      "mean": 60.061282,
+      "median": 60.0,
+      "std": 3.913782,
+      "min": 60.0,
+      "max": 310.0
+    },
+    "dMinPktSz": {
+      "mean": 60.0,
+      "median": 60.0,
+      "std": 0.0,
+      "min": 60.0,
+      "max": 60.0
+    },
+    "Dur": {
+      "mean": 0.039227,
+      "median": 0.012574,
+      "std": 0.2499,
+      "min": 0.000128,
+      "max": 5.08852
+    },
+    "Trans": {
+      "mean": 1.0,
+      "median": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "TotPkts": {
+      "mean": 7.018201,
+      "median": 7.0,
+      "std": 0.341381,
+      "min": 3.0,
+      "max": 23.0
+    },
+    "TotBytes": {
+      "mean": 683.727969,
+      "median": 682.0,
+      "std": 41.832695,
+      "min": 436.0,
+      "max": 3180.0
+    },
+    "Load": {
+      "mean": 282864.995695,
+      "median": 315572.0,
+      "std": 111324.975308,
+      "min": 538.98,
+      "max": 3938000.0
+    },
+    "Loss": {
+      "mean": 0.00239,
+      "median": 0.0,
+      "std": 0.08679,
+      "min": 0.0,
+      "max": 4.0
+    },
+    "pLoss": {
+      "mean": 0.018954,
+      "median": 0.0,
+      "std": 0.634312,
+      "min": 0.0,
+      "max": 28.571429
+    },
+    "pSrcLoss": {
+      "mean": 0.015933,
+      "median": 0.0,
+      "std": 0.526854,
+      "min": 0.0,
+      "max": 20.0
+    },
+    "pDstLoss": {
+      "mean": 0.018044,
+      "median": 0.0,
+      "std": 0.748675,
+      "min": 0.0,
+      "max": 33.333333
+    },
+    "Rate": {
+      "mean": 428.72025,
+      "median": 477.175,
+      "std": 215.539362,
+      "min": 1.79,
+      "max": 15625.0
+    },
+    "Packet_num": {
+      "mean": 8156.3088,
+      "median": 8156.5,
+      "std": 4709.735634,
+      "min": 1.0,
+      "max": 16314.0
+    },
+    "Label": {
+      "mean": 0.125383,
+      "median": 0.0,
+      "std": 0.331163,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "Temp": {
+      "mean": 26.906815,
+      "std": 0.919766
+    },
+    "SpO2": {
+      "mean": 97.808861,
+      "std": 1.496269
+    },
+    "Pulse_Rate": {
+      "mean": 76.723741,
+      "std": 7.431914
+    },
+    "SYS": {
+      "mean": 142.846611,
+      "std": 8.493933
+    },
+    "DIA": {
+      "mean": 80.09419,
+      "std": 6.125289
+    },
+    "Heart_rate": {
+      "mean": 75.443927,
+      "std": 6.609102
+    },
+    "Resp_Rate": {
+      "mean": 19.695551,
+      "std": 7.325856
+    },
+    "ST": {
+      "mean": 0.258007,
+      "std": 0.10398
+    }
+  },
+  "missing_values": {},
+  "class_distribution": {
+    "Normal": {
+      "count": 14272,
+      "percentage": 87.4617
+    },
+    "Attack": {
+      "count": 2046,
+      "percentage": 12.5383
+    },
+    "imbalance_ratio": 6.9756
+  }
+}

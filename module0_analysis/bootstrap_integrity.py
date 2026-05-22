@@ -26,7 +26,7 @@ from pathlib import Path
 from .config import Phase0Config
 from .security import IntegrityError, IntegrityVerifier, PathValidator
 
-_DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "module0_analysis/phase0/config.yaml"
+_DEFAULT_CONFIG = Path(__file__).resolve().parents[1] / "module0_analysis/config.yaml"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -48,12 +48,12 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
     cfg = Phase0Config.from_yaml(args.config)
-    workspace = Path(__file__).resolve().parents[2]
+    workspace = Path(__file__).resolve().parents[1]
     validator = PathValidator(workspace)
     dataset_path = validator.validate_input_path(cfg.data_path)
 
     verifier = IntegrityVerifier(
-        metadata_dir=workspace / "module0_analysis/phase0",
+        metadata_dir=workspace / "module0_analysis",
     )
     try:
         digest = verifier.bootstrap(dataset_path)

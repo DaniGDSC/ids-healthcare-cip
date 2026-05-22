@@ -16,7 +16,7 @@ from src.mve_generator import (
     _detect_alert_type,
     _escalation,
     _fmt_dests,
-    _generate_llm,
+    _generate_llm_anthropic,
     _generate_rule_based,
     _normalize_device_type,
     generate_mve,
@@ -78,7 +78,7 @@ def _mock_anthropic_response(text: str) -> MagicMock:
     return mock_response
 
 
-# ── _generate_llm tests ──────────────────────────────────────────────────
+# ── _generate_llm_anthropic tests ──────────────────────────────────────────────────
 
 
 class TestGenerateLlm:
@@ -86,7 +86,7 @@ class TestGenerateLlm:
         env = dict(os.environ)
         env.pop("ANTHROPIC_API_KEY", None)
         with patch.dict(os.environ, env, clear=True):
-            result = _generate_llm(
+            result = _generate_llm_anthropic(
                 SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
             )
             assert result is None
@@ -94,7 +94,7 @@ class TestGenerateLlm:
     def test_import_error_returns_none(self) -> None:
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch.dict("sys.modules", {"anthropic": None}):
-                result = _generate_llm(
+                result = _generate_llm_anthropic(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is None
@@ -109,7 +109,7 @@ class TestGenerateLlm:
 
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
-                result = _generate_llm(
+                result = _generate_llm_anthropic(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is not None
@@ -125,7 +125,7 @@ class TestGenerateLlm:
 
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
-                result = _generate_llm(
+                result = _generate_llm_anthropic(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is None
@@ -138,7 +138,7 @@ class TestGenerateLlm:
 
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
-                result = _generate_llm(
+                result = _generate_llm_anthropic(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is None
@@ -152,7 +152,7 @@ class TestGenerateLlm:
 
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
-                result = _generate_llm(
+                result = _generate_llm_anthropic(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is not None
@@ -169,7 +169,7 @@ class TestGenerateLlm:
 
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
-                result = _generate_llm(
+                result = _generate_llm_anthropic(
                     SAMPLE_RAW, SAMPLE_DEVICE, SAMPLE_BASELINE, user_ctx, "T2"
                 )
                 assert result is not None
@@ -185,7 +185,7 @@ class TestGenerateLlm:
 
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with patch.dict("sys.modules", {"anthropic": mock_anthropic}):
-                result = _generate_llm(
+                result = _generate_llm_anthropic(
                     SAMPLE_RAW, low_device, SAMPLE_BASELINE, None, "T1"
                 )
                 assert result is not None

@@ -15,7 +15,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-_DROP_CANDIDATES = ("Label", "Attack Category")
+_DROP_CANDIDATES = ("Label", "Attack Category", "row_id", "device_class")
 
 
 def load_data(

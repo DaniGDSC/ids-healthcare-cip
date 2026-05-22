@@ -61,7 +61,7 @@ def load_data(label_col: str = "Label") -> tuple:
     train_df = pd.read_parquet(train_path)
     test_df = pd.read_parquet(test_path)
 
-    drop_cols = [c for c in [label_col, "Attack Category"] if c in train_df.columns]
+    drop_cols = [c for c in [label_col, "Attack Category", "row_id", "device_class"] if c in train_df.columns]
 
     y_train = train_df[label_col].values
     y_test = test_df[label_col].values
