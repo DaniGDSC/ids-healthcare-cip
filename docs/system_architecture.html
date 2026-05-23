@@ -518,18 +518,24 @@
         <!-- Module 2 -->
         <div class="module m2">
           <div class="num">MODULE 2</div>
-          <div class="title">Detection (Dual Track)</div>
-          <div class="path">module2_detection/</div>
+          <div class="title">Detection (Dual Track) — Training</div>
+          <div class="path">module2_detection/{module2_train_models, dae_training}.py</div>
           <div class="role">
-            <strong>Track A</strong>: XGBoost / RF / DT trained on
-            supervised splits with SMOTE inside CV.
-            <strong>Track B</strong>: DAE trained on benign-only data
-            (novelty detection by reconstruction error).
+            <strong>Track A</strong>: XGBoost / RF / DT trained with SMOTE
+            inside CV; emits per-model OOF probas for the cascade.
+            <strong>Track B</strong> (<code>dae_training.py</code>): DAE
+            trained on <em>benign-only</em> rows with cascaded input
+            <code>[raw_25 || xgb_OOF_proba]</code> (26 dims).
+            The augmentation set is defined once in
+            <code>common/dae_input.py</code> (<code>TRACK_A_FOR_DAE</code>) —
+            change it there, retrain via <code>dae_training</code>, the
+            engine picks it up automatically.
           </div>
           <div class="io">
-            <div class="row"><span class="label">in</span><span class="val"><code>train_phase1.parquet</code> + <code>benign_only_train.parquet</code></span></div>
-            <div class="row"><span class="label">out</span><span class="val"><code>results/models/{xgboost,rf,dt}.pkl</code></span></div>
-            <div class="row"><span class="label">out</span><span class="val">DAE checkpoint + threshold</span></div>
+            <div class="row"><span class="label">in</span><span class="val"><code>train_phase1.parquet</code> (benign mask applied for DAE)</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>results/models/{xgboost,rf,dt}_final_pipeline.pkl</code> + <code>_oof_proba.npy</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>dae_detector.json</code> + <code>dae_model.weights.h5</code> + <code>dae_final_report.json</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>dae_test_predictions.npz</code> via <code>detection_engine.write_test_predictions()</code></span></div>
           </div>
         </div>
 
@@ -545,9 +551,12 @@
             </span><br>
             Weights from <code class="font-mono">configs/composite_risk_weights.yaml</code>
             (0.40 / 0.25 / 0.15 / 0.20). Tier boundaries 0.40 / 0.60 / 0.80.
+            <code>C<sub>detect</sub></code> comes from
+            <code>detection_engine.DetectionEngine.predict(X)</code> — Module 3 no
+            longer reconstructs the cascaded input itself.
           </div>
           <div class="io">
-            <div class="row"><span class="label">in</span><span class="val"><code>test_phase1.parquet</code> + models</span></div>
+            <div class="row"><span class="label">in</span><span class="val"><code>test_phase1.parquet</code> + <code>detection_engine</code></span></div>
             <div class="row"><span class="label">out</span><span class="val"><code>results/reports/risk_scores.npz</code> (test)</span></div>
             <div class="row"><span class="label">out</span><span class="val"><code>demo_scores.npz</code> (demo split, frozen)</span></div>
           </div>
@@ -559,9 +568,12 @@
           <div class="title">Explanations (TreeSHAP + DAE + MVE)</div>
           <div class="path">module4_explanations/</div>
           <div class="role">
-            Batch: TreeSHAP top-N + DAE feature decomposition + global
-            importance plots. Online: per-alert MVE with p95 &lt; 150&nbsp;ms
-            SLA. MVE provider chain: OpenAI &rarr; Anthropic &rarr; rule-based.
+            Batch: TreeSHAP (xgboost only — set by <code>SHAP_MODELS</code>) +
+            DAE per-feature reconstruction-error decomposition (cascaded input
+            via <code>detection_engine.build_augmented</code>, sliced back to
+            25 raw cols) + global importance plots. Online: per-alert MVE with
+            p95 &lt; 150&nbsp;ms SLA. MVE provider chain: OpenAI &rarr;
+            Anthropic &rarr; rule-based.
           </div>
           <div class="io">
             <div class="row"><span class="label">in</span><span class="val"><code>risk_scores.npz</code> + models + raw features</span></div>
@@ -621,6 +633,23 @@
 
       <!-- Cross-cutting concerns -->
       <div class="crosscut">
+        <div class="cc-card">
+          <div class="cc-label">cross-cutting · inference</div>
+          <div class="cc-title">Detection engine (Track A + DAE fusion)</div>
+          <div class="cc-body">
+            <code>detection_engine/</code> owns the cascaded inference path.
+            <code>DetectionEngine.build_augmented(X)</code> is the <em>only</em>
+            place that constructs <code>[raw_features || Track_A_probas]</code>
+            — defined by <code>common/dae_input.TRACK_A_FOR_DAE</code> (currently
+            <code>("xgboost",)</code>) — and asserts the trained DAE's expected
+            input width matches. <code>predict(X)</code> returns Track A probas
+            (all 3), preds, <code>c_track_a</code>, <code>c_track_b</code>,
+            fused <code>c_detect = max(c_track_a, c_track_b)</code>, and the
+            augmented matrix. Modules 3, 4, and 6 call into it instead of
+            reimplementing fusion. Stale DAE artifacts fail loudly here, not
+            inside a numpy broadcast 100 lines downstream.
+          </div>
+        </div>
         <div class="cc-card">
           <div class="cc-label">cross-cutting · security</div>
           <div class="cc-title">Signed integrity + path validation</div>
@@ -685,14 +714,15 @@
         <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/val_phase1.parquet</code> (15%)</td><td>Module 2 (threshold calibration)</td></tr>
         <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/test_phase1.parquet</code> (15%, <strong>FROZEN</strong>)</td><td>Module 3 · Triage view · paper metrics</td></tr>
         <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/demo_phase1.parquet</code> (10%, <strong>FROZEN</strong>)</td><td>Module 6 Online Sim · Study A/B (curated YAML scenarios use this pool indirectly)</td></tr>
-        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/benign_only_train.parquet</code></td><td>Module 2 Track B (DAE)</td></tr>
+        <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>data/processed/benign_only_train.parquet</code></td><td>(currently unused; <code>dae_training</code> applies benign mask to <code>train_phase1.parquet</code> directly)</td></tr>
         <tr><td>Module 1</td><td class="dir">&rarr;</td><td><code>split_metadata.yaml</code> + <code>split_artifact_manifest.txt</code></td><td>Defense audit · <code>tests/test_split_contract.py</code></td></tr>
-        <tr><td>Module 2</td><td class="dir">&rarr;</td><td><code>results/models/{xgboost,rf,dt}.pkl</code></td><td>Module 3 · Module 4</td></tr>
-        <tr><td>Module 2</td><td class="dir">&rarr;</td><td>DAE checkpoint + adaptive threshold</td><td>Module 3 · Module 4 · drift_detection.py</td></tr>
+        <tr><td>Module 2 Track A</td><td class="dir">&rarr;</td><td><code>results/models/{xgboost,rf,dt}_final_pipeline.pkl</code> + <code>_oof_proba.npy</code></td><td><code>detection_engine</code> · Module 3 · Module 4</td></tr>
+        <tr><td>Module 2 (<code>dae_training</code>)</td><td class="dir">&rarr;</td><td><code>dae_detector.json</code> + <code>dae_model.weights.h5</code></td><td><code>detection_engine</code> · drift_detection.py</td></tr>
+        <tr><td><code>detection_engine</code></td><td class="dir">&rarr;</td><td><code>results/models/dae_test_predictions.npz</code> (cascaded scores)</td><td>Module 3 · Module 4 · Module 5</td></tr>
         <tr><td>Module 3</td><td class="dir">&rarr;</td><td><code>results/reports/risk_scores.npz</code> (test)</td><td>Module 4 · Module 5 · Module 6 Triage</td></tr>
         <tr><td>Module 3</td><td class="dir">&rarr;</td><td><code>results/reports/demo_scores.npz</code> (demo)</td><td>Module 6 Online Simulation (intended)</td></tr>
         <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>results/charts/waterfall_*.png</code> · <code>force_*.png</code></td><td>Module 6 (Browse / Online Sim / Triage)</td></tr>
-        <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>global_importance_{xgboost,rf,dt}.json</code></td><td>Module 6 Dashboard global SHAP panel</td></tr>
+        <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>global_importance_xgboost.json</code> + <code>shap_values_xgboost.npz</code></td><td>Module 6 Dashboard global SHAP panel</td></tr>
         <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>online_latency_profile.json</code> (p50/p95/p99)</td><td>Module 6 status strip + System Health</td></tr>
         <tr><td>Module 4</td><td class="dir">&rarr;</td><td><code>clinician_summaries.json</code> · <code>analyst_report.json</code></td><td>Module 6 role-adaptive MVE</td></tr>
         <tr><td>Module 5</td><td class="dir">&rarr;</td><td><code>alert_responses.json</code> (4,896 rec · val+test)</td><td>Module 6 (filtered to test-only in Triage)</td></tr>

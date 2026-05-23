@@ -148,9 +148,25 @@ RESPONSE_MAPPING = {
 
 # ── Data loading ────────────────────────────────────────────────────────
 
-def load_test_data() -> tuple:
-    """Load test parquet → X_test, y_test, attack_cats, feat_names."""
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
+def _split_paths(split: str) -> dict:
+    """Resolve per-split paths. Test = paper-clean; demo = operator-clean."""
+    if split == "test":
+        return {
+            "parquet": PROJECT_ROOT / "data/processed/test_phase1.parquet",
+            "out_npz": OUTPUT_DIR / "risk_scores.npz",
+        }
+    if split == "demo":
+        return {
+            "parquet": PROJECT_ROOT / "data/processed/demo_phase1.parquet",
+            "out_npz": OUTPUT_DIR / "demo_scores.npz",
+        }
+    raise ValueError(f"unknown split: {split!r} (expected 'test' or 'demo')")
+
+
+def load_test_data(parquet_path: Path | None = None) -> tuple:
+    """Load a split's parquet → X, y, attack_cats, feat_names."""
+    path = parquet_path or (PROJECT_ROOT / "data/processed/test_phase1.parquet")
+    df = pd.read_parquet(path)
     drop_cols = ["Label", "Attack Category", "row_id", "device_class"]
     feat_names = [c for c in df.columns if c not in drop_cols]
     X_test = df[feat_names].values.astype(np.float32)
@@ -969,17 +985,24 @@ def save_outputs(
     contributions: dict,
     sensitivity: dict,
     worked_examples: list,
+    *,
+    out_npz: Path | None = None,
 ) -> None:
-    """Save all risk score artifacts."""
-    # NPZ
+    """Save all risk score artifacts.
+
+    `out_npz` defaults to `risk_scores.npz` (test); demo runs pass
+    `demo_scores.npz`. The auxiliary CSV/JSON outputs stay at canonical
+    paths to preserve test as the source-of-truth for paper artifacts.
+    """
+    npz_path = out_npz or (OUTPUT_DIR / "risk_scores.npz")
     np.savez(
-        OUTPUT_DIR / "risk_scores.npz",
+        npz_path,
         R=R, c_detect=c_detect, d_crit=d_crit,
         s_data=s_data, d_clinical_tier=d_clinical_tier,
         c_track_a=c_track_a, c_track_b=c_track_b,
         risk_levels=levels, y_true=y_true,
     )
-    logger.info("  Saved: risk_scores.npz")
+    logger.info("  Saved: %s", npz_path.name)
 
     # CSV detail
     df = pd.DataFrame({
@@ -1051,32 +1074,63 @@ def save_outputs(
 # ── Main ────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog="python -m module3_risk_scoring.module3_risk_scores",
+        description="Module 3 — composite risk scoring. Operates on the "
+                    "selected frozen split (test=paper-clean, demo=operator-clean).",
+    )
+    parser.add_argument(
+        "--split",
+        choices=["test", "demo", "both"],
+        default="test",
+        help="Frozen split to process. 'test' writes the paper-clean "
+             "`risk_scores.npz`; 'demo' writes `demo_scores.npz`.",
+    )
+    args = parser.parse_args()
+
+    splits_to_run = ["test", "demo"] if args.split == "both" else [args.split]
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-
     sep = "=" * 72
     t0 = time.perf_counter()
-
-    logger.info(sep)
-    logger.info("MODULE 3 — COMPOSITE RISK SCORES (RQ2/RO2)")
-    logger.info(sep)
-
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
+    for split in splits_to_run:
+        _run_one_split(split, sep)
+    logger.info("Module 3 complete (%.1fs, splits=%s)",
+                time.perf_counter() - t0, splits_to_run)
+
+
+def _run_one_split(split: str, sep: str) -> None:
+    paths = _split_paths(split)
+    logger.info(sep)
+    logger.info("MODULE 3 — COMPOSITE RISK SCORES (RQ2/RO2) — split=%s", split)
+    logger.info(sep)
+
     # ── Load data ──
-    X_test, y_test, attack_cats, feat_names = load_test_data()
+    X_test, y_test, attack_cats, feat_names = load_test_data(paths["parquet"])
     n_samples = len(y_test)
     n_attacks = (y_test == 1).sum()
-    logger.info("Test data: %d samples (%d attacks)", n_samples, n_attacks)
+    logger.info("Data: %d samples (%d attacks) from %s",
+                n_samples, n_attacks, paths["parquet"].name)
 
     # ── Compute components ──
     logger.info("Computing risk components...")
 
-    _, xgb_threshold = load_xgboost_proba()
-    logger.info("  Track A: XGBoost proba, threshold=%.3f", xgb_threshold)
+    # XGBoost threshold log — only available for test (cached test predictions).
+    # Demo runs skip this informational read since the threshold doesn't enter
+    # the formula (it's used only for the operating-point log line).
+    if split == "test":
+        try:
+            _, xgb_threshold = load_xgboost_proba()
+            logger.info("  Track A: XGBoost proba, threshold=%.3f", xgb_threshold)
+        except FileNotFoundError:
+            logger.warning("  XGBoost cached test predictions absent; skipping threshold log")
 
     from detection_engine import DetectionEngine
     det_result = DetectionEngine().predict(X_test)
@@ -1112,7 +1166,10 @@ def main() -> None:
     # ── Dual-track fusion ──
     logger.info("")
     logger.info("── Dual-Track Fusion Analysis ──")
-    fusion = dual_track_fusion_analysis(c_track_a, c_track_b, y_test, attack_cats, xgb_threshold)
+    # On demo splits where the test-cached XGBoost threshold isn't loaded, use
+    # the canonical 0.5 fallback (only affects an informational log line).
+    _xgb_threshold = locals().get("xgb_threshold", 0.5)
+    fusion = dual_track_fusion_analysis(c_track_a, c_track_b, y_test, attack_cats, _xgb_threshold)
     r = fusion["recall"]
     logger.info("  XGBoost recall: %.4f", r["xgboost_alone"])
     logger.info("  DAE recall:     %.4f", r["dae_alone"])
@@ -1145,31 +1202,30 @@ def main() -> None:
     logger.info("Saving outputs...")
     save_outputs(R, c_detect, d_crit, s_data, d_clinical_tier, c_track_a, c_track_b,
                  levels, y_test, attack_cats, fusion, contributions,
-                 sensitivity, worked_examples)
+                 sensitivity, worked_examples,
+                 out_npz=paths["out_npz"])
 
-    # ── Visualizations ──
-    logger.info("Generating charts...")
-    plot_risk_distribution(R, levels)
-    plot_component_breakdown(contributions)
-    plot_dual_track_heatmap(fusion)
-    plot_component_scatter(c_track_a, c_track_b, y_test)
-    plot_risk_by_category(R, attack_cats, y_test)
-    plot_risk_by_label(R, y_test)
+    # ── Visualizations + config JSON exports (test split only — paper figures
+    #    must not be clobbered by demo runs) ──
+    if split == "test":
+        logger.info("Generating charts...")
+        plot_risk_distribution(R, levels)
+        plot_component_breakdown(contributions)
+        plot_dual_track_heatmap(fusion)
+        plot_component_scatter(c_track_a, c_track_b, y_test)
+        plot_risk_by_category(R, attack_cats, y_test)
+        plot_risk_by_label(R, y_test)
+        logger.info("Exporting config JSONs...")
+        export_config_jsons()
 
-    # ── Export standalone config JSONs (Tasks 3.1, 3.2, 3.8) ──
-    logger.info("Exporting config JSONs...")
-    export_config_jsons()
-
-    # ── Summary ──
-    elapsed = round(time.perf_counter() - t0, 1)
     logger.info("")
     logger.info(sep)
-    logger.info("RISK SCORING COMPLETE — %.1fs", elapsed)
+    logger.info("SPLIT %s COMPLETE", split.upper())
     logger.info(sep)
     logger.info("  Formula   : R = %.2f·C_detect + %.2f·D_crit + %.2f·S_data + %.2f·D_clinical_tier",
                 WEIGHTS["w1"], WEIGHTS["w2"], WEIGHTS["w3"], WEIGHTS["w4"])
     logger.info("  Fusion    : C_detect = cascaded(Track_A → Track_B)")
-    logger.info("  Output    : %s", OUTPUT_DIR)
+    logger.info("  Output    : %s", paths["out_npz"])
     logger.info(sep)
 
 

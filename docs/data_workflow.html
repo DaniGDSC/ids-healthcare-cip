@@ -713,10 +713,11 @@
           <div class="stage-header">
             <div class="num">STAGE 4 · TRAIN MODELS</div>
             <div class="title">Track A supervised + Track B novelty</div>
-            <div class="source">module2_detection/module2_train_models.py · models/{XGBoost,RandomForest,DecisionTree,DAE}.py</div>
+            <div class="source">module2_detection/{module2_train_models, dae_training}.py · models/{XGBoost,RandomForest,DecisionTree,DAE}.py</div>
             <div class="vol">
-              <span class="vol-key">track A</span> <span class="vol-val">3 supervised models</span> trained on train_phase1<br>
-              <span class="vol-key">track B</span> <span class="vol-val">1 DAE</span> trained on benign_only_train<br>
+              <span class="vol-key">track A</span> <span class="vol-val">3 supervised models</span> trained on train_phase1 (emit *_oof_proba.npy for the cascade)<br>
+              <span class="vol-key">track B</span> <span class="vol-val">1 DAE</span> trained by <code>dae_training.py</code> on benign-only rows of train_phase1<br>
+              <span class="vol-key">cascade subset</span> <code>common.dae_input.TRACK_A_FOR_DAE</code> (currently <code>("xgboost",)</code>)<br>
               <span class="vol-key">hyperparams</span> from <span class="vol-val">module2_detection/tuning/</span> (pre-tuned, not re-tuned here)<br>
               <span class="vol-key">signing</span> ECDSA-P256 — refuses to load unsigned pickles
             </div>
@@ -725,8 +726,9 @@
             <div class="panel-label">Track A + Track B</div>
             <ol>
               <li><strong>Track A · supervised</strong>: XGBoost, RandomForest, DecisionTree. SMOTE applied <em>inside CV pipeline</em>, not during preprocessing (would otherwise leak synthetic samples into val).</li>
-              <li><strong>Track B · novelty</strong>: Denoising Autoencoder trained on benign-only train. Threshold calibrated against benign-only val.</li>
-              <li><strong>Cascaded DAE input</strong>: DAE trained on <code>[raw_25_features || track_a_OOF_probas (3 floats)]</code>. Closes train-inference skew on joint feature-prediction space.</li>
+              <li><strong>Track B · novelty</strong>: Denoising Autoencoder trained on benign-only rows. Threshold calibrated on the same fit set (percentile of reconstruction error).</li>
+              <li><strong>Cascaded DAE input</strong>: DAE trained on <code>[raw_25_features || track_a_OOF_probas (1 float — xgboost)]</code> = 26 dims. The augmentation set is owned by <code>common.dae_input.TRACK_A_FOR_DAE</code>; change it there and retrain via <code>dae_training.train_dae()</code> — the inference engine picks it up automatically.</li>
+              <li>Test-time DAE scores are written by <code>detection_engine.DetectionEngine.write_test_predictions()</code>, not by the training step (separation of concerns: training is pure, inference is centralised).</li>
               <li>All model pickles signed with the Module-5 ECDSA key; <code>common.model_registry.loads_signed</code> refuses tampered or unsigned files.</li>
             </ol>
           </div>
@@ -759,8 +761,7 @@
           <div class="transforms">
             <div class="panel-label">Composite formula assembly</div>
             <ol>
-              <li>Per-alert run all 4 models (3 Track A + DAE) on the alert's feature vector — get 4 probabilities/scores.</li>
-              <li><code>C_detect</code> — fused detector signal (consensus across XGBoost/RF/DT/DAE). <code>C_track_a</code> + <code>C_track_b</code> retained as ancillary diagnostics in risk_components.</li>
+              <li><code>detection_engine.DetectionEngine.predict(X)</code> runs all 3 Track A models in parallel (joblib threading) + the cascaded DAE in one call; returns per-sample <code>c_track_a</code>, <code>c_track_b</code>, fused <code>c_detect = max(c_track_a, c_track_b)</code>, and the augmented matrix. Module 3 no longer constructs the cascaded input itself.</li>
               <li><code>D_crit</code> — device criticality from device-tier lookup (default: <code>vital_monitoring</code> for WUSTL-EHMS).</li>
               <li><code>S_data</code> — data sensitivity (binary biometric exposure / PHI scope).</li>
               <li><code>D_clinical_tier</code> — clinical-tier weight (active-care context).</li>
@@ -785,7 +786,7 @@
             <div class="title">SHAP + MVE + response policy</div>
             <div class="source">module4_explanations/ · module5_responses/</div>
             <div class="vol">
-              <span class="vol-key">batch</span> <span class="vol-val">module4_explanations.py</span> — TreeSHAP per Track-A model on flagged samples<br>
+              <span class="vol-key">batch</span> <span class="vol-val">module4_explanations.py</span> — TreeSHAP for xgboost only (set by <code>SHAP_MODELS</code>); other Track A models still vote in consensus via cached preds<br>
               <span class="vol-key">online</span> <span class="vol-val">module4_online_explainer.py</span> — p95 &lt; 150 ms per alert<br>
               <span class="vol-key">MVE</span> chain: OpenAI → Anthropic → rule-based templates<br>
               <span class="vol-key">response</span> <span class="vol-val">module5_responses.py</span> — escalation chain + clinical constraints
@@ -794,7 +795,7 @@
           <div class="transforms">
             <div class="panel-label">Per-alert 6-stage explanation pipeline (online)</div>
             <ol>
-              <li><strong>Predict</strong> — 4-vote Track-A + cascaded-DAE (augmented with Track-A probas).</li>
+              <li><strong>Predict</strong> — Track A (3 votes) + cascaded DAE, all via <code>detection_engine.DetectionEngine.predict</code>; cascaded input <code>[raw || xgboost_proba]</code> built in one place.</li>
               <li><strong>Severity</strong> — n_flagged: ≥4 CRIT, 3 HIGH, 2 MED, ≤1 LOW. LOW short-circuits.</li>
               <li><strong>TreeSHAP</strong> — top-3 per model via <code>np.argpartition</code> (O(F)); RandomForest skipped (90% of treeshap_ms baseline).</li>
               <li><strong>DAE decompose</strong> — top-3 per-feature reconstruction error (reused from Step 1 forward pass).</li>
@@ -891,15 +892,13 @@
       <div class="split-routing">
         <div class="route-card train">
           <div class="rname">train_phase1.parquet</div>
-          Track A: XGBoost · RandomForest · DecisionTree (with SMOTE inside CV)<br>
-          Track B: → benign_only_train.parquet (8,563 rows, Label==0)<br>
-          → DAE training (autoencoder)
+          Track A: XGBoost · RandomForest · DecisionTree (SMOTE inside CV); emits <code>*_oof_proba.npy</code> for the cascade<br>
+          Track B: <code>dae_training.py</code> applies benign mask inline + augments with <code>TRACK_A_FOR_DAE</code> OOF probas (currently xgboost only → 26-dim)
         </div>
         <div class="route-card val">
           <div class="rname">val_phase1.parquet</div>
           Track A: threshold calibration (operating-point selection)<br>
-          Track B: DAE-cascade OOF-proba generation → benign_only_val.parquet<br>
-          Threshold tuning &amp; DAE input augmentation
+          Track B: DAE threshold is set on the fit set (percentile of reconstruction error); no separate val path required after the refactor
         </div>
         <div class="route-card test">
           <div class="rname">test_phase1.parquet · FROZEN</div>

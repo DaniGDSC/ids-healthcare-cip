@@ -202,25 +202,79 @@ BASE_PROTOCOL = {
 # ── Data loading ────────────────────────────────────────────────────────
 
 
-def load_risk_scores() -> dict:
-    """Load Module 3 risk scores."""
-    data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz", allow_pickle=True)
+def _paths(split: str) -> dict:
+    """Resolve per-split input + output paths.
+
+    Test = paper-clean (the default; preserves legacy filename
+    `alert_responses.json` for backward compatibility with the dashboard's
+    fallback loader and downstream tooling).
+    Demo = operator-clean (suffixed `_demo` everywhere).
+    """
+    if split == "test":
+        scores_npz = "risk_scores.npz"
+        parquet = "test_phase1.parquet"
+        suffix = ""               # legacy: no suffix on test outputs
+    elif split == "demo":
+        scores_npz = "demo_scores.npz"
+        parquet = "demo_phase1.parquet"
+        suffix = "_demo"
+    else:
+        raise ValueError(f"unknown split: {split!r} (expected 'test' or 'demo')")
+
+    return {
+        "split": split,
+        "scores_npz": PROJECT_ROOT / "results/reports" / scores_npz,
+        "parquet": PROJECT_ROOT / "data/processed" / parquet,
+        "analyst_json": PROJECT_ROOT / "results/reports" / f"analyst_report{suffix}.json",
+        "clinician_json": PROJECT_ROOT / "results/reports" / f"clinician_summaries{suffix}.json",
+        "out_alert_responses": OUTPUT_DIR / f"alert_responses{suffix}.json",
+        "out_audit_trail": OUTPUT_DIR / f"audit_trail{suffix}.json",
+        "out_effectiveness": OUTPUT_DIR / f"effectiveness_analysis{suffix}.json",
+        "out_response_report": OUTPUT_DIR / f"response_report{suffix}.json",
+        "out_detail_csv": OUTPUT_DIR / f"alert_responses_detail{suffix}.csv",
+        "suffix": suffix,
+    }
+
+
+def load_risk_scores(scores_npz_path: Path | None = None) -> dict:
+    """Load Module 3 risk scores from the configured split's npz."""
+    path = scores_npz_path or (PROJECT_ROOT / "results/reports/risk_scores.npz")
+    data = np.load(path, allow_pickle=True)
     return {k: data[k] for k in data.files}
 
 
-def load_explanations() -> tuple:
-    """Load Module 4 analyst reports and clinician summaries."""
-    with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
-        analyst = {a["sample_index"]: a for a in json.load(f)}
-    with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
-        clinician = {s["sample_index"]: s for s in json.load(f)}
+def load_explanations(
+    analyst_json_path: Path | None = None,
+    clinician_json_path: Path | None = None,
+) -> tuple:
+    """Load Module 4 analyst reports and clinician summaries.
+
+    Both files are OPTIONAL — when running against the demo split before
+    Module 4 has produced demo-specific explanations, falls back to empty
+    dicts. Downstream record builders gracefully handle this case (records
+    are marked ``analyst_available: false``).
+    """
+    a_path = analyst_json_path or (PROJECT_ROOT / "results/reports/analyst_report.json")
+    c_path = clinician_json_path or (PROJECT_ROOT / "results/reports/clinician_summaries.json")
+    analyst: dict = {}
+    clinician: dict = {}
+    if a_path.exists():
+        with open(a_path) as f:
+            analyst = {a["sample_index"]: a for a in json.load(f)}
+    else:
+        logger.warning("analyst report missing at %s — proceeding with empty dict", a_path)
+    if c_path.exists():
+        with open(c_path) as f:
+            clinician = {s["sample_index"]: s for s in json.load(f)}
+    else:
+        logger.warning("clinician summaries missing at %s — proceeding with empty dict", c_path)
     return analyst, clinician
 
 
-def load_attack_categories() -> np.ndarray:
-    df = pd.read_parquet(
-        PROJECT_ROOT / "data/processed/test_phase1.parquet", columns=["Attack Category"]
-    )
+def load_attack_categories(parquet_path: Path | None = None) -> np.ndarray:
+    """Load Attack Category column from the configured split's parquet."""
+    path = parquet_path or (PROJECT_ROOT / "data/processed/test_phase1.parquet")
+    df = pd.read_parquet(path, columns=["Attack Category"])
     return df["Attack Category"].values
 
 
@@ -793,25 +847,52 @@ def plot_response_sankey(audit_records: list) -> None:
 
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog="python -m module5_responses.module5_responses",
+        description="Module 5 — closed-loop response engine. Operates on the "
+                    "selected frozen split (test=paper-clean, demo=operator-clean).",
+    )
+    parser.add_argument(
+        "--split",
+        choices=["test", "demo", "both"],
+        default="test",
+        help="Frozen split to process. 'test' writes paper-clean artifacts (legacy "
+             "`alert_responses.json`); 'demo' writes operator-clean artifacts with "
+             "`_demo` suffix; 'both' processes test then demo sequentially.",
+    )
+    args = parser.parse_args()
+
+    splits_to_run = ["test", "demo"] if args.split == "both" else [args.split]
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-
     sep = "=" * 72
     t0 = time.perf_counter()
-
-    logger.info(sep)
-    logger.info("MODULE 5 — CLOSED-LOOP RESPONSE ENGINE (RQ3/RO3)")
-    logger.info(sep)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
+    for split in splits_to_run:
+        _run_one_split(split, sep)
+    logger.info("Module 5 complete (%.1fs, splits=%s)",
+                time.perf_counter() - t0, splits_to_run)
+
+
+def _run_one_split(split: str, sep: str) -> None:
+    paths = _paths(split)
+    logger.info(sep)
+    logger.info("MODULE 5 — CLOSED-LOOP RESPONSE ENGINE (RQ3/RO3) — split=%s", split)
+    logger.info(sep)
+
     # Load inputs
-    risk_data = load_risk_scores()
-    analyst_by_idx, clinician_by_idx = load_explanations()
-    attack_cats = load_attack_categories()
+    risk_data = load_risk_scores(paths["scores_npz"])
+    analyst_by_idx, clinician_by_idx = load_explanations(
+        paths["analyst_json"], paths["clinician_json"]
+    )
+    attack_cats = load_attack_categories(paths["parquet"])
 
     n_samples = len(risk_data["R"])
     logger.info(
@@ -865,20 +946,22 @@ def main() -> None:
     logger.info("")
     logger.info("Saving outputs...")
 
-    (OUTPUT_DIR / "alert_responses.json").write_text(
+    paths["out_alert_responses"].write_text(
         json.dumps(records, indent=2), encoding="utf-8"
     )
-    logger.info("  Saved: alert_responses.json (%d records)", len(records))
+    logger.info("  Saved: %s (%d records)",
+                paths["out_alert_responses"].name, len(records))
 
-    (OUTPUT_DIR / "audit_trail.json").write_text(
+    paths["out_audit_trail"].write_text(
         json.dumps(audit_trail, indent=2), encoding="utf-8"
     )
-    logger.info("  Saved: audit_trail.json (%d records)", len(audit_trail))
+    logger.info("  Saved: %s (%d records)",
+                paths["out_audit_trail"].name, len(audit_trail))
 
-    (OUTPUT_DIR / "effectiveness_analysis.json").write_text(
+    paths["out_effectiveness"].write_text(
         json.dumps(effectiveness, indent=2), encoding="utf-8"
     )
-    logger.info("  Saved: effectiveness_analysis.json")
+    logger.info("  Saved: %s", paths["out_effectiveness"].name)
 
     report = {
         "module": "Module 5 — Closed-Loop Response Engine (RQ3/RO3)",
@@ -895,10 +978,10 @@ def main() -> None:
         },
         "device_constraints": DEVICE_TIERS,
     }
-    (OUTPUT_DIR / "response_report.json").write_text(
+    paths["out_response_report"].write_text(
         json.dumps(report, indent=2), encoding="utf-8"
     )
-    logger.info("  Saved: response_report.json")
+    logger.info("  Saved: %s", paths["out_response_report"].name)
 
     # CSV
     rows = []
@@ -917,27 +1000,28 @@ def main() -> None:
                 "rationale": rec["response"]["rationale"][:100],
             }
         )
-    pd.DataFrame(rows).to_csv(OUTPUT_DIR / "alert_responses_detail.csv", index=False)
-    logger.info("  Saved: alert_responses_detail.csv")
+    pd.DataFrame(rows).to_csv(paths["out_detail_csv"], index=False)
+    logger.info("  Saved: %s", paths["out_detail_csv"].name)
 
-    # Visualizations
-    logger.info("Generating charts...")
-    plot_response_distribution(records)
-    plot_precision_by_level(stats)
-    plot_escalation_funnel(stats)
-    plot_effectiveness_by_action(effectiveness)
-    plot_response_sankey(audit_trail)
+    # Visualizations (test-only; demo skips charts to avoid clobbering
+    # paper figures and to keep demo runs fast).
+    if split == "test":
+        logger.info("Generating charts...")
+        plot_response_distribution(records)
+        plot_precision_by_level(stats)
+        plot_escalation_funnel(stats)
+        plot_effectiveness_by_action(effectiveness)
+        plot_response_sankey(audit_trail)
 
-    elapsed = round(time.perf_counter() - t0, 1)
     logger.info("")
     logger.info(sep)
-    logger.info("CLOSED-LOOP RESPONSE ENGINE COMPLETE — %.1fs", elapsed)
+    logger.info("SPLIT %s COMPLETE", split.upper())
     logger.info(sep)
     logger.info("  Alerts         : %d", len(records))
     logger.info("  Audit records  : %d", len(audit_trail))
     logger.info("  Over-response  : %.1f%%", effectiveness["over_response_rate"] * 100)
     logger.info("  Under-response : %.1f%%", effectiveness["under_response_rate"] * 100)
-    logger.info("  Output         : %s", OUTPUT_DIR)
+    logger.info("  Output         : %s", paths["out_alert_responses"])
     logger.info(sep)
 
 

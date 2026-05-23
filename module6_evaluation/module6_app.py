@@ -46,11 +46,27 @@ EVAL_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 MODELS_DIR = PROJECT_ROOT / "results/models"
 
-# alert_responses.json is val_phase1[0..N-1] + test_phase1[N..2N-1] concatenated.
-# Filtering `sample_index >= _TEST_SPLIT_OFFSET` keeps only test-split predictions —
-# val examples were used for hyperparameter tuning and must not be shown to
-# operators or study participants as if they were unseen test cases.
-_TEST_SPLIT_OFFSET = 2448
+# ── Dataset routing per dashboard page ────────────────────────────────────
+# Each operator-facing page reads a *specific* frozen split. Test = paper-clean
+# (the thesis's headline metrics come from here; passive display only). Demo =
+# operator-clean (any page with interactive controls that could feed back into
+# model retraining reads here, so test never gets contaminated by operator
+# actions). Study mode uses YAML fixtures and is dataset-agnostic.
+PAGE_SPLIT: dict[str, str | None] = {
+    "Dashboard":         "test",   # Triage view — passive display
+    "Online Simulation": "demo",   # interactive replay + feedback
+    "Browse Alerts":     "test",   # static browsing, no feedback loop
+    "Study (A/B)":       None,     # YAML fixtures, not from parquet splits
+    "PCAP Replay":       None,     # stub
+}
+
+# Legacy file = test split (no suffix). Producer chain writes:
+#   alert_responses.json        ← test  (paper-clean)
+#   alert_responses_demo.json   ← demo  (operator-clean)
+_SPLIT_FILES = {
+    "test": "",         # no suffix → legacy file names
+    "demo": "_demo",
+}
 # Singleton hardened logger for reviewer-attributed events. The existing
 # AuditTrailWriter (audit_trail.jsonl) is kept for backward compatibility
 # with offline study mode; reviewer-attributed alert decisions ALSO get
@@ -756,32 +772,70 @@ def load_alerts() -> list:
         return json.load(f)
 
 
+_ENRICH_KEYS = (
+    "device_class", "device_criticality", "affected_system",
+    "patient_care_impact", "active_device", "correct_action",
+)
+
+
+def _enrich_with_device_context(responses: list) -> list:
+    """Join responses with evaluation_alerts.json for device-context fields.
+
+    Mutates `responses` in place AND returns it. Helper extracted so both
+    `load_responses_for` and the legacy `load_all_responses` use the same
+    enrichment logic. Tolerates a missing evaluation_alerts.json silently.
+    """
+    eval_path = EVAL_DIR / "evaluation_alerts.json"
+    if not eval_path.exists():
+        return responses
+    with open(eval_path) as f:
+        eval_alerts = {a["sample_index"]: a for a in json.load(f)}
+    for r in responses:
+        ea = eval_alerts.get(r.get("sample_index"))
+        # Issue 5 fix: guard with `if ea` before iterating — avoids creating
+        # a throwaway {} on every miss via .get(key, {}).
+        if ea:
+            for k in _ENRICH_KEYS:
+                if k in ea and k not in r:
+                    r[k] = ea[k]
+    return responses
+
+
 @st.cache_data
-def load_all_responses() -> list:
-    """Load alert_responses.json, enriched with device context from evaluation_alerts.json."""
-    path = EVAL_DIR / "alert_responses.json"
+def load_responses_for(split: str | None) -> list:
+    """Load `alert_responses_<split>.json` (or legacy `alert_responses.json`
+    for test) enriched with device-context fields.
+
+    `split` MUST be a key in `_SPLIT_FILES` (either "test" or "demo"), OR
+    `None` for pages that don't use parquet-derived alerts (Study / PCAP).
+    Any other value raises RuntimeError — guard against accidental reads
+    from a non-frozen split.
+    """
+    if split is None:
+        return []
+    if split not in _SPLIT_FILES:
+        raise RuntimeError(
+            f"Refusing to load alert_responses for split={split!r}: must be "
+            f"one of {sorted(_SPLIT_FILES)} or None."
+        )
+    suffix = _SPLIT_FILES[split]
+    path = EVAL_DIR / f"alert_responses{suffix}.json"
     if not path.exists():
         return []
     with open(path) as f:
         responses = json.load(f)
+    return _enrich_with_device_context(responses)
 
-    # M4: Join with evaluation_alerts.json for device context fields
-    eval_path = EVAL_DIR / "evaluation_alerts.json"
-    if eval_path.exists():
-        with open(eval_path) as f:
-            eval_alerts = {a["sample_index"]: a for a in json.load(f)}
-        _ENRICH_KEYS = (
-            "device_class", "device_criticality", "affected_system",
-            "patient_care_impact", "active_device", "correct_action",
-        )
-        for r in responses:
-            ea = eval_alerts.get(r.get("sample_index"))
-            # Issue 5 fix: guard with `if ea` before iterating — avoids
-            # creating a throwaway {} on every miss via .get(key, {}).
-            if ea:
-                for k in _ENRICH_KEYS:
-                    if k in ea and k not in r:
-                        r[k] = ea[k]
+
+@st.cache_data
+def load_all_responses() -> list:
+    """Legacy compatibility shim — defaults to the test split.
+
+    Kept so existing call sites that haven't migrated to `load_responses_for`
+    continue to work. New code should call `load_responses_for("test"|"demo")`
+    explicitly so the data-routing intent is visible at the call site.
+    """
+    return load_responses_for("test")
 
     return responses
 
@@ -923,15 +977,19 @@ def load_latency_profile() -> dict:
 
 @st.cache_data
 def load_live_stream_source() -> pd.DataFrame | None:
-    """Mock 'live data source' — reads the test parquet directly and attaches a
+    """Mock 'live data source' for Online Simulation — reads the **demo**
+    split parquet (per PAGE_SPLIT["Online Simulation"]) and attaches a
     synthetic arrival timestamp per row.
 
     This simulates a feature-extracted flow stream without requiring a real
     network TAP. Each row is one timestep of mock 'arrived data'; the
     timestamps are anchored to a fixed start instant so the stream is
-    reproducible across reruns.
+    reproducible across reruns. Demo (not test) is used because operators
+    interact with this page — keeping operator-touch off test protects the
+    paper-clean held-out set.
     """
-    path = PROJECT_ROOT / "data/processed/test_phase1.parquet"
+    split = PAGE_SPLIT["Online Simulation"]  # "demo" — single source of truth
+    path = PROJECT_ROOT / "data/processed" / f"{split}_phase1.parquet"
     if not path.exists():
         return None
     df = pd.read_parquet(path)
@@ -1106,19 +1164,16 @@ def dashboard_mode():
 
     inject_theme()
 
-    responses = load_all_responses()
+    # Triage page reads the paper-clean test split per PAGE_SPLIT.
+    # alert_responses.json (no suffix) is the test-split file produced by
+    # `python module5_responses/module5_responses.py --split=test`.
+    responses = load_responses_for(PAGE_SPLIT["Dashboard"])
     if not responses:
-        st.warning("No alert data found. Run Modules 3-5 first.")
-        return
-
-    # Filter to test split only. alert_responses.json is val[0..2447] +
-    # test[2448..4895] concatenated; without this filter the Triage queue
-    # would expose validation-set examples (used for hyperparameter tuning)
-    # to operators — a data-leakage story.
-    responses = [r for r in responses
-                 if r.get("sample_index", -1) >= _TEST_SPLIT_OFFSET]
-    if not responses:
-        st.warning("No test-split alerts found.")
+        st.warning(
+            "No test-split alerts found at "
+            "`results/reports/alert_responses.json`. "
+            "Run `python module5_responses/module5_responses.py --split=test`."
+        )
         return
 
     # Visual queue: top 50 by tier-then-score (CRITICAL first, then HIGH...)
@@ -1596,14 +1651,22 @@ def simulation_mode():
 
     st.title("IoMT IDS — Online Simulation")
 
-    responses = load_all_responses()
+    # Online Simulation reads the operator-clean demo split per PAGE_SPLIT.
+    # Operator interactions on this page (Confirm/Reject/Note) feed the audit
+    # chain and potentially the feedback loop — keeping them off the test
+    # split protects the thesis's paper-clean metrics.
+    responses = load_responses_for(PAGE_SPLIT["Online Simulation"])
     clin_summaries = load_clinician_summaries()
     audit_trail = load_audit_trail()
     latency_profile = load_latency_profile()
     live_df = load_live_stream_source()
 
     if not responses:
-        st.warning("No alert data. Run Modules 3-5 first.")
+        st.warning(
+            "No demo-split alerts found at "
+            "`results/reports/alert_responses_demo.json`. "
+            "Run `python module5_responses/module5_responses.py --split=demo`."
+        )
         return
 
     # 6C.8 Role switcher
@@ -1635,11 +1698,14 @@ def simulation_mode():
         ["Pre-computed alerts (Module 5)", "Live parquet (mock TAP)"],
         index=0 if st.session_state.sim_source == "alerts" else 1,
         help=(
-            "Pre-computed alerts replays Module 5 outputs.\n\n"
-            "Live parquet reads data/processed/test_phase1.parquet row by row "
+            "Pre-computed alerts replays Module 5 demo-split outputs.\n\n"
+            "Live parquet reads data/processed/demo_phase1.parquet row by row "
             "and attaches synthetic arrival timestamps, simulating a feature-"
             "extracted flow stream from a network TAP. Alert metadata is "
-            "joined from Module 5 by sample index where available."
+            "joined from Module 5 by sample index where available. The demo "
+            "split is used here (not test) because operator interactions on "
+            "this page can feed the audit/feedback loop — test is reserved "
+            "for paper-clean metrics."
         ),
     )
     st.session_state.sim_source = "live_parquet" if "Live" in source_label else "alerts"
@@ -1647,7 +1713,8 @@ def simulation_mode():
 
     if using_live and live_df is None:
         st.sidebar.warning(
-            "data/processed/test_phase1.parquet not found — falling back to pre-computed alerts."
+            f"data/processed/{PAGE_SPLIT['Online Simulation']}_phase1.parquet "
+            "not found — falling back to pre-computed alerts."
         )
         using_live = False
         st.session_state.sim_source = "alerts"
@@ -1893,7 +1960,7 @@ def simulation_mode():
             ):
                 st.caption(
                     "Mock TAP: feature-extracted flow read directly from "
-                    "data/processed/test_phase1.parquet."
+                    f"data/processed/{PAGE_SPLIT['Online Simulation']}_phase1.parquet."
                 )
                 preview_cache = st.session_state.setdefault("_live_preview_cache", {})
                 if idx_local not in preview_cache:

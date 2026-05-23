@@ -42,6 +42,7 @@ try:
     from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import ec
+
     _HAVE_CRYPTOGRAPHY = True
 except ImportError:  # pragma: no cover
     _HAVE_CRYPTOGRAPHY = False
@@ -99,23 +100,58 @@ RESPONSE_POLICY = {
     "version": "1.0",
     "description": "Maps (alert_tier, device_tier, patient_acuity_level) to response action sets",
     "action_catalogue": {
-        "log_event":           {"cost": 0.1, "reversible": True,  "requires_approval": False},
-        "enhanced_monitoring": {"cost": 0.2, "reversible": True,  "requires_approval": False},
-        "re_authenticate":     {"cost": 0.3, "reversible": True,  "requires_approval": False},
-        "restrict_traffic":    {"cost": 0.5, "reversible": True,  "requires_approval": False},
-        "isolate_device":      {"cost": 0.8, "reversible": True,  "requires_approval": True},
-        "forensic_snapshot":   {"cost": 0.4, "reversible": True,  "requires_approval": False},
-        "escalate_clinical":   {"cost": 0.7, "reversible": False, "requires_approval": False},
-        "escalate_incident":   {"cost": 1.0, "reversible": False, "requires_approval": False},
+        "log_event": {"cost": 0.1, "reversible": True, "requires_approval": False},
+        "enhanced_monitoring": {
+            "cost": 0.2,
+            "reversible": True,
+            "requires_approval": False,
+        },
+        "re_authenticate": {
+            "cost": 0.3,
+            "reversible": True,
+            "requires_approval": False,
+        },
+        "restrict_traffic": {
+            "cost": 0.5,
+            "reversible": True,
+            "requires_approval": False,
+        },
+        "isolate_device": {"cost": 0.8, "reversible": True, "requires_approval": True},
+        "forensic_snapshot": {
+            "cost": 0.4,
+            "reversible": True,
+            "requires_approval": False,
+        },
+        "escalate_clinical": {
+            "cost": 0.7,
+            "reversible": False,
+            "requires_approval": False,
+        },
+        "escalate_incident": {
+            "cost": 1.0,
+            "reversible": False,
+            "requires_approval": False,
+        },
     },
     "tier_policies": {
         "CRITICAL": {
-            "default_actions": ["log_event", "isolate_device", "forensic_snapshot", "escalate_incident", "escalate_clinical"],
+            "default_actions": [
+                "log_event",
+                "isolate_device",
+                "forensic_snapshot",
+                "escalate_incident",
+                "escalate_clinical",
+            ],
             "max_response_min": 5,
             "auto_execute": True,
         },
         "HIGH": {
-            "default_actions": ["log_event", "isolate_device", "forensic_snapshot", "enhanced_monitoring"],
+            "default_actions": [
+                "log_event",
+                "isolate_device",
+                "forensic_snapshot",
+                "enhanced_monitoring",
+            ],
             "max_response_min": 15,
             "auto_execute": True,
         },
@@ -131,18 +167,42 @@ RESPONSE_POLICY = {
         },
     },
     "device_constraints": {
-        "life_sustaining":  {"max_action_cost": 0.5, "isolation_blocked": True,  "clinical_approval_required": True},
-        "vital_monitoring": {"max_action_cost": 0.8, "isolation_blocked": False, "clinical_approval_required": True},
-        "diagnostic":       {"max_action_cost": 0.8, "isolation_blocked": False, "clinical_approval_required": False},
-        "auxiliary":        {"max_action_cost": 0.8, "isolation_blocked": False, "clinical_approval_required": False},
+        "life_sustaining": {
+            "max_action_cost": 0.5,
+            "isolation_blocked": True,
+            "clinical_approval_required": True,
+        },
+        "vital_monitoring": {
+            "max_action_cost": 0.8,
+            "isolation_blocked": False,
+            "clinical_approval_required": True,
+        },
+        "diagnostic": {
+            "max_action_cost": 0.8,
+            "isolation_blocked": False,
+            "clinical_approval_required": False,
+        },
+        "auxiliary": {
+            "max_action_cost": 0.8,
+            "isolation_blocked": False,
+            "clinical_approval_required": False,
+        },
     },
     "acuity_overrides": {
         "elevated_acuity_threshold": 0.25,
         "action_on_elevated": "Add escalate_clinical if not present; require clinical confirmation before isolation",
     },
     "attack_routing": {
-        "Spoofing":        {"add_actions": ["re_authenticate"], "primary_notify": "IT Security", "secondary_notify": "Biomedical Engineering"},
-        "Data Alteration": {"add_actions": ["forensic_snapshot", "escalate_clinical"], "primary_notify": "IT Security", "secondary_notify": "Charge Nurse"},
+        "Spoofing": {
+            "add_actions": ["re_authenticate"],
+            "primary_notify": "IT Security",
+            "secondary_notify": "Biomedical Engineering",
+        },
+        "Data Alteration": {
+            "add_actions": ["forensic_snapshot", "escalate_clinical"],
+            "primary_notify": "IT Security",
+            "secondary_notify": "Charge Nurse",
+        },
     },
 }
 
@@ -158,6 +218,7 @@ def export_response_policy() -> None:
 # 5.2  PolicyEngine
 # ═══════════════════════════════════════════════════════════════════════
 
+
 class PolicyEngine:
     """Rule-based engine: reads policy config, returns recommended actions."""
 
@@ -172,7 +233,9 @@ class PolicyEngine:
         attack_category: str = "unknown",
         patient_acuity: float = 0.0,
     ) -> dict:
-        tier_policy = self.policy["tier_policies"].get(alert_tier, self.policy["tier_policies"]["LOW"])
+        tier_policy = self.policy["tier_policies"].get(
+            alert_tier, self.policy["tier_policies"]["LOW"]
+        )
         actions = list(tier_policy["default_actions"])
 
         # Attack-specific actions
@@ -189,16 +252,25 @@ class PolicyEngine:
             if "restrict_traffic" not in actions:
                 actions.append("restrict_traffic")
 
-        actions = [a for a in actions if self.catalogue.get(a, {}).get("cost", 0) <= max_cost
-                   or a in ("log_event", "escalate_clinical")]
+        actions = [
+            a
+            for a in actions
+            if self.catalogue.get(a, {}).get("cost", 0) <= max_cost
+            or a in ("log_event", "escalate_clinical")
+        ]
 
         # Clinical safety override (Task 5.3)
         override = clinical_safety_check(
-            alert_tier, device_tier, patient_acuity, actions,
+            alert_tier,
+            device_tier,
+            patient_acuity,
+            actions,
         )
 
         # Sort by cost
-        actions = sorted(set(actions), key=lambda a: self.catalogue.get(a, {}).get("cost", 0))
+        actions = sorted(
+            set(actions), key=lambda a: self.catalogue.get(a, {}).get("cost", 0)
+        )
 
         return {
             "actions": actions,
@@ -208,7 +280,8 @@ class PolicyEngine:
             "secondary_notify": routing.get("secondary_notify"),
             "clinical_override": override,
             "requires_approval": any(
-                self.catalogue.get(a, {}).get("requires_approval", False) for a in actions
+                self.catalogue.get(a, {}).get("requires_approval", False)
+                for a in actions
             ),
         }
 
@@ -216,6 +289,7 @@ class PolicyEngine:
 # ═══════════════════════════════════════════════════════════════════════
 # 5.3  Clinical Safety Override
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def clinical_safety_check(
     alert_tier: str,
@@ -232,7 +306,10 @@ def clinical_safety_check(
     }
 
     is_critical_device = device_tier in ("life_sustaining", "vital_monitoring")
-    acuity_elevated = patient_acuity >= RESPONSE_POLICY["acuity_overrides"]["elevated_acuity_threshold"]
+    acuity_elevated = (
+        patient_acuity
+        >= RESPONSE_POLICY["acuity_overrides"]["elevated_acuity_threshold"]
+    )
 
     if is_critical_device and acuity_elevated:
         override["triggered"] = True
@@ -263,6 +340,7 @@ def clinical_safety_check(
 # 5.4  ActionExecutor (simulated)
 # ═══════════════════════════════════════════════════════════════════════
 
+
 class ActionExecutor:
     """Simulated executor: logs actions to audit trail instead of real changes."""
 
@@ -278,8 +356,10 @@ class ActionExecutor:
         ground_truth: str,
         timestamp: datetime,
     ) -> dict:
-        has_mitigation = any(a in actions for a in
-                            ("isolate_device", "restrict_traffic", "re_authenticate"))
+        has_mitigation = any(
+            a in actions
+            for a in ("isolate_device", "restrict_traffic", "re_authenticate")
+        )
         is_attack = ground_truth == "attack"
 
         if is_attack and has_mitigation:
@@ -301,7 +381,9 @@ class ActionExecutor:
             "timestamp": timestamp.isoformat(),
             "actions_executed": actions,
             "auto_executed": recommendation.get("auto_execute", False),
-            "clinical_override": recommendation.get("clinical_override", {}).get("triggered", False),
+            "clinical_override": recommendation.get("clinical_override", {}).get(
+                "triggered", False
+            ),
             "requires_approval": recommendation.get("requires_approval", False),
             "outcome": outcome,
             "effective": effective,
@@ -314,6 +396,7 @@ class ActionExecutor:
 # ═══════════════════════════════════════════════════════════════════════
 # 5.5  NotificationService
 # ═══════════════════════════════════════════════════════════════════════
+
 
 class NotificationService:
     """Generate structured alert messages per stakeholder."""
@@ -333,34 +416,42 @@ class NotificationService:
         msgs = []
 
         # Security analyst notification
-        msgs.append({
-            "recipient": recommendation["primary_notify"],
-            "channel": "SIEM + Dashboard",
-            "priority": alert_tier,
-            "message": (
-                f"[{alert_tier}] Alert #{sample_index}: "
-                f"Risk={risk_score:.2f}. Actions: {', '.join(recommendation['actions'])}. "
-                f"Top features: {', '.join(f['feature'] for f in analyst_top_features[:3])}."
-            ),
-        })
+        msgs.append(
+            {
+                "recipient": recommendation["primary_notify"],
+                "channel": "SIEM + Dashboard",
+                "priority": alert_tier,
+                "message": (
+                    f"[{alert_tier}] Alert #{sample_index}: "
+                    f"Risk={risk_score:.2f}. Actions: {', '.join(recommendation['actions'])}. "
+                    f"Top features: {', '.join(f['feature'] for f in analyst_top_features[:3])}."
+                ),
+            }
+        )
 
         # Clinical notification (if escalation required)
         if "escalate_clinical" in recommendation["actions"]:
-            msgs.append({
-                "recipient": "Clinical Staff",
-                "channel": "Page / Dashboard",
-                "priority": alert_tier,
-                "message": clinician_summary[:300] if clinician_summary else "Clinical review requested.",
-            })
+            msgs.append(
+                {
+                    "recipient": "Clinical Staff",
+                    "channel": "Page / Dashboard",
+                    "priority": alert_tier,
+                    "message": clinician_summary[:300]
+                    if clinician_summary
+                    else "Clinical review requested.",
+                }
+            )
 
         # Secondary notification
         if recommendation.get("secondary_notify"):
-            msgs.append({
-                "recipient": recommendation["secondary_notify"],
-                "channel": "Email / Ticket",
-                "priority": alert_tier,
-                "message": f"[{alert_tier}] Sample #{sample_index}: {', '.join(recommendation['actions'])}",
-            })
+            msgs.append(
+                {
+                    "recipient": recommendation["secondary_notify"],
+                    "channel": "Email / Ticket",
+                    "priority": alert_tier,
+                    "message": f"[{alert_tier}] Sample #{sample_index}: {', '.join(recommendation['actions'])}",
+                }
+            )
 
         self.notifications.extend(msgs)
         return msgs
@@ -371,6 +462,7 @@ class NotificationService:
 # ═══════════════════════════════════════════════════════════════════════
 
 # ── Key management helpers ──────────────────────────────────────────────
+
 
 def _require_cryptography() -> None:
     if not _HAVE_CRYPTOGRAPHY:
@@ -469,6 +561,7 @@ def _canonical_json(record: dict) -> bytes:
 
 
 # ── AuditLogger ─────────────────────────────────────────────────────────
+
 
 class AuditLogger:
     """Hash-chained, ECDSA-signed append-only JSONL audit log.
@@ -735,15 +828,17 @@ class AuditLogger:
                 signature_alg = record.pop("signature_alg", None)
                 stored_integrity = record.get("integrity_hash")
                 # Recompute integrity hash from record minus integrity_hash
-                without_hash = {k: v for k, v in record.items() if k != "integrity_hash"}
+                without_hash = {
+                    k: v for k, v in record.items() if k != "integrity_hash"
+                }
                 computed = hashlib.sha256(_canonical_json(without_hash)).hexdigest()
                 # Legacy records (no signature) used the default-separator
                 # form of json.dumps; accept that variant during the
                 # migration window.
                 if computed != stored_integrity and signature_b64 is None:
-                    legacy_payload = json.dumps(
-                        without_hash, sort_keys=True
-                    ).encode("utf-8")
+                    legacy_payload = json.dumps(without_hash, sort_keys=True).encode(
+                        "utf-8"
+                    )
                     legacy_hash = hashlib.sha256(legacy_payload).hexdigest()
                     if legacy_hash == stored_integrity:
                         computed = stored_integrity
@@ -967,24 +1062,35 @@ class AuditLogger:
 # 5.8  Feedback Loop Stub
 # ═══════════════════════════════════════════════════════════════════════
 
+
 class FeedbackLoop:
     """Record TP/FP labels; suggest weight/threshold adjustments."""
 
     def __init__(self):
         self.records = []
 
-    def record(self, alert_id: str, ground_truth: str, predicted_tier: str,
-               risk_score: float, actions: list) -> None:
-        self.records.append({
-            "alert_id": alert_id,
-            "ground_truth": ground_truth,
-            "predicted_tier": predicted_tier,
-            "risk_score": risk_score,
-            "actions": actions,
-            "is_tp": ground_truth == "attack" and predicted_tier in ("MEDIUM", "HIGH", "CRITICAL"),
-            "is_fp": ground_truth == "benign" and predicted_tier in ("MEDIUM", "HIGH", "CRITICAL"),
-            "is_fn": ground_truth == "attack" and predicted_tier == "LOW",
-        })
+    def record(
+        self,
+        alert_id: str,
+        ground_truth: str,
+        predicted_tier: str,
+        risk_score: float,
+        actions: list,
+    ) -> None:
+        self.records.append(
+            {
+                "alert_id": alert_id,
+                "ground_truth": ground_truth,
+                "predicted_tier": predicted_tier,
+                "risk_score": risk_score,
+                "actions": actions,
+                "is_tp": ground_truth == "attack"
+                and predicted_tier in ("MEDIUM", "HIGH", "CRITICAL"),
+                "is_fp": ground_truth == "benign"
+                and predicted_tier in ("MEDIUM", "HIGH", "CRITICAL"),
+                "is_fn": ground_truth == "attack" and predicted_tier == "LOW",
+            }
+        )
 
     def compute_adjustments(self, current_thresholds: dict | None = None) -> dict:
         """Return numeric threshold adjustments based on TP/FP/FN rates.
@@ -1019,33 +1125,45 @@ class FeedbackLoop:
 
         if fpr > 0.10:
             # Raise thresholds to reduce false positives
-            delta_med  = 0.05 * (fpr - 0.10) / 0.10
+            delta_med = 0.05 * (fpr - 0.10) / 0.10
             delta_high = 0.03 * (fpr - 0.10) / 0.10
-            suggested["MEDIUM"]   += delta_med
-            suggested["HIGH"]     += delta_high
+            suggested["MEDIUM"] += delta_med
+            suggested["HIGH"] += delta_high
             suggested["CRITICAL"] += delta_high * 0.5
-            adjustments.append({
-                "metric": "fpr", "current_value": round(fpr, 4),
-                "target": 0.10, "direction": "raise",
-            })
+            adjustments.append(
+                {
+                    "metric": "fpr",
+                    "current_value": round(fpr, 4),
+                    "target": 0.10,
+                    "direction": "raise",
+                }
+            )
 
         if fnr > 0.05:
             # Lower thresholds to catch more attacks
-            delta_med  = 0.05 * (fnr - 0.05) / 0.05
+            delta_med = 0.05 * (fnr - 0.05) / 0.05
             delta_high = 0.03 * (fnr - 0.05) / 0.05
-            suggested["MEDIUM"]   -= delta_med
-            suggested["HIGH"]     -= delta_high
+            suggested["MEDIUM"] -= delta_med
+            suggested["HIGH"] -= delta_high
             suggested["CRITICAL"] -= delta_high * 0.5
-            adjustments.append({
-                "metric": "fnr", "current_value": round(fnr, 4),
-                "target": 0.05, "direction": "lower",
-            })
+            adjustments.append(
+                {
+                    "metric": "fnr",
+                    "current_value": round(fnr, 4),
+                    "target": 0.05,
+                    "direction": "lower",
+                }
+            )
 
         if fpr <= 0.10 and fnr <= 0.05:
-            adjustments.append({
-                "metric": "calibrated", "current_value": None,
-                "target": None, "direction": "none",
-            })
+            adjustments.append(
+                {
+                    "metric": "calibrated",
+                    "current_value": None,
+                    "target": None,
+                    "direction": "none",
+                }
+            )
 
         # Round suggested thresholds
         suggested = {k: round(v, 4) for k, v in suggested.items()}
@@ -1061,8 +1179,12 @@ class FeedbackLoop:
             "false_negatives": fn,
             "fpr": round(fpr, 4),
             "fnr": round(fnr, 4),
-            "mean_fp_risk_score": round(float(np.mean(fp_scores)), 4) if fp_scores else None,
-            "mean_tp_risk_score": round(float(np.mean(tp_scores)), 4) if tp_scores else None,
+            "mean_fp_risk_score": round(float(np.mean(fp_scores)), 4)
+            if fp_scores
+            else None,
+            "mean_tp_risk_score": round(float(np.mean(tp_scores)), 4)
+            if tp_scores
+            else None,
             "current_thresholds": current_thresholds,
             "suggested_threshold_change": suggested,
             "adjustments": adjustments,
@@ -1072,6 +1194,7 @@ class FeedbackLoop:
 # ═══════════════════════════════════════════════════════════════════════
 # 5.7  End-to-End Worked Examples
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def run_worked_examples(
     risk_data: dict,
@@ -1115,17 +1238,32 @@ def run_worked_examples(
         # Step 2: Execute (simulated)
         ts = datetime(2026, 4, 3, 12, 0, 0) + timedelta(seconds=idx)
         exec_result = executor.execute(
-            f"ALERT-{idx:05d}", idx, rec["actions"], rec, gt, ts,
+            f"ALERT-{idx:05d}",
+            idx,
+            rec["actions"],
+            rec,
+            gt,
+            ts,
         )
 
         # Step 3: Notify
         clin_summary = clinician_by_idx.get(idx, {}).get("summary", "")
         analyst_feats = []
         if idx in analyst_by_idx:
-            analyst_feats = analyst_by_idx[idx].get("models", {}).get("xgboost", {}).get("top_features", [])
+            analyst_feats = (
+                analyst_by_idx[idx]
+                .get("models", {})
+                .get("xgboost", {})
+                .get("top_features", [])
+            )
 
         notifications = notifier.notify(
-            idx, tier, rec, clin_summary, analyst_feats, float(R[idx]),
+            idx,
+            tier,
+            rec,
+            clin_summary,
+            analyst_feats,
+            float(R[idx]),
         )
 
         scenario = {
@@ -1147,8 +1285,14 @@ def run_worked_examples(
             "clinical_override": rec["clinical_override"],
         }
         scenarios.append(scenario)
-        logger.info("  %s: sample %d, R=%.4f, actions=%s, outcome=%s",
-                    tier, idx, float(R[idx]), rec["actions"], exec_result["outcome"])
+        logger.info(
+            "  %s: sample %d, R=%.4f, actions=%s, outcome=%s",
+            tier,
+            idx,
+            float(R[idx]),
+            rec["actions"],
+            exec_result["outcome"],
+        )
 
     return scenarios
 
@@ -1156,6 +1300,7 @@ def run_worked_examples(
 # ═══════════════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def main() -> None:
     logging.basicConfig(
@@ -1171,9 +1316,12 @@ def main() -> None:
     logger.info(sep)
 
     # Load data
-    risk_data = {k: v for k, v in
-                 np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
-                         allow_pickle=True).items()}
+    risk_data = {
+        k: v
+        for k, v in np.load(
+            PROJECT_ROOT / "results/reports/risk_scores.npz", allow_pickle=True
+        ).items()
+    }
     with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
         analyst_by_idx = {a["sample_index"]: a for a in json.load(f)}
     with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
@@ -1192,9 +1340,12 @@ def main() -> None:
     # 5.7 End-to-end worked examples
     logger.info("")
     logger.info("── 5.7 End-to-End Worked Examples ──")
-    scenarios = run_worked_examples(risk_data, attack_cats, analyst_by_idx, clinician_by_idx)
+    scenarios = run_worked_examples(
+        risk_data, attack_cats, analyst_by_idx, clinician_by_idx
+    )
     (OUTPUT_DIR / "worked_examples.json").write_text(
-        json.dumps(scenarios, indent=2, default=str), encoding="utf-8")
+        json.dumps(scenarios, indent=2, default=str), encoding="utf-8"
+    )
     logger.info("  Saved: worked_examples.json (%d scenarios)", len(scenarios))
 
     # 5.6 + 5.8 Full pipeline run with audit logger + feedback loop
@@ -1231,20 +1382,32 @@ def main() -> None:
         alert_count += 1
 
     logger.info("  Processed %d alerts through pipeline", alert_count)
-    logger.info("  Audit log: %s (%d records)", OUTPUT_DIR / "audit_log.jsonl", alert_count)
+    logger.info(
+        "  Audit log: %s (%d records)", OUTPUT_DIR / "audit_log.jsonl", alert_count
+    )
 
     # 5.8 Feedback analysis
     adjustments = feedback.compute_adjustments()
     (OUTPUT_DIR / "feedback_analysis.json").write_text(
-        json.dumps(adjustments, indent=2), encoding="utf-8")
+        json.dumps(adjustments, indent=2), encoding="utf-8"
+    )
     logger.info("")
     logger.info("── 5.8 Feedback Loop Analysis ──")
-    logger.info("  TP=%d, FP=%d, FN=%d", adjustments["true_positives"],
-                adjustments["false_positives"], adjustments["false_negatives"])
-    logger.info("  FP rate: %.1f%%, FN rate: %.1f%%",
-                adjustments["fpr"] * 100, adjustments["fnr"] * 100)
+    logger.info(
+        "  TP=%d, FP=%d, FN=%d",
+        adjustments["true_positives"],
+        adjustments["false_positives"],
+        adjustments["false_negatives"],
+    )
+    logger.info(
+        "  FP rate: %.1f%%, FN rate: %.1f%%",
+        adjustments["fpr"] * 100,
+        adjustments["fnr"] * 100,
+    )
     logger.info("  Current thresholds: %s", adjustments.get("current_thresholds"))
-    logger.info("  Suggested thresholds: %s", adjustments.get("suggested_threshold_change"))
+    logger.info(
+        "  Suggested thresholds: %s", adjustments.get("suggested_threshold_change")
+    )
     for adj in adjustments.get("adjustments", []):
         logger.info("  Adjustment: %s", adj)
     logger.info("  Saved: feedback_analysis.json")
@@ -1283,8 +1446,12 @@ def _cli_rotate(args: argparse.Namespace) -> int:
     )
     report = audit.rotate_and_purge(retention_days=args.retention_days)
     print(json.dumps(report, indent=2))
-    return 0 if report["verify_before_rotate"] is None or report[
-        "verify_before_rotate"]["first_break_at"] is None else 2
+    return (
+        0
+        if report["verify_before_rotate"] is None
+        or report["verify_before_rotate"]["first_break_at"] is None
+        else 2
+    )
 
 
 if __name__ == "__main__":
@@ -1303,8 +1470,8 @@ if __name__ == "__main__":
         dest="rotate_audit_log",
         action="store_true",
         help="Rotate the active audit log if its oldest record is "
-             "older than the retention window. Refuses to rotate a "
-             "tampered log.",
+        "older than the retention window. Refuses to rotate a "
+        "tampered log.",
     )
     parser.add_argument(
         "--path",
@@ -1315,14 +1482,14 @@ if __name__ == "__main__":
         "--public-key",
         default=None,
         help="Public key PEM for verification "
-             "(default: results/reports/audit_signing_key.pub.pem)",
+        "(default: results/reports/audit_signing_key.pub.pem)",
     )
     parser.add_argument(
         "--retention-days",
         type=int,
         default=None,
         help=f"Retention window in days (default: {DEFAULT_RETENTION_DAYS}; "
-             f"env: IOMT_AUDIT_RETENTION_DAYS)",
+        f"env: IOMT_AUDIT_RETENTION_DAYS)",
     )
     parser.add_argument(
         "--strict",

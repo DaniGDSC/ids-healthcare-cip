@@ -21,9 +21,11 @@ import logging
 import sys
 import time
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Patch
@@ -71,11 +73,12 @@ def write_json_batch(outputs: dict) -> None:
     Args:
         outputs: dict mapping Path → serializable data.
     """
+
     async def _run():
-        await asyncio.gather(*[
-            _write_json_async(path, data)
-            for path, data in outputs.items()
-        ])
+        await asyncio.gather(
+            *[_write_json_async(path, data) for path, data in outputs.items()]
+        )
+
     asyncio.run(_run())
 
 
@@ -84,6 +87,7 @@ def _render_waterfall_worker(args: tuple) -> None:
     """Render one SHAP waterfall PNG — runs in a subprocess."""
     import shap as _shap
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as _plt
 
@@ -106,6 +110,7 @@ def _render_dae_breakdown_worker(args: tuple) -> None:
     """Render one DAE breakdown PNG — runs in a subprocess."""
     from matplotlib.patches import Patch as _Patch
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as _plt
 
@@ -119,13 +124,17 @@ def _render_dae_breakdown_worker(args: tuple) -> None:
     ax.barh(names_plot, values_plot, color=colors)
     ax.set_xlabel("Weighted Reconstruction Error")
     ax.set_title(f"DAE — Sample {idx} (error={recon_error:.6f})")
-    ax.legend(handles=[
-        _Patch(facecolor="#C44E52", label="Network"),
-        _Patch(facecolor="#3274A1", label="Biometric"),
-    ], loc="lower right")
+    ax.legend(
+        handles=[
+            _Patch(facecolor="#C44E52", label="Network"),
+            _Patch(facecolor="#3274A1", label="Biometric"),
+        ],
+        loc="lower right",
+    )
     _plt.tight_layout()
     _plt.savefig(out_path, dpi=150)
     _plt.close(fig)
+
 
 TRACK_A_MODELS = {
     "xgboost": {
@@ -184,6 +193,7 @@ from module4_explanations.module4_online_explainer import (
 
 # ── Data loading ────────────────────────────────────────────────────────
 
+
 def load_test_data() -> tuple:
     """Load test parquet and return X, y, attack categories, feature names."""
     df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
@@ -191,7 +201,9 @@ def load_test_data() -> tuple:
     feat_names = [c for c in df.columns if c not in drop_cols]
     X_test = df[feat_names].values.astype(np.float32)
     y_test = df["Label"].values
-    attack_cats = df["Attack Category"].values if "Attack Category" in df.columns else None
+    attack_cats = (
+        df["Attack Category"].values if "Attack Category" in df.columns else None
+    )
     return X_test, y_test, attack_cats, feat_names
 
 
@@ -202,6 +214,7 @@ def load_predictions(npz_path: Path) -> dict:
 
 
 # ── Track A: TreeSHAP ──────────────────────────────────────────────────
+
 
 def compute_tree_shap(
     model_name: str,
@@ -218,6 +231,7 @@ def compute_tree_shap(
     # Pipeline), so we extract from .named_steps only when the loaded
     # artefact is still a legacy Pipeline. See Phase 2 finding #3a.
     from common import loads_signed
+
     obj = loads_signed(pipeline_path)
     clf = obj.named_steps["classifier"] if hasattr(obj, "named_steps") else obj
 
@@ -241,16 +255,27 @@ def compute_tree_shap(
         expected = float(expected)
 
     elapsed = time.perf_counter() - t0
-    logger.info("  %s TreeSHAP done: shape=%s, expected=%.4f (%.1fs)",
-                model_name, sv.shape, expected, elapsed)
+    logger.info(
+        "  %s TreeSHAP done: shape=%s, expected=%.4f (%.1fs)",
+        model_name,
+        sv.shape,
+        expected,
+        elapsed,
+    )
     return sv, expected
 
 
-def save_shap_values(model_name: str, sv: np.ndarray, expected: float, feat_names: list) -> None:
+def save_shap_values(
+    model_name: str, sv: np.ndarray, expected: float, feat_names: list
+) -> None:
     """Save SHAP values to npz."""
     path = OUTPUT_DIR / f"shap_values_{model_name}.npz"
-    np.savez(path, shap_values=sv, expected_value=np.array(expected),
-             feature_names=np.array(feat_names))
+    np.savez(
+        path,
+        shap_values=sv,
+        expected_value=np.array(expected),
+        feature_names=np.array(feat_names),
+    )
     logger.info("  Saved: %s", path)
 
 
@@ -267,13 +292,18 @@ def compute_global_importance(sv: np.ndarray, feat_names: list) -> list:
 def save_global_importance(model_name: str, importance: list) -> None:
     """Save global importance to JSON."""
     path = OUTPUT_DIR / f"global_importance_{model_name}.json"
-    path.write_text(json.dumps(
-        {"model": model_name, "features": importance}, indent=2,
-    ), encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {"model": model_name, "features": importance},
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     logger.info("  Saved: %s", path)
 
 
 # ── Track B: DAE per-feature error ─────────────────────────────────────
+
 
 def compute_dae_feature_errors(
     X_test: np.ndarray,
@@ -307,8 +337,11 @@ def compute_dae_feature_errors(
     weighted_err = weighted_err_full[:, :n_raw]
     feat_weights = det._feat_weights[:n_raw]
 
-    logger.info("  DAE decomposition done: shape=%s (sliced from %s)",
-                weighted_err.shape, weighted_err_full.shape)
+    logger.info(
+        "  DAE decomposition done: shape=%s (sliced from %s)",
+        weighted_err.shape,
+        weighted_err_full.shape,
+    )
     return sq_err, weighted_err, feat_weights
 
 
@@ -320,12 +353,18 @@ def save_dae_errors(
 ) -> None:
     """Save DAE per-feature errors to npz."""
     path = OUTPUT_DIR / "dae_feature_errors.npz"
-    np.savez(path, per_feature_error=sq_err, weighted_per_feature_error=weighted_err,
-             feature_weights=feat_weights, feature_names=np.array(feat_names))
+    np.savez(
+        path,
+        per_feature_error=sq_err,
+        weighted_per_feature_error=weighted_err,
+        feature_weights=feat_weights,
+        feature_names=np.array(feat_names),
+    )
     logger.info("  Saved: %s", path)
 
 
 # ── Visualizations ─────────────────────────────────────────────────────
+
 
 def _feat_color(name: str) -> str:
     return "#3274A1" if name in BIOMETRIC_FEATURES else "#C44E52"
@@ -347,10 +386,13 @@ def plot_global_importance_bar(
     ax.barh(names, values, color=colors)
     ax.set_xlabel(title_suffix)
     ax.set_title(f"{model_name} — Global Feature Importance ({title_suffix})")
-    ax.legend(handles=[
-        Patch(facecolor="#C44E52", label="Network"),
-        Patch(facecolor="#3274A1", label="Biometric"),
-    ], loc="lower right")
+    ax.legend(
+        handles=[
+            Patch(facecolor="#C44E52", label="Network"),
+            Patch(facecolor="#3274A1", label="Biometric"),
+        ],
+        loc="lower right",
+    )
     plt.tight_layout()
     plt.savefig(CHARTS_DIR / f"global_importance_{model_name}.png", dpi=150)
     plt.close(fig)
@@ -399,7 +441,9 @@ def plot_waterfalls(
     with ProcessPoolExecutor(max_workers=n_workers) as pool:
         list(pool.map(_render_waterfall_worker, render_args))
 
-    logger.info("  Charts: %d waterfall plots for %s (parallel)", len(top_idx), model_name)
+    logger.info(
+        "  Charts: %d waterfall plots for %s (parallel)", len(top_idx), model_name
+    )
 
 
 def plot_dae_breakdowns(
@@ -417,7 +461,9 @@ def plot_dae_breakdowns(
         logger.info("  No DAE anomalies, skipping breakdown plots")
         return
 
-    top_idx = anomaly_idx[np.argsort(recon_errors[anomaly_idx])[-TOP_N_WATERFALL:]][::-1]
+    top_idx = anomaly_idx[np.argsort(recon_errors[anomaly_idx])[-TOP_N_WATERFALL:]][
+        ::-1
+    ]
 
     bio_set = set(BIOMETRIC_FEATURES)
     render_args = [
@@ -487,8 +533,11 @@ def plot_force(
         shap.plots.force(explanation, show=False, matplotlib=True)
         plt.title(f"{model_name} — Sample {idx} (proba={y_proba[idx]:.3f})", y=1.05)
         plt.tight_layout()
-        plt.savefig(CHARTS_DIR / f"force_{model_name}_sample_{idx:04d}.png",
-                    dpi=150, bbox_inches="tight")
+        plt.savefig(
+            CHARTS_DIR / f"force_{model_name}_sample_{idx:04d}.png",
+            dpi=150,
+            bbox_inches="tight",
+        )
         plt.close(fig)
 
     logger.info("  Charts: %d force plots for %s", len(top_idx), model_name)
@@ -533,10 +582,13 @@ def plot_per_category_importance(
         ax.barh(names, values, color=colors)
         ax.set_xlabel("mean |SHAP|")
         ax.set_title(f"{model_name} — {cat} (n={mask.sum()}) Feature Importance")
-        ax.legend(handles=[
-            Patch(facecolor="#C44E52", label="Network"),
-            Patch(facecolor="#3274A1", label="Biometric"),
-        ], loc="lower right")
+        ax.legend(
+            handles=[
+                Patch(facecolor="#C44E52", label="Network"),
+                Patch(facecolor="#3274A1", label="Biometric"),
+            ],
+            loc="lower right",
+        )
         plt.tight_layout()
         safe_cat = cat.replace(" ", "_").lower()
         plt.savefig(CHARTS_DIR / f"importance_{model_name}_{safe_cat}.png", dpi=150)
@@ -544,11 +596,18 @@ def plot_per_category_importance(
 
     if categories:
         path = OUTPUT_DIR / f"per_category_importance_{model_name}.json"
-        path.write_text(json.dumps(
-            {"model": model_name, "categories": categories}, indent=2,
-        ), encoding="utf-8")
-        logger.info("  Per-category importance: %d categories for %s",
-                    len(categories), model_name)
+        path.write_text(
+            json.dumps(
+                {"model": model_name, "categories": categories},
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        logger.info(
+            "  Per-category importance: %d categories for %s",
+            len(categories),
+            model_name,
+        )
     return categories
 
 
@@ -567,10 +626,13 @@ def plot_dae_global_weights(feat_weights: np.ndarray, feat_names: list) -> None:
     ax.barh(names, values, color=colors)
     ax.set_xlabel("Feature Weight (inverse variance)")
     ax.set_title("DAE — Feature Monitoring Weights")
-    ax.legend(handles=[
-        Patch(facecolor="#C44E52", label="Network"),
-        Patch(facecolor="#3274A1", label="Biometric"),
-    ], loc="lower right")
+    ax.legend(
+        handles=[
+            Patch(facecolor="#C44E52", label="Network"),
+            Patch(facecolor="#3274A1", label="Biometric"),
+        ],
+        loc="lower right",
+    )
     plt.tight_layout()
     plt.savefig(CHARTS_DIR / "global_importance_dae.png", dpi=150)
     plt.close(fig)
@@ -578,6 +640,7 @@ def plot_dae_global_weights(feat_weights: np.ndarray, feat_names: list) -> None:
 
 
 # ── Stakeholder outputs ────────────────────────────────────────────────
+
 
 def _severity(n_models_flagged: int) -> str:
     if n_models_flagged >= 4:
@@ -615,7 +678,9 @@ def _top_features_dae(werr_row: np.ndarray, feat_names: list, k: int = 3) -> lis
         {
             "feature": feat_names[i],
             "weighted_error": round(float(werr_row[i]), 8),
-            "pct_contribution": round(float(werr_row[i] / total * 100), 1) if total > 0 else 0.0,
+            "pct_contribution": round(float(werr_row[i] / total * 100), 1)
+            if total > 0
+            else 0.0,
         }
         for i in top_i
     ]
@@ -635,8 +700,7 @@ def build_analyst_report(
 
     # M4-7: pre-compute per-sample flag counts; iterate only flagged indices
     pred_matrix = np.column_stack(
-        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS]
-        + [dae_preds["y_pred"]]
+        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS] + [dae_preds["y_pred"]]
     )  # (N, 4)
     n_flagged_all = pred_matrix.sum(axis=1)  # (N,)
     flagged_indices = np.where(n_flagged_all > 0)[0]
@@ -657,7 +721,8 @@ def build_analyst_report(
             }
             if name in all_shap:
                 model_entry["top_features"] = _top_features_shap(
-                    all_shap[name][idx], feat_names,
+                    all_shap[name][idx],
+                    feat_names,
                 )
             entry["models"][name] = model_entry
 
@@ -667,7 +732,9 @@ def build_analyst_report(
             models_flagged.append("dae")
         entry["models"]["dae"] = {
             "prediction": dae_pred,
-            "reconstruction_error": round(float(dae_preds["reconstruction_error"][idx]), 8),
+            "reconstruction_error": round(
+                float(dae_preds["reconstruction_error"][idx]), 8
+            ),
             "top_features": _top_features_dae(weighted_err[idx], feat_names),
         }
 
@@ -697,8 +764,7 @@ def build_clinician_summaries(
 
     # M4-7: pre-compute per-sample flag counts in C — avoids inner sum per row
     pred_matrix = np.column_stack(
-        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS]
-        + [dae_preds["y_pred"]]
+        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS] + [dae_preds["y_pred"]]
     )  # (N, 4)
     n_flagged_all = pred_matrix.sum(axis=1)  # (N,)
 
@@ -718,12 +784,14 @@ def build_clinician_summaries(
             if top1_val > 0 and top2_val / top1_val > 0.8:
                 narrative_2, cat_2 = _feature_to_narrative(top[1]["feature"])
                 if category != cat_2:
-                    secondary_note = f"A secondary indicator ({narrative_2}) also contributed. "
-            bio_feats = [f["feature"] for f in top if f["feature"] in BIOMETRIC_FEATURES]
+                    secondary_note = (
+                        f"A secondary indicator ({narrative_2}) also contributed. "
+                    )
+            bio_feats = [
+                f["feature"] for f in top if f["feature"] in BIOMETRIC_FEATURES
+            ]
             if bio_feats and category != "biometric":
-                secondary_note += (
-                    f"Note: Biometric data ({', '.join(bio_feats)}) showed unusual values. "
-                )
+                secondary_note += f"Note: Biometric data ({', '.join(bio_feats)}) showed unusual values. "
 
         template = CLINICIAN_TEMPLATES[severity]
         summary = template.format(
@@ -731,11 +799,13 @@ def build_clinician_summaries(
             narrative=narrative,
             secondary_note=secondary_note,
         )
-        summaries.append({
-            "sample_index": int(idx),
-            "severity": severity,
-            "summary": summary,
-        })
+        summaries.append(
+            {
+                "sample_index": int(idx),
+                "severity": severity,
+                "summary": summary,
+            }
+        )
 
     path = OUTPUT_DIR / "clinician_summaries.json"
     path.write_text(json.dumps(summaries, indent=2), encoding="utf-8")
@@ -758,17 +828,16 @@ def build_admin_dashboard(
     # Count alerts per severity
     # M4-6: stack all prediction arrays and sum in C — replaces O(N·M) Python loop
     pred_matrix = np.column_stack(
-        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS]
-        + [dae_preds["y_pred"]]
+        [all_preds[name]["y_pred"] for name in TRACK_A_MODELS] + [dae_preds["y_pred"]]
     )  # (N, 4)
     n_flagged_all = pred_matrix.sum(axis=1)  # (N,)
     flagged_mask = n_flagged_all > 0
 
     severity_counts = {
         "CRITICAL": int(((n_flagged_all >= 4) & flagged_mask).sum()),
-        "HIGH":     int(((n_flagged_all == 3) & flagged_mask).sum()),
-        "MEDIUM":   int(((n_flagged_all == 2) & flagged_mask).sum()),
-        "LOW":      int(((n_flagged_all == 1) & flagged_mask).sum()),
+        "HIGH": int(((n_flagged_all == 3) & flagged_mask).sum()),
+        "MEDIUM": int(((n_flagged_all == 2) & flagged_mask).sum()),
+        "LOW": int(((n_flagged_all == 1) & flagged_mask).sum()),
     }
     agreement_counts = {
         f"{k}_of_4": int((n_flagged_all == k).sum()) for k in range(1, 5)
@@ -783,8 +852,10 @@ def build_admin_dashboard(
 
     # DAE rankings by weight
     dae_ranked = sorted(
-        [{"rank": 0, "feature": n, "weight": round(float(w), 6)}
-         for n, w in zip(feat_names, feat_weights)],
+        [
+            {"rank": 0, "feature": n, "weight": round(float(w), 6)}
+            for n, w in zip(feat_names, feat_weights)
+        ],
         key=lambda x: -x["weight"],
     )
     for i, entry in enumerate(dae_ranked):
@@ -832,31 +903,156 @@ def build_admin_dashboard(
 # ── 4.4 Feature-to-concept mapping ─────────────────────────────────────
 
 FEATURE_CONCEPTS = {
-    "Flgs":        {"label": "TCP Flag Pattern",         "category": "network",   "direction_high": "unusual flag combination detected",        "direction_low": "normal flag pattern"},
-    "Sport":       {"label": "Source Port",              "category": "network",   "direction_high": "abnormal source port used",                "direction_low": "standard port range"},
-    "SrcBytes":    {"label": "Outbound Byte Volume",     "category": "network",   "direction_high": "unusually high outbound data volume",      "direction_low": "minimal outbound traffic"},
-    "DstBytes":    {"label": "Inbound Byte Volume",      "category": "network",   "direction_high": "unusually high inbound data volume",       "direction_low": "minimal inbound traffic"},
-    "SrcLoad":     {"label": "Source Load",              "category": "network",   "direction_high": "high source bandwidth utilization",         "direction_low": "normal source load"},
-    "DstLoad":     {"label": "Destination Load",         "category": "network",   "direction_high": "high destination bandwidth utilization",    "direction_low": "normal destination load"},
-    "SIntPkt":     {"label": "Source Inter-Packet Gap",  "category": "network",   "direction_high": "abnormal packet timing (slow)",             "direction_low": "rapid packet bursts"},
-    "DIntPkt":     {"label": "Dest Inter-Packet Gap",    "category": "network",   "direction_high": "abnormal response timing",                 "direction_low": "unusually fast responses"},
-    "SIntPktAct":  {"label": "Active Inter-Packet Time", "category": "network",   "direction_high": "extended active session timing",            "direction_low": "brief session activity"},
-    "sMaxPktSz":   {"label": "Max Source Packet Size",   "category": "network",   "direction_high": "large packets sent",                       "direction_low": "small packet sizes"},
-    "dMaxPktSz":   {"label": "Max Dest Packet Size",     "category": "network",   "direction_high": "large packets received",                   "direction_low": "small packet sizes"},
-    "sMinPktSz":   {"label": "Min Source Packet Size",   "category": "network",   "direction_high": "varying source packet sizes",              "direction_low": "consistent small packets"},
-    "Dur":         {"label": "Flow Duration",            "category": "network",   "direction_high": "prolonged connection duration",             "direction_low": "unusually brief connection"},
-    "TotBytes":    {"label": "Total Byte Volume",        "category": "network",   "direction_high": "high total data transfer",                 "direction_low": "minimal data transferred"},
-    "Load":        {"label": "Network Load",             "category": "network",   "direction_high": "high network utilization",                  "direction_low": "low network activity"},
-    "pSrcLoss":    {"label": "Source Packet Loss",       "category": "network",   "direction_high": "significant packet loss from source",       "direction_low": "no source packet loss"},
-    "pDstLoss":    {"label": "Dest Packet Loss",         "category": "network",   "direction_high": "significant packet loss at destination",    "direction_low": "no destination packet loss"},
-    "Temp":        {"label": "Body Temperature",         "category": "biometric", "direction_high": "elevated temperature reading",              "direction_low": "below-normal temperature"},
-    "SpO2":        {"label": "Blood Oxygen Saturation",  "category": "biometric", "direction_high": "normal SpO2",                              "direction_low": "dangerously low oxygen saturation"},
-    "Pulse_Rate":  {"label": "Pulse Rate",               "category": "biometric", "direction_high": "elevated heart rate (tachycardia)",         "direction_low": "low heart rate (bradycardia)"},
-    "SYS":         {"label": "Systolic Blood Pressure",  "category": "biometric", "direction_high": "elevated systolic BP (hypertension)",       "direction_low": "low systolic BP (hypotension)"},
-    "DIA":         {"label": "Diastolic Blood Pressure",  "category": "biometric", "direction_high": "elevated diastolic BP",                    "direction_low": "low diastolic BP"},
-    "Heart_rate":  {"label": "Heart Rate",               "category": "biometric", "direction_high": "elevated heart rate",                      "direction_low": "low heart rate"},
-    "Resp_Rate":   {"label": "Respiratory Rate",         "category": "biometric", "direction_high": "rapid breathing (tachypnea)",              "direction_low": "slow breathing (bradypnea)"},
-    "ST":          {"label": "ST Segment (ECG)",         "category": "biometric", "direction_high": "ST elevation (possible cardiac event)",     "direction_low": "ST depression"},
+    "Flgs": {
+        "label": "TCP Flag Pattern",
+        "category": "network",
+        "direction_high": "unusual flag combination detected",
+        "direction_low": "normal flag pattern",
+    },
+    "Sport": {
+        "label": "Source Port",
+        "category": "network",
+        "direction_high": "abnormal source port used",
+        "direction_low": "standard port range",
+    },
+    "SrcBytes": {
+        "label": "Outbound Byte Volume",
+        "category": "network",
+        "direction_high": "unusually high outbound data volume",
+        "direction_low": "minimal outbound traffic",
+    },
+    "DstBytes": {
+        "label": "Inbound Byte Volume",
+        "category": "network",
+        "direction_high": "unusually high inbound data volume",
+        "direction_low": "minimal inbound traffic",
+    },
+    "SrcLoad": {
+        "label": "Source Load",
+        "category": "network",
+        "direction_high": "high source bandwidth utilization",
+        "direction_low": "normal source load",
+    },
+    "DstLoad": {
+        "label": "Destination Load",
+        "category": "network",
+        "direction_high": "high destination bandwidth utilization",
+        "direction_low": "normal destination load",
+    },
+    "SIntPkt": {
+        "label": "Source Inter-Packet Gap",
+        "category": "network",
+        "direction_high": "abnormal packet timing (slow)",
+        "direction_low": "rapid packet bursts",
+    },
+    "DIntPkt": {
+        "label": "Dest Inter-Packet Gap",
+        "category": "network",
+        "direction_high": "abnormal response timing",
+        "direction_low": "unusually fast responses",
+    },
+    "SIntPktAct": {
+        "label": "Active Inter-Packet Time",
+        "category": "network",
+        "direction_high": "extended active session timing",
+        "direction_low": "brief session activity",
+    },
+    "sMaxPktSz": {
+        "label": "Max Source Packet Size",
+        "category": "network",
+        "direction_high": "large packets sent",
+        "direction_low": "small packet sizes",
+    },
+    "dMaxPktSz": {
+        "label": "Max Dest Packet Size",
+        "category": "network",
+        "direction_high": "large packets received",
+        "direction_low": "small packet sizes",
+    },
+    "sMinPktSz": {
+        "label": "Min Source Packet Size",
+        "category": "network",
+        "direction_high": "varying source packet sizes",
+        "direction_low": "consistent small packets",
+    },
+    "Dur": {
+        "label": "Flow Duration",
+        "category": "network",
+        "direction_high": "prolonged connection duration",
+        "direction_low": "unusually brief connection",
+    },
+    "TotBytes": {
+        "label": "Total Byte Volume",
+        "category": "network",
+        "direction_high": "high total data transfer",
+        "direction_low": "minimal data transferred",
+    },
+    "Load": {
+        "label": "Network Load",
+        "category": "network",
+        "direction_high": "high network utilization",
+        "direction_low": "low network activity",
+    },
+    "pSrcLoss": {
+        "label": "Source Packet Loss",
+        "category": "network",
+        "direction_high": "significant packet loss from source",
+        "direction_low": "no source packet loss",
+    },
+    "pDstLoss": {
+        "label": "Dest Packet Loss",
+        "category": "network",
+        "direction_high": "significant packet loss at destination",
+        "direction_low": "no destination packet loss",
+    },
+    "Temp": {
+        "label": "Body Temperature",
+        "category": "biometric",
+        "direction_high": "elevated temperature reading",
+        "direction_low": "below-normal temperature",
+    },
+    "SpO2": {
+        "label": "Blood Oxygen Saturation",
+        "category": "biometric",
+        "direction_high": "normal SpO2",
+        "direction_low": "dangerously low oxygen saturation",
+    },
+    "Pulse_Rate": {
+        "label": "Pulse Rate",
+        "category": "biometric",
+        "direction_high": "elevated heart rate (tachycardia)",
+        "direction_low": "low heart rate (bradycardia)",
+    },
+    "SYS": {
+        "label": "Systolic Blood Pressure",
+        "category": "biometric",
+        "direction_high": "elevated systolic BP (hypertension)",
+        "direction_low": "low systolic BP (hypotension)",
+    },
+    "DIA": {
+        "label": "Diastolic Blood Pressure",
+        "category": "biometric",
+        "direction_high": "elevated diastolic BP",
+        "direction_low": "low diastolic BP",
+    },
+    "Heart_rate": {
+        "label": "Heart Rate",
+        "category": "biometric",
+        "direction_high": "elevated heart rate",
+        "direction_low": "low heart rate",
+    },
+    "Resp_Rate": {
+        "label": "Respiratory Rate",
+        "category": "biometric",
+        "direction_high": "rapid breathing (tachypnea)",
+        "direction_low": "slow breathing (bradypnea)",
+    },
+    "ST": {
+        "label": "ST Segment (ECG)",
+        "category": "biometric",
+        "direction_high": "ST elevation (possible cardiac event)",
+        "direction_low": "ST depression",
+    },
 }
 
 
@@ -872,17 +1068,16 @@ def export_feature_concepts() -> None:
 NLG_TEMPLATES = {
     "severity_header": {
         "CRITICAL": "CRITICAL SECURITY ALERT — Immediate action required.",
-        "HIGH":     "HIGH PRIORITY ALERT — Active investigation needed.",
-        "MEDIUM":   "MODERATE ALERT — Flagged for review.",
-        "LOW":      "LOW PRIORITY — Logged for audit.",
+        "HIGH": "HIGH PRIORITY ALERT — Active investigation needed.",
+        "MEDIUM": "MODERATE ALERT — Flagged for review.",
+        "LOW": "LOW PRIORITY — Logged for audit.",
     },
     "detection_sentence": (
         "The intrusion detection system flagged this network flow with "
         "{consensus} using a confidence of {confidence:.0%}."
     ),
     "feature_explanation_network": (
-        "{label} showed {direction} "
-        "(SHAP contribution: {shap_value:+.3f})."
+        "{label} showed {direction} (SHAP contribution: {shap_value:+.3f})."
     ),
     "feature_explanation_biometric": (
         "Patient {label} showed {direction} "
@@ -903,9 +1098,9 @@ NLG_TEMPLATES = {
     ),
     "action_recommendation": {
         "CRITICAL": "Recommended: Isolate device immediately. Page on-call physician and CISO. Initiate incident response.",
-        "HIGH":     "Recommended: Isolate network segment. Notify SOC and biomedical engineering.",
-        "MEDIUM":   "Recommended: Enable enhanced monitoring. Queue for security team review.",
-        "LOW":      "Recommended: No immediate action. Review at next security audit.",
+        "HIGH": "Recommended: Isolate network segment. Notify SOC and biomedical engineering.",
+        "MEDIUM": "Recommended: Enable enhanced monitoring. Queue for security team review.",
+        "LOW": "Recommended: No immediate action. Review at next security audit.",
     },
 }
 
@@ -918,6 +1113,7 @@ def export_nlg_templates() -> None:
 
 
 # ── 4.7 Clinician NLG engine (6-step assembly) ────────────────────────
+
 
 def generate_clinician_alert(
     idx: int,
@@ -937,9 +1133,12 @@ def generate_clinician_alert(
     parts.append(NLG_TEMPLATES["severity_header"].get(severity, severity))
 
     # Step 2: Detection sentence
-    parts.append(NLG_TEMPLATES["detection_sentence"].format(
-        consensus=consensus, confidence=confidence,
-    ))
+    parts.append(
+        NLG_TEMPLATES["detection_sentence"].format(
+            consensus=consensus,
+            confidence=confidence,
+        )
+    )
 
     # Step 3: Top-5 feature explanations
     abs_vals = np.abs(sv_row)
@@ -954,20 +1153,30 @@ def generate_clinician_alert(
             "abnormal value",
         )
         template_key = f"feature_explanation_{cat}"
-        parts.append(NLG_TEMPLATES[template_key].format(
-            label=label, direction=direction, shap_value=float(sv_row[fi]),
-        ))
+        parts.append(
+            NLG_TEMPLATES[template_key].format(
+                label=label,
+                direction=direction,
+                shap_value=float(sv_row[fi]),
+            )
+        )
 
     # Step 4: Risk context
     if risk_components:
-        parts.append(NLG_TEMPLATES["risk_context"].format(
-            risk_score=risk_score, risk_level=severity, **risk_components,
-        ))
+        parts.append(
+            NLG_TEMPLATES["risk_context"].format(
+                risk_score=risk_score,
+                risk_level=severity,
+                **risk_components,
+            )
+        )
 
     # Step 5: Clinical-tier note
     if d_clinical_tier_val > 0:
         n_abnormal = int(round(d_clinical_tier_val * 8))
-        parts.append(NLG_TEMPLATES["acuity_note_abnormal"].format(n_abnormal=n_abnormal))
+        parts.append(
+            NLG_TEMPLATES["acuity_note_abnormal"].format(n_abnormal=n_abnormal)
+        )
     else:
         parts.append(NLG_TEMPLATES["acuity_note_normal"])
 
@@ -978,6 +1187,7 @@ def generate_clinician_alert(
 
 
 # ── 4.10 Stakeholder router ───────────────────────────────────────────
+
 
 def route_explanation(
     idx: int,
@@ -998,8 +1208,15 @@ def route_explanation(
             "role": "clinician",
             "format": "text",
             "content": generate_clinician_alert(
-                idx, sv_row, feat_names, severity, confidence, consensus,
-                risk_score, risk_components, d_clinical_tier_val,
+                idx,
+                sv_row,
+                feat_names,
+                severity,
+                confidence,
+                consensus,
+                risk_score,
+                risk_components,
+                d_clinical_tier_val,
             ),
         }
     elif stakeholder_role == "analyst":
@@ -1041,6 +1258,7 @@ def route_explanation(
 
 # ── 4.11 Example explanations for thesis ──────────────────────────────
 
+
 def generate_example_explanations(
     all_shap: dict,
     all_preds: dict,
@@ -1068,7 +1286,9 @@ def generate_example_explanations(
     # One spoofing, one data alteration (if available)
     if attack_cats is not None:
         for cat in ["Spoofing", "Data Alteration"]:
-            cat_idx = [i for i in attack_idx if str(attack_cats[i]) == cat and i not in picks]
+            cat_idx = [
+                i for i in attack_idx if str(attack_cats[i]) == cat and i not in picks
+            ]
             if cat_idx:
                 picks.append(cat_idx[0])
 
@@ -1082,7 +1302,9 @@ def generate_example_explanations(
     # Load risk scores if available
     risk_data = {}
     try:
-        rd = np.load(PROJECT_ROOT / "data/phase2/risk_scores/risk_scores.npz", allow_pickle=True)
+        rd = np.load(
+            PROJECT_ROOT / "data/phase2/risk_scores/risk_scores.npz", allow_pickle=True
+        )
         risk_data = {k: rd[k] for k in rd.files}
     except FileNotFoundError:
         pass
@@ -1093,7 +1315,15 @@ def generate_example_explanations(
         confidence = float(xgb_preds["y_proba"][idx])
         n_flagged = sum(1 for name in all_preds if all_preds[name]["y_pred"][idx] == 1)
         n_flagged += 1 if dae_preds["y_pred"][idx] == 1 else 0
-        severity = "CRITICAL" if n_flagged >= 4 else "HIGH" if n_flagged == 3 else "MEDIUM" if n_flagged == 2 else "LOW"
+        severity = (
+            "CRITICAL"
+            if n_flagged >= 4
+            else "HIGH"
+            if n_flagged == 3
+            else "MEDIUM"
+            if n_flagged == 2
+            else "LOW"
+        )
         consensus = f"{n_flagged}/4 models flagged"
 
         dae_top = _top_features_dae(weighted_err[idx], feat_names, k=3)
@@ -1107,24 +1337,44 @@ def generate_example_explanations(
                 "s_data": float(risk_data["s_data"][idx]),
                 "d_clinical_tier": float(risk_data["d_clinical_tier"][idx]),
             }
-        a_pat = float(risk_data["d_clinical_tier"][idx]) if "d_clinical_tier" in risk_data else 0.0
+        a_pat = (
+            float(risk_data["d_clinical_tier"][idx])
+            if "d_clinical_tier" in risk_data
+            else 0.0
+        )
 
         example = {
             "sample_index": int(idx),
             "ground_truth": "attack" if y_test[idx] == 1 else "benign",
-            "attack_category": str(attack_cats[idx]) if attack_cats is not None else "unknown",
+            "attack_category": str(attack_cats[idx])
+            if attack_cats is not None
+            else "unknown",
             "views": {},
         }
 
         for role in ["clinician", "analyst", "administrator"]:
             example["views"][role] = route_explanation(
-                int(idx), role, sv_row, feat_names, severity, confidence,
-                consensus, risk_score, risk_comps, a_pat, dae_top,
+                int(idx),
+                role,
+                sv_row,
+                feat_names,
+                severity,
+                confidence,
+                consensus,
+                risk_score,
+                risk_comps,
+                a_pat,
+                dae_top,
             )
 
         examples.append(example)
-        logger.info("  Example: sample %d (%s, %s) — %s",
-                    idx, example["attack_category"], severity, consensus)
+        logger.info(
+            "  Example: sample %d (%s, %s) — %s",
+            idx,
+            example["attack_category"],
+            severity,
+            consensus,
+        )
 
     path = OUTPUT_DIR / "example_explanations.json"
     path.write_text(json.dumps(examples, indent=2, default=str), encoding="utf-8")
@@ -1133,6 +1383,7 @@ def generate_example_explanations(
 
 
 # ── Validation ──────────────────────────────────────────────────────────
+
 
 def validate_consistency(
     all_shap: dict,
@@ -1148,6 +1399,7 @@ def validate_consistency(
     results = {}
 
     from common import loads_signed
+
     for name in SHAP_MODELS:
         cfg = TRACK_A_MODELS[name]
         obj = loads_signed(PROJECT_ROOT / cfg["pipeline"])
@@ -1169,6 +1421,7 @@ def validate_consistency(
 
         # Rank correlation (Spearman)
         from scipy.stats import spearmanr
+
         native_ranks = np.argsort(np.argsort(-native_imp))
         shap_ranks = np.argsort(np.argsort(-shap_mean_abs))
         rho, p_val = spearmanr(native_ranks, shap_ranks)
@@ -1181,8 +1434,13 @@ def validate_consistency(
             "spearman_rho": round(float(rho), 4),
             "spearman_p_value": round(float(p_val), 6),
         }
-        logger.info("  %s: top-5 overlap=%d/5, Spearman rho=%.4f (p=%.4f)",
-                    name, len(overlap), rho, p_val)
+        logger.info(
+            "  %s: top-5 overlap=%d/5, Spearman rho=%.4f (p=%.4f)",
+            name,
+            len(overlap),
+            rho,
+            p_val,
+        )
 
     path = OUTPUT_DIR / "validation_consistency.json"
     path.write_text(json.dumps(results, indent=2), encoding="utf-8")
@@ -1249,9 +1507,14 @@ def validate_perturbation(
             "f1_drop_pct": round(float(drop_pct), 1),
             "faithful": drop_pct > 5.0,
         }
-        logger.info("  %s: F1 %.4f → %.4f (drop=%.1f%%) %s",
-                    name, f1_base, f1_masked, drop_pct,
-                    "FAITHFUL" if drop_pct > 5.0 else "WEAK")
+        logger.info(
+            "  %s: F1 %.4f → %.4f (drop=%.1f%%) %s",
+            name,
+            f1_base,
+            f1_masked,
+            drop_pct,
+            "FAITHFUL" if drop_pct > 5.0 else "WEAK",
+        )
 
     path = OUTPUT_DIR / "validation_perturbation.json"
     path.write_text(json.dumps(results, indent=2), encoding="utf-8")
@@ -1297,7 +1560,7 @@ def validate_cross_model(
 
     comparisons = {}
     for i, m1 in enumerate(model_names):
-        for j, m2 in enumerate(model_names[i + 1:], start=i + 1):
+        for j, m2 in enumerate(model_names[i + 1 :], start=i + 1):
             rho, p_val = spearmanr(rank_matrix[i], rank_matrix[j])
             overlap = top5_sets[i] & top5_sets[j]
             pair = f"{m1}_vs_{m2}"
@@ -1307,8 +1570,9 @@ def validate_cross_model(
                 "top5_overlap": sorted(overlap),
                 "top5_overlap_count": len(overlap),
             }
-            logger.info("  %s vs %s: rho=%.4f, top-5 overlap=%d/5",
-                        m1, m2, rho, len(overlap))
+            logger.info(
+                "  %s vs %s: rho=%.4f, top-5 overlap=%d/5", m1, m2, rho, len(overlap)
+            )
 
     # Consensus top features: features in top-5 across ALL models.
     # Uses pre-built top5_sets — no rank_vectors dict needed.
@@ -1327,6 +1591,7 @@ def validate_cross_model(
 
 
 # ── Main ────────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     logging.basicConfig(
@@ -1363,7 +1628,10 @@ def main() -> None:
             continue
 
         sv, expected = compute_tree_shap(
-            name, PROJECT_ROOT / cfg["pipeline"], X_test, feat_names,
+            name,
+            PROJECT_ROOT / cfg["pipeline"],
+            X_test,
+            feat_names,
         )
         save_shap_values(name, sv, expected, feat_names)
 
@@ -1374,19 +1642,22 @@ def main() -> None:
         plot_global_importance_bar(name, importance)
         all_shap[name] = sv
 
-        plot_waterfalls(name, sv, expected, X_test, feat_names,
-                        preds["y_pred"], preds["y_proba"])
+        plot_waterfalls(
+            name, sv, expected, X_test, feat_names, preds["y_pred"], preds["y_proba"]
+        )
 
         plot_beeswarm(name, sv, X_test, feat_names)
 
-        plot_force(name, sv, expected, X_test, feat_names,
-                   preds["y_pred"], preds["y_proba"])
+        plot_force(
+            name, sv, expected, X_test, feat_names, preds["y_pred"], preds["y_proba"]
+        )
 
         plot_per_category_importance(name, sv, y_test, attack_cats, feat_names)
 
     # ── Track B: DAE ──
     sq_err, weighted_err, feat_weights = compute_dae_feature_errors(
-        X_test, feat_names,
+        X_test,
+        feat_names,
     )
     save_dae_errors(sq_err, weighted_err, feat_weights, feat_names)
     plot_dae_global_weights(feat_weights, feat_names)
@@ -1394,20 +1665,36 @@ def main() -> None:
     dae_preds = load_predictions(
         PROJECT_ROOT / "results/models/dae_test_predictions.npz"
     )
-    plot_dae_breakdowns(weighted_err, feat_names,
-                        dae_preds["y_pred"], dae_preds["reconstruction_error"])
+    plot_dae_breakdowns(
+        weighted_err, feat_names, dae_preds["y_pred"], dae_preds["reconstruction_error"]
+    )
 
     # ── Stakeholder outputs ──
     all_preds_with_dae = dict(all_preds)
     alerts = build_analyst_report(
-        all_shap, all_preds, weighted_err, dae_preds, feat_names, n_samples,
+        all_shap,
+        all_preds,
+        weighted_err,
+        dae_preds,
+        feat_names,
+        n_samples,
     )
     build_clinician_summaries(
-        all_shap, all_preds, dae_preds, feat_names, n_samples,
+        all_shap,
+        all_preds,
+        dae_preds,
+        feat_names,
+        n_samples,
     )
     build_admin_dashboard(
-        all_shap, all_preds, dae_preds, feat_names, feat_weights,
-        global_importances, attack_cats, n_samples,
+        all_shap,
+        all_preds,
+        dae_preds,
+        feat_names,
+        feat_weights,
+        global_importances,
+        attack_cats,
+        n_samples,
     )
 
     # ── Export feature concepts + NLG templates (Tasks 4.4, 4.6) ──
@@ -1416,8 +1703,13 @@ def main() -> None:
 
     # ── Example explanations for thesis (Tasks 4.10, 4.11) ──
     generate_example_explanations(
-        all_shap, all_preds, dae_preds, weighted_err,
-        feat_names, y_test, attack_cats,
+        all_shap,
+        all_preds,
+        dae_preds,
+        weighted_err,
+        feat_names,
+        y_test,
+        attack_cats,
     )
 
     # ── Validation ──
@@ -1434,8 +1726,9 @@ def main() -> None:
     logger.info("EXPLANATIONS COMPLETE — %.1fs", elapsed)
     logger.info(sep)
     logger.info("  Output dir    : %s", OUTPUT_DIR)
-    logger.info("  SHAP files    : %d models (%s)",
-                len(SHAP_MODELS), ", ".join(SHAP_MODELS))
+    logger.info(
+        "  SHAP files    : %d models (%s)", len(SHAP_MODELS), ", ".join(SHAP_MODELS)
+    )
     logger.info("  DAE errors    : dae_feature_errors.npz")
     logger.info("  Analyst alerts: %d", len(alerts))
     logger.info("  Charts        : %s", CHARTS_DIR)
