@@ -1,16 +1,16 @@
 {
   "total_samples": 2448,
-  "total_alerts": 654,
+  "total_alerts": 668,
   "alerts_by_severity": {
     "CRITICAL": 159,
-    "HIGH": 124,
-    "MEDIUM": 70,
-    "LOW": 301
+    "HIGH": 7,
+    "MEDIUM": 144,
+    "LOW": 358
   },
   "model_agreement": {
-    "1_of_4": 301,
-    "2_of_4": 70,
-    "3_of_4": 124,
+    "1_of_4": 358,
+    "2_of_4": 144,
+    "3_of_4": 7,
     "4_of_4": 159
   },
   "feature_importance_rankings": {
@@ -18,104 +18,104 @@
       {
         "rank": 1,
         "feature": "Flgs",
-        "mean_abs_shap": 4.254138
+        "mean_abs_shap": 4.274932
       },
       {
         "rank": 2,
         "feature": "Temp",
-        "mean_abs_shap": 3.121518
+        "mean_abs_shap": 3.057146
       },
       {
         "rank": 3,
         "feature": "DIntPkt",
-        "mean_abs_shap": 2.91882
+        "mean_abs_shap": 2.965395
       },
       {
         "rank": 4,
         "feature": "Sport",
-        "mean_abs_shap": 2.402472
+        "mean_abs_shap": 2.439804
       },
       {
         "rank": 5,
-        "feature": "Dur",
-        "mean_abs_shap": 1.668012
+        "feature": "SIntPkt",
+        "mean_abs_shap": 1.431062
       },
       {
         "rank": 6,
-        "feature": "Pulse_Rate",
-        "mean_abs_shap": 1.110549
+        "feature": "Dur",
+        "mean_abs_shap": 1.299526
       },
       {
         "rank": 7,
-        "feature": "SIntPkt",
-        "mean_abs_shap": 1.007487
+        "feature": "Pulse_Rate",
+        "mean_abs_shap": 1.071195
       },
       {
         "rank": 8,
         "feature": "SrcLoad",
-        "mean_abs_shap": 0.805063
+        "mean_abs_shap": 0.92787
       },
       {
         "rank": 9,
         "feature": "Resp_Rate",
-        "mean_abs_shap": 0.67071
+        "mean_abs_shap": 0.662247
       },
       {
         "rank": 10,
         "feature": "SYS",
-        "mean_abs_shap": 0.540565
+        "mean_abs_shap": 0.552513
       }
     ],
     "dae": [
       {
         "rank": 1,
         "feature": "SIntPktAct",
-        "weight": 0.431277
+        "weight": 0.271256
       },
       {
         "rank": 2,
-        "feature": "SrcBytes",
-        "weight": 0.276163
+        "feature": "sMaxPktSz",
+        "weight": 0.247655
       },
       {
         "rank": 3,
-        "feature": "DstBytes",
-        "weight": 0.123662
+        "feature": "SrcBytes",
+        "weight": 0.18265
       },
       {
         "rank": 4,
         "feature": "TotBytes",
-        "weight": 0.055126
+        "weight": 0.134331
       },
       {
         "rank": 5,
-        "feature": "dMaxPktSz",
-        "weight": 0.054788
+        "feature": "pDstLoss",
+        "weight": 0.083444
       },
       {
         "rank": 6,
-        "feature": "pDstLoss",
-        "weight": 0.02517
+        "feature": "pSrcLoss",
+        "weight": 0.033709
       },
       {
         "rank": 7,
-        "feature": "Flgs",
-        "weight": 0.013685
+        "feature": "dMaxPktSz",
+        "weight": 0.016421
       },
       {
         "rank": 8,
-        "feature": "pSrcLoss",
-        "weight": 0.012793
+        "feature": "Flgs",
+        "weight": 0.013936
       },
       {
         "rank": 9,
-        "feature": "sMaxPktSz",
-        "weight": 0.004411
+        "feature": "sMinPktSz",
+        "weight": 0.012981
       },
       {
         "rank": 10,
-        "feature": "sMinPktSz",
-        "weight": 0.002926
+        "feature": "DstBytes",
+        "weight": 0.003617
       }
     ]
   },
@@ -131,7 +131,7 @@
   },
   "alerts_by_attack_category": {
     "Data Alteration": 138,
-    "normal": 64,
-    "Spoofing": 161
+    "normal": 58,
+    "Spoofing": 160
   }
 }

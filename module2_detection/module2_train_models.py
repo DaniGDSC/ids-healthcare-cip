@@ -28,6 +28,7 @@ from imblearn.pipeline import Pipeline as ImbPipeline
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import (
     classification_report,
+    confusion_matrix,
     f1_score,
     fbeta_score,
     roc_auc_score,
@@ -270,6 +271,42 @@ def train_track_a(
 # two below.
 
 
+def evaluate_dae(npz_path: Path, threshold: float) -> dict:
+    """Compute DAE test metrics from the engine-emitted prediction npz.
+
+    Matches the Track A `evaluate()` schema so the summary table and
+    downstream consumers can treat all four models uniformly. AUC-ROC is
+    computed against `reconstruction_error` (the underlying scalar), F1/F2
+    against the engine's threshold decision in `y_pred`.
+    """
+    data = np.load(npz_path)
+    y_test = data["y_true"]
+    y_pred = data["y_pred"].astype(int)
+    score = data["reconstruction_error"]
+
+    metrics = {
+        "attack_f1": float(f1_score(y_test, y_pred, pos_label=1)),
+        "attack_f2": float(fbeta_score(y_test, y_pred, beta=2, pos_label=1)),
+        "weighted_f1": float(f1_score(y_test, y_pred, average="weighted")),
+        "macro_f1": float(f1_score(y_test, y_pred, average="macro")),
+        "auc_roc": float(roc_auc_score(y_test, score)),
+        "optimal_threshold": float(threshold),
+    }
+    tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+    metrics["confusion_matrix"] = {
+        "tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp),
+    }
+    logger.info(
+        "dae: attack_f1=%.4f  attack_f2=%.4f  AUC=%.4f  threshold=%.3g",
+        metrics["attack_f1"], metrics["attack_f2"],
+        metrics["auc_roc"], threshold,
+    )
+    logger.info("\n%s", classification_report(
+        y_test, y_pred, target_names=["Normal", "Attack"], digits=4,
+    ))
+    return metrics
+
+
 # ── Main ────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -303,8 +340,18 @@ def main() -> None:
 
     dae_summary = train_dae()
     invalidate_cache()  # force re-load of the freshly written DAE artifact
-    DetectionEngine().write_test_predictions()
-    all_metrics["dae"] = dae_summary
+    dae_npz = DetectionEngine().write_test_predictions()
+
+    # Patch the report and merge metrics so the summary table reflects
+    # real DAE performance instead of the all-zeros placeholder.
+    dae_report_path = PROJECT_ROOT / "results/models/dae_final_report.json"
+    dae_report = json.loads(dae_report_path.read_text(encoding="utf-8"))
+    dae_metrics = evaluate_dae(dae_npz, dae_report.get("threshold", 0.0))
+    dae_report["test_metrics"] = dae_metrics
+    dae_report_path.write_text(
+        json.dumps(dae_report, indent=2, default=str), encoding="utf-8",
+    )
+    all_metrics["dae"] = {**dae_summary, **dae_metrics}
 
     # Final summary
     total = round(time.perf_counter() - t0, 1)

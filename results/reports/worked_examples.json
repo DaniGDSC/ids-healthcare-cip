@@ -90,10 +90,10 @@
     "sample_index": 2096,
     "ground_truth": "attack",
     "attack_category": "Spoofing",
-    "risk_score": 0.7991,
+    "risk_score": 0.7961,
     "risk_level": "HIGH",
     "components": {
-      "C_detect": 0.9853,
+      "C_detect": 0.9776,
       "D_crit": 0.72,
       "S_data": 1.0,
       "D_clinical_tier": 0.375
@@ -149,13 +149,13 @@
         "recipient": "IT Security",
         "channel": "SIEM + Dashboard",
         "priority": "HIGH",
-        "message": "[HIGH] Alert #2096: Risk=0.80. Actions: log_event, enhanced_monitoring, re_authenticate, forensic_snapshot, restrict_traffic, escalate_clinical. Top features: Pulse_Rate, Sport, Flgs."
+        "message": "[HIGH] Alert #2096: Risk=0.80. Actions: log_event, enhanced_monitoring, re_authenticate, forensic_snapshot, restrict_traffic, escalate_clinical. Top features: Pulse_Rate, Flgs, SIntPkt."
       },
       {
         "recipient": "Clinical Staff",
         "channel": "Page / Dashboard",
         "priority": "HIGH",
-        "message": "MODERATE ALERT (Sample 2096): Minor anomaly detected \u2014 abnormal pulse rate. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+        "message": "LOW ALERT (Sample 2096): Borderline detection by one model. Likely benign; logged for audit purposes."
       },
       {
         "recipient": "Biomedical Engineering",
@@ -179,52 +179,50 @@
   },
   {
     "scenario": "LOW alert \u2014 Spoofing on vital_monitoring device",
-    "sample_index": 2326,
+    "sample_index": 2360,
     "ground_truth": "attack",
     "attack_category": "Spoofing",
-    "risk_score": 0.3879,
+    "risk_score": 0.3957,
     "risk_level": "LOW",
     "components": {
-      "C_detect": 0.0199,
+      "C_detect": 0.3316,
       "D_crit": 0.72,
-      "S_data": 1.0,
-      "D_clinical_tier": 0.25
+      "S_data": 0.5536,
+      "D_clinical_tier": 0.0
     },
     "policy_recommendation": {
       "actions": [
         "log_event",
         "enhanced_monitoring",
-        "re_authenticate",
-        "escalate_clinical"
+        "re_authenticate"
       ],
       "max_response_min": 480,
       "auto_execute": false,
       "primary_notify": "IT Security",
       "secondary_notify": "Biomedical Engineering",
       "clinical_override": {
-        "triggered": true,
-        "reason": "Device tier 'vital_monitoring' with elevated acuity (0.25) \u2014 clinical confirmation required.",
+        "triggered": false,
+        "reason": null,
         "original_actions": [
           "log_event",
           "enhanced_monitoring",
           "re_authenticate"
         ],
-        "clinical_confirmation_required": true
+        "clinical_confirmation_required": false
       },
       "requires_approval": false
     },
     "execution_result": {
-      "alert_id": "ALERT-02326",
-      "sample_index": 2326,
-      "timestamp": "2026-04-03T12:38:46",
+      "alert_id": "ALERT-02360",
+      "sample_index": 2360,
+      "timestamp": "2026-04-03T12:39:20",
       "actions_executed": [
         "log_event",
         "enhanced_monitoring",
-        "re_authenticate",
-        "escalate_clinical"
+        "re_authenticate"
       ],
       "auto_executed": false,
-      "clinical_override": true,
+      "clinical_override": false,
       "requires_approval": false,
       "outcome": "threat_contained",
       "effective": true,
@@ -235,30 +233,24 @@
         "recipient": "IT Security",
         "channel": "SIEM + Dashboard",
         "priority": "LOW",
-        "message": "[LOW] Alert #2326: Risk=0.39. Actions: log_event, enhanced_monitoring, re_authenticate, escalate_clinical. Top features: Flgs, Temp, SrcLoad."
-      },
-      {
-        "recipient": "Clinical Staff",
-        "channel": "Page / Dashboard",
-        "priority": "LOW",
-        "message": "Clinical review requested."
+        "message": "[LOW] Alert #2360: Risk=0.40. Actions: log_event, enhanced_monitoring, re_authenticate. Top features: Flgs, DIntPkt, SIntPkt."
       },
       {
         "recipient": "Biomedical Engineering",
         "channel": "Email / Ticket",
         "priority": "LOW",
-        "message": "[LOW] Sample #2326: log_event, enhanced_monitoring, re_authenticate, escalate_clinical"
+        "message": "[LOW] Sample #2360: log_event, enhanced_monitoring, re_authenticate"
       }
     ],
     "clinical_override": {
-      "triggered": true,
-      "reason": "Device tier 'vital_monitoring' with elevated acuity (0.25) \u2014 clinical confirmation required.",
+      "triggered": false,
+      "reason": null,
       "original_actions": [
         "log_event",
         "enhanced_monitoring",
         "re_authenticate"
       ],
-      "clinical_confirmation_required": true
+      "clinical_confirmation_required": false
     }
   }
 ]

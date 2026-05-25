@@ -83,6 +83,16 @@ class DetectionEngine:
 
     PRIMARY_TRACK_A = "xgboost"
 
+    # Cascade gate: when XGBoost proba ≥ TAU_SKIP_DAE, skip the DAE
+    # forward pass for that row and set c_track_b = 0. Safe because
+    # c_detect = max(c_track_a, c_track_b), so a high c_track_a already
+    # dominates any DAE elevation. Kept distinct from
+    # thresholds["xgboost"] (the calibrated decision threshold, often
+    # well below 0.9) — this is a compute-side optimisation, not a
+    # decision boundary. Lower at your peril: gated rows where DAE
+    # might have scored higher will lose that elevation.
+    TAU_SKIP_DAE: float = 0.90
+
     def __init__(self):
         self._classifiers = None
         self._thresholds = None
@@ -171,8 +181,30 @@ class DetectionEngine:
         X_aug[:, n_raw:] = proba_cols
         return X_aug
 
-    def predict(self, X_raw: np.ndarray) -> DetectionResult:
-        """Run Track A + Track B over a batch and return all per-sample arrays."""
+    def predict(
+        self,
+        X_raw: np.ndarray,
+        *,
+        _force_full_dae: bool = False,
+    ) -> DetectionResult:
+        """Run Track A + Track B over a batch and return all per-sample arrays.
+
+        The DAE is gated on ``c_track_a >= TAU_SKIP_DAE``: rows already
+        confidently flagged by XGBoost skip the DAE forward pass and
+        receive ``c_track_b = 0`` / ``y_pred_dae = 0``. Fusion is
+        unchanged (``c_detect = max(c_track_a, c_track_b)`` clipped),
+        so the gated rows' c_detect equals c_track_a — identical to
+        the un-gated path for those rows.
+
+        Args:
+            X_raw: ``(n, n_raw_features)`` raw feature batch.
+            _force_full_dae: engine-internal flag. When True, bypass the
+                gate and score every row with the DAE. Used by
+                :meth:`write_test_predictions` so that downstream
+                evaluation artefacts (AUC, PSI, threshold sweeps) get
+                a complete per-row ``reconstruction_error``. Not part
+                of the public API.
+        """
         self._load()
         X_clean = self._sanitise(X_raw)
 
@@ -186,7 +218,10 @@ class DetectionEngine:
         # c_track_a — primary supervised detector
         c_track_a = probas[self.PRIMARY_TRACK_A].astype(np.float32)
 
-        # Augmented input for the DAE (probas already computed, reuse)
+        # Augmented input for the DAE (probas already computed, reuse).
+        # Built for ALL rows even when most will be gated — the
+        # column_stack is cheap and Module 4 reads x_augmented for the
+        # full batch.
         n, n_raw = X_clean.shape
         proba_cols = np.column_stack(
             [probas[name] for name in TRACK_A_FOR_DAE]
@@ -204,9 +239,25 @@ class DetectionEngine:
         x_aug[:, :n_raw] = X_clean
         x_aug[:, n_raw:] = proba_cols
 
-        # Track B — DAE novelty
-        c_track_b = self._dae.predict_proba(x_aug).astype(np.float32)
-        y_pred_dae = self._dae.predict(x_aug).astype(np.int8)
+        # Track B — DAE novelty, gated unless forced.
+        c_track_b = np.zeros(n, dtype=np.float32)
+        y_pred_dae = np.zeros(n, dtype=np.int8)
+        if _force_full_dae:
+            to_score_mask = np.ones(n, dtype=bool)
+        else:
+            to_score_mask = c_track_a < self.TAU_SKIP_DAE
+        n_scored = int(to_score_mask.sum())
+        if n_scored > 0:
+            x_sub = x_aug[to_score_mask]
+            c_track_b[to_score_mask] = self._dae.predict_proba(x_sub).astype(np.float32)
+            y_pred_dae[to_score_mask] = self._dae.predict(x_sub).astype(np.int8)
+        logger.info(
+            "detection_engine.predict: %d/%d rows scored by DAE "
+            "(%d gated by XGBoost>=%.2f, %.1f%% compute saved)%s",
+            n_scored, n, n - n_scored, self.TAU_SKIP_DAE,
+            100.0 * (n - n_scored) / max(n, 1),
+            " [forced full-DAE]" if _force_full_dae else "",
+        )
 
         # Fusion: DAE elevates, never suppresses Track A
         c_detect = np.clip(np.maximum(c_track_a, c_track_b), 0.0, 1.0)
@@ -240,7 +291,12 @@ class DetectionEngine:
         from module2_detection.module2_train_models import load_data
         _X_train, X_test, _y_train, y_test, _feat_names = load_data()
 
-        result = self.predict(X_test)
+        # Force full DAE coverage for the evaluation export: AUC,
+        # PSI (drift_detection), and threshold sweeps
+        # (dynamic_threshold_sim) need a per-sample reconstruction
+        # error over the entire test split — gated zeros would
+        # corrupt those metrics.
+        result = self.predict(X_test, _force_full_dae=True)
 
         # Reconstruction error on the augmented input — the underlying
         # scalar that the DAE turns into a probability.

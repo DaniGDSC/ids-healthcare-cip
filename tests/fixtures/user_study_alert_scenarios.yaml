@@ -1,0 +1,1407 @@
+# ================================================================
+# user_study_alert_scenarios.yaml
+# 20 Alert Scenarios for Phase 2 User Study
+# Target: IT Security Generalist at 200-500 bed hospital
+# ================================================================
+# Ground truth labels are HIDDEN from participants
+# Correct actions are used only for scoring
+# ================================================================
+
+metadata:
+  total_alerts: 20
+  alert_types: 5
+  per_type: 4
+  distribution:
+    true_positive: 10
+    false_positive: 6
+    legitimate_rare: 4
+  severity:
+    CRITICAL: 3
+    HIGH: 7
+    MEDIUM: 6
+    LOW: 4
+  correct_actions:
+    isolate: 5
+    escalate: 3
+    investigate: 5
+    monitor: 4
+    dismiss: 3
+
+# ================================================================
+# TYPE 1 — Anomalous Outbound Connection from Clinical Device
+# ================================================================
+
+alerts:
+
+  - alert_id: "A-01"
+    type: "T1_outbound_clinical_device"
+    order: 1  # randomize before presenting
+
+    ground_truth:
+      label: true_positive
+      severity: CRITICAL
+      correct_action: escalate
+      rationale: >
+        Infusion pump initiating outbound FTP to unknown external IP
+        during active patient care is a confirmed critical threat.
+        Escalate immediately — do not isolate without clinical coordination.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-01                                 │
+        │  IDS-2847: Outbound FTP — Clinical Subnet    │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.4.12.8                      │
+        │  Dest IP:     203.0.113.42 (external)        │
+        │  Protocol:    FTP (port 21)                  │
+        │  Timestamp:   02:47:33                       │
+        │  Severity:    6.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-01                                 │
+        │  IDS-2847: Outbound FTP — Clinical Subnet    │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.4.12.8                      │
+        │  Dest IP:     203.0.113.42 (external)        │
+        │  Protocol:    FTP (port 21)                  │
+        │  Timestamp:   02:47:33                       │
+        │  Severity:    6.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  This device (BD Alaris pump, ICU Wing 3)    │
+        │  normally communicates only with EHR         │
+        │  gateway on port 443. At 02:47 AM it         │
+        │  initiated outbound FTP to an external IP    │
+        │  not on any approved list.                   │
+        │  Confidence: HIGH — never observed in        │
+        │  120 days for this device class.             │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: CRITICAL                 │
+        │  Infusion pump network (ICU Wing 3) —        │
+        │  active drug delivery to 8 patients.         │
+        │  Compromise could alter infusion             │
+        │  parameters. PHI: medication records         │
+        │  for current ICU census.                     │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Apply NAC policy ICU-QUARANTINE-01          │
+        │  (blocks outbound non-HTTPS, preserves       │
+        │  EHR connectivity).                          │
+        │  DO NOT power-cycle pumps during active      │
+        │  infusions — coordinate with ICU nurse.      │
+        │  Escalate: Clinical Engineering → Security   │
+        │  lead → ICU charge nurse.                    │
+        │  Act within 15 minutes.                      │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-02"
+    type: "T1_outbound_clinical_device"
+    order: 6
+
+    ground_truth:
+      label: legitimate_rare
+      severity: LOW
+      correct_action: dismiss
+      rationale: >
+        Scheduled vendor maintenance window for GE CARESCAPE.
+        High DNS query volume is normal firmware update check pattern.
+        Dismiss after confirming with biomed.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-02                                 │
+        │  IDS-3301: Anomaly — Medical Device          │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.4.20.6                      │
+        │  Dest IP:     10.1.1.1 (internal DNS)        │
+        │  Protocol:    DNS (port 53, high volume)     │
+        │  Timestamp:   09:30:00                       │
+        │  Severity:    4.0/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-02                                 │
+        │  IDS-3301: Anomaly — Medical Device          │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.4.20.6                      │
+        │  Dest IP:     10.1.1.1 (internal DNS)        │
+        │  Protocol:    DNS (port 53, high volume)     │
+        │  Timestamp:   09:30:00                       │
+        │  Severity:    4.0/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Patient monitor (GE CARESCAPE, MedSurg)     │
+        │  normally sends vitals via HL7 every 30s.    │
+        │  Starting 09:30 it began 300+ DNS            │
+        │  queries/min — 20x normal volume.            │
+        │  Confidence: MEDIUM — could be malware       │
+        │  beacon OR firmware update check loop.       │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: MEDIUM                   │
+        │  Patient monitoring (MedSurg 2nd floor) —    │
+        │  vital signs for 24 beds. Monitor sending    │
+        │  vitals normally. If isolated, 24 beds       │
+        │  lose automated monitoring.                  │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Check with Biomed Engineering: was a        │
+        │  GE CARESCAPE firmware update scheduled      │
+        │  today? If YES: dismiss alert.               │
+        │  If NO: rate-limit DNS to 10 queries/min.   │
+        │  DO NOT isolate monitor from EHR gateway     │
+        │  — vital sign reporting must continue.       │
+        │  Verify with biomed within 1 hour.           │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-03"
+    type: "T1_outbound_clinical_device"
+    order: 11
+
+    ground_truth:
+      label: true_positive
+      severity: HIGH
+      correct_action: isolate
+      rationale: >
+        PACS server initiating HTTPS to unrecognized external IP
+        at 4 AM is consistent with data exfiltration staging.
+        Isolate outbound connection to unrecognized dest only.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-03                                 │
+        │  DLP-0712: Large Outbound Transfer           │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.5.3                       │
+        │  Dest IP:     198.51.100.77 (external)       │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      2.3 GB                         │
+        │  Timestamp:   04:05:00                       │
+        │  Severity:    5.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-03                                 │
+        │  DLP-0712: Large Outbound Transfer           │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.5.3                       │
+        │  Dest IP:     198.51.100.77 (external)       │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      2.3 GB                         │
+        │  Timestamp:   04:05:00                       │
+        │  Severity:    5.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  PACS archive (10.1.5.3) transferred 2.3 GB  │
+        │  outbound at 04:05 AM. Baseline: outbound    │
+        │  only to 3 approved radiology partners.      │
+        │  Destination 198.51.100.77 is NOT approved.  │
+        │  Confidence: MEDIUM — PACS does large        │
+        │  transfers legitimately, but this dest       │
+        │  is unrecognized.                            │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: HIGH                     │
+        │  PACS archive — all diagnostic imaging.      │
+        │  No immediate care disruption. Risk: bulk    │
+        │  exfiltration of imaging with embedded PHI   │
+        │  in DICOM headers. Potentially thousands     │
+        │  of studies with patient name, DOB, MRN.     │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Block PACS outbound to 198.51.100.77 only.  │
+        │  Verify with Radiology IT: was a new image-  │
+        │  sharing agreement configured recently?      │
+        │  DO NOT block all PACS outbound — active     │
+        │  radiology reads depend on approved partners. │
+        │  Escalate: Security lead → Radiology IT →   │
+        │  Privacy Officer.                            │
+        │  Act within 30 minutes. Capture NetFlow      │
+        │  for PACS past 24 hours.                     │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-04"
+    type: "T1_outbound_clinical_device"
+    order: 16
+
+    ground_truth:
+      label: false_positive
+      severity: LOW
+      correct_action: dismiss
+      rationale: >
+        Pharmacy system backup to approved cloud storage.
+        Destination is in approved partner list.
+        Alert triggered due to unusual transfer time (weekend).
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-04                                 │
+        │  IDS-4401: Outbound HTTPS — Pharmacy         │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.3.8.12                      │
+        │  Dest IP:     52.84.219.100 (external)       │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      890 MB                         │
+        │  Timestamp:   Saturday 03:15:00              │
+        │  Severity:    3.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-04                                 │
+        │  IDS-4401: Outbound HTTPS — Pharmacy         │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.3.8.12                      │
+        │  Dest IP:     52.84.219.100 (external)       │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      890 MB                         │
+        │  Timestamp:   Saturday 03:15:00              │
+        │  Severity:    3.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Pharmacy system transferred 890 MB on       │
+        │  Saturday 03:15 AM. Baseline: weekday        │
+        │  transfers only during business hours.       │
+        │  Destination 52.84.219.100 is listed as      │
+        │  approved backup partner (AWS us-east-1).    │
+        │  Confidence: LOW — weekend timing unusual    │
+        │  but destination is pre-approved.            │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: LOW                      │
+        │  Pharmacy administrative system — not        │
+        │  directly connected to active dispensing.    │
+        │  No patient care disruption risk.            │
+        │  PHI: archived prescription records only.   │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Verify with Pharmacy IT: is Saturday        │
+        │  03:00 backup scheduled? This transfer       │
+        │  to approved destination is likely           │
+        │  a rescheduled routine backup.               │
+        │  No immediate action required.               │
+        │  Review within 24 hours.                     │
+        └──────────────────────────────────────────────┘
+
+
+# ================================================================
+# TYPE 2 — Unauthorized EHR Access Outside Normal Patterns
+# ================================================================
+
+  - alert_id: "A-05"
+    type: "T2_unauthorized_ehr_access"
+    order: 2
+
+    ground_truth:
+      label: true_positive
+      severity: HIGH
+      correct_action: investigate
+      rationale: >
+        Billing clerk accessing 47 Cardiology records after hours
+        is a clear role/scope violation. Investigate before action —
+        could be compromised credentials or insider threat.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-05                                 │
+        │  SIEM-4102: Anomalous EHR Access Volume      │
+        ├──────────────────────────────────────────────┤
+        │  User:        jsmith (BILLING-07)            │
+        │  Target:      EHR-PRIMARY (10.1.1.10)        │
+        │  Records:     47 accessed                    │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Timestamp:   23:14:00                       │
+        │  Severity:    5.0/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-05                                 │
+        │  SIEM-4102: Anomalous EHR Access Volume      │
+        ├──────────────────────────────────────────────┤
+        │  User:        jsmith (BILLING-07)            │
+        │  Target:      EHR-PRIMARY (10.1.1.10)        │
+        │  Records:     47 accessed                    │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Timestamp:   23:14:00                       │
+        │  Severity:    5.0/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  User jsmith (Billing, day-shift 08-17)      │
+        │  accessed 47 Cardiology records at 11:14 PM  │
+        │  from billing workstation.                   │
+        │  Baseline: 8-12 records/day in Billing       │
+        │  module during business hours only.          │
+        │  Confidence: HIGH — after-hours clinical-    │
+        │  dept access has zero precedent in 90 days.  │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: HIGH                     │
+        │  EHR (Epic) — Cardiology patient records.    │
+        │  No direct care disruption. Risk:            │
+        │  unauthorized PHI viewing or exfiltration.   │
+        │  PHI: full records for 47 cardiology         │
+        │  patients (diagnoses, procedures, insurance).│
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Disable jsmith's EHR session and force      │
+        │  MFA re-authentication.                      │
+        │  DO NOT delete account — preserve audit      │
+        │  trail for investigation.                    │
+        │  Escalate: Privacy Officer → HR →            │
+        │  Security lead.                              │
+        │  Act within 30 minutes. Preserve EHR audit   │
+        │  logs for jsmith, past 72 hours.             │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-06"
+    type: "T2_unauthorized_ehr_access"
+    order: 9
+
+    ground_truth:
+      label: false_positive
+      severity: LOW
+      correct_action: dismiss
+      rationale: >
+        Night shift nurse accessing patients from multiple wards
+        is normal during float pool assignment. Access volume
+        consistent with night shift patient load.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-06                                 │
+        │  SIEM-4205: Multi-Dept EHR Access            │
+        ├──────────────────────────────────────────────┤
+        │  User:        mnguyen (NURSING-12)           │
+        │  Target:      EHR-PRIMARY (10.1.1.10)        │
+        │  Departments: Cardiology, Orthopedics, ICU   │
+        │  Records:     31 accessed                    │
+        │  Timestamp:   02:30:00                       │
+        │  Severity:    4.2/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-06                                 │
+        │  SIEM-4205: Multi-Dept EHR Access            │
+        ├──────────────────────────────────────────────┤
+        │  User:        mnguyen (NURSING-12)           │
+        │  Target:      EHR-PRIMARY (10.1.1.10)        │
+        │  Departments: Cardiology, Orthopedics, ICU   │
+        │  Records:     31 accessed                    │
+        │  Timestamp:   02:30:00                       │
+        │  Severity:    4.2/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  User mnguyen (Nursing) accessed records     │
+        │  across 3 departments at 02:30 AM. Baseline: │
+        │  typically 1 department per shift.           │
+        │  Confidence: LOW — float pool nurses         │
+        │  legitimately cover multiple wards;          │
+        │  access volume (31) is within normal         │
+        │  range for night shift census.               │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: LOW                      │
+        │  EHR access during active nursing shift.     │
+        │  Multi-dept access is expected behavior      │
+        │  for float pool staff. No care disruption    │
+        │  risk from investigation.                    │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Verify with Nursing supervisor: is mnguyen  │
+        │  assigned to float pool tonight?             │
+        │  If YES: dismiss alert, add mnguyen to       │
+        │  float pool exception list.                  │
+        │  No immediate action required.               │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-07"
+    type: "T2_unauthorized_ehr_access"
+    order: 14
+
+    ground_truth:
+      label: true_positive
+      severity: CRITICAL
+      correct_action: escalate
+      rationale: >
+        Admin account accessing 312 records across all departments
+        in 8 minutes is consistent with automated bulk exfiltration.
+        Escalate as potential breach — not routine access.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-07                                 │
+        │  SIEM-4890: Bulk EHR Access — Admin          │
+        ├──────────────────────────────────────────────┤
+        │  User:        svc_report_admin               │
+        │  Target:      EHR-PRIMARY (10.1.1.10)        │
+        │  Records:     312 accessed in 8 minutes      │
+        │  Departments: ALL                            │
+        │  Timestamp:   01:03:00                       │
+        │  Severity:    8.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-07                                 │
+        │  SIEM-4890: Bulk EHR Access — Admin          │
+        ├──────────────────────────────────────────────┤
+        │  User:        svc_report_admin               │
+        │  Target:      EHR-PRIMARY (10.1.1.10)        │
+        │  Records:     312 accessed in 8 minutes      │
+        │  Departments: ALL                            │
+        │  Timestamp:   01:03:00                       │
+        │  Severity:    8.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Service account svc_report_admin accessed   │
+        │  312 records across ALL departments in       │
+        │  8 minutes at 01:03 AM. Baseline: scheduled  │
+        │  reports run at 06:00 AM, access 40-60       │
+        │  records per department per run.             │
+        │  Confidence: HIGH — velocity (39 records/   │
+        │  min) and timing have no precedent in        │
+        │  180 days of baseline.                       │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: CRITICAL                 │
+        │  All-department EHR access — full patient    │
+        │  census. PHI: complete medical records for   │
+        │  312 patients across all active wards.       │
+        │  Access velocity inconsistent with any       │
+        │  legitimate reporting function.              │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Disable svc_report_admin immediately.       │
+        │  DO NOT wait for business hours — bulk       │
+        │  PHI exfiltration cannot be undone.          │
+        │  Escalate: CISO on-call → Privacy Officer   │
+        │  → Legal (HIPAA breach notification).        │
+        │  Act within 10 minutes. Preserve all EHR    │
+        │  access logs from 00:00 to now.              │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-08"
+    type: "T2_unauthorized_ehr_access"
+    order: 19
+
+    ground_truth:
+      label: false_positive
+      severity: LOW
+      correct_action: monitor
+      rationale: >
+        Physician accessing own patients' records from home VPN
+        is authorized telehealth access. Volume and access pattern
+        consistent with end-of-day chart completion.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-08                                 │
+        │  SIEM-4310: Remote EHR Access — VPN          │
+        ├──────────────────────────────────────────────┤
+        │  User:        dchen (PHYSICIAN-04)           │
+        │  Source:      VPN (home IP: 72.x.x.x)       │
+        │  Records:     22 accessed                    │
+        │  Timestamp:   21:45:00                       │
+        │  Severity:    3.8/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-08                                 │
+        │  SIEM-4310: Remote EHR Access — VPN          │
+        ├──────────────────────────────────────────────┤
+        │  User:        dchen (PHYSICIAN-04)           │
+        │  Source:      VPN (home IP: 72.x.x.x)       │
+        │  Records:     22 accessed                    │
+        │  Timestamp:   21:45:00                       │
+        │  Severity:    3.8/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Dr. dchen accessed 22 patient records       │
+        │  via home VPN at 21:45. Baseline: typically  │
+        │  accesses from hospital workstation.         │
+        │  Confidence: LOW — VPN access is authorized  │
+        │  for physicians; records accessed match      │
+        │  dchen's own patient panel.                  │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: LOW                      │
+        │  Physician chart completion after hours.     │
+        │  Authorized telehealth access pattern.       │
+        │  No unusual departments or patient scope.   │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  No immediate action required. Monitor       │
+        │  for next 2 hours for unusual volume         │
+        │  increase or access to non-patient records. │
+        │  Review within 24 hours as routine audit.   │
+        └──────────────────────────────────────────────┘
+
+
+# ================================================================
+# TYPE 3 — Lateral Movement Between Network Segments
+# ================================================================
+
+  - alert_id: "A-09"
+    type: "T3_lateral_movement"
+    order: 3
+
+    ground_truth:
+      label: true_positive
+      severity: HIGH
+      correct_action: isolate
+      rationale: >
+        Unauthorized host crossing to medical device VLAN via SMB
+        is a confirmed lateral movement indicator. Isolate source only —
+        preserve authorized biomed workstation access.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-09                                 │
+        │  IDS-1933: Cross-VLAN SMB Connection         │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.3.15 (ADMIN-VLAN)         │
+        │  Dest IP:     10.4.8.22 (MEDICAL-DEVICE)     │
+        │  Protocol:    SMB (port 445)                 │
+        │  Timestamp:   14:22:11                       │
+        │  Severity:    7.0/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-09                                 │
+        │  IDS-1933: Cross-VLAN SMB Connection         │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.3.15 (ADMIN-VLAN)         │
+        │  Dest IP:     10.4.8.22 (MEDICAL-DEVICE)     │
+        │  Protocol:    SMB (port 445)                 │
+        │  Timestamp:   14:22:11                       │
+        │  Severity:    7.0/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Admin-VLAN workstation initiated SMB to     │
+        │  medical device subnet. Policy permits this  │
+        │  for 2 authorized biomed workstations only.  │
+        │  Source 10.2.3.15 is NOT one of them.        │
+        │  Confidence: HIGH — unauthorized cross-      │
+        │  segment SMB is a lateral movement indicator.│
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: HIGH                     │
+        │  Medical device management subnet — patient  │
+        │  monitor gateways and PACS interface.        │
+        │  Attacker reaching monitors could disrupt    │
+        │  or falsify vital signs. PACS disruption     │
+        │  affects active radiology reads.             │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Block source 10.2.3.15 at inter-VLAN        │
+        │  firewall. Isolate source workstation.       │
+        │  DO NOT block entire ADMIN-to-DEVICE path    │
+        │  — authorized biomed (10.2.3.40, .41)        │
+        │  need continued access.                      │
+        │  Escalate: Security lead → Clinical Eng.    │
+        │  → Network Admin.                            │
+        │  Act within 15 minutes.                      │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-10"
+    type: "T3_lateral_movement"
+    order: 13
+
+    ground_truth:
+      label: legitimate_rare
+      severity: LOW
+      correct_action: dismiss
+      rationale: >
+        Biomed engineer accessing device VLAN via RDP for scheduled
+        quarterly maintenance. Source IP is authorized but not in
+        static whitelist — triggered alert on anomalous timing.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-10                                 │
+        │  IDS-2100: RDP — Admin to Device Subnet      │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.5.44 (ADMIN-VLAN)         │
+        │  Dest IP:     10.4.0.0/24 (DEVICE-VLAN)      │
+        │  Protocol:    RDP (port 3389)                │
+        │  Timestamp:   Saturday 08:15:00              │
+        │  Severity:    5.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-10                                 │
+        │  IDS-2100: RDP — Admin to Device Subnet      │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.5.44 (ADMIN-VLAN)         │
+        │  Dest IP:     10.4.0.0/24 (DEVICE-VLAN)      │
+        │  Protocol:    RDP (port 3389)                │
+        │  Timestamp:   Saturday 08:15:00              │
+        │  Severity:    5.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  RDP connection from admin subnet to device  │
+        │  VLAN on Saturday 08:15. Baseline: device    │
+        │  VLAN RDP access only Mon-Fri from 2         │
+        │  authorized biomed IPs. Source 10.2.5.44 is  │
+        │  not in static whitelist.                    │
+        │  Confidence: LOW — Saturday biomed           │
+        │  maintenance windows are scheduled           │
+        │  quarterly; source may be contractor laptop. │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: LOW                      │
+        │  Device VLAN maintenance access. If this is  │
+        │  authorized maintenance, no patient risk.    │
+        │  Saturday access is unusual but not          │
+        │  unprecedented for quarterly service.        │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Verify with Biomed Engineering manager:     │
+        │  is quarterly device maintenance scheduled   │
+        │  this Saturday? If YES: dismiss and add      │
+        │  10.2.5.44 to maintenance exception list.   │
+        │  No immediate action required.               │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-11"
+    type: "T3_lateral_movement"
+    order: 17
+
+    ground_truth:
+      label: true_positive
+      severity: CRITICAL
+      correct_action: escalate
+      rationale: >
+        Compromised EHR server scanning internal subnets including
+        clinical devices is an active intrusion in progress.
+        Escalate immediately — full incident response required.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-11                                 │
+        │  IDS-5502: Internal Port Scan — EHR Server   │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.1.10 (EHR-PRIMARY)        │
+        │  Dest Range:  10.0.0.0/8 (ALL INTERNAL)      │
+        │  Ports:       22, 23, 80, 443, 445, 3389     │
+        │  Timestamp:   03:12:00                       │
+        │  Severity:    9.2/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-11                                 │
+        │  IDS-5502: Internal Port Scan — EHR Server   │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.1.10 (EHR-PRIMARY)        │
+        │  Dest Range:  10.0.0.0/8 (ALL INTERNAL)      │
+        │  Ports:       22, 23, 80, 443, 445, 3389     │
+        │  Timestamp:   03:12:00                       │
+        │  Severity:    9.2/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Primary EHR server initiated systematic     │
+        │  port scan of ALL internal subnets including │
+        │  clinical device VLANs at 03:12 AM.          │
+        │  Baseline: EHR server never initiates        │
+        │  outbound connections to other subnets.      │
+        │  Confidence: HIGH — no legitimate EHR        │
+        │  function initiates network discovery.       │
+        │  Consistent with post-compromise             │
+        │  reconnaissance.                             │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: CRITICAL                 │
+        │  EHR-PRIMARY contains full patient records   │
+        │  for all active patients. Scan reaching      │
+        │  clinical device VLAN means attacker could   │
+        │  pivot to infusion pumps, monitors,          │
+        │  surgical equipment. Active intrusion.       │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Isolate EHR-PRIMARY from network            │
+        │  immediately via emergency VLAN policy.      │
+        │  DO NOT shut down EHR — active patients      │
+        │  need read access; use network isolation,    │
+        │  not power-off.                              │
+        │  Escalate: CISO on-call NOW → Clinical       │
+        │  informatics → All department heads.         │
+        │  Initiate Incident Response Plan 1.1.        │
+        │  Act within 5 minutes.                       │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-12"
+    type: "T3_lateral_movement"
+    order: 8
+
+    ground_truth:
+      label: false_positive
+      severity: MEDIUM
+      correct_action: monitor
+      rationale: >
+        New IT asset management tool scanning network for inventory.
+        Cross-VLAN ping sweep was authorized but not communicated
+        to security team. Confirm with IT before taking action.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-12                                 │
+        │  IDS-2250: ICMP Sweep — Multiple VLANs       │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.1.88 (MGMT-VLAN)          │
+        │  Dest Range:  Multiple VLANs                 │
+        │  Protocol:    ICMP (ping sweep)              │
+        │  Timestamp:   10:05:00                       │
+        │  Severity:    4.8/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-12                                 │
+        │  IDS-2250: ICMP Sweep — Multiple VLANs       │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.1.88 (MGMT-VLAN)          │
+        │  Dest Range:  Multiple VLANs                 │
+        │  Protocol:    ICMP (ping sweep)              │
+        │  Timestamp:   10:05:00                       │
+        │  Severity:    4.8/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Management VLAN host performed ICMP sweep   │
+        │  across all VLANs at 10:05 AM. Baseline:     │
+        │  10.2.1.88 is new asset, no baseline exists. │
+        │  Confidence: MEDIUM — sweep pattern is       │
+        │  consistent with both reconnaissance AND     │
+        │  legitimate IT asset discovery tools.        │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: MEDIUM                   │
+        │  Sweep reached clinical device VLAN but      │
+        │  ICMP-only (no service probing detected).    │
+        │  No direct threat to patient care currently. │
+        │  Risk if this is attacker reconnaissance:    │
+        │  map of clinical infrastructure exposed.     │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Contact IT Operations: was a new asset      │
+        │  management tool deployed this week?         │
+        │  If YES: whitelist 10.2.1.88 for ICMP.      │
+        │  If NO: treat as active reconnaissance —     │
+        │  isolate and escalate to Security lead.      │
+        │  DO NOT block entire management VLAN —       │
+        │  authorized IT tools need continued access.  │
+        │  Resolve within 4 hours.                     │
+        └──────────────────────────────────────────────┘
+
+
+# ================================================================
+# TYPE 4 — Data Exfiltration Indicator from Clinical System
+# ================================================================
+
+  - alert_id: "A-13"
+    type: "T4_data_exfiltration"
+    order: 4
+
+    ground_truth:
+      label: true_positive
+      severity: HIGH
+      correct_action: investigate
+      rationale: >
+        Lab system sending patient data to non-approved external IP
+        via SFTP. Investigate to confirm before isolation —
+        could be misconfigured new integration or active exfiltration.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-13                                 │
+        │  DLP-1204: SFTP Transfer — Lab System        │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.5.2.3 (LIS-SERVER)          │
+        │  Dest IP:     185.220.101.42 (external)      │
+        │  Protocol:    SFTP (port 22)                 │
+        │  Volume:      340 MB                         │
+        │  Timestamp:   16:33:00                       │
+        │  Severity:    6.8/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-13                                 │
+        │  DLP-1204: SFTP Transfer — Lab System        │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.5.2.3 (LIS-SERVER)          │
+        │  Dest IP:     185.220.101.42 (external)      │
+        │  Protocol:    SFTP (port 22)                 │
+        │  Volume:      340 MB                         │
+        │  Timestamp:   16:33:00                       │
+        │  Severity:    6.8/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Laboratory Information System transferred   │
+        │  340 MB via SFTP to 185.220.101.42 at 16:33. │
+        │  Baseline: LIS only sends to 2 approved lab  │
+        │  partners via HTTPS. SFTP was never used     │
+        │  in 180 days of baseline.                    │
+        │  Confidence: HIGH — new protocol + new       │
+        │  destination is a strong exfiltration signal.│
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: HIGH                     │
+        │  LIS contains lab results for all patients.  │
+        │  PHI: test results, diagnoses, patient        │
+        │  identifiers for all tests processed today.  │
+        │  No immediate care disruption if isolated.   │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Block LIS outbound SFTP (port 22) only.     │
+        │  DO NOT block all LIS outbound — active      │
+        │  lab results depend on HTTPS to partners.    │
+        │  Check with Lab IT: was new reference lab    │
+        │  integration deployed recently?              │
+        │  Escalate: Security lead → Lab IT Director  │
+        │  → Privacy Officer.                          │
+        │  Act within 30 minutes. Capture NetFlow      │
+        │  for LIS-SERVER past 48 hours.               │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-14"
+    type: "T4_data_exfiltration"
+    order: 10
+
+    ground_truth:
+      label: legitimate_rare
+      severity: LOW
+      correct_action: dismiss
+      rationale: >
+        Radiology sharing imaging with approved out-of-state
+        specialist for second opinion. Transfer to known partner
+        IP but volume higher than usual due to CT scan series.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-14                                 │
+        │  DLP-0998: Large PACS Transfer — Radiology   │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.5.3 (PACS-ARCHIVE)        │
+        │  Dest IP:     64.71.44.122 (external)        │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      4.8 GB                         │
+        │  Timestamp:   11:20:00                       │
+        │  Severity:    5.2/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-14                                 │
+        │  DLP-0998: Large PACS Transfer — Radiology   │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.5.3 (PACS-ARCHIVE)        │
+        │  Dest IP:     64.71.44.122 (external)        │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      4.8 GB                         │
+        │  Timestamp:   11:20:00                       │
+        │  Severity:    5.2/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  PACS transferred 4.8 GB to 64.71.44.122     │
+        │  at 11:20 AM. Baseline: typical transfer     │
+        │  to this IP is 200-500 MB. Destination is    │
+        │  on approved partner list (Regional Cancer   │
+        │  Center — second opinion program).           │
+        │  Confidence: LOW — destination is approved;  │
+        │  volume elevated but consistent with full    │
+        │  CT series (vs single study).               │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: LOW                      │
+        │  Transfer to approved clinical partner.      │
+        │  Volume elevation likely due to CT scan      │
+        │  series. Standard second-opinion workflow.   │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Verify with Radiology: was a CT series      │
+        │  second-opinion consult requested today?     │
+        │  If YES: dismiss. Log volume anomaly for     │
+        │  monthly review.                             │
+        │  No immediate action required.               │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-15"
+    type: "T4_data_exfiltration"
+    order: 15
+
+    ground_truth:
+      label: false_positive
+      severity: MEDIUM
+      correct_action: monitor
+      rationale: >
+        EHR backup job triggered outside maintenance window due
+        to failed overnight run. Large transfer to approved backup
+        destination but unusual time caused alert.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-15                                 │
+        │  DLP-1100: Large EHR Transfer — Off-Hours    │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.1.10 (EHR-PRIMARY)        │
+        │  Dest IP:     10.99.0.5 (BACKUP-SERVER)      │
+        │  Protocol:    SMB (port 445)                 │
+        │  Volume:      28 GB                          │
+        │  Timestamp:   14:30:00                       │
+        │  Severity:    4.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-15                                 │
+        │  DLP-1100: Large EHR Transfer — Off-Hours    │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.1.1.10 (EHR-PRIMARY)        │
+        │  Dest IP:     10.99.0.5 (BACKUP-SERVER)      │
+        │  Protocol:    SMB (port 445)                 │
+        │  Volume:      28 GB                          │
+        │  Timestamp:   14:30:00                       │
+        │  Severity:    4.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  EHR transferred 28 GB to internal backup    │
+        │  server at 14:30. Baseline: backup runs      │
+        │  02:00-04:00 only. Destination is approved   │
+        │  internal backup server (10.99.0.5).         │
+        │  Confidence: LOW — destination and protocol  │
+        │  are approved; timing is anomalous.          │
+        │  Consistent with rescheduled failed backup.  │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: MEDIUM                   │
+        │  Large internal transfer during business     │
+        │  hours may impact EHR performance for        │
+        │  active clinical users. No PHI exfiltration  │
+        │  risk (internal backup server).              │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Verify with IT Operations: did the          │
+        │  overnight backup fail last night?           │
+        │  If YES: monitor for performance impact,     │
+        │  no security action required.                │
+        │  If NO: investigate further before action.  │
+        │  DO NOT interrupt transfer if scheduled —    │
+        │  interruption delays EHR restore capability. │
+        │  Resolve within 4 hours.                     │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-16"
+    type: "T4_data_exfiltration"
+    order: 20
+
+    ground_truth:
+      label: true_positive
+      severity: HIGH
+      correct_action: isolate
+      rationale: >
+        Nurse station workstation encrypted and sent files to
+        external IP — ransomware staging behavior.
+        Isolate immediately before encryption spreads.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-16                                 │
+        │  IDS-6610: Encrypted Outbound — Workstation  │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.8.45 (NURSE-STATION-3B)   │
+        │  Dest IP:     91.108.4.77 (external)         │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      1.1 GB in 3 minutes            │
+        │  Timestamp:   11:47:00                       │
+        │  Severity:    8.8/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-16                                 │
+        │  IDS-6610: Encrypted Outbound — Workstation  │
+        ├──────────────────────────────────────────────┤
+        │  Source IP:   10.2.8.45 (NURSE-STATION-3B)   │
+        │  Dest IP:     91.108.4.77 (external)         │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Volume:      1.1 GB in 3 minutes            │
+        │  Timestamp:   11:47:00                       │
+        │  Severity:    8.8/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Nurse station workstation (3B) transferred  │
+        │  1.1 GB to external IP in 3 minutes at       │
+        │  11:47 AM. Baseline: workstation only        │
+        │  accesses EHR and internal systems.          │
+        │  Never initiates outbound external traffic.  │
+        │  Transfer velocity (6 MB/s) exceeds human    │
+        │  capability — automated exfiltration.        │
+        │  Confidence: HIGH — no legitimate nurse      │
+        │  station function initiates external upload. │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: HIGH                     │
+        │  Nurse station on Ward 3B — active patient   │
+        │  care area. Workstation may hold cached EHR  │
+        │  sessions with PHI for current ward census.  │
+        │  If ransomware: could spread to other        │
+        │  workstations on nursing VLAN.               │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Isolate 10.2.8.45 via NAC immediately.      │
+        │  DO NOT allow user to save files or          │
+        │  continue working on this workstation.       │
+        │  Provide replacement workstation to nurse.   │
+        │  Escalate: Security lead → Ward 3B nursing   │
+        │  supervisor → CISO.                          │
+        │  Act within 10 minutes. Do not reimage       │
+        │  until forensic image captured.              │
+        └──────────────────────────────────────────────┘
+
+
+# ================================================================
+# TYPE 5 — IoMT Device Behavioral Deviation
+# ================================================================
+
+  - alert_id: "A-17"
+    type: "T5_iomt_behavioral"
+    order: 5
+
+    ground_truth:
+      label: false_positive
+      severity: LOW
+      correct_action: dismiss
+      rationale: >
+        Baxter Sigma pump connecting to new WBM update server.
+        Vendor released firmware update this week — connection
+        to new Baxter IP is expected and authorized.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-17                                 │
+        │  IOT-4401: New Destination — Infusion Pump   │
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.15.8                      │
+        │  New Dest IP: 23.45.67.89 (external)         │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Timestamp:   06:00:00                       │
+        │  Severity:    3.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-17                                 │
+        │  IOT-4401: New Destination — Infusion Pump   │
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.15.8                      │
+        │  New Dest IP: 23.45.67.89 (external)         │
+        │  Protocol:    HTTPS (port 443)               │
+        │  Timestamp:   06:00:00                       │
+        │  Severity:    3.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Baxter Sigma Spectrum pump contacted a new  │
+        │  external IP at 06:00 via HTTPS. Baseline:   │
+        │  device only contacts EHR gateway and        │
+        │  Baxter WBM server (known IPs).              │
+        │  Confidence: LOW — 23.45.67.89 resolves to   │
+        │  baxter-wbm-updates.com; consistent with     │
+        │  firmware update check cycle.                │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: LOW                      │
+        │  Infusion pump update check — device         │
+        │  operational normally. Update connections    │
+        │  are read-only checks; no configuration      │
+        │  changes without biomed approval.            │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Verify with Biomed: did Baxter release a    │
+        │  firmware update this week for Sigma         │
+        │  Spectrum? If YES: add 23.45.67.89 to        │
+        │  approved Baxter IP list and dismiss.        │
+        │  No immediate action required.               │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-18"
+    type: "T5_iomt_behavioral"
+    order: 7
+
+    ground_truth:
+      label: true_positive
+      severity: HIGH
+      correct_action: investigate
+      rationale: >
+        Ventilator initiating Telnet connection — this protocol
+        should never be active on life-sustaining equipment.
+        Investigate before any action that could disrupt ventilation.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-18                                 │
+        │  IOT-5501: Unexpected Protocol — Ventilator  │
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.1.3                       │
+        │  Dest IP:     10.2.0.1 (internal gateway)    │
+        │  Protocol:    Telnet (port 23)               │
+        │  Timestamp:   22:05:00                       │
+        │  Severity:    7.5/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-18                                 │
+        │  IOT-5501: Unexpected Protocol — Ventilator  │
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.1.3                       │
+        │  Dest IP:     10.2.0.1 (internal gateway)    │
+        │  Protocol:    Telnet (port 23)               │
+        │  Timestamp:   22:05:00                       │
+        │  Severity:    7.5/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Ventilator (ICU-VENT-03) initiated Telnet   │
+        │  connection to internal gateway at 22:05.    │
+        │  Baseline: device only uses HL7 FHIR to      │
+        │  EHR gateway. Telnet has NEVER been          │
+        │  observed in 365 days of baseline.           │
+        │  Confidence: HIGH — Telnet is not a          │
+        │  legitimate clinical protocol for this       │
+        │  device class.                               │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: HIGH                     │
+        │  ICU ventilator — life-sustaining device     │
+        │  for active patient. Telnet may indicate     │
+        │  firmware compromise or unauthorized         │
+        │  remote access attempt. Disruption could     │
+        │  be life-threatening.                        │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Block Telnet (port 23) at VLAN ACL for      │
+        │  this device only — do NOT isolate device.  │
+        │  DO NOT power-cycle or physically disconnect │
+        │  while patient is on ventilator.             │
+        │  Escalate: Clinical Engineering IMMEDIATELY  │
+        │  → ICU physician on-call → Security lead.   │
+        │  Act within 15 minutes.                      │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-19"
+    type: "T5_iomt_behavioral"
+    order: 12
+
+    ground_truth:
+      label: true_positive
+      severity: CRITICAL
+      correct_action: escalate
+      rationale: >
+        Insulin pump communicating with unrecognized Bluetooth
+        device is consistent with CVE-2019-10964 exploitation
+        attempt. Escalate immediately — patient safety risk.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-19                                 │
+        │  IOT-6601: Anomalous Communication Pattern   │
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.22.7                      │
+        │  Dest:        Unknown wireless device        │
+        │  Protocol:    Non-IP (proprietary wireless)  │
+        │  Timestamp:   15:30:00                       │
+        │  Severity:    8.0/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-19                                 │
+        │  IOT-6601: Anomalous Communication Pattern   │
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.22.7                      │
+        │  Dest:        Unknown wireless device        │
+        │  Protocol:    Non-IP (proprietary wireless)  │
+        │  Timestamp:   15:30:00                       │
+        │  Severity:    8.0/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Insulin pump (Endocrinology Ward) detected  │
+        │  pairing attempt with unrecognized wireless  │
+        │  device at 15:30. Baseline: device only      │
+        │  paired with 1 approved glucose meter        │
+        │  (device ID: CGM-0042).                      │
+        │  Confidence: HIGH — unrecognized device ID   │
+        │  is not in approved pairing list.            │
+        │  Pattern consistent with known insulin pump  │
+        │  wireless vulnerability (improper auth).     │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: CRITICAL                 │
+        │  Insulin pump — active drug delivery.        │
+        │  Unauthorized pairing could allow remote     │
+        │  control of insulin dosing. Patient safety   │
+        │  at immediate risk. Clinical intervention    │
+        │  required regardless of security action.    │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Notify Endocrinology nurse IMMEDIATELY —    │
+        │  switch patient to manual insulin protocol.  │
+        │  DO NOT attempt to reset pump remotely       │
+        │  while delivering insulin.                   │
+        │  Escalate: Attending physician NOW →         │
+        │  Clinical Engineering → Security lead.       │
+        │  Remove pump from service after patient      │
+        │  is transferred to manual protocol.          │
+        │  Act within 5 minutes.                       │
+        └──────────────────────────────────────────────┘
+
+
+  - alert_id: "A-20"
+    type: "T5_iomt_behavioral"
+    order: 18
+
+    ground_truth:
+      label: legitimate_rare
+      severity: LOW
+      correct_action: dismiss
+      rationale: >
+        Patient monitor running scheduled self-diagnostic
+        that generates higher-than-normal internal traffic.
+        This is a known quarterly diagnostic cycle.
+
+    group_a:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-20                                 │
+        │  IOT-3302: Elevated Traffic — Patient Monitor│
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.20.9                      │
+        │  Dest IP:     10.4.0.1 (VLAN gateway)        │
+        │  Protocol:    TCP (multiple ports)           │
+        │  Volume:      5x normal                      │
+        │  Timestamp:   03:00:00                       │
+        │  Severity:    3.2/10                         │
+        └──────────────────────────────────────────────┘
+
+    group_b:
+      display: |
+        ┌──────────────────────────────────────────────┐
+        │  ALERT #A-20                                 │
+        │  IOT-3302: Elevated Traffic — Patient Monitor│
+        ├──────────────────────────────────────────────┤
+        │  Device IP:   10.4.20.9                      │
+        │  Dest IP:     10.4.0.1 (VLAN gateway)        │
+        │  Protocol:    TCP (multiple ports)           │
+        │  Volume:      5x normal                      │
+        │  Timestamp:   03:00:00                       │
+        │  Severity:    3.2/10                         │
+        ├──────────────────────────────────────────────┤
+        │  WHY ANOMALOUS                               │
+        │  Philips IntelliVue monitor generated 5x     │
+        │  normal internal traffic at 03:00 AM.        │
+        │  Baseline: this traffic spike occurred       │
+        │  on the same date 3 months ago (quarterly    │
+        │  pattern). All destinations are internal.    │
+        │  Confidence: LOW — quarterly diagnostic      │
+        │  cycle matches prior baseline event.         │
+        ├──────────────────────────────────────────────┤
+        │  CLINICAL SEVERITY: LOW                      │
+        │  Patient monitor operational normally.       │
+        │  Self-diagnostic traffic is internal only.   │
+        │  No patient data transmitted externally.     │
+        ├──────────────────────────────────────────────┤
+        │  RECOMMENDED ACTION                          │
+        │  Check Biomed maintenance calendar: is the   │
+        │  quarterly Philips IntelliVue diagnostic     │
+        │  scheduled for today?                        │
+        │  If YES: dismiss and add quarterly           │
+        │  suppression rule for this device.           │
+        │  No immediate action required.               │
+        └──────────────────────────────────────────────┘
+
+
+# ================================================================
+# SCORING KEY (for researcher use only — hidden from participants)
+# ================================================================
+
+scoring_key:
+  method: "composite_accuracy"
+  formula: "severity_correct (1pt) + action_correct (1pt) = 2pt max per alert"
+  severity_partial_credit:
+    within_1_level: 0.5
+    exact_match: 1.0
+    more_than_1_level: 0.0
+    critical_low_mismatch: 0.0  # automatic fail
+
+  correct_answers:
+    A-01: {severity: CRITICAL, action: escalate}
+    A-02: {severity: LOW,      action: dismiss}
+    A-03: {severity: HIGH,     action: isolate}
+    A-04: {severity: LOW,      action: dismiss}
+    A-05: {severity: HIGH,     action: investigate}
+    A-06: {severity: LOW,      action: dismiss}
+    A-07: {severity: CRITICAL, action: escalate}
+    A-08: {severity: LOW,      action: monitor}
+    A-09: {severity: HIGH,     action: isolate}
+    A-10: {severity: LOW,      action: dismiss}
+    A-11: {severity: CRITICAL, action: escalate}
+    A-12: {severity: MEDIUM,   action: monitor}
+    A-13: {severity: HIGH,     action: investigate}
+    A-14: {severity: LOW,      action: dismiss}
+    A-15: {severity: MEDIUM,   action: monitor}
+    A-16: {severity: HIGH,     action: isolate}
+    A-17: {severity: LOW,      action: dismiss}
+    A-18: {severity: HIGH,     action: investigate}
+    A-19: {severity: CRITICAL, action: escalate}
+    A-20: {severity: LOW,      action: dismiss}
+
+  presentation_order:
+    randomized: true
+    seed: 42
+    order: [A-01, A-05, A-09, A-13, A-17,
+            A-02, A-06, A-12, A-10, A-14,
+            A-03, A-19, A-07, A-18, A-15,
+            A-04, A-20, A-11, A-08, A-16]

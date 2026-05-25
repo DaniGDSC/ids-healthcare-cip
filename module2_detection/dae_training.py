@@ -162,7 +162,7 @@ def train_dae(seed: int = RANDOM_STATE, persist: bool = True) -> dict:
         batch_size=256,
         random_state=seed,
     )
-    det.fit(X_benign_aug, validation_split=0.0)
+    det.fit(X_benign_aug, validation_split=0.1)
 
     elapsed = round(time.perf_counter() - t0, 1)
 

@@ -52,5 +52,5 @@
     "test_samples": 2448,
     "train_attack_rate": 0.1253
   },
-  "elapsed_seconds": 0.7
+  "elapsed_seconds": 1.7
 }

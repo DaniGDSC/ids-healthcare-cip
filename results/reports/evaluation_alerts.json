@@ -1,7 +1,7 @@
 [
   {
-    "alert_id": "EVAL-0452",
-    "sample_index": 452,
+    "alert_id": "EVAL-1447",
+    "sample_index": 1447,
     "ground_truth": "attack",
     "attack_category": "Spoofing",
     "risk_score": 0.83,
@@ -14,40 +14,40 @@
     "xai_explanation": {
       "xgboost_top_features": [
         {
-          "feature": "Pulse_Rate",
-          "shap_value": 5.709121,
-          "direction": "increases_risk"
-        },
-        {
-          "feature": "DIntPkt",
-          "shap_value": -5.315313,
-          "direction": "decreases_risk"
-        },
-        {
           "feature": "Resp_Rate",
-          "shap_value": 3.790252,
+          "shap_value": 5.862173,
           "direction": "increases_risk"
+        },
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 5.007098,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Flgs",
+          "shap_value": -3.005936,
+          "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "sMinPktSz",
-          "weighted_error": 3.648e-05,
-          "pct_contribution": 50.6
+          "feature": "pDstLoss",
+          "weighted_error": 0.0,
+          "pct_contribution": 21.3
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 1.584e-05,
-          "pct_contribution": 22.0
+          "feature": "SrcBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 19.9
         },
         {
-          "feature": "DstBytes",
-          "weighted_error": 7.92e-06,
-          "pct_contribution": 11.0
+          "feature": "Pulse_Rate",
+          "weighted_error": 0.0,
+          "pct_contribution": 14.9
         }
       ],
       "consensus": "2/4 models flagged",
-      "clinician_summary": "MODERATE ALERT (Sample 452): Minor anomaly detected \u2014 abnormal pulse rate. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, but flagged for review."
+      "clinician_summary": "MODERATE ALERT (Sample 1447): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "isolate"
   },
@@ -67,35 +67,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -104,54 +104,54 @@
     "correct_action": "isolate"
   },
   {
-    "alert_id": "EVAL-0506",
-    "sample_index": 506,
+    "alert_id": "EVAL-2096",
+    "sample_index": 2096,
     "ground_truth": "attack",
     "attack_category": "Spoofing",
-    "risk_score": 0.7916,
+    "risk_score": 0.7961,
     "risk_level": "HIGH",
-    "device_class": "other",
-    "device_criticality": "MEDIUM",
-    "affected_system": "Clinical network device",
-    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
-    "active_device": false,
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "affected_system": "Patient monitor \u2014 vital signs tracking",
+    "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
+    "active_device": true,
     "xai_explanation": {
       "xgboost_top_features": [
         {
+          "feature": "Pulse_Rate",
+          "shap_value": 3.943206,
+          "direction": "increases_risk"
+        },
+        {
           "feature": "Flgs",
-          "shap_value": -2.644147,
+          "shap_value": -3.151038,
           "direction": "decreases_risk"
         },
         {
-          "feature": "Pulse_Rate",
-          "shap_value": 2.631118,
-          "direction": "increases_risk"
-        },
-        {
-          "feature": "Sport",
-          "shap_value": 2.130279,
-          "direction": "increases_risk"
+          "feature": "SIntPkt",
+          "shap_value": -2.624857,
+          "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 1.211e-05,
-          "pct_contribution": 29.4
-        },
-        {
           "feature": "SrcBytes",
-          "weighted_error": 1.201e-05,
-          "pct_contribution": 29.2
+          "weighted_error": 1.2e-07,
+          "pct_contribution": 42.5
         },
         {
           "feature": "pDstLoss",
-          "weighted_error": 5.25e-06,
-          "pct_contribution": 12.7
+          "weighted_error": 6e-08,
+          "pct_contribution": 21.9
+        },
+        {
+          "feature": "TotBytes",
+          "weighted_error": 3e-08,
+          "pct_contribution": 9.6
         }
       ],
-      "consensus": "3/4 models flagged",
-      "clinician_summary": "HIGH ALERT (Sample 506): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
+      "consensus": "1/4 models flagged",
+      "clinician_summary": "LOW ALERT (Sample 2096): Borderline detection by one model. Likely benign; logged for audit purposes."
     },
     "correct_action": "isolate"
   },
@@ -171,35 +171,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.521955,
+          "shap_value": 11.777812,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 4.108301,
+          "shap_value": 4.392965,
           "direction": "increases_risk"
         },
         {
-          "feature": "Dur",
-          "shap_value": 2.639983,
+          "feature": "SIntPkt",
+          "shap_value": 2.766961,
           "direction": "increases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 0.0,
-          "pct_contribution": 33.5
+          "feature": "sMaxPktSz",
+          "weighted_error": 8.2e-06,
+          "pct_contribution": 42.8
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 17.5
+          "feature": "TotBytes",
+          "weighted_error": 7.29e-06,
+          "pct_contribution": 38.1
         },
         {
-          "feature": "Dur",
-          "weighted_error": 0.0,
-          "pct_contribution": 17.3
+          "feature": "SIntPktAct",
+          "weighted_error": 1.16e-06,
+          "pct_contribution": 6.1
         }
       ],
       "consensus": "4/4 models flagged",
@@ -223,39 +223,39 @@
       "xgboost_top_features": [
         {
           "feature": "Sport",
-          "shap_value": 6.960112,
+          "shap_value": 7.681388,
           "direction": "increases_risk"
         },
         {
           "feature": "Flgs",
-          "shap_value": -3.196208,
+          "shap_value": -3.04805,
           "direction": "decreases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -2.67767,
+          "shap_value": -2.642237,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
+          "feature": "DstLoad",
+          "weighted_error": 0.0,
+          "pct_contribution": 29.3
+        },
+        {
           "feature": "SrcBytes",
-          "weighted_error": 4.4e-07,
-          "pct_contribution": 60.1
+          "weighted_error": 0.0,
+          "pct_contribution": 18.3
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 1e-07,
-          "pct_contribution": 13.6
-        },
-        {
-          "feature": "pDstLoss",
-          "weighted_error": 9e-08,
-          "pct_contribution": 11.9
+          "feature": "TotBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 17.3
         }
       ],
-      "consensus": "3/4 models flagged",
-      "clinician_summary": "HIGH ALERT (Sample 1641): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 1641): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "investigate"
   },
@@ -264,7 +264,7 @@
     "sample_index": 2360,
     "ground_truth": "attack",
     "attack_category": "Spoofing",
-    "risk_score": 0.3949,
+    "risk_score": 0.3957,
     "risk_level": "LOW",
     "device_class": "ehr_workstation",
     "device_criticality": "HIGH",
@@ -275,48 +275,48 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": -3.384646,
-          "direction": "decreases_risk"
-        },
-        {
-          "feature": "Dur",
-          "shap_value": -2.335451,
+          "shap_value": -3.376858,
           "direction": "decreases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 2.120519,
+          "shap_value": 1.809209,
           "direction": "increases_risk"
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": -1.737875,
+          "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
           "feature": "SrcBytes",
-          "weighted_error": 4e-07,
-          "pct_contribution": 56.3
+          "weighted_error": 0.0,
+          "pct_contribution": 35.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 1.1e-07,
-          "pct_contribution": 15.1
+          "feature": "TotBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 23.2
         },
         {
           "feature": "pDstLoss",
-          "weighted_error": 1e-07,
-          "pct_contribution": 14.3
+          "weighted_error": 0.0,
+          "pct_contribution": 21.4
         }
       ],
-      "consensus": "3/4 models flagged",
-      "clinician_summary": "HIGH ALERT (Sample 2360): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 2360): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "monitor"
   },
   {
-    "alert_id": "EVAL-1786",
-    "sample_index": 1786,
+    "alert_id": "EVAL-2117",
+    "sample_index": 2117,
     "ground_truth": "benign",
     "attack_category": "normal",
-    "risk_score": 0.2001,
+    "risk_score": 0.2005,
     "risk_level": "LOW",
     "device_class": "other",
     "device_criticality": "MEDIUM",
@@ -324,16 +324,48 @@
     "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
     "active_device": false,
     "xai_explanation": {
-      "xgboost_top_features": [],
-      "dae_top_features": [],
-      "consensus": "",
-      "clinician_summary": ""
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": -4.43541,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": 3.745483,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Dur",
+          "shap_value": 3.156242,
+          "direction": "increases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "TotBytes",
+          "weighted_error": 1e-07,
+          "pct_contribution": 71.1
+        },
+        {
+          "feature": "sMaxPktSz",
+          "weighted_error": 3e-08,
+          "pct_contribution": 18.9
+        },
+        {
+          "feature": "pDstLoss",
+          "weighted_error": 1e-08,
+          "pct_contribution": 4.9
+        }
+      ],
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 2117): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "dismiss"
   },
   {
-    "alert_id": "EVAL-2188",
-    "sample_index": 2188,
+    "alert_id": "EVAL-1165",
+    "sample_index": 1165,
     "ground_truth": "benign",
     "attack_category": "normal",
     "risk_score": 0.3,
@@ -352,11 +384,11 @@
     "correct_action": "dismiss"
   },
   {
-    "alert_id": "EVAL-1494",
-    "sample_index": 1494,
+    "alert_id": "EVAL-0980",
+    "sample_index": 980,
     "ground_truth": "benign",
     "attack_category": "normal",
-    "risk_score": 0.4499,
+    "risk_score": 0.4498,
     "risk_level": "MEDIUM",
     "device_class": "other",
     "device_criticality": "MEDIUM",
@@ -366,49 +398,49 @@
     "xai_explanation": {
       "xgboost_top_features": [
         {
-          "feature": "Temp",
-          "shap_value": -3.364905,
-          "direction": "decreases_risk"
+          "feature": "Sport",
+          "shap_value": 5.675627,
+          "direction": "increases_risk"
         },
         {
           "feature": "Flgs",
-          "shap_value": -3.161583,
+          "shap_value": -3.079471,
           "direction": "decreases_risk"
         },
         {
-          "feature": "ST",
-          "shap_value": -2.769325,
-          "direction": "decreases_risk"
+          "feature": "DIntPkt",
+          "shap_value": 1.410022,
+          "direction": "increases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 8.4e-07,
-          "pct_contribution": 48.9
+          "feature": "DstLoad",
+          "weighted_error": 0.0,
+          "pct_contribution": 38.8
         },
         {
-          "feature": "Flgs",
-          "weighted_error": 3.7e-07,
-          "pct_contribution": 21.8
+          "feature": "SrcBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 13.1
         },
         {
-          "feature": "DstBytes",
-          "weighted_error": 3.3e-07,
-          "pct_contribution": 19.3
+          "feature": "TotBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 12.9
         }
       ],
-      "consensus": "1/4 models flagged",
-      "clinician_summary": ""
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 980): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
     },
     "correct_action": "dismiss"
   },
   {
-    "alert_id": "EVAL-0530",
-    "sample_index": 530,
+    "alert_id": "EVAL-1898",
+    "sample_index": 1898,
     "ground_truth": "benign",
     "attack_category": "normal",
-    "risk_score": 0.5534,
+    "risk_score": 0.5503,
     "risk_level": "MEDIUM",
     "device_class": "other",
     "device_criticality": "MEDIUM",
@@ -419,39 +451,39 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": -3.51281,
+          "shap_value": -3.310943,
           "direction": "decreases_risk"
         },
         {
-          "feature": "Sport",
-          "shap_value": 2.2649,
+          "feature": "DIntPkt",
+          "shap_value": 3.218709,
           "direction": "increases_risk"
         },
         {
-          "feature": "SYS",
-          "shap_value": 1.09353,
+          "feature": "Temp",
+          "shap_value": 2.898206,
           "direction": "increases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 9.6e-07,
-          "pct_contribution": 30.5
+          "feature": "SrcBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 37.2
+        },
+        {
+          "feature": "TotBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 22.3
         },
         {
           "feature": "pDstLoss",
-          "weighted_error": 6.2e-07,
-          "pct_contribution": 19.7
-        },
-        {
-          "feature": "SrcBytes",
-          "weighted_error": 5.9e-07,
-          "pct_contribution": 18.7
+          "weighted_error": 0.0,
+          "pct_contribution": 21.7
         }
       ],
-      "consensus": "3/4 models flagged",
-      "clinician_summary": "HIGH ALERT (Sample 530): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (SYS) showed unusual values. Consider verifying device integrity."
+      "consensus": "1/4 models flagged",
+      "clinician_summary": "LOW ALERT (Sample 1898): Borderline detection by one model. Likely benign; logged for audit purposes."
     },
     "correct_action": "dismiss"
   },
@@ -471,35 +503,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -523,35 +555,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -575,35 +607,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -627,35 +659,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -679,35 +711,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -731,35 +763,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -783,35 +815,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -835,35 +867,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -887,35 +919,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",
@@ -939,35 +971,35 @@
       "xgboost_top_features": [
         {
           "feature": "Flgs",
-          "shap_value": 12.376314,
+          "shap_value": 11.985993,
           "direction": "increases_risk"
         },
         {
           "feature": "DIntPkt",
-          "shap_value": 8.406209,
+          "shap_value": 7.818203,
           "direction": "increases_risk"
         },
         {
           "feature": "Temp",
-          "shap_value": -4.829056,
+          "shap_value": -4.897041,
           "direction": "decreases_risk"
         }
       ],
       "dae_top_features": [
         {
-          "feature": "SrcBytes",
-          "weighted_error": 1e-08,
-          "pct_contribution": 46.3
+          "feature": "TotBytes",
+          "weighted_error": 2.7e-07,
+          "pct_contribution": 64.3
         },
         {
-          "feature": "Sport",
-          "weighted_error": 0.0,
-          "pct_contribution": 29.8
+          "feature": "sMaxPktSz",
+          "weighted_error": 9e-08,
+          "pct_contribution": 21.4
         },
         {
-          "feature": "SIntPktAct",
-          "weighted_error": 0.0,
-          "pct_contribution": 9.4
+          "feature": "pDstLoss",
+          "weighted_error": 3e-08,
+          "pct_contribution": 7.7
         }
       ],
       "consensus": "4/4 models flagged",

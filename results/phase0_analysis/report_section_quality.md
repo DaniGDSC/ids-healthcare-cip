@@ -48,7 +48,7 @@ Outliers are identified using the Interquartile Range (IQR) method with a fence 
 | Normal |  14,272 | 87.4617% |
 | Attack |   2,046 | 12.5383% |
 
-The imbalance ratio of **6.9756:1** (Normal : Attack) justifies the use of SMOTE (Synthetic Minority Oversampling Technique) applied exclusively to the training partition. Without resampling, classifiers trained on the raw distribution would achieve high accuracy by trivially predicting the majority class, yielding unacceptable recall on attack samples. SMOTE is applied before feature scaling to generate synthetic samples in the original feature space.
+The imbalance ratio of **0.0000:1** (Normal : Attack) justifies the use of SMOTE (Synthetic Minority Oversampling Technique) applied exclusively to the training partition. Without resampling, classifiers trained on the raw distribution would achieve high accuracy by trivially predicting the majority class, yielding unacceptable recall on attack samples. SMOTE is applied before feature scaling to generate synthetic samples in the original feature space.
 
 ### 3.2.3 Feature Correlation Analysis
 

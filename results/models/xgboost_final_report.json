@@ -10,14 +10,14 @@
     "max_depth": 9,
     "learning_rate": 0.2
   },
-  "optimal_threshold": 0.0030085353591574227,
+  "optimal_threshold": 0.006032602763694183,
   "test_metrics": {
-    "attack_f1": 0.8925373134328358,
-    "attack_f2": 0.9396605908233815,
-    "weighted_f1": 0.9716225115894872,
-    "macro_f1": 0.9377499629161339,
-    "auc_roc": 0.9941319393202664,
-    "optimal_threshold": 0.0030085353591574227
+    "attack_f1": 0.8989441930618401,
+    "attack_f2": 0.9406565656565656,
+    "weighted_f1": 0.9734836931495537,
+    "macro_f1": 0.9415580875538352,
+    "auc_roc": 0.9947298516477582,
+    "optimal_threshold": 0.006032602763694183
   },
   "data": {
     "n_features": 25,
@@ -52,5 +52,5 @@
     "test_samples": 2448,
     "train_attack_rate": 0.1253
   },
-  "elapsed_seconds": 106.3
+  "elapsed_seconds": 150.5
 }

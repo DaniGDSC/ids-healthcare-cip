@@ -4,26 +4,26 @@ This section documents the computational environment, random seed configuration,
 
 ### 3.4.1 Environment Specification
 
-- **Python**: 3.10.20
-- **Platform**: Linux 6.17.0-23-generic
+- **Python**: 3.12.3
+- **Platform**: Linux 6.17.0-22-generic
 - **Architecture**: x86_64
 
 | Package | Version |
 |---------|---------|
 | tensorflow | 2.21.0 |
-| keras | 3.12.1 |
-| pandas | 2.3.3 |
-| numpy | 2.2.6 |
-| scikit-learn | 1.7.2 |
-| scipy | 1.15.3 |
+| keras | 3.14.1 |
+| pandas | 3.0.3 |
+| numpy | 2.4.6 |
+| scikit-learn | 1.8.0 |
+| scipy | 1.17.1 |
 | imbalanced-learn | 0.14.1 |
-| hdbscan | not installed |
-| matplotlib | 3.10.8 |
-| pyyaml | 6.0.3 |
-| cryptography | 46.0.6 |
-| pytest | 9.0.2 |
+| hdbscan | — |
+| matplotlib | 3.10.9 |
+| pyyaml | — |
+| cryptography | 48.0.0 |
+| pytest | 9.0.3 |
 
-Full dependency list is maintained in `requirements.txt` (12 packages total).
+Full dependency list is maintained in `requirements.txt` (166 packages total).
 
 ### 3.4.2 Experiment Reproducibility
 

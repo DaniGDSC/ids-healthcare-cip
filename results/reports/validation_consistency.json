@@ -12,7 +12,7 @@
       "Temp",
       "DIntPkt",
       "Sport",
-      "Dur"
+      "SIntPkt"
     ],
     "top5_overlap": [
       "DIntPkt",
@@ -21,7 +21,7 @@
       "Temp"
     ],
     "top5_overlap_count": 4,
-    "spearman_rho": 0.8754,
+    "spearman_rho": 0.8815,
     "spearman_p_value": 0.0
   }
 }

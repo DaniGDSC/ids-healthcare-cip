@@ -745,7 +745,7 @@ def export_config_jsons() -> None:
     # 3.8 Risk scoring config
     risk_cfg = {
         "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
-        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
+        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]; DAE forward pass skipped where Track_A (XGBoost) proba >= 0.90 (compute optimisation; c_track_b=0 for those rows)",
         "weights": WEIGHTS,
         "thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
         "alert_tiers": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
@@ -1026,7 +1026,7 @@ def save_outputs(
 
     report = {
         "formula": "R = w1*C_detect + w2*D_crit + w3*S_data + w4*D_clinical_tier",
-        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]",
+        "fusion": "C_detect = cascaded(Track_A → Track_B): DAE input = [raw_features || Track_A_probas]; DAE forward pass skipped where Track_A (XGBoost) proba >= 0.90 (compute optimisation; c_track_b=0 for those rows)",
         "weights": WEIGHTS,
         "risk_thresholds": {label: thresh for thresh, label in RISK_THRESHOLDS},
         "total_samples": int(len(R)),
