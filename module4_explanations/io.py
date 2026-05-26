@@ -35,6 +35,7 @@ def _split_paths(split: str) -> dict:
     demo = operator-clean (suffix '_demo').
     """
     from common import split_paths as sp
+
     return {
         "parquet": sp.parquet(split),
         "xgboost_preds": sp.model_predictions("xgboost", split),
@@ -86,10 +87,12 @@ async def _write_json_async(path: Path, data) -> None:
 
 def write_json_batch(outputs: dict[Path, Any]) -> None:
     """Write multiple JSON files concurrently."""
+
     async def _run():
         await asyncio.gather(
             *[_write_json_async(path, data) for path, data in outputs.items()]
         )
+
     asyncio.run(_run())
 
 

@@ -1,8 +1,8 @@
 """Public signing API for Module 5's ECDSA P-256 audit-log primitives.
 
-Wraps internal ``module5_pipeline`` symbols (``_canonical_json``,
-``_load_signing_key``, ``_HAVE_CRYPTOGRAPHY``) under stable public names
-so other modules don't depend on private API.
+Wraps internal ``module5_responses.audit.signing`` symbols
+(``_canonical_json``, ``_load_signing_key``, ``_HAVE_CRYPTOGRAPHY``)
+under stable public names so other modules don't depend on private API.
 
 Stable contract for cross-module callers
 ----------------------------------------
@@ -12,17 +12,14 @@ Stable contract for cross-module callers
   (sorted keys, compact separators) used for hashing and signing.
 - ``load_signing_key(private_path=None, public_path=None)
   -> (private_key, public_path, key_id)``: load (or bootstrap) the
-  ECDSA P-256 keypair. See ``module5_pipeline._load_signing_key`` for
+  ECDSA P-256 keypair. See ``audit.signing._load_signing_key`` for
   resolution order.
 
-Internal Module 5 callers continue to import the underscore variants
-directly to avoid churn; Module 0, Module 1, and common/signed_pickle.py
-import from here.
+Module 0, Module 1, common/signed_pickle.py, and tests import from here.
 """
-
 from __future__ import annotations
 
-from module5_responses.module5_pipeline import (
+from module5_responses.audit.signing import (
     _HAVE_CRYPTOGRAPHY as HAVE_CRYPTOGRAPHY,
     _canonical_json as canonical_json,
     _load_signing_key as load_signing_key,
