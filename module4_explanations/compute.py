@@ -171,9 +171,15 @@ def _top_features_shap(sv_row: np.ndarray, feat_names: list, k: int = 3) -> list
     """Top-k features by ``|SHAP|`` for one sample.
 
     Uses ``np.argpartition`` (O(F)) to find candidate indices, then
-    sorts only the k of them — faster than full ``argsort``.
+    sorts only the k of them — faster than full ``argsort``. ``k`` is
+    clamped to ``len(sv_row)`` so callers requesting more features than
+    exist (e.g. a stakeholder test fixture with 2 features asking for
+    top-5) get whatever is available instead of crashing.
     """
     abs_vals = np.abs(sv_row)
+    k = min(k, len(abs_vals))
+    if k <= 0:
+        return []
     top_i_unsorted = np.argpartition(abs_vals, -k)[-k:]
     top_i = top_i_unsorted[np.argsort(abs_vals[top_i_unsorted])[::-1]]
     return [
@@ -187,8 +193,13 @@ def _top_features_shap(sv_row: np.ndarray, feat_names: list, k: int = 3) -> list
 
 
 def _top_features_dae(werr_row: np.ndarray, feat_names: list, k: int = 3) -> list:
-    """Top-k features by weighted error for one DAE sample."""
+    """Top-k features by weighted error for one DAE sample. ``k`` clamped
+    to array length (see ``_top_features_shap`` for rationale).
+    """
     total = werr_row.sum()
+    k = min(k, len(werr_row))
+    if k <= 0:
+        return []
     top_i_unsorted = np.argpartition(werr_row, -k)[-k:]
     top_i = top_i_unsorted[np.argsort(werr_row[top_i_unsorted])[::-1]]
     return [
