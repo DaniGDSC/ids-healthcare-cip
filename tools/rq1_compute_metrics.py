@@ -16,6 +16,7 @@ Input artifacts:
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -26,6 +27,11 @@ from sklearn.metrics import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Prepend project root so module3_risk_scoring + src.risk_scorer are
+# importable when this script is executed directly (it is not a package
+# member of any subdir).
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 RESULTS = PROJECT_ROOT / "results"
 REPORTS = RESULTS / "reports"
 
@@ -326,11 +332,49 @@ def compute_track_b_per_class():
 def compute_weight_sensitivity():
     """Vary the composite risk weights and recompute FNR_critical + AUC.
 
-    The current composite is R = α·C_detect + β·D_crit + γ·S_data + δ·D_clinical_tier
-    (approximated; actual formula is in src.risk_scorer.score_alert). Here we
-    do a grid search over weight perturbations around the implied baseline to
-    show how sensitive FNR_critical is to weight choice.
+    Composite formula (canonical, from
+    `module3_risk_scoring/module3_risk_scores.py::WEIGHTS`):
+
+        R = w1·C_detect + w2·D_crit + w3·S_data + w4·D_clinical_tier
+
+    Grid search perturbs each weight ±0.10 around the canonical anchor
+    (w1=0.40, w2=0.25, w3=0.15, w4=0.20) and renormalizes to sum=1.
+
+    The canonical baseline is guaranteed to appear as exactly one row in
+    the grid so reviewers can read sensitivity around the actual
+    operating point — not around an approximation.
     """
+    # Canonical baseline (R3 fix — was approximated as 0.40/0.30/0.20/0.10
+    # in the original pass; canonical is 0.40/0.25/0.15/0.20 with D_clinical
+    # weighted more heavily than D_crit).
+    try:
+        from module3_risk_scoring.module3_risk_scores import (
+            WEIGHTS as _MODULE3_WEIGHTS,
+            RISK_THRESHOLDS as _MODULE3_TIER_THRESHOLDS,
+        )
+    except Exception as e:
+        # Hard failure — sensitivity analysis without canonical anchor is
+        # the bug we're trying to fix. Re-raise with context.
+        raise ImportError(
+            "Could not import canonical weights from "
+            "module3_risk_scoring.module3_risk_scores — "
+            f"re-run the pipeline or check the import path. Underlying error: {e}"
+        )
+
+    # Module 3 names them w1..w4; surface as (alpha, beta, gamma, delta) for
+    # readability and to match the existing API of the audit JSON.
+    canonical_baseline = {
+        "alpha": float(_MODULE3_WEIGHTS["w1"]),   # C_detect
+        "beta":  float(_MODULE3_WEIGHTS["w2"]),   # D_crit
+        "gamma": float(_MODULE3_WEIGHTS["w3"]),   # S_data
+        "delta": float(_MODULE3_WEIGHTS["w4"]),   # D_clinical_tier
+    }
+
+    # MEDIUM cutoff = surfacing threshold (anything below this lands in LOW
+    # and is suppressed). Canonical value from RISK_THRESHOLDS (the last
+    # tuple's threshold is the MEDIUM/LOW boundary).
+    surfacing_threshold = float(_MODULE3_TIER_THRESHOLDS[-1][0])
+
     d = np.load(REPORTS / "risk_scores.npz", allow_pickle=True)
     y_true = d["y_true"].astype(int)
     c_detect = d["c_detect"].astype(float)
@@ -340,46 +384,66 @@ def compute_weight_sensitivity():
 
     crit_attack_mask = (d_crit >= CRITICAL_DEVICE_THRESHOLD) & (y_true == 1)
 
-    # Use existing risk_levels as the "baseline" thresholding. We can't
-    # cheaply re-derive tier from new R since tier boundaries depend on the
-    # full pipeline. Instead, report AUC + FNR_at_threshold for the new R.
-    SURFACING_R_THRESHOLD = 0.30  # heuristic (LOW max ~ 0.29 in current data)
-
-    # Baseline weights (rough — actual = src.risk_scorer constants)
-    baseline = {"alpha": 0.4, "beta": 0.3, "gamma": 0.2, "delta": 0.1}
+    # Grid: each weight perturbed at -0.10, 0, +0.10 around the canonical
+    # anchor (clamped to [0.05, 1.0]). Configurations whose weights don't
+    # sum to ~1 after the perturbation are skipped post-renormalization.
+    # Note: set-dedupe collapses perturbations that land on the same clamped
+    # value (e.g., center=0.05 → {0.05, 0.05, 0.15} → 2 entries). Acceptable
+    # because the canonical anchor (0.40/0.25/0.15/0.20) never hits the
+    # clamp; sanity-checked downstream via `n_canon == 1` assertion.
+    def _perturbations(center: float) -> list[float]:
+        return sorted({round(max(0.05, min(1.0, center + step)), 3)
+                       for step in (-0.10, 0.0, 0.10)})
 
     grid = []
-    # Perturb each weight by ±0.10 from baseline; renormalize so weights sum=1
-    for alpha in (0.3, 0.4, 0.5):
-        for beta in (0.2, 0.3, 0.4):
-            for gamma in (0.1, 0.2, 0.3):
-                for delta in (0.05, 0.1, 0.15):
+    canonical_row = None
+    for alpha in _perturbations(canonical_baseline["alpha"]):
+        for beta in _perturbations(canonical_baseline["beta"]):
+            for gamma in _perturbations(canonical_baseline["gamma"]):
+                for delta in _perturbations(canonical_baseline["delta"]):
                     s = alpha + beta + gamma + delta
-                    if not (0.95 <= s <= 1.05):
+                    if not (0.85 <= s <= 1.15):
                         continue
                     R_new = (
-                        alpha * c_detect + beta * d_crit + gamma * s_data + delta * d_clinical
+                        alpha * c_detect + beta * d_crit
+                        + gamma * s_data + delta * d_clinical
                     ) / s
-                    surfaced = R_new >= SURFACING_R_THRESHOLD
+                    surfaced = R_new >= surfacing_threshold
                     missed_crit = (crit_attack_mask & ~surfaced).sum()
                     fnr_crit = _safe_div(missed_crit, crit_attack_mask.sum())
                     try:
                         auc = float(roc_auc_score(y_true, R_new))
                     except ValueError:
                         auc = float("nan")
-                    grid.append({
+                    is_canonical = (
+                        alpha == canonical_baseline["alpha"]
+                        and beta == canonical_baseline["beta"]
+                        and gamma == canonical_baseline["gamma"]
+                        and delta == canonical_baseline["delta"]
+                    )
+                    row = {
                         "alpha": alpha, "beta": beta, "gamma": gamma, "delta": delta,
                         "weight_sum": round(s, 3),
+                        "is_canonical": is_canonical,
                         "FNR_critical": round(fnr_crit, 6),
                         "AUC": round(auc, 6),
                         "n_surfaced": int(surfaced.sum()),
-                    })
+                    }
+                    grid.append(row)
+                    if is_canonical:
+                        canonical_row = row
 
-    # Summary stats
+    # Sanity: canonical baseline must appear in the grid exactly once.
+    n_canon = sum(1 for g in grid if g["is_canonical"])
+    if n_canon != 1:
+        raise RuntimeError(
+            f"Canonical baseline must appear in grid exactly once (got "
+            f"{n_canon}). Check perturbation logic — the baseline anchor "
+            "must be one of the chosen perturbations."
+        )
+
     fnr_crits = [g["FNR_critical"] for g in grid]
     aucs = [g["AUC"] for g in grid if not np.isnan(g["AUC"])]
-
-    # Find best/worst
     best = min(grid, key=lambda g: g["FNR_critical"])
     worst = max(grid, key=lambda g: g["FNR_critical"])
 
@@ -388,13 +452,23 @@ def compute_weight_sensitivity():
             "description": (
                 "Composite risk weight sensitivity grid search. Each row "
                 "shows FNR_critical and AUC at a particular (α, β, γ, δ) "
-                "weighting after renormalizing to sum=1."
+                "weighting after renormalizing to sum=1. Grid perturbs "
+                "each weight by ±0.10 around the canonical anchor."
             ),
-            "baseline_approximated": baseline,
-            "surfacing_threshold_on_R": SURFACING_R_THRESHOLD,
+            "baseline_canonical": canonical_baseline,
+            "baseline_source": (
+                "module3_risk_scoring.module3_risk_scores.WEIGHTS "
+                "(w1=C_detect, w2=D_crit, w3=S_data, w4=D_clinical_tier)"
+            ),
+            "surfacing_threshold_on_R": surfacing_threshold,
+            "surfacing_threshold_source": (
+                "module3_risk_scoring.module3_risk_scores.RISK_THRESHOLDS "
+                "[MEDIUM cutoff — anything below = LOW = suppressed]"
+            ),
             "n_critical_device_attacks": int(crit_attack_mask.sum()),
             "grid_size": len(grid),
         },
+        "canonical_baseline_row": canonical_row,
         "summary": {
             "FNR_critical_min": min(fnr_crits),
             "FNR_critical_max": max(fnr_crits),

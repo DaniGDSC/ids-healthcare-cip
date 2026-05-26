@@ -79,7 +79,7 @@
       }
     ]
   },
-  "layer1_mitre_reference_rate": {
+  "layer1_mitre_reference_rate_cached": {
     "n_narratives_evaluated": 25,
     "n_referencing_mitre": 0,
     "pct_referencing_mitre": 0.0,
@@ -282,6 +282,99 @@
         "category": "normal",
         "references_mitre": false,
         "match_reason": "no MITRE reference"
+      }
+    ]
+  },
+  "layer1_mitre_reference_rate_fresh": {
+    "n_narratives_evaluated": 48,
+    "n_referencing_mitre": 32,
+    "pct_referencing_mitre_all": 66.67,
+    "n_attack_class_evaluated": 32,
+    "n_attack_class_referencing": 32,
+    "pct_referencing_mitre_attack_class": 100.0,
+    "target_pct": 90.0,
+    "target_met_attack_class": true,
+    "target_met_all": false,
+    "n_gen_failures": 0,
+    "gen_failures": [],
+    "per_category": {
+      "normal": {
+        "total": 16,
+        "hits": 0,
+        "hit_rate_pct": 0.0
+      },
+      "Data Alteration": {
+        "total": 16,
+        "hits": 16,
+        "hit_rate_pct": 100.0
+      },
+      "Spoofing": {
+        "total": 16,
+        "hits": 16,
+        "hit_rate_pct": 100.0
+      }
+    },
+    "method": "Regenerated at runtime via src.mve_generator (post-G3 fix). attack_class denominator excludes 'normal' baseline samples since benign traffic has no MITRE mapping by design (see config/attack_to_mitre_mapping.yaml \u2014 excluded: ['normal']). Per-sample top-3 SHAP features pulled from analyst_report.json; samples missing from that file fall back to a synthetic constant.",
+    "samples_audit": [
+      {
+        "sample_index": 0,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 1,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 2,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 3,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 4,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 6,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 7,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 8,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 9,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
+      },
+      {
+        "sample_index": 10,
+        "category": "normal",
+        "references_mitre": false,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to unknown, not on any approved destin"
       }
     ]
   },

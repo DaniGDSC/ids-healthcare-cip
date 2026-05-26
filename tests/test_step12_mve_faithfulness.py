@@ -108,3 +108,76 @@ def test_meta_lists_alias_table(alignment_report):
     assert len(meta["alias_table_features"]) >= 20, (
         "alias_table too small — cannot bridge feature names to text"
     )
+
+
+# ── Post-fix targets (G1 + G2 closed) ───────────────────────────────
+
+
+def test_mode_b_at_least_2_meets_target(alignment_report):
+    """After the G1+G2 fix, Mode B rule-based MVE lists the top-3 SHAP
+    features in Layer 1, so the ≥2 alignment rate should hit ≥95%.
+    A drop below this means src.mve_generator regressed back to top-1.
+    """
+    mb = alignment_report["mode_b_rule_based"]
+    assert mb["contains_at_least_2_pct"] >= 95.0, (
+        f"Mode B ≥2 rate = {mb['contains_at_least_2_pct']}% — "
+        "below 95% target. Did src.mve_generator stop injecting top-3?"
+    )
+
+
+def test_mode_b_all_3_meets_target(alignment_report):
+    """After the G1+G2 fix, Mode B should also surface all 3 top SHAP
+    features at ≥80% rate (the spec target).
+    """
+    mb = alignment_report["mode_b_rule_based"]
+    assert mb["contains_all_3_pct"] >= 80.0, (
+        f"Mode B all-3 rate = {mb['contains_all_3_pct']}% — "
+        "below 80% target."
+    )
+
+
+# ── G6 large-N assertions ────────────────────────────────────────────
+
+
+def test_mode_b_large_n_present(alignment_report):
+    """G6 fix: the large-N Mode B measurement (n≥100) must be embedded
+    in the alignment report so reviewers can verify the n=20 result
+    isn't a small-sample artifact.
+    """
+    assert "mode_b_rule_based_large_n" in alignment_report, (
+        "G6 large-N alignment missing — run tools/rq2_compute_faithfulness.py"
+    )
+    large = alignment_report["mode_b_rule_based_large_n"]
+    assert large["metrics"]["n_total"] >= 100, (
+        f"large-N sample size = {large['metrics']['n_total']} — must be ≥100 "
+        "for the small-sample claim to be statistically defensible"
+    )
+
+
+def test_mode_b_large_n_meets_targets(alignment_report):
+    """At n=200, both ≥2 (≥95%) and all-3 (≥80%) targets must hold."""
+    m = alignment_report["mode_b_rule_based_large_n"]["metrics"]
+    assert m["target_at_least_2_met"] is True, (
+        f"large-N ≥2 rate = {m['contains_at_least_2_pct']}% — below 95% target"
+    )
+    assert m["target_all_3_met"] is True, (
+        f"large-N all-3 rate = {m['contains_all_3_pct']}% — below 80% target"
+    )
+
+
+def test_mode_b_large_n_ci_lower_bound_above_target(alignment_report):
+    """95% Wilson CI lower bound on ≥2 must clear the 95% spec target —
+    this is the formal small-sample-fluke rebuttal.
+    """
+    m = alignment_report["mode_b_rule_based_large_n"]["metrics"]
+    ci_low, ci_high = m["ci95_at_least_2_pct"]
+    point = m["contains_at_least_2_pct"]
+    assert ci_low >= 95.0, (
+        f"CI lower bound {ci_low}% does not clear 95% target "
+        f"(point estimate {point}%, CI=[{ci_low}, {ci_high}]). "
+        f"Diagnostic checklist: "
+        f"(1) did src.mve_generator stop injecting top-3 SHAP features? "
+        f"(2) is the point estimate itself comfortably above 95% — "
+        f"if at exactly 95%, CI lower bound *will* dip below by construction; "
+        f"(3) raise n in tools/rq2_compute_faithfulness.py and re-run."
+    )

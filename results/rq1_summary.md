@@ -105,17 +105,37 @@ anomaly detector.
 
 ## 5. Composite risk weight sensitivity (`results/rq1_weight_sensitivity.json`)
 
-Grid search over 33 weight configurations renormalized to sum=1:
+**Canonical baseline (R3 fix):** imported from
+`module3_risk_scoring.module3_risk_scores.WEIGHTS` — anchor is exactly
+one row in the grid so reviewers read sensitivity around the actual
+operating point (not an approximation).
 
-- **FNR_critical range:** [0.000, 0.000] — **invariant across all configs**
-- **AUC range:** [0.9709, 0.9965]
-- **AUC variation:** 0.026 (small — model is robust to weight choice)
+| Weight | Canonical value | Maps to |
+|--------|----------------:|---------|
+| w1 (α) | 0.40 | C_detect |
+| w2 (β) | 0.25 | D_crit |
+| w3 (γ) | 0.15 | S_data |
+| w4 (δ) | 0.20 | D_clinical_tier |
+
+Surfacing threshold = 0.40 (the canonical MEDIUM cutoff from
+`RISK_THRESHOLDS`). At the canonical anchor: **AUC = 0.9838**,
+**n_surfaced = 392** (matching the live tier distribution:
+CRITICAL 34 + HIGH 273 + MEDIUM 85).
+
+Grid search over **51 weight configurations** (each weight perturbed
+±0.10 around its canonical value, renormalized to sum ≈ 1):
+
+- **FNR_critical range:** [0.000, 0.000] — **invariant across all 51 configs**
+- **AUC range:** [0.9660, 0.9963]
+- **AUC variation:** 0.030 (small — model is robust to weight choice)
 
 **Conclusion for defense:** Composite risk weighting is **not the source
 of safety performance** — FNR_critical stays at 0 across all weight
-choices tested. The driver is upstream detector quality + tier-boundary
-calibration. This is a strong defensibility point: the safety property
-is robust to weight tuning, not a knife-edge.
+choices tested AND the analysis is now anchored on the canonical
+operating point (not an approximation). The safety property is robust
+to weight tuning, not a knife-edge. Best AUC (0.9963) is at perturbed
+weights that boost D_clinical_tier — but the canonical safety-aware
+weighting still meets the FNR_critical target without compromise.
 
 ---
 
@@ -128,6 +148,7 @@ is robust to weight tuning, not a knife-edge.
 | `confusion_matrix.png` | Surfacing decision: 19 FN (LOW-tier missed attacks, all non-critical devices), 104 FP (mostly HIGH-tier benign 28 + MEDIUM noise 76). |
 | `tier_calibration_hist.png` | Stacked histogram by tier with empirical R-boundary lines; bottom panel shows attack density (log scale) — attacks concentrate in R > 0.45. |
 | `device_correlation.png` | D_crit vs D_clinical_tier — Pearson ρ ≈ 0.08 (essentially independent). Colored by tier; CRITICAL tier clusters at high d_crit, mixed clinical tier. |
+| `rq1_weight_sensitivity.png` | 2-panel weight sensitivity (S7 follow-up to R3): top = AUC across 51 configs with canonical highlighted in red; bottom = FNR_critical at 0.0 for all configs with spec 0.05 ceiling. Visually shows safety-property robustness. |
 
 ---
 
@@ -145,7 +166,7 @@ is robust to weight tuning, not a knife-edge.
 | Spoofing detection via Track B is at chance | Per-class report; affects unsupervised generalization claim | Document as limitation; add Track A coverage justification |
 | Composite R AUC = 0.984 vs target 0.99 | Marginal; below the bar set by Track A alone | Investigate whether composite is dampening Track A — possibly weight α on c_detect should be higher |
 | 19 LOW-tier missed attacks (non-critical devices) | Not in FNR_critical, but counts in overall FNR | Add post-hoc batch audit; acknowledge in limitations |
-| Weight sensitivity uses approximated baseline | Actual weights in `src.risk_scorer` may differ | Wire script to import canonical weights for reproducibility |
+| ~~Weight sensitivity uses approximated baseline~~ — **CLOSED (R3 fix)** | Script now imports canonical weights from `module3_risk_scoring.module3_risk_scores.WEIGHTS`; grid anchored on actual operating point; canonical row guaranteed present | n/a — fixed |
 
 ---
 

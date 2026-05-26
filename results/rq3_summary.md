@@ -66,13 +66,15 @@ attribution all enforced.
 | Action accuracy | 0.494 | 0.672 | ↑ better |
 | Confidence | 3.28 | 3.86 | ↑ more confident |
 | Decision time (s) | 20.7 | 17.9 | ↓ faster |
-| Catastrophic miss (sev=LOW or dismiss on CRITICAL gt) | 0.120 | 0.060 | ↓ safer |
+| Catastrophic miss (severity-distance == 3, CRITICAL↔LOW only) | 0.034 | 0.012 | ↓ safer |
 | Over-reaction rate | 0.094 | 0.136 | ↑ slightly noisier |
 | Under-reaction rate | 0.006 | 0.004 | ↓ safer |
 
-> Note: catastrophic_miss_rate uses a more permissive definition than
-> `survey/m5_result.yaml` (which counts only `action_chosen=dismiss`).
-> Both definitions agree on direction (B lower); magnitudes differ ~3×.
+> Q3 fix (2026-05-26): catastrophic_miss_rate now uses the canonical
+> definition `severity_chosen` and `ground_truth_severity` are at
+> opposite ends of the 4-tier scale (distance == 3, CRITICAL ↔ LOW
+> mismatch only). This matches `survey/m5_result.yaml` exactly
+> (A=0.034, B=0.012) and `tests/acceptance_tests.py:248-250`.
 
 ### Per-role breakdown (M6 study, with vs without XAI)
 
@@ -172,8 +174,16 @@ report for the gap analysis.
 - `results/rq3_summary.md` (this file)
 
 ### Phase 6 — Cross-check (1)
-- 14/14 metrics match `survey/m5_result.yaml` within tolerance
-  (catastrophic_miss has definitional variance — documented)
+- **14/14 metrics match `survey/m5_result.yaml` exactly** (post Q3 fix —
+  catastrophic_miss aligned to canonical severity-distance==3 definition)
+
+### Post-spec follow-ups (Q3, Q7, Q8 — 2026-05-26)
+- `docs/rq3_tier_surfacing_appendix.md` — RQ3-specific lens on the
+  shared tier × surfacing truth table (Q7)
+- `tests/test_rq3_config_sync.py` — 9 tests guarding tier_routing.yaml
+  + role_action_authorization.yaml against drift from canonical code
+  sources (Q8)
+- Catastrophic_miss definition aligned with m5_result.yaml (Q3)
 
 ---
 

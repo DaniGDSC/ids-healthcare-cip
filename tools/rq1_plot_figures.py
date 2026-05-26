@@ -335,6 +335,115 @@ def plot_device_correlation(data):
     return out
 
 
+def plot_weight_sensitivity():
+    """Composite-risk weight sensitivity — 2-panel figure.
+
+    Top: AUC across 51 weight configurations, sorted, with the canonical
+    baseline highlighted. Shows the narrow band of AUC variation
+    (0.966-0.996, span 0.030).
+
+    Bottom: FNR_critical across the same 51 configurations. ALL points
+    sit at 0.0 (defendability claim: safety property robust to weight
+    choice). Target threshold line drawn at 0.05.
+
+    Data source: `results/rq1_weight_sensitivity.json` (R3 fix — anchored
+    on canonical Module 3 weights).
+    """
+    with open(RESULTS / "rq1_weight_sensitivity.json") as f:
+        sens = json.load(f)
+
+    grid = sens["grid"]
+    canon = sens["canonical_baseline_row"]
+    # Sort by AUC so the canonical's position relative to the rest is
+    # visually clear.
+    sorted_grid = sorted(grid, key=lambda g: g["AUC"])
+    aucs = [g["AUC"] for g in sorted_grid]
+    fnrs = [g["FNR_critical"] for g in sorted_grid]
+    is_canon = [g.get("is_canonical", False) for g in sorted_grid]
+    canon_idx = is_canon.index(True)
+
+    fig, (ax_top, ax_bot) = plt.subplots(
+        2, 1, figsize=(10, 7),
+        gridspec_kw={"height_ratios": [3, 1]},
+        sharex=True,
+    )
+
+    # ── Top: AUC bars, canonical highlighted ──
+    x = np.arange(len(aucs))
+    bar_colors = [
+        "#C53030" if c else "#7BA7BC"   # tier-critical for canonical, accent otherwise
+        for c in is_canon
+    ]
+    ax_top.bar(x, aucs, color=bar_colors, edgecolor="#262A33",
+               linewidth=0.4, width=0.9)
+
+    # Annotate canonical position
+    ax_top.axhline(canon["AUC"], color="#C53030", linestyle="--",
+                   linewidth=1.0, alpha=0.6,
+                   label=f"Canonical AUC = {canon['AUC']:.4f}")
+    # Show min/max as dotted reference lines
+    ax_top.axhline(max(aucs), color="#5F9E7B", linestyle=":",
+                   linewidth=0.9, alpha=0.6,
+                   label=f"Grid max = {max(aucs):.4f}")
+    ax_top.axhline(min(aucs), color="#9CA0AB", linestyle=":",
+                   linewidth=0.9, alpha=0.6,
+                   label=f"Grid min = {min(aucs):.4f}")
+
+    # Y range: narrow to AUC band so variation is visible
+    ax_top.set_ylim(min(aucs) - 0.005, max(aucs) + 0.005)
+    ax_top.set_ylabel("AUC (Composite risk R vs y_true)")
+    ax_top.set_title(
+        f"RQ1 — Composite risk weight sensitivity  ·  {len(grid)} configurations\n"
+        f"Canonical baseline: α={canon['alpha']}, β={canon['beta']}, "
+        f"γ={canon['gamma']}, δ={canon['delta']}  "
+        f"(from module3_risk_scoring.WEIGHTS)",
+        loc="left", pad=14,
+    )
+    ax_top.legend(loc="lower right", frameon=False)
+    ax_top.grid(True, alpha=0.25, linestyle="--", linewidth=0.5, axis="y")
+
+    # Mark canonical column with arrow + label
+    ax_top.annotate(
+        "canonical baseline",
+        xy=(canon_idx, canon["AUC"]),
+        xytext=(canon_idx + 5, canon["AUC"] - 0.012),
+        fontsize=9, color="#C53030", fontweight="500",
+        arrowprops=dict(arrowstyle="->", color="#C53030", lw=0.8),
+    )
+
+    # ── Bottom: FNR_critical (all at 0) with target threshold ──
+    ax_bot.scatter(x, fnrs, color="#5F9E7B", edgecolor="#262A33",
+                   s=18, linewidth=0.4, label="FNR_critical (per config)")
+    ax_bot.axhline(0.05, color="#C53030", linestyle="--", linewidth=1.0,
+                   alpha=0.7, label="Spec target ceiling = 0.05")
+
+    # Highlight canonical
+    ax_bot.scatter([canon_idx], [canon["FNR_critical"]],
+                   color="#C53030", edgecolor="#262A33", s=80,
+                   marker="D", zorder=5, label="Canonical")
+
+    ax_bot.set_ylim(-0.01, 0.07)
+    ax_bot.set_xlim(-1, len(aucs))
+    ax_bot.set_xlabel("Weight configuration (sorted by AUC, ascending)")
+    ax_bot.set_ylabel("FNR_critical")
+    ax_bot.text(
+        len(aucs) - 1, 0.025,
+        f"All {len(grid)} configs: FNR_critical = 0.000 ✓\n"
+        "Safety property robust to weight choice",
+        ha="right", va="center",
+        fontsize=10, color="#262A33",
+        bbox=dict(boxstyle="round,pad=0.4",
+                  facecolor="#E8F0E8", edgecolor="#5F9E7B", alpha=0.8),
+    )
+    ax_bot.legend(loc="upper left", frameon=False, fontsize=9)
+    ax_bot.grid(True, alpha=0.25, linestyle="--", linewidth=0.5, axis="y")
+
+    out = FIGURES / "rq1_weight_sensitivity.png"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
 def main():
     data = _load_data()
     print("[R6] ROC curves...")
@@ -347,6 +456,8 @@ def main():
     print(f"  -> {plot_tier_histogram(data)}")
     print("[R10] Device correlation scatter...")
     print(f"  -> {plot_device_correlation(data)}")
+    print("[S7]  Weight sensitivity (R3 follow-up)...")
+    print(f"  -> {plot_weight_sensitivity()}")
 
 
 if __name__ == "__main__":

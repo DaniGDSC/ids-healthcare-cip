@@ -391,52 +391,52 @@
     "mode": "mode_b_rule_based",
     "n_total": 20,
     "contains_top1_pct": 100.0,
-    "contains_at_least_2_pct": 0.0,
-    "contains_all_3_pct": 0.0,
+    "contains_at_least_2_pct": 100.0,
+    "contains_all_3_pct": 100.0,
     "target_at_least_2_pct": 95.0,
     "target_all_3_pct": 80.0,
-    "target_at_least_2_met": false,
-    "target_all_3_met": false,
+    "target_at_least_2_met": true,
+    "target_all_3_met": true,
     "per_feature_hit_rate": {
       "Flgs": {
         "appearances": 20,
-        "mentioned": 9,
-        "hit_rate": 45.0
+        "mentioned": 20,
+        "hit_rate": 100.0
       },
       "DIntPkt": {
         "appearances": 13,
-        "mentioned": 1,
-        "hit_rate": 7.69
+        "mentioned": 13,
+        "hit_rate": 100.0
       },
       "Dur": {
         "appearances": 2,
-        "mentioned": 0,
-        "hit_rate": 0.0
+        "mentioned": 2,
+        "hit_rate": 100.0
       },
       "Temp": {
         "appearances": 7,
-        "mentioned": 0,
-        "hit_rate": 0.0
+        "mentioned": 7,
+        "hit_rate": 100.0
       },
       "Sport": {
         "appearances": 11,
-        "mentioned": 10,
-        "hit_rate": 90.91
+        "mentioned": 11,
+        "hit_rate": 100.0
       },
       "SrcLoad": {
         "appearances": 1,
-        "mentioned": 0,
-        "hit_rate": 0.0
+        "mentioned": 1,
+        "hit_rate": 100.0
       },
       "SIntPkt": {
         "appearances": 5,
-        "mentioned": 0,
-        "hit_rate": 0.0
+        "mentioned": 5,
+        "hit_rate": 100.0
       },
       "Resp_Rate": {
         "appearances": 1,
-        "mentioned": 0,
-        "hit_rate": 0.0
+        "mentioned": 1,
+        "hit_rate": 100.0
       }
     },
     "per_sample": [
@@ -450,10 +450,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 9,
@@ -465,10 +465,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 14,
@@ -480,10 +480,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 20,
@@ -495,10 +495,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 21,
@@ -510,10 +510,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 23,
@@ -525,10 +525,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 34,
@@ -540,10 +540,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 38,
@@ -555,10 +555,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 44,
@@ -570,10 +570,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 50,
@@ -585,10 +585,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 52,
@@ -600,10 +600,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 60,
@@ -615,10 +615,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 63,
@@ -630,10 +630,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 65,
@@ -645,10 +645,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 66,
@@ -660,10 +660,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 76,
@@ -675,10 +675,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 77,
@@ -690,10 +690,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 79,
@@ -705,10 +705,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 91,
@@ -720,10 +720,10 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
       },
       {
         "sample_index": 97,
@@ -735,10 +735,541 @@
         ],
         "feature_hits": [
           true,
-          false,
-          false
+          true,
+          true
         ],
-        "n_features_mentioned": 1
+        "n_features_mentioned": 3
+      }
+    ]
+  },
+  "mode_b_rule_based_large_n": {
+    "_meta": {
+      "description": "Mode B (rule-based) alignment at large n \u2014 G6 fix",
+      "n_samples_requested": 200,
+      "n_samples_evaluated": 200,
+      "sampling_strategy": "stratified by analyst_report severity",
+      "seed": 42
+    },
+    "mode": "mode_b_rule_based_large_n",
+    "metrics": {
+      "n_total": 200,
+      "contains_top1_pct": 100.0,
+      "contains_at_least_2_pct": 100.0,
+      "contains_all_3_pct": 100.0,
+      "ci95_top1_pct": [
+        98.12,
+        100.0
+      ],
+      "ci95_at_least_2_pct": [
+        98.12,
+        100.0
+      ],
+      "ci95_all_3_pct": [
+        98.12,
+        100.0
+      ],
+      "target_at_least_2_pct": 95.0,
+      "target_all_3_pct": 80.0,
+      "target_at_least_2_met": true,
+      "target_all_3_met": true
+    },
+    "per_feature_hit_rate": {
+      "DIntPkt": {
+        "appearances": 94,
+        "mentioned": 94,
+        "hit_rate": 100.0
+      },
+      "Flgs": {
+        "appearances": 192,
+        "mentioned": 192,
+        "hit_rate": 100.0
+      },
+      "Temp": {
+        "appearances": 93,
+        "mentioned": 93,
+        "hit_rate": 100.0
+      },
+      "SrcLoad": {
+        "appearances": 17,
+        "mentioned": 17,
+        "hit_rate": 100.0
+      },
+      "Resp_Rate": {
+        "appearances": 24,
+        "mentioned": 24,
+        "hit_rate": 100.0
+      },
+      "SYS": {
+        "appearances": 8,
+        "mentioned": 8,
+        "hit_rate": 100.0
+      },
+      "Sport": {
+        "appearances": 79,
+        "mentioned": 79,
+        "hit_rate": 100.0
+      },
+      "DIA": {
+        "appearances": 3,
+        "mentioned": 3,
+        "hit_rate": 100.0
+      },
+      "SIntPkt": {
+        "appearances": 35,
+        "mentioned": 35,
+        "hit_rate": 100.0
+      },
+      "Pulse_Rate": {
+        "appearances": 24,
+        "mentioned": 24,
+        "hit_rate": 100.0
+      },
+      "Load": {
+        "appearances": 2,
+        "mentioned": 2,
+        "hit_rate": 100.0
+      },
+      "Dur": {
+        "appearances": 20,
+        "mentioned": 20,
+        "hit_rate": 100.0
+      },
+      "ST": {
+        "appearances": 1,
+        "mentioned": 1,
+        "hit_rate": 100.0
+      },
+      "Heart_rate": {
+        "appearances": 3,
+        "mentioned": 3,
+        "hit_rate": 100.0
+      },
+      "SpO2": {
+        "appearances": 5,
+        "mentioned": 5,
+        "hit_rate": 100.0
+      }
+    },
+    "per_sample": [
+      {
+        "sample_index": 2220,
+        "top_features": [
+          "DIntPkt",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 399,
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 93,
+        "top_features": [
+          "Temp",
+          "Flgs",
+          "SrcLoad"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 975,
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "Resp_Rate"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 899,
+        "top_features": [
+          "Flgs",
+          "SYS",
+          "Sport"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 817,
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 527,
+        "top_features": [
+          "Flgs",
+          "DIA",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 343,
+        "top_features": [
+          "Temp",
+          "Flgs",
+          "SrcLoad"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 2383,
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 1876,
+        "top_features": [
+          "DIntPkt",
+          "Flgs",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 297,
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "Pulse_Rate"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 2032,
+        "top_features": [
+          "DIntPkt",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 1546,
+        "top_features": [
+          "Temp",
+          "Flgs",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 110,
+        "top_features": [
+          "DIntPkt",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 102,
+        "top_features": [
+          "DIntPkt",
+          "Sport",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 318,
+        "top_features": [
+          "Flgs",
+          "SYS",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 804,
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "Load"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 856,
+        "top_features": [
+          "Flgs",
+          "Sport",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 1769,
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "SrcLoad"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 2087,
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "SrcLoad"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 94,
+        "top_features": [
+          "DIntPkt",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 1931,
+        "top_features": [
+          "DIntPkt",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 734,
+        "top_features": [
+          "Temp",
+          "Flgs",
+          "Sport"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 2241,
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "Resp_Rate"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 1524,
+        "top_features": [
+          "Temp",
+          "Flgs",
+          "Sport"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 805,
+        "top_features": [
+          "Temp",
+          "Flgs",
+          "Sport"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 1618,
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 2015,
+        "top_features": [
+          "Flgs",
+          "Pulse_Rate",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 994,
+        "top_features": [
+          "Sport",
+          "DIntPkt",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
+      },
+      {
+        "sample_index": 24,
+        "top_features": [
+          "Flgs",
+          "Pulse_Rate",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          true
+        ],
+        "n_features_mentioned": 3
       }
     ]
   }

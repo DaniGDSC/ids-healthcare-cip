@@ -89,14 +89,25 @@ def compute_primary():
         vals = [accessor(r) for r in responses if accessor(r) is not None]
         return float(np.mean(vals)) if vals else None
 
-    # Catastrophic miss: ground truth CRITICAL but operator chose LOW/dismiss-tier
+    # Catastrophic miss — canonical definition matching m5_result.yaml,
+    # tests/acceptance_tests.py:248-250, and module6_evaluation.study_analysis:
+    # severity_chosen and ground_truth_severity differ by the full 4-tier
+    # span (|distance| == 3, i.e. CRITICAL ↔ LOW). SYMMETRIC by design:
+    # both miss-the-severity (CRITICAL→LOW) and over-react (LOW→CRITICAL)
+    # are catastrophic on a 4-tier scale. Function name retained because
+    # the metric key `catastrophic_miss_rate` is cross-module public API.
+    #
+    # The previous (rate = action=dismiss OR sev=LOW) ran ~3× higher than
+    # the canonical m5 number because it counted any LOW-severity choice,
+    # not just full-scale mismatches.
+    _SEV_LEVEL = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
+
     def _is_catastrophic_miss(r):
-        if r.get("ground_truth_severity") != "CRITICAL":
+        truth = r.get("ground_truth_severity")
+        chosen = r.get("response", {}).get("severity_chosen")
+        if truth not in _SEV_LEVEL or chosen not in _SEV_LEVEL:
             return None
-        action = r.get("response", {}).get("action_chosen")
-        # Catastrophic if dismissed or marked LOW severity
-        sev = r.get("response", {}).get("severity_chosen")
-        return 1 if (action == "dismiss" or sev == "LOW") else 0
+        return 1 if abs(_SEV_LEVEL[truth] - _SEV_LEVEL[chosen]) == 3 else 0
 
     # Over/under reaction
     SEVERITY_ORDER = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}

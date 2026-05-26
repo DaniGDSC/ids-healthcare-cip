@@ -86,27 +86,55 @@ def plot_mve_alignment():
 
     ma = data["mode_a_llm_narrative"]
     mb = data["mode_b_rule_based"]
+    mb_large = data.get("mode_b_rule_based_large_n", {}).get("metrics", {})
+    has_large = bool(mb_large)
 
-    fig, ax = plt.subplots(figsize=(9, 5.5))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
-    # 3 metric groups, 2 modes each
+    # 3 metric groups; 2 or 3 series depending on large-N availability
     x = np.arange(3)
-    bar_w = 0.36
+    n_series = 3 if has_large else 2
+    bar_w = 0.85 / n_series
+
     mode_a_vals = [ma["contains_top1_pct"], ma["contains_at_least_2_pct"], ma["contains_all_3_pct"]]
     mode_b_vals = [mb["contains_top1_pct"], mb["contains_at_least_2_pct"], mb["contains_all_3_pct"]]
 
-    bars_a = ax.bar(x - bar_w/2, mode_a_vals, bar_w,
-                    color=COLOR["mode_a"], edgecolor="#262A33", linewidth=0.8,
-                    label="Mode A (LLM narrative)")
-    bars_b = ax.bar(x + bar_w/2, mode_b_vals, bar_w,
-                    color=COLOR["mode_b"], edgecolor="#262A33", linewidth=0.8,
-                    label="Mode B (rule-based)")
+    series: list[tuple[list, str, str]] = [
+        (mode_a_vals, COLOR["mode_a"], f"Mode A LLM narrative (n={ma['n_total']})"),
+        (mode_b_vals, COLOR["mode_b"], f"Mode B rule-based (n={mb['n_total']})"),
+    ]
+    large_vals = None
+    if has_large:
+        large_vals = [
+            mb_large["contains_top1_pct"],
+            mb_large["contains_at_least_2_pct"],
+            mb_large["contains_all_3_pct"],
+        ]
+        series.append((large_vals, "#5F9E7B",
+                       f"Mode B rule-based large-N (n={mb_large['n_total']})"))
 
-    for bars, vals in [(bars_a, mode_a_vals), (bars_b, mode_b_vals)]:
+    # Offsets center the side-by-side bars on each x tick.
+    offsets = [bar_w * (i - (len(series) - 1) / 2) for i in range(len(series))]
+
+    for offset, (vals, color, label) in zip(offsets, series):
+        bars = ax.bar(x + offset, vals, bar_w,
+                      color=color, edgecolor="#262A33", linewidth=0.8,
+                      label=label)
         for bar, v in zip(bars, vals):
             ax.text(bar.get_x() + bar.get_width()/2, v + 1.5,
                     f"{v:.0f}%", ha="center", va="bottom",
-                    fontsize=10, family="monospace", color="#262A33")
+                    fontsize=9, family="monospace", color="#262A33")
+
+    # 95% CI error bars on the large-N series, when present
+    if has_large:
+        ci_t1 = mb_large["ci95_top1_pct"]
+        ci_2 = mb_large["ci95_at_least_2_pct"]
+        ci_3 = mb_large["ci95_all_3_pct"]
+        lows = [v - low for v, (low, high) in zip(large_vals, [ci_t1, ci_2, ci_3])]
+        highs = [high - v for v, (low, high) in zip(large_vals, [ci_t1, ci_2, ci_3])]
+        ax.errorbar(x + offsets[-1], large_vals, yerr=[lows, highs],
+                    fmt="none", ecolor="#262A33", capsize=4, capthick=1.0,
+                    elinewidth=1.0, alpha=0.7)
 
     # Target lines
     ax.axhline(95, color=COLOR["target"], linestyle="--", linewidth=1.0,
@@ -120,13 +148,23 @@ def plot_mve_alignment():
                         "Contains all 3\ntop SHAP features"])
     ax.set_ylabel("% of evaluated samples")
     ax.set_ylim(0, 115)
+
+    subtitle_extra = ""
+    if has_large:
+        ci_2_l, ci_2_h = mb_large["ci95_at_least_2_pct"]
+        subtitle_extra = (
+            f" · 95% CI on Mode B large-N ≥2: [{ci_2_l:.1f}%, {ci_2_h:.1f}%] "
+            "rules out small-sample fluke"
+        )
+    n_parts = f"{ma['n_total']}/{mb['n_total']}"
+    if has_large:
+        n_parts += f"/{mb_large.get('n_total', '')}"
     ax.set_title(
-        f"RQ2.b — MVE Layer 1 vs top SHAP features alignment\n"
-        f"n={ma['n_total']} explanations per mode · gap between current "
-        f"implementation and spec targets shown in red",
+        "RQ2.b — MVE Layer 1 vs top SHAP features alignment\n"
+        f"Post G1+G2+G6 fix · n={n_parts} per series{subtitle_extra}",
         loc="left", pad=12,
     )
-    ax.legend(loc="upper right", frameon=False, ncol=2)
+    ax.legend(loc="lower right", frameon=False, ncol=1, fontsize=9)
     ax.grid(True, alpha=0.25, linestyle="--", linewidth=0.6, axis="y")
 
     out = OUT_DIR / "rq2_mve_alignment.png"

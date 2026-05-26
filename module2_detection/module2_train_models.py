@@ -50,12 +50,36 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RANDOM_STATE = 42
 
 
+# ── Strategy-1 frozen-split leakage guard ───────────────────────────────
+# The demo split (operator-clean) must never be loaded by training-side
+# functions. It is frozen for the M6 user study and may only be scored
+# at inference time via `predict_demo()` on already-fitted pipelines.
+# Re-introduced after silent regression in commit 5d4cf95 — see
+# docs/section312_offline_online_extraction.md for the invariant.
+_FORBIDDEN_TRAINING_PARQUETS = frozenset({"demo_phase1.parquet"})
+
+
+def _assert_no_demo_leakage(parquet_path: Path) -> None:
+    """Refuse to read the demo split from any training-side function."""
+    if parquet_path.name in _FORBIDDEN_TRAINING_PARQUETS:
+        raise RuntimeError(
+            f"Module 2 training functions must not load "
+            f"{parquet_path.name}. Strategy 1 invariant: the demo split "
+            f"is frozen and may only be touched at inference time "
+            f"(see module2_train_models.predict_demo). If you need "
+            f"demo predictions, run predict_demo() on already-fitted "
+            f"pipelines — do not refit on demo rows."
+        )
+
+
 # ── Data loading ────────────────────────────────────────────────────────
 
 def load_data(label_col: str = "Label") -> tuple:
     """Load Phase 1 parquet files, return X/y arrays and feature names."""
     train_path = PROJECT_ROOT / "data/processed/train_phase1.parquet"
     test_path = PROJECT_ROOT / "data/processed/test_phase1.parquet"
+    _assert_no_demo_leakage(train_path)
+    _assert_no_demo_leakage(test_path)
 
     train_df = pd.read_parquet(train_path)
     test_df = pd.read_parquet(test_path)

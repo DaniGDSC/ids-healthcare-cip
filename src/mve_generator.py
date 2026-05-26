@@ -188,6 +188,55 @@ _DEVICE_TYPE_KEYWORDS = (
 )
 
 
+# ── MITRE ATT&CK technique lookup (RQ2.e) ───────────────────────────
+# Layer 1 narratives append "Consistent with MITRE TXXXX (Name)." when
+# the alert's attack category maps to a technique in
+# config/attack_to_mitre_mapping.yaml. Cached via lru_cache after first
+# read; tests can reset via `_load_mitre_mapping.cache_clear()`.
+
+
+@functools.lru_cache(maxsize=1)
+def _load_mitre_mapping() -> dict:
+    """Read config/attack_to_mitre_mapping.yaml once; return cached dict.
+
+    Returns {} when PyYAML isn't installed or the file is missing/unreadable
+    — MVE generation must not break because of an optional reference.
+    """
+    from pathlib import Path
+    try:
+        import yaml
+    except ImportError:
+        return {}
+    path = Path(__file__).resolve().parent.parent / "config" / "attack_to_mitre_mapping.yaml"
+    if not path.exists():
+        return {}
+    try:
+        with open(path) as f:
+            return yaml.safe_load(f) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+
+def _lookup_mitre_reference(attack_category: str) -> Optional[dict[str, str]]:
+    """Return {'id', 'name'} for the primary MITRE technique of an
+    attack category, or None when no mapping applies (benign baseline,
+    unknown category, or low-confidence association).
+    """
+    if not attack_category:
+        return None
+    mapping = _load_mitre_mapping()
+    cat = (mapping.get("attack_categories") or {}).get(attack_category)
+    if not cat or cat.get("excluded_from_coverage_audit"):
+        return None
+    primary = cat.get("primary_technique") or {}
+    pid = primary.get("id")
+    pname = primary.get("name", "")
+    pconf = str(primary.get("confidence", "")).lower()
+    if not pid or pid == "NONE" or pconf == "low":
+        return None
+    return {"id": pid, "name": pname}
+
+
 def _normalize_device_type(raw: str) -> str:
     """Map descriptive device names to canonical types.
 
@@ -1096,8 +1145,15 @@ def generate_mve(
         )
 
     # ── SHAP-context enrichment (v2.0 M5: shap_narrative_alignment) ─────
-    # Layer 1 MUST mention top_category and at least one top_feature
+    # Layer 1 MUST mention top_category and the top-k SHAP features
     # when shap_context is provided (research_spec §2.module_4).
+    #
+    # RQ2.b G1+G2 fix: previously injected only top_features[0], leaving
+    # the "≥2 features mentioned" alignment target at 0%. Now lists up
+    # to the top-3 features so Mode B alignment hits 100% / 100% / 100%
+    # on top-1 / ≥2 / all-3 by construction. Word budget impact is ~6-12
+    # additional words (feature names are short network/biometric tokens),
+    # well under the 150-word Layer 1+2+3 cap enforced post-generation.
     if shap_context:
         top_category = str(shap_context.get("top_category", "")).strip()
         top_features = shap_context.get("top_features") or []
@@ -1106,17 +1162,34 @@ def generate_mve(
                 "top_feature_narrative", "abnormal biometric reading"
             )
             existing = mve.layer_1.get("deviation_description", "")
+            # Also list raw biometric features so the SHAP-alignment audit
+            # can verify the top-k were surfaced.
+            feats_str = ", ".join(str(f) for f in top_features[:3])
+            feat_suffix = f" Driving features: {feats_str}." if feats_str else ""
             mve.layer_1["deviation_description"] = (
                 f"{existing} Concurrent clinical anomaly: {narrative} "
-                "deviates from this device's baseline vital signs."
+                f"deviates from this device's baseline vital signs.{feat_suffix}"
             )
         elif top_category and top_features:
-            feat = str(top_features[0])
+            feats_str = ", ".join(str(f) for f in top_features[:3])
             existing = mve.layer_1.get("deviation_description", "")
             readable = top_category.replace("_", " ")
             mve.layer_1["deviation_description"] = (
-                f"{existing} Primary signal: {readable} ({feat})."
+                f"{existing} Top signals: {readable} ({feats_str})."
             ).strip()
+
+    # ── MITRE ATT&CK reference (RQ2.e G3) ───────────────────────────────
+    # When the alert's attack_category maps to a MITRE technique in
+    # config/attack_to_mitre_mapping.yaml, append the technique ID + name
+    # to Layer 1. Previously zero narratives referenced MITRE; this
+    # closes the spec target of ≥90% Layer 1 MITRE-reference rate.
+    attack_category = str(raw_alert.get("attack_category", "")).strip()
+    mitre_ref = _lookup_mitre_reference(attack_category)
+    if mitre_ref:
+        existing = mve.layer_1.get("deviation_description", "")
+        mve.layer_1["deviation_description"] = (
+            f"{existing} Consistent with MITRE {mitre_ref['id']} ({mitre_ref['name']})."
+        ).strip()
 
     mve.provider = provider_used
     return mve

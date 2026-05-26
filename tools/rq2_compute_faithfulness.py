@@ -217,6 +217,32 @@ def _extract_layer1(record: dict) -> str:
     return " ".join(sentences[:2])
 
 
+_SAMPLE_INDEX_TO_CATEGORY: dict | None = None
+
+
+def _load_category_map() -> dict:
+    """Build sample_index → attack_category lookup from alert_responses.json.
+
+    sample_explanations.json doesn't carry attack_category at top level
+    but it's needed by mve_generator's MITRE-reference injection. The
+    test-split alert_responses.json has the canonical mapping.
+    """
+    global _SAMPLE_INDEX_TO_CATEGORY
+    if _SAMPLE_INDEX_TO_CATEGORY is not None:
+        return _SAMPLE_INDEX_TO_CATEGORY
+    path = REPORTS / "alert_responses.json"
+    if not path.exists():
+        _SAMPLE_INDEX_TO_CATEGORY = {}
+        return _SAMPLE_INDEX_TO_CATEGORY
+    with open(path) as f:
+        data = json.load(f)
+    records = data.get("records", data) if isinstance(data, dict) else data
+    _SAMPLE_INDEX_TO_CATEGORY = {
+        r["sample_index"]: r.get("attack_category", "unknown") for r in records
+    }
+    return _SAMPLE_INDEX_TO_CATEGORY
+
+
 def _generate_mve_for_sample(sample: dict, force_rule_based: bool = True) -> dict:
     """Generate a fresh MVE via src.mve_generator with SHAP context wired
     in — gives the canonical Mode B Layer 1 that the spec table targets.
@@ -225,14 +251,19 @@ def _generate_mve_for_sample(sample: dict, force_rule_based: bool = True) -> dic
     sys.path.insert(0, str(PROJECT_ROOT))
     from src.mve_generator import generate_mve
 
+    cat_map = _load_category_map()
+    sidx = sample.get("sample_index", 0)
+    attack_cat = cat_map.get(sidx, "unknown")
+
     raw_alert = {
-        "alert_id": f"SAMPLE-{sample.get('sample_index', 0):04d}",
+        "alert_id": f"SAMPLE-{sidx:04d}",
         "severity": sample.get("severity", "MEDIUM"),
         "src_ip": sample.get("src_ip", "10.0.0.1"),
         "dest_ip": sample.get("dest_ip", "external"),
         "proto": sample.get("proto", "TCP"),
         "alert_type": "anomalous_outbound_connection",  # generic IDS-driven
         "dest_port": sample.get("dest_port", 443),
+        "attack_category": attack_cat,   # drives MITRE injection (G3)
     }
     device_context = {
         "device_type": sample.get("device_type", "patient_monitor"),
@@ -360,6 +391,155 @@ def compute_mve_shap_alignment() -> dict:
 
 
 
+def _load_large_n_samples(n: int = 200, seed: int = 42) -> list[dict]:
+    """G6 — build a larger sample set for the alignment audit.
+
+    The cached `sample_explanations.json` has only 20 records; statistical
+    power for the Mode B alignment claim benefits from n=200. We join:
+
+      • `results/reports/analyst_report.json` — per-record top SHAP features
+        (668 records on the test split)
+      • `results/reports/alert_responses.json` — `attack_category` (for
+        MITRE injection by the generator)
+
+    Returns a list of synthetic "sample" dicts with the same fields the
+    alignment computation expects: sample_index, severity, top_shap_features.
+    """
+    import random
+    rng = random.Random(seed)
+
+    with open(REPORTS / "analyst_report.json") as f:
+        analyst = json.load(f)
+
+    # Strata: try to spread across severity buckets so per-severity hit
+    # rates are meaningful — pure random would skew toward majority class.
+    by_severity = {}
+    for a in analyst:
+        sev = (a.get("severity") or "MEDIUM").upper()
+        by_severity.setdefault(sev, []).append(a)
+
+    target_per = max(1, n // max(1, len(by_severity)))
+    chosen: list[dict] = []
+    for sev, recs in by_severity.items():
+        # Per-stratum sample (with replacement only if stratum smaller than target).
+        take = min(len(recs), target_per)
+        chosen.extend(rng.sample(recs, take))
+
+    # Fill remainder if strata thin
+    if len(chosen) < n:
+        chosen_idx = {a["sample_index"] for a in chosen}
+        remaining = [a for a in analyst if a["sample_index"] not in chosen_idx]
+        rng.shuffle(remaining)
+        chosen.extend(remaining[: n - len(chosen)])
+
+    chosen = chosen[:n]
+
+    # Map to the sample-dict shape used by `_eval_block` callers
+    samples = []
+    for a in chosen:
+        xgb = (a.get("models") or {}).get("xgboost") or {}
+        top_shap = xgb.get("top_features") or []
+        samples.append({
+            "sample_index": a["sample_index"],
+            "severity": a.get("severity", "MEDIUM"),
+            "top_shap_features": top_shap,
+        })
+    return samples
+
+
+def compute_mve_shap_alignment_large_n(n: int = 200) -> dict:
+    """G6 — Mode B alignment at larger sample size.
+
+    Only Mode B is re-measured at n=200 (rule-based is cheap; Mode A LLM
+    narratives would need expensive regeneration). Mode A remains at the
+    cached n=20 in `compute_mve_shap_alignment()` for backwards
+    compatibility.
+    """
+    samples = _load_large_n_samples(n=n)
+
+    # Reuse the same per-sample evaluator the n=20 block uses, but feed
+    # it the larger sample set. Mode B (fresh rule-based) only.
+    n_top1 = n_2 = n_3 = 0
+    feat_hits = {}
+    per = []
+
+    for s in samples:
+        mve = _generate_mve_for_sample(s, force_rule_based=True)
+        l1 = mve.get("layer_1", {}) or {}
+        layer1_text = " ".join(filter(None, [
+            l1.get("baseline_behavior", ""),
+            l1.get("deviation_description", ""),
+            l1.get("confidence_indicator", ""),
+        ]))
+        top_features = [f["feature"] for f in s.get("top_shap_features", [])[:3]]
+        if not top_features:
+            continue
+        hits = [_feature_in_text(f, layer1_text) for f in top_features]
+        n_hits = sum(hits)
+        per.append({
+            "sample_index": s["sample_index"],
+            "top_features": top_features,
+            "feature_hits": hits,
+            "n_features_mentioned": n_hits,
+        })
+        if hits and hits[0]:
+            n_top1 += 1
+        if n_hits >= 2:
+            n_2 += 1
+        if n_hits >= 3:
+            n_3 += 1
+        for f, h in zip(top_features, hits):
+            d = feat_hits.setdefault(f, {"appearances": 0, "mentioned": 0})
+            d["appearances"] += 1
+            if h:
+                d["mentioned"] += 1
+
+    n_total = len(per)
+    for f, v in feat_hits.items():
+        v["hit_rate"] = round(v["mentioned"] / v["appearances"] * 100, 2) if v["appearances"] else 0.0
+
+    # 95% Wilson confidence intervals so the larger-n value carries
+    # explicit statistical-power context.
+    def _wilson_ci(k: int, total: int, z: float = 1.96):
+        if total == 0:
+            return (0.0, 0.0)
+        p = k / total
+        denom = 1 + z * z / total
+        centre = (p + z * z / (2 * total)) / denom
+        half = (z / denom) * ((p * (1 - p) / total + z * z / (4 * total * total)) ** 0.5)
+        return (max(0.0, centre - half), min(1.0, centre + half))
+
+    ci_top1 = _wilson_ci(n_top1, n_total)
+    ci_at_least_2 = _wilson_ci(n_2, n_total)
+    ci_all_3 = _wilson_ci(n_3, n_total)
+
+    return {
+        "_meta": {
+            "description": "Mode B (rule-based) alignment at large n — G6 fix",
+            "n_samples_requested": n,
+            "n_samples_evaluated": n_total,
+            "sampling_strategy": "stratified by analyst_report severity",
+            "seed": 42,
+        },
+        "mode": "mode_b_rule_based_large_n",
+        "metrics": {
+            "n_total": n_total,
+            "contains_top1_pct": round(n_top1 / n_total * 100, 2) if n_total else 0.0,
+            "contains_at_least_2_pct": round(n_2 / n_total * 100, 2) if n_total else 0.0,
+            "contains_all_3_pct": round(n_3 / n_total * 100, 2) if n_total else 0.0,
+            "ci95_top1_pct": [round(ci_top1[0] * 100, 2), round(ci_top1[1] * 100, 2)],
+            "ci95_at_least_2_pct": [round(ci_at_least_2[0] * 100, 2), round(ci_at_least_2[1] * 100, 2)],
+            "ci95_all_3_pct": [round(ci_all_3[0] * 100, 2), round(ci_all_3[1] * 100, 2)],
+            "target_at_least_2_pct": 95.0,
+            "target_all_3_pct": 80.0,
+            "target_at_least_2_met": bool(n_2 / n_total >= 0.95) if n_total else False,
+            "target_all_3_met": bool(n_3 / n_total >= 0.80) if n_total else False,
+        },
+        "per_feature_hit_rate": feat_hits,
+        "per_sample": per[:30],   # truncated for size; full list = per
+    }
+
+
 def main():
     print("[1] Computing SHAP stability...")
     stability = compute_shap_stability()
@@ -373,18 +553,32 @@ def main():
           f"targets_met=(mean: {s['target_mean_met']}, pct: {s['target_pct_stable_met']})")
 
     print()
-    print("[2] Computing MVE-SHAP alignment (Mode A vs Mode B)...")
+    print("[2] Computing MVE-SHAP alignment (Mode A vs Mode B, n=20 cached)...")
     alignment = compute_mve_shap_alignment()
-    out2 = PROJECT_ROOT / "results" / "rq2_mve_shap_alignment.json"
-    with open(out2, "w") as f:
-        json.dump(alignment, f, indent=2, default=float)
-    print(f"  → {out2.relative_to(PROJECT_ROOT)}")
     for mode_key, mode_label in [("mode_a_llm_narrative", "Mode A (LLM narrative)"),
                                   ("mode_b_rule_based", "Mode B (rule-based)")]:
         m = alignment[mode_key]
         print(f"  {mode_label}: top1={m['contains_top1_pct']}%  "
               f"≥2={m['contains_at_least_2_pct']}%  all3={m['contains_all_3_pct']}%  "
               f"(targets ≥2≥95%, all3≥80%)")
+
+    print()
+    print("[3] Computing MVE-SHAP alignment large-N (Mode B, n=200) — G6...")
+    large_n = compute_mve_shap_alignment_large_n(n=200)
+
+    # Embed both n=20 and n=200 results in the same artifact, then write
+    # before printing summary so the [3] print reflects the on-disk file.
+    alignment["mode_b_rule_based_large_n"] = large_n
+    out2 = PROJECT_ROOT / "results" / "rq2_mve_shap_alignment.json"
+    with open(out2, "w") as f:
+        json.dump(alignment, f, indent=2, default=float)
+
+    m = large_n["metrics"]
+    print(f"  Mode B large-N: top1={m['contains_top1_pct']}%  "
+          f"≥2={m['contains_at_least_2_pct']}%  all3={m['contains_all_3_pct']}%  "
+          f"(95% CI ≥2: [{m['ci95_at_least_2_pct'][0]}, {m['ci95_at_least_2_pct'][1]}])")
+    print(f"  Evaluated on n={m['n_total']} samples (stratified by severity)")
+    print(f"  → {out2.relative_to(PROJECT_ROOT)}")
 
 
 if __name__ == "__main__":

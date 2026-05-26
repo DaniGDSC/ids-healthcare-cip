@@ -315,7 +315,11 @@ class TestHelpers:
         assert _normalize_device_type("GE CARESCAPE B650 patient monitor") == "patient_monitor"
 
     def test_normalize_unknown(self) -> None:
-        assert _normalize_device_type("Some Widget X") == "some_widget_x"
+        # OOD-01 invariant (src/mve_generator.py:240-256): unknown device
+        # types must return "" so the caller's is_unknown check triggers
+        # the UNREGISTERED DEVICE flow. Snake-case fallback would silently
+        # admit out-of-vocabulary devices into the rule-based templates.
+        assert _normalize_device_type("Some Widget X") == ""
 
     def test_normalize_ehr(self) -> None:
         assert _normalize_device_type("EHR workstation") == "ehr_workstation"

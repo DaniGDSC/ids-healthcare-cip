@@ -191,12 +191,202 @@ def compute_mitre_reference_rate(cfg: dict) -> dict:
     }
 
 
+def compute_fresh_mve_reference_rate(cfg: dict, n_samples: int = 50) -> dict:
+    """Generate fresh MVE narratives via src.mve_generator and measure
+    MITRE-reference rate on the freshly produced Layer 1 text.
+
+    The cached `sample_explanations.json` / `example_explanations.json`
+    files were produced before the MITRE-injection fix (RQ2.e G3), so
+    auditing them shows the old behavior. This function regenerates
+    narratives at runtime to validate the fix.
+    """
+    import sys
+    sys.path.insert(0, str(PROJECT_ROOT))
+    from src.mve_generator import generate_mve
+
+    # Pull a sample of test-split alerts spread across attack categories
+    resp_path = REPORTS / "alert_responses.json"
+    if not resp_path.exists():
+        return {"error": f"{resp_path} missing — cannot regenerate"}
+    with open(resp_path) as f:
+        data = json.load(f)
+    records = data.get("records", data) if isinstance(data, dict) else data
+
+    # Per-sample top SHAP features (G3 v2 fix — was a synthetic constant
+    # for every sample, misleading because Layer 1 generation actually
+    # cites the features). When analyst_report is unavailable, fall back
+    # to the synthetic constant.
+    shap_by_sidx: dict[int, list[str]] = {}
+    analyst_path = REPORTS / "analyst_report.json"
+    if analyst_path.exists():
+        with open(analyst_path) as f:
+            analyst = json.load(f)
+        for a in analyst:
+            xgb = (a.get("models") or {}).get("xgboost") or {}
+            top = [f["feature"] for f in xgb.get("top_features") or []]
+            if top:
+                shap_by_sidx[a["sample_index"]] = top
+    _FALLBACK_SHAP = ["Flgs", "DIntPkt", "Dur"]
+
+    # Stratified sample: ensure each non-normal category gets ≥10 entries
+    by_cat = {}
+    for r in records:
+        cat = r.get("attack_category", "unknown")
+        by_cat.setdefault(cat, []).append(r)
+
+    chosen = []
+    target_per_category = max(10, n_samples // max(1, len(by_cat)))
+    for cat, recs in by_cat.items():
+        take = min(len(recs), target_per_category)
+        chosen.extend(recs[:take])
+    chosen = chosen[:n_samples]
+
+    # Build lookup for MITRE expected names (same logic as cached path)
+    expected = {}
+    for cat, info in cfg.get("attack_categories", {}).items():
+        names = []
+        ids = []
+        primary = info.get("primary_technique", {}) or {}
+        if primary.get("id") and primary.get("id") != "NONE":
+            ids.append(primary["id"])
+            names.append(primary.get("name", "").lower())
+        expected[cat] = {"ids": set(ids), "names": {n for n in names if n}}
+
+    n_total = 0
+    n_ref = 0
+    n_total_attack_class = 0   # excludes benign baseline per spec
+    n_ref_attack_class = 0
+    n_gen_failures = 0
+    gen_failures_log: list[dict] = []
+    per_category_hits = {}
+    samples_audit = []
+
+    # Categories that don't get a MITRE reference by design — these
+    # are excluded from the denominator when computing the spec's
+    # ≥90% reference-rate target.
+    excluded_cats = set()
+    for cat_name, cat_info in (cfg.get("attack_categories") or {}).items():
+        if cat_info.get("excluded_from_coverage_audit"):
+            excluded_cats.add(cat_name)
+
+    for r in chosen:
+        cat = r.get("attack_category", "unknown")
+        sidx = r.get("sample_index")
+        raw_alert = {
+            "alert_id": f"SAMPLE-{sidx:04d}",
+            "severity": r.get("risk_level", "MEDIUM"),
+            "alert_type": "anomalous_outbound_connection",
+            "attack_category": cat,
+        }
+        device_context = {
+            "device_type": "patient_monitor",
+            "clinical_function": "vitals_monitoring",
+            "location": "clinical area",
+            "criticality": r.get("risk_level", "MEDIUM"),
+            "patchable": True,
+        }
+        baseline = {
+            "normal_destinations": ["internal hosts"],
+            "normal_protocols": ["HTTPS"],
+            "normal_hours": "business hours",
+            "baseline_days": 90,
+        }
+        top_features = shap_by_sidx.get(sidx, _FALLBACK_SHAP)
+        try:
+            mve = generate_mve(
+                raw_alert=raw_alert, device_context=device_context,
+                baseline=baseline, user_context=None,
+                shap_context={
+                    "top_features": top_features,
+                    "top_category": "network_protocol",
+                    "shap_direction": "elevated",
+                },
+                force_rule_based=True,
+            )
+            text = " ".join(mve.layer_1.get(k, "") for k in
+                            ("baseline_behavior", "deviation_description",
+                             "confidence_indicator"))
+        except Exception as e:
+            # G3 v2 fix — was: text = "" (counted failed gen as "no MITRE
+            # reference" → silently biased the rate down). Now: skip the
+            # sample, log, and surface the count in the report so reviewers
+            # can spot generator regressions.
+            n_gen_failures += 1
+            gen_failures_log.append({
+                "sample_index": sidx,
+                "category": cat,
+                "error": f"{type(e).__name__}: {e}",
+            })
+            print(f"WARN: generate_mve failed for sample {sidx} ({cat}): "
+                  f"{type(e).__name__}: {e}")
+            continue
+
+        n_total += 1
+        m = _MITRE_ID_RE.search(text)
+        matches = bool(m)
+        if not matches:
+            exp = expected.get(cat, {"names": set()})
+            for name in exp["names"]:
+                if name and name in text.lower():
+                    matches = True
+                    break
+        if matches:
+            n_ref += 1
+        # Attack-class denominator (excludes benign baseline)
+        if cat not in excluded_cats:
+            n_total_attack_class += 1
+            if matches:
+                n_ref_attack_class += 1
+        bucket = per_category_hits.setdefault(cat, {"total": 0, "hits": 0})
+        bucket["total"] += 1
+        if matches:
+            bucket["hits"] += 1
+        samples_audit.append({
+            "sample_index": r.get("sample_index"),
+            "category": cat,
+            "references_mitre": matches,
+            "layer1_excerpt": text[:160],
+        })
+
+    for cat, b in per_category_hits.items():
+        b["hit_rate_pct"] = round(b["hits"] / b["total"] * 100, 2)
+
+    # Two denominators reported: all-categories (includes benign noise)
+    # vs attack-class-only (the spec's "when applicable" filter).
+    pct_all = (n_ref / n_total * 100) if n_total else 0.0
+    pct_attack = (n_ref_attack_class / n_total_attack_class * 100) if n_total_attack_class else 0.0
+    return {
+        "n_narratives_evaluated": n_total,
+        "n_referencing_mitre": n_ref,
+        "pct_referencing_mitre_all": round(pct_all, 2),
+        "n_attack_class_evaluated": n_total_attack_class,
+        "n_attack_class_referencing": n_ref_attack_class,
+        "pct_referencing_mitre_attack_class": round(pct_attack, 2),
+        "target_pct": 90.0,
+        "target_met_attack_class": bool(pct_attack >= 90.0),
+        "target_met_all": bool(pct_all >= 90.0),
+        "n_gen_failures": n_gen_failures,
+        "gen_failures": gen_failures_log[:20],
+        "per_category": per_category_hits,
+        "method": (
+            "Regenerated at runtime via src.mve_generator (post-G3 fix). "
+            "attack_class denominator excludes 'normal' baseline samples "
+            "since benign traffic has no MITRE mapping by design (see "
+            f"config/attack_to_mitre_mapping.yaml — excluded: {sorted(excluded_cats)}). "
+            "Per-sample top-3 SHAP features pulled from analyst_report.json; "
+            "samples missing from that file fall back to a synthetic constant."
+        ),
+        "samples_audit": samples_audit[:10],
+    }
+
+
 def main():
     with open(CONFIG) as f:
         cfg = yaml.safe_load(f)
 
     config_audit = audit_config_coverage(cfg)
     reference_rate = compute_mitre_reference_rate(cfg)
+    reference_rate_fresh = compute_fresh_mve_reference_rate(cfg)
 
     report = {
         "_meta": {
@@ -206,10 +396,12 @@ def main():
             "mapping_yaml_version": cfg.get("version"),
         },
         "config_coverage": config_audit,
-        "layer1_mitre_reference_rate": reference_rate,
+        "layer1_mitre_reference_rate_cached": reference_rate,
+        "layer1_mitre_reference_rate_fresh": reference_rate_fresh,
         "overall_status": "PASS" if (
             config_audit["target_met_no_orphans"]
             and config_audit["framework_version_pinned"]
+            and reference_rate_fresh.get("target_met_attack_class")
         ) else "PARTIAL",
     }
 
@@ -225,13 +417,29 @@ def main():
     print(f"  framework version pinned: {config_audit['framework_version_pinned']} ({config_audit['framework_version']})")
 
     print()
-    print(f"=== Layer 1 MITRE Reference Rate ===")
-    print(f"  narratives evaluated: {reference_rate['n_narratives_evaluated']}")
-    print(f"  referencing MITRE:    {reference_rate['n_referencing_mitre']} ({reference_rate['pct_referencing_mitre']}%)")
-    print(f"  target: {reference_rate['target_pct']}% — met: {reference_rate['target_met']}")
-    print(f"  per-category hit rates:")
-    for cat, b in reference_rate["per_category"].items():
-        print(f"    {cat:20s} {b['hits']}/{b['total']} ({b['hit_rate_pct']}%)")
+    print(f"=== Layer 1 MITRE Reference Rate — CACHED narratives ===")
+    print(f"  (sample_explanations.json — pre-G3-fix; expected 0%)")
+    print(f"  narratives: {reference_rate['n_narratives_evaluated']}  "
+          f"refs: {reference_rate['n_referencing_mitre']} "
+          f"({reference_rate['pct_referencing_mitre']}%)")
+
+    print()
+    print(f"=== Layer 1 MITRE Reference Rate — FRESH narratives (post-G3 fix) ===")
+    fr = reference_rate_fresh
+    if "error" in fr:
+        print(f"  ERROR: {fr['error']}")
+    else:
+        print(f"  all categories:    {fr['n_referencing_mitre']}/{fr['n_narratives_evaluated']} "
+              f"({fr['pct_referencing_mitre_all']}%)")
+        print(f"  attack-class only: {fr['n_attack_class_referencing']}/{fr['n_attack_class_evaluated']} "
+              f"({fr['pct_referencing_mitre_attack_class']}%)  ← spec metric")
+        print(f"  target: {fr['target_pct']}% — met (attack-class): {fr['target_met_attack_class']}")
+        if fr.get("n_gen_failures"):
+            print(f"  ⚠ generator failures: {fr['n_gen_failures']} sample(s) skipped — "
+                  "see gen_failures in JSON output")
+        print(f"  per-category hit rates:")
+        for cat, b in fr["per_category"].items():
+            print(f"    {cat:20s} {b['hits']}/{b['total']} ({b['hit_rate_pct']}%)")
 
     print()
     print(f"OVERALL: {report['overall_status']}")

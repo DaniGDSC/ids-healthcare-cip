@@ -89,7 +89,38 @@ def _resolve_suffix(split: str | None) -> str:
 # logged to the signed audit_log.jsonl chain.
 _hardened_audit = HardenedAuditLogger(EVAL_DIR / "audit_log.jsonl")
 
-ROLES = ["Security Analyst", "Clinician", "Administrator"]
+# Canonical display names (spec triad). Internal data keys remain
+# lowercase analyst / clinician / administrator to preserve backward
+# compatibility with `participant_responses.json` and the YAML configs;
+# user-visible labels everywhere use the spec triad below.
+#
+# Mapping:
+#   analyst       ↔ IT Generalist   (SOC analyst, IT support)
+#   administrator ↔ Biomed Engineer (biomedical engineering, service line owner)
+#   clinician     ↔ Nurse Manager   (bedside clinician, charge nurse)
+ROLE_DISPLAY_NAMES = {
+    "analyst": "IT Generalist",
+    "administrator": "Biomed Engineer",
+    "clinician": "Nurse Manager",
+}
+# Inverse map for legacy lookup paths that still accept display strings.
+ROLE_INTERNAL_KEY = {v: k for k, v in ROLE_DISPLAY_NAMES.items()}
+
+# Ordered tuple for UI surfaces (spec ordering: IT → Biomed → Nurse).
+ROLE_ORDER = ("analyst", "administrator", "clinician")
+
+# Display-name list in canonical order — replaces the legacy ROLES list
+# (kept as alias for any external callers still importing the old name).
+ROLE_DISPLAY_LIST = [ROLE_DISPLAY_NAMES[k] for k in ROLE_ORDER]
+ROLES = ROLE_DISPLAY_LIST  # legacy alias — now ["IT Generalist", "Biomed Engineer", "Nurse Manager"]
+
+# Short labels for compact UI (e.g. Dashboard role pills)
+ROLE_SHORT_LABELS = {
+    "analyst": "IT",
+    "administrator": "Biomed",
+    "clinician": "Nurse",
+}
+
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
 
 TIER_COLORS = {"CRITICAL": "#8e44ad", "HIGH": "#e74c3c", "MEDIUM": "#e67e22", "LOW": "#2ecc71"}
@@ -803,7 +834,7 @@ def render_analyst(alert: dict):
     """
     from module6_evaluation import components as ui_mod
 
-    st.markdown("#### Security Analyst View")
+    st.markdown(f"#### {ROLE_DISPLAY_NAMES['analyst']} view")
 
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
@@ -874,7 +905,7 @@ def render_analyst(alert: dict):
 
 def render_clinician(alert: dict):
     """Clinician view: plain-language NLG summary + biometric safety notes."""
-    st.markdown("#### Clinician View")
+    st.markdown(f"#### {ROLE_DISPLAY_NAMES['clinician']} view")
 
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
@@ -919,7 +950,7 @@ def render_admin(alert: dict):
     """Administrator view: summary statistics + risk breakdown."""
     from module6_evaluation import components as ui_mod
 
-    st.markdown("#### Administrator View")
+    st.markdown(f"#### {ROLE_DISPLAY_NAMES['administrator']} view")
 
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
