@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pandas as pd
-import pytest
 
 from module1_preprocessing.phase1.hipaa import HIPAASanitizer
 

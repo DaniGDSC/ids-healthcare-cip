@@ -30,7 +30,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Patch
 
-import joblib
 import numpy as np
 import pandas as pd
 import shap
@@ -48,7 +47,6 @@ TOP_K_FEATURES = 10
 
 # ── Async JSON write utility (Opt-9) ───────────────────────────────────
 import asyncio
-import io
 from concurrent.futures import ProcessPoolExecutor
 
 

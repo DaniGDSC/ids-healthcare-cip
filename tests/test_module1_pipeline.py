@@ -247,7 +247,6 @@ def test_pipeline_refuses_unbaselined_csv(tmp_path):
 def test_pipeline_refuses_path_pattern_with_separator():
     """file_pattern must be a basename glob — no path traversal."""
     from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-    from module1_preprocessing.phase1.config import Phase1Config
     from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
     import tempfile
 

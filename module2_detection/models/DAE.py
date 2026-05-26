@@ -46,7 +46,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 
@@ -96,6 +96,11 @@ class DAEDetector:
         self._threshold_pct = threshold_percentile
         self._clip_pct = clip_percentile
         self._random_state = random_state
+        # Per-instance RNG drives the threshold jitter (TM-04). Local
+        # state avoids cross-test pollution and makes the noise pattern
+        # reproducible given a known seed — while still being
+        # unpredictable to an attacker who doesn't know it.
+        self._rng = np.random.default_rng(random_state)
 
         self._model = None
         self._threshold: float = 0.0
@@ -377,19 +382,40 @@ class DAEDetector:
         return per_sample, per_feature_weighted
 
     def _noisy_threshold(self) -> float:
-        """Return threshold with ±10% random noise (TM-04 fix).
+        """Return threshold with ±10% random jitter (TM-04 defense).
 
-        Prevents attackers from mapping the exact decision boundary
-        via repeated probing. Each call returns a slightly different
-        threshold, making the boundary non-deterministic.
+        Prevents an attacker who can submit repeated probes from mapping
+        the exact decision boundary by binary search. Uses the per-
+        instance RNG (``self._rng``) seeded from ``random_state`` —
+        deterministic for a given seed, unpredictable without it.
+
+        Threat model note: jitter chống casual boundary probing, NOT
+        cryptographic randomness. An attacker with sustained probing
+        capability can still average it out — the design assumes
+        Module 3+ rate-limits queries and Module 5 audit-logs all probes.
         """
-        noise = np.random.uniform(-0.10, 0.10)
+        noise = self._rng.uniform(-0.10, 0.10)
         return self._threshold * (1.0 + noise)
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        """Binary anomaly prediction: 1=attack (above noisy threshold)."""
+    def predict(
+        self,
+        X: np.ndarray,
+        *,
+        deterministic: bool = False,
+    ) -> np.ndarray:
+        """Binary anomaly prediction: 1=attack.
+
+        Args:
+            X: feature matrix.
+            deterministic: if True, use the fixed threshold (reproducible —
+                required by ``evaluate()`` and reviewer rerunability). If
+                False (default), apply ±10% jitter to the threshold so
+                each call returns a slightly different decision boundary
+                (TM-04 adversarial defense — see ``_noisy_threshold``).
+        """
         errors = self.reconstruction_error(X)
-        return (errors > self._noisy_threshold()).astype(int)
+        threshold = self._threshold if deterministic else self._noisy_threshold()
+        return (errors > threshold).astype(int)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Anomaly score normalized to [0, 1] range.
@@ -440,8 +466,12 @@ class DAEDetector:
         # Opt-4: one forward pass shared between prediction and error metrics.
         # Previously predict() called reconstruction_error() internally, then
         # evaluate() called reconstruction_error() again — two full DAE passes.
+        #
+        # Reproducibility (C2): paper metrics MUST be deterministic across
+        # runs. Use the fixed threshold here, not the noisy one. Inference
+        # callers still get jittered decisions via ``predict()`` defaults.
         errors = self.reconstruction_error(X_test)
-        y_pred = (errors > self._noisy_threshold()).astype(int)
+        y_pred = (errors > self._threshold).astype(int)
 
         metrics = {
             "attack_f1": float(f1_score(y_test, y_pred, pos_label=1)),

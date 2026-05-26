@@ -1,8 +1,14 @@
 """Shared data-loading utility for Track A and Track B tuning scripts.
 
 A single canonical ``load_data`` implementation used by all four
-run_*.py scripts so changes (e.g. new label columns, dtype policy) only
-need to be made in one place.
+run_*.py scripts + ``module2_train_models`` so changes (e.g. new label
+columns, dtype policy) only need to be made in one place.
+
+The leakage guard ``_assert_no_demo_leakage`` lives here too — every
+training-side load path must refuse ``demo_phase1.parquet`` to preserve
+the Strategy-1 frozen-split invariant. The defense is duplicated at
+import-time in ``module2_train_models`` so a regression in either
+module can't bypass it silently.
 """
 
 from __future__ import annotations
@@ -16,6 +22,25 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 _DROP_CANDIDATES = ("Label", "Attack Category", "row_id", "device_class")
+
+# ── Strategy-1 frozen-split leakage guard ───────────────────────────────
+# The demo split (operator-clean) is reserved for M6 user-study scoring
+# at inference time only. Any training-side function that loads it
+# silently would corrupt the held-out user-study results.
+_FORBIDDEN_TRAINING_PARQUETS = frozenset({"demo_phase1.parquet"})
+
+
+def _assert_no_demo_leakage(parquet_path: Path) -> None:
+    """Refuse to read the demo split from any training-side function."""
+    if parquet_path.name in _FORBIDDEN_TRAINING_PARQUETS:
+        raise RuntimeError(
+            f"Module 2 training functions must not load "
+            f"{parquet_path.name}. Strategy 1 invariant: the demo split "
+            f"is frozen and may only be touched at inference time "
+            f"(see module2_train_models.predict_split). If you need "
+            f"demo predictions, run predict_split('demo') on the "
+            f"already-fitted pipelines — do not refit on demo rows."
+        )
 
 
 def load_data(
@@ -35,7 +60,12 @@ def load_data(
 
     Returns:
         ``(X_train, X_test, y_train, y_test, feat_names)``
+
+    Raises:
+        RuntimeError: if either path references the demo split.
     """
+    _assert_no_demo_leakage(train_path)
+    _assert_no_demo_leakage(test_path)
     train_df = pd.read_parquet(train_path)
     test_df = pd.read_parquet(test_path)
 

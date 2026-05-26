@@ -31,7 +31,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.patches import Patch
 
 import numpy as np
 import pandas as pd

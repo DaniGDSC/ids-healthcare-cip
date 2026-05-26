@@ -9,7 +9,7 @@ translate alert data into the prototype's markup classes (see
 from __future__ import annotations
 
 from html import escape
-from typing import Iterable, Mapping
+from typing import Mapping
 
 
 _TIER_NORMALIZE = {

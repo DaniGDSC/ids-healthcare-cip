@@ -1,16 +1,23 @@
 
 #!/usr/bin/env python3
-"""Train final models with best hyperparameters — no more tuning.
+"""Train final detectors with best hyperparameters — no more tuning.
 
 Retrains each model on the full training set using the best
 hyperparameters found during CV tuning (Phase 2.5):
-  - Track A (XGBoost, RF, DT): SMOTE-balanced full training set
+  - Track A (GradientBoosting/XGBoost-equivalent, RandomForest,
+    DecisionTree): SMOTE-balanced full training set
   - Track B (DAE): full benign-only training set
 
-Artifacts are saved to data/phase2/{model}/final/.
+Artifacts are saved to ``results/models/`` (Track A) and via the
+DAE training module (Track B).
 
 Usage:
-    python train_final_models.py
+    # Train end-to-end (Track A + Track B + cascaded test eval):
+    python -m module2_detection.module2_train_models
+
+    # Re-emit predictions on a frozen split without re-training:
+    python -m module2_detection.module2_train_models --predict-only --split test
+    python -m module2_detection.module2_train_models --predict-only --split demo
 """
 
 from __future__ import annotations
@@ -47,57 +54,66 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-RANDOM_STATE = 42
+# Default seed when no tuning report is found. Real runs propagate the
+# random_state from the tuning report's metadata via _resolve_random_state
+# so the final-training stage uses the same seed the hyperparameters were
+# chosen under — see finding #17 lineage.
+DEFAULT_RANDOM_STATE = 42
+RANDOM_STATE = DEFAULT_RANDOM_STATE   # legacy alias for any external consumer
 
 
-# ── Strategy-1 frozen-split leakage guard ───────────────────────────────
-# The demo split (operator-clean) must never be loaded by training-side
-# functions. It is frozen for the M6 user study and may only be scored
-# at inference time via `predict_demo()` on already-fitted pipelines.
-# Re-introduced after silent regression in commit 5d4cf95 — see
-# docs/section312_offline_online_extraction.md for the invariant.
-_FORBIDDEN_TRAINING_PARQUETS = frozenset({"demo_phase1.parquet"})
+def _resolve_random_state(params_file: Path) -> int:
+    """Read random_state from the tuning report next to ``params_file``.
 
+    The runner writes ``data.random_state`` into the tuning report. We
+    look up that value so the final-fit seed matches the seed under
+    which the hyperparameters were selected; otherwise random_state
+    drift between tuning and final training breaks reproducibility.
 
-def _assert_no_demo_leakage(parquet_path: Path) -> None:
-    """Refuse to read the demo split from any training-side function."""
-    if parquet_path.name in _FORBIDDEN_TRAINING_PARQUETS:
-        raise RuntimeError(
-            f"Module 2 training functions must not load "
-            f"{parquet_path.name}. Strategy 1 invariant: the demo split "
-            f"is frozen and may only be touched at inference time "
-            f"(see module2_train_models.predict_demo). If you need "
-            f"demo predictions, run predict_demo() on already-fitted "
-            f"pipelines — do not refit on demo rows."
-        )
+    Falls back to DEFAULT_RANDOM_STATE if the report is missing or
+    doesn't carry the seed (e.g. legacy tuning artefacts pre-Y6).
+    """
+    report_path = params_file.parent / f"{params_file.stem.replace('_best_params', '')}_report.json"
+    # Also try the canonical report filenames produced by the runner
+    candidate_reports = [
+        report_path,
+        params_file.parent / "xgboost_report.json",
+        params_file.parent / "random_forest_report.json",
+        params_file.parent / "decision_tree_report.json",
+    ]
+    for cand in candidate_reports:
+        if cand.exists():
+            try:
+                data = json.loads(cand.read_text())
+                seed = data.get("data", {}).get("random_state")
+                if isinstance(seed, int):
+                    return seed
+            except (json.JSONDecodeError, OSError):
+                continue
+    return DEFAULT_RANDOM_STATE
 
 
 # ── Data loading ────────────────────────────────────────────────────────
+# The leakage guard + canonical load_data implementation live in
+# `module2_detection.tuning._data`; we import them here so all training-
+# side code paths share one source of truth.
+from module2_detection.tuning._data import (
+    load_data as _load_data_shared,
+)
+
 
 def load_data(label_col: str = "Label") -> tuple:
-    """Load Phase 1 parquet files, return X/y arrays and feature names."""
-    train_path = PROJECT_ROOT / "data/processed/train_phase1.parquet"
-    test_path = PROJECT_ROOT / "data/processed/test_phase1.parquet"
-    _assert_no_demo_leakage(train_path)
-    _assert_no_demo_leakage(test_path)
+    """Load Phase 1 train + test parquets at default paths.
 
-    train_df = pd.read_parquet(train_path)
-    test_df = pd.read_parquet(test_path)
-
-    drop_cols = [c for c in [label_col, "Attack Category", "row_id", "device_class"] if c in train_df.columns]
-
-    y_train = train_df[label_col].values
-    y_test = test_df[label_col].values
-    X_train = train_df.drop(columns=drop_cols).values.astype(np.float32)
-    X_test = test_df.drop(columns=drop_cols).values.astype(np.float32)
-    feat_names = [c for c in train_df.columns if c not in drop_cols]
-
-    logger.info(
-        "Data: train=%d (benign=%d, attack=%d), test=%d, features=%d",
-        len(y_train), (y_train == 0).sum(), (y_train == 1).sum(),
-        len(y_test), len(feat_names),
+    Thin wrapper around ``tuning._data.load_data`` that pins the paths
+    to the canonical Phase 1 outputs. Use the shared loader directly if
+    you need to specify alternative paths (e.g. CI fixtures).
+    """
+    return _load_data_shared(
+        PROJECT_ROOT / "data/processed/train_phase1.parquet",
+        PROJECT_ROOT / "data/processed/test_phase1.parquet",
+        label_col=label_col,
     )
-    return X_train, X_test, y_train, y_test, feat_names
 
 
 def load_split_data(split: str, label_col: str = "Label") -> tuple:
@@ -105,6 +121,7 @@ def load_split_data(split: str, label_col: str = "Label") -> tuple:
 
     Used by ``--predict-only`` and by detection_engine.write_predictions
     to score a frozen split (test = paper-clean; demo = operator-clean).
+    Inference-side: demo is explicitly allowed here, unlike load_data().
     """
     if split not in ("test", "demo"):
         raise ValueError(f"unknown split: {split!r} (expected 'test' or 'demo')")
@@ -203,22 +220,32 @@ def train_track_a(
     logger.info("FINAL TRAINING: %s", name.upper())
     logger.info(sep)
 
-    # Load best params
+    # Load best params + resolve the random_state that was used to pick them.
     params_path = PROJECT_ROOT / cfg["params_file"]
     with open(params_path) as f:
         raw_params = json.load(f)
     clf_params = strip_prefix(raw_params)
     logger.info("Best params: %s", clf_params)
 
+    # Y6 fix: use the same seed the tuning report was produced under, not
+    # a hardcoded RANDOM_STATE. Keeps SMOTE + classifier deterministic
+    # w.r.t. the hyperparameter selection that produced clf_params.
+    run_seed = _resolve_random_state(params_path)
+    logger.info("Final-fit random_state=%d (resolved from tuning report)", run_seed)
+
     # Build pipeline: SMOTE + classifier with fixed params
     def _fresh_pipeline() -> ImbPipeline:
+        # cls_kwargs already carries random_state for those classifiers
+        # whose default is hardcoded; override it with the resolved seed
+        # so the run is consistent end-to-end.
+        cls_kwargs = {**cfg["cls_kwargs"], "random_state": run_seed}
         return ImbPipeline([
             ("smote", SMOTE(
                 sampling_strategy="auto",
                 k_neighbors=5,
-                random_state=RANDOM_STATE,
+                random_state=run_seed,
             )),
-            ("classifier", cfg["cls"](**cfg["cls_kwargs"], **clf_params)),
+            ("classifier", cfg["cls"](**cls_kwargs, **clf_params)),
         ])
 
     pipeline = _fresh_pipeline()
@@ -239,7 +266,7 @@ def train_track_a(
     # receive, which is the distribution we should optimise against.
     # See finding #2 in the Phase 2 security review.
     logger.info("Computing out-of-fold probabilities for threshold fit...")
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=run_seed)
     oof_proba = cross_val_predict(
         _fresh_pipeline(),
         X_train,
@@ -292,7 +319,17 @@ def train_track_a(
         "elapsed_seconds": elapsed,
     }
     report_path = output_dir / f"{name}_final_report.json"
-    report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    # Strict JSON serialisation: a non-JSON value here is a producer
+    # bug, not something to silently coerce with default=str (which
+    # would render numpy arrays as their repr string and look plausible).
+    try:
+        payload = json.dumps(report, indent=2)
+    except TypeError as exc:
+        raise TypeError(
+            f"{name}_final_report.json contains a non-JSON-serialisable "
+            f"value (detail: {exc}). Fix the producer."
+        ) from exc
+    report_path.write_text(payload, encoding="utf-8")
 
     # Test predictions
     np.savez(
@@ -498,9 +535,14 @@ def main() -> None:
     dae_report = json.loads(dae_report_path.read_text(encoding="utf-8"))
     dae_metrics = evaluate_dae(dae_npz, dae_report.get("threshold", 0.0))
     dae_report["test_metrics"] = dae_metrics
-    dae_report_path.write_text(
-        json.dumps(dae_report, indent=2, default=str), encoding="utf-8",
-    )
+    try:
+        dae_payload = json.dumps(dae_report, indent=2)
+    except TypeError as exc:
+        raise TypeError(
+            f"dae_final_report.json contains a non-JSON-serialisable "
+            f"value (detail: {exc}). Fix the producer."
+        ) from exc
+    dae_report_path.write_text(dae_payload, encoding="utf-8")
     all_metrics["dae"] = {**dae_summary, **dae_metrics}
 
     # Final summary

@@ -36,9 +36,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-import matplotlib.ticker as mticker
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score
@@ -46,11 +44,8 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from module3_risk_scoring.module3_risk_scores import (
-    WEIGHTS,
     assign_risk_levels,
     apply_feedback,
-    apply_weight_feedback,
-    compute_composite_risk,
 )
 from module5_responses.module5_pipeline import FeedbackLoop
 

@@ -382,10 +382,10 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     w(f"| `train_phase1.parquet` | Apache Parquet | " f"{train_n:,} rows × {n_features} features |")
     w(f"| `test_phase1.parquet` | Apache Parquet | " f"{test_n:,} rows × {n_features} features |")
     w(
-        f"| `robust_scaler.json` | JSON sidecar | "
-        f"Fitted RobustScaler params (`center_`, `scale_`) — pickle-free |"
+        "| `robust_scaler.json` | JSON sidecar | "
+        "Fitted RobustScaler params (`center_`, `scale_`) — pickle-free |"
     )
-    w(f"| `preprocessing_report.json` | JSON | Per-step audit trail |")
+    w("| `preprocessing_report.json` | JSON | Per-step audit trail |")
     w("")
     elapsed = report.get("elapsed_seconds", 0)
     w(f"Total pipeline elapsed time: **{elapsed:.2f} s**")
@@ -502,7 +502,7 @@ def _smote_section(w, track_a) -> None:
     w(f"| Enabled | {'yes' if enabled else 'no'} |")
     w(f"| Sampling strategy | `{strategy}` |")
     w(f"| `k_neighbors` | {k} |")
-    w(f"| Applied at | Phase 2 cross-validation, train fold only |")
+    w("| Applied at | Phase 2 cross-validation, train fold only |")
     w("")
     w(
         "SMOTE is configured here but executed inside the Phase 2 "

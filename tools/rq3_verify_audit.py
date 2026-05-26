@@ -201,7 +201,7 @@ def main():
     with open(OUT, "w") as f:
         json.dump(report, f, indent=2, default=str)
 
-    print(f"\n=== Hash-chain integrity ===")
+    print("\n=== Hash-chain integrity ===")
     print(f"  Chain intact:        {integrity['chain_intact']}")
     print(f"  All hashes valid:    {integrity['all_hashes_valid']}")
     print(f"  Archive restarts:    {len(integrity.get('archive_restarts', []))}")
@@ -212,7 +212,7 @@ def main():
     if integrity["hash_mismatches"]:
         print(f"  First hash mismatch: index {integrity['hash_mismatches'][0]['index']}")
 
-    print(f"\n=== Spec §3 field completeness ===")
+    print("\n=== Spec §3 field completeness ===")
     for entry in completeness["spec_field_coverage"]:
         if entry["status"] == "ok":
             print(f"  ✓ {entry['spec_field']:25s} → {entry['actual_field']:25s} ({entry['coverage_rate']*100:.0f}%)")

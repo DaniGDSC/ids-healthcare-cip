@@ -28,7 +28,6 @@ import json
 import logging
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -60,6 +59,9 @@ def _load_oof_probas(benign_mask: np.ndarray) -> np.ndarray:
     Returns:
         Array of shape ``(n_benign, len(TRACK_A_FOR_DAE))``.
     """
+    # Previously wrapped in ThreadPoolExecutor over 3 .npy files; the
+    # thread-pool setup cost dominated the actual IO time (~80KB files
+    # on local disk). Sequential is simpler and faster in practice.
     def _load_one(name: str) -> np.ndarray:
         path = MODELS_DIR / f"{name}_oof_proba.npy"
         if not path.exists():
@@ -69,8 +71,7 @@ def _load_oof_probas(benign_mask: np.ndarray) -> np.ndarray:
             )
         return np.load(path)[benign_mask]
 
-    with ThreadPoolExecutor(max_workers=len(TRACK_A_FOR_DAE)) as pool:
-        cols = list(pool.map(_load_one, TRACK_A_FOR_DAE))
+    cols = [_load_one(name) for name in TRACK_A_FOR_DAE]
     return np.column_stack(cols).astype(np.float32)
 
 
@@ -189,9 +190,17 @@ def train_dae(seed: int = RANDOM_STATE, persist: bool = True) -> dict:
         report["elapsed_seconds"] = elapsed
 
         report_path = MODELS_DIR / "dae_final_report.json"
-        report_path.write_text(
-            json.dumps(report, indent=2, default=str), encoding="utf-8",
-        )
+        # Strict JSON serialisation — match the discipline applied across
+        # Module 0/1 exporters. `default=str` would silently coerce numpy
+        # arrays to repr strings and look like a valid JSON value.
+        try:
+            payload = json.dumps(report, indent=2)
+        except TypeError as exc:
+            raise TypeError(
+                f"dae_final_report.json contains a non-JSON-serialisable "
+                f"value (detail: {exc}). Fix the producer."
+            ) from exc
+        report_path.write_text(payload, encoding="utf-8")
         logger.info("Saved: %s (%.1fs)", MODELS_DIR, elapsed)
 
     return {

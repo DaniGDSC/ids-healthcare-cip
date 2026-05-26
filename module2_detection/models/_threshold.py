@@ -57,8 +57,11 @@ def find_optimal_threshold(
 
     b2 = beta ** 2
     denom = b2 * p + r
-    # Avoid division by zero on degenerate (p=0, r=0) segments.
-    fbeta = np.where(denom > 0, (1.0 + b2) * p * r / denom, 0.0)
+    # Avoid division by zero on degenerate (p=0, r=0) segments. Numpy
+    # evaluates both branches of np.where so we suppress the warning
+    # rather than relying on the where condition.
+    with np.errstate(invalid="ignore", divide="ignore"):
+        fbeta = np.where(denom > 0, (1.0 + b2) * p * r / denom, 0.0)
 
     if fbeta.size == 0 or fbeta.max() == 0.0:
         return 0.5

@@ -24,7 +24,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 import numpy as np
-import pandas as pd
 from sklearn.metrics import (
     roc_auc_score,
     precision_score,

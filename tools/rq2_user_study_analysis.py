@@ -297,7 +297,7 @@ def main():
     print(f"  → {out2.relative_to(PROJECT_ROOT)}")
     print(f"  scanned {fm['_meta']['n_total_responses_scanned']} responses, "
           f"{fm['_meta']['pct_responses_with_signal']}% with failure signal")
-    print(f"  modes observed:")
+    print("  modes observed:")
     for mode, count in fm["failure_mode_counts"].items():
         print(f"    {mode:30s} {count}")
 

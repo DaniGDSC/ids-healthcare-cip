@@ -26,7 +26,6 @@ import sys
 import numpy as np
 import pandas as pd
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
 
 
 # When invoked via `streamlit run module6_evaluation/module6_app.py`
@@ -2845,7 +2844,7 @@ def simulation_mode():
                 st.metric(
                     "Current Alert",
                     f"{latest_score:.3f}",
-                    help=f"Risk tier classification for this sample.",
+                    help="Risk tier classification for this sample.",
                 )
                 st.markdown(
                     f"**Tier:** :{tier_color}[**{latest_level}**]",

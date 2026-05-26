@@ -408,7 +408,7 @@ def main():
     with open(OUT, "w") as f:
         json.dump(report, f, indent=2, default=str)
 
-    print(f"=== MITRE Config Coverage ===")
+    print("=== MITRE Config Coverage ===")
     print(f"  total categories (excluding 'normal'): {config_audit['n_total_categories']}")
     print(f"  mapped: {config_audit['n_mapped']} ({config_audit['pct_mapped']}%)")
     print(f"  with sub-techniques: {config_audit['n_with_sub_techniques']}")
@@ -417,14 +417,14 @@ def main():
     print(f"  framework version pinned: {config_audit['framework_version_pinned']} ({config_audit['framework_version']})")
 
     print()
-    print(f"=== Layer 1 MITRE Reference Rate — CACHED narratives ===")
-    print(f"  (sample_explanations.json — pre-G3-fix; expected 0%)")
+    print("=== Layer 1 MITRE Reference Rate — CACHED narratives ===")
+    print("  (sample_explanations.json — pre-G3-fix; expected 0%)")
     print(f"  narratives: {reference_rate['n_narratives_evaluated']}  "
           f"refs: {reference_rate['n_referencing_mitre']} "
           f"({reference_rate['pct_referencing_mitre']}%)")
 
     print()
-    print(f"=== Layer 1 MITRE Reference Rate — FRESH narratives (post-G3 fix) ===")
+    print("=== Layer 1 MITRE Reference Rate — FRESH narratives (post-G3 fix) ===")
     fr = reference_rate_fresh
     if "error" in fr:
         print(f"  ERROR: {fr['error']}")
@@ -437,7 +437,7 @@ def main():
         if fr.get("n_gen_failures"):
             print(f"  ⚠ generator failures: {fr['n_gen_failures']} sample(s) skipped — "
                   "see gen_failures in JSON output")
-        print(f"  per-category hit rates:")
+        print("  per-category hit rates:")
         for cat, b in fr["per_category"].items():
             print(f"    {cat:20s} {b['hits']}/{b['total']} ({b['hit_rate_pct']}%)")
 

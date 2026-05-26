@@ -33,6 +33,7 @@ What this does
 5. Re-sign the v3 body with the current Module 5 ECDSA P-256 key.
 6. Atomic write to *out*; rename old to ``.v2.bak`` if --keep-backup.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,9 +71,7 @@ def _verify_v2_signature(meta: dict) -> None:
     public_key = serialization.load_pem_public_key(public_path.read_bytes())
     payload = canonical_json({"version": meta["version"], "entries": meta["entries"]})
     try:
-        public_key.verify(
-            base64.b64decode(sig_b64), payload, ec.ECDSA(hashes.SHA256())
-        )
+        public_key.verify(base64.b64decode(sig_b64), payload, ec.ECDSA(hashes.SHA256()))
     except InvalidSignature as exc:
         raise IntegrityError(
             "v2 metadata signature is invalid — file has been tampered with. "
@@ -158,9 +157,7 @@ def main(argv: list[str] | None = None) -> int:
 
     version = meta.get("version")
     if version == _METADATA_VERSION:
-        print(
-            f"Already v{_METADATA_VERSION}; nothing to migrate.", file=sys.stderr
-        )
+        print(f"Already v{_METADATA_VERSION}; nothing to migrate.", file=sys.stderr)
         return 0
     if version != 2:
         print(
@@ -197,7 +194,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     for digest, rec in v3_entries.items():
         paths_summary = ", ".join(rec.get("migrated_from_v2_paths", []))
-        print(f"  sha256={digest[:16]}…  filename={rec['filename']}  paths=[{paths_summary}]")
+        print(
+            f"  sha256={digest[:16]}…  filename={rec['filename']}  paths=[{paths_summary}]"
+        )
     return 0
 
 

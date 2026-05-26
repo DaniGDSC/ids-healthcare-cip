@@ -9,7 +9,6 @@ that caused the rendered §4.1 to print:
 """
 from __future__ import annotations
 
-import pytest
 
 from module1_preprocessing.phase1.report import render_preprocessing_report
 
