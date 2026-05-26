@@ -22,33 +22,25 @@ from src.data_models import ScoredAlert
 DEFAULT_THRESHOLD: float = 0.50
 """Baseline surfacing threshold (static, for comparison baseline)."""
 
-# Threshold multipliers per (criticality, patchable).
-# CRITICAL + unpatchable: 0.70 → threshold = 0.50 * 0.70 = 0.35 (30% reduction).
-# LOW + patchable: 1.00 → threshold = 0.50 (default, per spec).
-_THRESHOLD_MULT: dict[tuple[str, bool], float] = {
-    ("CRITICAL", False): 0.70,   # ≥30% reduction required by spec
-    ("CRITICAL", True):  0.80,
-    ("HIGH",     False): 0.85,
-    ("HIGH",     True):  0.90,
-    ("MEDIUM",   False): 0.95,
-    ("MEDIUM",   True):  1.00,
-    ("LOW",      False): 1.00,
-    ("LOW",      True):  1.00,   # default threshold per spec
+# Per-tier policy: threshold mult + risk mult in one mapping.
+# N4 fix: was two separate dicts keyed identically — single source of truth
+# for the tier policy + half the lookups per call.
+#
+# CRITICAL + unpatchable: threshold mult 0.70 (≥30% reduction per spec),
+#                          risk mult 1.50 (≥1.5 per spec).
+# LOW + patchable:         threshold mult 1.00 (default), risk mult 1.00.
+_DEVICE_TIER_POLICY: dict[tuple[str, bool], dict[str, float]] = {
+    ("CRITICAL", False): {"threshold_mult": 0.70, "risk_mult": 1.50},
+    ("CRITICAL", True):  {"threshold_mult": 0.80, "risk_mult": 1.30},
+    ("HIGH",     False): {"threshold_mult": 0.85, "risk_mult": 1.20},
+    ("HIGH",     True):  {"threshold_mult": 0.90, "risk_mult": 1.10},
+    ("MEDIUM",   False): {"threshold_mult": 0.95, "risk_mult": 1.05},
+    ("MEDIUM",   True):  {"threshold_mult": 1.00, "risk_mult": 1.00},
+    ("LOW",      False): {"threshold_mult": 1.00, "risk_mult": 1.00},
+    ("LOW",      True):  {"threshold_mult": 1.00, "risk_mult": 1.00},
 }
 
-# Risk multipliers per (criticality, patchable).
-# CRITICAL + unpatchable: ≥1.5 required by spec.
-# LOW + patchable: 1.0 required by spec.
-_RISK_MULT: dict[tuple[str, bool], float] = {
-    ("CRITICAL", False): 1.50,   # ≥1.5 required by spec
-    ("CRITICAL", True):  1.30,
-    ("HIGH",     False): 1.20,
-    ("HIGH",     True):  1.10,
-    ("MEDIUM",   False): 1.05,
-    ("MEDIUM",   True):  1.00,
-    ("LOW",      False): 1.00,
-    ("LOW",      True):  1.00,   # 1.0 required by spec
-}
+_DEFAULT_POLICY = {"threshold_mult": 1.00, "risk_mult": 1.00}
 
 
 # ── Public API ──────────────────────────────────────────────────────────
@@ -56,7 +48,7 @@ _RISK_MULT: dict[tuple[str, bool], float] = {
 def get_threshold(device_criticality: str, patchable: bool) -> float:
     """Return the surfacing threshold for a given device context.
 
-    Used by test_risk_adaptive_threshold to verify that the
+    Used by verify_risk_adaptive_threshold to verify that the
     CRITICAL-unpatchable threshold is strictly lower (more sensitive)
     than the LOW-patchable threshold.
 
@@ -68,8 +60,8 @@ def get_threshold(device_criticality: str, patchable: bool) -> float:
         Float threshold in [0.0, 1.0].
     """
     key = (device_criticality.upper(), bool(patchable))
-    mult: float = _THRESHOLD_MULT.get(key, 1.00)
-    return round(DEFAULT_THRESHOLD * mult, 4)
+    policy = _DEVICE_TIER_POLICY.get(key, _DEFAULT_POLICY)
+    return round(DEFAULT_THRESHOLD * policy["threshold_mult"], 4)
 
 
 def score_alert(
@@ -126,11 +118,10 @@ def score_alert(
                 suppression_reason="maintenance window — reduced confidence, verify with biomed",
             )
 
-    # RS-3: build key once and use it for both lookups — get_threshold()
-    # would rebuild the same (criticality, patchable) tuple internally.
-    key = (criticality, patchable)
-    risk_multiplier: float = _RISK_MULT.get(key, 1.0)
-    threshold = round(DEFAULT_THRESHOLD * _THRESHOLD_MULT.get(key, 1.0), 4)
+    # RS-3 + N4: single dict lookup carries both threshold and risk multipliers.
+    policy = _DEVICE_TIER_POLICY.get((criticality, patchable), _DEFAULT_POLICY)
+    risk_multiplier: float = policy["risk_mult"]
+    threshold = round(DEFAULT_THRESHOLD * policy["threshold_mult"], 4)
 
     # Adaptive rule: reduce multiplier for frequently-seen patterns
     if event_context:
@@ -169,7 +160,7 @@ def score_alert_static(anomaly_score: float) -> dict[str, bool]:
 
     Applies the same fixed 0.5 threshold to every alert regardless of
     device context — simulating a legacy IDS with no adaptive logic.
-    Used by test_false_positive_rate to compute the baseline FP rate.
+    Used by compute_false_positive_rate to compute the baseline FP rate.
 
     Args:
         anomaly_score: Raw anomaly score [0.0, 1.0].

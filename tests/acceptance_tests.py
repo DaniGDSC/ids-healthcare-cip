@@ -50,7 +50,7 @@ PATIENT_IMPACT_PATTERNS = re.compile(
 
 # ── M1: MVE Completeness ─────────────────────────────────────────────────
 
-def test_mve_completeness(outputs: List[MVEOutput]) -> float:
+def compute_mve_completeness_metric(outputs: List[MVEOutput]) -> float:
     """Claim C7: MVE contains 3 layers with all required elements.
 
     Checks that every output has all required fields in each layer,
@@ -91,7 +91,7 @@ def test_mve_completeness(outputs: List[MVEOutput]) -> float:
 
 # ── M2: Clinical Relevance ───────────────────────────────────────────────
 
-def test_clinical_relevance(
+def compute_clinical_relevance_metric(
     outputs: List[MVEOutput],
     ground_truths: List[AlertGroundTruth],
 ) -> float:
@@ -142,7 +142,7 @@ def test_clinical_relevance(
 
 # ── M3: Actionability ────────────────────────────────────────────────────
 
-def test_actionability(outputs: List[MVEOutput]) -> float:
+def compute_actionability_metric(outputs: List[MVEOutput]) -> float:
     """Claim C3: Layer 3 provides specific executable action, not vague advice.
 
     Pass: immediate_action contains at least one specific keyword AND
@@ -177,7 +177,7 @@ def test_actionability(outputs: List[MVEOutput]) -> float:
 
 # ── M4: Clinical Constraint Awareness ────────────────────────────────────
 
-def test_clinical_constraint_awareness(outputs: List[MVEOutput]) -> float:
+def compute_clinical_constraint_metric(outputs: List[MVEOutput]) -> float:
     """Claim C3: Layer 3 includes 'DO NOT' statement for clinical-system alerts.
 
     Only alerts where alert_involves_clinical_system=True are tested.
@@ -213,7 +213,7 @@ def test_clinical_constraint_awareness(outputs: List[MVEOutput]) -> float:
 
 # ── M8: Severity Label Accuracy ──────────────────────────────────────────
 
-def test_severity_label_accuracy(
+def compute_severity_accuracy_metric(
     outputs: List[MVEOutput],
     ground_truths: List[AlertGroundTruth],
 ) -> float:
@@ -264,7 +264,7 @@ def test_severity_label_accuracy(
 
 # ── M1b: Layer 1 Length Constraint ───────────────────────────────────────
 
-def test_layer1_length_constraint(outputs: List[MVEOutput]) -> float:
+def compute_layer1_length_metric(outputs: List[MVEOutput]) -> float:
     """MVE spec: Layer 1 <= 60 words, total output <= 150 words.
 
     Checks both constraints per output.
@@ -304,7 +304,7 @@ def test_layer1_length_constraint(outputs: List[MVEOutput]) -> float:
 
 # ── M7: Risk-Adaptive Threshold Behavior ────────────────────────────────
 
-def test_risk_adaptive_threshold() -> bool:
+def verify_risk_adaptive_threshold() -> bool:
     """Claim C2: Unpatchable CRITICAL devices have lower (more sensitive)
     alert thresholds than patchable LOW devices.
 
@@ -364,7 +364,7 @@ def _load_shap_stubs() -> dict[str, dict[str, Any]]:
         return yaml.safe_load(f).get("stubs", {})
 
 
-def test_shap_narrative_alignment(
+def compute_shap_narrative_alignment(
     mve_outputs: List[MVEOutput],
     ground_truths: List[AlertGroundTruth],
 ) -> float:
@@ -439,7 +439,7 @@ def test_shap_narrative_alignment(
 
 # ── M6: False Positive Rate Reduction ───────────────────────────────────
 
-def test_false_positive_rate(
+def compute_false_positive_rate(
     baseline_results: List[dict[str, Any]],
     adaptive_results: List[dict[str, Any]],
     ground_truths: List[AlertGroundTruth],
@@ -511,15 +511,15 @@ def run_acceptance_tests(
         {metric_id, metric_name, result_value, target, minimum, pass_fail, detail}
     """
     METRICS = [
-        ("M1",  "test_mve_completeness",            0.95, 0.85),
-        ("M2",  "test_clinical_relevance",           0.90, 0.75),
-        ("M3",  "test_actionability",                0.85, 0.70),
-        ("M4",  "test_clinical_constraint_awareness",0.90, 0.80),
-        ("M8",  "test_severity_label_accuracy",      0.80, 0.70),
-        ("M1b", "test_layer1_length_constraint",     0.95, 0.90),
-        ("M5",  "test_shap_narrative_alignment",     0.85, 0.75),
-        ("M7",  "test_risk_adaptive_threshold",      1.00, 1.00),
-        ("M6",  "test_false_positive_rate",          0.40, 0.20),
+        ("M1",  "compute_mve_completeness_metric",            0.95, 0.85),
+        ("M2",  "compute_clinical_relevance_metric",           0.90, 0.75),
+        ("M3",  "compute_actionability_metric",                0.85, 0.70),
+        ("M4",  "compute_clinical_constraint_metric",0.90, 0.80),
+        ("M8",  "compute_severity_accuracy_metric",      0.80, 0.70),
+        ("M1b", "compute_layer1_length_metric",     0.95, 0.90),
+        ("M5",  "compute_shap_narrative_alignment",     0.85, 0.75),
+        ("M7",  "verify_risk_adaptive_threshold",      1.00, 1.00),
+        ("M6",  "compute_false_positive_rate",          0.40, 0.20),
     ]
 
     results = []
@@ -527,26 +527,26 @@ def run_acceptance_tests(
         detail = ""
         try:
             if metric_id == "M1":
-                val = float(test_mve_completeness(mve_outputs))
+                val = float(compute_mve_completeness_metric(mve_outputs))
             elif metric_id == "M2":
-                val = float(test_clinical_relevance(mve_outputs, ground_truths))
+                val = float(compute_clinical_relevance_metric(mve_outputs, ground_truths))
             elif metric_id == "M3":
-                val = float(test_actionability(mve_outputs))
+                val = float(compute_actionability_metric(mve_outputs))
             elif metric_id == "M4":
-                val = float(test_clinical_constraint_awareness(mve_outputs))
+                val = float(compute_clinical_constraint_metric(mve_outputs))
             elif metric_id == "M8":
-                val = float(test_severity_label_accuracy(mve_outputs, ground_truths))
+                val = float(compute_severity_accuracy_metric(mve_outputs, ground_truths))
             elif metric_id == "M1b":
-                val = float(test_layer1_length_constraint(mve_outputs))
+                val = float(compute_layer1_length_metric(mve_outputs))
             elif metric_id == "M5":
-                val = float(test_shap_narrative_alignment(
+                val = float(compute_shap_narrative_alignment(
                     mve_outputs, ground_truths,
                 ))
             elif metric_id == "M7":
-                test_risk_adaptive_threshold()
+                verify_risk_adaptive_threshold()
                 val = 1.0
             elif metric_id == "M6":
-                val = float(test_false_positive_rate(
+                val = float(compute_false_positive_rate(
                     baseline_results, adaptive_results,
                     # M6 uses all-alerts ground truth, not just surfaced
                     ground_truths,

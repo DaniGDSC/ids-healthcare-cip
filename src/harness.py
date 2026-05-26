@@ -18,9 +18,10 @@ Workflow (per research_spec.yaml component_3.workflow):
 """
 from __future__ import annotations
 
+import functools
 import logging
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Iterator, List, Optional
 
 import yaml
 
@@ -41,8 +42,6 @@ SAMPLE_ALERTS_PATH = FIXTURES_DIR / "sample_alerts.yaml"
 
 
 # ── Fixture loading ──────────────────────────────────────────────────────
-
-from typing import Iterator
 
 
 def stream_dataset(path: Optional[Path] = None) -> Iterator[AlertRecord]:
@@ -151,7 +150,7 @@ def run_simulation(
     Returns:
         TestReport with metrics, negative_tests, and alignment results.
     """
-    from tests.acceptance_tests import run_acceptance_tests, test_false_positive_rate
+    from tests.acceptance_tests import run_acceptance_tests, compute_false_positive_rate
     from tests.negative_tests import run_negative_tests
 
     # Opt-10: use streaming generator when no pre-loaded dataset is supplied.
@@ -240,9 +239,9 @@ def run_simulation(
     # Patch M6 to use full dataset GTs
     for m in metric_results:
         if m["metric_id"] == "M6":
-            # H-5: test_false_positive_rate imported at function top — not per iteration
+            # H-5: compute_false_positive_rate imported at function top — not per iteration
             try:
-                val = test_false_positive_rate(
+                val = compute_false_positive_rate(
                     baseline_results, adaptive_results, all_gts
                 )
                 m["result_value"] = round(val, 4)
@@ -272,46 +271,29 @@ def run_simulation(
 
 # ── Alignment mapping ────────────────────────────────────────────────────
 
-_CLAIM_MAP: list[dict[str, Any]] = [
-    {
-        "claim_id": "C1",
-        "claim_text": "explainable anomaly narratives that translate network "
-                      "detections into clinically contextualized alerts",
-        "supported_by": ["M2", "M8", "M5"],
-    },
-    {
-        "claim_id": "C2",
-        "claim_text": "risk-adaptive thresholds that auto-adjust detection sensitivity",
-        "supported_by": ["M7", "M6"],
-    },
-    {
-        "claim_id": "C3",
-        "claim_text": "clinical-constraint-aware response recommendations",
-        "supported_by": ["M3", "M4"],
-    },
-    {
-        "claim_id": "C7",
-        "claim_text": "MVE structural completeness",
-        "supported_by": ["M1", "M1b"],
-    },
-    {
-        "claim_id": "C8",
-        "claim_text": "alert fatigue reduction",
-        "supported_by": ["M6"],
-    },
-    {
-        "claim_id": "C4",
-        "claim_text": "enabling correct triage from non-specialist operators",
-        "supported_by": [],
-        "verdict": "NOT_TESTED — requires A/B user study with n≥20 IT generalists (Phase 2)",
-    },
-    {
-        "claim_id": "C5",
-        "claim_text": "reducing dwell time for non-ransomware intrusions",
-        "supported_by": [],
-        "verdict": "NOT_TESTED — requires longitudinal field deployment (Phase 3)",
-    },
-]
+_CLAIM_MAP_PATH = FIXTURES_DIR / "research_claims.yaml"
+
+
+@functools.lru_cache(maxsize=1)
+def _load_claim_map() -> list[dict[str, Any]]:
+    """Load the claim → metric alignment from the YAML fixture.
+
+    Y9 fix: was a 40-LOC dict literal embedded in this file. Externalised
+    to ``tests/fixtures/research_claims.yaml`` so claim definitions can be
+    edited without code changes. Cached via lru_cache so repeated harness
+    runs don't re-parse the YAML.
+    """
+    with open(_CLAIM_MAP_PATH, encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    return [
+        {
+            "claim_id": c["id"],
+            "claim_text": c["text"],
+            "supported_by": list(c.get("supported_by", [])),
+            **({"verdict": c["verdict"]} if "verdict" in c else {}),
+        }
+        for c in data.get("claims", [])
+    ]
 
 
 def _build_alignment(metric_results: List[dict[str, Any]]) -> List[dict[str, Any]]:
@@ -321,7 +303,7 @@ def _build_alignment(metric_results: List[dict[str, Any]]) -> List[dict[str, Any
     }
     alignment: list[dict[str, Any]] = []
 
-    for claim in _CLAIM_MAP:
+    for claim in _load_claim_map():
         if not claim["supported_by"]:
             # Untested claims (C4, C5)
             alignment.append({

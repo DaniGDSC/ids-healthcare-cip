@@ -1,0 +1,35 @@
+# Research claim → metric alignment for the C3 harness.
+# Externalised from src/harness.py to keep the claim map editable
+# without code changes. Loaded by `_build_alignment`.
+claims:
+  - id: C1
+    text: >-
+      explainable anomaly narratives that translate network detections into
+      clinically contextualized alerts
+    supported_by: [M2, M8, M5]
+
+  - id: C2
+    text: risk-adaptive thresholds that auto-adjust detection sensitivity
+    supported_by: [M7, M6]
+
+  - id: C3
+    text: clinical-constraint-aware response recommendations
+    supported_by: [M3, M4]
+
+  - id: C7
+    text: MVE structural completeness
+    supported_by: [M1, M1b]
+
+  - id: C8
+    text: alert fatigue reduction
+    supported_by: [M6]
+
+  - id: C4
+    text: enabling correct triage from non-specialist operators
+    supported_by: []
+    verdict: "NOT_TESTED — requires A/B user study with n≥20 IT generalists (Phase 2)"
+
+  - id: C5
+    text: reducing dwell time for non-ransomware intrusions
+    supported_by: []
+    verdict: "NOT_TESTED — requires longitudinal field deployment (Phase 3)"

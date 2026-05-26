@@ -1,0 +1,59 @@
+# Minimal synthetic alert fixture for unit-testing src.harness.stream_dataset.
+# Not the production sample_alerts.yaml — kept tiny on purpose so unit tests
+# don't depend on the 50-alert thesis fixture being present.
+alerts:
+  - alert_id: TEST-001
+    ground_truth_severity: CRITICAL
+    true_clinical_system: "infusion pump network"
+    ground_truth_label: true_positive
+    anomaly_score: 0.85
+    device_context:
+      device_type: infusion_pump
+      criticality: CRITICAL
+      patchable: false
+      clinical_function: drug delivery
+      location: ICU
+    raw_alert:
+      alert_name: "Anomalous outbound from infusion pump"
+      protocol: TCP/443
+      source_ip: 10.0.1.50
+      dest_ip: 198.51.100.42
+      timestamp: "2026-05-26T03:15:00Z"
+      severity_score: 0.85
+    behavioral_baseline:
+      normal_destinations: ["10.0.2.0/24", "10.0.3.0/24"]
+      normal_protocols: ["HTTPS"]
+      normal_hours: "07:00-19:00"
+      baseline_days: 90
+    user_context: null
+    event_context:
+      is_maintenance_window: false
+      is_known_vendor_ip: false
+      similar_events_past_30d: 0
+      baseline_days: 90
+
+  - alert_id: TEST-002
+    ground_truth_severity: LOW
+    true_clinical_system: "guest wifi"
+    ground_truth_label: false_positive
+    anomaly_score: 0.15
+    device_context:
+      device_type: workstation
+      criticality: LOW
+      patchable: true
+      clinical_function: administrative
+      location: office
+    raw_alert:
+      alert_name: "Workstation behavioral anomaly"
+      protocol: TCP/80
+      source_ip: 10.0.5.10
+      dest_ip: 10.0.6.20
+      timestamp: "2026-05-26T14:00:00Z"
+      severity_score: 0.15
+    behavioral_baseline:
+      normal_destinations: ["10.0.6.0/24"]
+      normal_protocols: ["HTTPS", "HTTP"]
+      normal_hours: "09:00-17:00"
+      baseline_days: 90
+    user_context: null
+    event_context: null

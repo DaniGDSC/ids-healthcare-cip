@@ -119,7 +119,7 @@ class MVEOutput:
 
         Includes alert_id so negative tests can cite the failing alert.
         Concatenates layer_1 fields into layer_1_why_anomalous for the
-        test_no_rf_protocol_claims and test_no_model_internals_exposed checks.
+        assert_no_rf_protocol_claims and assert_no_model_internals_exposed checks.
         """
         return {
             "alert_id": alert_id,
@@ -131,6 +131,7 @@ class MVEOutput:
             "layer_3": dict(self.layer_3),
             "total_word_count": self.total_word_count,
             "alert_involves_clinical_system": self.alert_involves_clinical_system,
+            "provider": self.provider,
         }
 
 

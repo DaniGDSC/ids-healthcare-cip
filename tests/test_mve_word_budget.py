@@ -1,7 +1,7 @@
 """Word-budget enforcement for SHAP + MITRE injections in mve_generator.
 
 Layers 1+2+3 combined must stay ≤ 150 words per the MVE spec
-(see `tests/acceptance_tests.py::test_layer1_length_constraint`).
+(see `tests/acceptance_tests.py::compute_layer1_length_metric`).
 
 The G1/G2 (top-3 SHAP injection) and G3 (MITRE technique injection)
 fixes in `src.mve_generator.generate_mve` each add 6-12 words to

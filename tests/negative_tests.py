@@ -57,7 +57,7 @@ _MODEL_INTERNALS = [
 
 # ── Individual negative tests ────────────────────────────────────────────
 
-def test_no_device_discovery_attempted(system_logs: List[dict[str, Any]]) -> dict[str, Any]:
+def assert_no_device_discovery_attempted(system_logs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system must consume existing inventory, never scan/discover.
 
     Verifies that no log entry records a device discovery action.
@@ -80,14 +80,14 @@ def test_no_device_discovery_attempted(system_logs: List[dict[str, Any]]) -> dic
                 )
 
     return {
-        "test_name": "test_no_device_discovery_attempted",
+        "test_name": "assert_no_device_discovery_attempted",
         "violations_found": len(violations),
         "pass_fail": "PASS" if not violations else "FAIL",
         "violations": violations,
     }
 
 
-def test_no_automated_blocking(system_actions: List[dict[str, Any]]) -> dict[str, Any]:
+def assert_no_automated_blocking(system_actions: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system recommends only, never executes enforcement.
 
     Verifies all system actions are tagged as 'recommendation' type
@@ -114,14 +114,14 @@ def test_no_automated_blocking(system_actions: List[dict[str, Any]]) -> dict[str
                 )
 
     return {
-        "test_name": "test_no_automated_blocking",
+        "test_name": "assert_no_automated_blocking",
         "violations_found": len(violations),
         "pass_fail": "PASS" if not violations else "FAIL",
         "violations": violations,
     }
 
 
-def test_no_rf_protocol_claims(outputs: List[dict[str, Any]]) -> dict[str, Any]:
+def assert_no_rf_protocol_claims(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system must not claim detection of Bluetooth/Zigbee/RF attacks.
 
     IoMT RF/proprietary wireless attacks (CVE-2019-10964, CVE-2022-32537)
@@ -153,14 +153,14 @@ def test_no_rf_protocol_claims(outputs: List[dict[str, Any]]) -> dict[str, Any]:
                 )
 
     return {
-        "test_name": "test_no_rf_protocol_claims",
+        "test_name": "assert_no_rf_protocol_claims",
         "violations_found": len(violations),
         "pass_fail": "PASS" if not violations else "FAIL",
         "violations": violations,
     }
 
 
-def test_no_ransomware_dwell_time_claims(outputs: List[dict[str, Any]]) -> dict[str, Any]:
+def assert_no_ransomware_dwell_time_claims(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: system must not claim early ransomware detection.
 
     Per research_spec.yaml: 96% of ransomware is actor-disclosed (DBIR 2025),
@@ -188,14 +188,14 @@ def test_no_ransomware_dwell_time_claims(outputs: List[dict[str, Any]]) -> dict[
             )
 
     return {
-        "test_name": "test_no_ransomware_dwell_time_claims",
+        "test_name": "assert_no_ransomware_dwell_time_claims",
         "violations_found": len(violations),
         "pass_fail": "PASS" if not violations else "FAIL",
         "violations": violations,
     }
 
 
-def test_severity_uses_clinical_not_cvss(outputs: List[dict[str, Any]]) -> dict[str, Any]:
+def assert_severity_uses_clinical_not_cvss(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: severity labels must be based on clinical impact, NOT CVSS.
 
     Checks that 'CVSS' does not appear in severity_rationale.
@@ -217,14 +217,14 @@ def test_severity_uses_clinical_not_cvss(outputs: List[dict[str, Any]]) -> dict[
             )
 
     return {
-        "test_name": "test_severity_uses_clinical_not_cvss",
+        "test_name": "assert_severity_uses_clinical_not_cvss",
         "violations_found": len(violations),
         "pass_fail": "PASS" if not violations else "FAIL",
         "violations": violations,
     }
 
 
-def test_no_model_internals_exposed(outputs: List[dict[str, Any]]) -> dict[str, Any]:
+def assert_no_model_internals_exposed(outputs: List[dict[str, Any]]) -> dict[str, Any]:
     """Scope: explanations must not expose SHAP, model names, or statistics.
 
     Per mve_specification.yaml what_NOT_to_include:
@@ -251,7 +251,7 @@ def test_no_model_internals_exposed(outputs: List[dict[str, Any]]) -> dict[str, 
                 )
 
     return {
-        "test_name": "test_no_model_internals_exposed",
+        "test_name": "assert_no_model_internals_exposed",
         "violations_found": len(violations),
         "pass_fail": "PASS" if not violations else "FAIL",
         "violations": violations,
@@ -277,10 +277,10 @@ def run_negative_tests(
         {test_name, violations_found, pass_fail, violations}
     """
     return [
-        test_no_device_discovery_attempted(system_logs),
-        test_no_automated_blocking(system_actions),
-        test_no_rf_protocol_claims(mve_dicts),
-        test_no_ransomware_dwell_time_claims(mve_dicts),
-        test_severity_uses_clinical_not_cvss(mve_dicts),
-        test_no_model_internals_exposed(mve_dicts),
+        assert_no_device_discovery_attempted(system_logs),
+        assert_no_automated_blocking(system_actions),
+        assert_no_rf_protocol_claims(mve_dicts),
+        assert_no_ransomware_dwell_time_claims(mve_dicts),
+        assert_severity_uses_clinical_not_cvss(mve_dicts),
+        assert_no_model_internals_exposed(mve_dicts),
     ]
