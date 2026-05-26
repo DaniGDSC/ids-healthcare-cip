@@ -40,11 +40,24 @@ def render_tier_glyph(tier: str, size_px: int = 10) -> str:
 
 
 def render_floor_badge(invariant_name: str = "floor-elevated") -> str:
-    """Prototype L504-507 / L670-673."""
+    """Prototype L504-507 / L670-673.
+
+    Tone decision (P2-16): the accent (blue-teal) is intentional and stays.
+    Floor elevation is *informational* — "policy bumped this tier because
+    of life-critical context" — not alarming. Using the high/critical tier
+    colors here would muddle the signal (the tier itself already carries
+    that color); the badge complements rather than competes. A `title`
+    attribute provides hover context for operators unfamiliar with the
+    convention.
+    """
     safe = escape(invariant_name)
+    tooltip = (
+        "Tier was elevated by the Module-5 safety floor "
+        "because a life-critical device is involved."
+    )
     return (
-        '<span class="floor-badge">'
-        '<svg width="8" height="8" viewBox="0 0 8 8" fill="none">'
+        f'<span class="floor-badge" title="{escape(tooltip)}">'
+        '<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">'
         '<path d="M4 1L7 5H1L4 1Z" fill="currentColor"/></svg>'
         f'{safe}</span>'
     )
@@ -189,13 +202,19 @@ def render_timeline_item(
     """Audit-trail timeline item (prototype L961-991). `kind` ∈ {system, human}."""
     safe_kind = "human" if kind == "human" else "system"
     extra_style = " style=\"padding-bottom:0;\"" if is_last else ""
+    time_html = (
+        f'<span class="tl-time">{escape(timestamp)}</span>' if timestamp else ""
+    )
+    body_html = (
+        f'<div class="tl-body">{escape(body)}</div>' if body else ""
+    )
     return (
         f'<div class="timeline-item {safe_kind}"{extra_style}>'
         '  <div class="tl-head">'
         f'    <span class="tl-label">{escape(label)}</span>'
-        f'    <span class="tl-time">{escape(timestamp)}</span>'
+        f'    {time_html}'
         '  </div>'
-        f'  <div class="tl-body">{escape(body)}</div>'
+        f'  {body_html}'
         '</div>'
     )
 
@@ -232,17 +251,26 @@ def render_card(label: str, body_html: str) -> str:
     )
 
 
-def render_status_strip(metrics: Mapping[str, str]) -> str:
+def render_status_strip(
+    metrics: Mapping[str, str],
+    *,
+    is_live: bool = True,
+) -> str:
     """Fixed-position footer (prototype L996-1019).
 
     Expected keys (any subset; missing ones are skipped):
       `system`, `p95_ms`, `threshold`, `drift`, `last_calibration`,
       `n_val`, `fnr_delta`, `build`
+
+    `is_live=False` swaps the pulsing dot for a static one — used on pages
+    whose data is a file snapshot (e.g. the Triage Dashboard) so the
+    indicator doesn't imply liveness the page doesn't have.
     """
+    dot_cls = "pulse-live" if is_live else "pulse-static"
     left_parts: list[str] = []
     if "system" in metrics:
         left_parts.append(
-            f'<span><span class="pulse-live"></span> <span>{escape(metrics["system"])}</span></span>'
+            f'<span><span class="{dot_cls}"></span> <span>{escape(metrics["system"])}</span></span>'
         )
     if "p95_ms" in metrics:
         left_parts.append(
@@ -309,11 +337,16 @@ def render_investigation_header(
     tier_label = {"critical": "Critical", "high": "High", "medium": "Medium", "low": "Low"}.get(cls, cls.title())
     floor_html = ""
     if floor_elevated:
-        suffix = f" · floor-elevated" if floor_elevated else ""
+        suffix = " · floor-elevated"
         tier_label = tier_label + suffix
+        tooltip = (
+            "Tier was elevated by the Module-5 safety floor "
+            "because a life-critical device is involved."
+        )
         floor_html = (
-            f'<span class="floor-badge" style="margin-left:4px;">'
-            '<svg width="8" height="8" viewBox="0 0 8 8" fill="none">'
+            f'<span class="floor-badge" title="{escape(tooltip)}" '
+            f'style="margin-left:4px;">'
+            '<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">'
             '<path d="M4 1L7 5H1L4 1Z" fill="currentColor"/></svg>'
             f'{escape(invariant_label)}</span>'
         )
@@ -348,10 +381,174 @@ def render_investigation_header(
     )
 
 
-def render_actions_disclaimer() -> str:
-    """One-liner under the action buttons reminding ops of the no-auto invariant."""
+def render_consensus_badge(
+    n_flagged: int,
+    total: int,
+    *,
+    label: str = "Detector consensus",
+) -> str:
+    """Visual badge for the Module 4 detector-ensemble consensus.
+
+    `n_flagged` is the number of detectors that flagged the sample as
+    anomalous; `total` is the ensemble size (4 in the current pipeline).
+    Tone is mapped to consensus strength:
+      * 4/4 → success (unanimous)
+      * 3/4 → accent  (strong)
+      * 2/4 → tier-medium (mixed)
+      * 1/4 → tier-low (weak)
+      * 0/4 → text-tertiary (no flags)
+
+    The badge renders both as N filled / M-N empty dots AND a numeric
+    string so colour-blind operators retain the signal. A tooltip
+    explains the threshold semantics.
+    """
+    n = max(0, min(int(n_flagged), int(total)))
+    m = max(1, int(total))
+    if n == m:
+        tone = ("var(--success)", "var(--success-bg)", "rgba(95,158,123,0.3)", "unanimous")
+    elif n / m >= 0.75:
+        tone = ("var(--accent)", "var(--accent-bg)", "rgba(123,167,188,0.3)", "strong")
+    elif n / m >= 0.5:
+        tone = ("var(--tier-medium)", "var(--tier-medium-bg)", "rgba(212,164,69,0.3)", "mixed")
+    elif n / m > 0:
+        tone = ("var(--tier-low)", "var(--tier-low-bg)", "rgba(91,143,185,0.3)", "weak")
+    else:
+        tone = ("var(--text-tertiary)", "var(--surface-2)", "var(--border)", "no flags")
+    fg, bg, border, descriptor = tone
+    dots = ""
+    for i in range(m):
+        filled = i < n
+        if filled:
+            dots += (
+                f'<span style="display:inline-block;width:8px;height:8px;'
+                f'border-radius:50%;background:{fg};margin-right:3px;"></span>'
+            )
+        else:
+            dots += (
+                f'<span style="display:inline-block;width:8px;height:8px;'
+                f'border-radius:50%;border:1px solid {fg};box-sizing:border-box;'
+                f'margin-right:3px;opacity:0.4;"></span>'
+            )
+    tooltip = (
+        f"{n} of {m} detectors flagged this sample as anomalous. "
+        "4/4 = unanimous; 3/4 = strong; 2/4 = mixed; 1/4 = weak; 0/4 = no flags."
+    )
     return (
-        '<p class="font-mono" style="font-size:10px;margin-top:12px;line-height:1.5;color:var(--text-quaternary);">'
+        f'<div title="{escape(tooltip)}" style="display:inline-flex;'
+        f'align-items:center;gap:10px;padding:6px 12px;border-radius:4px;'
+        f'background:{bg};border:1px solid {border};color:{fg};">'
+        f'<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px;'
+        f'font-weight:500;letter-spacing:0.08em;text-transform:uppercase;">'
+        f'{escape(label)}</span>'
+        f'<span style="display:inline-flex;align-items:center;">{dots}</span>'
+        f'<span style="font-family:\'JetBrains Mono\',monospace;font-size:12px;'
+        f'font-weight:500;font-variant-numeric:tabular-nums;">'
+        f'{n}/{m}<span style="opacity:0.7;font-size:10px;'
+        f'margin-left:6px;">{descriptor}</span></span>'
+        f'</div>'
+    )
+
+
+def render_model_breakdown(models: Mapping[str, Mapping]) -> str:
+    """Per-detector breakdown table — Module 4 `models` dict → 4-row mini-table.
+
+    Expected shape per model:
+      {prediction: 0|1, confidence: float, ...}
+    The DAE model uses `reconstruction_error` instead of `confidence`; we
+    surface that as the magnitude. Missing models render as a muted row
+    so the operator can tell which detector didn't produce output.
+    """
+    if not models:
+        return ""
+    expected = ("xgboost", "random_forest", "decision_tree", "dae")
+    display_names = {
+        "xgboost":       "XGBoost",
+        "random_forest": "Random Forest",
+        "decision_tree": "Decision Tree",
+        "dae":           "DAE (autoencoder)",
+    }
+    rows = ""
+    for key in expected:
+        info = models.get(key) or {}
+        if not info:
+            rows += (
+                f'<div style="display:grid;grid-template-columns:140px 80px 1fr 60px;'
+                f'gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid '
+                f'var(--border-subtle);color:var(--text-quaternary);">'
+                f'<span style="font-size:0.875rem;">{escape(display_names.get(key, key))}</span>'
+                f'<span class="font-mono" style="font-size:11px;">— no output —</span>'
+                f'<span></span><span></span>'
+                f'</div>'
+            )
+            continue
+        pred = info.get("prediction")
+        if pred == 1:
+            pred_chip = (
+                '<span style="display:inline-block;padding:1px 8px;border-radius:3px;'
+                'background:var(--tier-high-bg);color:var(--tier-high);'
+                'font-family:\'JetBrains Mono\',monospace;font-size:10px;'
+                'font-weight:500;letter-spacing:0.04em;">FLAG</span>'
+            )
+        elif pred == 0:
+            pred_chip = (
+                '<span style="display:inline-block;padding:1px 8px;border-radius:3px;'
+                'background:var(--success-bg);color:var(--success);'
+                'font-family:\'JetBrains Mono\',monospace;font-size:10px;'
+                'font-weight:500;letter-spacing:0.04em;">CLEAR</span>'
+            )
+        else:
+            pred_chip = (
+                '<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px;'
+                'color:var(--text-tertiary);">—</span>'
+            )
+
+        # DAE uses reconstruction_error; others use confidence in [0,1].
+        if key == "dae" and "reconstruction_error" in info:
+            magnitude = float(info.get("reconstruction_error", 0.0))
+            # Clamp to a usable visual scale; DAE errors can be tiny.
+            mag_pct = min(100, max(0, int(magnitude * 1e6))) if magnitude > 0 else 0
+            value_label = f"err {magnitude:.2e}"
+        else:
+            magnitude = float(info.get("confidence", 0.0))
+            mag_pct = int(round(min(1.0, max(0.0, magnitude)) * 100))
+            value_label = f"{magnitude:.2f}"
+
+        bar_color = "var(--tier-high)" if pred == 1 else "var(--accent)"
+        rows += (
+            f'<div style="display:grid;grid-template-columns:140px 80px 1fr 60px;'
+            f'gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid '
+            f'var(--border-subtle);">'
+            f'<span style="font-size:0.875rem;color:var(--text-primary);">'
+            f'{escape(display_names.get(key, key))}</span>'
+            f'{pred_chip}'
+            f'<div style="height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden;">'
+            f'<div style="height:100%;width:{mag_pct}%;background:{bar_color};border-radius:2px;"></div>'
+            f'</div>'
+            f'<span class="font-mono" style="font-size:11px;font-variant-numeric:tabular-nums;'
+            f'text-align:right;color:var(--text-secondary);">{escape(value_label)}</span>'
+            f'</div>'
+        )
+
+    return (
+        '<div style="padding:8px 0 4px;">'
+        '<div style="font-size:10px;font-weight:500;letter-spacing:0.08em;'
+        'text-transform:uppercase;color:var(--text-tertiary);margin-bottom:8px;">'
+        'Per-detector breakdown</div>'
+        f'{rows}'
+        '</div>'
+    )
+
+
+def render_actions_disclaimer() -> str:
+    """One-liner under the action buttons reminding ops of the no-auto invariant.
+
+    Color bumped from --text-quaternary (~2.6:1 contrast) to --text-tertiary
+    (~4.4:1, meets WCAG AA for normal text). This line is a safety statement
+    — it needs to stay readable, not just decorative.
+    """
+    return (
+        '<p class="font-mono" style="font-size:10px;margin-top:12px;line-height:1.5;'
+        'font-weight:500;color:var(--text-tertiary);">'
         'No action is auto-executed. Every decision is logged with operator, timestamp, and rationale.'
         '</p>'
     )

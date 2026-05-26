@@ -67,6 +67,22 @@ _SPLIT_FILES = {
     "test": "",         # no suffix → legacy file names
     "demo": "_demo",
 }
+
+
+def _resolve_suffix(split: str | None) -> str:
+    """Resolve the file suffix for a split, with strict validation.
+
+    ``None`` → ``""`` (legacy test fallback for dashboard callers that
+    haven't migrated to passing split explicitly). Any other value is
+    delegated to :func:`common.split_paths.suffix`, which raises
+    ``ValueError`` on typos like ``"tset"`` or ``"DEMO"`` that a
+    permissive ``dict.get(split, fallback)`` would have silently coerced
+    to test.
+    """
+    if split is None:
+        return ""
+    from common import split_paths as sp
+    return sp.suffix(split)
 # Singleton hardened logger for reviewer-attributed events. The existing
 # AuditTrailWriter (audit_trail.jsonl) is kept for backward compatibility
 # with offline study mode; reviewer-attributed alert decisions ALSO get
@@ -77,6 +93,58 @@ ROLES = ["Security Analyst", "Clinician", "Administrator"]
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
 
 TIER_COLORS = {"CRITICAL": "#8e44ad", "HIGH": "#e74c3c", "MEDIUM": "#e67e22", "LOW": "#2ecc71"}
+
+# Streamlit's inline-color syntax (`:red[text]`) only accepts a fixed set of
+# named colors — hex codes silently render as literal text. This map carries
+# the closest named color per tier so expander titles and other markdown-
+# colored strings actually render in color.
+TIER_STREAMLIT_COLORS = {
+    "CRITICAL": "violet",
+    "HIGH": "red",
+    "MEDIUM": "orange",
+    "LOW": "green",
+}
+
+# Unified label for detector-ensemble consensus across the app. The
+# codebase previously used 4 variants ("Consensus" / "Model consensus" /
+# "Detection confidence" / "detector consensus") for the same concept,
+# which created cross-page recognition friction.
+DETECTOR_CONSENSUS_LABEL = "Detector consensus"
+
+
+def _parse_consensus(consensus_str: str) -> tuple[int, int] | None:
+    """Parse a Module 4 consensus string into (n_flagged, total).
+
+    Format produced by `module4_explanations.py:772` is `"N/M models flagged"`.
+    Returns None if the string doesn't match (e.g. empty or unexpected
+    legacy shape) — callers should treat None as "consensus unavailable".
+    """
+    if not consensus_str:
+        return None
+    try:
+        head = consensus_str.split(" ", 1)[0]  # "N/M"
+        n_str, m_str = head.split("/")
+        return int(n_str), int(m_str)
+    except (ValueError, IndexError):
+        return None
+
+
+def _analyst_state(alert: dict) -> str:
+    """Return analyst-data availability state for a rendered alert.
+
+    Three states drive consistent empty-state messaging across the role
+    renderers:
+      * "available"   — analyst data joined and consensus present
+      * "pending"     — flag says analyst_available but the join missed
+                        (pipeline mismatch — Module 4/5 desynced)
+      * "unavailable" — Module 4 didn't process this sample
+    """
+    consensus = alert.get("consensus") or ""
+    if consensus:
+        return "available"
+    expl = alert.get("explanation") or {}
+    flag = bool(expl.get("analyst_available")) if isinstance(expl, dict) else False
+    return "pending" if flag else "unavailable"
 
 from common.phi import BIOMETRIC_COLUMNS as BIOMETRIC_FEATURES  # noqa: E402
 
@@ -150,27 +218,46 @@ _ACTION_PRIORITY = {
 
 
 def render_device_criticality(alert: dict) -> None:
-    """Gap 2 + UX-X-02: Render device class criticality badge + context."""
+    """Gap 2 + UX-X-02: Render device class criticality badge + context.
+
+    BA-15: badge now uses Sentinel tier tokens (`--tier-*-bg`) when the
+    criticality maps to a known tier, instead of a hardcoded hex that
+    silently diverged from the Dashboard's palette. Falls back to a neutral
+    surface when criticality isn't a tier label.
+    """
     criticality = str(alert.get("device_criticality", "")).upper()
     if not criticality or criticality not in _CRIT_COLOR_HEX:
         criticality = str(alert.get("risk_level", "UNKNOWN")).upper()
-    hex_c = _CRIT_COLOR_HEX.get(criticality, "#757575")
+
+    # Prefer Sentinel tier token; fall back to a neutral surface for
+    # non-tier strings (e.g. "ROUTINE", "UNKNOWN").
+    if criticality in TIER_STREAMLIT_COLORS:
+        token = criticality.lower()
+        bg = f"var(--tier-{token}-bg)"
+        fg = f"var(--tier-{token})"
+        border = f"1px solid {fg}"
+    else:
+        bg = "var(--surface-2)"
+        fg = "var(--text-secondary)"
+        border = "1px solid var(--border)"
 
     # FIX B: infer device class when missing
     device_cls, was_inferred = infer_device_class(alert)
     affected = alert.get("affected_system", "")
 
     st.markdown(
-        f'<span style="background:{hex_c};color:white;'
-        f'padding:3px 10px;border-radius:4px;font-weight:bold;">'
-        f'Device: {criticality}</span>',
+        f'<span style="background:{bg};color:{fg};border:{border};'
+        f'padding:4px 12px;border-radius:4px;font-weight:500;'
+        f'font-family:JetBrains Mono,monospace;font-size:12px;'
+        f'letter-spacing:0.04em;">'
+        f'Device · {criticality}</span>',
         unsafe_allow_html=True,
     )
     if device_cls or affected:
         st.caption(f"{device_cls}{' — ' + affected if affected else ''}")
     if was_inferred:
         st.caption(
-            f"\u26a0\ufe0f Device class inferred from attack category "
+            f"Device class inferred from attack category "
             f"({alert.get('attack_category', '?')}) — asset inventory lookup unavailable."
         )
 
@@ -178,9 +265,9 @@ def render_device_criticality(alert: dict) -> None:
     impact = alert.get("patient_care_impact", "")
     active = alert.get("active_device", False)
     if active and impact:
-        st.warning(f"\U0001f3e5 Active device — {impact}")
+        st.warning(f"Active device — {impact}")
     elif impact:
-        st.info(f"\u2139\ufe0f {impact}")
+        st.info(impact)
 
 
 def infer_device_class(alert: dict) -> tuple[str, bool]:
@@ -266,12 +353,28 @@ def render_mve_layers(alert: dict) -> None:
     expl = alert.get("explanation") or {}
     resp = alert.get("response") or {}
 
+    # MVE payload (Option 4) — nested under explanation.mve when Module 5
+    # generated one. layer_1/layer_2/layer_3 sub-dicts contain string fields
+    # the existing _get() lookup chain expects (baseline_behavior, severity,
+    # immediate_action, ...); `mve` itself carries the joined why_anomalous.
+    mve = (expl.get("mve") if isinstance(expl, dict) else None) or {}
+    mve_l1 = mve.get("layer_1") or {}
+    mve_l2 = mve.get("layer_2") or {}
+    mve_l3 = mve.get("layer_3") or {}
+
     # Merge once — O(1) view construction, O(1) per key lookup thereafter.
+    # MVE sub-dicts come AFTER the source dicts so an explicit alert-level
+    # field still wins; they come BEFORE the implicit fallback to legacy
+    # clinician_summary inside _get's key list.
     _cm = ChainMap(
         alert,
         xai  if isinstance(xai,  dict) else {},
         expl if isinstance(expl, dict) else {},
         resp if isinstance(resp, dict) else {},
+        mve_l1 if isinstance(mve_l1, dict) else {},
+        mve_l2 if isinstance(mve_l2, dict) else {},
+        mve_l3 if isinstance(mve_l3, dict) else {},
+        mve    if isinstance(mve,    dict) else {},
     )
 
     def _get(*keys) -> str:
@@ -288,13 +391,37 @@ def render_mve_layers(alert: dict) -> None:
               "clinician_summary", "nlg_text")
     consensus = _get("consensus")
 
-    with st.expander("\U0001f50d Layer 1 \u2014 Why Anomalous", expanded=True):
+    # BA-9: Layer headers without emoji. Layer numbers + serif typography
+    # already establish the hierarchy; emojis render differently across
+    # browsers and force-vocalize on screen readers.
+    with st.expander("Layer 1 \u00b7 Why anomalous", expanded=True):
         if l1:
             st.write(l1)
             if consensus:
-                st.caption(f"Model consensus: {consensus}")
+                # Unified label + visual treatment (T10). When the consensus
+                # string is parseable as "N/M models flagged" we render the
+                # visual badge; otherwise fall back to a caption with the
+                # canonical label so all 4 surfaces use the same wording.
+                parsed = _parse_consensus(consensus)
+                if parsed:
+                    from module6_evaluation import components as _ui
+                    n_flagged, total = parsed
+                    st.markdown(
+                        _ui.render_consensus_badge(
+                            n_flagged, total, label=DETECTOR_CONSENSUS_LABEL,
+                        ),
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.caption(f"{DETECTOR_CONSENSUS_LABEL}: {consensus}")
         else:
-            st.caption("Baseline deviation detected. See SHAP features below.")
+            # BA-17: empty-state with explicit styling \u2014 was a quiet caption
+            # that operators tended to skip past.
+            st.info(
+                "Baseline deviation detected, but no narrative explanation is "
+                "available for this alert. See SHAP features below for the "
+                "feature-level signal."
+            )
 
     # ── Layer 2: Clinical Severity ──
     affected = _get("affected_system")
@@ -302,14 +429,23 @@ def render_mve_layers(alert: dict) -> None:
     severity = _get("severity_label", "severity", "risk_level", "tier")
     device_tier = _get("device_tier", "device_class")
 
-    with st.expander("\U0001f3e5 Layer 2 \u2014 Clinical Severity", expanded=True):
+    with st.expander("Layer 2 \u00b7 Clinical severity", expanded=True):
         if severity:
-            color = TIER_COLORS.get(severity.upper(), "#999")
-            st.markdown(
-                f"**Severity:** <span style='color:{color}'>"
-                f"{severity}</span>",
-                unsafe_allow_html=True,
-            )
+            # BA-15: use Sentinel tier token instead of inline hex from
+            # TIER_COLORS. Severity may arrive as either tier name
+            # (CRITICAL/HIGH/...) or a free-form label; only token-map the
+            # former.
+            sev_upper = severity.upper()
+            if sev_upper in TIER_STREAMLIT_COLORS:
+                token = sev_upper.lower()
+                st.markdown(
+                    f"**Severity:** <span style='color:var(--tier-{token});"
+                    f"font-family:JetBrains Mono,monospace;font-weight:500;'>"
+                    f"{severity}</span>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(f"**Severity:** {severity}")
         if affected:
             st.write(f"**Affected system:** {affected}")
         elif device_tier:
@@ -333,7 +469,7 @@ def render_mve_layers(alert: dict) -> None:
                 action = _PA_MAP[pa]
                 break
 
-    with st.expander("\u26a1 Layer 3 \u2014 Recommended Action", expanded=True):
+    with st.expander("Layer 3 \u00b7 Recommended action", expanded=True):
         if action:
             st.write(f"**Recommended:** {action}")
         else:
@@ -633,6 +769,10 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
         "dae_top_features": xai.get("dae_top_features", []),
         "nlg_text": clinician_summary,
         "consensus": xai.get("consensus", "") or (expl.get("consensus", "") if isinstance(expl, dict) else ""),
+        # Per-model ensemble breakdown — surfaced by render_model_breakdown.
+        # Empty dict when Module 4 didn't process this sample (analyst
+        # unavailable). Pulled from the joined analyst_report payload.
+        "models": xai.get("models", {}) or {},
         "response_action": action,
         "response": resp,
         # Device context
@@ -653,11 +793,49 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
 
 
 def render_analyst(alert: dict):
-    """Analyst view: SHAP plots + feature table + classification detail."""
+    """Analyst view: SHAP plots + feature table + classification detail.
+
+    Consensus + per-model breakdown now leads the render so the operator
+    sees the ensemble agreement signal *before* diving into any one
+    model's SHAP. Empty-state messaging is gated by `_analyst_state` so a
+    sample with no analyst data renders an explicit caption rather than
+    silently empty rows.
+    """
+    from module6_evaluation import components as ui_mod
+
     st.markdown("#### Security Analyst View")
 
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
+
+    # Consensus + per-model breakdown surfaced at the top of the analyst
+    # view — this is the meta-explanation that should frame how to read
+    # the individual SHAP plots below. Three-state handling (T6):
+    state = _analyst_state(alert)
+    if state == "available":
+        parsed = _parse_consensus(alert.get("consensus", ""))
+        if parsed:
+            n_flagged, total = parsed
+            st.markdown(
+                ui_mod.render_consensus_badge(
+                    n_flagged, total, label=DETECTOR_CONSENSUS_LABEL,
+                ),
+                unsafe_allow_html=True,
+            )
+        models = alert.get("models") or {}
+        if models:
+            st.markdown(ui_mod.render_model_breakdown(models), unsafe_allow_html=True)
+    elif state == "pending":
+        st.info(
+            "Analyst payload pending — `analyst_available=True` on this "
+            "alert but no joined entry from `analyst_report.json`. "
+            "Re-run `module4_explanations` to refresh the demo split."
+        )
+    else:  # unavailable
+        st.caption(
+            "Analyst data not generated for this sample (Module 4 didn't "
+            "process it; SHAP charts below may also be missing)."
+        )
 
     # SHAP waterfall
     idx = alert.get("sample_index", 0)
@@ -670,7 +848,7 @@ def render_analyst(alert: dict):
     if force_bytes:
         st.image(force_bytes, caption="SHAP Force Plot", width="stretch")
 
-    # Top features table
+    # Top features table — only when join landed data.
     feats = alert.get("shap_top_features", [])
     if feats:
         st.markdown("**Top SHAP Features:**")
@@ -693,8 +871,6 @@ def render_analyst(alert: dict):
         for f in dae[:3]:
             st.text(f"  {f['feature']}: {f.get('pct_contribution', 0):.1f}% contribution")
 
-    st.markdown(f"**Consensus:** {alert.get('consensus', 'N/A')}")
-
 
 def render_clinician(alert: dict):
     """Clinician view: plain-language NLG summary + biometric safety notes."""
@@ -716,7 +892,14 @@ def render_clinician(alert: dict):
         if f["feature"] in BIOMETRIC_FEATURES
     ]
     if bio_feats:
-        st.error(f"Patient safety note: Biometric features affected: {', '.join(bio_feats)}")
+        # Informational note — biometric features being implicated is
+        # context for the clinician's decision, not an error. The previous
+        # st.error (red) overstated the signal and contributed to alarm
+        # fatigue.
+        st.warning(
+            f"Patient safety note · biometric features in the alert: "
+            f"{', '.join(bio_feats)}"
+        )
     else:
         st.success("Patient vitals are not among the primary alert indicators.")
 
@@ -734,6 +917,8 @@ def render_clinician(alert: dict):
 
 def render_admin(alert: dict):
     """Administrator view: summary statistics + risk breakdown."""
+    from module6_evaluation import components as ui_mod
+
     st.markdown("#### Administrator View")
 
     # Gap 2: Device criticality badge
@@ -744,7 +929,24 @@ def render_admin(alert: dict):
     col2.metric("Tier", alert.get("tier", "N/A"))
     col3.metric("Category", alert.get("attack_category", "N/A"))
 
-    st.markdown(f"**Consensus:** {alert.get('consensus', 'N/A')}")
+    # Detector consensus — admin doesn't need the full per-model breakdown
+    # (that's analyst territory), just the badge for situational awareness.
+    state = _analyst_state(alert)
+    if state == "available":
+        parsed = _parse_consensus(alert.get("consensus", ""))
+        if parsed:
+            n_flagged, total = parsed
+            st.markdown(
+                ui_mod.render_consensus_badge(
+                    n_flagged, total, label=DETECTOR_CONSENSUS_LABEL,
+                ),
+                unsafe_allow_html=True,
+            )
+
+    # Recommended action — consensus is rendered as a badge above by
+    # the new render_consensus_badge component; the plain `**Detector
+    # consensus:** ...` text row was the T3 stopgap fix and is now
+    # superseded.
     st.markdown(f"**Recommended Action:** {alert.get('response_action', 'N/A')}")
 
     # Global charts
@@ -778,14 +980,21 @@ _ENRICH_KEYS = (
 )
 
 
-def _enrich_with_device_context(responses: list) -> list:
-    """Join responses with evaluation_alerts.json for device-context fields.
+def _enrich_with_device_context(responses: list, split: str | None = None) -> list:
+    """Join responses with evaluation_alerts{suffix}.json for device-context fields.
 
-    Mutates `responses` in place AND returns it. Helper extracted so both
-    `load_responses_for` and the legacy `load_all_responses` use the same
-    enrichment logic. Tolerates a missing evaluation_alerts.json silently.
+    ``split`` selects the split-specific curated file. Test = paper-clean
+    (legacy unsuffixed); demo = operator-clean (suffix '_demo'). When
+    ``None`` (legacy callers), falls back to the test-suffixed file —
+    safe for the dashboard Test page, dangerous if a demo-side caller
+    forgets to pass split because device_class is derived from per-row
+    biometric features and so is sample-specific to the split.
+
+    Mutates `responses` in place AND returns it. Tolerates a missing
+    evaluation_alerts file silently (degrades to no enrichment).
     """
-    eval_path = EVAL_DIR / "evaluation_alerts.json"
+    suffix = _resolve_suffix(split)
+    eval_path = EVAL_DIR / f"evaluation_alerts{suffix}.json"
     if not eval_path.exists():
         return responses
     with open(eval_path) as f:
@@ -810,7 +1019,19 @@ def load_responses_for(split: str | None) -> list:
     `None` for pages that don't use parquet-derived alerts (Study / PCAP).
     Any other value raises RuntimeError — guard against accidental reads
     from a non-frozen split.
+
+    Accepts BOTH the new envelope shape
+    ``{"_provenance": {...}, "records": [...]}`` and the legacy
+    bare-list shape (returned as-is). When the envelope is present,
+    the records are validated against
+    :class:`common.alert_response_schema.AlertResponsesEnvelope` and a
+    clean ``st.error`` + ``st.stop`` replaces what would otherwise be a
+    ``KeyError`` 200 lines deep inside a Streamlit render.
     """
+    from pydantic import ValidationError
+
+    from common.alert_response_schema import AlertResponsesEnvelope
+
     if split is None:
         return []
     if split not in _SPLIT_FILES:
@@ -823,8 +1044,86 @@ def load_responses_for(split: str | None) -> list:
     if not path.exists():
         return []
     with open(path) as f:
-        responses = json.load(f)
-    return _enrich_with_device_context(responses)
+        raw = json.load(f)
+
+    if isinstance(raw, list):
+        # Legacy bare-list shape — pre-envelope artefact. No provenance,
+        # no schema validation. Kept for backward compatibility with
+        # demo files that haven't been regenerated yet.
+        responses = raw
+    elif isinstance(raw, dict) and "records" in raw:
+        try:
+            envelope = AlertResponsesEnvelope.model_validate(raw)
+        except ValidationError as e:
+            st.error(
+                f"Schema mismatch in {path.name}:\n\n{e}\n\n"
+                f"Run `python -m module5_responses.module5_responses "
+                f"--split={split}` to regenerate."
+            )
+            st.stop()
+        responses = [r.model_dump() for r in envelope.records]
+    else:
+        st.error(
+            f"{path.name} is neither a bare list nor an envelope "
+            f"({{'_provenance': ..., 'records': ...}}). Unknown shape."
+        )
+        st.stop()
+
+    return _enrich_with_device_context(responses, split=split)
+
+
+@st.cache_data
+def load_provenance_for(split: str | None) -> dict | None:
+    """Return the ``_provenance`` block from an envelope-formatted
+    responses file, or ``None`` if the file is legacy bare-list shape.
+
+    Used by the freshness banner in :func:`dashboard_mode` to detect
+    when an upstream artefact (risk_scores.npz, analyst_report.json,
+    test_phase1.parquet, clinician_summaries.json) has been
+    regenerated since this responses file was built.
+    """
+    if split is None or split not in _SPLIT_FILES:
+        return None
+    suffix = _SPLIT_FILES[split]
+    path = EVAL_DIR / f"alert_responses{suffix}.json"
+    if not path.exists():
+        return None
+    with open(path) as f:
+        raw = json.load(f)
+    if isinstance(raw, dict) and "_provenance" in raw:
+        return raw["_provenance"]
+    return None
+
+
+def _render_freshness_banner(split: str) -> None:
+    """Warn the operator if upstream inputs are newer than this file.
+
+    Compares each input's recorded ``mtime_iso`` (stamped at Module 5
+    build time) against the file's live mtime on disk. A 1-second
+    tolerance avoids spurious warnings on the same-second rewrite case.
+    Silent when provenance is absent (legacy file).
+    """
+    prov = load_provenance_for(split)
+    if prov is None:
+        return
+    stale = []
+    for key, meta in prov.get("inputs", {}).items():
+        if meta is None:
+            continue
+        live = (PROJECT_ROOT / meta["path"])
+        if not live.exists():
+            continue
+        live_mtime = live.stat().st_mtime
+        prov_mtime = datetime.fromisoformat(meta["mtime_iso"]).timestamp()
+        if live_mtime > prov_mtime + 1.0:
+            stale.append(meta["path"])
+    if stale:
+        st.warning(
+            "⚠️ Module 5 outputs are stale. Newer inputs on disk: "
+            f"{', '.join(stale)}. Run "
+            f"`python -m module5_responses.module5_responses "
+            f"--split={prov['split']}` to refresh."
+        )
 
 
 @st.cache_data
@@ -858,11 +1157,42 @@ def load_admin_dashboard() -> dict:
 
 
 @st.cache_data
-def load_clinician_summaries() -> dict:
-    path = EVAL_DIR / "clinician_summaries.json"
+def load_clinician_summaries(split: str | None = None) -> dict:
+    """Load clinician summaries for a frozen split.
+
+    ``split`` MUST be a key in ``_SPLIT_FILES`` (``"test"`` or ``"demo"``)
+    or ``None`` (legacy = test, paper-clean). Each page passes its own
+    ``PAGE_SPLIT`` value so the operator-clean demo doesn't render
+    test-split summaries on top of demo alerts (which silently mis-maps
+    by ``sample_index``).
+    """
+    suffix = _resolve_suffix(split)
+    path = EVAL_DIR / f"clinician_summaries{suffix}.json"
     if path.exists():
         with open(path) as f:
             return {s["sample_index"]: s for s in json.load(f)}
+    return {}
+
+
+@st.cache_data
+def load_analyst_report_for(split: str | None = None) -> dict:
+    """Load Module 4 analyst reports for a frozen split.
+
+    Module 5's `alert_responses{suffix}.json` only carries the boolean
+    `analyst_available` flag — the full `consensus / models / top_features`
+    payload is dropped during serialization. This loader fills that gap by
+    reading `analyst_report{suffix}.json` directly, returning a dict keyed
+    by `sample_index` so the simulation playhead can join the two streams
+    at render time.
+
+    Returns `{}` when the file is missing (graceful fallback — UI is
+    expected to handle the analyst-unavailable case anyway).
+    """
+    suffix = _resolve_suffix(split)
+    path = EVAL_DIR / f"analyst_report{suffix}.json"
+    if path.exists():
+        with open(path) as f:
+            return {a["sample_index"]: a for a in json.load(f)}
     return {}
 
 
@@ -892,9 +1222,16 @@ def _cached_png_bytes(path_str: str) -> bytes | None:
 
 
 @st.cache_data
-def load_audit_trail() -> dict:
-    """Module 5 FDA-style audit records, keyed by sample index parsed from alert_id."""
-    path = EVAL_DIR / "audit_trail.json"
+def load_audit_trail(split: str | None = None) -> dict:
+    """Module 5 FDA-style audit records, keyed by sample index parsed from alert_id.
+
+    ``split`` MUST be a key in ``_SPLIT_FILES`` (``"test"`` or ``"demo"``)
+    or ``None`` (legacy = test). The Online Simulation page passes
+    ``"demo"`` so its audit timeline doesn't render test-split FDA
+    records on top of demo alerts (mis-mapped by ``sample_index``).
+    """
+    suffix = _resolve_suffix(split)
+    path = EVAL_DIR / f"audit_trail{suffix}.json"
     if not path.exists():
         return {}
     with open(path) as f:
@@ -1109,11 +1446,17 @@ def build_fda_record_for_alert(
         return canonical
 
     # Fallback: rebuild a Module-5-shaped record from what we have on hand.
+    # Previously this stuffed the consensus string ("N/4 models flagged")
+    # into `explanation_summary`, which is a semantic mismatch — FDA
+    # records expect a human-readable narrative, not a model-vote count.
+    # Pull the narrative from the clinician NLG or response rationale
+    # instead; fall back to empty string if neither is available.
     response = alert.get("response", {}) or {}
     explanation = (
-        alert.get("explanation", {}).get("analyst", {}).get("consensus", "")
-        if isinstance(alert.get("explanation"), dict)
-        else ""
+        alert.get("nlg_text")
+        or alert.get("clinician_summary")
+        or response.get("rationale", "")
+        or ""
     )
     payload = json.dumps(
         {
@@ -1152,17 +1495,35 @@ def build_fda_record_for_alert(
 # ═══════════════════════════════════════════════════════════════════════
 
 
+_TIER_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+_DASHBOARD_PAGE_SIZE = 50
+
+
 def dashboard_mode():
     """Triage view — three-column Sentinel layout per `docs/sentinel_dashboard.html`.
 
     D1=A (Streamlit refactor in place). Visual direction locked to the
     prototype; ~85% fidelity envelope. See `docs/dashboard_design_memo.md`
     Phase 3 Plan for the implementation contract.
+
+    Render structure:
+      * Theme + data load are unconditional (cheap; CSS is precomputed and
+        loaders are @st.cache_data).
+      * The three triage columns live inside an @st.fragment so changes to
+        the selectbox / filter chips / search field rerun only that scope
+        — not the full page, and not the status strip.
+      * The status strip renders once per page and stays put.
     """
     from module6_evaluation.sentinel_theme import inject_theme
     from module6_evaluation import components as ui
 
     inject_theme()
+
+    # P0-1: warn the operator if any Module 5 input has been
+    # regenerated since alert_responses.json was built. Silent when
+    # provenance is absent (legacy file) — so this is purely additive
+    # and safe to ship even before Module 5 has been rerun.
+    _render_freshness_banner(PAGE_SPLIT["Dashboard"])
 
     # Triage page reads the paper-clean test split per PAGE_SPLIT.
     # alert_responses.json (no suffix) is the test-split file produced by
@@ -1176,36 +1537,101 @@ def dashboard_mode():
         )
         return
 
-    # Visual queue: top 50 by tier-then-score (CRITICAL first, then HIGH...)
-    _TIER_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
-    sorted_resp = sorted(
-        responses,
-        key=lambda r: (_TIER_ORDER.get(r.get("risk_level", "LOW"), 9),
-                       -r.get("risk_score", 0.0)),
-    )
-    visible = sorted_resp[:50]
+    # Filter / search / page state — initialized once per session.
+    st.session_state.setdefault("dashboard_filter", "All")
+    st.session_state.setdefault("dashboard_search", "")
+    st.session_state.setdefault("dashboard_page", 0)
 
-    counts = Counter(r.get("risk_level", "LOW") for r in responses)
+    @st.fragment
+    def _triage_body():
+        # Apply filter chips + search to the full response list.
+        filtered = _apply_dashboard_filters(responses)
 
-    # Selection state — single source of truth: st.session_state["selected_alert_id"]
-    if "selected_alert_id" not in st.session_state:
-        st.session_state["selected_alert_id"] = visible[0].get("sample_index")
-    selected = next(
-        (r for r in responses
-         if r.get("sample_index") == st.session_state["selected_alert_id"]),
-        visible[0],
-    )
+        sorted_resp = sorted(
+            filtered,
+            key=lambda r: (
+                _TIER_ORDER.get(r.get("risk_level", "LOW"), 9),
+                -r.get("risk_score", 0.0),
+            ),
+        )
 
-    with st.container(key="sentinel-triage"):
-        col_q, col_inv, col_act = st.columns([1.3, 3.0, 1.7], gap="small")
-        with col_q:
-            _triage_queue_column(visible, counts, selected, ui)
-        with col_inv:
-            _triage_investigation_column(selected, ui)
-        with col_act:
-            _triage_actions_column(selected, ui)
+        page = st.session_state["dashboard_page"]
+        start = page * _DASHBOARD_PAGE_SIZE
+        end = start + _DASHBOARD_PAGE_SIZE
+        visible = sorted_resp[start:end]
+        if not visible and page > 0:
+            # Filter narrowed past current page — reset to page 0.
+            st.session_state["dashboard_page"] = 0
+            visible = sorted_resp[:_DASHBOARD_PAGE_SIZE]
 
+        # Counts: total = unfiltered (true situation), filtered = post-filter
+        # (drives the queue tier-tiles so they reflect what's visible).
+        counts_total = Counter(r.get("risk_level", "LOW") for r in responses)
+        counts_filtered = Counter(r.get("risk_level", "LOW") for r in filtered)
+
+        # Pick a sensible default selection if nothing is set yet, or if
+        # the previously-selected alert was filtered out.
+        if visible:
+            default_id = visible[0].get("sample_index")
+        else:
+            default_id = sorted_resp[0].get("sample_index") if sorted_resp else responses[0].get("sample_index")
+        st.session_state.setdefault("selected_alert_id", default_id)
+
+        with st.container(key="sentinel-triage"):
+            col_q, col_inv, col_act = st.columns([1.3, 3.0, 1.7], gap="small")
+            with col_q:
+                sel_id = _triage_queue_column(
+                    responses=responses,
+                    filtered=filtered,
+                    sorted_resp=sorted_resp,
+                    visible=visible,
+                    counts_total=counts_total,
+                    counts_filtered=counts_filtered,
+                    page=page,
+                    ui=ui,
+                )
+            # Resolve selection AFTER queue column has run — that's where
+            # the selectbox lives. No st.rerun() needed; reading the
+            # widget's current value within the same fragment render is
+            # the natural Streamlit pattern.
+            selected = next(
+                (r for r in responses if r.get("sample_index") == sel_id),
+                visible[0] if visible else responses[0],
+            )
+            with col_inv:
+                _triage_investigation_column(selected, ui)
+            with col_act:
+                _triage_actions_column(selected, ui)
+
+    _triage_body()
     _triage_status_strip(ui)
+
+
+def _apply_dashboard_filters(responses: list) -> list:
+    """Apply the active filter chip + search string to the response list.
+
+    Filters:
+      * "All" — pass through.
+      * "Floor-elevated" — keep only alerts the visual floor proxy flags.
+      * "Critical + High" — keep only top-two tiers (operator focus mode).
+
+    Search matches case-insensitively against `attack_category` and the
+    formatted alert ID (A-XXXX).
+    """
+    f = st.session_state.get("dashboard_filter", "All")
+    if f == "Floor-elevated":
+        responses = [r for r in responses if _floor_elevated(r)]
+    elif f == "Critical + High":
+        responses = [r for r in responses if r.get("risk_level") in ("CRITICAL", "HIGH")]
+
+    q = (st.session_state.get("dashboard_search") or "").strip().lower()
+    if q:
+        def _match(r: dict) -> bool:
+            cat = (r.get("attack_category") or "").lower()
+            aid = f"a-{int(r.get('sample_index', 0)):04d}"
+            return q in cat or q in aid
+        responses = [r for r in responses if _match(r)]
+    return responses
 
 
 def _floor_elevated(alert: dict) -> bool:
@@ -1222,54 +1648,144 @@ def _floor_elevated(alert: dict) -> bool:
     return tier in ("CRITICAL", "HIGH") and d_crit >= 0.9
 
 
-def _triage_queue_column(visible, counts, selected, ui):
-    sel_id = selected.get("sample_index")
-    total_open = sum(counts.values())
+def _triage_queue_column(
+    *,
+    responses,
+    filtered,
+    sorted_resp,
+    visible,
+    counts_total,
+    counts_filtered,
+    page,
+    ui,
+):
+    """Left column: header, tier tiles, filters, search, selector, queue list.
 
+    Returns the currently-selected `sample_index` so the caller can resolve
+    the alert dict in the same render pass (no st.rerun needed). The
+    selectbox is the source of truth for selection; the rendered queue
+    rows are display-only (see sentinel_theme._ALERT_ROW_CSS for why).
+    """
+    sel_id = st.session_state.get("selected_alert_id")
+    total_open = sum(counts_total.values())
+    filtered_open = sum(counts_filtered.values())
+    total_pages = max(1, (filtered_open + _DASHBOARD_PAGE_SIZE - 1) // _DASHBOARD_PAGE_SIZE)
+
+    # Header: title + "N open" (true total, not the filtered count — this
+    # tells the operator how many live alerts are in the system regardless
+    # of the current view).
+    count_label = f"{total_open} open"
+    if filtered_open != total_open:
+        count_label = f"{filtered_open} shown · {total_open} open"
     st.markdown(
         f'<div style="padding:16px 16px 4px;">'
         f'  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;">'
         f'    <h2 class="font-display" style="font-size:1.5rem;margin:0;letter-spacing:-0.02em;color:var(--text-primary);">Active queue</h2>'
-        f'    <span class="font-mono" style="font-size:11px;color:var(--text-tertiary);">{total_open} open</span>'
+        f'    <span class="font-mono" style="font-size:11px;color:var(--text-tertiary);">{count_label}</span>'
         f'  </div>'
         f'</div>',
         unsafe_allow_html=True,
     )
 
-    # 4-up tier-count tile grid
+    # 4-up tier-count tile grid — reflects the unfiltered totals so the
+    # operator's situational awareness isn't masked by their own filter.
     tiles = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 12px;">'
     for tier in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
-        tiles += ui.render_tier_count_tile(tier, counts.get(tier, 0))
+        tiles += ui.render_tier_count_tile(tier, counts_total.get(tier, 0))
     tiles += '</div>'
     st.markdown(tiles, unsafe_allow_html=True)
 
-    # Functional selectbox — source of truth for selection (click-on-row
-    # is the prototype's behavior; Streamlit can't bind clicks to arbitrary
-    # HTML, so the selectbox is the workable substitute under D1=A).
+    # Filter chips. "Unassigned" is omitted because alert_responses.json
+    # carries no owner field; the chip would always match everything.
+    st.markdown(
+        '<div style="padding:0 16px 6px;font-size:10px;font-weight:500;'
+        'letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);">'
+        'Filter'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    st.pills(
+        "Filter",
+        ["All", "Critical + High", "Floor-elevated"],
+        default=st.session_state.get("dashboard_filter", "All"),
+        selection_mode="single",
+        key="dashboard_filter",
+        label_visibility="collapsed",
+    )
+
+    # Search input — placeholder mentions ⌘K so the prototype's affordance
+    # at least visually carries through. Native browser focus shortcut is
+    # not bound (would require JS injection); the affordance is the search
+    # box itself.
+    st.text_input(
+        "Search",
+        placeholder="Search attack or A-#### (⌘K)",
+        key="dashboard_search",
+        label_visibility="collapsed",
+    )
+
+    # Selectbox is the actual control. Label is now visible so users
+    # understand this is THE selector and the queue below is display.
     options = [r.get("sample_index") for r in visible]
+    if not options:
+        st.info(
+            "No alerts match the current filter and search. "
+            "Adjust the chips above or clear the search box."
+        )
+        return sel_id
+
     def _fmt(idx):
         a = next(a for a in visible if a.get("sample_index") == idx)
         return f"{a.get('risk_level', 'LOW')[:4]}  ·  A-{idx:04d}  ·  {a.get('attack_category', '?')}"
 
-    chosen = st.selectbox(
-        "Select alert",
-        options,
-        index=options.index(sel_id) if sel_id in options else 0,
-        format_func=_fmt,
-        key="alert_selectbox",
-        label_visibility="collapsed",
-    )
-    if chosen != sel_id:
-        st.session_state["selected_alert_id"] = chosen
-        st.rerun()
+    # Default selection: if previously-selected alert is still visible
+    # under the current filter, keep it. Otherwise fall back to first.
+    if sel_id in options:
+        default_index = options.index(sel_id)
+    else:
+        default_index = 0
 
-    # Visual queue, grouped by tier
+    chosen = st.selectbox(
+        "Select alert (↑/↓ when focused)",
+        options,
+        index=default_index,
+        format_func=_fmt,
+        key=f"alert_selectbox_p{page}",
+    )
+    # Persist selection without forcing a manual rerun — the fragment
+    # naturally re-renders on widget change.
+    st.session_state["selected_alert_id"] = chosen
+    sel_id = chosen
+
+    # Pagination controls — only render when there's >1 page.
+    if total_pages > 1:
+        st.markdown(
+            f'<div style="padding:6px 16px 4px;font-family:JetBrains Mono,monospace;'
+            f'font-size:10px;color:var(--text-tertiary);">'
+            f'Page {page + 1} of {total_pages}</div>',
+            unsafe_allow_html=True,
+        )
+        pcol1, pcol2 = st.columns(2)
+        with pcol1:
+            if st.button("← Prev", key="dashboard_prev", width="stretch",
+                         disabled=(page == 0)):
+                st.session_state["dashboard_page"] = max(0, page - 1)
+                st.rerun(scope="fragment")
+        with pcol2:
+            if st.button("Next →", key="dashboard_next", width="stretch",
+                         disabled=(page >= total_pages - 1)):
+                st.session_state["dashboard_page"] = min(total_pages - 1, page + 1)
+                st.rerun(scope="fragment")
+
+    # Visual queue, grouped by tier — display-only. Cursor + hover removed
+    # at the CSS layer (sentinel_theme._ALERT_ROW_CSS) to keep the
+    # affordance honest.
     queue_html = ""
     for tier in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
         tier_alerts = [a for a in visible if a.get("risk_level") == tier]
         if not tier_alerts:
             continue
-        queue_html += ui.render_tier_header(tier, counts.get(tier, 0))
+        queue_html += ui.render_tier_header(tier, counts_filtered.get(tier, 0))
         for a in tier_alerts:
             aid = a.get("sample_index", 0)
             queue_html += ui.render_alert_row(
@@ -1282,6 +1798,7 @@ def _triage_queue_column(visible, counts, selected, ui):
                 active=(aid == sel_id),
             )
     st.markdown(queue_html, unsafe_allow_html=True)
+    return sel_id
 
 
 def _triage_investigation_column(selected, ui):
@@ -1292,8 +1809,18 @@ def _triage_investigation_column(selected, ui):
     components = selected.get("risk_components", {}) or {}
     floor = _floor_elevated(selected)
     composite = selected.get("risk_score", 0.0)
-    raw = max(0.0, composite - 0.15) if floor else composite
-    floor_delta = (composite - raw) if floor else None
+
+    # Use the actual raw score if it's been persisted to the response
+    # record (e.g. by Module 5 in a future iteration). Otherwise show
+    # only the floor *badge* and skip the raw / delta sub-line — fabricating
+    # a fixed 0.15 delta misled operators about the policy's real impact.
+    raw_risk_real = selected.get("raw_risk_score")
+    if raw_risk_real is not None and floor:
+        raw_display = float(raw_risk_real)
+        delta_display = composite - raw_display
+    else:
+        raw_display = None
+        delta_display = None
 
     subtitle_html = (
         f'Attack <span class="font-mono" style="color:var(--text-primary);">'
@@ -1309,8 +1836,8 @@ def _triage_investigation_column(selected, ui):
             title=selected.get("attack_category") or f"Alert {aid}",
             subtitle_html=subtitle_html,
             composite_risk=composite,
-            raw_risk=raw if floor else None,
-            floor_delta=floor_delta,
+            raw_risk=raw_display,
+            floor_delta=delta_display,
             floor_elevated=floor,
             invariant_label="Invariant 2",
         ),
@@ -1336,16 +1863,22 @@ def _triage_investigation_column(selected, ui):
     metric_grid += '</div>'
     st.markdown(metric_grid, unsafe_allow_html=True)
 
-    # Risk-component contribution rows (substitute for SHAP under
-    # current data contract — SHAP top-features live on evaluation_alerts,
-    # not alert_responses; tying the two requires the device-context join
-    # already done in load_all_responses).
+    # Risk-component panel. Renamed "contributions" → "weights" because
+    # alert_responses.json carries positive-only component values, not
+    # signed SHAP-style contributions. Calling them "contributions" while
+    # only showing positive bars over-promises the explanation depth
+    # operators should expect from this panel. Real SHAP top-features live
+    # on evaluation_alerts and would require the device-context join.
     st.markdown(
         '<div style="padding:24px 32px 8px;">'
         '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-        '    <h3 class="font-display" style="font-size:1.25rem;margin:0;letter-spacing:-0.01em;color:var(--text-primary);">Risk component contributions</h3>'
+        '    <h3 class="font-display" style="font-size:1.25rem;margin:0;letter-spacing:-0.01em;color:var(--text-primary);">Risk component weights</h3>'
         '    <span class="font-mono" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);">6 components</span>'
         '  </div>'
+        '  <p style="font-size:11px;color:var(--text-tertiary);margin:0 0 8px;line-height:1.5;">'
+        '    Positive-only weights from the Risk-Adaptive Scoring Engine. '
+        '    For signed SHAP contributions, see the Online Simulation page.'
+        '  </p>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -1464,6 +1997,14 @@ def _triage_actions_column(selected, ui):
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Action buttons (Step 4)
+    #
+    # Vocabulary note: the Triage view exposes a deliberate 3-action subset
+    # (Acknowledge / Escalate / Dismiss). The full Module-5 vocabulary
+    # (`module6_app.ACTIONS` — monitor / investigate / isolate / escalate /
+    # dismiss) is available on the Online Simulation page, where the
+    # operator is in active investigation rather than first-touch triage.
+    # The caption below makes this routing explicit so operators don't
+    # think the missing actions are a bug.
     st.markdown(
         '<div style="padding:8px 20px 4px;">'
         '  <div style="font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:10px;">Recommended actions · human-required</div>'
@@ -1472,51 +2013,92 @@ def _triage_actions_column(selected, ui):
     )
     btn_col = st.container()
     with btn_col:
+        # Unicode glyph prefixes were dropped from button labels for two
+        # reasons: (1) screen readers read them aloud as e.g. "check mark"
+        # / "upwards arrow" / "multiplication sign", which is noise; (2) the
+        # action color is already encoded by the sentinel-btn-* classes via
+        # data-sentinel-action selectors in sentinel_theme._BTN_CSS. Color
+        # + label carry the affordance; the glyph was decorative.
         st.markdown('<div data-sentinel-action="acknowledge" style="padding:0 20px 6px;">', unsafe_allow_html=True)
-        if st.button("✓  Acknowledge — taking ownership", key=f"ack_{aid}", width="stretch"):
+        if st.button("Acknowledge — taking ownership", key=f"ack_{aid}", width="stretch",
+                     help="Records you as the owner of this alert. Audit log gets a signed acknowledge event."):
             _capture_dashboard_action(aid, "acknowledge", details={"tier": tier, "role": role})
             st.toast(f"Alert acknowledged · A-{aid:04d}", icon="✅")
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div data-sentinel-action="escalate" style="padding:0 20px 6px;">', unsafe_allow_html=True)
-        if st.button("↑  Escalate — pull in T3 + biomed", key=f"esc_{aid}", width="stretch"):
+        if st.button("Escalate — pull in T3 + biomed", key=f"esc_{aid}", width="stretch",
+                     help="Routes the alert to Tier-3 SOC and the biomedical engineering on-call."):
             _capture_dashboard_action(aid, "escalate", details={"tier": tier, "role": role})
             st.toast(f"Escalated · A-{aid:04d}", icon="⚠️")
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div data-sentinel-action="dismiss" style="padding:0 20px 6px;">', unsafe_allow_html=True)
-        if st.button("✕  Dismiss — requires reason", key=f"dis_{aid}", width="stretch"):
+        if st.button("Dismiss — requires reason", key=f"dis_{aid}", width="stretch",
+                     help="Closes the alert. A written rationale is required (no silent suppression)."):
             _dismiss_dialog(aid, tier, role)
         st.markdown('</div>', unsafe_allow_html=True)
+
+        # Routing note: clarifies that monitor/investigate/isolate live on
+        # Online Simulation, not in the Triage view's 3-action set.
+        st.markdown(
+            '<div style="padding:0 20px 6px;font-size:10px;line-height:1.5;'
+            'color:var(--text-tertiary);">'
+            'Need <span class="font-mono">monitor</span> / '
+            '<span class="font-mono">investigate</span> / '
+            '<span class="font-mono">isolate</span>? Switch to '
+            '<strong>Online Simulation</strong> in the sidebar — the '
+            'Triage view is intentionally a 3-action first-touch surface.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
         st.markdown(
             f'<div style="padding:6px 20px 16px;">{ui.render_actions_disclaimer()}</div>',
             unsafe_allow_html=True,
         )
 
-    # Audit timeline — derived from audit_trail.json for this sample
+    # Audit timeline — derived from audit_trail.json for this sample.
     audit = load_audit_trail()
     rec = audit.get(aid, {}) if isinstance(audit, dict) else {}
     events = rec.get("events", []) if isinstance(rec, dict) else []
+
     if not events:
-        events = [
-            {"kind": "system", "label": "Alert raised", "ts": "", "body": f"Sentinel · risk {selected.get('risk_score', 0.0):.2f} · tier {tier}"},
-        ]
-    timeline_html = (
-        '<div style="padding:8px 20px 24px;">'
-        f'  <div style="font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:12px;">Audit trail · {len(events)} entr{"y" if len(events) == 1 else "ies"}</div>'
-    )
-    for i, ev in enumerate(events[:8]):
-        kind = ev.get("kind") or ("human" if "operator" in ev else "system")
-        timeline_html += ui.render_timeline_item(
-            kind=kind,
-            label=str(ev.get("label", ev.get("event_type", "event"))),
-            timestamp=str(ev.get("ts", ev.get("timestamp", ""))),
-            body=str(ev.get("body", ev.get("rationale", ""))),
-            is_last=(i == len(events) - 1 or i == 7),
+        # Empty state — was previously a fabricated "Alert raised" entry
+        # that misled operators into thinking the audit chain had a record
+        # when it didn't. Honest empty state: say so, and remind that the
+        # chain starts the moment an action is taken.
+        st.markdown(
+            '<div style="padding:8px 20px 24px;">'
+            '  <div style="font-size:10px;font-weight:500;letter-spacing:0.08em;'
+            'text-transform:uppercase;color:var(--text-tertiary);margin-bottom:12px;">'
+            'Audit trail · empty'
+            '  </div>'
+            '  <p style="font-size:12px;line-height:1.5;color:var(--text-secondary);'
+            'margin:0;padding:8px 0 0;border-top:1px dashed var(--border-subtle);">'
+            'No operator events recorded for this alert yet. The signed audit '
+            'chain (<span class="font-mono">audit_log.jsonl</span>) appends '
+            'on the first Acknowledge / Escalate / Dismiss action below.'
+            '  </p>'
+            '</div>',
+            unsafe_allow_html=True,
         )
-    timeline_html += '</div>'
-    st.markdown(timeline_html, unsafe_allow_html=True)
+    else:
+        timeline_html = (
+            '<div style="padding:8px 20px 24px;">'
+            f'  <div style="font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:12px;">Audit trail · {len(events)} entr{"y" if len(events) == 1 else "ies"}</div>'
+        )
+        for i, ev in enumerate(events[:8]):
+            kind = ev.get("kind") or ("human" if "operator" in ev else "system")
+            timeline_html += ui.render_timeline_item(
+                kind=kind,
+                label=str(ev.get("label", ev.get("event_type", "event"))),
+                timestamp=str(ev.get("ts", ev.get("timestamp", ""))),
+                body=str(ev.get("body", ev.get("rationale", ""))),
+                is_last=(i == len(events) - 1 or i == 7),
+            )
+        timeline_html += '</div>'
+        st.markdown(timeline_html, unsafe_allow_html=True)
 
 
 def _capture_dashboard_action(sample_idx: int, action: str, details: dict | None = None) -> None:
@@ -1597,6 +2179,42 @@ def _dismiss_dialog(sample_idx: int, tier: str, role: str):
             st.rerun()
 
 
+@st.dialog("Reset simulation?")
+def _confirm_sim_reset():
+    """Reset wipes the latency history and rewinds the playhead to 0.
+
+    In a long demo session this is an expensive loss — the static analytics
+    panels above are derived from `latency_history`, and clearing it
+    erases the rolling per-sample chart. Required confirmation prevents
+    a stray click from destroying state.
+    """
+    st.markdown(
+        '<p style="font-size:0.875rem;color:var(--text-secondary);margin:0 0 16px;">'
+        'Resetting will rewind the playhead to <span class="font-mono">position 1</span> '
+        'and clear the latency history accumulated this session. The audit chain '
+        'and the demo split data are not affected.'
+        '</p>',
+        unsafe_allow_html=True,
+    )
+    cancel_col, confirm_col = st.columns(2)
+    with cancel_col:
+        if st.button("Cancel", key="sim_reset_cancel", width="stretch"):
+            st.rerun()
+    with confirm_col:
+        if st.button("Confirm reset", key="sim_reset_confirm",
+                     type="primary", width="stretch"):
+            st.session_state.sim_index = 0
+            if "latency_history" in st.session_state:
+                st.session_state.latency_history.clear()
+            # Reset incremental accumulators so tier counts and tier
+            # distribution chart start from zero too.
+            st.session_state.pop("_sim_acc", None)
+            st.session_state.pop("_tier_history", None)
+            audit_log("sim_reset")
+            st.toast("Simulation reset", icon="🔄")
+            st.rerun()
+
+
 def _triage_status_strip(ui):
     """Fixed-position status strip footer (prototype L996-1019)."""
     latency = load_latency_profile()
@@ -1623,11 +2241,31 @@ def _triage_status_strip(ui):
         pass
 
     metrics = {
-        "system": "System nominal",
+        "system": "Snapshot · test split",
         "p95_ms": p95_ms or "—",
         "build": build,
     }
-    st.markdown(ui.render_status_strip(metrics), unsafe_allow_html=True)
+    # is_live=False swaps the pulsing dot for a static one — the Triage
+    # page reads a frozen JSON snapshot, not a live stream. Pulsing here
+    # would mis-signal liveness the page doesn't have.
+    st.markdown(ui.render_status_strip(metrics, is_live=False), unsafe_allow_html=True)
+
+    # Keyboard-navigation hint (P3-17). Streamlit doesn't natively bind
+    # arbitrary key shortcuts to widgets, but the selectbox in the queue
+    # column supports ↑/↓ when focused — clicking the selectbox once gives
+    # operators arrow-key navigation through the visible alerts. A small
+    # helper banner makes the affordance discoverable; we don't inject JS
+    # to do something more aggressive because Streamlit reruns reset DOM
+    # state on every interaction and the resulting brittleness isn't worth
+    # the marginal UX gain.
+    st.markdown(
+        '<div style="position:fixed;left:20px;bottom:44px;z-index:998;'
+        'font-family:JetBrains Mono,monospace;font-size:10px;'
+        'color:var(--text-quaternary);pointer-events:none;">'
+        'Tip · click the alert selector and use ↑/↓ to scan'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -1649,17 +2287,45 @@ def simulation_mode():
     # default; toggle from the sidebar.
     _render_t0 = time.perf_counter()
 
-    st.title("IoMT IDS — Online Simulation")
+    # Inject the Sentinel design tokens so the Online Simulation page
+    # shares the Dashboard's visual identity. Without this, the two pages
+    # use entirely different palettes / fonts and operators switching
+    # between them feel like they've entered a different app.
+    from module6_evaluation.sentinel_theme import inject_theme
+    inject_theme()
+
+    # Page header — display serif title + one-line context so a new
+    # operator knows this is a replay tool, not a live tap.
+    st.markdown(
+        '<div style="margin:8px 0 4px;">'
+        '  <h1 class="font-display" style="font-size:2rem;letter-spacing:-0.025em;'
+        'margin:0 0 6px;color:var(--text-primary);">IoMT IDS · Online Simulation</h1>'
+        '  <p style="font-size:0.875rem;color:var(--text-secondary);margin:0;line-height:1.5;">'
+        'Replays the <span class="font-mono">demo</span> split through the live '
+        'detection pipeline at adjustable speed. Operator interactions on this '
+        'page feed the audit chain and the feedback loop — the '
+        '<span class="font-mono">test</span> split stays paper-clean for the '
+        'thesis metrics.'
+        '  </p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
     # Online Simulation reads the operator-clean demo split per PAGE_SPLIT.
     # Operator interactions on this page (Confirm/Reject/Note) feed the audit
     # chain and potentially the feedback loop — keeping them off the test
     # split protects the thesis's paper-clean metrics.
     responses = load_responses_for(PAGE_SPLIT["Online Simulation"])
-    clin_summaries = load_clinician_summaries()
-    audit_trail = load_audit_trail()
+    clin_summaries = load_clinician_summaries(PAGE_SPLIT["Online Simulation"])
+    audit_trail = load_audit_trail(PAGE_SPLIT["Online Simulation"])
     latency_profile = load_latency_profile()
     live_df = load_live_stream_source()
+    # Join analyst_report data — Module 5 strips the full analyst payload
+    # (consensus / models / top_features) before serializing the response
+    # records; we restore it here so render_analyst / render_admin can
+    # actually show what's been computed. Empty dict when the file is
+    # missing, in which case _analyst_state will report "unavailable".
+    analyst_report_by_idx = load_analyst_report_for(PAGE_SPLIT["Online Simulation"])
 
     if not responses:
         st.warning(
@@ -1669,29 +2335,50 @@ def simulation_mode():
         )
         return
 
-    # 6C.8 Role switcher
-    st.sidebar.markdown("---")
+    # 6C.8 Role switcher — pills match the Dashboard's role-toggle pattern
+    # (see _triage_actions_column). Selectbox cost an extra click and was
+    # inconsistent with the rest of the app.
+    st.sidebar.divider()
     st.sidebar.markdown("## Stakeholder View")
-    sim_role = st.sidebar.selectbox(
-        "View as:",
+    sim_role = st.sidebar.pills(
+        "View as",
         ["Security Analyst", "Clinician", "Administrator"],
+        default=st.session_state.get("sim_role", "Security Analyst"),
+        selection_mode="single",
         key="sim_role",
+        label_visibility="collapsed",
     )
+    # Fallback when user clears the pill (pills allow none-selected by
+    # spec); the rest of the page assumes a non-None role string.
+    if not sim_role:
+        sim_role = "Security Analyst"
 
-    # ── Step 0 instrumentation toggle ──
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("## Debug")
-    st.session_state["_render_caption_enabled"] = st.sidebar.toggle(
-        "Show render time", value=True, key="dbg_render_caption"
-    )
-    st.session_state["_render_log_enabled"] = st.sidebar.toggle(
-        "Log render time to /tmp/sim_render_timings.jsonl",
-        value=False,
-        key="dbg_render_log",
-    )
+    # ── Debug instrumentation (hidden behind SENTINEL_DEV env var) ──
+    # Render-time captions and timing JSONL exports are useful for
+    # performance work but they're noise for thesis demos and RQ3
+    # participants. Toggle visibility from the shell:
+    #   SENTINEL_DEV=1 streamlit run module6_evaluation/module6_app.py
+    import os as _os
+    _dev_mode = bool(_os.environ.get("SENTINEL_DEV"))
+    if _dev_mode:
+        st.sidebar.divider()
+        st.sidebar.markdown("## Debug")
+        st.session_state["_render_caption_enabled"] = st.sidebar.toggle(
+            "Show render time", value=False, key="dbg_render_caption"
+        )
+        st.session_state["_render_log_enabled"] = st.sidebar.toggle(
+            "Log render time to /tmp/sim_render_timings.jsonl",
+            value=False,
+            key="dbg_render_log",
+        )
+    else:
+        # Default-off when SENTINEL_DEV isn't set — even if some other
+        # render flow toggled them on previously in this session.
+        st.session_state.setdefault("_render_caption_enabled", False)
+        st.session_state.setdefault("_render_log_enabled", False)
 
     # ── Data source toggle (6C.11 mock live source) ──
-    st.sidebar.markdown("---")
+    st.sidebar.divider()
     st.sidebar.markdown("## Data Source")
     source_label = st.sidebar.radio(
         "Stream from:",
@@ -1720,52 +2407,74 @@ def simulation_mode():
         st.session_state.sim_source = "alerts"
 
     # ── Smoother playback controls ──
-    ctrl_a, ctrl_b, ctrl_c, ctrl_d, ctrl_e = st.columns([1.2, 1, 1, 1, 1.4])
+    # Speed is now pills (was selectbox — 2 clicks → 1 click for frequent
+    # control). Emoji glyphs in button labels are wrapped via the
+    # `:material/` icon convention where supported; raw unicode glyphs are
+    # kept for buttons whose meaning is universal (▶/⏸).
+    ctrl_a, ctrl_b, ctrl_c, ctrl_d, ctrl_e = st.columns([1.5, 1, 1, 1, 1.4])
 
     with ctrl_a:
-        speed_label = st.selectbox(
+        st.markdown(
+            '<div style="font-size:11px;font-weight:500;letter-spacing:0.04em;'
+            'text-transform:uppercase;color:var(--text-tertiary);margin-bottom:4px;">'
+            'Speed</div>',
+            unsafe_allow_html=True,
+        )
+        speed_label = st.pills(
             "Speed",
             ["0.5x", "1x", "2x", "4x"],
-            index=["0.5x", "1x", "2x", "4x"].index(f"{st.session_state.sim_speed:g}x")
-            if f"{st.session_state.sim_speed:g}x" in ["0.5x", "1x", "2x", "4x"]
-            else 1,
-            help="Playback speed multiplier for the auto-advance loop.",
+            default=f"{st.session_state.sim_speed:g}x" if f"{st.session_state.sim_speed:g}x" in ["0.5x", "1x", "2x", "4x"] else "1x",
+            selection_mode="single",
+            key="sim_speed_pill",
+            label_visibility="collapsed",
         )
-        st.session_state.sim_speed = float(speed_label.rstrip("x"))
+        if speed_label:
+            st.session_state.sim_speed = float(speed_label.rstrip("x"))
 
     with ctrl_b:
         if st.session_state.sim_running:
-            if st.button("⏸ Pause", width="stretch"):
+            if st.button("Pause", width="stretch", icon=":material/pause:",
+                         help="Halt auto-advance. Step still works."):
                 st.session_state.sim_running = False
                 audit_log("sim_pause", sim_index=st.session_state.sim_index)
         else:
-            if st.button("▶ Resume", width="stretch"):
+            if st.button("Resume", width="stretch", icon=":material/play_arrow:",
+                         help="Resume auto-advance at the current speed."):
                 st.session_state.sim_running = True
                 audit_log("sim_resume", sim_index=st.session_state.sim_index)
 
     with ctrl_c:
-        if st.button("⏭ Step", width="stretch", help="Advance one alert (works while paused)."):
+        if st.button("Step", width="stretch", icon=":material/skip_next:",
+                     help="Advance one alert (works while paused)."):
             st.session_state.sim_index = min(st.session_state.sim_index + 1, len(responses) - 1)
             push_latency_sample(latency_profile)
 
     with ctrl_d:
-        if st.button("⟲ Reset", width="stretch"):
-            st.session_state.sim_index = 0
-            st.session_state.latency_history.clear()
-            audit_log("sim_reset")
+        if st.button("Reset", width="stretch", icon=":material/restart_alt:",
+                     help="Rewind to alert 0 and clear the latency history. Requires confirmation."):
+            _confirm_sim_reset()
 
     with ctrl_e:
+        # Range hint surfaced in the label so operators don't have to
+        # trial-and-error the bounds. The number_input enforces them at
+        # widget level anyway, but the label is the first place a user
+        # looks. 1-based to match the progress bar and "Stream position"
+        # metric — see corresponding comment near the playhead.
+        max_n = len(responses)
         jump_target = st.number_input(
-            "Jump to alert #",
-            min_value=0,
-            max_value=max(0, len(responses) - 1),
-            value=int(st.session_state.sim_index),
+            f"Jump to stream position # (1–{max_n})",
+            min_value=1,
+            max_value=max_n,
+            value=int(st.session_state.sim_index) + 1,
             step=1,
-            help="Jump the playhead to a specific alert index.",
+            help="Jump the playhead to a specific position in the alert "
+                 "stream (1-based). This is the order alerts arrived, "
+                 "not the alert ID — see expander labels below for IDs.",
         )
-        if jump_target != st.session_state.sim_index:
-            st.session_state.sim_index = int(jump_target)
-            audit_log("sim_jump", target=int(jump_target))
+        new_idx = int(jump_target) - 1
+        if new_idx != st.session_state.sim_index:
+            st.session_state.sim_index = new_idx
+            audit_log("sim_jump", position=int(jump_target), sim_index=new_idx)
 
     # ─────────────────────────────────────────────────────────────────
     # Phase 2 — STATIC ANALYTICS (rendered once per script run)
@@ -1812,7 +2521,17 @@ def simulation_mode():
                 ]
                 if stage_rows:
                     stage_df = pd.DataFrame(stage_rows).set_index("stage")
-                    st.bar_chart(stage_df, color="#3274A1")
+                    # Sentinel accent token. The previous #3274A1 was the
+                    # matplotlib default blue and didn't match the rest of
+                    # the app.
+                    st.bar_chart(stage_df, color="#7BA7BC")
+                    # SLA threshold annotation — st.bar_chart can't draw a
+                    # horizontal reference line, so the value is surfaced
+                    # in a caption directly under the chart instead.
+                    st.caption(
+                        "Reference: 150 ms end-to-end SLA. Stage means above this "
+                        "value are likely the dominant latency contributor."
+                    )
 
             with lat_right:
                 st.markdown("**Percentiles per stage**")
@@ -1837,7 +2556,10 @@ def simulation_mode():
         col_thresh, col_drift = st.columns(2)
         with col_thresh:
             st.markdown("#### Adaptive Threshold Monitor")
-            dyn_path = EVAL_DIR / "dynamic_threshold_results.json"
+            # Online Simulation is the demo split — read the demo-suffixed
+            # output so this panel reflects the operator-clean stream.
+            sim_suffix = _resolve_suffix(PAGE_SPLIT["Online Simulation"])
+            dyn_path = EVAL_DIR / f"dynamic_threshold_results{sim_suffix}.json"
             if dyn_path.exists():
                 with open(dyn_path) as f:
                     dyn = json.load(f)
@@ -1847,33 +2569,59 @@ def simulation_mode():
                     thc1, thc2 = st.columns(2)
                     thc1.metric("Static F1", f"{fm.get('static', {}).get('f1', 0):.4f}")
                     thc2.metric("Adaptive F1", f"{fm.get('adaptive', {}).get('f1', 0):.4f}")
-                thresh_bytes = _cached_png_bytes(str(CHARTS_DIR / "threshold_over_time.png"))
+                thresh_bytes = _cached_png_bytes(
+                    str(CHARTS_DIR / f"threshold_over_time{sim_suffix}.png")
+                )
                 if thresh_bytes:
                     st.image(thresh_bytes, width="stretch", caption="DAE threshold: static vs adaptive")
             else:
-                st.info("Run `dynamic_threshold_sim.py` to enable adaptive threshold monitoring")
+                st.info(
+                    f"Run `python tools/diagnostics/dynamic_threshold_sim.py --split={PAGE_SPLIT['Online Simulation']}` "
+                    "to enable adaptive threshold monitoring"
+                )
 
         with col_drift:
             st.markdown("#### Drift Detection Status")
-            drift_path = EVAL_DIR / "drift_detection_results.json"
+            # Online Simulation is the demo split — read the demo-suffixed
+            # output so this panel reflects the operator-clean stream.
+            drift_path = EVAL_DIR / f"drift_detection_results{sim_suffix}.json"
             if drift_path.exists():
                 with open(drift_path) as f:
                     drift = json.load(f)
                 psi = drift.get("psi_summary", {})
                 n_events = len(drift.get("drift_events", []))
                 dc1, dc2 = st.columns(2)
-                dc1.metric("Drift Events", n_events)
+                dc1.metric(
+                    "Drift Events", n_events,
+                    help=(
+                        "Number of times the drift detector flagged a "
+                        "distribution shift since the last calibration. Each "
+                        "event triggers a re-baseline check downstream."
+                    ),
+                )
+                psi_max = psi.get("max", 0)
                 dc2.metric(
                     "PSI (max)",
-                    f"{psi.get('max', 0):.4f}",
-                    delta="DRIFT" if psi.get("max", 0) > 0.1 else "OK",
-                    delta_color="inverse" if psi.get("max", 0) > 0.1 else "normal",
+                    f"{psi_max:.4f}",
+                    delta="DRIFT" if psi_max > 0.1 else "OK",
+                    delta_color="inverse" if psi_max > 0.1 else "normal",
+                    help=(
+                        "Population Stability Index — measures how much each "
+                        "feature's distribution has shifted vs. the calibration "
+                        "baseline.\n\n"
+                        "• PSI < 0.1 = no significant drift\n"
+                        "• 0.1 ≤ PSI < 0.25 = moderate drift (monitor)\n"
+                        "• PSI ≥ 0.25 = significant drift (re-baseline)"
+                    ),
                 )
-                psi_bytes = _cached_png_bytes(str(CHARTS_DIR / "drift_psi.png"))
+                psi_bytes = _cached_png_bytes(str(CHARTS_DIR / f"drift_psi{sim_suffix}.png"))
                 if psi_bytes:
                     st.image(psi_bytes, width="stretch", caption="PSI over time")
             else:
-                st.info("Run `drift_detection.py` to enable drift monitoring")
+                st.info(
+                    f"Run `python tools/diagnostics/drift_detection.py --split={PAGE_SPLIT['Online Simulation']}` "
+                    "to enable drift monitoring"
+                )
 
     # ─────────────────────────────────────────────────────────────────
     # Phase 2 — PLAYHEAD FRAGMENT (auto-ticks at speed-derived interval)
@@ -1936,19 +2684,49 @@ def simulation_mode():
             _acc["idx"] = idx_local
         # _acc is always consistent with idx_local at this point
 
-        # Status + progress
+        # Status + progress. Status indicator uses both color *and* text
+        # (was emoji-only — color-blind operators / non-emoji fonts lose
+        # the signal). Pulse-live class comes from the Sentinel theme.
         status_col, prog_col = st.columns([1, 4])
         with status_col:
             running_local = st.session_state.sim_running
+            at_end = idx_local >= len(responses) - 1
+            if at_end:
+                state_label = "Complete"
+                state_dot = "pulse-static"
+                state_color = "var(--text-secondary)"
+            elif running_local:
+                state_label = "Running"
+                state_dot = "pulse-live"
+                state_color = "var(--success)"
+            else:
+                state_label = "Paused"
+                state_dot = "pulse-static"
+                state_color = "var(--warning)"
             st.markdown(
-                f"**Status:** {'🟢 Running' if running_local else '🟡 Paused'} "
-                f"&nbsp;&nbsp; `{st.session_state.sim_speed:g}x`",
+                f'<div style="display:flex;align-items:center;gap:8px;'
+                f'font-size:0.875rem;color:var(--text-primary);">'
+                f'<span class="{state_dot}" style="background:{state_color};"></span>'
+                f'<span style="font-weight:500;">{state_label}</span>'
+                f'<span class="font-mono" style="color:var(--text-tertiary);font-size:11px;">'
+                f'{st.session_state.sim_speed:g}x</span>'
+                f'</div>',
                 unsafe_allow_html=True,
             )
         with prog_col:
             st.progress(
                 (idx_local + 1) / max(1, len(responses)),
-                text=f"Alert {idx_local + 1} / {len(responses)}",
+                text=f"Position {idx_local + 1} / {len(responses)}",
+            )
+
+        # End-of-stream callout (OS-12). Without this the simulation just
+        # quietly stops auto-advancing and the operator has no signal that
+        # they've reviewed everything.
+        if idx_local >= len(responses) - 1:
+            st.success(
+                f"🏁 End of stream — reviewed all {len(responses)} alerts in "
+                f"the demo split. Use **Reset** to start over, or **Jump to "
+                f"stream position #** to revisit a specific position."
             )
 
         # Mock live source preview (only when live mode active)
@@ -1976,28 +2754,51 @@ def simulation_mode():
                     width="stretch",
                 )
 
-        # Summary metrics — O(1) reads from incremental accumulators
+        # Summary metrics — O(1) reads from incremental accumulators.
+        # All four tiers are shown so the operator sees the full tier
+        # distribution at a glance (was CRITICAL+HIGH only, hiding the
+        # MEDIUM/LOW volume that contextualizes how noisy the stream is).
         st.markdown("---")
-        mc1, mc2, mc3, mc4, mc5 = st.columns(5)
-        mc1.metric("Samples Processed", idx_local + 1)
+        mc1, mc2, mc3, mc4, mc5, mc6 = st.columns(6)
+        mc1.metric(
+            "Stream position",
+            f"{idx_local + 1} / {len(responses)}",
+            help="Current playhead position in the alert stream (1-based). "
+                 "This is NOT the alert ID — see expander labels below.",
+        )
         mc2.metric("CRITICAL", _acc["tier"].get("CRITICAL", 0))
         mc3.metric("HIGH", _acc["tier"].get("HIGH", 0))
-        mc4.metric("True Attacks Seen", _acc["attacks"])
-        mc5.metric("Latest Risk Score", f"{responses[idx_local]['risk_score']:.3f}")
+        mc4.metric("MEDIUM", _acc["tier"].get("MEDIUM", 0))
+        mc5.metric("LOW", _acc["tier"].get("LOW", 0))
+        mc6.metric("True attacks", _acc["attacks"],
+                   help="Ground-truth attack count among samples processed so far.")
 
-        # Risk gauge + 4-component breakdown
+        # Latest risk score + 4-component breakdown
         if current_batch_local:
             latest = current_batch_local[-1]
             latest_score = latest["risk_score"]
             latest_level = latest["risk_level"]
             col_gauge, col_components = st.columns([1, 2])
             with col_gauge:
-                st.markdown("#### Risk Score Gauge")
+                # Renamed from "Risk Score Gauge" — st.metric + st.progress
+                # is a number plus a bar, not a true gauge. The old name
+                # over-promised on the visualization.
+                st.markdown("#### Latest risk score")
+                # st.metric.delta needs a numeric sign to honor delta_color.
+                # The previous code passed a string ("CRITICAL"), so the
+                # inverse-color logic never kicked in. Render the tier as
+                # a colored badge instead, and use a tone-appropriate help
+                # tooltip for context.
+                tier_color = TIER_STREAMLIT_COLORS.get(latest_level, "gray")
                 st.metric(
                     "Current Alert",
                     f"{latest_score:.3f}",
-                    delta=latest_level,
-                    delta_color="inverse" if latest_level in ("CRITICAL", "HIGH") else "normal",
+                    help=f"Risk tier classification for this sample.",
+                )
+                st.markdown(
+                    f"**Tier:** :{tier_color}[**{latest_level}**]",
+                    help="Tier color reflects severity (violet=CRITICAL, red=HIGH, "
+                    "orange=MEDIUM, green=LOW).",
                 )
                 st.progress(min(latest_score, 1.0))
             with col_components:
@@ -2010,7 +2811,10 @@ def simulation_mode():
                             "Value": [float(v) for v in comps.values()],
                         }
                     )
-                    st.bar_chart(comp_df.set_index("Component"), color="#3274A1")
+                    # Sentinel accent token (#7BA7BC). The previous
+                    # hardcoded #3274A1 (matplotlib default blue) was
+                    # off-brand and didn't match the Dashboard's palette.
+                    st.bar_chart(comp_df.set_index("Component"), color="#7BA7BC")
                 else:
                     st.caption("Component breakdown not available for this alert")
 
@@ -2034,10 +2838,35 @@ def simulation_mode():
             st.line_chart(roll_df[chart_cols])
             if "total_ms" in roll_df.columns:
                 last_total = float(roll_df["total_ms"].iloc[-1])
-                sla_warn = " ⚠️ exceeds 150 ms SLA" if last_total > 150 else " ✅ within 150 ms SLA"
-                st.caption(f"Latest total latency: {last_total:.1f} ms{sla_warn}")
+                # SLA badge — styled HTML pill rather than emoji-prefixed
+                # caption. SLA breach is an incident-level signal; muted
+                # caption tone under-weights it.
+                if last_total > 150:
+                    badge_bg = "var(--tier-high-bg)"
+                    badge_border = "rgba(224, 122, 95, 0.3)"
+                    badge_color = "var(--tier-high)"
+                    badge_label = "SLA breach"
+                else:
+                    badge_bg = "var(--success-bg)"
+                    badge_border = "rgba(95, 158, 123, 0.3)"
+                    badge_color = "var(--success)"
+                    badge_label = "Within SLA"
+                st.markdown(
+                    f'<div style="display:flex;align-items:center;gap:10px;'
+                    f'margin-top:6px;font-size:12px;color:var(--text-secondary);">'
+                    f'<span style="display:inline-flex;align-items:center;gap:6px;'
+                    f'padding:3px 10px;border-radius:3px;background:{badge_bg};'
+                    f'border:1px solid {badge_border};color:{badge_color};'
+                    f'font-family:JetBrains Mono,monospace;font-size:11px;'
+                    f'font-weight:500;letter-spacing:0.04em;">{badge_label}</span>'
+                    f'<span>Latest total latency: <span class="font-mono" '
+                    f'style="color:var(--text-primary);">{last_total:.1f} ms</span> '
+                    f'(SLA = 150 ms)</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
         else:
-            st.caption("Step or resume the simulation to populate the rolling latency chart.")
+            st.info("Step or resume the simulation to populate the rolling latency chart.")
 
         # Current batch (per-alert expanders with role render + interactions + FDA export)
         st.markdown("---")
@@ -2046,18 +2875,39 @@ def simulation_mode():
         fda_cache = st.session_state.setdefault("_fda_payload_cache", {})
         fda_filename_cache = st.session_state.setdefault("_fda_filename_cache", {})
 
-        for r in current_batch_local:
+        for offset, r in enumerate(current_batch_local):
             sample_idx = r["sample_index"]
             level = r["risk_level"]
             score = r["risk_score"]
-            color = TIER_COLORS.get(level, "#999")
+            # Streamlit's `:color[text]` syntax only supports named colors —
+            # the previous `:{hex}[level]` rendered as literal `:e74c3c[HIGH]`.
+            named_color = TIER_STREAMLIT_COLORS.get(level, "gray")
+
+            # current_batch_local is the trailing window ending at idx_local,
+            # so this entry's 1-based stream position is:
+            #   idx_local - (window_len - 1 - offset) + 1
+            # Edge: when idx_local < window-1, the slice is shorter and the
+            # formula still holds since len(current_batch_local) reflects
+            # the actual slice length.
+            position = idx_local - (len(current_batch_local) - 1 - offset) + 1
 
             with st.expander(
-                f"Alert #{sample_idx} — :{color.replace('#', '')}[{level}] R={score:.3f}",
+                f"Position {position} · Alert A-{sample_idx:04d} — "
+                f":{named_color}[{level}] R={score:.3f}",
                 expanded=(level in ("CRITICAL", "HIGH")),
             ):
                 if sample_idx not in alerts_cache:
                     clin = clin_summaries.get(sample_idx, {})
+                    # Module 5 strips analyst payload from alert_responses
+                    # records (keeping only the `analyst_available` flag),
+                    # so we join from `analyst_report_by_idx` loaded above.
+                    # The `r.get("explanation", {}).get("analyst", {})`
+                    # chain that lived here used to always return {} and
+                    # silently break the analyst view.
+                    analyst_data = analyst_report_by_idx.get(sample_idx, {})
+                    analyst_models = analyst_data.get("models") or {}
+                    xgb_top = (analyst_models.get("xgboost") or {}).get("top_features", [])
+                    dae_top = (analyst_models.get("dae") or {}).get("top_features", [])
                     alerts_cache[sample_idx] = process_alert(
                         sample_idx,
                         {
@@ -2065,19 +2915,25 @@ def simulation_mode():
                             "risk_level": level,
                             "attack_category": r.get("attack_category", "unknown"),
                             "xai_explanation": {
-                                "xgboost_top_features": r.get("explanation", {})
-                                .get("analyst", {})
-                                .get("xgboost_top_features", []),
-                                "dae_top_features": r.get("explanation", {})
-                                .get("analyst", {})
-                                .get("dae_top_features", []),
+                                "xgboost_top_features": xgb_top,
+                                "dae_top_features": dae_top,
                                 "clinician_summary": clin.get("summary", ""),
-                                "consensus": r.get("explanation", {})
-                                .get("analyst", {})
-                                .get("consensus", ""),
+                                "consensus": analyst_data.get("consensus", ""),
+                                # Per-model breakdown — surfaced by the new
+                                # render_model_breakdown component. Empty
+                                # dict when analyst data is unavailable.
+                                "models": analyst_models,
                             },
                         },
                     )
+                    # Mirror analyst_available flag onto the cached alert
+                    # so _analyst_state() can distinguish "Module 4 didn't
+                    # process this sample" from "pipeline desynced".
+                    alerts_cache[sample_idx]["explanation"] = {
+                        "analyst_available": bool(
+                            (r.get("explanation") or {}).get("analyst_available")
+                        ),
+                    }
                 alert_obj = alerts_cache[sample_idx]
 
                 if sim_role == "Security Analyst":
@@ -2108,39 +2964,66 @@ def simulation_mode():
                     ),
                 )
 
-                btn_col1, btn_col2, btn_col3 = st.columns(3)
+                # Label-feedback section (OS-6): distinct from the Triage
+                # Dashboard's Acknowledge/Escalate/Dismiss workflow actions.
+                # Confirm/Reject here are *labels* fed back into the
+                # feedback-loop training data, not operational decisions.
+                st.markdown(
+                    '<div style="font-size:10px;font-weight:500;letter-spacing:0.08em;'
+                    'text-transform:uppercase;color:#6A6F7B;margin:8px 0 6px;">'
+                    'Label feedback · trains the next model iteration'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
+                # Buttons on top row, note input below — the previous
+                # 3-column layout made the text input visually overpower the
+                # two buttons. Stacking gives each control its natural width.
+                btn_col1, btn_col2 = st.columns(2)
                 with btn_col1:
-                    if st.button("Confirm", key=f"confirm_{sample_idx}"):
+                    if st.button("Confirm", key=f"confirm_{sample_idx}", width="stretch"):
                         capture_online_interaction(
                             st.session_state.get("participant_id", "anon"),
                             sample_idx,
                             "confirm",
                             {"tier": level, "score": score},
                         )
-                        st.success("Confirmed")
+                        # st.toast lives ~3s in a global slot — it survives
+                        # the fragment's next tick, unlike st.success which
+                        # vanishes the moment the fragment re-renders.
+                        st.toast(f"Confirmed · A-{sample_idx:04d}", icon="✅")
                 with btn_col2:
-                    if st.button("Reject", key=f"reject_{sample_idx}"):
+                    if st.button("Reject", key=f"reject_{sample_idx}", width="stretch"):
                         capture_online_interaction(
                             st.session_state.get("participant_id", "anon"),
                             sample_idx,
                             "reject",
                             {"tier": level, "score": score},
                         )
-                        st.warning("Rejected — logged for feedback loop")
-                with btn_col3:
-                    note = st.text_input(
-                        "Note",
-                        key=f"note_{sample_idx}",
-                        label_visibility="collapsed",
-                        placeholder="Add feedback note...",
-                    )
-                    if note:
-                        capture_online_interaction(
-                            st.session_state.get("participant_id", "anon"),
-                            sample_idx,
-                            "feedback_note",
-                            {"note": note, "tier": level},
+                        st.toast(
+                            f"Rejected · A-{sample_idx:04d} — added to feedback loop",
+                            icon="⚠️",
                         )
+
+                # Note input. The auto-tick fragment re-runs every speed
+                # interval — a naive `if note: capture_online_interaction(...)`
+                # used to log on every tick, spamming the audit chain with
+                # duplicates of the same note. We compare against the
+                # last-logged value per sample and only log on change.
+                note = st.text_input(
+                    "Feedback note",
+                    key=f"note_{sample_idx}",
+                    placeholder="Add feedback note (optional)…",
+                )
+                _last_logged = st.session_state.setdefault("_last_logged_notes", {})
+                if note and _last_logged.get(sample_idx) != note:
+                    capture_online_interaction(
+                        st.session_state.get("participant_id", "anon"),
+                        sample_idx,
+                        "feedback_note",
+                        {"note": note, "tier": level},
+                    )
+                    _last_logged[sample_idx] = note
 
         # Cumulative tier distribution (incremental, O(1) per advance)
         # Issue 3 fix: target_len uses idx_local+1 directly — no history_local.
@@ -2168,9 +3051,20 @@ def simulation_mode():
             DISPLAY_LIMIT = 200
             if tier_state["len"] <= DISPLAY_LIMIT:
                 display = tier_state["data"]
+                window_caption = None
             else:
                 display = {t: tier_state["data"][t][-DISPLAY_LIMIT:] for t in TIERS}
+                # Surface the windowing so the operator doesn't think the
+                # chart "froze" once they cross 200 samples — the chart is
+                # a rolling window, not a complete history past that point.
+                window_caption = (
+                    f"Showing the most recent {DISPLAY_LIMIT} of "
+                    f"{tier_state['len']} processed samples. Earlier samples "
+                    f"are still counted in the tier metrics above."
+                )
             st.line_chart(pd.DataFrame(display))
+            if window_caption:
+                st.caption(window_caption)
 
     # Drive the playhead fragment. The first call renders the playhead
     # panels using the current sim_index. Subsequent ticks (via the
@@ -2240,13 +3134,37 @@ def display_alert(alert: dict, show_xai: bool):
     # Gap 2: Device criticality badge at the top
     render_device_criticality(alert)
 
+    level = alert.get("risk_level", "LOW")
+    # BA-1: Use the single tier-token source of truth — the previous local
+    # `level_colors` had CRITICAL=red which conflicted with the rest of
+    # the app (CRITICAL=violet). Four mapping tables had silently diverged
+    # across pages; consolidating here removes the last in-tree exception.
+    # tier_token maps to Sentinel CSS vars (--tier-critical, --tier-high, ...).
+    tier_token = level.lower()
+
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Risk Score", f"{alert['risk_score']:.2f}")
     with col2:
-        level_colors = {"CRITICAL": "red", "HIGH": "orange", "MEDIUM": "blue", "LOW": "green"}
+        # BA-12: Render as a proper pill badge instead of plain colored
+        # text. Pill matches the visual weight of the Sentinel investigation
+        # header so cross-page recognition is preserved. The dot inherits
+        # color from the parent span via currentColor.
         st.markdown(
-            f"**Risk Level:** :{level_colors.get(alert['risk_level'], 'gray')}[{alert['risk_level']}]"
+            f'<div style="font-size:10px;font-weight:500;letter-spacing:0.08em;'
+            f'text-transform:uppercase;color:var(--text-tertiary);margin-bottom:4px;">'
+            f'Risk Level</div>'
+            f'<span style="display:inline-flex;align-items:center;gap:6px;'
+            f'padding:4px 12px;border-radius:4px;'
+            f'background:var(--tier-{tier_token}-bg);'
+            f'color:var(--tier-{tier_token});'
+            f'font-family:JetBrains Mono,monospace;font-size:13px;'
+            f'font-weight:500;letter-spacing:0.04em;">'
+            f'<span style="width:8px;height:8px;border-radius:50%;'
+            f'background:currentColor;display:inline-block;"></span>'
+            f'{level}'
+            f'</span>',
+            unsafe_allow_html=True,
         )
 
     if show_xai:
@@ -2261,33 +3179,85 @@ def display_alert(alert: dict, show_xai: bool):
         xai = alert.get("xai_explanation", {})
         top_feats = xai.get("xgboost_top_features", [])
         if top_feats:
-            st.markdown("**Top Contributing Features (SHAP):**")
+            # BA-10: SHAP features as bar visualization. The previous
+            # bullet list buried the SHAP magnitude in body text — operators
+            # had to mentally rank 5 numbers. The bar makes the dominant
+            # contributors visually obvious; the sign drives the bar color
+            # (positive = accent, negative = tier-high tone).
+            st.markdown("**Top contributing features (SHAP)**")
+            max_abs = max(abs(f.get("shap_value", 0)) for f in top_feats[:5]) or 1.0
+            from module6_evaluation import components as ui_mod
+            shap_html = '<div style="padding:4px 0 8px;">'
             for f in top_feats[:5]:
-                direction = "increases" if f.get("shap_value", 0) > 0 else "decreases"
-                st.markdown(
-                    f"- **{f['feature']}**: {direction} risk (SHAP: {f.get('shap_value', 0):+.3f})"
+                v = float(f.get("shap_value", 0))
+                weight_pct = int(round(abs(v) / max_abs * 100))
+                feat_type = "biometric" if f["feature"] in BIOMETRIC_FEATURES else "network feature"
+                shap_html += ui_mod.render_factor_row(
+                    label=f["feature"],
+                    sublabel=feat_type,
+                    weight_pct=weight_pct,
+                    contribution=v,
+                    negative=(v < 0),
                 )
+            shap_html += '</div>'
+            st.markdown(shap_html, unsafe_allow_html=True)
 
         dae_feats = xai.get("dae_top_features", [])
         if dae_feats:
-            st.markdown("**DAE Anomaly Indicators:**")
+            st.markdown("**DAE anomaly indicators**")
+            dae_html = '<div style="padding:4px 0 8px;">'
+            from module6_evaluation import components as ui_mod
             for f in dae_feats[:3]:
-                st.markdown(
-                    f"- **{f['feature']}**: {f.get('pct_contribution', 0):.1f}% of anomaly score"
+                pct = float(f.get("pct_contribution", 0))
+                dae_html += ui_mod.render_factor_row(
+                    label=f["feature"],
+                    sublabel="DAE reconstruction error",
+                    weight_pct=int(round(min(100, pct))),
+                    contribution=pct / 100,
                 )
+            dae_html += '</div>'
+            st.markdown(dae_html, unsafe_allow_html=True)
 
         consensus = xai.get("consensus", "")
         if consensus:
-            st.info(f"Model consensus: {consensus}")
+            # Unified visual treatment (T10) — was st.info with the
+            # legacy "Model consensus" label.
+            parsed = _parse_consensus(consensus)
+            if parsed:
+                n_flagged, total = parsed
+                st.markdown(
+                    ui_mod.render_consensus_badge(
+                        n_flagged, total, label=DETECTOR_CONSENSUS_LABEL,
+                    ),
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.info(f"{DETECTOR_CONSENSUS_LABEL}: {consensus}")
 
-        wf_bytes = _cached_png_bytes(
-            str(CHARTS_DIR / f"waterfall_xgboost_sample_{alert['sample_index']:04d}.png")
-        )
+        # BA-19: Graceful fallback when the waterfall PNG is missing.
+        # Previously the section was invisible — operator couldn't tell
+        # whether SHAP plotting failed or was just unavailable.
+        wf_path = CHARTS_DIR / f"waterfall_xgboost_sample_{alert['sample_index']:04d}.png"
+        wf_bytes = _cached_png_bytes(str(wf_path))
         if wf_bytes:
             st.image(wf_bytes, caption="SHAP Waterfall Plot", width="stretch")
+        else:
+            st.caption(
+                f"SHAP waterfall plot unavailable for this sample · "
+                f"expected at `results/charts/{wf_path.name}`."
+            )
     else:
         st.markdown("---")
-        st.info("No explanation available. Decide based on risk score and level only.")
+        # BA-8: The original "Decide based on risk score and level only"
+        # implied a decision flow that browse_mode does not have (response
+        # forms live in study_mode). The new copy explains the XAI toggle
+        # honestly and points operators to the right surface for decisions.
+        st.info(
+            "XAI explanation hidden via the sidebar toggle. Re-enable it to "
+            "see the 3-layer MVE breakdown and SHAP contributions. "
+            "For decision capture, switch to the **Study (A/B)** or "
+            "**Online Simulation** page."
+        )
 
 
 def response_form(alert: dict, alert_index: int, show_xai: bool) -> dict | None:
@@ -2318,47 +3288,253 @@ def response_form(alert: dict, alert_index: int, show_xai: bool) -> dict | None:
 
 
 def browse_mode():
-    """6.3a — Free browsing with XAI toggle."""
+    """6.3a — Free browsing with XAI toggle.
+
+    Refactored to match Dashboard / Online Simulation visual identity:
+      * Sentinel theme injected (BA-3)
+      * Title unified with sidebar nav label (BA-5)
+      * Page intro caption explains the surface honestly (BA-13)
+      * Sidebar restructured with dividers (BA-14)
+      * Answer key gated behind facilitator toggle (BA-2)
+      * Prev/Next navigation buttons + kbd hint (BA-4, BA-20)
+      * Filter chips + search (BA-7)
+      * Selectbox shows tier + visited mark (BA-6, BA-18)
+      * Recommended action uses Sentinel tier glyphs (BA-11)
+    """
+    from module6_evaluation.sentinel_theme import inject_theme
+    from module6_evaluation import components as ui_mod
+    inject_theme()
+
     alerts = load_alerts()
     n = len(alerts)
 
+    # ── Sidebar: structured with dividers ─────────────────────────────
+    st.sidebar.divider()
     st.sidebar.markdown("## Browse Controls")
-    show_xai = st.sidebar.toggle("Show XAI Explanation", value=True)
-    idx = st.sidebar.slider("Alert #", 0, n - 1, 0)
+    show_xai = st.sidebar.toggle(
+        "Show XAI Explanation",
+        value=True,
+        help="Toggle the 3-layer MVE breakdown and SHAP visualisation.",
+    )
+
+    # ── Filter chips + search (BA-7) ──────────────────────────────────
+    st.sidebar.divider()
+    st.sidebar.markdown("### Filter")
+    st.session_state.setdefault("browse_filter", "All")
+    st.session_state.setdefault("browse_search", "")
+    st.sidebar.pills(
+        "Filter",
+        ["All", "Critical + High", "Attacks only"],
+        default=st.session_state.get("browse_filter", "All"),
+        selection_mode="single",
+        key="browse_filter",
+        label_visibility="collapsed",
+    )
+    st.sidebar.text_input(
+        "Search",
+        placeholder="Search attack / alert ID",
+        key="browse_search",
+        label_visibility="collapsed",
+    )
+
+    f = st.session_state.get("browse_filter", "All")
+    q = (st.session_state.get("browse_search") or "").strip().lower()
+
+    def _matches(a: dict) -> bool:
+        if f == "Critical + High" and a.get("risk_level") not in ("CRITICAL", "HIGH"):
+            return False
+        if f == "Attacks only" and a.get("ground_truth") != "attack":
+            return False
+        if q:
+            aid = str(a.get("alert_id", "")).lower()
+            cat = str(a.get("attack_category", "")).lower()
+            if q not in aid and q not in cat:
+                return False
+        return True
+
+    visible_indices = [i for i, a in enumerate(alerts) if _matches(a)]
+    if not visible_indices:
+        st.sidebar.warning("No alerts match the current filter + search.")
+        visible_indices = list(range(n))
+
+    # ── Alert selector (BA-6, BA-18) ──────────────────────────────────
+    st.sidebar.divider()
+    st.sidebar.markdown("### Select alert")
+
+    visited: set = st.session_state.setdefault("browse_visited", set())
+    prev_idx = st.session_state.get("browse_idx", visible_indices[0])
+    if prev_idx not in visible_indices:
+        prev_idx = visible_indices[0]
+
+    def _option_fmt(i: int) -> str:
+        a = alerts[i]
+        lvl = a.get("risk_level", "LOW")[:4]
+        mark = "* " if i in visited else "  "
+        return f"{mark}{lvl}  -  {a.get('alert_id', f'A-{i:04d}')}  -  {a.get('attack_category', '?')}"
+
+    chosen_idx = st.sidebar.selectbox(
+        "Alert",
+        visible_indices,
+        index=visible_indices.index(prev_idx),
+        format_func=_option_fmt,
+        key="browse_alert_selectbox",
+        label_visibility="collapsed",
+    )
+    st.session_state["browse_idx"] = chosen_idx
+    idx = chosen_idx
     alert = alerts[idx]
+    visited.add(idx)
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown(f"**Ground Truth:** `{alert['ground_truth']}`")
-    st.sidebar.markdown(f"**Attack Type:** `{alert['attack_category']}`")
-    st.sidebar.markdown(f"**Correct Action:** `{alert.get('correct_action', 'N/A')}`")
+    # ── Facilitator-only answer key (BA-2) ────────────────────────────
+    # Previously the sidebar exposed ground truth + correct action right
+    # away — fine for facilitator review, but a spoiler for any
+    # operator-learning use of this page. Gated behind a toggle that
+    # defaults OFF.
+    st.sidebar.divider()
+    show_answer = st.sidebar.toggle(
+        "Show facilitator answer key",
+        value=False,
+        help="Reveals ground truth + correct action. Hidden by default to "
+        "preserve the browse-as-learning use case. Facilitators reviewing "
+        "decisions should flip this on.",
+    )
+    if show_answer:
+        st.sidebar.markdown(
+            '<div style="margin-top:8px;padding:10px 12px;border:1px solid '
+            'rgba(212,164,69,0.3);background:var(--tier-medium-bg);'
+            'border-radius:4px;font-size:11px;">'
+            '<div style="font-weight:500;color:var(--tier-medium);'
+            'text-transform:uppercase;letter-spacing:0.08em;font-size:10px;'
+            'margin-bottom:6px;">Answer key - facilitator only</div>'
+            f'<div><strong>Ground truth:</strong> <code>{alert["ground_truth"]}</code></div>'
+            f'<div><strong>Attack type:</strong> <code>{alert["attack_category"]}</code></div>'
+            f'<div><strong>Correct action:</strong> <code>{alert.get("correct_action", "N/A")}</code></div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
-    st.title("IoMT Alert Browser")
-    st.caption(f"Alert {idx + 1} of {n} — {'With XAI' if show_xai else 'Without XAI'}")
+    # ── Page header (BA-5, BA-13) ─────────────────────────────────────
+    st.markdown(
+        '<div style="margin:8px 0 4px;">'
+        '  <h1 class="font-display" style="font-size:2rem;letter-spacing:-0.025em;'
+        'margin:0 0 6px;color:var(--text-primary);">Browse Alerts</h1>'
+        '  <p style="font-size:0.875rem;color:var(--text-secondary);margin:0;line-height:1.5;">'
+        'Free-browsing view over the <span class="font-mono">evaluation</span> '
+        'alert set. No decisions are captured here - switch to the '
+        '<strong>Study (A/B)</strong> or <strong>Online Simulation</strong> '
+        'page to record responses. Use the filter chips in the sidebar to '
+        'narrow scope; the answer-key toggle reveals ground truth for '
+        'facilitator review.'
+        '  </p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Position indicator + visited count
+    visible_position = visible_indices.index(idx) + 1
+    visible_total = len(visible_indices)
+    st.markdown(
+        f'<div style="display:flex;gap:18px;align-items:center;margin:12px 0 8px;'
+        f'font-family:JetBrains Mono,monospace;font-size:11px;'
+        f'color:var(--text-tertiary);">'
+        f'<span>Alert <span style="color:var(--text-primary);">{visible_position}</span> '
+        f'of {visible_total}{" (filtered)" if visible_total != n else ""}</span>'
+        f'<span>|</span>'
+        f'<span>XAI <span style="color:var(--text-primary);">'
+        f'{"on" if show_xai else "off"}</span></span>'
+        f'<span>|</span>'
+        f'<span>Visited <span style="color:var(--text-primary);">{len(visited)}</span> '
+        f'/ {n}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Prev / Next navigation (BA-4) ─────────────────────────────────
+    nav_prev, nav_next, nav_unvisit = st.columns([1, 1, 1.4])
+    cur_pos = visible_indices.index(idx)
+    with nav_prev:
+        if st.button("< Previous", key="browse_prev", width="stretch",
+                     disabled=(cur_pos == 0),
+                     help="Move to the previous alert in the current filter."):
+            st.session_state["browse_idx"] = visible_indices[max(0, cur_pos - 1)]
+            st.rerun()
+    with nav_next:
+        if st.button("Next >", key="browse_next", width="stretch",
+                     disabled=(cur_pos >= visible_total - 1),
+                     help="Move to the next alert in the current filter."):
+            st.session_state["browse_idx"] = visible_indices[min(visible_total - 1, cur_pos + 1)]
+            st.rerun()
+    with nav_unvisit:
+        if st.button("Clear visited markers", key="browse_clear_visited",
+                     width="stretch",
+                     help="Forget which alerts you've already opened."):
+            st.session_state["browse_visited"] = set()
+            st.rerun()
+
     display_alert(alert, show_xai)
 
-    # UX-B-01: Action affordance — show recommended action
+    # ── Recommended Action (BA-11) ────────────────────────────────────
+    # Only renders when the facilitator toggle is on - the action *is* the
+    # answer for the test split, so leaving it visible by default leaks
+    # the same information BA-2 just hid.
+    if not show_answer:
+        # Keyboard shortcut hint (BA-20) only — recommended action is
+        # gated; show the hint here so it sits below display_alert.
+        st.markdown(
+            '<div style="margin-top:24px;padding-top:12px;border-top:1px dashed var(--border-subtle);'
+            'font-family:JetBrains Mono,monospace;font-size:10px;color:var(--text-quaternary);">'
+            'Tip - click the Alert selector in the sidebar and use the up/down keys to scan. '
+            'Use the Prev/Next buttons above to step through the filtered set.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
     st.divider()
-    st.subheader("\u26a1 Recommended Action")
+    st.subheader("Recommended Action")
     correct_action = alert.get("correct_action", "")
+    # Tier-mapped guidance — emoji color circles (the previous design)
+    # replaced with the Sentinel tier glyph + token color, so the visual
+    # carries through consistent with Dashboard / Online Simulation
+    # severity coding.
     _ACTION_GUIDANCE = {
-        "isolate": ("\U0001f534 Isolate device from network",
-                    "Block all non-essential connections while preserving clinical paths."),
-        "escalate": ("\U0001f7e0 Escalate immediately",
-                     "Notify security lead and clinical engineering on-call."),
-        "investigate": ("\U0001f7e1 Investigate before acting",
+        "isolate":     ("critical", "Isolate device from network",
+                        "Block all non-essential connections while preserving clinical paths."),
+        "escalate":    ("high", "Escalate immediately",
+                        "Notify security lead and clinical engineering on-call."),
+        "investigate": ("high", "Investigate before acting",
                         "Gather more information. Check with Biomed for scheduled maintenance."),
-        "monitor": ("\U0001f7e2 Monitor — no immediate action",
-                    "Watch for escalation. Set alert for threshold change."),
-        "dismiss": ("\u26aa Dismiss — expected behavior",
-                    "Verify with asset owner. Document reason for dismissal."),
+        "monitor":     ("medium", "Monitor - no immediate action",
+                        "Watch for escalation. Set alert for threshold change."),
+        "dismiss":     ("low", "Dismiss - expected behavior",
+                        "Verify with asset owner. Document reason for dismissal."),
     }
-    label, guidance = _ACTION_GUIDANCE.get(
+    tier_key, label, guidance = _ACTION_GUIDANCE.get(
         correct_action,
-        ("\u2139\ufe0f Review recommended",
+        ("low", "Review recommended",
          "Check response policy for this alert type."),
     )
-    st.markdown(f"**{label}**")
-    st.caption(guidance)
+    st.markdown(
+        f'<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;'
+        f'background:var(--tier-{tier_key}-bg);border-left:3px solid var(--tier-{tier_key});'
+        f'border-radius:4px;margin-bottom:6px;">'
+        f'{ui_mod.render_tier_glyph(tier_key.upper(), size_px=12)}'
+        f'<div style="flex:1;"><div style="font-weight:500;color:var(--text-primary);'
+        f'font-size:0.95rem;margin-bottom:2px;">{label}</div>'
+        f'<div style="font-size:0.8rem;color:var(--text-secondary);">{guidance}</div>'
+        f'</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    # Keyboard shortcut hint (BA-20)
+    st.markdown(
+        '<div style="margin-top:24px;padding-top:12px;border-top:1px dashed var(--border-subtle);'
+        'font-family:JetBrains Mono,monospace;font-size:10px;color:var(--text-quaternary);">'
+        'Tip - click the Alert selector in the sidebar and use the up/down keys to scan. '
+        'Use the Prev/Next buttons above to step through the filtered set.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def _render_proxy_questions():

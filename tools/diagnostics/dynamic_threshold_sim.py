@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from module3_risk_scoring.module3_risk_scores import (
     WEIGHTS,
@@ -56,7 +56,8 @@ from module5_responses.module5_pipeline import FeedbackLoop
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+# Project root is two directories up: tools/diagnostics/ → project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results" / "reports"
 CHARTS_DIR = PROJECT_ROOT / "results" / "charts"
 
@@ -73,25 +74,42 @@ DEFAULT_THRESHOLDS = {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40}
 # Data loading (B1.1)
 # ═══════════════════════════════════════════════════════════════════════
 
-def load_stream_data() -> dict:
-    """Load test data sorted by row index as temporal proxy.
+def _split_paths(split: str) -> dict:
+    """Resolve per-split input/output paths.
 
-    The WUSTL-EHMS-2020 test parquet has no timestamp columns, so row
+    Thin wrapper over :mod:`common.split_paths` — call sites keep their
+    dict-access shape while the canonical path mapping lives in common.
+    """
+    from common import split_paths as sp
+    return {
+        "dae_preds": sp.dae_predictions(split),
+        "risk_npz":  sp.risk_scores(split),
+        "suffix":    sp.suffix(split),
+    }
+
+
+def load_stream_data(split: str = "test") -> dict:
+    """Load a split's stream data, sorted by row index as temporal proxy.
+
+    The WUSTL-EHMS-2020 parquet files have no timestamp columns, so row
     order serves as the time proxy.  This is acknowledged as a
     limitation in the thesis.
     """
-    npz = dict(np.load(
-        PROJECT_ROOT / "results" / "models" / "dae_test_predictions.npz",
-        allow_pickle=True,
-    ))
-    risk_npz = dict(np.load(
-        OUTPUT_DIR / "risk_scores.npz", allow_pickle=True,
-    ))
-    # Signed-pickle load (Phase 2 finding #3a).
-    from common import loads_signed
-    detector = loads_signed(
-        PROJECT_ROOT / "results" / "models" / "dae_detector.pkl",
-    )
+    paths = _split_paths(split)
+    npz = dict(np.load(paths["dae_preds"], allow_pickle=True))
+    risk_npz = dict(np.load(paths["risk_npz"], allow_pickle=True))
+    # DAE is persisted as dae_detector.json + dae_model.weights.h5 (no
+    # pickle on the load path — see DAE.from_artefacts). The model_registry
+    # singleton caches it.
+    from common.model_registry import get_dae
+    detector = get_dae()
+    if detector._train_errors is None:
+        raise RuntimeError(
+            "DAE artifact is missing the `train_errors` array — adaptive "
+            "threshold simulation needs it to seed the sliding-window "
+            "baseline. Retrain the DAE (module2_detection.dae_training) so "
+            "the JSON sidecar persists train_errors."
+        )
 
     re_scores = npz["reconstruction_error"]  # raw RE per sample
     y_true = risk_npz["y_true"]
@@ -306,7 +324,7 @@ def sensitivity_grid(
 # B1.6  Comparison figures
 # ═══════════════════════════════════════════════════════════════════════
 
-def plot_threshold_over_time(result: dict) -> None:
+def plot_threshold_over_time(result: dict, suffix: str = "") -> None:
     """(a) Static horizontal line vs adaptive curve."""
     fig, ax = plt.subplots(figsize=(14, 5))
     n = len(result["adaptive_thresh"])
@@ -322,12 +340,13 @@ def plot_threshold_over_time(result: dict) -> None:
     ax.legend()
     ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "threshold_over_time.png", dpi=150)
+    out = CHARTS_DIR / f"threshold_over_time{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: threshold_over_time.png")
+    logger.info("  Chart: %s", out.name)
 
 
-def plot_cumulative_f1(result: dict) -> None:
+def plot_cumulative_f1(result: dict, suffix: str = "") -> None:
     """(b) Cumulative F1 over time."""
     fig, ax = plt.subplots(figsize=(14, 5))
     n = len(result["cum_f1_static"])
@@ -344,12 +363,13 @@ def plot_cumulative_f1(result: dict) -> None:
     ax.set_ylim(0, 1.05)
     ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "cumulative_f1.png", dpi=150)
+    out = CHARTS_DIR / f"cumulative_f1{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: cumulative_f1.png")
+    logger.info("  Chart: %s", out.name)
 
 
-def plot_sensitivity_heatmap(grid_df: pd.DataFrame) -> None:
+def plot_sensitivity_heatmap(grid_df: pd.DataFrame, suffix: str = "") -> None:
     """(c) Heatmap of F1 by W × k."""
     pivot = grid_df.pivot(index="k", columns="W", values="F1_adaptive")
 
@@ -373,9 +393,10 @@ def plot_sensitivity_heatmap(grid_df: pd.DataFrame) -> None:
 
     plt.colorbar(im, label="F1 Score")
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "sensitivity_heatmap.png", dpi=150)
+    out = CHARTS_DIR / f"sensitivity_heatmap{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: sensitivity_heatmap.png")
+    logger.info("  Chart: %s", out.name)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -605,7 +626,7 @@ def build_master_table(comparison: dict, tier_result: dict) -> str:
 # Additional B3 figures
 # ═══════════════════════════════════════════════════════════════════════
 
-def plot_adaptive_tier_thresholds(tier_result: dict) -> None:
+def plot_adaptive_tier_thresholds(tier_result: dict, suffix: str = "") -> None:
     """Plot adaptive tier threshold values over time."""
     fig, ax = plt.subplots(figsize=(14, 5))
     n = len(tier_result["tier_history"]["MEDIUM"])
@@ -625,12 +646,13 @@ def plot_adaptive_tier_thresholds(tier_result: dict) -> None:
     ax.legend(fontsize=8, ncol=2)
     ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "adaptive_tier_thresholds.png", dpi=150)
+    out = CHARTS_DIR / f"adaptive_tier_thresholds{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: adaptive_tier_thresholds.png")
+    logger.info("  Chart: %s", out.name)
 
 
-def plot_master_comparison(comparison: dict) -> None:
+def plot_master_comparison(comparison: dict, suffix: str = "") -> None:
     """Bar chart comparing F1 across the four approaches."""
     approaches = ["Static-only", "Sliding-window", "Feedback-loop", "Combined"]
     keys = ["static", "adaptive", "feedback", "combined"]
@@ -655,9 +677,10 @@ def plot_master_comparison(comparison: dict) -> None:
         ax2.text(i, v + 0.001, f"{v:.4f}", ha="center", fontsize=9, fontweight="bold")
 
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "master_comparison.png", dpi=150)
+    out = CHARTS_DIR / f"master_comparison{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: master_comparison.png")
+    logger.info("  Chart: %s", out.name)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -665,22 +688,46 @@ def plot_master_comparison(comparison: dict) -> None:
 # ═══════════════════════════════════════════════════════════════════════
 
 def main() -> None:
+    import argparse
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    parser = argparse.ArgumentParser(
+        description=(
+            "Dynamic threshold simulation (Phases B1 + B3). Test = paper-clean "
+            "(unsuffixed outputs preserved for thesis); demo = operator-clean "
+            "(outputs suffixed _demo so the Online Simulation panel reflects "
+            "the operator stream without overwriting the test baseline)."
+        )
+    )
+    parser.add_argument(
+        "--split",
+        choices=("test", "demo"),
+        default="test",
+        help="Frozen split to stream-process. Default: test.",
+    )
+    args = parser.parse_args()
+
+    paths = _split_paths(args.split)
+    suffix = paths["suffix"]
+
     sep = "=" * 72
     t0 = time.perf_counter()
 
     logger.info(sep)
-    logger.info("DYNAMIC THRESHOLD SIMULATION (Phases B1 + B3)")
+    logger.info(
+        "DYNAMIC THRESHOLD SIMULATION (Phases B1 + B3) — split=%s",
+        args.split,
+    )
     logger.info(sep)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    data = load_stream_data()
+    data = load_stream_data(args.split)
     n = len(data["y_true"])
     n_attacks = int((data["y_true"] == 1).sum())
     logger.info("Loaded %d samples (%d attacks)", n, n_attacks)
@@ -713,9 +760,9 @@ def main() -> None:
     # ── B1.6  Figures ──
     logger.info("")
     logger.info("── B1.6  Generating Figures ──")
-    plot_threshold_over_time(result)
-    plot_cumulative_f1(result)
-    plot_sensitivity_heatmap(grid_df)
+    plot_threshold_over_time(result, suffix=suffix)
+    plot_cumulative_f1(result, suffix=suffix)
+    plot_sensitivity_heatmap(grid_df, suffix=suffix)
 
     # ── B3.1 + B3.2  Adaptive risk tiers ──
     logger.info("")
@@ -725,7 +772,7 @@ def main() -> None:
                 tier_result["static_distribution"], tier_result["static_metrics"])
     logger.info("  Adaptive tiers: %s  metrics: %s",
                 tier_result["adaptive_distribution"], tier_result["adaptive_metrics"])
-    plot_adaptive_tier_thresholds(tier_result)
+    plot_adaptive_tier_thresholds(tier_result, suffix=suffix)
 
     # ── B3.3  Combined ──
     logger.info("")
@@ -746,10 +793,11 @@ def main() -> None:
     logger.info("── B3.4  Master Comparison Table ──")
     table = build_master_table(comparison, tier_result)
     logger.info("\n%s", table)
-    plot_master_comparison(comparison)
+    plot_master_comparison(comparison, suffix=suffix)
 
     # ── Save all results ──
     results = {
+        "split": args.split,
         "b1_static_vs_adaptive": {
             "W": DEFAULT_WINDOW, "k": DEFAULT_K,
             "final_metrics": result["final_metrics"],
@@ -764,26 +812,27 @@ def main() -> None:
         "b3_combined_comparison": comparison,
         "master_comparison_table_md": table,
         "time_proxy_note": (
-            "Row index used as temporal proxy — WUSTL-EHMS-2020 test "
+            f"Row index used as temporal proxy — WUSTL-EHMS-2020 {args.split} "
             "parquet contains no timestamp columns."
         ),
     }
-    out_path = OUTPUT_DIR / "dynamic_threshold_results.json"
+    out_name = f"dynamic_threshold_results{suffix}.json"
+    out_path = OUTPUT_DIR / out_name
     out_path.write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
     logger.info("")
-    logger.info("Saved: dynamic_threshold_results.json")
+    logger.info("Saved: %s", out_name)
 
     elapsed = round(time.perf_counter() - t0, 1)
     logger.info("")
     logger.info(sep)
-    logger.info("DYNAMIC THRESHOLD SIM COMPLETE — %.1fs", elapsed)
+    logger.info("DYNAMIC THRESHOLD SIM COMPLETE — %.1fs (split=%s)", elapsed, args.split)
     logger.info(sep)
-    logger.info("  dynamic_threshold_results.json")
-    logger.info("  threshold_over_time.png")
-    logger.info("  cumulative_f1.png")
-    logger.info("  sensitivity_heatmap.png")
-    logger.info("  adaptive_tier_thresholds.png")
-    logger.info("  master_comparison.png")
+    logger.info("  %s", out_name)
+    logger.info("  threshold_over_time%s.png", suffix)
+    logger.info("  cumulative_f1%s.png", suffix)
+    logger.info("  sensitivity_heatmap%s.png", suffix)
+    logger.info("  adaptive_tier_thresholds%s.png", suffix)
+    logger.info("  master_comparison%s.png", suffix)
     logger.info(sep)
 
 

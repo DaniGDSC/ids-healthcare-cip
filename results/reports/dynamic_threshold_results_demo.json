@@ -1,0 +1,242 @@
+{
+  "split": "demo",
+  "b1_static_vs_adaptive": {
+    "W": 100,
+    "k": 3,
+    "final_metrics": {
+      "static": {
+        "f1": 0.521739,
+        "precision": 0.453237,
+        "recall": 0.614634,
+        "fpr": 0.093137,
+        "fnr": 0.048407
+      },
+      "adaptive": {
+        "f1": 0.372208,
+        "precision": 0.249584,
+        "recall": 0.731707,
+        "fpr": 0.276348,
+        "fnr": 0.033701
+      }
+    }
+  },
+  "b1_sensitivity_grid": [
+    {
+      "W": 50,
+      "k": 2,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.364706,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.300245,
+      "FNR_adaptive": 0.030637,
+      "delta_F1": -0.157033
+    },
+    {
+      "W": 50,
+      "k": 3,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.377358,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.269608,
+      "FNR_adaptive": 0.033701,
+      "delta_F1": -0.144381
+    },
+    {
+      "W": 50,
+      "k": 4,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.389542,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.251838,
+      "FNR_adaptive": 0.034314,
+      "delta_F1": -0.132197
+    },
+    {
+      "W": 100,
+      "k": 2,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.362573,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.303309,
+      "FNR_adaptive": 0.030637,
+      "delta_F1": -0.159166
+    },
+    {
+      "W": 100,
+      "k": 3,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.372208,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.276348,
+      "FNR_adaptive": 0.033701,
+      "delta_F1": -0.149531
+    },
+    {
+      "W": 100,
+      "k": 4,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.388451,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.250613,
+      "FNR_adaptive": 0.034926,
+      "delta_F1": -0.133288
+    },
+    {
+      "W": 200,
+      "k": 2,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.368794,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.297181,
+      "FNR_adaptive": 0.030025,
+      "delta_F1": -0.152945
+    },
+    {
+      "W": 200,
+      "k": 3,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.37594,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.271446,
+      "FNR_adaptive": 0.033701,
+      "delta_F1": -0.145799
+    },
+    {
+      "W": 200,
+      "k": 4,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.387942,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.251225,
+      "FNR_adaptive": 0.034926,
+      "delta_F1": -0.133797
+    },
+    {
+      "W": 500,
+      "k": 2,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.363636,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.29902,
+      "FNR_adaptive": 0.03125,
+      "delta_F1": -0.158103
+    },
+    {
+      "W": 500,
+      "k": 3,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.381313,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.267157,
+      "FNR_adaptive": 0.033088,
+      "delta_F1": -0.140426
+    },
+    {
+      "W": 500,
+      "k": 4,
+      "F1_static": 0.521739,
+      "F1_adaptive": 0.385126,
+      "FPR_static": 0.093137,
+      "FPR_adaptive": 0.246936,
+      "FNR_adaptive": 0.036765,
+      "delta_F1": -0.136613
+    }
+  ],
+  "b3_adaptive_tiers": {
+    "static_metrics": {
+      "f1": 0.818182,
+      "fpr": 0.041667,
+      "fnr": 0.009804,
+      "precision": 0.735409,
+      "recall": 0.921951
+    },
+    "adaptive_metrics": {
+      "f1": 0.509044,
+      "fpr": 0.227941,
+      "fnr": 0.004902,
+      "precision": 0.346221,
+      "recall": 0.960976
+    },
+    "static_distribution": {
+      "LOW": 1375,
+      "MEDIUM": 54,
+      "HIGH": 185,
+      "CRITICAL": 18
+    },
+    "adaptive_distribution": {
+      "LOW": 1063,
+      "MEDIUM": 227,
+      "HIGH": 71,
+      "CRITICAL": 271
+    }
+  },
+  "b3_combined_comparison": {
+    "static": {
+      "metrics": {
+        "f1": 0.818182,
+        "fpr": 0.041667,
+        "fnr": 0.009804,
+        "precision": 0.735409,
+        "recall": 0.921951
+      },
+      "distribution": {
+        "LOW": 1375,
+        "MEDIUM": 54,
+        "HIGH": 185,
+        "CRITICAL": 18
+      }
+    },
+    "adaptive": {
+      "metrics": {
+        "f1": 0.509044,
+        "fpr": 0.227941,
+        "fnr": 0.004902,
+        "precision": 0.346221,
+        "recall": 0.960976
+      },
+      "distribution": {
+        "LOW": 1063,
+        "MEDIUM": 227,
+        "HIGH": 71,
+        "CRITICAL": 271
+      }
+    },
+    "feedback": {
+      "metrics": {
+        "f1": 0.818182,
+        "fpr": 0.041667,
+        "fnr": 0.009804,
+        "precision": 0.735409,
+        "recall": 0.921951
+      },
+      "distribution": {
+        "LOW": 1375,
+        "MEDIUM": 54,
+        "HIGH": 185,
+        "CRITICAL": 18
+      },
+      "thresholds": {
+        "CRITICAL": 0.8,
+        "HIGH": 0.6,
+        "MEDIUM": 0.4
+      }
+    },
+    "combined": {
+      "metrics": {
+        "f1": 0.76494,
+        "fpr": 0.064338,
+        "fnr": 0.007966,
+        "precision": 0.646465,
+        "recall": 0.936585
+      },
+      "distribution": {
+        "LOW": 1335,
+        "MEDIUM": 67,
+        "HIGH": 22,
+        "CRITICAL": 208
+      }
+    }
+  },
+  "master_comparison_table_md": "| Approach | F1 | FPR | FNR | Precision | Recall | LOW | MED | HIGH | CRIT |\n|----------|---:|----:|----:|----------:|-------:|----:|----:|-----:|-----:|\n| Static-only | 0.8182 | 0.0417 | 0.0098 | 0.7354 | 0.9220 | 1375 | 54 | 185 | 18 |\n| Sliding-window | 0.5090 | 0.2279 | 0.0049 | 0.3462 | 0.9610 | 1063 | 227 | 71 | 271 |\n| Feedback-loop | 0.8182 | 0.0417 | 0.0098 | 0.7354 | 0.9220 | 1375 | 54 | 185 | 18 |\n| Combined | 0.7649 | 0.0643 | 0.0080 | 0.6465 | 0.9366 | 1335 | 67 | 22 | 208 |",
+  "time_proxy_note": "Row index used as temporal proxy \u2014 WUSTL-EHMS-2020 demo parquet contains no timestamp columns."
+}

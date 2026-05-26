@@ -24,6 +24,15 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 import pandas as pd
 
+# DEVICE_CONTEXT + derive_device_class_row consolidated into common/ so
+# Module 5 (MVE generation) and Module 6 (evaluation alert curation) tag
+# rows identically. _derive_device_class kept as a private alias for the
+# rest of this module's call sites — no behaviour change.
+from common.device_class import (  # noqa: E402
+    DEVICE_CONTEXT,
+    derive_device_class_row as _derive_device_class_row,
+)
+
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -32,131 +41,56 @@ CHARTS_DIR = PROJECT_ROOT / "results/charts"
 
 ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
 
-# UX-X-01 / UX-X-02: Device context for evaluation alerts
-DEVICE_CONTEXT = {
-    "infusion_pump": {
-        "affected_system": "Infusion pump — active drug delivery",
-        "patient_care_impact": "Compromise could alter infusion parameters for active patients.",
-        "device_criticality": "CRITICAL",
-        "active_device": True,
-    },
-    "ventilator": {
-        "affected_system": "Ventilator — active respiratory support",
-        "patient_care_impact": "Device disruption directly affects patient breathing.",
-        "device_criticality": "CRITICAL",
-        "active_device": True,
-    },
-    "patient_monitor": {
-        "affected_system": "Patient monitor — vital signs tracking",
-        "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
-        "device_criticality": "HIGH",
-        "active_device": True,
-    },
-    "ehr_workstation": {
-        "affected_system": "EHR workstation — clinical documentation",
-        "patient_care_impact": "Disruption affects active patient charting for floor nurses.",
-        "device_criticality": "HIGH",
-        "active_device": False,
-    },
-    "pacs_server": {
-        "affected_system": "PACS server — diagnostic imaging",
-        "patient_care_impact": "Disruption affects radiology reads and image delivery.",
-        "device_criticality": "HIGH",
-        "active_device": False,
-    },
-    "insulin_pump": {
-        "affected_system": "Insulin pump — active drug delivery (mobile)",
-        "patient_care_impact": "Compromise could alter insulin dosing. Hypo/hyperglycemia risk.",
-        "device_criticality": "HIGH",
-        "active_device": True,
-    },
-    "pharmacy_system": {
-        "affected_system": "Pharmacy system — medication dispensing",
-        "patient_care_impact": "Disruption affects automated drug dispensing for all patients.",
-        "device_criticality": "HIGH",
-        "active_device": False,
-    },
-    "server": {
-        "affected_system": "Clinical server — infrastructure",
-        "patient_care_impact": "Server disruption may cascade to dependent clinical systems.",
-        "device_criticality": "MEDIUM",
-        "active_device": False,
-    },
-    "other": {
-        "affected_system": "Clinical network device",
-        "patient_care_impact": "Impact depends on device function — verify with Biomed.",
-        "device_criticality": "MEDIUM",
-        "active_device": False,
-    },
-}
-
-_DEVICE_TYPE_KEYWORDS = [
-    ("infusion", "infusion_pump"), ("ventilator", "ventilator"),
-    ("insulin", "insulin_pump"),
-    ("patient monitor", "patient_monitor"), ("monitor", "patient_monitor"),
-    ("ehr", "ehr_workstation"), ("pacs", "pacs_server"),
-    ("pharmacy", "pharmacy_system"),
-    ("workstation", "ehr_workstation"), ("server", "server"),
-]
-
-
-_BIO_FEATS = ('Temp', 'SpO2', 'Pulse_Rate', 'Heart_rate', 'Resp_Rate', 'ST')
-
 
 def _derive_device_class(sample_index: int, test_df: pd.DataFrame) -> str:
-    """Derive device class from biometric feature patterns.
-
-    M6-E1: compute each biometric abs-threshold check once into a dict,
-    eliminating the double-extraction (loop + named booleans) from before.
-    """
-    row = test_df.iloc[sample_index]
-    # Single pass — each feature extracted exactly once
-    vals = {f: abs(float(row.get(f, 0))) > 0.5 for f in _BIO_FEATS}
-    bio_active = sum(vals.values())
-    resp_a  = vals['Resp_Rate']
-    spo2_a  = vals['SpO2']
-    pulse_a = vals['Pulse_Rate']
-    hr_a    = vals['Heart_rate']
-    temp_a  = vals['Temp']
-
-    if resp_a and spo2_a and bio_active >= 4:
-        return "ventilator"
-    if pulse_a and hr_a and bio_active >= 3:
-        return "patient_monitor"
-    if temp_a and bio_active >= 2:
-        return "infusion_pump"
-    sport = abs(float(row.get('Sport', 0)))
-    src = abs(float(row.get('SrcBytes', 0)))
-    if bio_active <= 1 and (sport > 0.1 or src > 0.1):
-        return "ehr_workstation"
-    return "other"
+    """Per-row wrapper kept as a thin shim over ``common.device_class``."""
+    return _derive_device_class_row(test_df.iloc[sample_index])
 
 
 # ═══════════════════════════════════════════════════════════════════════
 # 6.2  Curate evaluation alert set
 # ═══════════════════════════════════════════════════════════════════════
 
-def curate_evaluation_alerts() -> list:
-    """Select 20 diverse alerts spanning all tiers and attack types."""
-    logger.info("Curating evaluation alert set...")
+def _curate_split_paths(split: str) -> dict:
+    """Resolve per-split inputs + output suffix for evaluation-alert curation.
 
-    risk_data = np.load(PROJECT_ROOT / "results/reports/risk_scores.npz",
-                        allow_pickle=True)
+    Thin wrapper over :mod:`common.split_paths` — keeps the M6 call sites
+    using their dict-access shape while the canonical mapping lives in
+    common.
+    """
+    from common import split_paths as sp
+    return {
+        "risk_npz":  sp.risk_scores(split),
+        "parquet":   sp.parquet(split),
+        "analyst":   sp.analyst_report(split),
+        "clinician": sp.clinician_summaries(split),
+        "examples":  sp.example_explanations(split),
+        "suffix":    sp.suffix(split),
+    }
+
+
+def curate_evaluation_alerts(split: str = "test") -> list:
+    """Select 20 diverse alerts spanning all tiers and attack types."""
+    paths = _curate_split_paths(split)
+    logger.info("Curating evaluation alert set (split=%s)...", split)
+
+    risk_data = np.load(paths["risk_npz"], allow_pickle=True)
     R = risk_data["R"]
     levels = risk_data["risk_levels"]
     y_true = risk_data["y_true"]
 
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
+    df = pd.read_parquet(paths["parquet"])
     attack_cats = df["Attack Category"].values
 
-    with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
+    with open(paths["analyst"]) as f:
         analyst_by_idx = {a["sample_index"]: a for a in json.load(f)}
-    with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
+    with open(paths["clinician"]) as f:
         clinician_by_idx = {s["sample_index"]: s for s in json.load(f)}
 
-    # Load example explanations for full clinician NLG
+    # Load example explanations for full clinician NLG (test-split only;
+    # demo doesn't produce examples in thin mode — fall back silently).
     try:
-        with open(PROJECT_ROOT / "results/reports/example_explanations.json") as f:
+        with open(paths["examples"]) as f:
             examples_by_idx = {e["sample_index"]: e for e in json.load(f)}
     except FileNotFoundError:
         examples_by_idx = {}
@@ -852,26 +786,75 @@ def _plot_effect_sizes(stats: dict) -> None:
 # ═══════════════════════════════════════════════════════════════════════
 
 def main() -> None:
+    import argparse
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    parser = argparse.ArgumentParser(
+        description=(
+            "Build Module 6 evaluation artefacts. Default mode runs the full "
+            "thesis pipeline (curate + simulate + stats + IRR + figures) for "
+            "the test split. --curate-only is a thin mode that produces ONLY "
+            "evaluation_alerts{suffix}.json (the file the dashboard reads "
+            "via _enrich_with_device_context); use it for the demo split to "
+            "produce demo-derived device context without rerunning the "
+            "thesis-only steps."
+        )
+    )
+    parser.add_argument(
+        "--split",
+        choices=("test", "demo"),
+        default="test",
+        help="Frozen split (test=paper-clean, demo=operator-clean). Default: test.",
+    )
+    parser.add_argument(
+        "--curate-only",
+        action="store_true",
+        help=(
+            "Only run 6.2 curation; skip simulated responses, statistical "
+            "analysis, IRR, feedback, and thesis figures."
+        ),
+    )
+    args = parser.parse_args()
+
+    paths = _curate_split_paths(args.split)
+    suffix = paths["suffix"]
+
     sep = "=" * 72
     t0 = time.perf_counter()
 
     logger.info(sep)
-    logger.info("MODULE 6 — BUILD EVALUATION ARTIFACTS")
+    logger.info(
+        "MODULE 6 — BUILD EVALUATION ARTIFACTS — split=%s%s",
+        args.split,
+        " [curate-only]" if args.curate_only else "",
+    )
     logger.info(sep)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    if not args.curate_only:
+        CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
     # 6.2 Curate evaluation alerts
-    alerts = curate_evaluation_alerts()
-    alerts_path = OUTPUT_DIR / "evaluation_alerts.json"
+    alerts = curate_evaluation_alerts(args.split)
+    alerts_path = OUTPUT_DIR / f"evaluation_alerts{suffix}.json"
     alerts_path.write_text(json.dumps(alerts, indent=2), encoding="utf-8")
-    logger.info("6.2 Saved: evaluation_alerts.json (%d alerts)", len(alerts))
+    logger.info("6.2 Saved: %s (%d alerts)", alerts_path.name, len(alerts))
+
+    if args.curate_only:
+        elapsed = round(time.perf_counter() - t0, 1)
+        logger.info("")
+        logger.info(sep)
+        logger.info(
+            "CURATE-ONLY COMPLETE — %.1fs (split=%s)", elapsed, args.split,
+        )
+        logger.info(sep)
+        logger.info("  Alerts : %s (%d)", alerts_path.name, len(alerts))
+        logger.info(sep)
+        return
 
     # Generate simulated responses (replace with real data from evaluation_app.py)
     logger.info("")

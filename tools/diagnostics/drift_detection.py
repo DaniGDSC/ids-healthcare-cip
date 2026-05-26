@@ -34,11 +34,12 @@ import numpy as np
 from scipy.stats import ks_2samp
 from sklearn.metrics import f1_score
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+# Project root is two directories up: tools/diagnostics/ → project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results" / "reports"
 CHARTS_DIR = PROJECT_ROOT / "results" / "charts"
 
@@ -52,24 +53,37 @@ KS_ALPHA = 0.05
 # Data loading
 # ═══════════════════════════════════════════════════════════════════════
 
-def load_drift_data() -> dict:
-    """Load DAE reconstruction errors and training benign baseline."""
-    npz = dict(np.load(
-        PROJECT_ROOT / "results" / "models" / "dae_test_predictions.npz",
-        allow_pickle=True,
-    ))
-    risk_npz = dict(np.load(
-        OUTPUT_DIR / "risk_scores.npz", allow_pickle=True,
-    ))
-    # Signed-pickle load (Phase 2 finding #3a). The DAE detector
-    # carries fitted Keras weights through joblib pickling, so its
-    # deserialiser is the highest-blast-radius RCE sink in the
-    # production inference path. Refuses to deserialise unless the
-    # signature verifies against the Module 5 audit key.
-    from common import loads_signed
-    detector = loads_signed(
-        PROJECT_ROOT / "results" / "models" / "dae_detector.pkl",
-    )
+def _split_paths(split: str) -> dict:
+    """Resolve per-split input/output paths.
+
+    Thin wrapper over :mod:`common.split_paths` — call sites keep their
+    dict-access shape while the canonical path mapping lives in common.
+    """
+    from common import split_paths as sp
+    return {
+        "dae_preds": sp.dae_predictions(split),
+        "risk_npz":  sp.risk_scores(split),
+        "suffix":    sp.suffix(split),
+    }
+
+
+def load_drift_data(split: str = "test") -> dict:
+    """Load DAE reconstruction errors and training benign baseline for a split."""
+    paths = _split_paths(split)
+    npz = dict(np.load(paths["dae_preds"], allow_pickle=True))
+    risk_npz = dict(np.load(paths["risk_npz"], allow_pickle=True))
+    # DAE is persisted as dae_detector.json + dae_model.weights.h5 (no
+    # pickle on the load path — see DAE.from_artefacts). The model_registry
+    # singleton caches it.
+    from common.model_registry import get_dae
+    detector = get_dae()
+    if detector._train_errors is None:
+        raise RuntimeError(
+            "DAE artifact is missing the `train_errors` array — drift "
+            "detection needs it as the reference distribution for PSI/KS. "
+            "Retrain the DAE (module2_detection.dae_training) so the JSON "
+            "sidecar persists train_errors."
+        )
 
     return {
         "re_scores": npz["reconstruction_error"],
@@ -290,7 +304,7 @@ def simulate_recalibration(
 # B2.5  Drift detection figures
 # ═══════════════════════════════════════════════════════════════════════
 
-def plot_psi_over_time(drift: dict) -> None:
+def plot_psi_over_time(drift: dict, suffix: str = "") -> None:
     """(a) PSI over time with threshold line."""
     fig, ax = plt.subplots(figsize=(14, 5))
     x = drift["window_centers"]
@@ -306,12 +320,13 @@ def plot_psi_over_time(drift: dict) -> None:
     ax.legend()
     ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "drift_psi.png", dpi=150)
+    out = CHARTS_DIR / f"drift_psi{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: drift_psi.png")
+    logger.info("  Chart: %s", out.name)
 
 
-def plot_ks_over_time(drift: dict) -> None:
+def plot_ks_over_time(drift: dict, suffix: str = "") -> None:
     """(b) KS p-value over time with threshold line."""
     fig, ax = plt.subplots(figsize=(14, 5))
     x = drift["window_centers"]
@@ -327,15 +342,17 @@ def plot_ks_over_time(drift: dict) -> None:
     ax.legend()
     ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "drift_ks.png", dpi=150)
+    out = CHARTS_DIR / f"drift_ks{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: drift_ks.png")
+    logger.info("  Chart: %s", out.name)
 
 
 def plot_annotated_timeline(
     drift: dict,
     recal: dict,
     y_true: np.ndarray,
+    suffix: str = "",
 ) -> None:
     """(c) Annotated timeline showing drift events and recalibration points."""
     fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
@@ -384,9 +401,10 @@ def plot_annotated_timeline(
     ax3.grid(alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(CHARTS_DIR / "drift_timeline.png", dpi=150)
+    out = CHARTS_DIR / f"drift_timeline{suffix}.png"
+    plt.savefig(out, dpi=150)
     plt.close(fig)
-    logger.info("  Chart: drift_timeline.png")
+    logger.info("  Chart: %s", out.name)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -394,24 +412,45 @@ def plot_annotated_timeline(
 # ═══════════════════════════════════════════════════════════════════════
 
 def main() -> None:
+    import argparse
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    parser = argparse.ArgumentParser(
+        description=(
+            "Behavioral drift detection (Phase B2). Test = paper-clean "
+            "(unsuffixed outputs preserved for thesis); demo = operator-clean "
+            "(outputs suffixed _demo so the Online Simulation panel reflects "
+            "the operator stream without overwriting the test baseline)."
+        )
+    )
+    parser.add_argument(
+        "--split",
+        choices=("test", "demo"),
+        default="test",
+        help="Frozen split to stream-process. Default: test.",
+    )
+    args = parser.parse_args()
+
+    paths = _split_paths(args.split)
+    suffix = paths["suffix"]
+
     sep = "=" * 72
     t0 = time.perf_counter()
 
     logger.info(sep)
-    logger.info("BEHAVIORAL DRIFT DETECTION (Phase B2)")
+    logger.info("BEHAVIORAL DRIFT DETECTION (Phase B2) — split=%s", args.split)
     logger.info(sep)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    data = load_drift_data()
+    data = load_drift_data(args.split)
     n = len(data["y_true"])
-    logger.info("Loaded %d test samples, %d training benign RE values",
+    logger.info("Loaded %d samples, %d training benign RE values",
                 n, len(data["train_benign_re"]))
     logger.info("Static DAE threshold: %.6e", data["static_threshold"])
 
@@ -442,12 +481,13 @@ def main() -> None:
     # ── B2.5  Figures ──
     logger.info("")
     logger.info("── B2.5  Generating Figures ──")
-    plot_psi_over_time(drift)
-    plot_ks_over_time(drift)
-    plot_annotated_timeline(drift, recal, data["y_true"])
+    plot_psi_over_time(drift, suffix=suffix)
+    plot_ks_over_time(drift, suffix=suffix)
+    plot_annotated_timeline(drift, recal, data["y_true"], suffix=suffix)
 
     # ── Save results ──
     results = {
+        "split": args.split,
         "window_size": DEFAULT_WINDOW,
         "psi_threshold": PSI_THRESHOLD,
         "ks_alpha": KS_ALPHA,
@@ -469,24 +509,25 @@ def main() -> None:
             "segment_comparisons": recal["segment_comparisons"],
         },
         "time_proxy_note": (
-            "Row index used as temporal proxy — WUSTL-EHMS-2020 test "
+            f"Row index used as temporal proxy — WUSTL-EHMS-2020 {args.split} "
             "parquet contains no timestamp columns."
         ),
     }
-    out_path = OUTPUT_DIR / "drift_detection_results.json"
+    out_name = f"drift_detection_results{suffix}.json"
+    out_path = OUTPUT_DIR / out_name
     out_path.write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
     logger.info("")
-    logger.info("Saved: drift_detection_results.json")
+    logger.info("Saved: %s", out_name)
 
     elapsed = round(time.perf_counter() - t0, 1)
     logger.info("")
     logger.info(sep)
-    logger.info("DRIFT DETECTION COMPLETE — %.1fs", elapsed)
+    logger.info("DRIFT DETECTION COMPLETE — %.1fs (split=%s)", elapsed, args.split)
     logger.info(sep)
-    logger.info("  drift_detection_results.json")
-    logger.info("  drift_psi.png")
-    logger.info("  drift_ks.png")
-    logger.info("  drift_timeline.png")
+    logger.info("  %s", out_name)
+    logger.info("  drift_psi%s.png", suffix)
+    logger.info("  drift_ks%s.png", suffix)
+    logger.info("  drift_timeline%s.png", suffix)
     logger.info(sep)
 
 

@@ -76,6 +76,28 @@ def load_data(label_col: str = "Label") -> tuple:
     return X_train, X_test, y_train, y_test, feat_names
 
 
+def load_split_data(split: str, label_col: str = "Label") -> tuple:
+    """Load a single labelled split parquet → (X, y, feat_names).
+
+    Used by ``--predict-only`` and by detection_engine.write_predictions
+    to score a frozen split (test = paper-clean; demo = operator-clean).
+    """
+    if split not in ("test", "demo"):
+        raise ValueError(f"unknown split: {split!r} (expected 'test' or 'demo')")
+
+    path = PROJECT_ROOT / f"data/processed/{split}_phase1.parquet"
+    df = pd.read_parquet(path)
+    drop_cols = [c for c in [label_col, "Attack Category", "row_id", "device_class"] if c in df.columns]
+    y = df[label_col].values
+    X = df.drop(columns=drop_cols).values.astype(np.float32)
+    feat_names = [c for c in df.columns if c not in drop_cols]
+    logger.info(
+        "Split %s: %d samples (benign=%d, attack=%d), %d features",
+        split, len(y), (y == 0).sum(), (y == 1).sum(), len(feat_names),
+    )
+    return X, y, feat_names
+
+
 # ── Threshold optimization ──────────────────────────────────────────────
 
 # find_optimal_threshold is imported from models._threshold (shared utility).
@@ -307,15 +329,119 @@ def evaluate_dae(npz_path: Path, threshold: float) -> dict:
     return metrics
 
 
+# ── Predict-only path (re-emit predictions on a frozen split) ───────────
+
+def predict_split(split: str) -> dict:
+    """Score a frozen labelled split with the already-trained models.
+
+    Skips all training: loads the four signed pipeline artefacts via
+    ``common.model_registry`` and emits one npz per model:
+        results/models/{xgboost,random_forest,decision_tree}_{split}_predictions.npz
+        results/models/dae_{split}_predictions.npz
+
+    Returns the same metrics dict shape as ``train_track_a`` so callers
+    can log a summary table for whichever split was scored.
+    """
+    from common.model_registry import (
+        get_track_a_classifiers,
+        get_track_a_thresholds,
+    )
+    from detection_engine import DetectionEngine
+
+    sep = "-" * 60
+    logger.info(sep)
+    logger.info("PREDICT-ONLY: split=%s", split)
+    logger.info(sep)
+
+    X, y, _feat_names = load_split_data(split)
+    classifiers = get_track_a_classifiers()
+    thresholds = get_track_a_thresholds()
+
+    output_dir = PROJECT_ROOT / "results/models"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    all_metrics: dict = {}
+
+    for name, clf in classifiers.items():
+        threshold = thresholds[name]
+        y_proba = clf.predict_proba(X)[:, 1]
+        y_pred = (y_proba >= threshold).astype(int)
+
+        npz_path = output_dir / f"{name}_{split}_predictions.npz"
+        np.savez(npz_path, y_true=y, y_pred=y_pred, y_proba=y_proba)
+        logger.info("Saved: %s", npz_path)
+
+        all_metrics[name] = evaluate(name, y, y_pred, y_proba, threshold)
+
+    # DAE — split-aware via the engine; models are cached by model_registry.
+    dae_npz = DetectionEngine().write_predictions(split=split)
+
+    dae_report_path = PROJECT_ROOT / "results/models/dae_final_report.json"
+    if dae_report_path.exists():
+        dae_report = json.loads(dae_report_path.read_text(encoding="utf-8"))
+        dae_metrics = evaluate_dae(dae_npz, dae_report.get("threshold", 0.0))
+        all_metrics["dae"] = dae_metrics
+
+    return all_metrics
+
+
 # ── Main ────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    import argparse
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    parser = argparse.ArgumentParser(
+        description=(
+            "Train detection models on the training split, then score the "
+            "frozen test split. Use --predict-only to skip training and only "
+            "re-emit predictions on a chosen frozen split (test/demo)."
+        )
+    )
+    parser.add_argument(
+        "--predict-only",
+        action="store_true",
+        help=(
+            "Skip training. Load the existing signed pipeline artefacts and "
+            "write {model}_<split>_predictions.npz for each split selected "
+            "by --split."
+        ),
+    )
+    parser.add_argument(
+        "--split",
+        choices=("test", "demo", "both"),
+        default="test",
+        help=(
+            "Frozen split(s) to score in --predict-only mode "
+            "(test=paper-clean, demo=operator-clean). Ignored when "
+            "training. Default: test."
+        ),
+    )
+    args = parser.parse_args()
+
     sep = "=" * 72
+
+    # ── Predict-only path: no training, just re-score frozen splits ──
+    if args.predict_only:
+        logger.info(sep)
+        logger.info("PREDICT-ONLY MODE — split(s)=%s", args.split)
+        logger.info(sep)
+
+        t0 = time.perf_counter()
+        splits_to_run = ["test", "demo"] if args.split == "both" else [args.split]
+        for split in splits_to_run:
+            predict_split(split)
+
+        total = round(time.perf_counter() - t0, 1)
+        logger.info(sep)
+        logger.info("PREDICT-ONLY COMPLETE — %.1fs (splits=%s)", total, splits_to_run)
+        logger.info(sep)
+        return
+
     logger.info(sep)
     logger.info("FINAL MODEL TRAINING — FIXED BEST HYPERPARAMETERS")
     logger.info(sep)
@@ -331,7 +457,7 @@ def main() -> None:
         all_metrics[name] = metrics
 
     # Track B: DAE training (benign-only) + test-set scoring via engine.
-    # Training only writes the DAE artifact; engine.write_test_predictions
+    # Training only writes the DAE artifact; engine.write_predictions
     # produces dae_test_predictions.npz with the cascaded-fusion scores
     # the rest of the pipeline expects.
     from module2_detection.dae_training import train_dae
@@ -340,7 +466,7 @@ def main() -> None:
 
     dae_summary = train_dae()
     invalidate_cache()  # force re-load of the freshly written DAE artifact
-    dae_npz = DetectionEngine().write_test_predictions()
+    dae_npz = DetectionEngine().write_predictions()
 
     # Patch the report and merge metrics so the summary table reflects
     # real DAE performance instead of the all-zeros placeholder.

@@ -968,6 +968,7 @@ def generate_mve(
     user_context: Optional[dict[str, Any]],
     shap_context: Optional[dict[str, Any]] = None,
     event_context: Optional[dict[str, Any]] = None,
+    force_rule_based: bool = False,
 ) -> MVEOutput:
     """Generate a 3-layer Minimum Viable Explanation for a single alert.
 
@@ -983,6 +984,11 @@ def generate_mve(
         shap_context: Optional SHAP feature category context.
         event_context: Optional dict with is_maintenance_window,
                        is_known_vendor_ip, baseline_days.
+        force_rule_based: Skip the OpenAI/Anthropic provider chain and go
+                          straight to the deterministic templates. Batch
+                          callers flip this once an LLM quota tripwire
+                          fires so the rest of the batch doesn't waste
+                          1-2 seconds per failed API call.
 
     Returns:
         MVEOutput with layer_1, layer_2, layer_3 and total_word_count <= 150.
@@ -1032,13 +1038,22 @@ def generate_mve(
     # Provider chain: A1 (OpenAI) → A2 (Anthropic) → B (rule-based).
     # Each LLM helper returns None when its key is missing, its SDK is
     # uninstalled, or the call fails — the next provider is then tried.
-    mve = _generate_llm_openai(
-        raw_alert, device_context, baseline, user_context, alert_type
-    )
-    if mve is None:
-        mve = _generate_llm_anthropic(
+    # force_rule_based short-circuits the chain entirely (batch tripwire).
+    provider_used = "rule_based"
+    if force_rule_based:
+        mve = None
+    else:
+        mve = _generate_llm_openai(
             raw_alert, device_context, baseline, user_context, alert_type
         )
+        if mve is not None:
+            provider_used = "openai"
+        else:
+            mve = _generate_llm_anthropic(
+                raw_alert, device_context, baseline, user_context, alert_type
+            )
+            if mve is not None:
+                provider_used = "anthropic"
     if mve is None:
         mve = _generate_rule_based(
             raw_alert, device_context, baseline, user_context, alert_type
@@ -1103,4 +1118,5 @@ def generate_mve(
                 f"{existing} Primary signal: {readable} ({feat})."
             ).strip()
 
+    mve.provider = provider_used
     return mve

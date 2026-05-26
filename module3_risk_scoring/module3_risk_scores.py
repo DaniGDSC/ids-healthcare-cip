@@ -149,18 +149,17 @@ RESPONSE_MAPPING = {
 # ── Data loading ────────────────────────────────────────────────────────
 
 def _split_paths(split: str) -> dict:
-    """Resolve per-split paths. Test = paper-clean; demo = operator-clean."""
-    if split == "test":
-        return {
-            "parquet": PROJECT_ROOT / "data/processed/test_phase1.parquet",
-            "out_npz": OUTPUT_DIR / "risk_scores.npz",
-        }
-    if split == "demo":
-        return {
-            "parquet": PROJECT_ROOT / "data/processed/demo_phase1.parquet",
-            "out_npz": OUTPUT_DIR / "demo_scores.npz",
-        }
-    raise ValueError(f"unknown split: {split!r} (expected 'test' or 'demo')")
+    """Resolve per-split paths. Test = paper-clean; demo = operator-clean.
+
+    Thin wrapper over :mod:`common.split_paths` so the call sites below
+    keep their original dict-access shape; the canonical path mapping
+    now lives in common.
+    """
+    from common import split_paths as sp
+    return {
+        "parquet": sp.parquet(split),
+        "out_npz": sp.risk_scores(split),
+    }
 
 
 def load_test_data(parquet_path: Path | None = None) -> tuple:

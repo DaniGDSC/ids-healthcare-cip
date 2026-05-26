@@ -1,0 +1,184 @@
+"""Pydantic 2 schema for Module 5's ``alert_responses{,_demo}.json``.
+
+This is the single source of truth for the shape of the file Module 5
+writes and Module 6 (Dashboard) consumes. Both ends validate against
+this schema so a divergence in either direction fails loud at
+build-time or load-time instead of surfacing as a KeyError 200 lines
+deep inside a Streamlit render.
+
+Envelope format (introduced alongside this schema):
+
+    {
+        "_provenance": {...},   # see Provenance below
+        "records": [AlertRecord, ...]
+    }
+
+The loader in ``module6_app.load_responses_for`` accepts the legacy
+bare-list shape too so an old artifact on disk still works while
+Module 5 re-runs are pending.
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class RiskComponents(BaseModel):
+    """Six normalised risk components from Module 3 (all in [0, 1])."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    C_detect: float = Field(ge=0.0, le=1.0)
+    C_track_a: float = Field(ge=0.0, le=1.0)
+    C_track_b: float = Field(ge=0.0, le=1.0)
+    D_crit: float = Field(ge=0.0, le=1.0)
+    S_data: float = Field(ge=0.0, le=1.0)
+    D_clinical_tier: float = Field(ge=0.0, le=1.0)
+
+
+class EscalationChain(BaseModel):
+    """Three-tier escalation routing — populated from ESCALATION_ROUTING.
+
+    Any tier can be ``None`` when the attack category has no routing
+    entry (the DEFAULT_ROUTING uses None for all three tiers).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    primary: str | None
+    secondary: str | None
+    tertiary: str | None
+
+
+class Response(BaseModel):
+    """Output of ``select_adaptive_response`` — the policy-engine verdict."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    actions: list[str]
+    action_descriptions: list[str]
+    escalation_chain: EscalationChain
+    escalation_rationale: str
+    max_response_min: int = Field(ge=0)
+    priority: int = Field(ge=1, le=5)
+    rationale: str
+    device_tier: str
+    device_constraint_applied: bool
+
+
+class MVEPayload(BaseModel):
+    """Three-layer Minimum Viable Explanation from ``src.mve_generator``.
+
+    Stored on each alert record so the dashboard can render Layer 1
+    (``Why anomalous``) without reusing Module 4's clinician_summary —
+    those two strings track different concepts (composite tier vs.
+    detection consensus) and previously disagreed in wording. Added
+    2026-05-25 alongside the Layer 1 wording fix.
+
+    Optional on AlertRecord so legacy artefacts without MVE still validate.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    layer_1: dict[str, str]
+    """Keys: baseline_behavior, deviation_description, confidence_indicator."""
+
+    layer_2: dict[str, str]
+    """Keys: affected_system, patient_care_impact, phi_exposure,
+    severity_label, severity_rationale."""
+
+    layer_3: dict[str, str]
+    """Keys: immediate_action, clinical_constraint, escalation_path, timeframe."""
+
+    why_anomalous: str
+    """Concatenated layer_1 fields — direct lookup target for the dashboard's
+    render_mve_layers, which expects a string at this key."""
+
+    alert_involves_clinical_system: bool = True
+    total_word_count: int = Field(ge=0)
+    provider: Literal["openai", "anthropic", "rule_based"] = "rule_based"
+    """Which generator path produced this MVE. Surfaces in the provenance
+    summary so a reviewer can spot LLM-vs-rule-based mixes."""
+
+
+class Explanation(BaseModel):
+    """Pointer to Module 4 explanation artefacts."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    clinician_summary: str
+    analyst_available: bool
+    mve: MVEPayload | None = None
+
+
+class AlertRecord(BaseModel):
+    """One alert: join of Module 2/3/4 outputs at a per-split row offset.
+
+    ``sample_index`` is the per-split offset (0..N-1), not a global
+    row_id. Upper bound is enforced by the drift check in
+    ``module5_responses._assert_no_score_drift``, not by the schema —
+    the schema cannot know the split's N without context, and the
+    cross-check against ``risk_scores.npz`` is the canonical proof of
+    test-split provenance anyway.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    sample_index: int = Field(ge=0)
+    ground_truth: Literal["attack", "benign"]
+    attack_category: str
+    risk_score: float = Field(ge=0.0, le=1.0)
+    risk_level: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW", "NORMAL"]
+    risk_components: RiskComponents
+    response: Response
+    explanation: Explanation
+
+
+# ── Provenance (P0-1) ────────────────────────────────────────────────────
+
+
+class InputFile(BaseModel):
+    """Per-input-file fingerprint at the moment Module 5 ran."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    path: str
+    mtime_iso: str
+    sha256: str
+    size_bytes: int
+
+
+class Provenance(BaseModel):
+    """Self-describing metadata embedded in every Module 5 output.
+
+    Lets the Dashboard surface a stale-data warning when an upstream
+    artefact (risk_scores.npz, analyst_report.json, ...) has been
+    regenerated since this file was built.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    split: Literal["test", "demo"]
+    generated_at: str
+    module5_git_rev: str | None
+    n_input_samples: int = Field(ge=0)
+    n_alerts_emitted: int = Field(ge=0)
+    n_normal_excluded: int = Field(ge=0)
+    filter_applied: Literal["non_normal", "none"]
+    inputs: dict[str, InputFile | None]
+
+
+class AlertResponsesEnvelope(BaseModel):
+    """Top-level wrapper Module 5 writes from 2026-05-25 onwards.
+
+    The ``_provenance`` key is aliased (leading underscore is a Python
+    convention for "private", but the on-disk JSON uses the underscored
+    form so a quick ``jq '._provenance'`` works).
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    provenance: Provenance = Field(alias="_provenance")
+    records: list[AlertRecord]

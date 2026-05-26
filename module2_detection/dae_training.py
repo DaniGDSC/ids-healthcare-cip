@@ -13,7 +13,7 @@ This module is **pure training**:
   - Persists ``dae_detector.json`` + ``dae_model.weights.h5`` +
     ``dae_final_report.json``.
   - Does **not** score the test set. Test-set scoring lives in
-    :meth:`detection_engine.DetectionEngine.write_test_predictions`,
+    :meth:`detection_engine.DetectionEngine.write_predictions`,
     because that needs the same cascaded inference path the rest of the
     pipeline uses.
 

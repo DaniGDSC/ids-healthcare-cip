@@ -146,15 +146,15 @@ _GLYPH_CSS = """
 
 
 _ALERT_ROW_CSS = """
+/* Queue rows are display-only under D1=A (Streamlit can't bind clicks to
+   arbitrary HTML). The selectbox above the queue is the actual control;
+   hover + cursor:pointer would create a false affordance. The active state
+   stays — it's reflective of selection driven by the selectbox. */
 .alert-row {
-  transition: background 120ms ease, border-left-color 120ms ease;
+  transition: border-left-color 120ms ease;
   border-left: 2px solid transparent;
   padding: 12px 16px;
-  cursor: pointer;
   border-bottom: 1px solid var(--border-subtle);
-}
-.alert-row:hover {
-  background: var(--surface-2);
 }
 .alert-row.active {
   background: var(--surface-2);
@@ -407,6 +407,17 @@ _PULSE_CSS = """
   background: var(--success);
   vertical-align: middle;
 }
+/* Static variant — used on the Dashboard (Triage) page whose data is a
+   file snapshot, not a live stream. Pulsing would imply liveness the
+   page doesn't actually have. */
+.pulse-static {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  vertical-align: middle;
+}
 """
 
 
@@ -500,18 +511,60 @@ _CARD_CSS = """
 
 
 _COLUMNS_OVERRIDE_CSS = """
-/* Tighten the three-column Triage layout. Streamlit's st.columns is
-   proportional; we pin approximate target widths via per-column overrides. */
-[data-sentinel-triage="root"] [data-testid="stHorizontalBlock"] {
+/* Three-column Triage layout. Streamlit's st.columns is proportional; we
+   pin approximate target widths via per-column overrides. The prototype
+   targets 360 / flex / 400; here we approximate with min-widths so each
+   column stays usable under typical desktop widths.
+
+   Selector note: st.container(key="sentinel-triage") emits an extra div
+   with class `st-key-sentinel-triage` (Streamlit ≥1.36). The earlier
+   `[data-sentinel-triage="root"]` selector never matched anything — the
+   attribute was never injected onto a real ancestor. */
+.st-key-sentinel-triage [data-testid="stHorizontalBlock"] {
   gap: 0 !important;
 }
-[data-sentinel-triage="root"] [data-testid="column"] {
+.st-key-sentinel-triage [data-testid="column"] {
   border-right: 1px solid var(--border);
   padding: 0 !important;
 }
-[data-sentinel-triage="root"] [data-testid="column"]:last-child {
+.st-key-sentinel-triage [data-testid="column"]:first-child {
+  min-width: 320px;
+}
+.st-key-sentinel-triage [data-testid="column"]:nth-child(2) {
+  min-width: 480px;
+}
+.st-key-sentinel-triage [data-testid="column"]:last-child {
   border-right: none;
   border-left: 1px solid var(--border);
+  min-width: 320px;
+}
+"""
+
+
+_RESPONSIVE_CSS = """
+/* Investigation column's 4-up metric grid is dense; below ~1280px the
+   column gets squeezed and the grid would overflow horizontally. Step it
+   down to 2 columns at narrower widths. The factor-row 3-col grid is
+   already flexible (1fr / 80px / 60px) and survives a 320px column. */
+@media (max-width: 1280px) {
+  .st-key-sentinel-triage [data-testid="column"]:nth-child(2)
+    div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+@media (max-width: 960px) {
+  .st-key-sentinel-triage [data-testid="column"]:nth-child(2)
+    div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* Queue tier-count tiles wrap to 2x2 on very narrow first column. */
+@media (max-width: 360px) {
+  .st-key-sentinel-triage [data-testid="column"]:first-child
+    div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 """
 
@@ -523,7 +576,16 @@ def inject_theme() -> None:
     depends on the classes. Subsequent calls are harmless (Streamlit
     deduplicates identical markdown blocks) but wasted.
     """
-    blocks = (
+    st.markdown(_THEME_HTML, unsafe_allow_html=True)
+
+
+# Precompute the theme HTML once at import time — Streamlit reruns
+# call inject_theme() on every render, and joining ~17 CSS blocks plus
+# wrapping them in <style> tags is wasted work when the result never
+# changes. Computing this at module load is the cheapest "cache" available
+# without involving @st.cache_resource.
+_THEME_HTML = "\n".join(
+    (
         _FONTS_LINK,
         "<style>",
         _TOKENS_CSS,
@@ -541,6 +603,7 @@ def inject_theme() -> None:
         _STATUS_STRIP_CSS,
         _CARD_CSS,
         _COLUMNS_OVERRIDE_CSS,
+        _RESPONSIVE_CSS,
         "</style>",
     )
-    st.markdown("\n".join(blocks), unsafe_allow_html=True)
+)

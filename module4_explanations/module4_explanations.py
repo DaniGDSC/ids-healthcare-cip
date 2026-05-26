@@ -194,9 +194,28 @@ from module4_explanations.module4_online_explainer import (
 # ── Data loading ────────────────────────────────────────────────────────
 
 
-def load_test_data() -> tuple:
-    """Load test parquet and return X, y, attack categories, feature names."""
-    df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")
+def _split_paths(split: str) -> dict:
+    """Resolve per-split inputs + output suffix. Test = paper-clean
+    (legacy unsuffixed filenames); demo = operator-clean (suffix '_demo').
+
+    Thin wrapper over :mod:`common.split_paths` — kept here so the M4
+    call sites below keep their original dict-access shape.
+    """
+    from common import split_paths as sp
+    return {
+        "parquet": sp.parquet(split),
+        "xgboost_preds": sp.model_predictions("xgboost", split),
+        "random_forest_preds": sp.model_predictions("random_forest", split),
+        "decision_tree_preds": sp.model_predictions("decision_tree", split),
+        "dae_preds": sp.dae_predictions(split),
+        "suffix": sp.suffix(split),
+    }
+
+
+def load_test_data(parquet_path: Path | None = None) -> tuple:
+    """Load a split parquet and return X, y, attack categories, feature names."""
+    path = parquet_path or (PROJECT_ROOT / "data/processed/test_phase1.parquet")
+    df = pd.read_parquet(path)
     drop_cols = ["Label", "Attack Category", "row_id", "device_class"]
     feat_names = [c for c in df.columns if c not in drop_cols]
     X_test = df[feat_names].values.astype(np.float32)
@@ -693,8 +712,13 @@ def build_analyst_report(
     dae_preds: dict,
     feat_names: list,
     n_samples: int,
+    suffix: str = "",
 ) -> list:
-    """Build per-alert analyst report."""
+    """Build per-alert analyst report.
+
+    ``suffix`` is appended to the output filename (e.g. ``"_demo"``) so
+    test and demo splits write to separate files.
+    """
     logger.info("Building analyst report...")
     alerts = []
 
@@ -742,7 +766,7 @@ def build_analyst_report(
         entry["severity"] = _severity(int(n_flagged_all[idx]))
         alerts.append(entry)
 
-    path = OUTPUT_DIR / "analyst_report.json"
+    path = OUTPUT_DIR / f"analyst_report{suffix}.json"
     path.write_text(json.dumps(alerts, indent=2), encoding="utf-8")
     logger.info("  Saved: %s (%d alerts)", path, len(alerts))
     return alerts
@@ -754,8 +778,13 @@ def build_clinician_summaries(
     dae_preds: dict,
     feat_names: list,
     n_samples: int,
+    suffix: str = "",
 ) -> None:
-    """Build plain-language clinician summaries for XGBoost-flagged alerts."""
+    """Build plain-language clinician summaries for XGBoost-flagged alerts.
+
+    ``suffix`` is appended to the output filename (e.g. ``"_demo"``) so
+    test and demo splits write to separate files.
+    """
     logger.info("Building clinician summaries...")
     summaries = []
 
@@ -807,7 +836,7 @@ def build_clinician_summaries(
             }
         )
 
-    path = OUTPUT_DIR / "clinician_summaries.json"
+    path = OUTPUT_DIR / f"clinician_summaries{suffix}.json"
     path.write_text(json.dumps(summaries, indent=2), encoding="utf-8")
     logger.info("  Saved: %s (%d summaries)", path, len(summaries))
 
@@ -1594,25 +1623,74 @@ def validate_cross_model(
 
 
 def main() -> None:
+    import argparse
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    parser = argparse.ArgumentParser(
+        description=(
+            "Generate stakeholder explanations from Phase 2 predictions. "
+            "Default mode produces all paper artefacts (SHAP, charts, "
+            "admin dashboard, validation) for the test split. "
+            "--explanations-only is a thin mode that produces ONLY the "
+            "two JSONs Module 5 needs (analyst + clinician); intended "
+            "for the demo split where the full paper artefact set is "
+            "neither consumed nor needed."
+        )
+    )
+    parser.add_argument(
+        "--split",
+        choices=("test", "demo"),
+        default="test",
+        help="Frozen split (test=paper-clean, demo=operator-clean). Default: test.",
+    )
+    parser.add_argument(
+        "--explanations-only",
+        action="store_true",
+        help=(
+            "Skip SHAP/DAE persistence, all charts, admin dashboard, "
+            "feature_concepts/nlg_templates export, example explanations, "
+            "and validation. Only writes analyst_report{suffix}.json and "
+            "clinician_summaries{suffix}.json."
+        ),
+    )
+    args = parser.parse_args()
+
+    paths = _split_paths(args.split)
+    suffix = paths["suffix"]
+    explanations_only = args.explanations_only
+
     sep = "=" * 72
     t0 = time.perf_counter()
 
     logger.info(sep)
-    logger.info("MODULE 4 — GENERATE EXPLANATIONS (RQ1/RO1)")
+    logger.info(
+        "MODULE 4 — GENERATE EXPLANATIONS (RQ1/RO1) — split=%s%s",
+        args.split,
+        " [explanations-only]" if explanations_only else "",
+    )
     logger.info(sep)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    if not explanations_only:
+        CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Load test data
-    X_test, y_test, attack_cats, feat_names = load_test_data()
+    # Load split data
+    X_test, y_test, attack_cats, feat_names = load_test_data(paths["parquet"])
     n_samples = len(y_test)
-    logger.info("Test data: %d samples, %d features", n_samples, len(feat_names))
+    logger.info("Split %s: %d samples, %d features", args.split, n_samples, len(feat_names))
+
+    # Resolve per-model prediction paths from the split (overrides
+    # TRACK_A_MODELS["predictions"], which still names the test-split
+    # files as the default for backward compatibility).
+    pred_paths = {
+        "xgboost":       paths["xgboost_preds"],
+        "random_forest": paths["random_forest_preds"],
+        "decision_tree": paths["decision_tree_preds"],
+    }
 
     # ── Track A: TreeSHAP ──
     all_shap = {}
@@ -1620,7 +1698,7 @@ def main() -> None:
     global_importances = {}
 
     for name, cfg in TRACK_A_MODELS.items():
-        preds = load_predictions(PROJECT_ROOT / cfg["predictions"])
+        preds = load_predictions(pred_paths[name])
         all_preds[name] = preds
 
         if name not in SHAP_MODELS:
@@ -1633,44 +1711,44 @@ def main() -> None:
             X_test,
             feat_names,
         )
-        save_shap_values(name, sv, expected, feat_names)
-
-        importance = compute_global_importance(sv, feat_names)
-        save_global_importance(name, importance)
-        global_importances[name] = importance
-
-        plot_global_importance_bar(name, importance)
         all_shap[name] = sv
 
-        plot_waterfalls(
-            name, sv, expected, X_test, feat_names, preds["y_pred"], preds["y_proba"]
-        )
+        if not explanations_only:
+            save_shap_values(name, sv, expected, feat_names)
 
-        plot_beeswarm(name, sv, X_test, feat_names)
+            importance = compute_global_importance(sv, feat_names)
+            save_global_importance(name, importance)
+            global_importances[name] = importance
 
-        plot_force(
-            name, sv, expected, X_test, feat_names, preds["y_pred"], preds["y_proba"]
-        )
+            plot_global_importance_bar(name, importance)
 
-        plot_per_category_importance(name, sv, y_test, attack_cats, feat_names)
+            plot_waterfalls(
+                name, sv, expected, X_test, feat_names, preds["y_pred"], preds["y_proba"]
+            )
+
+            plot_beeswarm(name, sv, X_test, feat_names)
+
+            plot_force(
+                name, sv, expected, X_test, feat_names, preds["y_pred"], preds["y_proba"]
+            )
+
+            plot_per_category_importance(name, sv, y_test, attack_cats, feat_names)
 
     # ── Track B: DAE ──
     sq_err, weighted_err, feat_weights = compute_dae_feature_errors(
         X_test,
         feat_names,
     )
-    save_dae_errors(sq_err, weighted_err, feat_weights, feat_names)
-    plot_dae_global_weights(feat_weights, feat_names)
+    dae_preds = load_predictions(paths["dae_preds"])
 
-    dae_preds = load_predictions(
-        PROJECT_ROOT / "results/models/dae_test_predictions.npz"
-    )
-    plot_dae_breakdowns(
-        weighted_err, feat_names, dae_preds["y_pred"], dae_preds["reconstruction_error"]
-    )
+    if not explanations_only:
+        save_dae_errors(sq_err, weighted_err, feat_weights, feat_names)
+        plot_dae_global_weights(feat_weights, feat_names)
+        plot_dae_breakdowns(
+            weighted_err, feat_names, dae_preds["y_pred"], dae_preds["reconstruction_error"]
+        )
 
-    # ── Stakeholder outputs ──
-    all_preds_with_dae = dict(all_preds)
+    # ── Stakeholder outputs (always produced — these are what Module 5 reads) ──
     alerts = build_analyst_report(
         all_shap,
         all_preds,
@@ -1678,6 +1756,7 @@ def main() -> None:
         dae_preds,
         feat_names,
         n_samples,
+        suffix=suffix,
     )
     build_clinician_summaries(
         all_shap,
@@ -1685,53 +1764,63 @@ def main() -> None:
         dae_preds,
         feat_names,
         n_samples,
-    )
-    build_admin_dashboard(
-        all_shap,
-        all_preds,
-        dae_preds,
-        feat_names,
-        feat_weights,
-        global_importances,
-        attack_cats,
-        n_samples,
+        suffix=suffix,
     )
 
-    # ── Export feature concepts + NLG templates (Tasks 4.4, 4.6) ──
-    export_feature_concepts()
-    export_nlg_templates()
+    if not explanations_only:
+        build_admin_dashboard(
+            all_shap,
+            all_preds,
+            dae_preds,
+            feat_names,
+            feat_weights,
+            global_importances,
+            attack_cats,
+            n_samples,
+        )
 
-    # ── Example explanations for thesis (Tasks 4.10, 4.11) ──
-    generate_example_explanations(
-        all_shap,
-        all_preds,
-        dae_preds,
-        weighted_err,
-        feat_names,
-        y_test,
-        attack_cats,
-    )
+        # ── Export feature concepts + NLG templates (Tasks 4.4, 4.6) ──
+        export_feature_concepts()
+        export_nlg_templates()
 
-    # ── Validation ──
-    logger.info("")
-    logger.info("── Explanation Validation ──")
-    validate_consistency(all_shap, feat_names)
-    validate_perturbation(all_shap, X_test, y_test, feat_names)
-    validate_cross_model(global_importances)
+        # ── Example explanations for thesis (Tasks 4.10, 4.11) ──
+        generate_example_explanations(
+            all_shap,
+            all_preds,
+            dae_preds,
+            weighted_err,
+            feat_names,
+            y_test,
+            attack_cats,
+        )
+
+        # ── Validation ──
+        logger.info("")
+        logger.info("── Explanation Validation ──")
+        validate_consistency(all_shap, feat_names)
+        validate_perturbation(all_shap, X_test, y_test, feat_names)
+        validate_cross_model(global_importances)
 
     # ── Summary ──
     elapsed = round(time.perf_counter() - t0, 1)
     logger.info("")
     logger.info(sep)
-    logger.info("EXPLANATIONS COMPLETE — %.1fs", elapsed)
+    logger.info(
+        "EXPLANATIONS COMPLETE — %.1fs (split=%s%s)",
+        elapsed,
+        args.split,
+        ", thin" if explanations_only else "",
+    )
     logger.info(sep)
     logger.info("  Output dir    : %s", OUTPUT_DIR)
-    logger.info(
-        "  SHAP files    : %d models (%s)", len(SHAP_MODELS), ", ".join(SHAP_MODELS)
-    )
-    logger.info("  DAE errors    : dae_feature_errors.npz")
-    logger.info("  Analyst alerts: %d", len(alerts))
-    logger.info("  Charts        : %s", CHARTS_DIR)
+    if not explanations_only:
+        logger.info(
+            "  SHAP files    : %d models (%s)", len(SHAP_MODELS), ", ".join(SHAP_MODELS)
+        )
+        logger.info("  DAE errors    : dae_feature_errors.npz")
+        logger.info("  Charts        : %s", CHARTS_DIR)
+    logger.info("  Analyst alerts: %d  → analyst_report%s.json", len(alerts), suffix)
+    logger.info("  Clinician sums: → clinician_summaries%s.json", suffix)
     logger.info(sep)
 
 

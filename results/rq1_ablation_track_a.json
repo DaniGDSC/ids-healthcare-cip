@@ -1,0 +1,102 @@
+{
+  "_meta": {
+    "description": "Track A model comparison on analyst_report subset",
+    "n_samples": 668,
+    "n_attacks_in_subset": 301
+  },
+  "models": {
+    "xgboost": {
+      "metrics_at_threshold_0.5": {
+        "n": 668,
+        "n_positive": 301,
+        "n_negative": 367,
+        "threshold": 0.5,
+        "tp": 282,
+        "fp": 20,
+        "tn": 347,
+        "fn": 19,
+        "sensitivity": 0.936877,
+        "specificity": 0.945504,
+        "precision": 0.933775,
+        "recall": 0.936877,
+        "fnr": 0.063123,
+        "fpr": 0.054496,
+        "f1": 0.935323,
+        "f2": 0.936255,
+        "auc": 0.989454
+      },
+      "metrics_native_prediction": {
+        "tp": 298,
+        "fp": 58,
+        "tn": 309,
+        "fn": 3,
+        "sensitivity": 0.990033,
+        "specificity": 0.841962,
+        "precision": 0.837079,
+        "f1": 0.907154
+      }
+    },
+    "random_forest": {
+      "metrics_at_threshold_0.5": {
+        "n": 668,
+        "n_positive": 301,
+        "n_negative": 367,
+        "threshold": 0.5,
+        "tp": 236,
+        "fp": 45,
+        "tn": 322,
+        "fn": 65,
+        "sensitivity": 0.784053,
+        "specificity": 0.877384,
+        "precision": 0.839858,
+        "recall": 0.784053,
+        "fnr": 0.215947,
+        "fpr": 0.122616,
+        "f1": 0.810997,
+        "f2": 0.794613,
+        "auc": 0.915943
+      },
+      "metrics_native_prediction": {
+        "tp": 272,
+        "fp": 127,
+        "tn": 240,
+        "fn": 29,
+        "sensitivity": 0.903654,
+        "specificity": 0.653951,
+        "precision": 0.681704,
+        "f1": 0.777143
+      }
+    },
+    "decision_tree": {
+      "metrics_at_threshold_0.5": {
+        "n": 668,
+        "n_positive": 301,
+        "n_negative": 367,
+        "threshold": 0.5,
+        "tp": 159,
+        "fp": 3,
+        "tn": 364,
+        "fn": 142,
+        "sensitivity": 0.528239,
+        "specificity": 0.991826,
+        "precision": 0.981481,
+        "recall": 0.528239,
+        "fnr": 0.471761,
+        "fpr": 0.008174,
+        "f1": 0.686825,
+        "f2": 0.581991,
+        "auc": 0.81728
+      },
+      "metrics_native_prediction": {
+        "tp": 159,
+        "fp": 1,
+        "tn": 366,
+        "fn": 142,
+        "sensitivity": 0.528239,
+        "specificity": 0.997275,
+        "precision": 0.99375,
+        "f1": 0.689805
+      }
+    }
+  }
+}

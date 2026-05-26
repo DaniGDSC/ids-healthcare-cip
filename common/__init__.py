@@ -11,12 +11,16 @@ Add new shared definitions here only when at least two modules need
 them — keep this package small on purpose.
 """
 
+from . import split_paths
 from .phi import BIOMETRIC_COLUMNS
 from .signed_pickle import SignedPickleError, dumps_signed, loads_signed
+from .split_paths import Split
 
 __all__ = [
     "BIOMETRIC_COLUMNS",
     "dumps_signed",
     "loads_signed",
     "SignedPickleError",
+    "Split",
+    "split_paths",
 ]

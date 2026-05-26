@@ -1,0 +1,1010 @@
+[
+  {
+    "alert_id": "EVAL-0059",
+    "sample_index": 59,
+    "ground_truth": "attack",
+    "attack_category": "Spoofing",
+    "risk_score": 0.83,
+    "risk_level": "CRITICAL",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "affected_system": "Patient monitor \u2014 vital signs tracking",
+    "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
+    "active_device": true,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Pulse_Rate",
+          "shap_value": 7.703686,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Sport",
+          "shap_value": 2.758755,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Flgs",
+          "shap_value": -2.441074,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "pSrcLoss",
+          "weighted_error": 4.1e-07,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 3.1e-07,
+          "pct_contribution": 21.1
+        },
+        {
+          "feature": "pDstLoss",
+          "weighted_error": 1.9e-07,
+          "pct_contribution": 12.6
+        }
+      ],
+      "consensus": "3/4 models flagged",
+      "clinician_summary": "HIGH ALERT (Sample 59): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "ventilator",
+    "device_criticality": "CRITICAL",
+    "affected_system": "Ventilator \u2014 active respiratory support",
+    "patient_care_impact": "Device disruption directly affects patient breathing.",
+    "active_device": true,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0301",
+    "sample_index": 301,
+    "ground_truth": "attack",
+    "attack_category": "Spoofing",
+    "risk_score": 0.7916,
+    "risk_level": "HIGH",
+    "device_class": "patient_monitor",
+    "device_criticality": "HIGH",
+    "affected_system": "Patient monitor \u2014 vital signs tracking",
+    "patient_care_impact": "Isolation removes automated vital sign alerts for nursing staff.",
+    "active_device": true,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 14.71961,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Resp_Rate",
+          "shap_value": 3.873723,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "SrcLoad",
+          "shap_value": -2.006795,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "DstBytes",
+          "weighted_error": 1e-08,
+          "pct_contribution": 23.7
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 13.3
+        },
+        {
+          "feature": "DstLoad",
+          "weighted_error": 0.0,
+          "pct_contribution": 12.4
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 301): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-1083",
+    "sample_index": 1083,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.8,
+    "risk_level": "HIGH",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 11.864354,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 5.728739,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.006502,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "Flgs",
+          "weighted_error": 7.79e-06,
+          "pct_contribution": 25.3
+        },
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 7.3e-06,
+          "pct_contribution": 23.8
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 5.23e-06,
+          "pct_contribution": 17.0
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 1083): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-1471",
+    "sample_index": 1471,
+    "ground_truth": "attack",
+    "attack_category": "Spoofing",
+    "risk_score": 0.5511,
+    "risk_level": "MEDIUM",
+    "device_class": "ehr_workstation",
+    "device_criticality": "HIGH",
+    "affected_system": "EHR workstation \u2014 clinical documentation",
+    "patient_care_impact": "Disruption affects active patient charting for floor nurses.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Sport",
+          "shap_value": 8.78646,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": -6.626078,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "Flgs",
+          "shap_value": -3.646955,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "dMaxPktSz",
+          "weighted_error": 1e-08,
+          "pct_contribution": 32.5
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 18.0
+        },
+        {
+          "feature": "DstBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 10.1
+        }
+      ],
+      "consensus": "1/4 models flagged",
+      "clinician_summary": "LOW ALERT (Sample 1471): Borderline detection by one model. Likely benign; logged for audit purposes."
+    },
+    "correct_action": "investigate"
+  },
+  {
+    "alert_id": "EVAL-1191",
+    "sample_index": 1191,
+    "ground_truth": "attack",
+    "attack_category": "Spoofing",
+    "risk_score": 0.3861,
+    "risk_level": "LOW",
+    "device_class": "infusion_pump",
+    "device_criticality": "CRITICAL",
+    "affected_system": "Infusion pump \u2014 active drug delivery",
+    "patient_care_impact": "Compromise could alter infusion parameters for active patients.",
+    "active_device": true,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Sport",
+          "shap_value": 5.422785,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Flgs",
+          "shap_value": -3.211056,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "SIntPkt",
+          "shap_value": -2.703376,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "dMaxPktSz",
+          "weighted_error": 1.2e-07,
+          "pct_contribution": 55.4
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 4e-08,
+          "pct_contribution": 17.2
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 2e-08,
+          "pct_contribution": 7.9
+        }
+      ],
+      "consensus": "1/4 models flagged",
+      "clinician_summary": "LOW ALERT (Sample 1191): Borderline detection by one model. Likely benign; logged for audit purposes."
+    },
+    "correct_action": "monitor"
+  },
+  {
+    "alert_id": "EVAL-0550",
+    "sample_index": 550,
+    "ground_truth": "benign",
+    "attack_category": "normal",
+    "risk_score": 0.2008,
+    "risk_level": "LOW",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": -3.003846,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 2.690794,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -1.739126,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "dMaxPktSz",
+          "weighted_error": 0.0,
+          "pct_contribution": 45.2
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 0.0,
+          "pct_contribution": 19.3
+        },
+        {
+          "feature": "Sport",
+          "weighted_error": 0.0,
+          "pct_contribution": 15.1
+        }
+      ],
+      "consensus": "2/4 models flagged",
+      "clinician_summary": "MODERATE ALERT (Sample 550): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    },
+    "correct_action": "dismiss"
+  },
+  {
+    "alert_id": "EVAL-0114",
+    "sample_index": 114,
+    "ground_truth": "benign",
+    "attack_category": "normal",
+    "risk_score": 0.3001,
+    "risk_level": "LOW",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [],
+      "dae_top_features": [],
+      "consensus": "",
+      "clinician_summary": ""
+    },
+    "correct_action": "dismiss"
+  },
+  {
+    "alert_id": "EVAL-1568",
+    "sample_index": 1568,
+    "ground_truth": "benign",
+    "attack_category": "normal",
+    "risk_score": 0.4517,
+    "risk_level": "MEDIUM",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": -5.022437,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "SrcLoad",
+          "shap_value": -3.177727,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "Sport",
+          "shap_value": -3.024012,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 1.23e-06,
+          "pct_contribution": 30.2
+        },
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 7.8e-07,
+          "pct_contribution": 19.1
+        },
+        {
+          "feature": "sMinPktSz",
+          "weighted_error": 4.2e-07,
+          "pct_contribution": 10.2
+        }
+      ],
+      "consensus": "1/4 models flagged",
+      "clinician_summary": ""
+    },
+    "correct_action": "dismiss"
+  },
+  {
+    "alert_id": "EVAL-1331",
+    "sample_index": 1331,
+    "ground_truth": "benign",
+    "attack_category": "normal",
+    "risk_score": 0.5534,
+    "risk_level": "MEDIUM",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Temp",
+          "shap_value": -8.35101,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "Flgs",
+          "shap_value": -3.312332,
+          "direction": "decreases_risk"
+        },
+        {
+          "feature": "SrcLoad",
+          "shap_value": -1.832044,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "pDstLoss",
+          "weighted_error": 1.67e-06,
+          "pct_contribution": 32.2
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 8.4e-07,
+          "pct_contribution": 16.2
+        },
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 7.4e-07,
+          "pct_contribution": 14.2
+        }
+      ],
+      "consensus": "1/4 models flagged",
+      "clinician_summary": ""
+    },
+    "correct_action": "dismiss"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  },
+  {
+    "alert_id": "EVAL-0976",
+    "sample_index": 976,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "risk_score": 0.85,
+    "risk_level": "CRITICAL",
+    "device_class": "other",
+    "device_criticality": "MEDIUM",
+    "affected_system": "Clinical network device",
+    "patient_care_impact": "Impact depends on device function \u2014 verify with Biomed.",
+    "active_device": false,
+    "xai_explanation": {
+      "xgboost_top_features": [
+        {
+          "feature": "Flgs",
+          "shap_value": 12.33184,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "DIntPkt",
+          "shap_value": 4.527581,
+          "direction": "increases_risk"
+        },
+        {
+          "feature": "Temp",
+          "shap_value": -3.773449,
+          "direction": "decreases_risk"
+        }
+      ],
+      "dae_top_features": [
+        {
+          "feature": "SIntPktAct",
+          "weighted_error": 4.18e-06,
+          "pct_contribution": 27.7
+        },
+        {
+          "feature": "Flgs",
+          "weighted_error": 3.7e-06,
+          "pct_contribution": 24.6
+        },
+        {
+          "feature": "SrcBytes",
+          "weighted_error": 2.13e-06,
+          "pct_contribution": 14.1
+        }
+      ],
+      "consensus": "4/4 models flagged",
+      "clinician_summary": "CRITICAL ALERT (Sample 976): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    },
+    "correct_action": "isolate"
+  }
+]

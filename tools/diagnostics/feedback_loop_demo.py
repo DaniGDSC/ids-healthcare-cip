@@ -32,7 +32,7 @@ from sklearn.metrics import (
     f1_score,
 )
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from module3_risk_scoring.module3_risk_scores import (
     WEIGHTS,
@@ -45,7 +45,8 @@ from module5_responses.module5_pipeline import FeedbackLoop
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+# Project root is two directories up: tools/diagnostics/ → project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results" / "reports"
 CHARTS_DIR = PROJECT_ROOT / "results" / "charts"
 

@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "description": "Track B cascade ablation \u2014 DAE-raw reconstruction error vs post-cascade composite c_track_b. Compared on the analyst report subset to ensure both have outputs for the same samples.",
+    "n_samples": 668,
+    "n_attacks_in_subset": 301,
+    "dae_recon_99th_pct": 8720.7390437722
+  },
+  "dae_raw_reconstruction_error": {
+    "n": 668,
+    "n_positive": 301,
+    "n_negative": 367,
+    "threshold": 0.5,
+    "tp": 6,
+    "fp": 2,
+    "tn": 365,
+    "fn": 295,
+    "sensitivity": 0.019934,
+    "specificity": 0.99455,
+    "precision": 0.75,
+    "recall": 0.019934,
+    "fnr": 0.980066,
+    "fpr": 0.00545,
+    "f1": 0.038835,
+    "f2": 0.024752,
+    "auc": 0.646994
+  },
+  "dae_native_prediction": {
+    "tp": 166,
+    "fp": 222,
+    "tn": 145,
+    "fn": 135,
+    "sensitivity": 0.551495
+  },
+  "track_b_cascade_c_track_b": {
+    "n": 668,
+    "n_positive": 301,
+    "n_negative": 367,
+    "threshold": 0.5,
+    "tp": 160,
+    "fp": 54,
+    "tn": 313,
+    "fn": 141,
+    "sensitivity": 0.531561,
+    "specificity": 0.852861,
+    "precision": 0.747664,
+    "recall": 0.531561,
+    "fnr": 0.468439,
+    "fpr": 0.147139,
+    "f1": 0.621359,
+    "f2": 0.564175,
+    "auc": 0.642355
+  }
+}

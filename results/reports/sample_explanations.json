@@ -1,0 +1,1482 @@
+[
+  {
+    "sample_index": 5,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "decision_tree": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 0.70657444
+      }
+    },
+    "severity": "CRITICAL",
+    "n_flagged": 4,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": 11.8135,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 4.184671,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Dur",
+        "shap_value": 2.155644,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "Flgs",
+        "weighted_error": 2.4e-07,
+        "pct_contribution": 51.4
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 8e-08,
+        "pct_contribution": 17.6
+      },
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 5e-08,
+        "pct_contribution": 9.6
+      }
+    ],
+    "clinician_summary": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "DIntPkt",
+        "Dur"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 9,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.0111
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.3552
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 1e-08
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": -3.308159,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "Temp",
+        "shap_value": -1.566189,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 1.459657,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 0.0,
+        "pct_contribution": 39.0
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 25.9
+      },
+      {
+        "feature": "Flgs",
+        "weighted_error": 0.0,
+        "pct_contribution": 9.1
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "Temp",
+        "DIntPkt"
+      ],
+      "shap_direction": "suppressed",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 14,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "decision_tree": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 0.70657425
+      }
+    },
+    "severity": "CRITICAL",
+    "n_flagged": 4,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": 12.081502,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 5.044119,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Temp",
+        "shap_value": -3.242039,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "Flgs",
+        "weighted_error": 2.4e-07,
+        "pct_contribution": 55.6
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 7e-08,
+        "pct_contribution": 16.6
+      },
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 6e-08,
+        "pct_contribution": 14.4
+      }
+    ],
+    "clinician_summary": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "DIntPkt",
+        "Temp"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 20,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9928
+      },
+      "random_forest": {
+        "prediction": 0,
+        "confidence": 0.0538
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.0992
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 4e-07
+      }
+    },
+    "severity": "LOW",
+    "n_flagged": 1,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 6.817069,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Temp",
+        "shap_value": 3.71796,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.357819,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 1e-07,
+        "pct_contribution": 26.4
+      },
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 9e-08,
+        "pct_contribution": 22.0
+      },
+      {
+        "feature": "sMinPktSz",
+        "weighted_error": 6e-08,
+        "pct_contribution": 14.6
+      }
+    ],
+    "clinician_summary": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Temp",
+        "Flgs"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 21,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9998
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.5089
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 1e-07
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 10.155896,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.080343,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 1.362293,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 6e-08,
+        "pct_contribution": 58.6
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 3e-08,
+        "pct_contribution": 27.3
+      },
+      {
+        "feature": "TotBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 3.2
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Flgs",
+        "DIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 23,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9902
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.837
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 2e-08
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 4.06708,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.49376,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 1.928143,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 0.0,
+        "pct_contribution": 25.8
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 19.4
+      },
+      {
+        "feature": "pDstLoss",
+        "weighted_error": 0.0,
+        "pct_contribution": 15.9
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Flgs",
+        "DIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 34,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.0078
+      },
+      "random_forest": {
+        "prediction": 0,
+        "confidence": 0.2328
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.0992
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 1e-08
+      }
+    },
+    "severity": "LOW",
+    "n_flagged": 1,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": -3.467549,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": -2.176998,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "Dur",
+        "shap_value": -1.823499,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 0.0,
+        "pct_contribution": 30.9
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 23.1
+      },
+      {
+        "feature": "DstBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 10.2
+      }
+    ],
+    "clinician_summary": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "shap_context": {
+      "top_category": "network_timing",
+      "top_features": [
+        "Flgs",
+        "DIntPkt",
+        "Dur"
+      ],
+      "shap_direction": "suppressed",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 38,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9996
+      },
+      "random_forest": {
+        "prediction": 0,
+        "confidence": 0.3197
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 2e-08
+      }
+    },
+    "severity": "LOW",
+    "n_flagged": 1,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 7.166701,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Temp",
+        "shap_value": 3.844601,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.41744,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 1e-08,
+        "pct_contribution": 38.5
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 15.2
+      },
+      {
+        "feature": "DstLoad",
+        "weighted_error": 0.0,
+        "pct_contribution": 10.0
+      }
+    ],
+    "clinician_summary": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Temp",
+        "Flgs"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 44,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9843
+      },
+      "random_forest": {
+        "prediction": 0,
+        "confidence": 0.245
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 1.71e-06
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 3.681348,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.485804,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "SrcLoad",
+        "shap_value": -2.187703,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "TotBytes",
+        "weighted_error": 5.7e-07,
+        "pct_contribution": 33.4
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 2.6e-07,
+        "pct_contribution": 15.3
+      },
+      {
+        "feature": "sMinPktSz",
+        "weighted_error": 2.5e-07,
+        "pct_contribution": 14.4
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Flgs",
+        "SrcLoad"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 50,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.6199
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 3e-08
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 5.293018,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Temp",
+        "shap_value": 4.995202,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.485863,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 1e-08,
+        "pct_contribution": 44.7
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 14.2
+      },
+      {
+        "feature": "Sport",
+        "weighted_error": 0.0,
+        "pct_contribution": 10.8
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Temp",
+        "Flgs"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 52,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "decision_tree": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 0.70657453
+      }
+    },
+    "severity": "CRITICAL",
+    "n_flagged": 4,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": 12.587226,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 5.348765,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "SIntPkt",
+        "shap_value": 3.197899,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "Flgs",
+        "weighted_error": 2.2e-07,
+        "pct_contribution": 47.4
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 8e-08,
+        "pct_contribution": 17.8
+      },
+      {
+        "feature": "sMinPktSz",
+        "weighted_error": 5e-08,
+        "pct_contribution": 9.7
+      }
+    ],
+    "clinician_summary": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "DIntPkt",
+        "SIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 60,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.7911
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 3e-08
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 6.439277,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Temp",
+        "shap_value": 5.71425,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.026557,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 1e-08,
+        "pct_contribution": 40.3
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 1e-08,
+        "pct_contribution": 18.0
+      },
+      {
+        "feature": "Flgs",
+        "weighted_error": 0.0,
+        "pct_contribution": 13.3
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Temp",
+        "Flgs"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 63,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.9997
+      },
+      "decision_tree": {
+        "prediction": 1,
+        "confidence": 0.9919
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 0.17664347
+      }
+    },
+    "severity": "CRITICAL",
+    "n_flagged": 4,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": 15.459876,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Sport",
+        "shap_value": 2.390421,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "SIntPkt",
+        "shap_value": -1.017892,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 1e-08,
+        "pct_contribution": 27.7
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 21.6
+      },
+      {
+        "feature": "pDstLoss",
+        "weighted_error": 0.0,
+        "pct_contribution": 11.0
+      }
+    ],
+    "clinician_summary": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 65,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9982
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.4023
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 7e-08
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 7.101229,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.414782,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 2.730471,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 3e-08,
+        "pct_contribution": 45.4
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 2e-08,
+        "pct_contribution": 33.2
+      },
+      {
+        "feature": "sMinPktSz",
+        "weighted_error": 0.0,
+        "pct_contribution": 4.5
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Flgs",
+        "DIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 66,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.012
+      },
+      "random_forest": {
+        "prediction": 0,
+        "confidence": 0.0285
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.0992
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 4.3e-07
+      }
+    },
+    "severity": "LOW",
+    "n_flagged": 1,
+    "top_shap_features": [
+      {
+        "feature": "DIntPkt",
+        "shap_value": -5.349305,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.859698,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "Temp",
+        "shap_value": 3.103314,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 8e-08,
+        "pct_contribution": 18.0
+      },
+      {
+        "feature": "DstBytes",
+        "weighted_error": 7e-08,
+        "pct_contribution": 16.6
+      },
+      {
+        "feature": "pDstLoss",
+        "weighted_error": 7e-08,
+        "pct_contribution": 15.2
+      }
+    ],
+    "clinician_summary": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "shap_context": {
+      "top_category": "network_timing",
+      "top_features": [
+        "DIntPkt",
+        "Flgs",
+        "Temp"
+      ],
+      "shap_direction": "suppressed",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 76,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "decision_tree": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 0.7065783
+      }
+    },
+    "severity": "CRITICAL",
+    "n_flagged": 4,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": 13.356422,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 4.441925,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "SIntPkt",
+        "shap_value": 2.781903,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "Flgs",
+        "weighted_error": 1.3e-06,
+        "pct_contribution": 29.0
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 1e-06,
+        "pct_contribution": 22.2
+      },
+      {
+        "feature": "SIntPktAct",
+        "weighted_error": 7.4e-07,
+        "pct_contribution": 16.6
+      }
+    ],
+    "clinician_summary": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "DIntPkt",
+        "SIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 77,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.872
+      },
+      "decision_tree": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 1572.39470952
+      }
+    },
+    "severity": "CRITICAL",
+    "n_flagged": 4,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": 11.36405,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 4.06515,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "SIntPkt",
+        "shap_value": 2.098348,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "Flgs",
+        "weighted_error": 2.4e-07,
+        "pct_contribution": 55.3
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 7e-08,
+        "pct_contribution": 16.5
+      },
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 6e-08,
+        "pct_contribution": 14.7
+      }
+    ],
+    "clinician_summary": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "DIntPkt",
+        "SIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 79,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9996
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.888
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 4e-08
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 4.94993,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -2.289604,
+        "direction": "decreases_risk"
+      },
+      {
+        "feature": "Resp_Rate",
+        "shap_value": 1.553,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 1e-08,
+        "pct_contribution": 30.4
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 1e-08,
+        "pct_contribution": 26.4
+      },
+      {
+        "feature": "Sport",
+        "weighted_error": 0.0,
+        "pct_contribution": 11.6
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "Flgs",
+        "Resp_Rate"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 91,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 0.9997
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 0.5397
+      },
+      "decision_tree": {
+        "prediction": 0,
+        "confidence": 0.458
+      },
+      "dae": {
+        "prediction": 0,
+        "reconstruction_error": 2e-08
+      }
+    },
+    "severity": "MEDIUM",
+    "n_flagged": 2,
+    "top_shap_features": [
+      {
+        "feature": "Sport",
+        "shap_value": 5.353645,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 4.257008,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "Flgs",
+        "shap_value": -3.235081,
+        "direction": "decreases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "dMaxPktSz",
+        "weighted_error": 1e-08,
+        "pct_contribution": 42.0
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 0.0,
+        "pct_contribution": 14.0
+      },
+      {
+        "feature": "DstLoad",
+        "weighted_error": 0.0,
+        "pct_contribution": 10.7
+      }
+    ],
+    "clinician_summary": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Sport",
+        "DIntPkt",
+        "Flgs"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  },
+  {
+    "sample_index": 97,
+    "votes": {
+      "xgboost": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "random_forest": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "decision_tree": {
+        "prediction": 1,
+        "confidence": 1.0
+      },
+      "dae": {
+        "prediction": 1,
+        "reconstruction_error": 0.70657435
+      }
+    },
+    "severity": "CRITICAL",
+    "n_flagged": 4,
+    "top_shap_features": [
+      {
+        "feature": "Flgs",
+        "shap_value": 12.555239,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "DIntPkt",
+        "shap_value": 5.391952,
+        "direction": "increases_risk"
+      },
+      {
+        "feature": "SIntPkt",
+        "shap_value": 3.176114,
+        "direction": "increases_risk"
+      }
+    ],
+    "top_dae_features": [
+      {
+        "feature": "Flgs",
+        "weighted_error": 2.4e-07,
+        "pct_contribution": 54.3
+      },
+      {
+        "feature": "SrcBytes",
+        "weighted_error": 8e-08,
+        "pct_contribution": 16.8
+      },
+      {
+        "feature": "sMinPktSz",
+        "weighted_error": 4e-08,
+        "pct_contribution": 8.1
+      }
+    ],
+    "clinician_summary": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals.",
+    "shap_context": {
+      "top_category": "network_protocol",
+      "top_features": [
+        "Flgs",
+        "DIntPkt",
+        "SIntPkt"
+      ],
+      "shap_direction": "elevated",
+      "confidence_from_shap": "HIGH"
+    },
+    "timings_ms": {
+      "predict_ms": 0.741,
+      "treeshap_ms": 13.485,
+      "dae_ms": 0.879,
+      "total_ms": 15.104
+    }
+  }
+]

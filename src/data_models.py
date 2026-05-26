@@ -90,6 +90,11 @@ class MVEOutput:
     """True for CRITICAL/HIGH/MEDIUM severity (clinical care systems).
     False for LOW (administrative/guest network). Controls DO NOT test."""
 
+    provider: str = "rule_based"
+    """Which generator path produced this MVE: 'openai', 'anthropic', or
+    'rule_based'. Set by ``generate_mve`` so batch callers can summarize
+    provider-mix in their provenance log."""
+
     # Field lists for word-count helpers
     _L1 = ["baseline_behavior", "deviation_description", "confidence_indicator"]
     _L2 = ["affected_system", "patient_care_impact", "phi_exposure",

@@ -5,43 +5,44 @@
   "statistics": {
     "total_alerts": 1632,
     "alerts_by_level": {
-      "LOW": 1408,
-      "HIGH": 176,
-      "MEDIUM": 28,
-      "CRITICAL": 20
+      "LOW": 1375,
+      "HIGH": 185,
+      "CRITICAL": 18,
+      "MEDIUM": 54
     },
     "actions_triggered": {
       "log_event": 1632,
-      "enhanced_monitoring": 1612,
+      "enhanced_monitoring": 1614,
       "re_authenticate": 113,
-      "forensic_snapshot": 196,
-      "restrict_traffic": 139,
-      "isolate_device": 196,
-      "escalate_clinical": 102
+      "forensic_snapshot": 203,
+      "restrict_traffic": 159,
+      "isolate_device": 203,
+      "escalate_clinical": 343
     },
     "true_positives_by_level": {
-      "HIGH": 166,
-      "LOW": 17,
-      "CRITICAL": 20,
-      "MEDIUM": 2
+      "HIGH": 164,
+      "LOW": 16,
+      "CRITICAL": 17,
+      "MEDIUM": 8
     },
     "false_positives_by_level": {
-      "LOW": 1391,
-      "MEDIUM": 26,
-      "HIGH": 10
+      "LOW": 1359,
+      "HIGH": 21,
+      "MEDIUM": 46,
+      "CRITICAL": 1
     },
     "precision_by_level": {
-      "LOW": 0.0121,
-      "HIGH": 0.9432,
-      "MEDIUM": 0.0714,
-      "CRITICAL": 1.0
+      "LOW": 0.0116,
+      "HIGH": 0.8865,
+      "CRITICAL": 0.9444,
+      "MEDIUM": 0.1481
     }
   },
   "effectiveness": {
     "outcome_distribution": {
-      "benign_logged": 1391,
+      "benign_logged": 1359,
       "threat_contained": 205,
-      "false_positive_isolated": 36,
+      "false_positive_isolated": 68,
       "threat_logged_not_mitigated": 0
     },
     "per_action_stats": {
@@ -53,11 +54,11 @@
         "false_positive_rate": 0.8744
       },
       "enhanced_monitoring": {
-        "true_attacks": 185,
-        "false_positives": 1427,
-        "total": 1612,
-        "precision": 0.1148,
-        "false_positive_rate": 0.8852
+        "true_attacks": 188,
+        "false_positives": 1426,
+        "total": 1614,
+        "precision": 0.1165,
+        "false_positive_rate": 0.8835
       },
       "re_authenticate": {
         "true_attacks": 113,
@@ -67,58 +68,58 @@
         "false_positive_rate": 0.0
       },
       "forensic_snapshot": {
-        "true_attacks": 186,
-        "false_positives": 10,
-        "total": 196,
-        "precision": 0.949,
-        "false_positive_rate": 0.051
+        "true_attacks": 181,
+        "false_positives": 22,
+        "total": 203,
+        "precision": 0.8916,
+        "false_positive_rate": 0.1084
       },
       "restrict_traffic": {
         "true_attacks": 113,
-        "false_positives": 26,
-        "total": 139,
-        "precision": 0.8129,
-        "false_positive_rate": 0.1871
+        "false_positives": 46,
+        "total": 159,
+        "precision": 0.7107,
+        "false_positive_rate": 0.2893
       },
       "isolate_device": {
-        "true_attacks": 186,
-        "false_positives": 10,
-        "total": 196,
-        "precision": 0.949,
-        "false_positive_rate": 0.051
+        "true_attacks": 181,
+        "false_positives": 22,
+        "total": 203,
+        "precision": 0.8916,
+        "false_positive_rate": 0.1084
       },
       "escalate_clinical": {
-        "true_attacks": 102,
-        "false_positives": 0,
-        "total": 102,
-        "precision": 1.0,
-        "false_positive_rate": 0.0
+        "true_attacks": 164,
+        "false_positives": 179,
+        "total": 343,
+        "precision": 0.4781,
+        "false_positive_rate": 0.5219
       }
     },
     "proportionality_analysis": [
       {
         "action": "isolate_device",
         "cost": 0.8,
-        "precision": 0.949,
-        "total": 196
+        "precision": 0.8916,
+        "total": 203
       },
       {
         "action": "escalate_clinical",
         "cost": 0.7,
-        "precision": 1.0,
-        "total": 102
+        "precision": 0.4781,
+        "total": 343
       },
       {
         "action": "restrict_traffic",
         "cost": 0.5,
-        "precision": 0.8129,
-        "total": 139
+        "precision": 0.7107,
+        "total": 159
       },
       {
         "action": "forensic_snapshot",
         "cost": 0.4,
-        "precision": 0.949,
-        "total": 196
+        "precision": 0.8916,
+        "total": 203
       },
       {
         "action": "re_authenticate",
@@ -129,8 +130,8 @@
       {
         "action": "enhanced_monitoring",
         "cost": 0.2,
-        "precision": 0.1148,
-        "total": 1612
+        "precision": 0.1165,
+        "total": 1614
       },
       {
         "action": "log_event",
@@ -139,9 +140,9 @@
         "total": 1632
       }
     ],
-    "over_response_count": 36,
+    "over_response_count": 68,
     "under_response_count": 0,
-    "over_response_rate": 0.0221,
+    "over_response_rate": 0.0417,
     "under_response_rate": 0.0
   },
   "mitigation_catalogue": {

@@ -200,7 +200,7 @@ class DetectionEngine:
             X_raw: ``(n, n_raw_features)`` raw feature batch.
             _force_full_dae: engine-internal flag. When True, bypass the
                 gate and score every row with the DAE. Used by
-                :meth:`write_test_predictions` so that downstream
+                :meth:`write_predictions` so that downstream
                 evaluation artefacts (AUC, PSI, threshold sweeps) get
                 a complete per-row ``reconstruction_error``. Not part
                 of the public API.
@@ -272,31 +272,38 @@ class DetectionEngine:
             x_augmented=x_aug,
         )
 
-    def write_test_predictions(
+    def write_predictions(
         self,
         out_path: Path | None = None,
+        split: str = "test",
     ) -> Path:
-        """Run the engine on ``test_phase1.parquet`` and write the DAE
-        test-prediction npz that downstream modules expect.
+        """Run the engine on a labelled split parquet and write the DAE
+        prediction npz that downstream modules expect.
+
+        ``split`` selects which frozen parquet to score:
+          - ``"test"`` → ``test_phase1.parquet`` → ``dae_test_predictions.npz``
+          - ``"demo"`` → ``demo_phase1.parquet`` → ``dae_demo_predictions.npz``
 
         This replaces the side effect that previously lived in
         ``train_track_b_dae`` — keeping training pure (only artifact
-        write) and centralising test-set scoring in the engine.
+        write) and centralising scoring in the engine.
         """
-        import pandas as pd
+        from module2_detection.module2_train_models import load_split_data
+
+        if split not in ("test", "demo"):
+            raise ValueError(f"unknown split: {split!r} (expected 'test' or 'demo')")
 
         if out_path is None:
-            out_path = PROJECT_ROOT / "results/models/dae_test_predictions.npz"
+            out_path = PROJECT_ROOT / f"results/models/dae_{split}_predictions.npz"
 
-        from module2_detection.module2_train_models import load_data
-        _X_train, X_test, _y_train, y_test, _feat_names = load_data()
+        X, y, _feat_names = load_split_data(split)
 
         # Force full DAE coverage for the evaluation export: AUC,
         # PSI (drift_detection), and threshold sweeps
         # (dynamic_threshold_sim) need a per-sample reconstruction
-        # error over the entire test split — gated zeros would
+        # error over the entire split — gated zeros would
         # corrupt those metrics.
-        result = self.predict(X_test, _force_full_dae=True)
+        result = self.predict(X, _force_full_dae=True)
 
         # Reconstruction error on the augmented input — the underlying
         # scalar that the DAE turns into a probability.
@@ -304,13 +311,29 @@ class DetectionEngine:
 
         np.savez(
             out_path,
-            y_true=y_test,
+            y_true=y,
             y_pred=result.y_pred_dae,
             reconstruction_error=recon_err,
         )
         logger.info(
             "detection_engine: wrote %s (%d samples, c_detect range "
             "[%.4f, %.4f])",
-            out_path, len(y_test), result.c_detect.min(), result.c_detect.max(),
+            out_path, len(y), result.c_detect.min(), result.c_detect.max(),
         )
         return out_path
+
+    def write_test_predictions(self, *args, **kwargs) -> Path:
+        """Deprecated alias for :meth:`write_predictions`.
+
+        Renamed when the method gained ``split`` support — the old name
+        suggested test-only semantics that no longer hold. Existing
+        callers continue to work; new code should call ``write_predictions``.
+        """
+        import warnings
+        warnings.warn(
+            "DetectionEngine.write_test_predictions is deprecated; "
+            "use write_predictions(...) instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.write_predictions(*args, **kwargs)
