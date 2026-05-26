@@ -1,0 +1,23 @@
+[run]
+# Omit Streamlit-rendering surfaces from coverage gating.
+# Mode handlers in module6_app.py call st.* widgets that only run inside a
+# Streamlit runtime; smoke-testing them via AppTest is slower than useful
+# for the inner test loop. The pure helpers extracted to constants.py,
+# loaders.py, forms.py, triage_helpers.py, stream_helpers.py, audit_writer.py
+# carry the testable logic and have direct unit coverage.
+omit =
+    module6_evaluation/module6_app.py
+    module6_evaluation/components.py
+    module6_evaluation/sentinel_theme.py
+    module6_evaluation/study_loader.py
+    module6_evaluation/study_analysis.py
+    module6_evaluation/_src_adapter.py
+    module6_evaluation/figures.py
+    module6_evaluation/__main__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:

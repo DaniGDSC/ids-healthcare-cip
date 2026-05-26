@@ -31,115 +31,49 @@ import streamlit as st
 # When invoked via `streamlit run module6_evaluation/module6_app.py`
 # the project root is NOT on sys.path (streamlit treats the file as a
 # script, not a package). Prepend it so the absolute import below works.
+# C5 follow-up: kept for the `streamlit run` invocation path; the package
+# itself is importable without this because of __init__.py.
 _PROJECT_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT_FOR_IMPORT))
 
-# Hardened audit logger from Module 5 — used to bind reviewer attribution
-# (participant_id / role / timestamp) from st.session_state to a signed,
-# hash-chained record in results/reports/audit_log.jsonl.
-from module5_responses.module5_pipeline import AuditLogger as HardenedAuditLogger  # noqa: E402
+# Lazy hardened audit (Y5/Y8 fix) — was eagerly constructed at import time.
+from module6_evaluation.audit_writer import get_hardened_audit  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EVAL_DIR = PROJECT_ROOT / "results/reports"
 CHARTS_DIR = PROJECT_ROOT / "results/charts"
 MODELS_DIR = PROJECT_ROOT / "results/models"
 
-# ── Dataset routing per dashboard page ────────────────────────────────────
-# Each operator-facing page reads a *specific* frozen split. Test = paper-clean
-# (the thesis's headline metrics come from here; passive display only). Demo =
-# operator-clean (any page with interactive controls that could feed back into
-# model retraining reads here, so test never gets contaminated by operator
-# actions). Study mode uses YAML fixtures and is dataset-agnostic.
-PAGE_SPLIT: dict[str, str | None] = {
-    "Dashboard":         "test",   # Triage view — passive display
-    "Online Simulation": "demo",   # interactive replay + feedback
-    "Browse Alerts":     "test",   # static browsing, no feedback loop
-    "Study (A/B)":       None,     # YAML fixtures, not from parquet splits
-    "PCAP Replay":       None,     # stub
-}
-
-# Legacy file = test split (no suffix). Producer chain writes:
-#   alert_responses.json        ← test  (paper-clean)
-#   alert_responses_demo.json   ← demo  (operator-clean)
-_SPLIT_FILES = {
-    "test": "",         # no suffix → legacy file names
-    "demo": "_demo",
-}
+# Dataset routing + suffix files now live in module6_evaluation.constants
+# (re-imported below). PAGE_SPLIT carries the test=paper-clean /
+# demo=operator-clean per-page routing the legacy code documented here.
 
 
-def _resolve_suffix(split: str | None) -> str:
-    """Resolve the file suffix for a split, with strict validation.
+# Constants + suffix resolution now live in module6_evaluation.constants.
+# Re-exported here for back-compat with any callers reading them off the
+# app module directly.
+from module6_evaluation.constants import (  # noqa: E402
+    PAGE_SPLIT,
+    _SPLIT_FILES,
+    resolve_suffix as _resolve_suffix,
+)
 
-    ``None`` → ``""`` (legacy test fallback for dashboard callers that
-    haven't migrated to passing split explicitly). Any other value is
-    delegated to :func:`common.split_paths.suffix`, which raises
-    ``ValueError`` on typos like ``"tset"`` or ``"DEMO"`` that a
-    permissive ``dict.get(split, fallback)`` would have silently coerced
-    to test.
-    """
-    if split is None:
-        return ""
-    from common import split_paths as sp
-    return sp.suffix(split)
-# Singleton hardened logger for reviewer-attributed events. The existing
-# AuditTrailWriter (audit_trail.jsonl) is kept for backward compatibility
-# with offline study mode; reviewer-attributed alert decisions ALSO get
-# logged to the signed audit_log.jsonl chain.
-_hardened_audit = HardenedAuditLogger(EVAL_DIR / "audit_log.jsonl")
-
-# Canonical display names (spec triad). Internal data keys remain
-# lowercase analyst / clinician / administrator to preserve backward
-# compatibility with `participant_responses.json` and the YAML configs;
-# user-visible labels everywhere use the spec triad below.
-#
-# Mapping:
-#   analyst       ↔ IT Generalist   (SOC analyst, IT support)
-#   administrator ↔ Biomed Engineer (biomedical engineering, service line owner)
-#   clinician     ↔ Nurse Manager   (bedside clinician, charge nurse)
-ROLE_DISPLAY_NAMES = {
-    "analyst": "IT Generalist",
-    "administrator": "Biomed Engineer",
-    "clinician": "Nurse Manager",
-}
-# Inverse map for legacy lookup paths that still accept display strings.
-ROLE_INTERNAL_KEY = {v: k for k, v in ROLE_DISPLAY_NAMES.items()}
-
-# Ordered tuple for UI surfaces (spec ordering: IT → Biomed → Nurse).
-ROLE_ORDER = ("analyst", "administrator", "clinician")
-
-# Display-name list in canonical order — replaces the legacy ROLES list
-# (kept as alias for any external callers still importing the old name).
-ROLE_DISPLAY_LIST = [ROLE_DISPLAY_NAMES[k] for k in ROLE_ORDER]
-ROLES = ROLE_DISPLAY_LIST  # legacy alias — now ["IT Generalist", "Biomed Engineer", "Nurse Manager"]
-
-# Short labels for compact UI (e.g. Dashboard role pills)
-ROLE_SHORT_LABELS = {
-    "analyst": "IT",
-    "administrator": "Biomed",
-    "clinician": "Nurse",
-}
-
-ACTIONS = ["dismiss", "monitor", "investigate", "isolate", "escalate"]
-
-TIER_COLORS = {"CRITICAL": "#8e44ad", "HIGH": "#e74c3c", "MEDIUM": "#e67e22", "LOW": "#2ecc71"}
-
-# Streamlit's inline-color syntax (`:red[text]`) only accepts a fixed set of
-# named colors — hex codes silently render as literal text. This map carries
-# the closest named color per tier so expander titles and other markdown-
-# colored strings actually render in color.
-TIER_STREAMLIT_COLORS = {
-    "CRITICAL": "violet",
-    "HIGH": "red",
-    "MEDIUM": "orange",
-    "LOW": "green",
-}
-
-# Unified label for detector-ensemble consensus across the app. The
-# codebase previously used 4 variants ("Consensus" / "Model consensus" /
-# "Detection confidence" / "detector consensus") for the same concept,
-# which created cross-page recognition friction.
-DETECTOR_CONSENSUS_LABEL = "Detector consensus"
+# Role names + tier colors + action priority maps live in
+# module6_evaluation.constants. Re-imported here for back-compat with any
+# caller (test or module) still grabbing them off the app module path.
+from module6_evaluation.constants import (  # noqa: E402, F401
+    ACTIONS,
+    DETECTOR_CONSENSUS_LABEL,
+    ROLE_DISPLAY_LIST,
+    ROLE_DISPLAY_NAMES,
+    ROLE_INTERNAL_KEY,
+    ROLE_ORDER,
+    ROLE_SHORT_LABELS,
+    ROLES,
+    TIER_COLORS,
+    TIER_STREAMLIT_COLORS,
+)
 
 
 def _parse_consensus(consensus_str: str) -> tuple[int, int] | None:
@@ -185,66 +119,18 @@ from module6_evaluation._src_adapter import scored_from_eval_alert  # noqa: E402
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# MVE Display Helpers (Gap 1, Gap 2, Gap 3 fixes)
+# MVE Display Helpers — all action/device/tier maps now live in
+# module6_evaluation.constants; re-exported below for back-compat.
 # ═══════════════════════════════════════════════════════════════════════
 
-# FIX B: Infer device class from attack category when asset lookup fails
-_CATEGORY_TO_DEVICE = {
-    "Spoofing": "iomt_device",
-    "Data Alteration": "iomt_device",
-    "iomt_deviation": "iomt_device",
-    "anomalous_outbound": "iomt_device",
-    "lateral_movement": "workstation",
-    "data_exfiltration": "ehr_workstation",
-    "ehr_access": "ehr_workstation",
-}
-
-# FIX C: Action priority ordering for consensus display
-_ACTION_DISPLAY = {
-    "isolate_device":        (1, "\U0001f534", "Isolate device"),
-    "escalate_incident":     (2, "\U0001f7e0", "Escalate to security lead"),
-    "escalate_clinical":     (2, "\U0001f7e0", "Escalate to clinical engineering"),
-    "restrict_traffic":      (3, "\U0001f7e1", "Restrict suspicious traffic"),
-    "re_authenticate":       (3, "\U0001f7e1", "Force re-authentication"),
-    "forensic_snapshot":     (4, "\U0001f535", "Capture forensic snapshot"),
-    "enhanced_monitoring":   (5, "\U0001f7e2", "Enable enhanced monitoring"),
-    "log_event":             (6, "\u26aa", "Log event"),
-}
-
-_CRIT_COLOR_HEX = {
-    "CRITICAL": "#d32f2f", "HIGH": "#f57c00",
-    "MEDIUM": "#1976d2", "LOW": "#388e3c",
-}
-
-# Module-level policy action label map — avoids rebuilding this dict on every
-# render_mve_layers() call (issue 4 / render_mve_layers locality fix).
-_PA_MAP = {
-    "isolate_device":     "Isolate device",
-    "escalate_incident":  "Escalate to security lead",
-    "escalate_clinical":  "Escalate to clinical engineering",
-    "restrict_traffic":   "Restrict suspicious traffic",
-    "re_authenticate":    "Force re-authentication",
-    "enhanced_monitoring": "Enhanced monitoring",
-    "forensic_snapshot":  "Capture forensic snapshot",
-    "log_event":          "Log and monitor",
-}
-
-# Module-level sentinel for _ACTION_DISPLAY misses — avoids {} allocation
-# per sort-key lambda invocation (issue 9).
-_ACTION_DISPLAY_MISS = (99, "\u26aa", "")
-
-# M6-A1: hoist _ACTION_PRIORITY to module level — was rebuilt as a dict
-# literal on every process_alert() call (one call per alert per simulation tick).
-_ACTION_PRIORITY = {
-    "isolate_device":    "isolate",
-    "escalate_incident": "escalate",
-    "escalate_clinical": "escalate",
-    "restrict_traffic":  "investigate",
-    "forensic_snapshot": "investigate",
-    "re_authenticate":   "investigate",
-    "enhanced_monitoring": "monitor",
-    "log_event":         "monitor",
-}
+from module6_evaluation.constants import (  # noqa: E402, F401
+    _ACTION_DISPLAY,
+    _ACTION_DISPLAY_MISS,
+    _ACTION_PRIORITY,
+    _CATEGORY_TO_DEVICE,
+    _CRIT_COLOR_HEX,
+    _PA_MAP,
+)
 
 
 def render_device_criticality(alert: dict) -> None:
@@ -732,7 +618,7 @@ def capture_online_interaction(
     # Local eval-app audit trail
     audit_log("online_interaction", **record)
     # Signed Module 5 audit chain with reviewer attribution
-    _hardened_audit.log(
+    get_hardened_audit().log(
         {"event_type": "reviewer_interaction", "alert_id": alert_id, "details": details or {}},
         reviewer_id=participant_id or st.session_state.get("participant_id") or "anon",
         reviewer_role=st.session_state.get("participant_role") or st.session_state.get("sim_role"),
@@ -1165,8 +1051,6 @@ def load_all_responses() -> list:
     explicitly so the data-routing intent is visible at the call site.
     """
     return load_responses_for("test")
-
-    return responses
 
 
 @st.cache_data
@@ -2168,7 +2052,7 @@ def _capture_dashboard_action(sample_idx: int, action: str, details: dict | None
         pass
     audit_log("dashboard_action", **payload)
     try:
-        _hardened_audit.log(
+        get_hardened_audit().log(
             {"event_type": "dashboard_action",
              "alert_id": payload["alert_id"],
              "action": action,
@@ -3677,7 +3561,7 @@ _SEV_COLORS = {
 
 # Issue 10 fix: compile patterns once at module load instead of running
 # repeated `in` substring scans on every line of every Group B render.
-import re as _re
+import re as _re  # noqa: E402  — late import; pattern compiled near use site
 
 _DO_NOT_RE = _re.compile(r"DO NOT", _re.IGNORECASE)
 # Matches "SEVERITY: CRITICAL", "► HIGH", "SEVERITY HIGH" etc.
