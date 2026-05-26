@@ -31,9 +31,9 @@ _PROJECT_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT_FOR_IMPORT))
 
-from common import dumps_signed
-from module2_detection.models._base_detector import BaseTrackADetector
-from module2_detection.tuning._data import load_data
+from common import dumps_signed  # noqa: E402
+from module2_detection.models._base_detector import BaseTrackADetector  # noqa: E402
+from module2_detection.tuning._data import load_data  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

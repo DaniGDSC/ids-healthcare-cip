@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """Train final detectors with best hyperparameters — no more tuning.
 
@@ -59,7 +58,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # so the final-training stage uses the same seed the hyperparameters were
 # chosen under — see finding #17 lineage.
 DEFAULT_RANDOM_STATE = 42
-RANDOM_STATE = DEFAULT_RANDOM_STATE   # legacy alias for any external consumer
+RANDOM_STATE = DEFAULT_RANDOM_STATE  # legacy alias for any external consumer
 
 
 def _resolve_random_state(params_file: Path) -> int:
@@ -73,7 +72,10 @@ def _resolve_random_state(params_file: Path) -> int:
     Falls back to DEFAULT_RANDOM_STATE if the report is missing or
     doesn't carry the seed (e.g. legacy tuning artefacts pre-Y6).
     """
-    report_path = params_file.parent / f"{params_file.stem.replace('_best_params', '')}_report.json"
+    report_path = (
+        params_file.parent
+        / f"{params_file.stem.replace('_best_params', '')}_report.json"
+    )
     # Also try the canonical report filenames produced by the runner
     candidate_reports = [
         report_path,
@@ -95,9 +97,12 @@ def _resolve_random_state(params_file: Path) -> int:
 
 # ── Data loading ────────────────────────────────────────────────────────
 # The leakage guard + canonical load_data implementation live in
-# `module2_detection.tuning._data`; we import them here so all training-
-# side code paths share one source of truth.
-from module2_detection.tuning._data import (
+# `module2_detection.tuning._data`; we re-export them here so all
+# training-side code paths share one source of truth AND so tests that
+# import from `module2_train_models` for backward-compat keep working.
+from module2_detection.tuning._data import (  # noqa: E402,F401
+    _FORBIDDEN_TRAINING_PARQUETS,
+    _assert_no_demo_leakage,
     load_data as _load_data_shared,
 )
 
@@ -128,13 +133,21 @@ def load_split_data(split: str, label_col: str = "Label") -> tuple:
 
     path = PROJECT_ROOT / f"data/processed/{split}_phase1.parquet"
     df = pd.read_parquet(path)
-    drop_cols = [c for c in [label_col, "Attack Category", "row_id", "device_class"] if c in df.columns]
+    drop_cols = [
+        c
+        for c in [label_col, "Attack Category", "row_id", "device_class"]
+        if c in df.columns
+    ]
     y = df[label_col].values
     X = df.drop(columns=drop_cols).values.astype(np.float32)
     feat_names = [c for c in df.columns if c not in drop_cols]
     logger.info(
         "Split %s: %d samples (benign=%d, attack=%d), %d features",
-        split, len(y), (y == 0).sum(), (y == 1).sum(), len(feat_names),
+        split,
+        len(y),
+        (y == 0).sum(),
+        (y == 1).sum(),
+        len(feat_names),
     )
     return X, y, feat_names
 
@@ -146,6 +159,7 @@ def load_split_data(split: str, label_col: str = "Label") -> tuple:
 
 
 # ── Evaluate and log ────────────────────────────────────────────────────
+
 
 def evaluate(
     name: str,
@@ -165,12 +179,21 @@ def evaluate(
     }
     logger.info(
         "%s: attack_f1=%.4f  attack_f2=%.4f  AUC=%.4f  threshold=%.3f",
-        name, metrics["attack_f1"], metrics["attack_f2"],
-        metrics["auc_roc"], threshold,
+        name,
+        metrics["attack_f1"],
+        metrics["attack_f2"],
+        metrics["auc_roc"],
+        threshold,
     )
-    logger.info("\n%s", classification_report(
-        y_test, y_pred, target_names=["Normal", "Attack"], digits=4,
-    ))
+    logger.info(
+        "\n%s",
+        classification_report(
+            y_test,
+            y_pred,
+            target_names=["Normal", "Attack"],
+            digits=4,
+        ),
+    )
     return metrics
 
 
@@ -239,14 +262,19 @@ def train_track_a(
         # whose default is hardcoded; override it with the resolved seed
         # so the run is consistent end-to-end.
         cls_kwargs = {**cfg["cls_kwargs"], "random_state": run_seed}
-        return ImbPipeline([
-            ("smote", SMOTE(
-                sampling_strategy="auto",
-                k_neighbors=5,
-                random_state=run_seed,
-            )),
-            ("classifier", cfg["cls"](**cls_kwargs, **clf_params)),
-        ])
+        return ImbPipeline(
+            [
+                (
+                    "smote",
+                    SMOTE(
+                        sampling_strategy="auto",
+                        k_neighbors=5,
+                        random_state=run_seed,
+                    ),
+                ),
+                ("classifier", cfg["cls"](**cls_kwargs, **clf_params)),
+            ]
+        )
 
     pipeline = _fresh_pipeline()
 
@@ -334,7 +362,9 @@ def train_track_a(
     # Test predictions
     np.savez(
         output_dir / f"{name}_test_predictions.npz",
-        y_true=y_test, y_pred=y_pred_test, y_proba=y_proba_test,
+        y_true=y_test,
+        y_pred=y_pred_test,
+        y_proba=y_proba_test,
     )
 
     # OOF probabilities for cascaded DAE input
@@ -377,20 +407,32 @@ def evaluate_dae(npz_path: Path, threshold: float) -> dict:
     }
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     metrics["confusion_matrix"] = {
-        "tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp),
+        "tn": int(tn),
+        "fp": int(fp),
+        "fn": int(fn),
+        "tp": int(tp),
     }
     logger.info(
         "dae: attack_f1=%.4f  attack_f2=%.4f  AUC=%.4f  threshold=%.3g",
-        metrics["attack_f1"], metrics["attack_f2"],
-        metrics["auc_roc"], threshold,
+        metrics["attack_f1"],
+        metrics["attack_f2"],
+        metrics["auc_roc"],
+        threshold,
     )
-    logger.info("\n%s", classification_report(
-        y_test, y_pred, target_names=["Normal", "Attack"], digits=4,
-    ))
+    logger.info(
+        "\n%s",
+        classification_report(
+            y_test,
+            y_pred,
+            target_names=["Normal", "Attack"],
+            digits=4,
+        ),
+    )
     return metrics
 
 
 # ── Predict-only path (re-emit predictions on a frozen split) ───────────
+
 
 def predict_split(split: str) -> dict:
     """Score a frozen labelled split with the already-trained models.
@@ -447,6 +489,7 @@ def predict_split(split: str) -> dict:
 
 
 # ── Main ────────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     import argparse

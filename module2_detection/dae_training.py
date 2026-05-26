@@ -37,8 +37,8 @@ _PROJECT_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT_FOR_IMPORT))
 
-from common.dae_input import TRACK_A_FOR_DAE, augmented_feature_names
-from module2_detection.models.DAE import DAEDetector
+from common.dae_input import TRACK_A_FOR_DAE, augmented_feature_names  # noqa: E402
+from module2_detection.models.DAE import DAEDetector  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

@@ -16,10 +16,12 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -46,8 +48,6 @@ TOP_N_WATERFALL = 5
 TOP_K_FEATURES = 10
 
 # ── Async JSON write utility (Opt-9) ───────────────────────────────────
-import asyncio
-from concurrent.futures import ProcessPoolExecutor
 
 
 def write_json_sync(path: Path, data) -> None:
@@ -184,7 +184,7 @@ CLINICIAN_TEMPLATES = {
 }
 
 # Import feature group mapping from the online explainer
-from module4_explanations.module4_online_explainer import (
+from module4_explanations.module4_online_explainer import (  # noqa: E402
     _feature_to_narrative,
 )
 
