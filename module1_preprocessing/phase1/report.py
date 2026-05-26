@@ -27,7 +27,7 @@ _N_BIOMETRIC: int = len(BIOMETRIC_COLUMNS)
 
 # The exact set of report keys this renderer reads. ``PreprocessingPipeline``
 # writes a superset; if any key in this set is missing at render time the
-# table that depends on it will fall back to its empty form rather than
+# section that depends on it will fall back to its empty form rather than
 # crashing — but the render-time logger emits a WARNING so the mismatch
 # is at least visible.
 EXPECTED_REPORT_KEYS: frozenset[str] = frozenset(
@@ -37,7 +37,10 @@ EXPECTED_REPORT_KEYS: frozenset[str] = frozenset(
         "cleaning",
         "redundancy",
         "split",
+        "scaling",
         "track_a",
+        "track_b",
+        "integrity",
         "output",
     }
 )
@@ -70,11 +73,14 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     mv = report.get("cleaning", {})
     red = report.get("redundancy", {})
     spl = report.get("split", {})
+    scaling = report.get("scaling", {})
     # SMOTE is applied inside the Phase 2 CV pipeline, not in Phase 1,
     # so the pipeline writes a ``track_a`` config block (no resampled
     # counts). The renderer below treats SMOTE as a forward reference
     # to Phase 2 rather than a Phase 1 result.
     track_a = report.get("track_a", {})
+    track_b = report.get("track_b", {})
+    integrity = report.get("integrity", {})
     out = report.get("output", {})
 
     raw_rows = ing.get("raw_rows", 0)
@@ -96,6 +102,32 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     # ── Feature reduction table ──
     _feature_reduction_table(w, raw_cols, hip, red)
 
+    # ── 4.1.0 Source-data provenance (integrity-verified) ──
+    if integrity:
+        verified = integrity.get("verified", False)
+        n_files = integrity.get("n_files_verified", 0)
+        files = integrity.get("files", []) or []
+        w("### 4.1.0 Source Dataset Provenance")
+        w("")
+        if verified and files:
+            w(
+                f"All **{n_files}** input CSV(s) were verified against the "
+                f"Module 0 signed integrity baseline (ECDSA P-256) before any "
+                f"preprocessing step touched the bytes:"
+            )
+            w("")
+            w("| File | SHA-256 (prefix) | Rows |")
+            w("|------|------------------|-----:|")
+            for f in files[:10]:
+                sha = f.get("sha256", "")[:16]
+                w(f"| `{f.get('file', '?')}` | `{sha}…` | {f.get('rows', 0):,} |")
+        else:
+            w(
+                "Integrity verification status is unavailable for this run — "
+                "see the pipeline log for details."
+            )
+        w("")
+
     # ── 4.1.1 HIPAA ──
     w("### 4.1.1 HIPAA Safe Harbor De-identification")
     w("")
@@ -113,19 +145,44 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     w("")
 
     # ── 4.1.2 Missing Values ──
+    bio_strat = mv.get("biometric_strategy", "median")
+    net_strat = mv.get("network_strategy", "dropna")
+    # Lookup justifications by strategy — never hardcode the description
+    # of a strategy we may not be running.
+    _BIO_JUSTIFICATION = {
+        "median": (
+            "Per-column median imputation is patient-safe: the imputed value "
+            "is a population-level statistic that never depends on a "
+            "different patient's reading at a session boundary"
+        ),
+        "ffill": (
+            "Forward-fill within session_column only; the constructor "
+            "rejects ffill without a grouping column, so cross-patient "
+            "boundaries are structurally protected"
+        ),
+    }
+    _NET_JUSTIFICATION = {
+        "dropna": (
+            "Row-wise dropna preserves the missing/zero distinction so an "
+            "attacker cannot mask attack flows as zero-traffic via induced "
+            "capture loss"
+        ),
+        "fill_zero": (
+            "Zero-fill — operator explicitly accepted that capture-loss "
+            "attack flows may be masked as benign idle traffic"
+        ),
+    }
     w("### 4.1.2 Context-Aware Missing Value Handling")
     w("")
     w("| Stream | Strategy | Justification |")
     w("|--------|----------|---------------|")
     w(
-        f"| Biometric ({_N_BIOMETRIC} features) | Forward-fill (ffill) "
-        f"| Sensor dropout produces temporal gaps; the most recent valid "
-        f"reading is the best available estimate |"
+        f"| Biometric ({_N_BIOMETRIC} features) | `{bio_strat}` "
+        f"| {_BIO_JUSTIFICATION.get(bio_strat, 'custom strategy')} |"
     )
     w(
-        f"| Network (remaining features) | Row-wise dropna "
-        f"| Corrupted packets produce incomplete flow records that cannot "
-        f"be reliably imputed |"
+        f"| Network (remaining features) | `{net_strat}` "
+        f"| {_NET_JUSTIFICATION.get(net_strat, 'custom strategy')} |"
     )
     w("")
     bio_filled = mv.get("biometric_cells_filled", 0)
@@ -134,6 +191,26 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     w(f"- Rows dropped (network NaN): **{rows_dropped:,}**")
     w(f"- Rows remaining: **{raw_rows - rows_dropped:,}**")
     w("")
+
+    # ── Phase 0 baseline cross-reference ──
+    # Wired from Phase0ArtifactReader.read_stats() so the Phase 0 §3.2.4
+    # missing-value figures and the Phase 1 §4.1.2 cleaning figures are
+    # cross-checkable in one document.
+    phase0 = report.get("phase0_baseline", {})
+    phase0_missing = phase0.get("missing_values", {}) or {}
+    if phase0_missing:
+        w("**Phase 0 baseline (§3.2.4) — features with missing values prior to cleaning:**")
+        w("")
+        w("| Feature | Missing Count | Missing (%) |")
+        w("|---------|-------------:|------------:|")
+        for feat, info in list(phase0_missing.items())[:15]:
+            count = info.get("count", 0) if isinstance(info, dict) else 0
+            pct = info.get("percentage", 0.0) if isinstance(info, dict) else 0.0
+            w(f"| {feat} | {count:,} | {pct:.4f}% |")
+        w("")
+    elif phase0.get("available") is False:
+        w("> Phase 0 stats artifact not available — baseline counts skipped.")
+        w("")
 
     # ── Residual-leakage disclosure ──
     # The "leakage barrier" sits between Steps 4 and 5, but Steps 3 and
@@ -199,20 +276,38 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     w("")
 
     # ── 4.1.4 Split ──
-    w("### 4.1.4 Stratified Train/Test Split")
+    w("### 4.1.4 Stratified 4-way Split (Strategy 1)")
     w("")
     train_n = spl.get("train_samples", 0)
+    val_n = spl.get("val_samples", 0)
     test_n = spl.get("test_samples", 0)
+    demo_n = spl.get("demo_samples", 0)
     random_state = report.get("random_state", 42)
-    w("| Partition | Samples | Ratio |")
-    w("|-----------|--------:|------:|")
-    w(f"| Train | {train_n:,} | {spl.get('train_ratio', 0.70):.0%} |")
-    w(f"| Test | {test_n:,} | {spl.get('test_ratio', 0.30):.0%} |")
+    stratify_target = spl.get("stratify_target", "Attack Category")
+    w("| Partition | Samples | Ratio | Attack rate | Purpose |")
+    w("|-----------|--------:|------:|------------:|---------|")
+    for name, key_n, key_r, key_atk, purpose in [
+        ("Train", "train_samples", "train_ratio_global", "train_attack_rate",
+         "Track A + Track B model fitting"),
+        ("Val",   "val_samples",   "val_ratio_global",   "val_attack_rate",
+         "Threshold calibration / DAE cascade input"),
+        ("Test",  "test_samples",  "test_ratio_global",  "test_attack_rate",
+         "FROZEN — paper metrics only"),
+        ("Demo",  "demo_samples",  "demo_ratio_global",  "demo_attack_rate",
+         "FROZEN — dashboard + user study"),
+    ]:
+        w(
+            f"| {name} | {spl.get(key_n, 0):,} "
+            f"| {spl.get(key_r, 0):.1%} "
+            f"| {spl.get(key_atk, 0):.1%} "
+            f"| {purpose} |"
+        )
     w("")
     w(
-        f"Stratification via `StratifiedShuffleSplit` with "
-        f"`random_state={random_state}` preserves the original class prior "
-        f"in both partitions, preventing evaluation bias from sampling variance."
+        f"Stratification via three sequential `StratifiedShuffleSplit` calls on "
+        f"`{stratify_target}` with `random_state={random_state}` preserves the "
+        f"original class prior in all 4 partitions (±2pp). The test and demo "
+        f"partitions are frozen — never seen by any model during training."
     )
     w("")
 
@@ -220,25 +315,63 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
     _smote_section(w, track_a)
 
     # ── 4.1.6 Scaling ──
-    w("### 4.1.6 Robust Scaling")
+    scaling_method = scaling.get("method", "robust")
+    w(f"### 4.1.6 Scaling ({scaling_method.capitalize()}Scaler)")
     w("")
-    w(
-        "RobustScaler (median / IQR normalisation) is chosen over StandardScaler "
-        "(mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 "
-        "identified heavy-tailed distributions in network-traffic features. "
-        "RobustScaler is insensitive to extreme values, preserving the "
-        "morphology of attack signatures for downstream explainability "
-        "analysis."
-    )
+    if scaling_method == "robust":
+        rationale = (
+            "RobustScaler (median / IQR normalisation) is chosen over "
+            "StandardScaler (mean / std) or MinMaxScaler because the outlier "
+            "analysis in §3.2.1 identified heavy-tailed distributions in "
+            "network-traffic features. RobustScaler is insensitive to extreme "
+            "values, preserving the morphology of attack signatures for "
+            "downstream explainability analysis."
+        )
+    elif scaling_method == "standard":
+        rationale = (
+            "StandardScaler (mean / std normalisation) is configured for this "
+            "run. Note: §3.2.1 identified heavy-tailed network-feature "
+            "distributions, for which RobustScaler is the spec-default; "
+            "this run deviates from that recommendation."
+        )
+    else:
+        rationale = f"Scaling method `{scaling_method}` is configured for this run."
+    w(rationale)
     w("")
     w(
         f"Scaler fitted exclusively on training set (n={train_n:,}). "
-        f"Test set transformed without refitting — preventing information "
-        f"leakage from test distribution. The fitted parameters are "
-        f"persisted as a JSON sidecar (`robust_scaler.json`), not a "
-        f"pickle, so loading the artefact never executes Python."
+        f"Validation, test, and demo sets transformed without refitting — "
+        f"preventing information leakage from the held-out distributions. "
+        f"The fitted parameters are persisted as a JSON sidecar "
+        f"(`{scaling_method}_scaler.json`), not a pickle, so loading the "
+        f"artefact never executes Python."
     )
     w("")
+
+    # ── 4.1.6b Track B novelty-detection subset (forward reference to Phase 2) ──
+    if track_b:
+        w("### 4.1.6b Track B — Benign-only Training Subset")
+        w("")
+        enabled = track_b.get("enabled", False)
+        n_benign = track_b.get("benign_train_samples", 0)
+        n_attack = track_b.get("attack_train_samples", 0)
+        if enabled:
+            total = n_benign + n_attack
+            pct = (n_benign / total * 100) if total else 0.0
+            w(
+                f"Track B (autoencoder-based novelty detection) consumes a "
+                f"benign-only subset of the training partition. Phase 1 "
+                f"exports this subset as `benign_only_train.parquet` "
+                f"(**{n_benign:,}** samples, {pct:.1f}% of train) and the "
+                f"matching benign-only validation set as "
+                f"`benign_only_val.parquet`. Phase 2's denoising autoencoder "
+                f"fits exclusively on the benign train subset; "
+                f"reconstruction error on a held-out attack sample is the "
+                f"novelty signal."
+            )
+        else:
+            w("Track B is disabled for this run; no benign-only subsets are exported.")
+        w("")
 
     # ── 4.1.7 Output ──
     w("### 4.1.7 Pipeline Output Summary")
@@ -271,11 +404,10 @@ def render_preprocessing_report(report: Dict[str, Any]) -> str:
 def _steps_table(w, ing, hip, mv, red, spl, track_a, out) -> None:
     """Render the pipeline steps summary table.
 
-    SMOTE is shown as a forward reference (config only) because it is
-    applied inside the Phase 2 cross-validation pipeline, not as a
-    standalone Phase 1 step. The previous version of this table read
-    ``smt['samples_after']`` from a non-existent ``smote`` report key
-    and silently rendered zeros.
+    All values are derived from the report dict — no hardcoded defaults
+    that would lie about non-default configurations. SMOTE remains a
+    forward reference (Phase 2 CV applies it; Phase 1 only carries the
+    config).
     """
     raw_shape = f"{ing.get('raw_rows', 0):,} × {ing.get('raw_columns', 0)}"
     n_hip = hip.get("n_dropped", len(hip.get("columns_dropped", [])))
@@ -286,9 +418,30 @@ def _steps_table(w, ing, hip, mv, red, spl, track_a, out) -> None:
     after_red_cols = ing.get("raw_columns", 0) - n_hip - n_red
     after_red = f"{rows_after_mv:,} × {after_red_cols}"
     train_n = spl.get("train_samples", 0)
+    val_n = spl.get("val_samples", 0)
     test_n = spl.get("test_samples", 0)
+    demo_n = spl.get("demo_samples", 0)
     n_feat = out.get("n_features", after_red_cols)
     smote_enabled = bool(track_a.get("smote_enabled"))
+
+    # Derive strategy strings from the cleaning report (formerly hardcoded
+    # "ffill bio, fill_zero net" which lied about the median/dropna defaults).
+    bio_strat = mv.get("biometric_strategy", "median")
+    net_strat = mv.get("network_strategy", "dropna")
+
+    # Derive split ratios from the split report (formerly hardcoded "70/30"
+    # from the 2-way era — current pipeline is 4-way).
+    train_r = spl.get("train_ratio_global", 0)
+    val_r = spl.get("val_ratio_global", 0)
+    test_r = spl.get("test_ratio_global", 0)
+    demo_r = spl.get("demo_ratio_global", 0)
+    split_summary = (
+        f"train {train_n:,} / val {val_n:,} / test {test_n:,} / demo {demo_n:,}"
+    )
+    split_ratio_note = (
+        f"Stratified 4-way "
+        f"({train_r:.0%}/{val_r:.0%}/{test_r:.0%}/{demo_r:.0%})"
+    )
 
     w("### Pipeline Steps Overview")
     w("")
@@ -296,9 +449,9 @@ def _steps_table(w, ing, hip, mv, red, spl, track_a, out) -> None:
     w("|------|-------------|--------------|-------|")
     w(f"| 1. Ingestion | — | {raw_shape} | Raw WUSTL-EHMS CSV (signed integrity verified) |")
     w(f"| 2. HIPAA | {raw_shape} | {after_hipaa} | {n_hip} identifier cols dropped |")
-    w(f"| 3. Missing | {after_hipaa} | {after_mv} | ffill bio, fill_zero net |")
+    w(f"| 3. Missing | {after_hipaa} | {after_mv} | {bio_strat} bio, {net_strat} net |")
     w(f"| 4. Redundancy | {after_mv} | {after_red} | {n_red} correlated features dropped |")
-    w(f"| 5. Split | {after_red} | train {train_n:,} / test {test_n:,} | Stratified 70/30 |")
+    w(f"| 5. Split | {after_red} | {split_summary} | {split_ratio_note} |")
     w(
         f"| 6. Scale | train {train_n:,} × {n_feat} | train {train_n:,} × {n_feat} | RobustScaler (train fit) |"
     )
@@ -313,6 +466,7 @@ def _feature_reduction_table(w, raw_cols, hip, red) -> None:
     """Render the feature reduction summary table."""
     n_hip = hip.get("n_dropped", len(hip.get("columns_dropped", [])))
     n_red = red.get("n_dropped", 0)
+    threshold = red.get("threshold", 0.95)
     # Also subtract non-numeric columns (Attack Category) and label
     n_nonnumeric = 1  # Attack Category
     remaining = raw_cols - n_hip - n_red - n_nonnumeric - 1  # -1 for label
@@ -322,7 +476,7 @@ def _feature_reduction_table(w, raw_cols, hip, red) -> None:
     w("| Reason | Features Dropped | Remaining |")
     w("|--------|----------------:|----------:|")
     w(f"| HIPAA identifiers | {n_hip} | {raw_cols - n_hip} |")
-    w(f"| Redundancy (|*r*| ≥ 0.95) | {n_red} | {raw_cols - n_hip - n_red} |")
+    w(f"| Redundancy (|*r*| ≥ {threshold}) | {n_red} | {raw_cols - n_hip - n_red} |")
     w(f"| Non-numeric / label | {n_nonnumeric + 1} | {remaining} |")
     w(f"| **Total reduction** | **{n_hip + n_red + n_nonnumeric + 1}** | **{remaining}** |")
     w("")

@@ -411,7 +411,7 @@ class PathValidator:
         self._root = workspace_root.resolve()
 
     def validate_input_path(self, path: Path) -> Path:
-        """Resolve *path* and assert it lives inside the workspace.
+        """Resolve *path*, assert workspace containment AND existence.
 
         Returns:
             Resolved absolute path inside the workspace.
@@ -425,6 +425,22 @@ class PathValidator:
             raise FileNotFoundError(f"Input path does not exist: {resolved}")
         log_phase0_event("INPUT_VALIDATED", {"path": str(resolved)})
         return resolved
+
+    def validate_path_containment(self, path: Path) -> Path:
+        """Resolve *path* and assert workspace containment WITHOUT existence check.
+
+        Use this for config-load-time validation where the target may
+        legitimately not exist yet (e.g., a CI config that lists an
+        input_dir before the dataset is downloaded). Pipelines should
+        still re-validate via ``validate_input_path`` at use time.
+
+        Returns:
+            Resolved absolute path inside the workspace.
+
+        Raises:
+            PermissionError: if the resolved path escapes the workspace.
+        """
+        return self._resolve_inside_workspace(path)
 
     def validate_output_dir(self, path: Path) -> Path:
         """Resolve *path*, assert workspace containment, then mkdir.

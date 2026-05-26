@@ -111,9 +111,11 @@ class Phase1Config(BaseModel):
     # Track B: Novelty detection
     track_b_enabled: bool = True
 
-    # Phase 0 artifacts
+    # Phase 0 artifacts. The signed integrity baseline lives in
+    # module0_analysis/dataset_integrity.json and is consumed directly by
+    # IntegrityVerifier inside the pipeline — Phase 1 does not load it
+    # through this config block.
     phase0_stats_file: Path = Path("results/phase0_analysis/stats_report.json")
-    phase0_integrity_file: Path = Path("results/phase0_analysis/dataset_integrity.json")
 
     # Output filenames
     train_parquet: str = "train_phase1.parquet"
@@ -251,13 +253,13 @@ class Phase1Config(BaseModel):
 
         validator = PathValidator(root)
         # validate_input_path requires existence; data dirs may not
-        # exist in CI runs that only exercise config parsing, so we
-        # only require workspace containment here. The pipeline's
-        # _ingest_with_integrity step re-validates with existence.
-        try:
-            validator._resolve_inside_workspace(Path(data.get("input_dir", "data/raw/WUSTL-EHMS")))
-        except PermissionError:
-            raise
+        # exist in CI runs that only exercise config parsing, so we use
+        # validate_path_containment (existence-optional) here. The
+        # pipeline's _ingest_with_integrity step re-validates with
+        # existence at run time.
+        validator.validate_path_containment(
+            Path(data.get("input_dir", "data/raw/WUSTL-EHMS"))
+        )
         validator.validate_output_dir(Path(data.get("output_dir", "data/processed")))
 
         return cls(

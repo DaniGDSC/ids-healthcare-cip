@@ -146,11 +146,8 @@ class Phase0Config:
         # Note: data_path is validated for *containment* here but not
         # for existence (the dataset may not be present in CI runs that
         # only exercise config parsing). DataLoader.load() re-validates
-        # existence at use time.
-        try:
-            validator._resolve_inside_workspace(Path(dataset["data_path"]))
-        except PermissionError:
-            raise
+        # existence at use time via ``validate_input_path``.
+        validator.validate_path_containment(Path(dataset["data_path"]))
         validator.validate_output_dir(Path(output["output_dir"]))
 
         cfg = cls(

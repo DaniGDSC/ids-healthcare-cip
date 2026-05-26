@@ -30,9 +30,13 @@ from .pipeline import PreprocessingPipeline
 from .redundancy import RedundancyRemover
 from .report import render_preprocessing_report
 from .scaler import RobustScalerTransformer
-from .smote import SMOTEBalancer
 from .splitter import DataSplitter
 from .variance import VarianceFilter
+
+# Note: `SMOTEBalancer` lives in module1_preprocessing.phase1.smote but is
+# NOT exported here. SMOTE is configured by Phase 1 (track_a config block)
+# and EXECUTED by Phase 2 inside the CV pipeline — exposing it from Phase 1
+# would suggest Phase 1 calls it directly, which is misleading.
 
 __all__ = [
     "BaseTransformer",
@@ -44,7 +48,6 @@ __all__ = [
     "VarianceFilter",
     "RedundancyRemover",
     "RobustScalerTransformer",
-    "SMOTEBalancer",
     "DataSplitter",
     "PreprocessingExporter",
     "PreprocessingPipeline",

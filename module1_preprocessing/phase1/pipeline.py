@@ -23,6 +23,7 @@ Pipeline (matches canonical diagram):
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import logging
@@ -106,6 +107,19 @@ class PreprocessingPipeline:
         # reader and re-opened the file for pd.read_csv, leaving a
         # TOCTOU window AND a multi-file bypass — both closed below.
         df = self._ingest_with_integrity(cfg)
+
+        # ── Capture Phase 0 baseline missing-values count ──
+        # Wires the previously-dead Phase0ArtifactReader.read_stats() into
+        # the rendered report so §4.1.2 shows the missing-value baseline
+        # that the cleaning step was designed against.
+        try:
+            phase0_stats = self._reader.read_stats()
+            self._report["phase0_baseline"] = {
+                "missing_values": phase0_stats.get("missing_values", {}),
+                "n_features_with_missing": len(phase0_stats.get("missing_values", {})),
+            }
+        except FileNotFoundError:
+            self._report["phase0_baseline"] = {"available": False}
 
         # ── Pre-split transforms (Steps 1–4) ──
         df, y_binary, y_multi = self._pre_split_transforms(df, cfg)
@@ -224,6 +238,7 @@ class PreprocessingPipeline:
         handler = MissingValueHandler(
             biometric_columns=cfg.biometric_columns,
             label_column=cfg.label_column,
+            multi_label_column=cfg.multi_label_column,
             biometric_strategy=cfg.biometric_strategy,
             network_strategy=cfg.network_strategy,
             session_column=cfg.session_column,
@@ -358,6 +373,23 @@ class PreprocessingPipeline:
             y_demo=y_demo,   y_multi_demo=y_multi_demo,
         )
 
+        # ── split_artifact_manifest.txt: byte-level audit anchor ──
+        # SHA-256 of every parquet that was just written, so downstream
+        # consumers / reviewers can verify they're loading the same bytes
+        # the pipeline produced. Promised by the module docstring.
+        parquet_names = [
+            cfg.train_parquet,
+            cfg.val_parquet,
+            cfg.test_parquet,
+            cfg.demo_parquet,
+        ]
+        if cfg.track_b_enabled:
+            parquet_names.extend([cfg.train_benign_parquet, cfg.val_benign_parquet])
+        self._export_split_manifest(
+            output_dir / "split_artifact_manifest.txt",
+            [output_dir / name for name in parquet_names],
+        )
+
         # Persist the deterministic categorical-encoder mappings as a
         # JSON sidecar so downstream inference can reproduce the same
         # integer codes for unseen samples without re-fitting (which
@@ -432,13 +464,17 @@ class PreprocessingPipeline:
         n_total = int(len(y_train) + len(y_val) + len(y_test) + len(y_demo))
 
         integrity_section = self._report.get("integrity", {})
-        # ``integrity`` is a list of per-file digests when populated by
-        # ``_ingest_with_integrity``; pull the first entry's hash if any.
+        # ``_ingest_with_integrity`` writes a dict with shape
+        # ``{"verified": bool, "n_files_verified": int, "files": [{...}]}``,
+        # so the sha256 is nested in ``files[0]`` — not at the dict's top
+        # level. Previous code looked for a top-level ``"sha256"`` key
+        # AND a list shape; both branches matched zero records produced
+        # by the current pipeline, leaving source_dataset_sha256 empty.
         source_sha256 = ""
-        if isinstance(integrity_section, list) and integrity_section:
-            source_sha256 = integrity_section[0].get("sha256", "") or ""
-        elif isinstance(integrity_section, dict):
-            source_sha256 = integrity_section.get("sha256", "") or ""
+        if isinstance(integrity_section, dict):
+            files = integrity_section.get("files") or []
+            if files and isinstance(files[0], dict):
+                source_sha256 = files[0].get("sha256", "") or ""
 
         payload: Dict[str, Any] = {
             "format": "phase1.split_metadata.v1",
@@ -476,6 +512,34 @@ class PreprocessingPipeline:
             encoding="utf-8",
         )
         logger.info("split_metadata sidecar → %s", path)
+
+    def _export_split_manifest(
+        self,
+        path: Path,
+        parquet_paths: List[Path],
+    ) -> None:
+        """Write SHA-256 manifest of every parquet produced by this run.
+
+        Format: one line per file as ``<filename>  <sha256_hex>``. A
+        downstream reviewer or audit script can re-hash the parquets and
+        cross-check against this manifest — fast tamper-detection without
+        re-running the pipeline.
+
+        Missing files (e.g., Track B disabled) are logged but do not
+        abort the manifest — partial provenance beats no provenance.
+        """
+        lines: List[str] = []
+        for parquet_path in parquet_paths:
+            if not parquet_path.exists():
+                logger.warning(
+                    "split_manifest: %s missing — skipping", parquet_path
+                )
+                continue
+            digest = hashlib.sha256(parquet_path.read_bytes()).hexdigest()
+            lines.append(f"{parquet_path.name}  {digest}")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        logger.info("split_artifact_manifest → %s (%d files)", path, len(lines))
 
     # ------------------------------------------------------------------
     # Ingestion & integrity (single in-memory pass per file)
@@ -616,8 +680,13 @@ class PreprocessingPipeline:
                      var.get("n_dropped", 0))
         logger.info("  Redundancy   : %d features dropped (|r| ≥ %.2f)",
                      red.get("n_dropped", 0), red.get("threshold", 0))
-        logger.info("  Split        : train=%d, test=%d",
-                     spl.get("train_samples", 0), spl.get("test_samples", 0))
+        logger.info(
+            "  Split        : train=%d, val=%d, test=%d, demo=%d",
+            spl.get("train_samples", 0),
+            spl.get("val_samples", 0),
+            spl.get("test_samples", 0),
+            spl.get("demo_samples", 0),
+        )
         logger.info("  Track A      : SMOTE inside CV pipeline")
         logger.info("  Track B      : %d benign-only samples",
                      tb.get("benign_train_samples", 0))

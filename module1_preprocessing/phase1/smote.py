@@ -1,8 +1,18 @@
-"""SMOTE balancer — applies oversampling to training set ONLY.
+"""SMOTE balancer — Phase-2 utility colocated in Phase 1 for historical reasons.
 
-Applied BEFORE scaling so synthetic points are generated in the
-original feature space, not in a normalised space where inter-feature
-distances are distorted.
+This module IS NOT executed during Phase 1. The Phase 1 pipeline only
+serializes the SMOTE configuration into the report's ``track_a`` block;
+Phase 2's cross-validation loop instantiates ``SMOTEBalancer`` (or an
+equivalent) and runs resampling per CV fold so synthetic samples never
+leak across folds.
+
+Applied BEFORE scaling so synthetic points are generated in the original
+feature space, not in a normalised space where inter-feature distances
+are distorted.
+
+This class is intentionally NOT exported from ``module1_preprocessing.phase1``
+to avoid the misleading API surface "Phase 1 also runs SMOTE". Import it
+directly from ``module1_preprocessing.phase1.smote`` if you need to.
 """
 
 from __future__ import annotations

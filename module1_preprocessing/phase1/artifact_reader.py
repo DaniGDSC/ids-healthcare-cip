@@ -30,10 +30,6 @@ class Phase0ArtifactReader:
         project_root: Absolute path to the project root directory.
         stats_file: Relative path to ``stats_report.json``.
         corr_file: Relative path to ``high_correlations.csv``.
-        integrity_file: Relative path to the signed baseline; kept on
-            the constructor only so callers don't have to update yet,
-            but the reader no longer touches the file. The pipeline
-            consumes the baseline directly via ``IntegrityVerifier``.
     """
 
     def __init__(
@@ -41,13 +37,10 @@ class Phase0ArtifactReader:
         project_root: Path,
         stats_file: Path,
         corr_file: Path,
-        integrity_file: Path | None = None,
     ) -> None:
         self._root = project_root
         self._stats_path = project_root / stats_file
         self._corr_path = project_root / corr_file
-        # Retained for backwards-compatible constructor signatures only.
-        self._integrity_path = project_root / integrity_file if integrity_file is not None else None
 
     def read_stats(self) -> Dict[str, Any]:
         """Read descriptive statistics and class distribution from Phase 0.

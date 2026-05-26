@@ -115,3 +115,28 @@ def test_read_only_passes_when_file_is_chmod_444(workspace):
     assert validator.check_read_only(f) is True
     # Restore for cleanup
     os.chmod(f, 0o644)
+
+
+# ── validate_path_containment: existence-optional sibling of validate_input_path ──
+
+
+def test_path_containment_passes_for_nonexistent_inside_workspace(workspace):
+    """Config-load-time validation must accept paths that don't exist yet."""
+    validator = PathValidator(workspace)
+    result = validator.validate_path_containment(Path("data/raw/missing.csv"))
+    assert result == (workspace / "data/raw/missing.csv").resolve()
+
+
+def test_path_containment_rejects_escape_even_when_nonexistent(workspace):
+    """Containment must still fire even if the path doesn't exist."""
+    validator = PathValidator(workspace)
+    with pytest.raises(PermissionError, match="Path escapes workspace"):
+        validator.validate_path_containment(Path("../../etc/passwd"))
+
+
+def test_path_containment_accepts_existing_file(workspace):
+    """A real file inside the workspace must also pass."""
+    f = workspace / "real.csv"
+    f.touch()
+    validator = PathValidator(workspace)
+    assert validator.validate_path_containment(f) == f.resolve()

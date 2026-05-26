@@ -8,9 +8,9 @@ This section documents the seven-step preprocessing pipeline applied to the WUST
 |------|-------------|--------------|-------|
 | 1. Ingestion | — | 16,318 × 45 | Raw WUSTL-EHMS CSV (signed integrity verified) |
 | 2. HIPAA | 16,318 × 45 | 16,318 × 40 | 5 identifier cols dropped |
-| 3. Missing | 16,318 × 40 | 16,318 × 40 | ffill bio, fill_zero net |
+| 3. Missing | 16,318 × 40 | 16,318 × 40 | median bio, dropna net |
 | 4. Redundancy | 16,318 × 40 | 16,318 × 34 | 6 correlated features dropped |
-| 5. Split | 16,318 × 34 | train 9,790 / test 2,448 | Stratified 70/30 |
+| 5. Split | 16,318 × 34 | train 9,790 / val 2,448 / test 2,448 / demo 1,632 | Stratified 4-way (60%/15%/15%/10%) |
 | 6. Scale | train 9,790 × 25 | train 9,790 × 25 | RobustScaler (train fit) |
 | 7. SMOTE | (deferred) | (deferred) | enabled, applied inside Phase 2 CV |
 
@@ -23,6 +23,14 @@ This section documents the seven-step preprocessing pipeline applied to the WUST
 | Non-numeric / label | 2 | 32 |
 | **Total reduction** | **13** | **32** |
 
+### 4.1.0 Source Dataset Provenance
+
+All **1** input CSV(s) were verified against the Module 0 signed integrity baseline (ECDSA P-256) before any preprocessing step touched the bytes:
+
+| File | SHA-256 (prefix) | Rows |
+|------|------------------|-----:|
+| `wustl-ehms-2020_with_attacks_categories.csv` | `8359da96154fa602…` | 16,318 |
+
 ### 4.1.1 HIPAA Safe Harbor De-identification
 
 **5 columns dropped:** [`SrcAddr`, `DstAddr`, `SrcMac`, `DstMac`, `Packet_num`]
@@ -33,8 +41,8 @@ These columns encode network identifiers (IP addresses, MAC addresses, port numb
 
 | Stream | Strategy | Justification |
 |--------|----------|---------------|
-| Biometric (8 features) | Forward-fill (ffill) | Sensor dropout produces temporal gaps; the most recent valid reading is the best available estimate |
-| Network (remaining features) | Row-wise dropna | Corrupted packets produce incomplete flow records that cannot be reliably imputed |
+| Biometric (8 features) | `median` | Per-column median imputation is patient-safe: the imputed value is a population-level statistic that never depends on a different patient's reading at a session boundary |
+| Network (remaining features) | `dropna` | Row-wise dropna preserves the missing/zero distinction so an attacker cannot mask attack flows as zero-traffic via induced capture loss |
 
 - Biometric cells filled: **0**
 - Rows dropped (network NaN): **0**
@@ -63,14 +71,16 @@ High-correlation pairs (|*r*| ≥ 0.95) were identified in Phase 0 (§3.2.3) and
 | `Loss` | |*r*| ≥ 0.95 with a retained feature |
 | `TotPkts` | |*r*| ≥ 0.95 with a retained feature |
 
-### 4.1.4 Stratified Train/Test Split
+### 4.1.4 Stratified 4-way Split (Strategy 1)
 
-| Partition | Samples | Ratio |
-|-----------|--------:|------:|
-| Train | 9,790 | 70% |
-| Test | 2,448 | 30% |
+| Partition | Samples | Ratio | Attack rate | Purpose |
+|-----------|--------:|------:|------------:|---------|
+| Train | 9,790 | 60.0% | 12.5% | Track A + Track B model fitting |
+| Val | 2,448 | 15.0% | 12.5% | Threshold calibration / DAE cascade input |
+| Test | 2,448 | 15.0% | 12.5% | FROZEN — paper metrics only |
+| Demo | 1,632 | 10.0% | 12.6% | FROZEN — dashboard + user study |
 
-Stratification via `StratifiedShuffleSplit` with `random_state=42` preserves the original class prior in both partitions, preventing evaluation bias from sampling variance.
+Stratification via three sequential `StratifiedShuffleSplit` calls on `Attack Category` with `random_state=42` preserves the original class prior in all 4 partitions (±2pp). The test and demo partitions are frozen — never seen by any model during training.
 
 ### 4.1.5 SMOTE Configuration (applied in Phase 2 CV)
 
@@ -83,11 +93,15 @@ Stratification via `StratifiedShuffleSplit` with `random_state=42` preserves the
 
 SMOTE is configured here but executed inside the Phase 2 stratified cross-validation loop, where each training fold is resampled independently before the model is fit. Performing the resampling inside CV (rather than as a standalone Phase 1 step) prevents synthetic samples from any single fold from leaking into the validation fold, which would inflate every reported metric. The resampling is also performed in the **unscaled** feature space so synthetic interpolations are generated in the same geometry as the real data.
 
-### 4.1.6 Robust Scaling
+### 4.1.6 Scaling (RobustScaler)
 
 RobustScaler (median / IQR normalisation) is chosen over StandardScaler (mean / std) or MinMaxScaler because the outlier analysis in §3.2.1 identified heavy-tailed distributions in network-traffic features. RobustScaler is insensitive to extreme values, preserving the morphology of attack signatures for downstream explainability analysis.
 
-Scaler fitted exclusively on training set (n=9,790). Test set transformed without refitting — preventing information leakage from test distribution. The fitted parameters are persisted as a JSON sidecar (`robust_scaler.json`), not a pickle, so loading the artefact never executes Python.
+Scaler fitted exclusively on training set (n=9,790). Validation, test, and demo sets transformed without refitting — preventing information leakage from the held-out distributions. The fitted parameters are persisted as a JSON sidecar (`robust_scaler.json`), not a pickle, so loading the artefact never executes Python.
+
+### 4.1.6b Track B — Benign-only Training Subset
+
+Track B (autoencoder-based novelty detection) consumes a benign-only subset of the training partition. Phase 1 exports this subset as `benign_only_train.parquet` (**8,563** samples, 87.5% of train) and the matching benign-only validation set as `benign_only_val.parquet`. Phase 2's denoising autoencoder fits exclusively on the benign train subset; reconstruction error on a held-out attack sample is the novelty signal.
 
 ### 4.1.7 Pipeline Output Summary
 

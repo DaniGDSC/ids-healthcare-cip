@@ -34,6 +34,11 @@ def migrate_legacy_pkl(path: Path, artefact_label: str) -> Path:
 
     No-op if *path* does not have a ``.pkl`` suffix.
 
+    Pickle removal is security-relevant (a leftover ``.pkl`` is an RCE
+    sink at every load site), so we route the event through Module 5's
+    hash-chained audit log via ``log_phase0_event`` — same discipline
+    Module 0 uses for integrity events.
+
     Args:
         path: Destination path requested by the caller.  May still
             carry the historical ``.pkl`` extension.
@@ -45,6 +50,13 @@ def migrate_legacy_pkl(path: Path, artefact_label: str) -> Path:
     """
     if path.suffix != ".pkl":
         return path
+
+    # Lazy import — `_sidecar_io` is allowed to be loaded in test contexts
+    # where the Module 0 + Module 5 chain may not be wired up yet.
+    try:
+        from module0_analysis.security import log_phase0_event as _audit
+    except (ImportError, ModuleNotFoundError):
+        _audit = None  # type: ignore[assignment]
 
     legacy = path
     json_path = path.with_suffix(".json")
@@ -58,6 +70,12 @@ def migrate_legacy_pkl(path: Path, artefact_label: str) -> Path:
                 legacy,
                 json_path,
             )
+            if _audit is not None:
+                _audit(
+                    "PICKLE_ARTEFACT_REMOVED",
+                    {"artefact": artefact_label, "path": str(legacy)},
+                    level=logging.WARNING,
+                )
         except OSError as exc:
             logger.warning(
                 "Could not remove legacy pickle %s at %s: %s "
@@ -67,6 +85,12 @@ def migrate_legacy_pkl(path: Path, artefact_label: str) -> Path:
                 legacy,
                 exc,
             )
+            if _audit is not None:
+                _audit(
+                    "PICKLE_ARTEFACT_REMOVAL_FAILED",
+                    {"artefact": artefact_label, "path": str(legacy), "error": str(exc)},
+                    level=logging.ERROR,
+                )
     return json_path
 
 

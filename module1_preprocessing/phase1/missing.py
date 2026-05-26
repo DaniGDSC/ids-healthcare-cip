@@ -61,6 +61,7 @@ class MissingValueHandler(BaseTransformer):
         self,
         biometric_columns: List[str],
         label_column: str = "Label",
+        multi_label_column: str = "Attack Category",
         biometric_strategy: str = "median",
         network_strategy: str = "dropna",
         session_column: str | None = None,
@@ -93,6 +94,7 @@ class MissingValueHandler(BaseTransformer):
 
         self._bio_cols = biometric_columns
         self._label_col = label_column
+        self._multi_label_col = multi_label_column
         self._bio_strategy = biometric_strategy
         self._net_strategy = network_strategy
         self._session_col = session_column
@@ -108,7 +110,7 @@ class MissingValueHandler(BaseTransformer):
             DataFrame with missing values handled.
         """
         bio_cols = [c for c in self._bio_cols if c in df.columns]
-        exclude = set(bio_cols) | {self._label_col, "Attack Category"}
+        exclude = set(bio_cols) | {self._label_col, self._multi_label_col}
         if self._session_col:
             exclude.add(self._session_col)
         net_cols = [c for c in df.select_dtypes(include=[np.number]).columns if c not in exclude]
