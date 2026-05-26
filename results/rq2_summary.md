@@ -101,18 +101,20 @@ simplifies for clinician readability. It satisfies user-study comprehension
 
 ## 3. RQ2.c — User Study Per-Role (`analysis/outputs/rq2c_per_role.json`)
 
-Role labels are analyst / clinician / administrator (M6 study; M5 study
+Role labels: IT Generalist (`analyst`) / Nurse Manager (`clinician`) /
+Biomed Engineer (`administrator`) — spec triad, with internal data
+keys in parentheses (M6 study; M5 study
 in `survey/` has no role metadata).
 
 | Role | n records | Acc without XAI | Acc with XAI | MWU p | Decision time (s) Δ |
 |------|----------:|----------------:|-------------:|-------:|---------------------:|
-| **administrator** | 50 | 0.700 | 0.920 | **0.007** ✓ | 44.4 → 29.1 |
-| **clinician** | 50 | 0.700 | 0.900 | **0.032** ✓ | 43.1 → 27.0 |
-| **analyst** | 50 | 0.860 | 0.940 | 0.109 | 40.2 → 20.7 |
+| **Biomed Engineer** (`administrator`) | 50 | 0.700 | 0.920 | **0.007** ✓ | 44.4 → 29.1 |
+| **Nurse Manager** (`clinician`) | 50 | 0.700 | 0.900 | **0.032** ✓ | 43.1 → 27.0 |
+| **IT Generalist** (`analyst`) | 50 | 0.860 | 0.940 | 0.109 | 40.2 → 20.7 |
 
-All three roles improve under XAI; administrator + clinician reach
-significance at α=0.05. Analyst's high baseline reduces effect size —
-expected (this is the role most familiar with SHAP).
+All three roles improve under XAI; Biomed Engineer + Nurse Manager
+reach significance at α=0.05. IT Generalist's high baseline reduces
+effect size — expected (this is the role most familiar with SHAP).
 
 **Cross-check with RQ3 per-role analysis:** identical numbers
 (✓ on all three roles in this session's cross-check).
@@ -245,7 +247,7 @@ trip them. New assertions added after P0:
 | **G6** | Alignment sample n=20 (cached) | ✅ **CLOSED** — Mode B large-N audit at n=200, all-3 targets met, 95% CI ≥2 = [98.12%, 100.00%] |
 | **G7** | NOVEL_ANOMALY per-feature attribution | ⚠ Out of scope — future work (XGBoost SHAP only currently) |
 | **G8** | RQ2.d improvement claim | ⚠ Rescoped to observation-only per spec |
-| **G9** | Bedside nurse role missing | ⚠ Proxied via `clinician`; future recruitment |
+| **G9** | Bedside nurse role missing (direct recruit) | ⚠ Proxied via `clinician` (Nurse Manager); future recruitment |
 
 ## 10. Defendability Statement — POST P0 FIX
 
@@ -266,8 +268,9 @@ trip them. New assertions added after P0:
 
 **User study (RQ2.c):** ✅ Defensible.
 
-- 2 of 3 roles improve significantly (admin p=0.007, clinician p=0.032);
-  analyst trends positive without significance (high baseline).
+- 2 of 3 roles improve significantly (Biomed Engineer p=0.007, Nurse
+  Manager p=0.032); IT Generalist trends positive without significance
+  (high baseline).
 - Cross-validates with RQ3 results.
 
 **Iteration (RQ2.d):** Observation-level claim only — explicitly

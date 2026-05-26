@@ -51,7 +51,12 @@ logger = logging.getLogger(__name__)
 
 _HASH_ALGORITHM: str = "sha256"
 _METADATA_FILE: str = "dataset_integrity.json"
-_METADATA_VERSION: int = 2  # bumped from the unsigned/auto-baseline format
+# v2: entries keyed by absolute path (leaked dev hostnames into the
+#     committed baseline; one fresh-bootstrap per host produced drift).
+# v3: entries keyed by SHA-256 digest. Filename + size are payload fields.
+#     One physical file → one entry, regardless of host/path.
+_METADATA_VERSION: int = 3
+_SUPPORTED_VERSIONS: frozenset[int] = frozenset({3})
 
 
 # ===================================================================
@@ -95,37 +100,57 @@ class IntegrityVerifier:
     def bootstrap(self, file_path: Path) -> str:
         """Establish (or refresh) the signed baseline for *file_path*.
 
-        Refuses to overwrite an existing baseline for the same path —
-        operators must explicitly delete the entry first if they want
-        to re-baseline a known-good file.
+        Entries are keyed by the file's SHA-256 digest (v3 schema), so
+        two hosts bootstrapping the same physical file produce one
+        entry — not one-per-path. Filename + size are payload fields
+        and are checked at verify time.
+
+        Idempotent on identical content: if the same hash is already
+        baselined, returns the existing digest (no-op) instead of
+        refusing or duplicating.
 
         Returns the SHA-256 hex digest written to the baseline.
 
         Raises:
             FileNotFoundError: if *file_path* does not exist.
-            IntegrityError: if a baseline already exists for *file_path*.
+            IntegrityError: if a different file is already baselined
+                under the same hash (impossible without collision, so
+                this is a sanity assert).
         """
         data = self._read_bytes(file_path)
         digest = hashlib.new(_HASH_ALGORITHM, data).hexdigest()
+        size = len(data)
+        filename = file_path.name
 
         existing = self._read_metadata()
-        key = str(file_path)
-        if key in existing.get("entries", {}):
-            raise IntegrityError(
-                f"Baseline already exists for {file_path}. "
-                f"Delete the entry from {self._metadata_path} first if "
-                f"you intentionally want to re-baseline a tampered file."
+        self._assert_supported_version(existing)
+        entries = existing.get("entries", {})
+        prior = entries.get(digest)
+        if prior is not None:
+            # Same content already baselined. Sanity-check that the
+            # filename/size payload matches; if not, the operator pointed
+            # at a renamed-but-identical file — log it but allow.
+            if prior.get("size_bytes") != size:
+                raise IntegrityError(
+                    f"Hash collision sanity-check failed: existing entry for "
+                    f"sha256={digest[:16]}… has size {prior.get('size_bytes')} "
+                    f"but new file is {size} bytes. Refusing to overwrite."
+                )
+            log_phase0_event(
+                "INTEGRITY_BOOTSTRAP_NOOP",
+                {"file": filename, "sha256_prefix": digest[:16]},
             )
+            return digest
 
         record = {
-            "sha256": digest,
-            "size_bytes": len(data),
+            "filename": filename,
+            "size_bytes": size,
             "bootstrapped_at": datetime.now(timezone.utc).isoformat(),
         }
-        self._write_signed_metadata(file_path=file_path, record=record)
+        self._write_signed_metadata(digest=digest, record=record)
         log_phase0_event(
             "INTEGRITY_BOOTSTRAPPED",
-            {"file": file_path.name, "sha256_prefix": digest[:16]},
+            {"file": filename, "sha256_prefix": digest[:16]},
         )
         return digest
 
@@ -135,6 +160,12 @@ class IntegrityVerifier:
         The returned bytes are the exact same buffer that was hashed,
         so the caller must parse them via ``io.BytesIO`` rather than
         re-opening the file.
+
+        Order matters: metadata signature is verified and the baseline
+        entry is looked up BEFORE the file is read into memory. This
+        prevents a DoS via "point at a 100GB attacker-controlled file"
+        — we exit early if there's no baseline entry, without paying for
+        the read or the hash.
 
         Returns:
             (file_bytes, sha256_hex_digest)
@@ -147,35 +178,58 @@ class IntegrityVerifier:
         if not self._metadata_path.exists():
             raise IntegrityError(
                 f"No integrity baseline at {self._metadata_path}. "
-                f"Run `python -m module0_analysis.phase0."
-                f"bootstrap_integrity` once to establish the baseline."
+                f"Run `python -m module0_analysis.bootstrap_integrity` "
+                f"once to establish the baseline."
             )
 
+        # 1. Verify metadata signature (cheap, bounded by entries size).
+        metadata = self._read_metadata_verified()
+        self._assert_supported_version(metadata)
+        entries = metadata.get("entries", {})
+
+        # 2. DoS guard: file size must equal a known-baseline size.
+        # Since entries are keyed by hash, we don't know which entry to
+        # match against without hashing — but we DO know the size of
+        # every legitimate baseline, so a file whose size matches none
+        # of them cannot possibly verify. Reject without reading.
+        if not file_path.exists():
+            raise FileNotFoundError(f"Cannot verify: file not found: {file_path}")
+        actual_size = file_path.stat().st_size
+        allowed_sizes = {e.get("size_bytes") for e in entries.values()}
+        if actual_size not in allowed_sizes:
+            log_phase0_event(
+                "INTEGRITY_SIZE_MISMATCH",
+                {
+                    "file": file_path.name,
+                    "actual_size": actual_size,
+                    "allowed_sizes_count": len(allowed_sizes),
+                },
+                level=logging.ERROR,
+            )
+            raise IntegrityError(
+                f"File size {actual_size} does not match any baseline "
+                f"(known sizes: {sorted(s for s in allowed_sizes if s is not None)}). "
+                f"Refusing to hash an attacker-controlled-size file."
+            )
+
+        # 3. NOW read the file + hash (expensive, but size-bounded).
         data = self._read_bytes(file_path)
         digest = hashlib.new(_HASH_ALGORITHM, data).hexdigest()
 
-        metadata = self._read_metadata_verified()
-        entries = metadata.get("entries", {})
-        stored = entries.get(str(file_path))
+        # 4. Lookup by hash. Mismatch = tamper.
+        stored = entries.get(digest)
         if stored is None:
-            raise IntegrityError(
-                f"No integrity baseline for {file_path}. "
-                f"Run bootstrap_integrity to establish one."
-            )
-
-        if digest != stored["sha256"]:
             log_phase0_event(
                 "INTEGRITY_VIOLATION",
                 {
                     "file": file_path.name,
-                    "expected": stored["sha256"][:16],
-                    "actual": digest[:16],
+                    "actual_sha256_prefix": digest[:16],
                 },
                 level=logging.CRITICAL,
             )
             raise IntegrityError(
                 f"INTEGRITY VIOLATION: {file_path.name} — "
-                f"expected {stored['sha256'][:16]}…, got {digest[:16]}…"
+                f"sha256={digest[:16]}… is not in the baseline."
             )
 
         log_phase0_event(
@@ -191,6 +245,31 @@ class IntegrityVerifier:
         if not file_path.exists():
             raise FileNotFoundError(f"Cannot hash: file not found: {file_path}")
         return file_path.read_bytes()
+
+    @staticmethod
+    def _assert_supported_version(metadata: Dict[str, Any]) -> None:
+        """Refuse to operate on metadata whose schema version is unknown.
+
+        v2 (path-keyed) baselines must be migrated via
+        `module0_analysis.migrate_v2_to_v3` before they can be used.
+        """
+        version = metadata.get("version")
+        if version is None:
+            # Empty metadata (no entries yet) — bootstrap path is allowed.
+            if not metadata.get("entries"):
+                return
+            raise IntegrityError(
+                "Integrity metadata is missing the 'version' field — "
+                "refusing to proceed."
+            )
+        if version not in _SUPPORTED_VERSIONS:
+            raise IntegrityError(
+                f"Integrity metadata uses unsupported schema version {version}. "
+                f"This security.py supports v{sorted(_SUPPORTED_VERSIONS)}. "
+                f"v2 baselines (path-keyed) must be migrated: run "
+                f"`python -m module0_analysis.migrate_v2_to_v3` once. "
+                f"After migration, re-bootstrap or re-verify."
+            )
 
     def _read_metadata(self) -> Dict[str, Any]:
         """Read raw metadata without signature checking (bootstrap path)."""
@@ -222,15 +301,12 @@ class IntegrityVerifier:
 
         # Lazy import: keep cryptography optional for environments that
         # only run unit tests against the analyzers.
-        from module5_responses.module5_pipeline import (
-            _canonical_json,
-            _load_signing_key,
-            _HAVE_CRYPTOGRAPHY,
-        )
+        from module5_responses.signing import HAVE_CRYPTOGRAPHY, canonical_json
 
-        if not _HAVE_CRYPTOGRAPHY:
+        if not HAVE_CRYPTOGRAPHY:
             raise IntegrityError(
-                "cryptography package is not installed; cannot verify " "signed integrity baseline."
+                "cryptography package is not installed; cannot verify "
+                "signed integrity baseline."
             )
 
         import base64
@@ -238,11 +314,9 @@ class IntegrityVerifier:
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import ec
 
-        # Opt-9: load the public key once per process via lru_cache instead
-        # of re-reading the PEM file on every verify_and_read() call.
         public_key = _load_phase0_public_key()
 
-        signed_payload = _canonical_json({"version": meta.get("version"), "entries": entries})
+        signed_payload = canonical_json({"version": meta.get("version"), "entries": entries})
         try:
             public_key.verify(
                 base64.b64decode(signature_b64),
@@ -262,15 +336,15 @@ class IntegrityVerifier:
 
         return meta
 
-    def _write_signed_metadata(self, file_path: Path, record: Dict[str, Any]) -> None:
-        """Add *record* under *file_path* and re-sign the entries block."""
-        from module5_responses.module5_pipeline import (
-            _canonical_json,
-            _load_signing_key,
-            _HAVE_CRYPTOGRAPHY,
+    def _write_signed_metadata(self, digest: str, record: Dict[str, Any]) -> None:
+        """Add *record* under *digest* (v3 hash key) and re-sign the entries block."""
+        from module5_responses.signing import (
+            HAVE_CRYPTOGRAPHY,
+            canonical_json,
+            load_signing_key,
         )
 
-        if not _HAVE_CRYPTOGRAPHY:
+        if not HAVE_CRYPTOGRAPHY:
             raise IntegrityError(
                 "cryptography package is not installed; cannot sign the "
                 "integrity baseline. Install with `pip install cryptography>=42`."
@@ -280,12 +354,15 @@ class IntegrityVerifier:
         from cryptography.hazmat.primitives.asymmetric import ec
 
         meta = self._read_metadata()
+        # Empty/new metadata is fine; non-empty must be supported version.
+        if meta.get("entries"):
+            self._assert_supported_version(meta)
         entries = meta.get("entries", {})
-        entries[str(file_path)] = record
+        entries[digest] = record
         body = {"version": _METADATA_VERSION, "entries": entries}
 
-        private_key, _, signing_key_id = _load_signing_key()
-        signature = private_key.sign(_canonical_json(body), ec.ECDSA(hashes.SHA256()))
+        private_key, _, signing_key_id = load_signing_key()
+        signature = private_key.sign(canonical_json(body), ec.ECDSA(hashes.SHA256()))
         body["signature"] = base64.b64encode(signature).decode("ascii")
         body["signing_key_id"] = signing_key_id
         body["signature_alg"] = "ECDSA_P256_SHA256"
@@ -304,17 +381,11 @@ class IntegrityVerifier:
 
 @lru_cache(maxsize=1)
 def _load_phase0_public_key():
-    """Load the Module 5 public key once and cache for the process lifetime.
-
-    Opt-9: ``_read_metadata_verified()`` previously called
-    ``serialization.load_pem_public_key(public_path.read_bytes())`` on every
-    invocation — one PEM disk read per dataset load. This function is called
-    instead; the result is cached so the PEM is read at most once per process.
-    """
-    from module5_responses.module5_pipeline import _load_signing_key
+    """Load the Module 5 public key once and cache for the process lifetime."""
+    from module5_responses.signing import load_signing_key
     from cryptography.hazmat.primitives import serialization
 
-    _, public_path, _ = _load_signing_key()
+    _, public_path, _ = load_signing_key()
     return serialization.load_pem_public_key(public_path.read_bytes())
 
 
@@ -482,7 +553,7 @@ def _get_hardened_audit():
             AuditLogger as HardenedAuditLogger,
             OUTPUT_DIR,
         )
-    except Exception as exc:  # noqa: BLE001
+    except (ImportError, ModuleNotFoundError) as exc:
         logger.warning(
             "phase0.security: cannot reach Module 5 hardened audit log "
             "(%s); falling back to local logger only.",
@@ -492,7 +563,7 @@ def _get_hardened_audit():
         return None
     try:
         _hardened_audit = HardenedAuditLogger(OUTPUT_DIR / "audit_log.jsonl")
-    except Exception as exc:  # noqa: BLE001
+    except (OSError, RuntimeError) as exc:
         logger.warning(
             "phase0.security: failed to construct hardened audit logger "
             "(%s); falling back to local logger only.",
@@ -522,9 +593,6 @@ def log_phase0_event(
     applied to redact any keys whose names match a biometric column.
     """
     payload = dict(payload or {})
-    # Opt-8: set intersection finds only the keys that need redacting in
-    # O(min(|payload|, |BIOMETRIC_COLUMNS|)) instead of iterating all keys.
-    # list(payload.keys()) allocation is also eliminated.
     for k in BIOMETRIC_COLUMNS & payload.keys():
         payload[k] = "[REDACTED-PHI]"
 
@@ -543,7 +611,7 @@ def log_phase0_event(
                     "logged_at": ts,
                 }
             )
-        except Exception as exc:  # noqa: BLE001
+        except (OSError, RuntimeError) as exc:
             # Never let an audit-sink failure block Phase 0 execution,
             # but DO surface it loudly so an operator notices.
             logger.error(

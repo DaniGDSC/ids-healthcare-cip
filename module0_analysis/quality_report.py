@@ -23,16 +23,27 @@ logger = logging.getLogger(__name__)
 
 _DP: int = 4  # decimal places for all formatted numbers
 
-# Opt-6: built once at import time — not rebuilt on every _correlation_interpretation() call.
-# Previously a local dict with 7 frozenset constructions per invocation.
 _CORRELATION_INTERPRETATIONS: Dict[frozenset, str] = {
+    # Timing/jitter family
     frozenset({"SIntPktAct", "SrcJitter"}): "Timing jitter derives from inter-packet intervals",
-    frozenset({"Loss", "pLoss"}):           "Absolute and proportional loss are co-determined",
-    frozenset({"DstLoad", "Rate"}):         "Destination load is a rate-normalised throughput",
     frozenset({"DIntPkt", "DstJitter"}):    "Destination jitter derives from inter-packet intervals",
+    frozenset({"SIntPkt", "SrcJitter"}):    "Source jitter is a function of inter-arrival times",
+    # Loss family
+    frozenset({"Loss", "pLoss"}):           "Absolute and proportional loss are co-determined",
     frozenset({"SIntPktAct", "Loss"}):      "Packet timing correlates with loss under congestion",
     frozenset({"SrcJitter", "Loss"}):       "Jitter and loss co-occur during network degradation",
+    frozenset({"DstJitter", "Loss"}):       "Destination jitter and loss co-occur under congestion",
+    # Volume/rate family
+    frozenset({"DstLoad", "Rate"}):         "Destination load is a rate-normalised throughput",
+    frozenset({"SrcLoad", "Rate"}):         "Source load is the source-side throughput rate",
     frozenset({"DstBytes", "TotPkts"}):     "Byte volume scales linearly with packet count",
+    frozenset({"SrcBytes", "TotBytes"}):    "Source bytes dominate total bytes for IoMT uplinks",
+    frozenset({"DstBytes", "TotBytes"}):    "Destination bytes dominate total bytes for IoMT downlinks",
+    frozenset({"SrcPkts", "TotPkts"}):      "Source packet count dominates total packet count",
+    frozenset({"DstPkts", "TotPkts"}):      "Destination packet count dominates total packet count",
+    # Packet-size family
+    frozenset({"sMeanPktSz", "sMaxPktSz"}): "Mean and max packet size move together at the source",
+    frozenset({"dMeanPktSz", "dMaxPktSz"}): "Mean and max packet size move together at the destination",
 }
 
 
@@ -117,8 +128,6 @@ def _section_outliers(
     w("| Feature | Outlier Count | Outlier (%) | Lower Bound | Upper Bound |")
     w("|---------|-------------:|------------:|------------:|------------:|")
 
-    # Opt-7: iterate once with inline counter — no throwaway filtered list.
-    # Previously built features_with_outliers list then len()'d it separately.
     n_with = 0
     n_total = len(outlier_report)
     for r in outlier_report:
@@ -199,15 +208,22 @@ def _section_correlation_heatmap(
         interp = _correlation_interpretation(fa, fb)
         w(f"| {idx} | {fa:<15} | {fb:<15} | {r:>+9.{_DP + 2}f} | {interp} |")
 
+    # Build connected components: each high-correlation pair is an edge,
+    # and Phase 1 retains exactly one representative per component. Number
+    # of columns dropped = (features touched by any pair) − (components).
+    n_components, n_features_in_pairs = _count_correlation_components(high_pairs)
+    n_dropped = max(0, n_features_in_pairs - n_components)
+
     w("")
     w(
         "The correlation heatmap reveals two dominant clusters of collinearity: "
         "(1) inter-arrival timing features (SIntPktAct ↔ SrcJitter ↔ Loss), "
         "and (2) volume-rate features (DstLoad ↔ Rate, DstBytes ↔ TotPkts). "
-        "Phase 1 redundancy elimination retains one member of each pair "
-        f"(threshold |*r*| > {config.correlation_threshold}), reducing the "
-        f"feature space by {len(high_pairs) - 1} columns while preserving "
-        f"the full information content."
+        "Phase 1 redundancy elimination retains one member of each connected "
+        f"cluster (threshold |*r*| > {config.correlation_threshold}). With "
+        f"**{n_components}** connected cluster(s) spanning {n_features_in_pairs} "
+        f"features, the feature space contracts by **{n_dropped}** columns "
+        f"while preserving the full linear-information content."
     )
     w("")
 
@@ -297,6 +313,38 @@ def _section_reproducibility(
 # ---------------------------------------------------------------------------
 
 
+def _count_correlation_components(
+    high_pairs: List[Tuple[str, str, float]],
+) -> Tuple[int, int]:
+    """Union-find over correlated feature pairs.
+
+    Returns (n_connected_components, n_distinct_features). The Phase 1
+    redundancy-elimination step retains exactly one feature per
+    connected component, so the columns dropped is
+    ``n_distinct_features - n_connected_components``.
+    """
+    parent: Dict[str, str] = {}
+
+    def find(x: str) -> str:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a: str, b: str) -> None:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[ra] = rb
+
+    for fa, fb, _r in high_pairs:
+        parent.setdefault(fa, fa)
+        parent.setdefault(fb, fb)
+        union(fa, fb)
+
+    roots = {find(node) for node in parent}
+    return len(roots), len(parent)
+
+
 def _correlation_interpretation(feature_a: str, feature_b: str) -> str:
     """Return a short domain interpretation for a correlated feature pair.
 
@@ -306,9 +354,6 @@ def _correlation_interpretation(feature_a: str, feature_b: str) -> str:
 
     Returns:
         One-line interpretation string for the Markdown table.
-
-    Opt-6: looks up the module-level ``_CORRELATION_INTERPRETATIONS`` constant
-    instead of rebuilding a 7-entry dict with 7 frozenset allocations on every call.
     """
     return _CORRELATION_INTERPRETATIONS.get(
         frozenset({feature_a, feature_b}), "Linear dependency detected"

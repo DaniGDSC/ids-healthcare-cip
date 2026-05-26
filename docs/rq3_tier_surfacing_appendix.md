@@ -33,9 +33,9 @@ underlying tier but a different action set (per
 
 | Role | CRITICAL | HIGH | MEDIUM | LOW |
 |------|----------|------|--------|-----|
-| analyst (IT Generalist proxy) | ack / esc / dismiss + isolate (with admin approval) / investigate / block_destination | same minus mandatory escalate | ack / monitor / investigate / dismiss | (no surface) |
-| clinician (Bedside Clinician proxy) | ack / esc / dismiss + verify_clinical / request_biomed | same | ack / dismiss + verify_clinical | (no surface) |
-| administrator (Biomed / Service Line proxy) | ack / esc / dismiss + approval queue + verify_clinical / request_biomed | same | same | (no surface) |
+| **IT Generalist** (key `analyst`; proxies: SOC analyst, IT support) | ack / esc / dismiss + isolate (with Biomed Engineer approval) / investigate / block_destination | same minus mandatory escalate | ack / monitor / investigate / dismiss | (no surface) |
+| **Nurse Manager** (key `clinician`; proxies: Bedside Clinician, Nurse practitioner) | ack / esc / dismiss + verify_clinical / request_biomed | same | ack / dismiss + verify_clinical | (no surface) |
+| **Biomed Engineer** (key `administrator`; proxies: Biomed engineering, Service Line Owner, Charge Nurse) | ack / esc / dismiss + approval queue + verify_clinical / request_biomed | same | same | (no surface) |
 
 **Invariant 6 (severity invariance):** The `risk_level` field is set by
 Module 5 BEFORE the role renderer dispatches; switching roles changes

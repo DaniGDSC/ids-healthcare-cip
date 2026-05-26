@@ -24,7 +24,6 @@ from .config import Phase0Config
 
 logger = logging.getLogger(__name__)
 
-# Opt-10: module-level constant — not a local literal rebuilt on every call.
 _KEY_PACKAGES: List[str] = [
     "tensorflow",
     "keras",
@@ -109,9 +108,7 @@ def _section_environment(
     w(f"- **Architecture**: {platform.machine()}")
     w("")
 
-    # Opt-10: precompute a normalised lookup dict once (hyphen ↔ underscore)
-    # so each package lookup is a single O(1) dict.get() instead of two
-    # sequential get() calls with a string allocation in between.
+    # Normalised lookup: hyphen ↔ underscore so 'scikit-learn' matches.
     norm_packages: Dict[str, str] = {k.replace("-", "_"): v for k, v in packages.items()}
     norm_packages.update(packages)  # original keys take precedence
 
@@ -197,8 +194,8 @@ def _section_dataset_versioning(
     w("")
     w(
         "The signed SHA-256 baseline is established once via "
-        "`python -m module0_analysis.phase0.bootstrap_integrity` "
-        "and stored in `module0_analysis/phase0/dataset_integrity.json`. "
+        "`python -m module0_analysis.bootstrap_integrity` "
+        "and stored in `module0_analysis/dataset_integrity.json`. "
         "Every subsequent `DataLoader.load()` call reads the dataset bytes "
         "into memory, recomputes the hash, verifies the ECDSA P-256 signature "
         "on the baseline (using the Module 5 audit-signing key), and only "

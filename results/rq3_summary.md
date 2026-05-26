@@ -10,7 +10,7 @@
 **Empirical side:** MVE explanations significantly improve operator triage
 accuracy (n=25/group, Mann-Whitney p=0.00019, Cohen's d=1.32 large effect,
 +60.8% relative improvement, verdict PASS). All three operator roles
-benefit; effect strongest for administrator (+22pp) and clinician (+20pp).
+benefit; effect strongest for Biomed Engineer (+22pp) and Nurse Manager (+20pp).
 
 **Architectural side:** 19/19 invariant tests pass. Hash-chained audit log
 verified intact across 19,821 records (0 chain breaks, 0 hash mismatches).
@@ -80,12 +80,13 @@ attribution all enforced.
 
 | Role | n (each cond) | Acc without XAI | Acc with XAI | Δ pp | p |
 |------|---:|--:|--:|--:|--:|
-| administrator | 50 | 0.700 | 0.920 | +22.0 | 0.0027 ** |
-| analyst | 50 | 0.860 | 0.940 | +8.0 | 0.0934 |
-| clinician | 50 | 0.700 | 0.900 | +20.0 | 0.0065 ** |
+| **Biomed Engineer** (`administrator`) | 50 | 0.700 | 0.920 | +22.0 | 0.0027 ** |
+| IT Generalist (`analyst`) | 50 | 0.860 | 0.940 | +8.0 | 0.0934 |
+| Nurse Manager (`clinician`) | 50 | 0.700 | 0.900 | +20.0 | 0.0065 ** |
 
-Administrator and clinician get the largest lift (~20pp); analyst
-already has high baseline so gain is smaller and not significant at α=0.05.
+Biomed Engineer and Nurse Manager get the largest lift (~20pp); IT
+Generalist already has a high baseline so the gain is smaller and not
+significant at α=0.05.
 
 ### Escalation behavior (chi-square)
 
@@ -213,7 +214,7 @@ Per spec §6:
 - ✗ Step 17 (outcome tracking) — future work
 - ✗ Step 18 (continuous improvement) — future work
 - ✗ Single-hospital evaluation only — multi-site replication is RQ4
-- ✗ Bedside nurse role not directly tested — proxied by `clinician`
+- ✗ Bedside nurse role not directly tested — proxied by `clinician` (Nurse Manager)
 
 ## 8. Defendability Statement
 

@@ -103,9 +103,9 @@ def _get_signing_key():
     disk exactly once per process regardless of how many artefacts are
     signed in a single run.
     """
-    from module5_responses.module5_pipeline import (
-        _HAVE_CRYPTOGRAPHY,
-        _load_signing_key,
+    from module5_responses.signing import (
+        HAVE_CRYPTOGRAPHY as _HAVE_CRYPTOGRAPHY,
+        load_signing_key as _load_signing_key,
     )
     if not _HAVE_CRYPTOGRAPHY:
         raise RuntimeError(
@@ -128,9 +128,9 @@ def _get_verifying_key():
     public key object is constructed exactly once — not once per model
     artefact loaded.
     """
-    from module5_responses.module5_pipeline import (
-        _HAVE_CRYPTOGRAPHY,
-        _load_signing_key,
+    from module5_responses.signing import (
+        HAVE_CRYPTOGRAPHY as _HAVE_CRYPTOGRAPHY,
+        load_signing_key as _load_signing_key,
     )
     if not _HAVE_CRYPTOGRAPHY:
         raise RuntimeError(

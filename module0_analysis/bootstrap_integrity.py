@@ -1,8 +1,8 @@
 """One-time CLI to bootstrap the signed integrity baseline.
 
 Usage:
-    python -m module0_analysis.phase0.bootstrap_integrity \\
-        [--config module0_analysis/phase0/config.yaml]
+    python -m module0_analysis.bootstrap_integrity \\
+        [--config module0_analysis/config.yaml]
 
 This MUST be run once per dataset, by an operator, on a known-good
 file. ``DataLoader.load()`` refuses to run without an existing baseline,
@@ -31,7 +31,7 @@ _DEFAULT_CONFIG = Path(__file__).resolve().parents[1] / "module0_analysis/config
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m module0_analysis.phase0.bootstrap_integrity",
+        prog="python -m module0_analysis.bootstrap_integrity",
         description=(
             "Establish the signed SHA-256 baseline for the Phase 0 dataset. "
             "Run once per known-good dataset."

@@ -91,7 +91,7 @@ jobs:
       - name: Run Phase 0 tests with coverage
         run: >
           python -m pytest
-          module0_analysis/phase0/tests/
+          tests/test_module0_*.py
           -v
           --cov=module0_analysis
           --cov=common
@@ -157,4 +157,4 @@ jobs:
       - name: Verify Phase 0 imports
         run: >
           docker run --rm analyst/phase0:${{ github.sha }}
-          -c "from module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator; print('OK')"
+          -c "from module0_analysis import Phase0Config, DataLoader, IntegrityVerifier, PathValidator; print('OK')"

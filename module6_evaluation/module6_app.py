@@ -1972,10 +1972,15 @@ def _triage_actions_column(selected, ui):
         '</div>',
         unsafe_allow_html=True,
     )
+    # Short pill labels = IT / Biomed / Nurse (compact) per ROLE_SHORT_LABELS.
+    # Maps internally to analyst / administrator / clinician keys; the legacy
+    # sim_role state takes the long display label so other surfaces stay
+    # consistent.
+    _short_labels = [ROLE_SHORT_LABELS[k] for k in ROLE_ORDER]
     role_pick = st.pills(
         "Role",
-        ["SOC", "Clinical", "Admin"],
-        default=st.session_state.get("sim_role_pill", "SOC"),
+        _short_labels,
+        default=st.session_state.get("sim_role_pill", _short_labels[0]),
         selection_mode="single",
         key="sim_role_pill",
         label_visibility="collapsed",
@@ -1984,17 +1989,19 @@ def _triage_actions_column(selected, ui):
 
     # Role-adaptive body (delegates to existing render_* functions — Step 3.5
     # body review parked; reuse keeps behavior stable).
-    role = role_pick or "SOC"
-    # Map pill -> existing sim_role string so the legacy renderers work unchanged.
-    st.session_state["sim_role"] = {
-        "SOC": "Security Analyst",
-        "Clinical": "Clinician",
-        "Admin": "Administrator",
-    }[role]
+    role = role_pick or _short_labels[0]
+    # Short label -> internal role key -> long display label for sim_role.
+    _short_to_key = {ROLE_SHORT_LABELS[k]: k for k in ROLE_ORDER}
+    _role_key = _short_to_key.get(role, "analyst")
+    st.session_state["sim_role"] = ROLE_DISPLAY_NAMES[_role_key]
 
     with st.container(border=False):
         st.markdown('<div style="padding:0 20px 16px;">', unsafe_allow_html=True)
-        if role == "SOC":
+        # Dispatch on the internal role key (analyst / clinician /
+        # administrator) — `role` is the user-facing short label
+        # (IT / Nurse / Biomed) which we map back via _short_to_key
+        # above. Pre-rename branches said SOC / Clinical / Admin.
+        if _role_key == "analyst":
             clin = (selected.get("explanation") or {}).get("clinician_summary", "")
             st.markdown(
                 f'<p style="font-size:0.875rem;line-height:1.55;color:var(--text-primary);margin:0 0 8px;">'
@@ -2006,14 +2013,14 @@ def _triage_actions_column(selected, ui):
                 f' device-class weight, and active-care weighting.</p>',
                 unsafe_allow_html=True,
             )
-        elif role == "Clinical":
+        elif _role_key == "clinician":
             clin = (selected.get("explanation") or {}).get("clinician_summary", "")
             st.markdown(
                 f'<p style="font-size:0.875rem;line-height:1.55;color:var(--text-primary);margin:0 0 8px;">'
                 f'{escape(clin) if clin else "No clinician summary on file for this alert."}</p>',
                 unsafe_allow_html=True,
             )
-        else:  # Admin
+        else:  # administrator (Biomed Engineer)
             comps = selected.get("risk_components", {}) or {}
             top = sorted(comps.items(), key=lambda kv: -kv[1])[:3]
             top_html = " · ".join(
@@ -2050,24 +2057,34 @@ def _triage_actions_column(selected, ui):
         # action color is already encoded by the sentinel-btn-* classes via
         # data-sentinel-action selectors in sentinel_theme._BTN_CSS. Color
         # + label carry the affordance; the glyph was decorative.
+        # Audit-log payload: persist BOTH the canonical internal role key
+        # (analyst/administrator/clinician — stable across UI renames) AND
+        # the human-readable display label so old + new records remain
+        # interpretable side by side.
+        _audit_role_payload = {
+            "role_key": _role_key,
+            "role_display": ROLE_DISPLAY_NAMES.get(_role_key, _role_key),
+        }
         st.markdown('<div data-sentinel-action="acknowledge" style="padding:0 20px 6px;">', unsafe_allow_html=True)
         if st.button("Acknowledge — taking ownership", key=f"ack_{aid}", width="stretch",
                      help="Records you as the owner of this alert. Audit log gets a signed acknowledge event."):
-            _capture_dashboard_action(aid, "acknowledge", details={"tier": tier, "role": role})
+            _capture_dashboard_action(aid, "acknowledge",
+                                       details={"tier": tier, **_audit_role_payload})
             st.toast(f"Alert acknowledged · A-{aid:04d}", icon="✅")
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div data-sentinel-action="escalate" style="padding:0 20px 6px;">', unsafe_allow_html=True)
         if st.button("Escalate — pull in T3 + biomed", key=f"esc_{aid}", width="stretch",
                      help="Routes the alert to Tier-3 SOC and the biomedical engineering on-call."):
-            _capture_dashboard_action(aid, "escalate", details={"tier": tier, "role": role})
+            _capture_dashboard_action(aid, "escalate",
+                                       details={"tier": tier, **_audit_role_payload})
             st.toast(f"Escalated · A-{aid:04d}", icon="⚠️")
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div data-sentinel-action="dismiss" style="padding:0 20px 6px;">', unsafe_allow_html=True)
         if st.button("Dismiss — requires reason", key=f"dis_{aid}", width="stretch",
                      help="Closes the alert. A written rationale is required (no silent suppression)."):
-            _dismiss_dialog(aid, tier, role)
+            _dismiss_dialog(aid, tier, ROLE_DISPLAY_NAMES.get(_role_key, _role_key))
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Routing note: clarifies that monitor/investigate/isolate live on
@@ -2369,12 +2386,16 @@ def simulation_mode():
     # 6C.8 Role switcher — pills match the Dashboard's role-toggle pattern
     # (see _triage_actions_column). Selectbox cost an extra click and was
     # inconsistent with the rest of the app.
+    #
+    # Labels = spec triad (IT Generalist / Biomed Engineer / Nurse Manager).
+    # Internal key resolution via ROLE_INTERNAL_KEY maps the display label
+    # back to analyst/administrator/clinician for downstream branching.
     st.sidebar.divider()
     st.sidebar.markdown("## Stakeholder View")
     sim_role = st.sidebar.pills(
         "View as",
-        ["Security Analyst", "Clinician", "Administrator"],
-        default=st.session_state.get("sim_role", "Security Analyst"),
+        ROLE_DISPLAY_LIST,
+        default=st.session_state.get("sim_role", ROLE_DISPLAY_LIST[0]),
         selection_mode="single",
         key="sim_role",
         label_visibility="collapsed",
@@ -2382,7 +2403,7 @@ def simulation_mode():
     # Fallback when user clears the pill (pills allow none-selected by
     # spec); the rest of the page assumes a non-None role string.
     if not sim_role:
-        sim_role = "Security Analyst"
+        sim_role = ROLE_DISPLAY_LIST[0]
 
     # ── Debug instrumentation (hidden behind SENTINEL_DEV env var) ──
     # Render-time captions and timing JSONL exports are useful for
@@ -2959,17 +2980,27 @@ def simulation_mode():
                     )
                     # Mirror analyst_available flag onto the cached alert
                     # so _analyst_state() can distinguish "Module 4 didn't
-                    # process this sample" from "pipeline desynced".
+                    # process this sample" from "pipeline desynced". Preserve
+                    # the MVE payload (Option 4) and any other fields Module 5
+                    # attached to the explanation — earlier this branch built
+                    # a fresh dict and silently dropped explanation.mve, so
+                    # render_mve_layers fell back to clinician_summary even
+                    # after Module 5 produced an LLM-generated Layer 1.
+                    src_expl = r.get("explanation") or {}
                     alerts_cache[sample_idx]["explanation"] = {
-                        "analyst_available": bool(
-                            (r.get("explanation") or {}).get("analyst_available")
-                        ),
+                        **src_expl,
+                        "analyst_available": bool(src_expl.get("analyst_available")),
                     }
                 alert_obj = alerts_cache[sample_idx]
 
-                if sim_role == "Security Analyst":
+                # Dispatch on internal role key — the sidebar pill returns
+                # a display label (e.g. "IT Generalist"); map it back to
+                # the canonical key (analyst/clinician/administrator)
+                # before branching.
+                _role_key = ROLE_INTERNAL_KEY.get(sim_role, "analyst")
+                if _role_key == "analyst":
                     render_analyst(alert_obj)
-                elif sim_role == "Clinician":
+                elif _role_key == "clinician":
                     render_clinician(alert_obj)
                 else:
                     render_admin(alert_obj)

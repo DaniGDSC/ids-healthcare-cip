@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from common.phi import BIOMETRIC_COLUMNS
+
 from .config import Phase0Config
 from .security import (
     ColumnAllowlist,
@@ -119,23 +121,69 @@ class DataLoader:
         return df
 
     def validate(self, df: pd.DataFrame) -> None:
-        """Assert that all required columns are present in *df*.
+        """Assert that all required columns are present in *df* and that the
+        network/biometric feature counts match the config-declared values.
 
-        Delegates to ``ColumnAllowlist.validate`` so the failure path is
-        audited via ``log_phase0_event`` (and therefore appended to the
-        Module 5 signed audit chain).
+        Delegates required-column check to ``ColumnAllowlist.validate`` so
+        the failure path is audited via ``log_phase0_event`` (and therefore
+        appended to the Module 5 signed audit chain).
+
+        Feature-count enforcement: when ``network_feature_count`` or
+        ``biometric_feature_count`` is non-zero in the config, the loader
+        partitions numeric columns (minus the label and any declared
+        leakage columns) into biometric vs. network using
+        ``common.phi.BIOMETRIC_COLUMNS`` and asserts each partition's size.
+        Mismatch raises ValueError so a silently-changed dataset surface
+        (e.g. an upstream schema drift) cannot pass into Phase 1.
 
         Args:
             df: DataFrame returned by :meth:`load`.
 
         Raises:
-            ValueError: If one or more required columns are absent.
+            ValueError: If one or more required columns are absent, or
+                if the network/biometric feature counts disagree with
+                the config.
         """
         ColumnAllowlist.validate(
             self._config.required_columns,
             set(df.columns),
             context="phase0.required_columns",
         )
+
+        # Feature-stream sanity check (formerly dead config fields).
+        # 0 = skip — preserves backwards-compat for configs that don't
+        # care about feature-stream sizes.
+        expected_net = self._config.network_feature_count
+        expected_bio = self._config.biometric_feature_count
+        if expected_net or expected_bio:
+            numeric_cols = set(df.select_dtypes(include="number").columns)
+            excluded = {self._config.label_column, *self._config.leakage_columns}
+            feature_cols = numeric_cols - excluded
+            actual_bio = feature_cols & BIOMETRIC_COLUMNS
+            actual_net = feature_cols - BIOMETRIC_COLUMNS
+
+            if expected_bio and len(actual_bio) != expected_bio:
+                log_phase0_event(
+                    "BIOMETRIC_COUNT_MISMATCH",
+                    {"expected": expected_bio, "actual": len(actual_bio)},
+                    level=logging.ERROR,
+                )
+                raise ValueError(
+                    f"Biometric feature count mismatch: config expects "
+                    f"{expected_bio}, dataset has {len(actual_bio)} "
+                    f"(found: {sorted(actual_bio)})"
+                )
+            if expected_net and len(actual_net) != expected_net:
+                log_phase0_event(
+                    "NETWORK_COUNT_MISMATCH",
+                    {"expected": expected_net, "actual": len(actual_net)},
+                    level=logging.ERROR,
+                )
+                raise ValueError(
+                    f"Network feature count mismatch: config expects "
+                    f"{expected_net}, dataset has {len(actual_net)}"
+                )
+
         logger.info(
             "Schema validation passed — all %d required columns present",
             len(self._config.required_columns),

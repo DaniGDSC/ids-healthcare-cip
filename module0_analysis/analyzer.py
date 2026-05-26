@@ -68,20 +68,14 @@ class StatisticsAnalyzer:
         from each per-column computation before aggregation.
 
         Network features get the full ``{mean, median, std, min, max}``.
-        Biometric features ({BIOMETRIC_COLUMNS}) are restricted to
-        ``{mean, std}``: per-patient minima and maxima are quasi-identifiers
-        under HIPAA Safe Harbor and are never published from this layer.
+        Biometric features (see ``common.phi.BIOMETRIC_COLUMNS``) are
+        restricted to ``{mean, std}``: per-patient minima and maxima are
+        quasi-identifiers under HIPAA Safe Harbor and are never published
+        from this layer.
 
         Returns:
             Nested dict mapping ``feature_name → stats dict``. Stats values
             are rounded to six decimal places.
-
-        Opt-1: one ``DataFrame.agg()`` call per column group executes a single
-        C-level pass instead of F Python-loop iterations each making 2–5
-        separate pandas reductions.
-
-        Opt-2 (inline): ``n_bio = len(bio_cols)`` replaces the post-loop
-        ``sum(1 for c in stats if c in BIOMETRIC_COLUMNS)`` second pass.
         """
         numeric_df = self._df.select_dtypes(include="number")
 
@@ -122,7 +116,6 @@ class StatisticsAnalyzer:
                     "std":  float(v["std"]),
                 }
 
-        # Opt-2: n_bio already known from the column partition — no second pass.
         logger.info(
             "Descriptive stats computed for %d numeric features "
             "(%d biometric channels published as mean/std only)",
@@ -141,16 +134,11 @@ class StatisticsAnalyzer:
         Returns:
             Dict mapping ``feature_name → {count, percentage}`` for features
             with at least one missing value.
-
-        Opt-3: ``df.isna().sum()`` executes a single C-level pass over all
-        columns; the previous implementation called it inside a Python loop,
-        paying C → Python transition overhead C times.
         """
         total = len(self._df)
         result: Dict[str, Dict[str, float]] = {}
         warn_pct = self._config.missing_value_warn_pct
 
-        # One vectorised pass — O(N) total, not O(C × N) Python overhead.
         null_counts = self._df.isna().sum()
         for col, n in null_counts[null_counts > 0].items():
             n = int(n)
@@ -268,10 +256,6 @@ class CorrelationAnalyzer:
         Returns:
             List of ``(feature_a, feature_b, correlation)`` tuples sorted by
             descending ``|correlation|``.
-
-        Opt-4: replace the O(F²) Python double-loop with ``np.triu_indices``
-        + vectorised boolean masking.  Zero Python-level per-pair iterations —
-        all filtering executes in C via numpy.
         """
         matrix = self.correlation_matrix()
         threshold = self._config.correlation_threshold
@@ -336,10 +320,10 @@ class OutlierAnalyzer:
         Network features get the full record (q1/q3/iqr/lower_bound/
         upper_bound/outlier_count/outlier_pct/total).
 
-        Biometric features ({BIOMETRIC_COLUMNS}) only publish
-        ``outlier_count``/``outlier_pct``/``total``: q1/q3 and the derived
-        fences are quantile-based quasi-identifiers under HIPAA Safe
-        Harbor and must not leave this layer.
+        Biometric features (see ``common.phi.BIOMETRIC_COLUMNS``) only
+        publish ``outlier_count``/``outlier_pct``/``total``: q1/q3 and the
+        derived fences are quantile-based quasi-identifiers under HIPAA
+        Safe Harbor and must not leave this layer.
 
         Returns:
             List of dicts, one per numeric feature, sorted by descending
@@ -350,9 +334,6 @@ class OutlierAnalyzer:
         total = len(numeric_df)
         report: List[Dict[str, Any]] = []
 
-        # Opt-5: one vectorised quantile() call for ALL columns at once
-        # replaces F separate per-column dropna() + 2 individual quantile()
-        # calls (2F sort operations).  One call → one C-level pass.
         quantiles = numeric_df.quantile([0.25, 0.75])
         q1_all = quantiles.loc[0.25]
         q3_all = quantiles.loc[0.75]
@@ -360,10 +341,9 @@ class OutlierAnalyzer:
         lower_all = q1_all - k * iqr_all
         upper_all = q3_all + k * iqr_all
 
-        # One boolean broadcast over the whole matrix for outlier counts.
         outlier_counts = ((numeric_df < lower_all) | (numeric_df > upper_all)).sum()
 
-        n_with = 0  # Opt-5 inline: count during construction, no post-loop pass
+        n_with = 0
         for col in numeric_df.columns:
             q1    = float(q1_all[col])
             q3    = float(q3_all[col])

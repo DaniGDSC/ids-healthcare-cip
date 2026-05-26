@@ -183,7 +183,7 @@ jobs:
             correlation_matrix_file: "correlation_matrix.parquet"
           ''')
           PY
-          python -m module0_analysis.phase0.bootstrap_integrity \
+          python -m module0_analysis.bootstrap_integrity \
             --config config/ci_test_phase0.yaml
 
       - name: Generate Phase 0 artefacts for the subset
@@ -426,7 +426,7 @@ jobs:
         run: >
           docker run --rm analyst/phase0-phase2:${{ github.sha }}
           -c "
-          from module0_analysis.phase0 import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
+          from module0_analysis import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
           from module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
           from module2_detection.models.DAE import DAEDetector;
           from module2_detection.models.XGBoost import XGBoostDetector;

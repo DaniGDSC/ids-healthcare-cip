@@ -17,21 +17,35 @@ last_synced: "2026-05-25"
 # ───────────────────────────────────────────────────────────────────────
 # Role definitions
 # ───────────────────────────────────────────────────────────────────────
+# Naming convention:
+#   key         = internal canonical (lowercase, data-side; preserved
+#                 across `participant_responses.json` + analysis JSONs)
+#   display_name = user-facing label (the spec triad — IT Generalist /
+#                 Biomed Engineer / Nurse Manager). Use this everywhere
+#                 a human reads the role (UI, docs, paper tables).
+#   short_label = compact pill label for Dashboard's role toggle
+#   proxies     = additional real-world roles this canonical covers
 roles:
   analyst:
-    proxies: ["IT Generalist", "SOC analyst"]
-    primary_view: "Security Analyst View"
+    display_name: "IT Generalist"
+    short_label: "IT"
+    proxies: ["SOC analyst", "IT support"]
+    primary_view: "IT Generalist view"
     explanation_layer: "SHAP + DAE features + per-detector breakdown"
 
-  clinician:
-    proxies: ["Bedside Clinician", "Nurse Manager"]
-    primary_view: "Clinician View"
-    explanation_layer: "NLG narrative + patient-impact framing + DO NOT constraint"
-
   administrator:
-    proxies: ["Biomed Engineer", "Charge Nurse", "Service Line Owner"]
-    primary_view: "Administrator View"
+    display_name: "Biomed Engineer"
+    short_label: "Biomed"
+    proxies: ["Biomed engineering", "Service Line Owner", "Charge Nurse"]
+    primary_view: "Biomed Engineer view"
     explanation_layer: "Aggregate metrics + risk components + global importance"
+
+  clinician:
+    display_name: "Nurse Manager"
+    short_label: "Nurse"
+    proxies: ["Bedside Clinician", "Nurse practitioner"]
+    primary_view: "Nurse Manager view"
+    explanation_layer: "NLG narrative + patient-impact framing + DO NOT constraint"
 
 # ───────────────────────────────────────────────────────────────────────
 # Action × Role matrix

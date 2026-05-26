@@ -193,8 +193,6 @@ class ReportExporter:
         self._csv = csv_exporter or CsvExporter()
         self._parquet = parquet_exporter or ParquetExporter()
         self._markdown = markdown_exporter or MarkdownExporter()
-        # Opt-11: create output directory once here rather than in every
-        # export method — eliminates a redundant mkdir syscall per export.
         config.output_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
