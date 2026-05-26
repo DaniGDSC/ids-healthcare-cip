@@ -113,6 +113,18 @@ class DetectionEngine:
             self._dae = get_dae()
             self._dae_expected_dim = int(self._dae._clip_lo.shape[0])
 
+    def get_dae(self):
+        """Public accessor for the cached DAE detector.
+
+        Module 4's ``compute_dae_feature_errors`` needs the fitted DAE
+        object to call its ``_normalise`` / ``_forward`` / ``_feat_weights``
+        internals for per-feature decomposition. Exposing the detector
+        here keeps the access pattern explicit instead of reaching into
+        ``engine._dae`` private state.
+        """
+        self._load()
+        return self._dae
+
     # ── Helpers ────────────────────────────────────────────────────────
 
     @staticmethod

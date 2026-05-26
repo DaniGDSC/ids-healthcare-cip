@@ -323,12 +323,24 @@ class AlertExplainer:
             x = np.where(np.isfinite(x), x, 0.0)
         return x
 
-    def explain(self, x_sample: np.ndarray, feat_names: list) -> dict:
+    def explain(
+        self,
+        x_sample: np.ndarray,
+        feat_names: list,
+        risk_level: str | None = None,
+    ) -> dict:
         """Generate per-alert explanation with component-level timing.
 
         Args:
             x_sample: Single sample, shape (n_features,).
             feat_names: Feature name list.
+            risk_level: Optional canonical pipeline risk tier (one of
+                CRITICAL/HIGH/MEDIUM/LOW). When provided, overrides the
+                detector-count severity so the clinician summary's
+                severity word matches module 3's ``risk_level`` (which is
+                what the response engine acts on). Required for parity
+                with the batch path; only omit it in unit tests or
+                pre-module-3 standalone use.
 
         Returns:
             Dict with explanation + timing breakdown (ms).
@@ -359,7 +371,10 @@ class AlertExplainer:
 
         # ── Step 2: Determine severity ──
         n_flagged = sum(1 for v in votes.values() if v["prediction"] == 1)
-        severity = self._severity(n_flagged)
+        if risk_level is not None:
+            severity = risk_level if risk_level in CLINICIAN_TEMPLATES else "LOW"
+        else:
+            severity = self._severity(n_flagged)
 
         # Minimal explanation for LOW severity
         if severity == "LOW" and n_flagged <= 1:
@@ -367,6 +382,7 @@ class AlertExplainer:
             return {
                 "severity": severity,
                 "n_models_flagged": n_flagged,
+                "detector_consensus": f"{n_flagged}/4",
                 "votes": votes,
                 "explanation_level": "minimal",
                 "clinician_summary": CLINICIAN_TEMPLATES["LOW"],
@@ -426,6 +442,7 @@ class AlertExplainer:
         return {
             "severity": severity,
             "n_models_flagged": n_flagged,
+            "detector_consensus": f"{n_flagged}/4",
             "votes": votes,
             "explanation_level": "full",
             "analyst": {

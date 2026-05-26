@@ -659,7 +659,14 @@ def plot_dae_global_weights(feat_weights: np.ndarray, feat_names: list) -> None:
 # ── Stakeholder outputs ────────────────────────────────────────────────
 
 
-def _severity(n_models_flagged: int) -> str:
+def _detector_consensus_severity(n_models_flagged: int) -> str:
+    """Detector-agreement-only severity (fallback when risk_level missing).
+
+    Why: kept as a fallback for offline runs that pre-date module 3 outputs
+    or for unit tests; production paths use module 3's ``risk_level`` so the
+    clinician summary's severity word matches the risk-scored tier the rest
+    of the pipeline acts on. See Invariant 6.
+    """
     if n_models_flagged >= 4:
         return "CRITICAL"
     elif n_models_flagged == 3:
@@ -667,6 +674,11 @@ def _severity(n_models_flagged: int) -> str:
     elif n_models_flagged == 2:
         return "MEDIUM"
     return "LOW"
+
+
+# Back-compat alias: external callers (tests, online explainer) may import
+# this name. Internal call-sites use the explicit name above.
+_severity = _detector_consensus_severity
 
 
 def _top_features_shap(sv_row: np.ndarray, feat_names: list, k: int = 3) -> list:
@@ -711,11 +723,20 @@ def build_analyst_report(
     feat_names: list,
     n_samples: int,
     suffix: str = "",
+    risk_levels: np.ndarray | None = None,
 ) -> list:
     """Build per-alert analyst report.
 
     ``suffix`` is appended to the output filename (e.g. ``"_demo"``) so
     test and demo splits write to separate files.
+
+    ``risk_levels``: per-sample tier strings emitted by module 3 (key
+    ``risk_levels`` in ``risk_scores.npz``). When provided, the alert's
+    ``severity`` field is set from this canonical source so it agrees with
+    the rest of the pipeline; ``detector_consensus`` is also persisted so
+    the "how many detectors agreed" signal is not lost. When ``None`` (e.g.
+    module 3 has not yet run), falls back to detector-count severity with a
+    warning.
     """
     logger.info("Building analyst report...")
     alerts = []
@@ -761,7 +782,12 @@ def build_analyst_report(
         }
 
         entry["consensus"] = f"{len(models_flagged)}/4 models flagged"
-        entry["severity"] = _severity(int(n_flagged_all[idx]))
+        n_flagged = int(n_flagged_all[idx])
+        entry["detector_consensus"] = f"{n_flagged}/4"
+        if risk_levels is not None:
+            entry["severity"] = str(risk_levels[idx])
+        else:
+            entry["severity"] = _detector_consensus_severity(n_flagged)
         alerts.append(entry)
 
     path = OUTPUT_DIR / f"analyst_report{suffix}.json"
@@ -777,13 +803,26 @@ def build_clinician_summaries(
     feat_names: list,
     n_samples: int,
     suffix: str = "",
+    risk_levels: np.ndarray | None = None,
 ) -> None:
     """Build plain-language clinician summaries for XGBoost-flagged alerts.
 
     ``suffix`` is appended to the output filename (e.g. ``"_demo"``) so
     test and demo splits write to separate files.
+
+    ``risk_levels``: per-sample tier strings from module 3. When provided,
+    the clinician summary template is selected by the canonical
+    ``risk_level`` so the summary's severity word matches what module 5
+    persists into ``alert_responses.json``. Falls back to detector-count
+    severity (with a warning) only if ``risk_levels`` is missing.
     """
     logger.info("Building clinician summaries...")
+    if risk_levels is None:
+        logger.warning(
+            "build_clinician_summaries: risk_levels not provided — "
+            "falling back to detector-count severity (may disagree with "
+            "module 3's risk_level downstream)"
+        )
     summaries = []
 
     xgb_preds = all_preds["xgboost"]
@@ -797,7 +836,16 @@ def build_clinician_summaries(
 
     for idx in np.where(xgb_preds["y_pred"] == 1)[0]:
         idx = int(idx)
-        severity = _severity(int(n_flagged_all[idx]))
+        n_flagged = int(n_flagged_all[idx])
+        if risk_levels is not None:
+            severity = str(risk_levels[idx])
+            # Module 3 emits "NORMAL" for benign rows below the LOW
+            # threshold; CLINICIAN_TEMPLATES has no NORMAL key. Surface
+            # as LOW since the model still flagged it.
+            if severity not in CLINICIAN_TEMPLATES:
+                severity = "LOW"
+        else:
+            severity = _detector_consensus_severity(n_flagged)
 
         top = _top_features_shap(xgb_shap[idx], feat_names, k=3)
         top1_feat = top[0]["feature"]
@@ -830,6 +878,7 @@ def build_clinician_summaries(
             {
                 "sample_index": int(idx),
                 "severity": severity,
+                "detector_consensus": f"{n_flagged}/4",
                 "summary": summary,
             }
         )
@@ -1746,6 +1795,35 @@ def main() -> None:
             weighted_err, feat_names, dae_preds["y_pred"], dae_preds["reconstruction_error"]
         )
 
+    # ── Load module 3 risk_levels (canonical severity source) ────────────
+    from common import split_paths as _sp
+    risk_npz_path = _sp.risk_scores(args.split)
+    risk_levels = None
+    if risk_npz_path.exists():
+        try:
+            _rd = np.load(risk_npz_path, allow_pickle=True)
+            if "risk_levels" in _rd.files:
+                risk_levels = _rd["risk_levels"]
+                logger.info(
+                    "Loaded module 3 risk_levels from %s (%d samples)",
+                    risk_npz_path, len(risk_levels),
+                )
+            else:
+                logger.warning(
+                    "%s present but missing 'risk_levels' key — falling back to "
+                    "detector-count severity", risk_npz_path,
+                )
+        except Exception as exc:
+            logger.warning(
+                "Failed to load risk_levels from %s (%s) — falling back to "
+                "detector-count severity", risk_npz_path, exc,
+            )
+    else:
+        logger.warning(
+            "risk_scores npz not found at %s — falling back to detector-count "
+            "severity (run module 3 first for severity alignment)", risk_npz_path,
+        )
+
     # ── Stakeholder outputs (always produced — these are what Module 5 reads) ──
     alerts = build_analyst_report(
         all_shap,
@@ -1755,6 +1833,7 @@ def main() -> None:
         feat_names,
         n_samples,
         suffix=suffix,
+        risk_levels=risk_levels,
     )
     build_clinician_summaries(
         all_shap,
@@ -1763,6 +1842,7 @@ def main() -> None:
         feat_names,
         n_samples,
         suffix=suffix,
+        risk_levels=risk_levels,
     )
 
     if not explanations_only:

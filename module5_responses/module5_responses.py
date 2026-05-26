@@ -626,6 +626,7 @@ def build_all_records(
                 shap_context=None,
                 event_context=None,
                 force_rule_based=force_rule_based,
+                risk_level=level,
             )
             mve_dict = mve_out.to_dict()
             mve_payload = {

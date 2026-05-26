@@ -767,7 +767,7 @@ Rules (non-negotiable):
   + phi_exposure + severity_label + severity_rationale)
 - layer_3 total words <= 60 (immediate_action + clinical_constraint
   + escalation_path + timeframe)
-- severity_label must be CRITICAL/HIGH/MEDIUM/LOW based on clinical impact, NOT CVSS
+- severity_label must equal the provided ``pipeline_risk_level`` verbatim when present (this is the canonical risk tier the response engine acts on); otherwise CRITICAL/HIGH/MEDIUM/LOW based on clinical impact, NOT CVSS. severity_rationale must justify that tier.
 - clinical_constraint must start with "DO NOT" for CRITICAL/HIGH/MEDIUM alerts
 - immediate_action must contain a specific executable step (block/isolate/disable/apply/rate-limit)
 - DO NOT mention SHAP values, feature importances, model names, p-values, or CVSS scores
@@ -782,6 +782,7 @@ def _build_user_prompt(
     baseline: dict[str, Any],
     user_context: Optional[dict[str, Any]],
     alert_type: str,
+    risk_level: Optional[str] = None,
 ) -> str:
     """Construct the user prompt with alert payloads and the JSON schema.
 
@@ -789,8 +790,13 @@ def _build_user_prompt(
     providers does not perturb the output distribution beyond the
     provider's own modelling differences.
     """
+    pipeline_line = (
+        f"Pipeline risk_level (canonical — use verbatim as severity_label): {risk_level}\n"
+        if risk_level
+        else ""
+    )
     return f"""Alert type: {alert_type}
-Raw alert: {json.dumps(raw_alert)}
+{pipeline_line}Raw alert: {json.dumps(raw_alert)}
 Device context: {json.dumps(device_context)}
 Behavioral baseline: {json.dumps(baseline)}
 User context: {json.dumps(user_context)}
@@ -867,6 +873,7 @@ def _generate_llm_openai(
     baseline: dict[str, Any],
     user_context: Optional[dict[str, Any]],
     alert_type: str,
+    risk_level: Optional[str] = None,
 ) -> Optional[MVEOutput]:
     """Attempt LLM-based MVE generation using the OpenAI API (primary path).
 
@@ -905,7 +912,8 @@ def _generate_llm_openai(
     is_clinical = _IS_CLINICAL.get(criticality, False)
 
     user_prompt = _build_user_prompt(
-        raw_alert, device_context, baseline, user_context, alert_type
+        raw_alert, device_context, baseline, user_context, alert_type,
+        risk_level=risk_level,
     )
 
     try:
@@ -944,6 +952,7 @@ def _generate_llm_anthropic(
     baseline: dict[str, Any],
     user_context: Optional[dict[str, Any]],
     alert_type: str,
+    risk_level: Optional[str] = None,
 ) -> Optional[MVEOutput]:
     """Attempt LLM-based MVE generation using the Anthropic API (secondary path).
 
@@ -978,7 +987,8 @@ def _generate_llm_anthropic(
     is_clinical = _IS_CLINICAL.get(criticality, False)
 
     user_prompt = _build_user_prompt(
-        raw_alert, device_context, baseline, user_context, alert_type
+        raw_alert, device_context, baseline, user_context, alert_type,
+        risk_level=risk_level,
     )
 
     try:
@@ -1018,6 +1028,7 @@ def generate_mve(
     shap_context: Optional[dict[str, Any]] = None,
     event_context: Optional[dict[str, Any]] = None,
     force_rule_based: bool = False,
+    risk_level: Optional[str] = None,
 ) -> MVEOutput:
     """Generate a 3-layer Minimum Viable Explanation for a single alert.
 
@@ -1038,6 +1049,14 @@ def generate_mve(
                           callers flip this once an LLM quota tripwire
                           fires so the rest of the batch doesn't waste
                           1-2 seconds per failed API call.
+        risk_level: Optional canonical pipeline risk tier (one of
+                    ``VALID_SEVERITY``). When provided, the final
+                    ``layer_2.severity_label`` is coerced to this value so
+                    the MVE agrees with module 3's ``risk_level`` (which
+                    is what module 5's response engine acts on). The
+                    LLM-/rule-derived value is preserved in
+                    ``layer_2.severity_rationale`` when the coercion
+                    changes the label.
 
     Returns:
         MVEOutput with layer_1, layer_2, layer_3 and total_word_count <= 150.
@@ -1093,13 +1112,15 @@ def generate_mve(
         mve = None
     else:
         mve = _generate_llm_openai(
-            raw_alert, device_context, baseline, user_context, alert_type
+            raw_alert, device_context, baseline, user_context, alert_type,
+            risk_level=risk_level,
         )
         if mve is not None:
             provider_used = "openai"
         else:
             mve = _generate_llm_anthropic(
-                raw_alert, device_context, baseline, user_context, alert_type
+                raw_alert, device_context, baseline, user_context, alert_type,
+                risk_level=risk_level,
             )
             if mve is not None:
                 provider_used = "anthropic"
@@ -1192,4 +1213,25 @@ def generate_mve(
         ).strip()
 
     mve.provider = provider_used
+
+    # ── Severity reconciliation (Invariant 6) ──────────────────────────
+    # The canonical severity is module 3's ``risk_level``; the rest of
+    # the pipeline (response engine, clinician summary template) acts on
+    # that tier. When provided, coerce ``layer_2.severity_label`` to it so
+    # the MVE cannot disagree with the rest of the alert record.
+    if risk_level:
+        canonical = str(risk_level).upper()
+        if canonical in VALID_SEVERITY:
+            original = mve.layer_2.get("severity_label", "")
+            if str(original).upper() != canonical:
+                logger.info(
+                    "MVE severity coerced: %s → %s (provider=%s)",
+                    sanitize_for_log(original), canonical, provider_used,
+                )
+                mve.layer_2["severity_label"] = canonical
+                rationale = mve.layer_2.get("severity_rationale", "")
+                note = f" (severity normalized to pipeline risk_level={canonical})"
+                if note not in rationale:
+                    mve.layer_2["severity_rationale"] = f"{rationale}{note}".strip()
+
     return mve

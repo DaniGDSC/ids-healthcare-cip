@@ -1,1782 +1,2138 @@
 [
   {
     "sample_index": 5,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 5): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 5): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 9,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 9): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 9): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 14,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 14): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 14): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 20,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 20): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 20): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 21,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 21): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 21): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 23,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 23): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 34,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 34): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 38,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 38): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 38): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 44,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 44): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 44): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 50,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 50): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 50): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 52,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 52): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 52): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 60,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 60): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 60): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 63,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 63): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 63): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 65,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 65): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 65): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 66,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 66): Minor anomaly detected \u2014 unusual network packet timing. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "1/4",
+    "summary": "LOW ALERT (Sample 66): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 76,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 76): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 76): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 77,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 77): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 77): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 79,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 79): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 79): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 91,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 91): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 91): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 97,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 97): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 97): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 99,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 99): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 99): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 105,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 105): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 105): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 107,
     "severity": "HIGH",
+    "detector_consensus": "2/4",
     "summary": "HIGH ALERT (Sample 107): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity."
   },
   {
     "sample_index": 109,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 109): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 109): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 110,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 110): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 111,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 111): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 116,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 116): Minor anomaly detected \u2014 abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 116): Suspicious activity detected. Key factor: abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 126,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 126): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 130,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 130): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 130): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 149,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 149): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 158,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 158): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 165,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 165): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 169,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 169): Minor anomaly detected \u2014 unusual network packet timing. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 169): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 170,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 170): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 184,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 184): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Note: Biometric data (SYS) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "3/4",
+    "summary": "LOW ALERT (Sample 184): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 194,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 194): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (ST) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 194): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (ST) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 195,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 195): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 195): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 198,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 198): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 198): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 202,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 202): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 202): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 209,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 209): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 219,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 219): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 219): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 241,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 241): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 241): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 246,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 246): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 246): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 273,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 273): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 273): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 277,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 277): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 277): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 280,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 280): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 280): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 281,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 281): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 281): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 284,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 284): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 284): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 292,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 292): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 292): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 294,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 294): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 294): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 295,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 295): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 295): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 304,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 304): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 304): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 307,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 307): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (SYS) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 307): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SYS) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 313,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 313): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 317,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 317): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 317): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 323,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 323): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 323): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 326,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 326): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 332,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 332): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 332): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 333,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 333): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 333): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 347,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 347): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 350,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 350): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 350): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 352,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 352): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 352): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 361,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 361): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 361): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 387,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 387): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 393,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 393): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 393): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 409,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 409): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 409): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 417,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 417): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "CRITICAL",
+    "detector_consensus": "1/4",
+    "summary": "CRITICAL ALERT (Sample 417): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 419,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 419): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 419): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (unusual network packet timing) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 421,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 421): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 421): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 425,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 425): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 425): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 427,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 427): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 427): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 428,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 428): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 430,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 430): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "CRITICAL",
+    "detector_consensus": "3/4",
+    "summary": "CRITICAL ALERT (Sample 430): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 431,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 431): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 431): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 444,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 444): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 451,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 451): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 451): Suspicious activity detected. Key factor: unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 452,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 452): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "CRITICAL",
+    "detector_consensus": "1/4",
+    "summary": "CRITICAL ALERT (Sample 452): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was unusual network packet timing. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate, Resp_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 464,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 464): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 464): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 465,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 465): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 471,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 471): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 471): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 473,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 473): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 473): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 474,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 474): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "CRITICAL",
+    "detector_consensus": "2/4",
+    "summary": "CRITICAL ALERT (Sample 474): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 477,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 477): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 477): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 495,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 495): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 495): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 505,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 505): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 505): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 506,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 506): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate, SpO2) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 506): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate, SpO2) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 514,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 514): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 514): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 515,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 515): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp, Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 515): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp, Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 530,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 530): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 534,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 534): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 534): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 543,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 543): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 543): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 565,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 565): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 565): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 579,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 579): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 579): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 584,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 584): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 584): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 587,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 587): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 587): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 591,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 591): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 602,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 602): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 602): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 627,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 627): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 627): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 636,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 636): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 636): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 641,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 641): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 643,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 643): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 643): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 644,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 644): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 644): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 652,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 652): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 652): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 655,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 655): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 660,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 660): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 660): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 662,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 662): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 662): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 666,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 666): Minor anomaly detected \u2014 abnormal temperature reading. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 666): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 671,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 671): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 671): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 673,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 673): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 673): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 689,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 689): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 689): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 690,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 690): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (SpO2) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 690): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SpO2) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 691,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 691): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 691): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 696,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 696): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 696): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 699,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 699): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 699): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 702,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 702): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 702): Suspicious activity detected. Key factor: abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 720,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 720): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 720): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 723,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 723): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 723): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 729,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 729): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 729): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 732,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 732): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp, Heart_rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 732): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp, Heart_rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 741,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 741): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 764,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 764): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 764): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 803,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 803): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 803): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 804,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 804): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 813,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 813): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "3/4",
+    "summary": "LOW ALERT (Sample 813): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 814,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 814): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 814): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 816,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 816): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 816): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 833,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 833): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 833): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 843,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 843): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 847,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 847): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "CRITICAL",
+    "detector_consensus": "2/4",
+    "summary": "CRITICAL ALERT (Sample 847): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 853,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 853): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 857,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 857): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 857): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 858,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 858): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 858): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 869,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 869): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 869): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 874,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 874): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 875,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 875): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 875): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 888,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 888): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 888): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 889,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 889): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 889): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 893,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 893): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 893): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 896,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 896): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 901,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 901): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 901): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 924,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 924): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 924): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity."
   },
   {
     "sample_index": 929,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 929): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 929): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 958,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 958): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "CRITICAL",
+    "detector_consensus": "1/4",
+    "summary": "CRITICAL ALERT (Sample 958): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 962,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 962): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 962): Suspicious activity detected. Key factor: unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 965,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 965): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 965): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 973,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 973): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 973): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 980,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 980): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 985,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 985): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 985): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 989,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 989): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 989): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 992,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 992): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 992): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1007,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1007): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 1007): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1008,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1008): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal network load. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1008): Suspicious activity detected. Key factor: abnormal network load. Consider verifying device integrity."
   },
   {
     "sample_index": 1009,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1009): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1009): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1012,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1012): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1012): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 1023,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1023): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1023): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1034,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1034): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 1034): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1046,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1046): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1046): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1047,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1047): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1047): Suspicious activity detected. Key factor: abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1053,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1053): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1053): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1059,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1059): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1059): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1071,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1071): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 1071): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity."
   },
   {
     "sample_index": 1081,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 1081): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1083,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1083): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (abnormal respiratory rate) also contributed. Note: Biometric data (Resp_Rate, Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "CRITICAL",
+    "detector_consensus": "2/4",
+    "summary": "CRITICAL ALERT (Sample 1083): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. A secondary indicator (abnormal respiratory rate) also contributed. Note: Biometric data (Resp_Rate, Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1086,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1086): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1086): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1087,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1087): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1087): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1093,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1093): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1093): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1094,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1094): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1094): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1099,
     "severity": "HIGH",
+    "detector_consensus": "2/4",
     "summary": "HIGH ALERT (Sample 1099): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1106,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1106): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1106): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1124,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1124): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1127,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1127): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1127): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1144,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1144): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1144): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1148,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1148): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1148): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1153,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1153): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1153): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1158,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1158): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1158): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1176,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 1176): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1177,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1177): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (SYS) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1177): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SYS) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1195,
     "severity": "HIGH",
+    "detector_consensus": "3/4",
     "summary": "HIGH ALERT (Sample 1195): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal respiratory rate) also contributed. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1199,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1199): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1199): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1206,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1206): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 1206): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1214,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1214): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1214): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1217,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1217): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1217): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1231,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1231): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1231): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1241,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1241): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1241): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1242,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1242): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1242): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1246,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 1246): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1251,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1251): Minor anomaly detected \u2014 unusual network packet timing. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 1251): Suspicious activity detected. Key factor: unusual network packet timing. Consider verifying device integrity."
   },
   {
     "sample_index": 1273,
     "severity": "HIGH",
+    "detector_consensus": "3/4",
     "summary": "HIGH ALERT (Sample 1273): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 1274,
     "severity": "MEDIUM",
+    "detector_consensus": "3/4",
     "summary": "MODERATE ALERT (Sample 1274): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1276,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1276): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1276): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1286,
-    "severity": "HIGH",
-    "summary": "HIGH ALERT (Sample 1286): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
+    "severity": "MEDIUM",
+    "detector_consensus": "2/4",
+    "summary": "MODERATE ALERT (Sample 1286): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1287,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1287): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1287): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1296,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1296): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1296): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1307,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1307): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1307): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1310,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1310): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (abnormal network load) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1310): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal network load) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1326,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1326): Minor anomaly detected \u2014 abnormal pulse rate. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1326): Suspicious activity detected. Key factor: abnormal pulse rate. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1333,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1333): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1333): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1352,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1352): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (SYS) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1352): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SYS) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1358,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1358): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1358): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1368,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1368): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1368): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1373,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1373): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1373): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1376,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1376): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1377,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1377): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1377): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1389,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1389): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1394,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 1394): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1396,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 1396): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1403,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1403): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1403): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1413,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1413): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1413): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1417,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1417): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1417): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1426,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1426): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1426): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1441,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1441): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1441): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1447,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1447): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "CRITICAL",
+    "detector_consensus": "2/4",
+    "summary": "CRITICAL ALERT (Sample 1447): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1451,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1451): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1457,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1457): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1457): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1469,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1469): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1473,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1473): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1473): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1496,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1496): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1496): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1503,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1503): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1503): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1504,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1504): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1504): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1505,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1505): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1505): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1509,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1509): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1509): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1516,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1516): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1516): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1525,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1525): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (SYS, Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1525): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1528,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1528): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1528): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1530,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1530): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1530): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1556,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1556): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1556): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1558,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1558): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (abnormal respiratory rate) also contributed. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1558): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal respiratory rate) also contributed. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1564,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1564): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1564): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1568,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1568): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1568): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1569,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1569): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1573,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1573): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1573): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1587,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1587): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1587): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1600,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1600): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1600): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1604,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1604): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1604): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1613,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1613): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1613): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1618,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1618): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1618): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1620,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1620): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1625,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1625): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1625): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1637,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1637): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1637): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1641,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 1641): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1642,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1642): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 1642): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1646,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1646): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "CRITICAL",
+    "detector_consensus": "2/4",
+    "summary": "CRITICAL ALERT (Sample 1646): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1647,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1647): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1647): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1650,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1650): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1650): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1651,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1651): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1651): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 1677,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1677): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1677): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1706,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 1706): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1707,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1707): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1707): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1709,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1709): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1709): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1711,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1711): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1711): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1719,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1719): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1729,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1729): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1729): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1731,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1731): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1731): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1752,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1752): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1752): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1753,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1753): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1753): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1755,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1755): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1755): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1763,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1763): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1765,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1765): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1765): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1766,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1766): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1770,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1770): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1770): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1779,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 1779): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1781,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1781): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1781): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity."
   },
   {
     "sample_index": 1788,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1788): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1788): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1789,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1789): Minor anomaly detected \u2014 abnormal pulse rate. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 1789): Suspicious activity detected. Key factor: abnormal pulse rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1794,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1794): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1794): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 1807,
     "severity": "HIGH",
+    "detector_consensus": "3/4",
     "summary": "HIGH ALERT (Sample 1807): Suspicious activity detected. Key factor: abnormal blood pressure. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1810,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1810): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1810): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1823,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 1823): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1836,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1836): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1836): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 1852,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1852): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1852): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1855,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1855): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1858,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1858): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 1858): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1880,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1880): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1880): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1883,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1883): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 1883): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 1891,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1891): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1891): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1898,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 1898): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 1898): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 1905,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1905): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1905): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1922,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1922): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1922): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1926,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1926): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1926): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 1940,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1940): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1940): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 1946,
-    "severity": "HIGH",
-    "summary": "HIGH ALERT (Sample 1946): Suspicious activity detected. Key factor: unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity."
+    "severity": "LOW",
+    "detector_consensus": "3/4",
+    "summary": "LOW ALERT (Sample 1946): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1959,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1959): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 1959): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1962,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 1962): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 1989,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 1989): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 1989): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 1997,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 1997): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 1999,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 1999): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 1999): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2001,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2001): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2001): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2005,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2005): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2005): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2018,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2018): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2018): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2027,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2027): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 2027): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2041,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2041): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2041): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2048,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 2048): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2051,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2051): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2051): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2055,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2055): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2055): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2060,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2060): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2060): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity."
   },
   {
     "sample_index": 2061,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 2061): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 2062,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2062): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2062): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2066,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2066): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 2066): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2068,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2068): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2068): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2074,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2074): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2074): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2077,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 2077): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2088,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2088): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp, SYS) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 2088): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp, SYS) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2090,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 2090): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2096,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 2096): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2096): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 2097,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2097): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2097): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2110,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2110): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2110): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2117,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2117): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 2117): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2118,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2118): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 2118): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2150,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2150): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2150): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 2160,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2160): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2160): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2162,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2162): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2162): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2174,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2174): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2174): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2176,
     "severity": "MEDIUM",
+    "detector_consensus": "3/4",
     "summary": "MODERATE ALERT (Sample 2176): Minor anomaly detected \u2014 unusual network packet timing. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2193,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2193): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2193): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2198,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2198): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2198): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2205,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2205): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2205): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2206,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2206): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2206): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity."
   },
   {
     "sample_index": 2212,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2212): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2212): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2214,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2214): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2214): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity."
   },
   {
     "sample_index": 2215,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 2215): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2222,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 2222): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 2236,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2236): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2236): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2239,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 2239): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 2246,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2246): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate, SpO2) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 2246): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate, SpO2) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2249,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2249): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2249): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2270,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2270): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2270): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2273,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2273): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2273): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2275,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 2275): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 2284,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2284): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "CRITICAL",
+    "detector_consensus": "3/4",
+    "summary": "CRITICAL ALERT (Sample 2284): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 2285,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2285): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2285): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2291,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2291): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2291): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2296,
     "severity": "CRITICAL",
+    "detector_consensus": "4/4",
     "summary": "CRITICAL ALERT (Sample 2296): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
   },
   {
     "sample_index": 2305,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2305): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2305): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2309,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2309): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2309): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2313,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2313): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2313): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2326,
     "severity": "MEDIUM",
+    "detector_consensus": "3/4",
     "summary": "MODERATE ALERT (Sample 2326): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (SpO2, Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2337,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2337): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "3/4",
+    "summary": "HIGH ALERT (Sample 2337): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity."
   },
   {
     "sample_index": 2340,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2340): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2340): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2356,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2356): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2356): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2360,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2360): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 2360): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2372,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2372): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2372): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity."
   },
   {
     "sample_index": 2382,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2382): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2382): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2383,
     "severity": "LOW",
+    "detector_consensus": "1/4",
     "summary": "LOW ALERT (Sample 2383): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2384,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2384): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2384): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 2385,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2385): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2385): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2387,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 2387): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 2387): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2397,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2397): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2397): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity."
   },
   {
     "sample_index": 2399,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2399): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2399): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2407,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 2407): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "HIGH",
+    "detector_consensus": "1/4",
+    "summary": "HIGH ALERT (Sample 2407): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 2411,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2411): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review."
+    "severity": "LOW",
+    "detector_consensus": "2/4",
+    "summary": "LOW ALERT (Sample 2411): Borderline detection by one model. Likely benign; logged for audit purposes."
   },
   {
     "sample_index": 2414,
-    "severity": "MEDIUM",
-    "summary": "MODERATE ALERT (Sample 2414): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review."
+    "severity": "HIGH",
+    "detector_consensus": "2/4",
+    "summary": "HIGH ALERT (Sample 2414): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity."
   },
   {
     "sample_index": 2424,
     "severity": "MEDIUM",
+    "detector_consensus": "2/4",
     "summary": "MODERATE ALERT (Sample 2424): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2428,
-    "severity": "LOW",
-    "summary": "LOW ALERT (Sample 2428): Borderline detection by one model. Likely benign; logged for audit purposes."
+    "severity": "MEDIUM",
+    "detector_consensus": "1/4",
+    "summary": "MODERATE ALERT (Sample 2428): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged for review."
   },
   {
     "sample_index": 2435,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2435): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2435): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2438,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2438): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2438): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   },
   {
     "sample_index": 2440,
-    "severity": "CRITICAL",
-    "summary": "CRITICAL ALERT (Sample 2440): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Recommend immediate review of device connectivity and patient vitals."
+    "severity": "HIGH",
+    "detector_consensus": "4/4",
+    "summary": "HIGH ALERT (Sample 2440): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity."
   }
 ]

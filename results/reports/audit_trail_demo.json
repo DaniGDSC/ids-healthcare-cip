@@ -306,7 +306,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 11): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 11): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -441,7 +441,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 16): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 16): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -970,7 +970,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 36): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 36): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -1077,7 +1077,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 40): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed un",
+    "explanation_summary": "HIGH ALERT (Sample 40): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -1522,7 +1522,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 57): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device ",
+    "explanation_summary": "HIGH ALERT (Sample 57): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -1578,7 +1578,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 59): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
+    "explanation_summary": "CRITICAL ALERT (Sample 59): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device conn",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -1633,7 +1633,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 61): Minor anomaly detected \u2014 abnormal packet loss. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 61): Suspicious activity detected. Key factor: abnormal packet loss. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "false_positive_isolated",
       "action_effective": false,
@@ -1951,7 +1951,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 73): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device ",
+    "explanation_summary": "HIGH ALERT (Sample 73): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -2241,7 +2241,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 84): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 84): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -2270,7 +2270,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 85): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed un",
+    "explanation_summary": "HIGH ALERT (Sample 85): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -2775,7 +2775,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 104): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 104): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -2861,7 +2861,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 107): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 107): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -3124,7 +3124,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 117): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 117): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -3153,7 +3153,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 118): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 118): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -3231,7 +3231,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 121): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 121): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -3444,7 +3444,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 129): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (unexpected network port activity) also contributed. No immediate clinical action required, b",
+    "explanation_summary": "LOW ALERT (Sample 129): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -3706,7 +3706,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 139): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 139): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -3735,7 +3735,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 140): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 140): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -3813,7 +3813,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 143): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 143): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -4082,7 +4082,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 153): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 153): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -4111,7 +4111,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 154): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 154): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -4170,7 +4170,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 156): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 156): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -4355,7 +4355,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 163): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 163): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -4623,7 +4623,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 173): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 173): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -4728,7 +4728,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 177): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 177): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -4939,7 +4939,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 185): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 185): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -5051,7 +5051,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 189): Minor anomaly detected \u2014 abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagged fo",
+    "explanation_summary": "CRITICAL ALERT (Sample 189): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. A secondary indicator (abnormal pr",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -5107,7 +5107,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 191): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 191): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -5374,7 +5374,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 201): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 201): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -5457,7 +5457,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 204): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 204): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -5617,7 +5617,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 210): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 210): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -5755,7 +5755,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 215): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (SpO2) showed unusual values. No immediate clinical action required, but flagged for review",
+    "explanation_summary": "HIGH ALERT (Sample 215): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SpO2) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -6178,7 +6178,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 231): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 231): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -6632,7 +6632,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 248): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 248): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -6924,7 +6924,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 259): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for r",
+    "explanation_summary": "HIGH ALERT (Sample 259): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7136,7 +7136,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 267): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 267): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7243,7 +7243,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 271): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 271): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7664,7 +7664,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 287): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 287): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7721,7 +7721,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 289): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 289): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7750,7 +7750,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 290): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 290): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7912,7 +7912,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 296): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (SYS, Pulse_Rat",
+    "explanation_summary": "HIGH ALERT (Sample 296): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (SYS, Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7965,7 +7965,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 298): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 298): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -8048,7 +8048,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 301): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) sho",
+    "explanation_summary": "HIGH ALERT (Sample 301): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -8077,7 +8077,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 302): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 302): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -8108,7 +8108,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 303): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review",
+    "explanation_summary": "HIGH ALERT (Sample 303): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -8688,7 +8688,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 325): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 325): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -9188,7 +9188,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 344): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 344): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -9321,7 +9321,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 349): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 349): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -9585,7 +9585,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 359): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 359): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -9928,7 +9928,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 372): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 372): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -10117,7 +10117,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 379): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 379): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -10172,7 +10172,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 381): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 381): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -10381,7 +10381,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 389): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values.",
+    "explanation_summary": "LOW ALERT (Sample 389): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -10516,7 +10516,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 394): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 394): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -10542,7 +10542,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 395): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 395): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -10990,7 +10990,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 412): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 412): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11126,7 +11126,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 417): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 417): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11339,7 +11339,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 425): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 425): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11552,7 +11552,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 433): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 433): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11739,7 +11739,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 440): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 440): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11821,7 +11821,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 443): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
+    "explanation_summary": "CRITICAL ALERT (Sample 443): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device con",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11980,7 +11980,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 449): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 449): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -12009,7 +12009,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 450): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 450): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -12926,7 +12926,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 485): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 485): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -13011,7 +13011,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 488): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 488): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -13093,7 +13093,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 491): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 491): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -13226,7 +13226,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 496): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 496): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -13385,7 +13385,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 502): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 502): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -13492,7 +13492,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 506): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "MODERATE ALERT (Sample 506): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -13921,7 +13921,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 522): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagge",
+    "explanation_summary": "HIGH ALERT (Sample 522): Suspicious activity detected. Key factor: unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -14480,7 +14480,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 543): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 543): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -14663,7 +14663,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 550): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Note: Biometric data (Temp) showed unusual values",
+    "explanation_summary": "LOW ALERT (Sample 550): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -15139,7 +15139,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 568): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 568): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -15353,7 +15353,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 576): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 576): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -15407,7 +15407,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 578): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 578): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -16246,7 +16246,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 610): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 610): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -16485,7 +16485,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 619): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 619): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -16563,7 +16563,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 622): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagge",
+    "explanation_summary": "LOW ALERT (Sample 622): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -16854,7 +16854,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 633): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 633): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -16880,7 +16880,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 634): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 634): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -17303,7 +17303,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 650): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 650): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -17646,7 +17646,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 663): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 663): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -17935,7 +17935,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 674): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 674): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -17992,7 +17992,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 676): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 676): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -18416,7 +18416,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 692): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "MODERATE ALERT (Sample 692): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -19101,7 +19101,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 718): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 718): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -19131,7 +19131,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 719): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "CRITICAL ALERT (Sample 719): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of devi",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -19160,7 +19160,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 720): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "MODERATE ALERT (Sample 720): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -19370,7 +19370,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 728): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 728): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -19556,7 +19556,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 735): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 735): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -19848,7 +19848,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 746): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 746): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -19957,7 +19957,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 750): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "CRITICAL ALERT (Sample 750): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of devi",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -20092,7 +20092,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 755): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 755): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -20178,7 +20178,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 758): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review",
+    "explanation_summary": "HIGH ALERT (Sample 758): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -20233,7 +20233,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 760): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 760): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -20788,7 +20788,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 781): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 781): Suspicious activity detected. Key factor: abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -20818,7 +20818,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 782): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 782): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -20900,7 +20900,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 785): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 785): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -21139,7 +21139,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 794): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 794): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -21564,7 +21564,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 810): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 810): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -21668,7 +21668,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 814): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, but flagge",
+    "explanation_summary": "LOW ALERT (Sample 814): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -21725,7 +21725,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 816): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 816): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -21755,7 +21755,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 817): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 817): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -21916,7 +21916,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 823): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 823): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -22132,7 +22132,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 831): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 831): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -22712,7 +22712,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 853): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 853): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23033,7 +23033,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 865): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 865): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23114,7 +23114,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 868): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 868): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23170,7 +23170,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 870): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 870): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23303,7 +23303,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 875): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 875): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23466,7 +23466,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 881): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 881): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23547,7 +23547,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 884): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 884): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23576,7 +23576,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 885): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 885): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23605,7 +23605,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 886): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 886): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23844,7 +23844,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 895): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagge",
+    "explanation_summary": "HIGH ALERT (Sample 895): Suspicious activity detected. Key factor: unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23982,7 +23982,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 900): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 900): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -24376,7 +24376,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 915): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 915): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -24458,7 +24458,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 918): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "CRITICAL ALERT (Sample 918): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -24698,7 +24698,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 927): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 927): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -25072,7 +25072,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 941): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review",
+    "explanation_summary": "HIGH ALERT (Sample 941): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -25603,7 +25603,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 961): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for r",
+    "explanation_summary": "HIGH ALERT (Sample 961): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -25816,7 +25816,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 969): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 969): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -25869,7 +25869,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 971): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) showed unusual values.",
+    "explanation_summary": "LOW ALERT (Sample 971): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -25926,7 +25926,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 973): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review",
+    "explanation_summary": "HIGH ALERT (Sample 973): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -26114,7 +26114,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 980): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 980): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -26252,7 +26252,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 985): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Heart_rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 985): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Heart_rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -26281,7 +26281,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 986): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 986): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -26598,7 +26598,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 998): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 998): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -26807,7 +26807,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1006): Minor anomaly detected \u2014 abnormal temperature reading. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 1006): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -26862,7 +26862,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1008): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1008): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -27655,7 +27655,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1038): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 1038): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28158,7 +28158,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1057): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1057): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28579,7 +28579,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1073): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 1073): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28686,7 +28686,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1077): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1077): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28848,7 +28848,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1083): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1083): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -29009,7 +29009,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1089): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 1089): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -29356,7 +29356,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1102): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
+    "explanation_summary": "MODERATE ALERT (Sample 1102): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "false_positive_isolated",
       "action_effective": false,
@@ -29832,7 +29832,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1120): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Pulse_Rate) s",
+    "explanation_summary": "HIGH ALERT (Sample 1120): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -30071,7 +30071,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1129): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1129): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -30181,7 +30181,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1133): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
+    "explanation_summary": "CRITICAL ALERT (Sample 1133): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device co",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -30288,7 +30288,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1137): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1137): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -30631,7 +30631,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1150): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1150): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -30686,7 +30686,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1152): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1152): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -31769,7 +31769,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1193): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1193): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -31954,7 +31954,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1200): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "MODERATE ALERT (Sample 1200): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -32035,7 +32035,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1203): Minor anomaly detected \u2014 abnormal temperature reading. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 1203): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -32090,7 +32090,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1205): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagge",
+    "explanation_summary": "LOW ALERT (Sample 1205): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -32119,7 +32119,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1206): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1206): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -32203,7 +32203,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1209): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1209): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -32725,7 +32725,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1229): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 1229): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -32834,7 +32834,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1233): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for",
+    "explanation_summary": "HIGH ALERT (Sample 1233): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -33439,7 +33439,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1256): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1256): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -33677,7 +33677,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1265): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1265): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -34000,7 +34000,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1277): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1277): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -34398,7 +34398,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1292): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1292): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -34607,7 +34607,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1300): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 1300): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -34636,7 +34636,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1301): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1301): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -34771,7 +34771,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1306): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1306): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -35222,7 +35222,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1323): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1323): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -35406,7 +35406,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1330): Minor anomaly detected \u2014 abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Note: Biometric data (Temp) showed unusual value",
+    "explanation_summary": "LOW ALERT (Sample 1330): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -35568,7 +35568,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1336): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1336): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -35599,7 +35599,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1337): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for revie",
+    "explanation_summary": "HIGH ALERT (Sample 1337): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -35656,7 +35656,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1339): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1339): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -36001,7 +36001,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1352): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1352): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -36135,7 +36135,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1357): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1357): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -36268,7 +36268,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1362): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1362): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -36562,7 +36562,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1373): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) sh",
+    "explanation_summary": "HIGH ALERT (Sample 1373): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -36771,7 +36771,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1381): Minor anomaly detected \u2014 abnormal temperature reading. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 1381): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -37647,7 +37647,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1414): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1414): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -37676,7 +37676,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1415): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1415): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -37732,7 +37732,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1417): Minor anomaly detected \u2014 unusual network packet timing. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1417): Suspicious activity detected. Key factor: unusual network packet timing. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -37995,7 +37995,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1427): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1427): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -38209,7 +38209,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1435): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1435): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -38735,7 +38735,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1455): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1455): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -38790,7 +38790,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1457): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1457): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -38821,7 +38821,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1458): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (SYS, Pulse_Ra",
+    "explanation_summary": "HIGH ALERT (Sample 1458): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (SYS, Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -38878,7 +38878,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1460): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for revie",
+    "explanation_summary": "HIGH ALERT (Sample 1460): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -39091,7 +39091,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1468): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1468): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -39148,7 +39148,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1470): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for revie",
+    "explanation_summary": "HIGH ALERT (Sample 1470): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -39176,7 +39176,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1471): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "MODERATE ALERT (Sample 1471): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -39364,7 +39364,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1478): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
+    "explanation_summary": "CRITICAL ALERT (Sample 1478): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of dev",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -39705,7 +39705,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1491): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1491): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -40520,7 +40520,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1522): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1522): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -40889,7 +40889,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1536): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1536): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -40945,7 +40945,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1538): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "CRITICAL ALERT (Sample 1538): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device co",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41026,7 +41026,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1541): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1541): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41268,7 +41268,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1550): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1550): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41349,7 +41349,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1553): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1553): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41409,7 +41409,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1555): Minor anomaly detected \u2014 abnormal pulse rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1555): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41886,7 +41886,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1573): Minor anomaly detected \u2014 abnormal temperature reading. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagge",
+    "explanation_summary": "LOW ALERT (Sample 1573): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -42021,7 +42021,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1578): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. No immediate clinical action required, but flagged for ",
+    "explanation_summary": "HIGH ALERT (Sample 1578): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -42498,7 +42498,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1596): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1596): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -42761,7 +42761,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1606): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1606): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -42894,7 +42894,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1611): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1611): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -42924,7 +42924,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1612): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 1612): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -43268,7 +43268,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1625): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1625): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
