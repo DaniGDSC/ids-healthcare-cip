@@ -1,0 +1,175 @@
+# RQ2.e — Attack category → MITRE ATT&CK technique mapping
+# ──────────────────────────────────────────────────────────────────────
+# Each attack category referenced by the IDS-HC-IoMT pipeline maps to
+# one or more MITRE ATT&CK techniques (enterprise + ICS matrices),
+# with a confidence band capturing the strength of the mapping.
+#
+# Used by:
+#   • src/mve_generator.py — Layer 1 narrative may reference the MITRE
+#     technique by name and ID
+#   • tools/rq2_audit_mitre_coverage.py — coverage audit + reference rate
+#
+# Mapping confidence:
+#   • high   — direct behavioral evidence in the feature set
+#   • medium — consistent with technique but requires corroboration
+#   • low    — plausible association; not the canonical evidence
+
+version: "1.0"
+mitre_framework_version: "v14.1"        # ATT&CK Enterprise + ICS
+last_synced: "2026-05-26"
+source: "https://attack.mitre.org/versions/v14/"
+
+# ──────────────────────────────────────────────────────────────────────
+# Per-attack-category mapping
+# ──────────────────────────────────────────────────────────────────────
+attack_categories:
+
+  Spoofing:
+    description: "Identity / source / address spoofing observed in the flow record (unusual src→dst pairing or protocol drift)."
+    primary_technique:
+      id: T1557
+      name: "Adversary-in-the-Middle"
+      confidence: high
+      url: "https://attack.mitre.org/techniques/T1557/"
+    sub_techniques:
+      - id: T1557.002
+        name: "ARP Cache Poisoning"
+        confidence: medium
+    related_techniques:
+      - id: T1071
+        name: "Application Layer Protocol"
+        confidence: medium
+      - id: T1036
+        name: "Masquerading"
+        confidence: medium
+    ics_techniques:
+      - id: T0830
+        name: "Adversary-in-the-Middle (ICS)"
+        confidence: high
+        matrix: ICS
+
+  Data Alteration:
+    description: "Unauthorized modification of data in transit or at rest (Module 4 flags this when packet body shape diverges from baseline)."
+    primary_technique:
+      id: T1565
+      name: "Data Manipulation"
+      confidence: high
+      url: "https://attack.mitre.org/techniques/T1565/"
+    sub_techniques:
+      - id: T1565.002
+        name: "Transmitted Data Manipulation"
+        confidence: high
+      - id: T1565.001
+        name: "Stored Data Manipulation"
+        confidence: medium
+    related_techniques:
+      - id: T1499
+        name: "Endpoint Denial of Service"
+        confidence: low
+    ics_techniques:
+      - id: T0832
+        name: "Manipulation of View (ICS)"
+        confidence: high
+        matrix: ICS
+      - id: T0836
+        name: "Modify Parameter (ICS)"
+        confidence: medium
+        matrix: ICS
+
+  # The categories below are documented as IN-SCOPE for the threat
+  # model but are NOT present in the current corpus (IDS-HC-IoMT-2024
+  # has only Spoofing + Data Alteration labels). Mappings are recorded
+  # so the corpus expansion path is unambiguous.
+
+  Reconnaissance:
+    description: "Network discovery / port scanning / OS fingerprinting prior to a clinical-device-targeted attack."
+    in_current_corpus: false
+    primary_technique:
+      id: T1595
+      name: "Active Scanning"
+      confidence: high
+    sub_techniques:
+      - id: T1595.001
+        name: "Scanning IP Blocks"
+        confidence: high
+      - id: T1595.002
+        name: "Vulnerability Scanning"
+        confidence: medium
+
+  Initial Access:
+    description: "First foothold via phishing, valid accounts, or exploit of public-facing service. Often precedes lateral movement onto the clinical VLAN."
+    in_current_corpus: false
+    primary_technique:
+      id: T1190
+      name: "Exploit Public-Facing Application"
+      confidence: high
+    related_techniques:
+      - id: T1078
+        name: "Valid Accounts"
+        confidence: high
+      - id: T1566
+        name: "Phishing"
+        confidence: medium
+
+  Lateral Movement:
+    description: "Movement from initial foothold onto the IoMT segment (RDP, SMB, or device-to-device pivot)."
+    in_current_corpus: false
+    primary_technique:
+      id: T1021
+      name: "Remote Services"
+      confidence: high
+    sub_techniques:
+      - id: T1021.001
+        name: "Remote Desktop Protocol"
+        confidence: high
+      - id: T1021.002
+        name: "SMB/Windows Admin Shares"
+        confidence: medium
+
+  Exfiltration:
+    description: "Bulk data egress (PHI / device telemetry / configuration) to an external destination."
+    in_current_corpus: false
+    primary_technique:
+      id: T1041
+      name: "Exfiltration Over C2 Channel"
+      confidence: high
+    related_techniques:
+      - id: T1048
+        name: "Exfiltration Over Alternative Protocol"
+        confidence: high
+      - id: T1567
+        name: "Exfiltration Over Web Service"
+        confidence: medium
+
+  # The "normal" label is included so coverage audits don't flag it as
+  # an orphan — normal traffic has no MITRE mapping by construction.
+
+  normal:
+    description: "Benign baseline traffic. No MITRE technique applies."
+    in_current_corpus: true
+    primary_technique:
+      id: NONE
+      name: "No mapping (benign baseline)"
+      confidence: not_applicable
+    excluded_from_coverage_audit: true
+
+# ──────────────────────────────────────────────────────────────────────
+# Cross-reference: MVE Layer 1 reference policy
+# ──────────────────────────────────────────────────────────────────────
+mve_reference_policy:
+  layer_1_must_reference_mitre: true
+  format: "Inline technique ID + name (e.g. 'consistent with T1565 — Data Manipulation')"
+  exemption:
+    - "Benign / normal alerts (no mapping)"
+    - "Confidence band == low (avoid over-attribution)"
+  enforcement: tools/rq2_audit_mitre_coverage.py
+
+# ──────────────────────────────────────────────────────────────────────
+# Future-corpus categories (placeholder — keep mapping coherent if
+# corpus is expanded)
+# ──────────────────────────────────────────────────────────────────────
+future_categories:
+  - Credential Access
+  - Privilege Escalation
+  - Defense Evasion
+  - Impact (Clinical Disruption)

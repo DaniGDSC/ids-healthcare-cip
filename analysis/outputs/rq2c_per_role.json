@@ -1,0 +1,86 @@
+{
+  "_meta": {
+    "description": "RQ2.c \u2014 per-role MWU on accuracy / decision_time / confidence",
+    "data_source": "results/reports/participant_responses.json",
+    "n_total_records": 300,
+    "test": "Mann-Whitney U per role (with_xai vs without_xai)",
+    "alternatives": {
+      "accuracy": "with_xai > without_xai",
+      "decision_time": "with_xai < without_xai (faster)",
+      "confidence": "with_xai > without_xai"
+    }
+  },
+  "per_role_means": [
+    {
+      "role": "administrator",
+      "n_with_xai": 50,
+      "n_without_xai": 50,
+      "accuracy_with_xai_mean": 0.92,
+      "accuracy_without_xai_mean": 0.7,
+      "decision_time_with_xai_mean": 29.12,
+      "decision_time_without_xai_mean": 44.38,
+      "confidence_with_xai_mean": 3.62,
+      "confidence_without_xai_mean": 2.8,
+      "likert_trust_with_xai_mean": 4.26,
+      "likert_trust_without_xai_mean": 2.98,
+      "likert_usefulness_with_xai_mean": 4.42,
+      "likert_usefulness_without_xai_mean": 3.28
+    },
+    {
+      "role": "analyst",
+      "n_with_xai": 50,
+      "n_without_xai": 50,
+      "accuracy_with_xai_mean": 0.94,
+      "accuracy_without_xai_mean": 0.86,
+      "decision_time_with_xai_mean": 20.7,
+      "decision_time_without_xai_mean": 40.18,
+      "confidence_with_xai_mean": 3.52,
+      "confidence_without_xai_mean": 3.04,
+      "likert_trust_with_xai_mean": 4.22,
+      "likert_trust_without_xai_mean": 3.0,
+      "likert_usefulness_with_xai_mean": 4.44,
+      "likert_usefulness_without_xai_mean": 3.32
+    },
+    {
+      "role": "clinician",
+      "n_with_xai": 50,
+      "n_without_xai": 50,
+      "accuracy_with_xai_mean": 0.9,
+      "accuracy_without_xai_mean": 0.7,
+      "decision_time_with_xai_mean": 26.98,
+      "decision_time_without_xai_mean": 43.12,
+      "confidence_with_xai_mean": 3.52,
+      "confidence_without_xai_mean": 3.06,
+      "likert_trust_with_xai_mean": 4.56,
+      "likert_trust_without_xai_mean": 3.22,
+      "likert_usefulness_with_xai_mean": 4.62,
+      "likert_usefulness_without_xai_mean": 3.7
+    }
+  ],
+  "per_role_mann_whitney": {
+    "administrator": {
+      "accuracy_mw_p_value": 0.007045996527915517,
+      "decision_time_mw_p_value": 0.003968253968253968,
+      "confidence_mw_p_value": 0.003968253968253968,
+      "accuracy_significant": true,
+      "decision_time_significant": true,
+      "confidence_significant": true
+    },
+    "analyst": {
+      "accuracy_mw_p_value": 0.10937900226669622,
+      "decision_time_mw_p_value": 0.003968253968253968,
+      "confidence_mw_p_value": 0.015873015873015872,
+      "accuracy_significant": false,
+      "decision_time_significant": true,
+      "confidence_significant": true
+    },
+    "clinician": {
+      "accuracy_mw_p_value": 0.031721075197817146,
+      "decision_time_mw_p_value": 0.003968253968253968,
+      "confidence_mw_p_value": 0.01778941661979705,
+      "accuracy_significant": true,
+      "decision_time_significant": true,
+      "confidence_significant": true
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "_meta": {
+    "description": "Chi-square on escalation rate (A baseline vs B with MVE)",
+    "data_sources": [
+      "survey/study_responses_A.json",
+      "survey/study_responses_B.json"
+    ]
+  },
+  "overall_chi2": {
+    "contingency_table": [
+      [
+        121,
+        379
+      ],
+      [
+        109,
+        391
+      ]
+    ],
+    "row_labels": [
+      "Group A",
+      "Group B"
+    ],
+    "col_labels": [
+      "Escalated",
+      "Not escalated"
+    ],
+    "chi2_statistic": 0.6832298136645962,
+    "p_value": 0.4084767632025941,
+    "degrees_of_freedom": 1,
+    "expected_frequencies": [
+      [
+        115.0,
+        385.0
+      ],
+      [
+        115.0,
+        385.0
+      ]
+    ],
+    "passes_significance": false
+  },
+  "appropriate_escalation_rate": {
+    "group_A": 0.304,
+    "group_B": 0.388,
+    "definition": "Fraction of CRITICAL+HIGH alerts where operator chose `escalate`"
+  },
+  "by_ground_truth_severity": {
+    "CRITICAL": {
+      "n_A": 100,
+      "A_escalated": 32,
+      "A_rate": 0.32,
+      "n_B": 100,
+      "B_escalated": 33,
+      "B_rate": 0.33
+    },
+    "HIGH": {
+      "n_A": 150,
+      "A_escalated": 44,
+      "A_rate": 0.29333333333333333,
+      "n_B": 150,
+      "B_escalated": 64,
+      "B_rate": 0.4266666666666667
+    },
+    "MEDIUM": {
+      "n_A": 75,
+      "A_escalated": 12,
+      "A_rate": 0.16,
+      "n_B": 75,
+      "B_escalated": 8,
+      "B_rate": 0.10666666666666667
+    },
+    "LOW": {
+      "n_A": 175,
+      "A_escalated": 33,
+      "A_rate": 0.18857142857142858,
+      "n_B": 175,
+      "B_escalated": 4,
+      "B_rate": 0.022857142857142857
+    }
+  }
+}

@@ -1,0 +1,136 @@
+# RQ3 §1 — Tier routing rules
+# ───────────────────────────────────────────────────────────────────────
+# Maps a (risk_tier, device_class) pair to:
+#   • surface_action  — what the operator sees (suppress / informational / surface / escalate)
+#   • default_route   — which role's queue the alert appears in first
+#   • SLA_minutes     — max time-to-decision before automated re-escalation
+#   • auto_executable — whether ANY action may run without human approval
+#
+# Derived from results/reports/response_policy.json (canonical source for
+# tier action sets) + the Module 5 invariants (Invariant 2 safety floor,
+# Invariant 3 no-auto-execute, Invariant 7 DO NOT constraints).
+#
+# This YAML is consumed by Module 5's response builder; the policy JSON
+# remains authoritative for action lists. Keep this file in lock-step
+# with `response_policy.json::tier_policies`.
+
+version: "1.0"
+source: "module5_responses/module5_pipeline.py + results/reports/response_policy.json"
+last_synced: "2026-05-25"
+
+# ───────────────────────────────────────────────────────────────────────
+# Tier-level routing
+# ───────────────────────────────────────────────────────────────────────
+tier_routes:
+  CRITICAL:
+    surface_action: escalate
+    default_route: T3_SOC_plus_biomed
+    SLA_minutes: 5
+    auto_executable: false        # Invariant 3 override — see §invariant_overrides
+    rationale: >-
+      Life-critical event. Notify Tier-3 SOC and biomedical engineering
+      on-call simultaneously. Operator decision required; isolate actions
+      blocked on life-sustaining devices (Invariant 7).
+
+  HIGH:
+    surface_action: surface
+    default_route: T2_SOC_analyst
+    SLA_minutes: 15
+    auto_executable: false
+    rationale: >-
+      Likely incident. Surface to T2 analyst with full MVE explanation.
+      Operator picks acknowledge / escalate / investigate. No auto-isolate
+      under any circumstances.
+
+  MEDIUM:
+    surface_action: informational
+    default_route: T1_SOC_analyst
+    SLA_minutes: 60
+    auto_executable: false
+    rationale: >-
+      Surface as informational. Most likely benign noise; serves as
+      context for the operator's situational awareness rather than a
+      mandatory action item.
+
+  LOW:
+    surface_action: suppress
+    default_route: audit_only
+    SLA_minutes: 480
+    auto_executable: false
+    rationale: >-
+      Suppress from the live operator queue. Logged to audit chain so
+      attribution is preserved (Invariant 5: silent suppression is
+      forbidden — every LOW gets a record).
+
+# ───────────────────────────────────────────────────────────────────────
+# Device-class overlays (modify tier route)
+# ───────────────────────────────────────────────────────────────────────
+device_overlays:
+  life_sustaining:
+    max_action_cost: 0.5
+    isolation_blocked: true
+    clinical_approval_required: true
+    do_not_constraint: >-
+      DO NOT power-cycle or disconnect device during active clinical use.
+      Coordinate with ICU charge nurse before any network-level action.
+
+  vital_monitoring:
+    max_action_cost: 0.8
+    isolation_blocked: false
+    clinical_approval_required: true
+    do_not_constraint: >-
+      DO NOT isolate from EHR gateway — vitals must continue. SAFE
+      action: rate-limit or destination-block; HL7 on 443 unaffected.
+
+  diagnostic:
+    max_action_cost: 0.8
+    isolation_blocked: false
+    clinical_approval_required: false
+
+  workstation:
+    max_action_cost: 1.0
+    isolation_blocked: false
+    clinical_approval_required: false
+
+# ───────────────────────────────────────────────────────────────────────
+# Invariant overrides (force routes regardless of tier policy)
+# ───────────────────────────────────────────────────────────────────────
+invariant_overrides:
+  - id: invariant_2_safety_floor
+    when:
+      device_class: life_sustaining
+      computed_tier: ["LOW", "MEDIUM"]
+    action:
+      override_tier: HIGH
+      reason: >-
+        Module-5 safety floor — any alert on a life-sustaining device
+        elevates to at least HIGH so it surfaces to an operator. Floor
+        engagement is logged with the `floor_elevated` marker.
+
+  - id: invariant_3_no_auto_execute
+    when: always
+    action:
+      force_auto_executable: false
+      reason: >-
+        Architecture-wide: no enforcement action runs without human
+        approval. This invariant supersedes any tier-level
+        `auto_execute: true` setting in legacy response_policy.json.
+
+  - id: invariant_7_do_not_on_critical_clinical
+    when:
+      computed_tier: CRITICAL
+      device_class: [life_sustaining, vital_monitoring]
+    action:
+      require_do_not_text: true
+      reason: >-
+        Every CRITICAL alert on clinical hardware must surface an
+        explicit DO NOT constraint in the MVE Layer 3 text so the
+        operator sees the safe-action boundary before deciding.
+
+# ───────────────────────────────────────────────────────────────────────
+# Test linkage
+# ───────────────────────────────────────────────────────────────────────
+tests:
+  - tests/test_safe_failure.py
+  - tests/test_step16_audit_integrity.py
+  - tests/negative_tests.py::test_no_automated_blocking

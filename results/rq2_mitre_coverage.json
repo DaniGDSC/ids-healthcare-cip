@@ -1,0 +1,289 @@
+{
+  "_meta": {
+    "description": "MITRE ATT&CK coverage + Layer 1 MITRE-reference rate",
+    "config_source": "config/attack_to_mitre_mapping.yaml",
+    "framework_version": "v14.1",
+    "mapping_yaml_version": "1.0"
+  },
+  "config_coverage": {
+    "n_total_categories": 6,
+    "n_mapped": 6,
+    "pct_mapped": 100.0,
+    "n_with_sub_techniques": 4,
+    "n_with_ics_techniques": 2,
+    "orphans": [],
+    "target_pct_mapped": 100.0,
+    "target_met_no_orphans": true,
+    "framework_version_pinned": true,
+    "framework_version": "v14.1",
+    "per_category": [
+      {
+        "category": "Spoofing",
+        "in_current_corpus": true,
+        "primary_technique_id": "T1557",
+        "primary_technique_name": "Adversary-in-the-Middle",
+        "primary_confidence": "high",
+        "n_sub_techniques": 1,
+        "n_ics_techniques": 1,
+        "n_related_techniques": 2
+      },
+      {
+        "category": "Data Alteration",
+        "in_current_corpus": true,
+        "primary_technique_id": "T1565",
+        "primary_technique_name": "Data Manipulation",
+        "primary_confidence": "high",
+        "n_sub_techniques": 2,
+        "n_ics_techniques": 2,
+        "n_related_techniques": 1
+      },
+      {
+        "category": "Reconnaissance",
+        "in_current_corpus": false,
+        "primary_technique_id": "T1595",
+        "primary_technique_name": "Active Scanning",
+        "primary_confidence": "high",
+        "n_sub_techniques": 2,
+        "n_ics_techniques": 0,
+        "n_related_techniques": 0
+      },
+      {
+        "category": "Initial Access",
+        "in_current_corpus": false,
+        "primary_technique_id": "T1190",
+        "primary_technique_name": "Exploit Public-Facing Application",
+        "primary_confidence": "high",
+        "n_sub_techniques": 0,
+        "n_ics_techniques": 0,
+        "n_related_techniques": 2
+      },
+      {
+        "category": "Lateral Movement",
+        "in_current_corpus": false,
+        "primary_technique_id": "T1021",
+        "primary_technique_name": "Remote Services",
+        "primary_confidence": "high",
+        "n_sub_techniques": 2,
+        "n_ics_techniques": 0,
+        "n_related_techniques": 0
+      },
+      {
+        "category": "Exfiltration",
+        "in_current_corpus": false,
+        "primary_technique_id": "T1041",
+        "primary_technique_name": "Exfiltration Over C2 Channel",
+        "primary_confidence": "high",
+        "n_sub_techniques": 0,
+        "n_ics_techniques": 0,
+        "n_related_techniques": 2
+      }
+    ]
+  },
+  "layer1_mitre_reference_rate": {
+    "n_narratives_evaluated": 25,
+    "n_referencing_mitre": 0,
+    "pct_referencing_mitre": 0.0,
+    "target_pct": 90.0,
+    "target_met": false,
+    "per_category": {
+      "unknown": {
+        "total": 20,
+        "hits": 0,
+        "hit_rate_pct": 0.0
+      },
+      "Spoofing": {
+        "total": 3,
+        "hits": 0,
+        "hit_rate_pct": 0.0
+      },
+      "Data Alteration": {
+        "total": 1,
+        "hits": 0,
+        "hit_rate_pct": 0.0
+      },
+      "normal": {
+        "total": 1,
+        "hits": 0,
+        "hit_rate_pct": 0.0
+      }
+    },
+    "per_narrative": [
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 5,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 9,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 14,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 20,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 21,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 23,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 34,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 38,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 44,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 50,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 52,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 60,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 63,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 65,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 66,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 76,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 77,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 79,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 91,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "sample_explanations.json",
+        "sample_index": 97,
+        "category": "unknown",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "example_explanations.json",
+        "sample_index": 425,
+        "category": "Spoofing",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "example_explanations.json",
+        "sample_index": 219,
+        "category": "Spoofing",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "example_explanations.json",
+        "sample_index": 20,
+        "category": "Spoofing",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "example_explanations.json",
+        "sample_index": 5,
+        "category": "Data Alteration",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      },
+      {
+        "source": "example_explanations.json",
+        "sample_index": 1376,
+        "category": "normal",
+        "references_mitre": false,
+        "match_reason": "no MITRE reference"
+      }
+    ]
+  },
+  "overall_status": "PASS"
+}

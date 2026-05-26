@@ -1,0 +1,100 @@
+{
+  "_meta": {
+    "description": "RQ3 audit log integrity + RQ3 spec \u00a73 field completeness",
+    "source": "results/reports/audit_log.jsonl",
+    "n_records": 19821
+  },
+  "hash_chain_integrity": {
+    "n_records": 19821,
+    "chain_breaks": [],
+    "hash_mismatches": [],
+    "archive_restarts": [
+      {
+        "index": 3042,
+        "alert_id": "ALERT-00000"
+      },
+      {
+        "index": 6084,
+        "alert_id": "ALERT-00000"
+      },
+      {
+        "index": 9126,
+        "alert_id": "ALERT-00000"
+      }
+    ],
+    "chain_intact": true,
+    "all_hashes_valid": true
+  },
+  "spec_field_completeness": {
+    "n_records": 19821,
+    "spec_field_coverage": [
+      {
+        "spec_field": "alert_id",
+        "actual_field": "alert_id",
+        "present_count": 19787,
+        "coverage_rate": 0.998284647595984,
+        "status": "partial"
+      },
+      {
+        "spec_field": "fusion_class",
+        "actual_field": "ground_truth",
+        "present_count": 19782,
+        "coverage_rate": 0.9980323898895112,
+        "status": "partial"
+      },
+      {
+        "spec_field": "risk_tier",
+        "status": "missing_from_schema",
+        "note": "Field is not part of the Module-5 AuditTrailWriter schema. Reviewer-attributed events go through the separate HardenedAuditLogger chain (results/reports/audit_log.jsonl events with event_type=reviewer_interaction or alert_responses)."
+      },
+      {
+        "spec_field": "operator_role",
+        "status": "missing_from_schema",
+        "note": "Field is not part of the Module-5 AuditTrailWriter schema. Reviewer-attributed events go through the separate HardenedAuditLogger chain (results/reports/audit_log.jsonl events with event_type=reviewer_interaction or alert_responses)."
+      },
+      {
+        "spec_field": "decision_time_seconds",
+        "status": "missing_from_schema",
+        "note": "Field is not part of the Module-5 AuditTrailWriter schema. Reviewer-attributed events go through the separate HardenedAuditLogger chain (results/reports/audit_log.jsonl events with event_type=reviewer_interaction or alert_responses)."
+      },
+      {
+        "spec_field": "operator_confidence",
+        "status": "missing_from_schema",
+        "note": "Field is not part of the Module-5 AuditTrailWriter schema. Reviewer-attributed events go through the separate HardenedAuditLogger chain (results/reports/audit_log.jsonl events with event_type=reviewer_interaction or alert_responses)."
+      },
+      {
+        "spec_field": "mve_text_shown",
+        "status": "missing_from_schema",
+        "note": "Field is not part of the Module-5 AuditTrailWriter schema. Reviewer-attributed events go through the separate HardenedAuditLogger chain (results/reports/audit_log.jsonl events with event_type=reviewer_interaction or alert_responses)."
+      },
+      {
+        "spec_field": "shap_features_shown",
+        "status": "missing_from_schema",
+        "note": "Field is not part of the Module-5 AuditTrailWriter schema. Reviewer-attributed events go through the separate HardenedAuditLogger chain (results/reports/audit_log.jsonl events with event_type=reviewer_interaction or alert_responses)."
+      },
+      {
+        "spec_field": "previous_hash",
+        "actual_field": "prev_hash",
+        "present_count": 19821,
+        "coverage_rate": 1.0,
+        "status": "ok"
+      },
+      {
+        "spec_field": "entry_hash",
+        "actual_field": "integrity_hash",
+        "present_count": 19821,
+        "coverage_rate": 1.0,
+        "status": "ok"
+      },
+      {
+        "spec_field": "timestamp",
+        "actual_field": "timestamp",
+        "present_count": 19782,
+        "coverage_rate": 0.9980323898895112,
+        "status": "partial"
+      }
+    ],
+    "missing_from_schema_count": 6
+  },
+  "overall_status": "PASS"
+}

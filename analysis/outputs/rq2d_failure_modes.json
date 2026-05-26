@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "description": "RQ2.d \u2014 Failure mode catalog from user study",
+    "data_sources": [
+      "survey/study_responses_A.json",
+      "survey/study_responses_B.json",
+      "results/reports/participant_responses.json"
+    ],
+    "scope": "Single-round study \u2014 claim is OBSERVATIONAL (failure modes identified). Improvement claims require a second round of evaluation post-iteration. See spec \u00a7RQ2.d scope note.",
+    "n_total_responses_scanned": 1300,
+    "n_responses_with_failure_signal": 77,
+    "pct_responses_with_signal": 5.92
+  },
+  "failure_mode_counts": {
+    "do_not_constraint_ignored": 70,
+    "mitre_not_understood": 7,
+    "feature_too_abstract": 1
+  },
+  "examples_per_mode": {
+    "do_not_constraint_ignored": [
+      {
+        "source": "study_responses_A.json",
+        "response_id": "A01",
+        "alert_id": 19,
+        "rationale_excerpt": "Unknown wireless communication from device with high severity could impact patient devices so isolating."
+      },
+      {
+        "source": "study_responses_A.json",
+        "response_id": "A01",
+        "alert_id": 7,
+        "rationale_excerpt": "Admin account accessing hundreds of EHR records rapidly looks like compromise so isolating access."
+      },
+      {
+        "source": "study_responses_A.json",
+        "response_id": "A01",
+        "alert_id": 18,
+        "rationale_excerpt": "Ventilator using Telnet is very unsafe and could affect patient care so isolating immediately."
+      }
+    ],
+    "mitre_not_understood": [
+      {
+        "source": "study_responses_A.json",
+        "response_id": "A11",
+        "alert_id": 12,
+        "rationale_excerpt": "Ping sweeps usually mean someone is trying to map the network for an attack."
+      },
+      {
+        "source": "study_responses_A.json",
+        "response_id": "A11",
+        "alert_id": 16,
+        "rationale_excerpt": "1.1 GB in 3 minutes from a nurse station to an IP in Russia is definitely an attack."
+      },
+      {
+        "source": "study_responses_A.json",
+        "response_id": "A16",
+        "alert_id": 20,
+        "rationale_excerpt": "Patient monitor showing 5x normal traffic to gateway is elevated but not screaming attack, so monitoring for now."
+      }
+    ],
+    "feature_too_abstract": [
+      {
+        "source": "study_responses_A.json",
+        "response_id": "A24",
+        "alert_id": 19,
+        "rationale_excerpt": "Proprietary wireless to an unknown device is vague enough to be a Bluetooth peripheral pairing but the 8.0 severity and lack of detail means I should at least l"
+      }
+    ]
+  },
+  "iteration_catalog": {
+    "layer1_too_technical": {
+      "iteration": "Simplify Layer 1 vocabulary (Mode A LLM prompt + Mode B template). Drop SHAP value numerics from clinician view.",
+      "metric": "Comprehension % (post-iteration study)",
+      "status": "OBSERVATION ONLY \u2014 single round; improvement not measured"
+    },
+    "mitre_not_understood": {
+      "iteration": "Inline plain-language gloss for each MITRE ID ('T1565 \u2014 Data Manipulation: unauthorized changes to data in transit').",
+      "metric": "Recognition % (post-iteration study)",
+      "status": "OBSERVATION ONLY \u2014 single round"
+    },
+    "do_not_constraint_ignored": {
+      "iteration": "Visual emphasis in MVE Layer 3 (bold DO NOT + warning icon). Already partially implemented in Sentinel theme \u2014 extend to clinician + admin views.",
+      "metric": "Action-compliance % (operator chose safe alternative)",
+      "status": "OBSERVATION ONLY \u2014 single round"
+    },
+    "role_mismatch": {
+      "iteration": "Better role inference at routing (Module 5) + role-switch button in UI when operator finds themselves on wrong queue.",
+      "metric": "Match rate %",
+      "status": "OBSERVATION ONLY \u2014 single round"
+    },
+    "feature_too_abstract": {
+      "iteration": "Increase Mode B feature injection from top-1 to top-3 in `src.mve_generator.py` Layer 1 'Primary signal' suffix.",
+      "metric": "MVE-SHAP alignment %\u22652 (target 95%)",
+      "status": "OBSERVATION ONLY \u2014 improvement gated on study re-run"
+    }
+  }
+}

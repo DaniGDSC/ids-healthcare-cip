@@ -1,0 +1,745 @@
+{
+  "_meta": {
+    "description": "MVE Layer 1 vs top SHAP features alignment \u2014 Mode A (LLM narrative) vs Mode B (rule-based)",
+    "source": "results/reports/sample_explanations.json",
+    "n_samples": 20,
+    "alias_table_features": [
+      "Flgs",
+      "Sport",
+      "Dport",
+      "Dur",
+      "SrcBytes",
+      "TotBytes",
+      "TotPkts",
+      "DIntPkt",
+      "SIntPkt",
+      "pDstLoss",
+      "pSrcLoss",
+      "Temp",
+      "HR",
+      "SpO2",
+      "SBP",
+      "DBP",
+      "DIA",
+      "Proto",
+      "dMaxPktSz",
+      "dMinPktSz",
+      "sMaxPktSz",
+      "Rate",
+      "Sintpkt",
+      "Load",
+      "SrcLoad",
+      "DstLoad"
+    ]
+  },
+  "mode_a_llm_narrative": {
+    "mode": "mode_a_llm_narrative",
+    "n_total": 20,
+    "contains_top1_pct": 80.0,
+    "contains_at_least_2_pct": 25.0,
+    "contains_all_3_pct": 0.0,
+    "target_at_least_2_pct": 95.0,
+    "target_all_3_pct": 80.0,
+    "target_at_least_2_met": false,
+    "target_all_3_met": false,
+    "per_feature_hit_rate": {
+      "Flgs": {
+        "appearances": 20,
+        "mentioned": 8,
+        "hit_rate": 40.0
+      },
+      "DIntPkt": {
+        "appearances": 13,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      },
+      "Dur": {
+        "appearances": 2,
+        "mentioned": 1,
+        "hit_rate": 50.0
+      },
+      "Temp": {
+        "appearances": 7,
+        "mentioned": 3,
+        "hit_rate": 42.86
+      },
+      "Sport": {
+        "appearances": 11,
+        "mentioned": 8,
+        "hit_rate": 72.73
+      },
+      "SrcLoad": {
+        "appearances": 1,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      },
+      "SIntPkt": {
+        "appearances": 5,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      },
+      "Resp_Rate": {
+        "appearances": 1,
+        "mentioned": 1,
+        "hit_rate": 100.0
+      }
+    },
+    "per_sample": [
+      {
+        "sample_index": 5,
+        "layer1_excerpt": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags.",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "Dur"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          true
+        ],
+        "n_features_mentioned": 2
+      },
+      {
+        "sample_index": 9,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values.",
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          false
+        ],
+        "n_features_mentioned": 2
+      },
+      {
+        "sample_index": 14,
+        "layer1_excerpt": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags.",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 20,
+        "layer1_excerpt": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          false,
+          false,
+          false
+        ],
+        "n_features_mentioned": 0
+      },
+      {
+        "sample_index": 21,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 23,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 34,
+        "layer1_excerpt": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "Dur"
+        ],
+        "feature_hits": [
+          false,
+          false,
+          false
+        ],
+        "n_features_mentioned": 0
+      },
+      {
+        "sample_index": 38,
+        "layer1_excerpt": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          false,
+          false,
+          false
+        ],
+        "n_features_mentioned": 0
+      },
+      {
+        "sample_index": 44,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "SrcLoad"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 50,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed.",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          false
+        ],
+        "n_features_mentioned": 2
+      },
+      {
+        "sample_index": 52,
+        "layer1_excerpt": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags.",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 60,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed.",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          true,
+          false
+        ],
+        "n_features_mentioned": 2
+      },
+      {
+        "sample_index": 63,
+        "layer1_excerpt": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags.",
+        "top_features": [
+          "Flgs",
+          "Sport",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 65,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 66,
+        "layer1_excerpt": "LOW ALERT: Borderline detection by one model. Likely benign; logged for audit purposes.",
+        "top_features": [
+          "DIntPkt",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          false,
+          false,
+          false
+        ],
+        "n_features_mentioned": 0
+      },
+      {
+        "sample_index": 76,
+        "layer1_excerpt": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags.",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 77,
+        "layer1_excerpt": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags.",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 79,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values.",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "Resp_Rate"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          true
+        ],
+        "n_features_mentioned": 2
+      },
+      {
+        "sample_index": 91,
+        "layer1_excerpt": "MODERATE ALERT: Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+        "top_features": [
+          "Sport",
+          "DIntPkt",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 97,
+        "layer1_excerpt": "CRITICAL ALERT: The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags.",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      }
+    ]
+  },
+  "mode_b_rule_based": {
+    "mode": "mode_b_rule_based",
+    "n_total": 20,
+    "contains_top1_pct": 100.0,
+    "contains_at_least_2_pct": 0.0,
+    "contains_all_3_pct": 0.0,
+    "target_at_least_2_pct": 95.0,
+    "target_all_3_pct": 80.0,
+    "target_at_least_2_met": false,
+    "target_all_3_met": false,
+    "per_feature_hit_rate": {
+      "Flgs": {
+        "appearances": 20,
+        "mentioned": 9,
+        "hit_rate": 45.0
+      },
+      "DIntPkt": {
+        "appearances": 13,
+        "mentioned": 1,
+        "hit_rate": 7.69
+      },
+      "Dur": {
+        "appearances": 2,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      },
+      "Temp": {
+        "appearances": 7,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      },
+      "Sport": {
+        "appearances": 11,
+        "mentioned": 10,
+        "hit_rate": 90.91
+      },
+      "SrcLoad": {
+        "appearances": 1,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      },
+      "SIntPkt": {
+        "appearances": 5,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      },
+      "Resp_Rate": {
+        "appearances": 1,
+        "mentioned": 0,
+        "hit_rate": 0.0
+      }
+    },
+    "per_sample": [
+      {
+        "sample_index": 5,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "Dur"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 9,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "Temp",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 14,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 20,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 21,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 23,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 34,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "Dur"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 38,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 44,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "SrcLoad"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 50,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 52,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 60,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Temp",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 63,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "Sport",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 65,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "DIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 66,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "DIntPkt",
+          "Flgs",
+          "Temp"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 76,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 77,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 79,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "Flgs",
+          "Resp_Rate"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 91,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Sport",
+          "DIntPkt",
+          "Flgs"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      },
+      {
+        "sample_index": 97,
+        "layer1_excerpt": "patient_monitor (clinical area) normally communicates with internal hosts using HTTPS. At , it initiated unknown protocol to external, not on any approved desti",
+        "top_features": [
+          "Flgs",
+          "DIntPkt",
+          "SIntPkt"
+        ],
+        "feature_hits": [
+          true,
+          false,
+          false
+        ],
+        "n_features_mentioned": 1
+      }
+    ]
+  }
+}

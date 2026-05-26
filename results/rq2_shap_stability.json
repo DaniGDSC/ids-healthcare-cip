@@ -1,0 +1,628 @@
+{
+  "_meta": {
+    "description": "SHAP stability via perturbation (Jaccard top-k overlap)",
+    "method": "Gaussian noise \u03c3=0.01 \u00d7 per-feature std, 5 perturbations/sample",
+    "n_attack_samples": 80,
+    "n_perturbations_per_sample": 5,
+    "top_k": 5,
+    "stability_threshold_jaccard": 0.5,
+    "noise_sigma_normalized": 0.005,
+    "seed": 42
+  },
+  "summary": {
+    "mean_stability_score": 0.7349,
+    "median_stability_score": 0.7333,
+    "std_stability_score": 0.2094,
+    "min_stability_score": 0.2857,
+    "max_stability_score": 1.0,
+    "n_stable": 69,
+    "n_unstable": 11,
+    "pct_stable": 86.25,
+    "target_mean_stability": 0.9,
+    "target_pct_stable": 80.0,
+    "target_mean_met": false,
+    "target_pct_stable_met": true
+  },
+  "per_sample": [
+    {
+      "sample_index": 1426,
+      "stability_score": 0.7524,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 427,
+      "stability_score": 0.4405,
+      "is_stable": false,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur"
+      ]
+    },
+    {
+      "sample_index": 901,
+      "stability_score": 0.7333,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 655,
+      "stability_score": 0.619,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "DIntPkt",
+        "Dur",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 431,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 63,
+      "stability_score": 0.2857,
+      "is_stable": false,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur"
+      ]
+    },
+    {
+      "sample_index": 1094,
+      "stability_score": 0.6667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur"
+      ]
+    },
+    {
+      "sample_index": 1199,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 1287,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 273,
+      "stability_score": 0.7333,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Load"
+      ]
+    },
+    {
+      "sample_index": 44,
+      "stability_score": 0.6667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SrcLoad",
+        "DIntPkt",
+        "Dur"
+      ]
+    },
+    {
+      "sample_index": 1083,
+      "stability_score": 0.5238,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "Temp",
+        "SYS",
+        "Resp_Rate"
+      ]
+    },
+    {
+      "sample_index": 326,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 1396,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 2435,
+      "stability_score": 0.8667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 332,
+      "stability_score": 0.5238,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "DIntPkt",
+        "Pulse_Rate",
+        "Resp_Rate"
+      ]
+    },
+    {
+      "sample_index": 2001,
+      "stability_score": 0.2857,
+      "is_stable": false,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SrcLoad",
+        "DIntPkt",
+        "Load"
+      ]
+    },
+    {
+      "sample_index": 2397,
+      "stability_score": 0.6667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Load"
+      ]
+    },
+    {
+      "sample_index": 1706,
+      "stability_score": 0.6667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Temp",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 1556,
+      "stability_score": 0.9333,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SrcLoad",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 1158,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 2214,
+      "stability_score": 0.7333,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "Temp",
+        "DIA"
+      ]
+    },
+    {
+      "sample_index": 2051,
+      "stability_score": 0.6857,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SrcLoad",
+        "DIntPkt",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 184,
+      "stability_score": 0.619,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SrcLoad",
+        "DIntPkt",
+        "Temp",
+        "SYS"
+      ]
+    },
+    {
+      "sample_index": 1099,
+      "stability_score": 0.5357,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "DIntPkt",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 1242,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 21,
+      "stability_score": 0.3929,
+      "is_stable": false,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SrcLoad",
+        "DIntPkt",
+        "Resp_Rate"
+      ]
+    },
+    {
+      "sample_index": 723,
+      "stability_score": 0.9333,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Load"
+      ]
+    },
+    {
+      "sample_index": 816,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 929,
+      "stability_score": 0.8,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur"
+      ]
+    },
+    {
+      "sample_index": 1852,
+      "stability_score": 0.8667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 2309,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 591,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 307,
+      "stability_score": 0.8667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "Temp",
+        "Pulse_Rate",
+        "SYS"
+      ]
+    },
+    {
+      "sample_index": 99,
+      "stability_score": 0.8667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "Temp",
+        "Pulse_Rate",
+        "Heart_rate"
+      ]
+    },
+    {
+      "sample_index": 1558,
+      "stability_score": 0.4881,
+      "is_stable": false,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "Temp",
+        "Heart_rate",
+        "Resp_Rate"
+      ]
+    },
+    {
+      "sample_index": 515,
+      "stability_score": 0.6857,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "DIntPkt",
+        "Temp",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 1905,
+      "stability_score": 0.8,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Load"
+      ]
+    },
+    {
+      "sample_index": 170,
+      "stability_score": 0.9333,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 419,
+      "stability_score": 0.6667,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SrcLoad",
+        "DIntPkt",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 495,
+      "stability_score": 0.3333,
+      "is_stable": false,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "Temp",
+        "SYS",
+        "DIA"
+      ]
+    },
+    {
+      "sample_index": 534,
+      "stability_score": 0.619,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SrcLoad",
+        "DIntPkt",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 699,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 875,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 52,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur"
+      ]
+    },
+    {
+      "sample_index": 506,
+      "stability_score": 0.3571,
+      "is_stable": false,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SrcLoad",
+        "SpO2",
+        "Pulse_Rate"
+      ]
+    },
+    {
+      "sample_index": 2291,
+      "stability_score": 0.8,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 644,
+      "stability_score": 0.9333,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    },
+    {
+      "sample_index": 874,
+      "stability_score": 0.5238,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "Sport",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur"
+      ]
+    },
+    {
+      "sample_index": 584,
+      "stability_score": 1.0,
+      "is_stable": true,
+      "baseline_top_features": [
+        "Flgs",
+        "SIntPkt",
+        "DIntPkt",
+        "Dur",
+        "Temp"
+      ]
+    }
+  ]
+}

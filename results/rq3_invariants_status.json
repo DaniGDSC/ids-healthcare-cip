@@ -1,0 +1,93 @@
+{
+  "_meta": {
+    "description": "RQ3 invariant pytest results \u2014 19 tests across 3 files",
+    "test_files": [
+      "tests/test_safe_failure.py",
+      "tests/test_step13_cross_role_consistency.py",
+      "tests/test_step16_audit_integrity.py"
+    ],
+    "exit_code": 0
+  },
+  "n_tests": 19,
+  "n_passed": 19,
+  "n_failed": 0,
+  "all_passing": true,
+  "tests": [
+    {
+      "test": "tests/test_safe_failure.py::test_inv3_no_auto_execute_with_clinical_override_disabled",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_safe_failure.py::test_inv3_no_enforcement_action_types_in_audit",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_safe_failure.py::test_inv3_response_policy_never_auto_executes",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_safe_failure.py::test_inv5_low_tier_alerts_still_audit_logged",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_safe_failure.py::test_inv7_critical_clinical_carries_do_not",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_safe_failure.py::test_critical_tier_always_surfaces",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_safe_failure.py::test_response_requires_operator_approval",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_safe_failure.py::test_audit_chain_records_carry_ground_truth",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step13_cross_role_consistency.py::test_inv6_alert_risk_level_is_role_independent",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step13_cross_role_consistency.py::test_inv6_same_alert_same_severity_across_renderers",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step13_cross_role_consistency.py::test_inv9_alert_id_stable_across_roles",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step13_cross_role_consistency.py::test_inv9_alert_record_keys_role_independent",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step13_cross_role_consistency.py::test_role_renderers_share_alert_dict",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step13_cross_role_consistency.py::test_consensus_label_unified_across_renderers",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step16_audit_integrity.py::test_step16_required_fields_present",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step16_audit_integrity.py::test_step16_integrity_hash_matches_canonical",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step16_audit_integrity.py::test_step16_prev_hash_chains_correctly",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step16_audit_integrity.py::test_step16_chain_genesis_is_zero_hash",
+      "status": "PASSED"
+    },
+    {
+      "test": "tests/test_step16_audit_integrity.py::test_step16_timestamps_monotonic",
+      "status": "PASSED"
+    }
+  ]
+}

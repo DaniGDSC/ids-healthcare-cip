@@ -1,0 +1,104 @@
+{
+  "_meta": {
+    "description": "RQ3 per-role breakdown (M6 study, with_xai vs without_xai)",
+    "data_source": "results/reports/participant_responses.json",
+    "note": "Role labels are analyst / clinician / administrator \u2014 the closest proxy available for the spec's IT Generalist / Biomed Engineer / Nurse Manager triad. M5 study (survey/) is unrolled and has no role metadata."
+  },
+  "rows": [
+    {
+      "role": "administrator",
+      "condition": "with_xai",
+      "n": 50,
+      "n_correct": 46,
+      "accuracy": 0.92,
+      "mean_decision_time_sec": 29.12,
+      "mean_confidence": 3.62,
+      "mean_likert_trust": 4.26,
+      "mean_likert_usefulness": 4.42
+    },
+    {
+      "role": "administrator",
+      "condition": "without_xai",
+      "n": 50,
+      "n_correct": 35,
+      "accuracy": 0.7,
+      "mean_decision_time_sec": 44.38,
+      "mean_confidence": 2.8,
+      "mean_likert_trust": 2.98,
+      "mean_likert_usefulness": 3.28
+    },
+    {
+      "role": "analyst",
+      "condition": "with_xai",
+      "n": 50,
+      "n_correct": 47,
+      "accuracy": 0.94,
+      "mean_decision_time_sec": 20.7,
+      "mean_confidence": 3.52,
+      "mean_likert_trust": 4.22,
+      "mean_likert_usefulness": 4.44
+    },
+    {
+      "role": "analyst",
+      "condition": "without_xai",
+      "n": 50,
+      "n_correct": 43,
+      "accuracy": 0.86,
+      "mean_decision_time_sec": 40.18,
+      "mean_confidence": 3.04,
+      "mean_likert_trust": 3.0,
+      "mean_likert_usefulness": 3.32
+    },
+    {
+      "role": "clinician",
+      "condition": "with_xai",
+      "n": 50,
+      "n_correct": 45,
+      "accuracy": 0.9,
+      "mean_decision_time_sec": 26.98,
+      "mean_confidence": 3.52,
+      "mean_likert_trust": 4.56,
+      "mean_likert_usefulness": 4.62
+    },
+    {
+      "role": "clinician",
+      "condition": "without_xai",
+      "n": 50,
+      "n_correct": 35,
+      "accuracy": 0.7,
+      "mean_decision_time_sec": 43.12,
+      "mean_confidence": 3.06,
+      "mean_likert_trust": 3.22,
+      "mean_likert_usefulness": 3.7
+    }
+  ],
+  "role_comparison_with_vs_without_xai": {
+    "administrator": {
+      "n_with_xai": 50,
+      "n_without_xai": 50,
+      "accuracy_with_xai": 0.92,
+      "accuracy_without_xai": 0.7,
+      "delta_pp": 22.000000000000007,
+      "mann_whitney_U": 1525.0,
+      "mann_whitney_p_value": 0.0026776870170746314
+    },
+    "analyst": {
+      "n_with_xai": 50,
+      "n_without_xai": 50,
+      "accuracy_with_xai": 0.94,
+      "accuracy_without_xai": 0.86,
+      "delta_pp": 7.9999999999999964,
+      "mann_whitney_U": 1350.0,
+      "mann_whitney_p_value": 0.09341472675761214
+    },
+    "clinician": {
+      "n_with_xai": 50,
+      "n_without_xai": 50,
+      "accuracy_with_xai": 0.9,
+      "accuracy_without_xai": 0.7,
+      "delta_pp": 20.000000000000007,
+      "mann_whitney_U": 1500.0,
+      "mann_whitney_p_value": 0.006523319556025906
+    }
+  }
+}

@@ -1,0 +1,162 @@
+# RQ3 §1 — Role × Action authorization matrix
+# ───────────────────────────────────────────────────────────────────────
+# For each operator role + action verb, declares:
+#   • allowed         — can this role initiate this action?
+#   • approval_chain  — additional approvers needed before execution
+#   • visibility      — does the role see the action button in the UI?
+#
+# Roles mirror the M6 user-study labels (analyst / clinician /
+# administrator) which proxy the spec triad (IT Generalist / Biomed
+# Engineer / Nurse Manager). Mapping documented in
+# `analysis/outputs/rq3_per_role.json`.
+
+version: "1.0"
+source: "module6_evaluation/module6_app.py role-routing logic"
+last_synced: "2026-05-25"
+
+# ───────────────────────────────────────────────────────────────────────
+# Role definitions
+# ───────────────────────────────────────────────────────────────────────
+roles:
+  analyst:
+    proxies: ["IT Generalist", "SOC analyst"]
+    primary_view: "Security Analyst View"
+    explanation_layer: "SHAP + DAE features + per-detector breakdown"
+
+  clinician:
+    proxies: ["Bedside Clinician", "Nurse Manager"]
+    primary_view: "Clinician View"
+    explanation_layer: "NLG narrative + patient-impact framing + DO NOT constraint"
+
+  administrator:
+    proxies: ["Biomed Engineer", "Charge Nurse", "Service Line Owner"]
+    primary_view: "Administrator View"
+    explanation_layer: "Aggregate metrics + risk components + global importance"
+
+# ───────────────────────────────────────────────────────────────────────
+# Action × Role matrix
+# ───────────────────────────────────────────────────────────────────────
+# Each action lists which roles may initiate it ('allowed'), who must
+# approve before execution ('approval_chain'), and whether the UI
+# surfaces it for that role ('visibility'). approval_chain=[] means the
+# acting role alone is sufficient.
+
+actions:
+  acknowledge:
+    description: "Mark alert as owned. No system change."
+    initiators: [analyst, clinician, administrator]
+    approval_chain: []
+    visibility:
+      analyst: button
+      clinician: button
+      administrator: button
+    reversible: true
+
+  escalate:
+    description: "Route alert to a higher tier of response (T3 SOC + biomed)."
+    initiators: [analyst, clinician, administrator]
+    approval_chain: []
+    visibility:
+      analyst: button
+      clinician: button
+      administrator: button
+    reversible: true
+
+  dismiss:
+    description: "Close alert without action. Requires written rationale."
+    initiators: [analyst, clinician, administrator]
+    approval_chain: []
+    requires_rationale: true
+    visibility:
+      analyst: button_with_dialog
+      clinician: button_with_dialog
+      administrator: button_with_dialog
+    reversible: false  # decision is logged immutably
+
+  monitor:
+    description: "Place alert on watch list for follow-up review."
+    initiators: [analyst]
+    approval_chain: []
+    visibility:
+      analyst: button
+      clinician: hidden
+      administrator: button
+    reversible: true
+
+  investigate:
+    description: "Open forensic investigation; pull PCAP / host artifacts."
+    initiators: [analyst]
+    approval_chain: []
+    visibility:
+      analyst: button
+      clinician: hidden
+      administrator: hidden
+    reversible: true
+
+  isolate:
+    description: "Quarantine device via NAC / VLAN — destructive to clinical traffic if applied to life-sustaining device."
+    initiators: [analyst]
+    approval_chain: [administrator]
+    blocked_on_device_class: [life_sustaining]
+    visibility:
+      analyst: button_with_warning
+      clinician: hidden
+      administrator: approval_dialog
+    reversible: true
+    auto_executable: false  # Invariant 3 — always human-decided
+
+  block_destination:
+    description: "Apply destination-specific block at firewall while preserving approved clinical paths."
+    initiators: [analyst]
+    approval_chain: [administrator]
+    visibility:
+      analyst: button
+      clinician: hidden
+      administrator: approval_dialog
+    reversible: true
+    auto_executable: false
+
+  verify_clinical:
+    description: "Notify clinical staff to independently verify patient vitals / device function."
+    initiators: [clinician, administrator]
+    approval_chain: []
+    visibility:
+      analyst: hidden
+      clinician: button
+      administrator: button
+    reversible: true
+
+  request_biomed:
+    description: "Page biomedical engineering for device-level inspection."
+    initiators: [clinician, administrator]
+    approval_chain: []
+    visibility:
+      analyst: hidden
+      clinician: button
+      administrator: button
+    reversible: true
+
+# ───────────────────────────────────────────────────────────────────────
+# Cross-role consistency invariants (RQ3 Invariant 6 / 9)
+# ───────────────────────────────────────────────────────────────────────
+cross_role_invariants:
+  - id: invariant_6_severity_independent_of_role
+    statement: >-
+      An alert's risk_level / severity is set by Module 5 BEFORE any role
+      renderer is dispatched. Switching roles changes the EXPLANATION
+      framing only — the underlying severity label is identical.
+    enforcement: tests/test_step13_cross_role_consistency.py
+
+  - id: invariant_9_shared_anchor_across_roles
+    statement: >-
+      alert_id / sample_index / timestamp are identical across role
+      views. Role-namespaced top-level fields (`*_analyst`, `*_clinician`,
+      `*_administrator`) are forbidden.
+    enforcement: tests/test_step13_cross_role_consistency.py
+
+# ───────────────────────────────────────────────────────────────────────
+# Test linkage
+# ───────────────────────────────────────────────────────────────────────
+tests:
+  - tests/test_safe_failure.py
+  - tests/test_step13_cross_role_consistency.py
