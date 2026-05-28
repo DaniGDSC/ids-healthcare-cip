@@ -45,6 +45,122 @@ logger = logging.getLogger(__name__)
 
 VALID_SEVERITY = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
 
+# ── Tier 1 F4: LLM egress hardening ─────────────────────────────────────
+#
+# Provider endpoints are pinned in code. An attacker who can set
+# OPENAI_BASE_URL / ANTHROPIC_BASE_URL on the host could otherwise
+# redirect every MVE prompt (operationally sensitive — attack_category,
+# device_class, criticality) to their own endpoint and log responses,
+# turning the host into an exfiltration relay. The MVE module refuses to
+# start when these env vars are present.
+_PINNED_BASE_URL_OPENAI = "https://api.openai.com"
+_PINNED_BASE_URL_ANTHROPIC = "https://api.anthropic.com"
+
+# Per-process LLM call counter + soft cap. A bug that fires generate_mve
+# in a loop would burn quota at $0.0002/call before anyone notices; the
+# cap is a backstop, not a budget — operators set
+# MVE_MAX_LLM_CALLS_PER_RUN explicitly when they expect a large run.
+_LLM_CALL_COUNTER = 0
+_LLM_CALL_CAP_DEFAULT = 5000
+
+
+class LLMEgressError(RuntimeError):
+    """Raised when the LLM egress harness refuses to proceed.
+
+    Subtypes by message:
+      - "base URL pinned": an env var attempted to redirect the SDK
+        endpoint (tier 1 F4).
+      - "API key format invalid": the configured key does not look
+        like a real provider key (tier 1 F4).
+      - "LLM call cap exceeded": the per-process soft cap kicked in
+        (tier 1 F4).
+    """
+
+
+def _refuse_base_url_override() -> None:
+    """Refuse to start when OPENAI_BASE_URL / ANTHROPIC_BASE_URL is set.
+
+    Returning silently when the override is harmless (matches the pin)
+    would create a false sense of safety on the next operator who
+    inspects the env. We require the env to be unset.
+    """
+    for env_var, pinned in (
+        ("OPENAI_BASE_URL", _PINNED_BASE_URL_OPENAI),
+        ("OPENAI_API_BASE", _PINNED_BASE_URL_OPENAI),
+        ("ANTHROPIC_BASE_URL", _PINNED_BASE_URL_ANTHROPIC),
+    ):
+        v = os.environ.get(env_var)
+        if v and v.rstrip("/") != pinned.rstrip("/"):
+            raise LLMEgressError(
+                f"base URL pinned: {env_var}={v!r} disagrees with the in-code "
+                f"pin {pinned!r}. Refusing to start the LLM path — "
+                "an env-var redirect to a non-vendor endpoint is the exact "
+                "exfiltration primitive tier 1 F4 closed. Unset the var to "
+                "proceed."
+            )
+
+
+def _validate_api_key(provider: str, key: str) -> None:
+    """Cheap format validation so a stray-whitespace or misconfigured
+    key fails fast at the egress harness instead of inside the SDK with
+    a generic error that gets swallowed and logged as 'API failure'.
+    """
+    if key != key.strip() or not key:
+        raise LLMEgressError(
+            f"API key format invalid: {provider} key has surrounding "
+            "whitespace or is empty after strip."
+        )
+    if provider == "openai" and not key.startswith(("sk-", "sk_")):
+        raise LLMEgressError(
+            f"API key format invalid: OpenAI keys start with 'sk-' or 'sk_'; "
+            f"got prefix {key[:4]!r}."
+        )
+    if provider == "anthropic" and not key.startswith(("sk-ant-", "sk_ant_")):
+        raise LLMEgressError(
+            f"API key format invalid: Anthropic keys start with 'sk-ant-' or "
+            f"'sk_ant_'; got prefix {key[:8]!r}."
+        )
+
+
+def _llm_call_cap() -> int:
+    raw = os.environ.get("MVE_MAX_LLM_CALLS_PER_RUN")
+    if raw is None:
+        return _LLM_CALL_CAP_DEFAULT
+    try:
+        cap = int(raw)
+    except ValueError:
+        logger.warning(
+            "MVE_MAX_LLM_CALLS_PER_RUN=%r is not an integer; using default %d",
+            raw, _LLM_CALL_CAP_DEFAULT,
+        )
+        return _LLM_CALL_CAP_DEFAULT
+    return cap
+
+
+def _call_budget_increment() -> None:
+    """Bump the per-process LLM counter; raise once the cap is exceeded.
+
+    Module-level state is fine here because the harness runs in a single
+    Python process (per-CI or per-pipeline run); the cap is reset on
+    process start.
+    """
+    global _LLM_CALL_COUNTER
+    cap = _llm_call_cap()
+    if _LLM_CALL_COUNTER >= cap:
+        raise LLMEgressError(
+            f"LLM call cap exceeded: {_LLM_CALL_COUNTER} calls made already "
+            f"(MVE_MAX_LLM_CALLS_PER_RUN={cap}). Increase the cap explicitly "
+            "or restart the process — refusing to ring up unbounded API "
+            "charges silently."
+        )
+    _LLM_CALL_COUNTER += 1
+
+
+def _reset_llm_call_counter() -> None:
+    """Reset the per-process counter. Test utility — not for production."""
+    global _LLM_CALL_COUNTER
+    _LLM_CALL_COUNTER = 0
+
 # ── ARCHITECTURE.md Step [12] — Mode A LLM PHI allow-list ───────────────
 
 _LLM_DATA_FLOW_YAML = (
@@ -911,6 +1027,14 @@ Rules (non-negotiable):
 - DO NOT mention SHAP values, feature importances, model names, p-values, or CVSS scores
 - DO NOT claim detection of Bluetooth, Zigbee, RF, or proprietary wireless protocols
 - DO NOT claim early ransomware detection capability
+- ANTI-PHI: never invent patient identifiers (names, MRNs, dates of
+  birth, room numbers, social security numbers, NHS numbers, ages of
+  specific people). Refer to patients as "the patient", "this device's
+  patient", or by clinical role only.
+- ANTI-PHI: never include numeric biometric values (vital signs,
+  oxygen saturation, heart rate, blood pressure) in the explanation
+  text. Refer to them as "elevated", "below baseline", or "outside
+  expected range".
 Return only valid JSON with keys: layer_1, layer_2, layer_3."""
 
 
@@ -980,8 +1104,15 @@ def _parse_llm_json(raw_text: str, is_clinical: bool) -> Optional[MVEOutput]:
     instructions), parses, validates the severity label, and returns
     either a usable MVEOutput or None (causing the caller to fall back
     to the next provider, ultimately rule-based).
+
+    Tier 1 F6: the raw LLM response is run through ``sanitize_for_log``
+    BEFORE JSON parsing. The model is instructed not to emit PHI-like
+    content (see ``_LLM_SYSTEM_PROMPT``); the sanitiser is the
+    defence-in-depth that protects the alert envelope when the model
+    hallucinates a plausible-looking patient identifier into a free-
+    text field.
     """
-    raw = raw_text.strip()
+    raw = sanitize_for_log(raw_text.strip())
     # M-4: pre-compiled patterns; cheap to apply unconditionally
     raw = _RE_FENCE_OPEN.sub("", raw)
     raw = _RE_FENCE_CLOSE.sub("", raw)
@@ -1043,6 +1174,14 @@ def _generate_llm_openai(
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
         return None
+    # Tier 1 F4: fail-fast format check + pinned-endpoint check + cap.
+    try:
+        _refuse_base_url_override()
+        _validate_api_key("openai", api_key)
+        _call_budget_increment()
+    except LLMEgressError as exc:
+        logger.error("OpenAI MVE refused by egress harness: %s", exc)
+        return None
 
     try:
         import openai  # optional dependency
@@ -1054,7 +1193,9 @@ def _generate_llm_openai(
     # alerts in the process — avoids a new TLS handshake per surfaced alert.
     @functools.lru_cache(maxsize=1)
     def _client(key: str) -> "openai.OpenAI":
-        return openai.OpenAI(api_key=key)
+        # base_url is pinned in code; the egress harness above refused
+        # any env-var override before we got here.
+        return openai.OpenAI(api_key=key, base_url=_PINNED_BASE_URL_OPENAI)
 
     model = os.environ.get("OPENAI_MVE_MODEL", "gpt-4o-mini")
     criticality = str(device_context.get("criticality", "LOW")).upper()
@@ -1120,6 +1261,14 @@ def _generate_llm_anthropic(
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
         return None
+    # Tier 1 F4: fail-fast format check + pinned-endpoint check + cap.
+    try:
+        _refuse_base_url_override()
+        _validate_api_key("anthropic", api_key)
+        _call_budget_increment()
+    except LLMEgressError as exc:
+        logger.error("Anthropic MVE refused by egress harness: %s", exc)
+        return None
 
     try:
         import anthropic  # optional dependency
@@ -1129,7 +1278,7 @@ def _generate_llm_anthropic(
 
     @functools.lru_cache(maxsize=1)
     def _client(key: str) -> "anthropic.Anthropic":
-        return anthropic.Anthropic(api_key=key)
+        return anthropic.Anthropic(api_key=key, base_url=_PINNED_BASE_URL_ANTHROPIC)
 
     model = os.environ.get("ANTHROPIC_MVE_MODEL", "claude-sonnet-4-6")
     criticality = str(device_context.get("criticality", "LOW")).upper()

@@ -73,8 +73,22 @@ mode_a_llm_inputs:
 
 validation:
   sanitize_before_send: true
-  log_full_prompt: true     # for audit reproducibility
-  log_full_response: true   # for audit reproducibility
+  # Tier 1 F5: previous lines `log_full_prompt: true` and
+  # `log_full_response: true` were declarative documentation never
+  # enforced in code (`grep log_full_` returns zero non-doc hits). Two
+  # failure modes that drove the removal:
+  #   1. A reviewer reading this YAML believed prompts / responses
+  #      were logged and approved the data flow accordingly.
+  #   2. If a future refactor *did* start logging, the LLM response
+  #      could carry hallucinated PHI-shaped strings into disk.
+  # The egress path now ALWAYS runs `src.sanitize_for_log` over the
+  # raw LLM response before parsing (defence in depth alongside the
+  # ANTI-PHI system prompt clause). Prompt / response content is NOT
+  # logged at any level; metrics exposed for audit are: provider used,
+  # alert_type, response valid/invalid, total word count.
+  log_full_prompt: false
+  log_full_response: false
+  prompt_response_audit_policy: "metadata_only"
   max_input_chars: 8192     # defence-in-depth against accidental dumps
 
 review:
