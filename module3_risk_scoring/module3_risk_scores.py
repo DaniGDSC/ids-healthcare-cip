@@ -199,8 +199,13 @@ def _run_one_split(split: str, sep: str) -> None:
     )
 
     # ── Composite risk ──
+    # Phase B detection gate enforced via ``c_detect=`` keyword. With it,
+    # any sample whose detector confidence is below ``MIN_DETECTION_GATE``
+    # is forced to NORMAL regardless of context — this prevents the
+    # context-only "alert floor" that previously surfaced ~2000 noise
+    # records on the test split.
     R = compute_composite_risk(c_detect, d_crit, s_data, d_clinical_tier)
-    levels = assign_risk_levels(R)
+    levels = assign_risk_levels(R, c_detect=c_detect)
     logger.info("")
     logger.info(
         "Composite risk R: mean=%.4f, median=%.4f, std=%.4f",

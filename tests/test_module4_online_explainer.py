@@ -41,15 +41,18 @@ def test_alert_explainer_feat_names_stored_as_tuple():
     assert isinstance(explainer.feat_names, tuple)
 
 
-def test_severity_mapping():
-    """_severity boundaries match the stakeholder module."""
-    from module4_explanations.online_explainer import AlertExplainer
-    explainer = AlertExplainer.__new__(AlertExplainer)
-    assert explainer._severity(4) == "CRITICAL"
-    assert explainer._severity(3) == "HIGH"
-    assert explainer._severity(2) == "MEDIUM"
-    assert explainer._severity(1) == "LOW"
-    assert explainer._severity(0) == "LOW"
+def test_risk_level_from_score_thresholds():
+    """Severity tier follows Module 3 risk_score thresholds (canonical)."""
+    from module4_explanations.online_explainer import _risk_level_from_score
+    assert _risk_level_from_score(0.95) == "CRITICAL"
+    assert _risk_level_from_score(0.80) == "CRITICAL"
+    assert _risk_level_from_score(0.79) == "HIGH"
+    assert _risk_level_from_score(0.60) == "HIGH"
+    assert _risk_level_from_score(0.59) == "MEDIUM"
+    assert _risk_level_from_score(0.40) == "MEDIUM"
+    assert _risk_level_from_score(0.39) == "LOW"
+    assert _risk_level_from_score(0.0) == "LOW"
+    assert _risk_level_from_score(None) == "LOW"
 
 
 def test_sanitise_replaces_nan_inf():

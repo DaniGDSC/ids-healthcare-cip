@@ -90,9 +90,24 @@ def select_adaptive_response(
 
     actions = sorted(set(actions), key=lambda a: ACTION_CATALOGUE[a]["cost"])
 
+    # Phase 1.3 — surface per-action operational metadata so downstream
+    # views (clinician summary, admin dashboard) can render reversibility
+    # / cost / disruption badges without re-walking ACTION_CATALOGUE.
+    actions_metadata = [
+        {
+            "name": a,
+            "cost": float(ACTION_CATALOGUE[a]["cost"]),
+            "reversible": bool(ACTION_CATALOGUE[a]["reversible"]),
+            "requires_approval": bool(ACTION_CATALOGUE[a]["requires_approval"]),
+            "expected_disruption": ACTION_CATALOGUE[a].get("expected_disruption", ""),
+        }
+        for a in actions
+    ]
+
     return {
         "actions": actions,
         "action_descriptions": [ACTION_CATALOGUE[a]["description"] for a in actions],
+        "actions_metadata": actions_metadata,
         "escalation_chain": {
             "primary": routing["primary"],
             "secondary": routing["secondary"],

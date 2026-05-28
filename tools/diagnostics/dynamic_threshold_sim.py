@@ -62,7 +62,7 @@ DEFAULT_K = 3
 WINDOW_GRID = [50, 100, 200, 500]
 K_GRID = [2, 3, 4]
 
-DEFAULT_THRESHOLDS = {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40}
+DEFAULT_THRESHOLDS = {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40, "LOW": 0.30}
 
 
 # ═══════════════════════════════════════════════════════════════════════

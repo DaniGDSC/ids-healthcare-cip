@@ -405,10 +405,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -432,10 +431,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -651,10 +649,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -912,9 +909,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -990,10 +988,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -1620,7 +1617,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 60): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) s",
+    "explanation_summary": "HIGH ALERT (Sample 60): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device int",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -1778,10 +1775,9 @@
       "log_event",
       "enhanced_monitoring",
       "re_authenticate",
-      "restrict_traffic",
-      "escalate_clinical"
+      "restrict_traffic"
     ],
-    "action_rationale": "Base response for LOW risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
@@ -2079,7 +2075,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 77): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 77): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -2098,9 +2094,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -2137,7 +2134,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 79): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 79): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (ST) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -2524,10 +2521,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -2939,7 +2935,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 109): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 109): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -3036,10 +3032,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -3339,7 +3334,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 124): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -3394,7 +3389,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 126): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 126): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -3859,10 +3854,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -3912,10 +3906,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -3939,9 +3932,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -4235,7 +4229,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 158): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -4881,9 +4875,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -4936,10 +4931,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -5337,10 +5331,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -5584,7 +5577,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 209): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 209): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -5602,10 +5595,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -5665,7 +5657,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 212): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -6261,10 +6253,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -6392,10 +6383,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -6526,10 +6516,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -6739,10 +6728,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -6767,9 +6755,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -7002,10 +6991,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -7580,7 +7568,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 284): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 284): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) ",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7650,10 +7638,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -7792,7 +7779,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 292): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 292): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -7847,7 +7834,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 294): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 294): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -8169,7 +8156,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 306): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -8200,7 +8187,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 307): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SYS) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 307): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -8297,9 +8284,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -8483,10 +8471,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -8570,7 +8557,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 321): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -8588,9 +8575,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -8680,7 +8668,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 325): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -8891,16 +8879,15 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
-      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 333): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 333): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -9025,10 +9012,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -9079,10 +9065,9 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic",
-      "escalate_clinical"
+      "restrict_traffic"
     ],
-    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for MEDIUM risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -9106,10 +9091,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -9238,10 +9222,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -9276,7 +9259,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 347): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 347): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -9375,10 +9358,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -9696,10 +9678,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -9827,10 +9808,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -10088,10 +10068,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -10272,9 +10251,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -10335,7 +10315,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 387): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 387): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -10379,10 +10359,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -10407,9 +10386,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -10496,7 +10476,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 393): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 393): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11062,10 +11042,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -11089,10 +11068,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -11129,7 +11107,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 417): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Resp_Rate) sho",
+    "explanation_summary": "HIGH ALERT (Sample 417): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11177,15 +11155,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.74 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.74 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 419): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (unusual network packet timing) also contributed. Consider verifying device i",
+    "explanation_summary": "HIGH ALERT (Sample 419): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11240,7 +11219,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 421): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 421): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11434,7 +11413,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 428): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "MODERATE ALERT (Sample 428): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11491,7 +11470,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 430): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device con",
+    "explanation_summary": "HIGH ALERT (Sample 430): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -11617,9 +11596,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -12008,10 +11988,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -12077,7 +12056,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 452): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was unusual network packet timing. A secondary indicator (abnorma",
+    "explanation_summary": "CRITICAL ALERT (Sample 452): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. A secondary indicator (unusual network p",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -12392,7 +12371,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 464): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 464): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -12421,7 +12400,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 465): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 465): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -12545,9 +12524,10 @@
       "log_event",
       "enhanced_monitoring",
       "forensic_snapshot",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -12670,7 +12650,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 474): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device con",
+    "explanation_summary": "HIGH ALERT (Sample 474): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -12821,10 +12801,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -13428,16 +13407,15 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 503): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -13525,7 +13503,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 506): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate, SpO2) showed",
+    "explanation_summary": "HIGH ALERT (Sample 506): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unusu",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -13543,10 +13521,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -13596,10 +13573,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -13675,10 +13651,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -13772,7 +13747,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 515): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp, ",
+    "explanation_summary": "HIGH ALERT (Sample 515): Suspicious activity detected. Key factor: abnormal pulse rate. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -14103,10 +14078,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -14157,15 +14131,16 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 530): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "MODERATE ALERT (Sample 530): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (SYS) showed unusual values. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "false_positive_isolated",
       "action_effective": false,
@@ -14265,15 +14240,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.77 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.77 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 534): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 534): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -14869,10 +14845,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -14896,10 +14871,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -15110,10 +15084,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -15462,7 +15435,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 579): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 579): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (DIA) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -15783,7 +15756,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 591): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed u",
+    "explanation_summary": "HIGH ALERT (Sample 591): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -16745,10 +16718,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -16801,10 +16773,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -17104,7 +17075,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 641): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of device",
+    "explanation_summary": "HIGH ALERT (Sample 641): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -17245,7 +17216,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 646): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -17289,9 +17260,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -17484,7 +17456,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 655): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "MODERATE ALERT (Sample 655): Minor anomaly detected \u2014 unexpected network port activity. A secondary indicator (unusual network packet timing) also contributed. No immediate clinical action required, b",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -17615,7 +17587,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 660): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unusual valu",
+    "explanation_summary": "LOW ALERT (Sample 660): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -17670,7 +17642,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 662): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 662): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -18544,10 +18516,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -18709,10 +18680,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -18749,7 +18719,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 702): Suspicious activity detected. Key factor: abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 702): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -18821,9 +18791,10 @@
       "log_event",
       "enhanced_monitoring",
       "forensic_snapshot",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -18978,10 +18949,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -19031,10 +19001,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -19188,9 +19157,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -19620,10 +19590,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -19700,10 +19669,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -19833,10 +19801,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -19964,10 +19931,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -20123,9 +20089,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -20464,10 +20431,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -21063,10 +21029,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -21273,10 +21238,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -21378,10 +21342,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -21678,7 +21641,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 813): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -21780,10 +21743,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -22356,10 +22318,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -22580,7 +22541,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 847): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of devi",
+    "explanation_summary": "HIGH ALERT (Sample 847): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -22598,9 +22559,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -22741,7 +22703,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 853): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "HIGH ALERT (Sample 853): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -22811,16 +22773,15 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 856): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -23175,7 +23136,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 869): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device in",
+    "explanation_summary": "HIGH ALERT (Sample 869): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp) ",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23307,7 +23268,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 874): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagge",
+    "explanation_summary": "LOW ALERT (Sample 874): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -23724,10 +23685,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -23964,10 +23924,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -24150,10 +24109,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -24229,10 +24187,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -24439,10 +24396,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -24466,10 +24422,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -24813,10 +24768,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -24866,10 +24820,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -25050,10 +25003,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -25077,10 +25029,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -25534,7 +25485,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 958): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of devi",
+    "explanation_summary": "HIGH ALERT (Sample 958): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -25634,15 +25585,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.74 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.74 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 962): Suspicious activity detected. Key factor: unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 962): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -25725,7 +25677,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 965): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 965): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unusu",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -25743,10 +25695,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -26062,10 +26013,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -26151,7 +26101,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 981): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -26247,9 +26197,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -26869,7 +26820,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1008): Suspicious activity detected. Key factor: abnormal network load. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1008): Suspicious activity detected. Key factor: abnormal network load. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -26918,9 +26869,10 @@
       "log_event",
       "enhanced_monitoring",
       "forensic_snapshot",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -27184,9 +27136,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -27554,16 +27507,15 @@
       "log_event",
       "enhanced_monitoring",
       "re_authenticate",
-      "restrict_traffic",
-      "escalate_clinical"
+      "restrict_traffic"
     ],
-    "action_rationale": "Base response for MEDIUM risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for MEDIUM risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1034): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for revie",
+    "explanation_summary": "MODERATE ALERT (Sample 1034): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -27792,9 +27744,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -27914,7 +27867,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1047): Suspicious activity detected. Key factor: abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1047): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28066,15 +28019,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.72 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.72 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1053): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1053): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28226,15 +28180,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.70 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.70 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1059): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1059): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SpO2) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28571,10 +28526,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -28624,10 +28578,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -28818,7 +28771,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1081): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1081): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28875,7 +28828,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1083): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. A secondary indicator (abnormal res",
+    "explanation_summary": "HIGH ALERT (Sample 1083): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -28988,7 +28941,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1087): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1087): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -29137,10 +29090,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -29542,10 +29494,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -29882,10 +29833,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -30050,7 +30000,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1127): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1127): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -30068,10 +30018,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -30121,10 +30070,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -30304,10 +30252,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -30651,9 +30598,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -30677,10 +30625,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -30811,10 +30758,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -30919,10 +30865,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -31181,10 +31126,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -31234,10 +31178,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -31350,7 +31293,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1176): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1176): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -31529,10 +31472,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -31738,10 +31680,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -31856,7 +31797,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1195): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal respiratory rate) also contributed. Note: Biometric data (Resp_Rat",
+    "explanation_summary": "HIGH ALERT (Sample 1195): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -32142,16 +32083,15 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic",
-      "escalate_clinical"
+      "restrict_traffic"
     ],
-    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for MEDIUM risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1206): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for revie",
+    "explanation_summary": "MODERATE ALERT (Sample 1206): Minor anomaly detected \u2014 unexpected network port activity. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "false_positive_isolated",
       "action_effective": false,
@@ -32515,10 +32455,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -32776,10 +32715,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -33106,7 +33044,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1242): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1242): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -33212,7 +33150,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1246): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "CRITICAL ALERT (Sample 1246): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -33282,10 +33220,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -33339,15 +33276,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.72 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.72 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1251): Suspicious activity detected. Key factor: unusual network packet timing. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1251): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (unusual network packet timing) also contributed. Note: Biometric data (Puls",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -33469,15 +33407,16 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 1256): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -33890,9 +33829,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -33929,7 +33869,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1273): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1273): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -33956,7 +33896,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 1274): Minor anomaly detected \u2014 abnormal respiratory rate. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "LOW ALERT (Sample 1274): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -34029,15 +33969,16 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 1277): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -34301,7 +34242,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1287): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1287): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -34688,10 +34629,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -34793,9 +34733,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -34872,10 +34813,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -34909,7 +34849,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1310): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal network load) also contributed. Consider verifying device integrity.",
+    "explanation_summary": "MODERATE ALERT (Sample 1310): Minor anomaly detected \u2014 abnormal protocol flags. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -35265,9 +35205,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -35332,7 +35273,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1326): Suspicious activity detected. Key factor: abnormal pulse rate. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1326): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) sh",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -35480,10 +35421,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -36010,16 +35950,15 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
-      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1352): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SYS) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1352): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -36538,10 +36477,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -36685,7 +36623,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1377): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1377): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -36964,9 +36902,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -37185,7 +37124,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1396): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1396): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -37334,10 +37273,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -37442,9 +37380,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -37520,9 +37459,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -37745,7 +37685,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1417): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device i",
+    "explanation_summary": "HIGH ALERT (Sample 1417): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp)",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -37919,10 +37859,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -38003,10 +37942,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -38292,10 +38230,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -38345,9 +38282,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -38384,7 +38322,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1441): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) sh",
+    "explanation_summary": "HIGH ALERT (Sample 1441): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unus",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -38454,9 +38392,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -38808,7 +38747,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1457): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1457): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -39060,10 +38999,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -39229,7 +39167,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1473): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1473): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -39560,10 +39498,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -39691,10 +39628,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -39853,9 +39789,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -39931,10 +39868,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -39958,10 +39894,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -40258,10 +40193,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -40576,10 +40510,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -40612,7 +40545,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1525): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -40686,15 +40619,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1528): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1528): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (ST) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41003,10 +40937,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -41240,9 +41173,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -41490,7 +41424,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1558): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal respiratory rate) also contributed. Note: Biometric data (Resp_Rate) showed",
+    "explanation_summary": "HIGH ALERT (Sample 1558): Suspicious activity detected. Key factor: abnormal respiratory rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41831,10 +41765,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -41897,7 +41830,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1573): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1573): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp, SYS) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -41941,10 +41874,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -42364,10 +42296,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -42444,9 +42375,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -42719,7 +42651,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1604): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1604): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -42893,10 +42825,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -42920,10 +42851,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -43144,7 +43074,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1620): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -44726,10 +44656,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -44909,9 +44838,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -44961,10 +44891,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -45014,10 +44943,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -45173,9 +45101,10 @@
       "log_event",
       "enhanced_monitoring",
       "forensic_snapshot",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -45419,7 +45348,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1706): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 1706): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -45503,7 +45432,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 1709): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1709): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -45734,10 +45663,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -46265,10 +46193,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -46371,9 +46298,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -46666,15 +46594,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.73 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.73 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1753): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1753): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -46718,9 +46647,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -46744,10 +46674,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -47152,9 +47081,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -47230,10 +47160,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -47336,9 +47265,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -47389,10 +47319,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -47428,7 +47357,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1781): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
+    "explanation_summary": "CRITICAL ALERT (Sample 1781): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal respiratory rate. Recommend immediate review of dev",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -47446,10 +47375,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -47616,7 +47544,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1788): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1788): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp, Resp_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -47647,7 +47575,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1789): Suspicious activity detected. Key factor: abnormal pulse rate. A secondary indicator (abnormal protocol flags) also contributed. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1789): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate) showed unus",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -47743,10 +47671,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -47957,10 +47884,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -48039,9 +47965,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -48130,7 +48057,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1807): Suspicious activity detected. Key factor: abnormal blood pressure. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integr",
+    "explanation_summary": "HIGH ALERT (Sample 1807): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (SYS) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -48255,9 +48182,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -48387,10 +48315,9 @@
       "log_event",
       "enhanced_monitoring",
       "forensic_snapshot",
-      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -48555,7 +48482,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1823): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1823): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -48899,7 +48826,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1836): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device i",
+    "explanation_summary": "HIGH ALERT (Sample 1836): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp)",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -49483,7 +49410,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 1858): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 1858): Suspicious activity detected. Key factor: unexpected network port activity. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -49553,10 +49480,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -49763,10 +49689,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -50082,10 +50007,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -50244,9 +50168,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -50350,9 +50275,10 @@
       "log_event",
       "enhanced_monitoring",
       "re_authenticate",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']",
+    "action_rationale": "Base response for LOW risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
@@ -50428,10 +50354,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -50481,10 +50406,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -50614,10 +50538,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -50694,9 +50617,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -50749,10 +50673,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -51114,10 +51037,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -51811,7 +51733,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1946): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "HIGH ALERT (Sample 1946): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Consider verifying device integrity",
     "simulated_outcome": {
       "outcome": "false_positive_isolated",
       "action_effective": false,
@@ -52116,9 +52038,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -52152,7 +52075,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1959): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "MODERATE ALERT (Sample 1959): Minor anomaly detected \u2014 unexpected network port activity. Note: Biometric data (Temp) showed unusual values. No immediate clinical action required, but flagged for revie",
     "simulated_outcome": {
       "outcome": "false_positive_isolated",
       "action_effective": false,
@@ -52230,7 +52153,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 1962): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -52274,10 +52197,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -52483,10 +52405,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -53153,7 +53074,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 1997): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 1997): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -53256,15 +53177,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2001): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2001): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -53598,10 +53520,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -53678,10 +53599,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -53736,10 +53656,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -53789,10 +53708,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -53894,10 +53812,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -53976,10 +53893,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -54082,10 +53998,9 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic",
-      "escalate_clinical"
+      "restrict_traffic"
     ],
-    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for MEDIUM risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -54213,10 +54128,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -54329,7 +54243,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 2041): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2041): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -55218,7 +55132,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 2074): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2074): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -55316,10 +55230,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -55553,10 +55466,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -55593,7 +55505,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2088): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp,",
+    "explanation_summary": "HIGH ALERT (Sample 2088): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal temperature reading) also contributed. Note: Biometric data (Temp)",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -55716,10 +55628,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -55745,9 +55656,10 @@
       "log_event",
       "enhanced_monitoring",
       "forensic_snapshot",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -55810,7 +55722,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2096): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2096): Suspicious activity detected. Key factor: abnormal pulse rate. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -55832,15 +55744,16 @@
       "re_authenticate",
       "forensic_snapshot",
       "restrict_traffic",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.71 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Escalated: R=0.71 exceeds 0.70 magnitude threshold; Attack-specific (Spoofing): added ['re_authenticate', 'restrict_traffic']; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2097): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2097): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -55936,10 +55849,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -56357,9 +56269,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -56827,10 +56740,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -56915,7 +56827,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 2138): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -57232,7 +57144,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2150): Suspicious activity detected. Key factor: abnormal protocol flags. A secondary indicator (unusual network packet timing) also contributed. Consider verifying device integrity",
+    "explanation_summary": "HIGH ALERT (Sample 2150): Suspicious activity detected. Key factor: unexpected network port activity. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -57458,10 +57370,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -57595,10 +57506,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -57726,10 +57636,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -57870,7 +57779,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 2174): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2174): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -57923,7 +57832,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 2176): Minor anomaly detected \u2014 unusual network packet timing. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "MODERATE ALERT (Sample 2176): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagg",
     "simulated_outcome": {
       "outcome": "false_positive_isolated",
       "action_effective": false,
@@ -58071,10 +57980,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -58229,9 +58137,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -58255,10 +58164,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -58308,10 +58216,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -58882,7 +58789,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 2212): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2212): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -58939,7 +58846,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2214): Suspicious activity detected. Key factor: abnormal temperature reading. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device i",
+    "explanation_summary": "HIGH ALERT (Sample 2214): Suspicious activity detected. Key factor: abnormal temperature reading. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -58968,7 +58875,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 2215): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "MODERATE ALERT (Sample 2215): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (Pulse_Rate) showed unusual values. No immediate clinical action required, but flagged for review.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -59153,7 +59060,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 2222): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 2222): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -59179,7 +59086,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 2223): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -59330,10 +59237,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -59410,9 +59316,10 @@
     "recommended_actions": [
       "log_event",
       "enhanced_monitoring",
-      "restrict_traffic"
+      "restrict_traffic",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for MEDIUM risk level",
+    "action_rationale": "Base response for MEDIUM risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -59606,7 +59513,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 2239): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Note: Biometric data (Temp) showed ",
+    "explanation_summary": "HIGH ALERT (Sample 2239): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -59794,7 +59701,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2246): Suspicious activity detected. Key factor: unexpected network port activity. A secondary indicator (abnormal pulse rate) also contributed. Note: Biometric data (Pulse_Rate, Sp",
+    "explanation_summary": "HIGH ALERT (Sample 2246): Suspicious activity detected. Key factor: abnormal pulse rate. A secondary indicator (unexpected network port activity) also contributed. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -60051,9 +59958,10 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring"
+      "enhanced_monitoring",
+      "escalate_clinical"
     ],
-    "action_rationale": "Base response for LOW risk level",
+    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -60156,10 +60064,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -60287,10 +60194,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -60804,7 +60710,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 2284): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal pulse rate. Recommend immediate review of device co",
+    "explanation_summary": "HIGH ALERT (Sample 2284): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -60833,7 +60739,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 2285): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2285): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -61062,10 +60968,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -61126,7 +61031,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "CRITICAL ALERT (Sample 2296): The system detected a likely intrusion affecting this patient's monitoring session. The primary indicator was abnormal protocol flags. Recommend immediate review of devic",
+    "explanation_summary": "HIGH ALERT (Sample 2296): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -61363,7 +61268,7 @@
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician"
     },
-    "explanation_summary": "HIGH ALERT (Sample 2305): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2305): Suspicious activity detected. Key factor: abnormal protocol flags. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -61488,10 +61393,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -61919,7 +61823,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 2326): Minor anomaly detected \u2014 abnormal protocol flags. Note: Biometric data (SpO2, Temp) showed unusual values. No immediate clinical action required, but flagged for review.",
+    "explanation_summary": "",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -61963,10 +61867,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -62521,9 +62424,10 @@
       "log_event",
       "enhanced_monitoring",
       "forensic_snapshot",
+      "escalate_clinical",
       "isolate_device"
     ],
-    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation",
+    "action_rationale": "Base response for HIGH risk level; Fallback monitoring required before isolation; Biometric features in top SHAP contributors \u2014 clinical escalation added",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -62839,10 +62743,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -63420,16 +63323,15 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "LOW ALERT (Sample 2383): Borderline detection by one model. Likely benign; logged for audit purposes.",
+    "explanation_summary": "",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -63460,7 +63362,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2384): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2384): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -63613,10 +63515,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -63866,7 +63767,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2399): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp) showed unusual values. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2399): Suspicious activity detected. Key factor: abnormal protocol flags. Note: Biometric data (Temp, Pulse_Rate) showed unusual values. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -64080,7 +63981,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "HIGH ALERT (Sample 2407): Suspicious activity detected. Key factor: abnormal pulse rate. Consider verifying device integrity.",
+    "explanation_summary": "HIGH ALERT (Sample 2407): Suspicious activity detected. Key factor: abnormal respiratory rate. Consider verifying device integrity.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -64176,10 +64077,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -64238,7 +64138,7 @@
       "secondary": null,
       "tertiary": null
     },
-    "explanation_summary": "",
+    "explanation_summary": "LOW ALERT (Sample 2413): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "benign_logged",
       "action_effective": true,
@@ -64636,7 +64536,7 @@
       "secondary": "Biomedical Engineering",
       "tertiary": null
     },
-    "explanation_summary": "MODERATE ALERT (Sample 2428): Minor anomaly detected \u2014 unusual network packet timing. A secondary indicator (abnormal protocol flags) also contributed. No immediate clinical action required, but flagg",
+    "explanation_summary": "LOW ALERT (Sample 2428): Borderline detection by one model. Likely benign; logged for audit purposes.",
     "simulated_outcome": {
       "outcome": "threat_contained",
       "action_effective": true,
@@ -64654,10 +64554,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,
@@ -64760,10 +64659,9 @@
     "risk_level": "LOW",
     "recommended_actions": [
       "log_event",
-      "enhanced_monitoring",
-      "escalate_clinical"
+      "enhanced_monitoring"
     ],
-    "action_rationale": "Base response for LOW risk level; Biometric features in top SHAP contributors \u2014 clinical escalation added",
+    "action_rationale": "Base response for LOW risk level",
     "escalation_chain": {
       "primary": null,
       "secondary": null,

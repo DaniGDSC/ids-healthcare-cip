@@ -13,7 +13,7 @@ import numpy as np
 
 from .compute import _normalise_shap_output, _top_features_dae, _top_features_shap
 from .nlg import build_shap_context, clinician_nlg
-from .online_explainer import AlertExplainer
+from .online_explainer import AlertExplainer, _risk_level_from_score
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +23,16 @@ def run_batch_simulation(
     X_test: np.ndarray,
     y_pred_xgb: np.ndarray,
     feat_names: list,
+    risk_scores: np.ndarray | None = None,
 ) -> tuple[list, list]:
     """Run per-alert explanations for all XGBoost-flagged samples.
 
     Batch TreeSHAP: computes SHAP values for all flagged samples in one
     call per model. Python→C boundary crossed once instead of k times.
+
+    ``risk_scores`` (Module 3 composite per-sample, shape ``(N,)``) is
+    used to set the canonical severity tier. When ``None`` (Module 3
+    not yet run), severity falls back to ``"LOW"`` for all alerts.
     """
     if tuple(feat_names) != explainer.feat_names:
         raise ValueError(
@@ -93,7 +98,8 @@ def run_batch_simulation(
         }
 
         n_flagged = sum(1 for v in votes.values() if v["prediction"] == 1)
-        severity = explainer._severity(n_flagged)
+        r_score = float(risk_scores[idx]) if risk_scores is not None else None
+        severity = _risk_level_from_score(r_score)
 
         timings = {
             "predict_ms":  round(pred_ms / len(alert_idx), 3),

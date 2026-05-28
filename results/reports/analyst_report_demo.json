@@ -55,7 +55,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 14,
@@ -113,7 +114,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 15,
@@ -171,7 +173,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 16,
@@ -229,7 +232,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 18,
@@ -287,7 +291,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 20,
@@ -345,7 +350,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 26,
@@ -403,7 +409,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 36,
@@ -461,7 +468,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 40,
@@ -519,7 +527,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 48,
@@ -577,7 +586,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 57,
@@ -635,7 +645,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 59,
@@ -693,7 +704,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "CRITICAL"
+    "severity": "CRITICAL",
+    "risk_level": "CRITICAL"
   },
   {
     "sample_index": 61,
@@ -751,7 +763,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 65,
@@ -809,7 +822,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 73,
@@ -867,7 +881,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 84,
@@ -925,7 +940,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 85,
@@ -983,7 +999,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 89,
@@ -1041,7 +1058,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 93,
@@ -1099,7 +1117,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 99,
@@ -1157,7 +1176,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 104,
@@ -1215,7 +1235,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 105,
@@ -1273,7 +1294,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 106,
@@ -1331,7 +1353,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 107,
@@ -1389,7 +1412,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 117,
@@ -1447,7 +1471,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 118,
@@ -1505,7 +1530,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 121,
@@ -1563,7 +1589,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 122,
@@ -1621,7 +1648,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 123,
@@ -1679,7 +1707,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 124,
@@ -1737,7 +1766,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 128,
@@ -1795,7 +1825,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 129,
@@ -1853,7 +1884,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 130,
@@ -1911,7 +1943,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 139,
@@ -1969,7 +2002,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 140,
@@ -2027,7 +2061,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 143,
@@ -2085,7 +2120,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 145,
@@ -2143,7 +2179,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 149,
@@ -2201,7 +2238,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 152,
@@ -2259,7 +2297,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 153,
@@ -2317,7 +2356,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 154,
@@ -2375,7 +2415,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 155,
@@ -2433,7 +2474,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 156,
@@ -2491,7 +2533,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 159,
@@ -2549,7 +2592,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 163,
@@ -2607,7 +2651,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 166,
@@ -2665,7 +2710,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 169,
@@ -2723,7 +2769,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 173,
@@ -2781,7 +2828,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 177,
@@ -2839,7 +2887,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 185,
@@ -2897,7 +2946,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 187,
@@ -2955,7 +3005,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 188,
@@ -3013,7 +3064,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 189,
@@ -3071,7 +3123,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 190,
@@ -3129,7 +3182,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 191,
@@ -3187,7 +3241,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 195,
@@ -3245,7 +3300,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 197,
@@ -3303,7 +3359,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 199,
@@ -3361,7 +3418,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 201,
@@ -3419,7 +3477,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 203,
@@ -3477,7 +3536,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 204,
@@ -3535,7 +3595,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 210,
@@ -3593,7 +3654,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 211,
@@ -3651,7 +3713,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 213,
@@ -3709,7 +3772,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 215,
@@ -3767,7 +3831,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 220,
@@ -3825,7 +3890,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 228,
@@ -3883,7 +3949,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 229,
@@ -3941,7 +4008,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 231,
@@ -3999,7 +4067,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 232,
@@ -4057,7 +4126,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 233,
@@ -4115,7 +4185,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 240,
@@ -4173,7 +4244,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 247,
@@ -4231,7 +4303,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 248,
@@ -4289,7 +4362,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 254,
@@ -4347,7 +4421,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 255,
@@ -4405,7 +4480,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 259,
@@ -4463,7 +4539,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 260,
@@ -4521,7 +4598,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 264,
@@ -4579,7 +4657,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 267,
@@ -4637,7 +4716,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 271,
@@ -4695,7 +4775,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 287,
@@ -4753,7 +4834,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 289,
@@ -4811,7 +4893,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 290,
@@ -4869,7 +4952,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 293,
@@ -4927,7 +5011,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 296,
@@ -4985,7 +5070,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 298,
@@ -5043,7 +5129,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 301,
@@ -5101,7 +5188,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 302,
@@ -5159,7 +5247,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 303,
@@ -5217,7 +5306,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 304,
@@ -5275,7 +5365,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 305,
@@ -5333,7 +5424,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 314,
@@ -5391,7 +5483,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 322,
@@ -5449,7 +5542,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 325,
@@ -5507,7 +5601,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 331,
@@ -5565,7 +5660,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 339,
@@ -5623,7 +5719,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 344,
@@ -5681,7 +5778,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 349,
@@ -5739,7 +5837,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 350,
@@ -5797,7 +5896,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 359,
@@ -5855,7 +5955,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 361,
@@ -5913,7 +6014,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 372,
@@ -5971,7 +6073,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 374,
@@ -6029,7 +6132,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 378,
@@ -6087,7 +6191,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 379,
@@ -6145,7 +6250,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 381,
@@ -6203,7 +6309,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 389,
@@ -6261,7 +6368,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 394,
@@ -6319,7 +6427,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 395,
@@ -6377,7 +6486,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 410,
@@ -6435,7 +6545,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 412,
@@ -6493,7 +6604,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 413,
@@ -6551,7 +6663,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 417,
@@ -6609,7 +6722,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 423,
@@ -6667,7 +6781,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 425,
@@ -6725,7 +6840,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 429,
@@ -6783,7 +6899,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 433,
@@ -6841,7 +6958,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 435,
@@ -6899,7 +7017,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 440,
@@ -6957,7 +7076,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 443,
@@ -7015,7 +7135,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 449,
@@ -7073,7 +7194,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 450,
@@ -7131,7 +7253,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 464,
@@ -7189,7 +7312,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 474,
@@ -7247,7 +7371,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 476,
@@ -7305,7 +7430,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 477,
@@ -7363,7 +7489,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 485,
@@ -7421,7 +7548,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 486,
@@ -7479,7 +7607,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 488,
@@ -7537,7 +7666,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 489,
@@ -7595,7 +7725,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 491,
@@ -7653,7 +7784,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 496,
@@ -7711,7 +7843,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 502,
@@ -7769,7 +7902,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 506,
@@ -7827,7 +7961,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 509,
@@ -7885,7 +8020,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 511,
@@ -7943,7 +8079,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 512,
@@ -8001,7 +8138,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 519,
@@ -8059,7 +8197,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 520,
@@ -8117,7 +8256,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 522,
@@ -8175,7 +8315,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 523,
@@ -8233,7 +8374,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 540,
@@ -8291,7 +8433,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 541,
@@ -8349,7 +8492,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 543,
@@ -8407,7 +8551,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 550,
@@ -8465,7 +8610,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 551,
@@ -8523,7 +8669,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 555,
@@ -8581,7 +8728,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 560,
@@ -8639,7 +8787,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 565,
@@ -8697,7 +8846,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 568,
@@ -8755,7 +8905,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 570,
@@ -8813,7 +8964,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 576,
@@ -8871,7 +9023,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 577,
@@ -8929,7 +9082,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 578,
@@ -8987,7 +9141,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 580,
@@ -9045,7 +9200,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 585,
@@ -9103,7 +9259,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 597,
@@ -9161,7 +9318,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 601,
@@ -9219,7 +9377,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 610,
@@ -9277,7 +9436,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 619,
@@ -9335,7 +9495,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 622,
@@ -9393,7 +9554,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 625,
@@ -9451,7 +9613,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 633,
@@ -9509,7 +9672,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 634,
@@ -9567,7 +9731,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 644,
@@ -9625,7 +9790,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 645,
@@ -9683,7 +9849,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 650,
@@ -9741,7 +9908,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 651,
@@ -9799,7 +9967,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 660,
@@ -9857,7 +10026,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 663,
@@ -9915,7 +10085,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 667,
@@ -9973,7 +10144,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 674,
@@ -10031,7 +10203,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 676,
@@ -10089,7 +10262,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 682,
@@ -10147,7 +10321,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 684,
@@ -10205,7 +10380,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 685,
@@ -10263,7 +10439,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 692,
@@ -10321,7 +10498,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 694,
@@ -10379,7 +10557,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 702,
@@ -10437,7 +10616,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 713,
@@ -10495,7 +10675,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 715,
@@ -10553,7 +10734,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 718,
@@ -10611,7 +10793,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 719,
@@ -10669,7 +10852,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 720,
@@ -10727,7 +10911,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 722,
@@ -10785,7 +10970,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 728,
@@ -10843,7 +11029,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 734,
@@ -10901,7 +11088,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 735,
@@ -10959,7 +11147,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 744,
@@ -11017,7 +11206,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "CRITICAL"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 746,
@@ -11075,7 +11265,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 747,
@@ -11133,7 +11324,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 750,
@@ -11191,7 +11383,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 753,
@@ -11249,7 +11442,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 755,
@@ -11307,7 +11501,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 756,
@@ -11365,7 +11560,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 757,
@@ -11423,7 +11619,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 758,
@@ -11481,7 +11678,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 760,
@@ -11539,7 +11737,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 764,
@@ -11597,7 +11796,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 765,
@@ -11655,7 +11855,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 779,
@@ -11713,7 +11914,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 780,
@@ -11771,7 +11973,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 781,
@@ -11829,7 +12032,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 782,
@@ -11887,7 +12091,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 785,
@@ -11945,7 +12150,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 794,
@@ -12003,7 +12209,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 799,
@@ -12061,7 +12268,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 801,
@@ -12119,7 +12327,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 810,
@@ -12177,7 +12386,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 814,
@@ -12235,7 +12445,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 816,
@@ -12293,7 +12504,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 817,
@@ -12351,7 +12563,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 821,
@@ -12409,7 +12622,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 823,
@@ -12467,7 +12681,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 826,
@@ -12525,7 +12740,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 831,
@@ -12583,7 +12799,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 834,
@@ -12641,7 +12858,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 847,
@@ -12699,7 +12917,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 851,
@@ -12757,7 +12976,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 853,
@@ -12815,7 +13035,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 856,
@@ -12873,7 +13094,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 859,
@@ -12931,7 +13153,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 861,
@@ -12989,7 +13212,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 863,
@@ -13047,7 +13271,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 865,
@@ -13105,7 +13330,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 868,
@@ -13163,7 +13389,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 870,
@@ -13221,7 +13448,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 875,
@@ -13279,7 +13507,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 880,
@@ -13337,7 +13566,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 881,
@@ -13395,7 +13625,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 884,
@@ -13453,7 +13684,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 885,
@@ -13511,7 +13743,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 886,
@@ -13569,7 +13802,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 892,
@@ -13627,7 +13861,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 895,
@@ -13685,7 +13920,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 896,
@@ -13743,7 +13979,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 898,
@@ -13801,7 +14038,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 900,
@@ -13859,7 +14097,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 911,
@@ -13917,7 +14156,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 915,
@@ -13975,7 +14215,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 918,
@@ -14033,7 +14274,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 922,
@@ -14091,7 +14333,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 927,
@@ -14149,7 +14392,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 930,
@@ -14207,7 +14451,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 933,
@@ -14265,7 +14510,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 941,
@@ -14323,7 +14569,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 942,
@@ -14381,7 +14628,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 943,
@@ -14439,7 +14687,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 946,
@@ -14497,7 +14746,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 951,
@@ -14555,7 +14805,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 955,
@@ -14613,7 +14864,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 961,
@@ -14671,7 +14923,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 962,
@@ -14729,7 +14982,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 969,
@@ -14787,7 +15041,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 971,
@@ -14845,7 +15100,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 973,
@@ -14903,7 +15159,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 975,
@@ -14961,7 +15218,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 976,
@@ -15019,7 +15277,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "CRITICAL",
+    "risk_level": "CRITICAL"
   },
   {
     "sample_index": 980,
@@ -15077,7 +15336,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 982,
@@ -15135,7 +15395,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 983,
@@ -15193,7 +15454,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 985,
@@ -15251,7 +15513,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 986,
@@ -15309,7 +15572,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 992,
@@ -15367,7 +15631,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 993,
@@ -15425,7 +15690,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 997,
@@ -15483,7 +15749,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 998,
@@ -15541,7 +15808,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1004,
@@ -15599,7 +15867,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1006,
@@ -15657,7 +15926,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1008,
@@ -15715,7 +15985,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1016,
@@ -15773,7 +16044,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1026,
@@ -15831,7 +16103,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1027,
@@ -15889,7 +16162,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1030,
@@ -15947,7 +16221,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1033,
@@ -16005,7 +16280,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1038,
@@ -16063,7 +16339,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1046,
@@ -16121,7 +16398,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1052,
@@ -16179,7 +16457,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1053,
@@ -16237,7 +16516,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1057,
@@ -16295,7 +16575,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1073,
@@ -16353,7 +16634,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1077,
@@ -16411,7 +16693,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1078,
@@ -16469,7 +16752,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1080,
@@ -16527,7 +16811,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1083,
@@ -16585,7 +16870,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1089,
@@ -16643,7 +16929,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1091,
@@ -16701,7 +16988,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1095,
@@ -16759,7 +17047,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1099,
@@ -16817,7 +17106,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1100,
@@ -16875,7 +17165,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1101,
@@ -16933,7 +17224,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1102,
@@ -16991,7 +17283,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "MEDIUM"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1106,
@@ -17049,7 +17342,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1111,
@@ -17107,7 +17401,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1118,
@@ -17165,7 +17460,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1120,
@@ -17223,7 +17519,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1123,
@@ -17281,7 +17578,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1129,
@@ -17339,7 +17637,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1130,
@@ -17397,7 +17696,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1131,
@@ -17455,7 +17755,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1133,
@@ -17513,7 +17814,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1137,
@@ -17571,7 +17873,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1150,
@@ -17629,7 +17932,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1152,
@@ -17687,7 +17991,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1154,
@@ -17745,7 +18050,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1157,
@@ -17803,7 +18109,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1160,
@@ -17861,7 +18168,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1161,
@@ -17919,7 +18227,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1163,
@@ -17977,7 +18286,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1164,
@@ -18035,7 +18345,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1179,
@@ -18093,7 +18404,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1181,
@@ -18151,7 +18463,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1185,
@@ -18209,7 +18522,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1191,
@@ -18267,7 +18581,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1193,
@@ -18325,7 +18640,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1197,
@@ -18383,7 +18699,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1200,
@@ -18441,7 +18758,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1203,
@@ -18499,7 +18817,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1204,
@@ -18557,7 +18876,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1205,
@@ -18615,7 +18935,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1206,
@@ -18673,7 +18994,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1208,
@@ -18731,7 +19053,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1209,
@@ -18789,7 +19112,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1212,
@@ -18847,7 +19171,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1221,
@@ -18905,7 +19230,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1229,
@@ -18963,7 +19289,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1233,
@@ -19021,7 +19348,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1235,
@@ -19079,7 +19407,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1241,
@@ -19137,7 +19466,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1243,
@@ -19195,7 +19525,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1251,
@@ -19253,7 +19584,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1254,
@@ -19311,7 +19643,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1256,
@@ -19369,7 +19702,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1258,
@@ -19427,7 +19761,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1259,
@@ -19485,7 +19820,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1265,
@@ -19543,7 +19879,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1267,
@@ -19601,7 +19938,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1269,
@@ -19659,7 +19997,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1271,
@@ -19717,7 +20056,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1275,
@@ -19775,7 +20115,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1276,
@@ -19833,7 +20174,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1277,
@@ -19891,7 +20233,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1283,
@@ -19949,7 +20292,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1284,
@@ -20007,7 +20351,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1285,
@@ -20065,7 +20410,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1292,
@@ -20123,7 +20469,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1295,
@@ -20181,7 +20528,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1300,
@@ -20239,7 +20587,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1301,
@@ -20297,7 +20646,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1303,
@@ -20355,7 +20705,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1306,
@@ -20413,7 +20764,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1310,
@@ -20471,7 +20823,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1312,
@@ -20529,7 +20882,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1314,
@@ -20587,7 +20941,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1318,
@@ -20645,7 +21000,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1323,
@@ -20703,7 +21059,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1326,
@@ -20761,7 +21118,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1330,
@@ -20819,7 +21177,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1331,
@@ -20877,7 +21236,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1335,
@@ -20935,7 +21295,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1336,
@@ -20993,7 +21354,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1337,
@@ -21051,7 +21413,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1339,
@@ -21109,7 +21472,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1343,
@@ -21167,7 +21531,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1344,
@@ -21225,7 +21590,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1345,
@@ -21283,7 +21649,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1349,
@@ -21341,7 +21708,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1352,
@@ -21399,7 +21767,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1357,
@@ -21457,7 +21826,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1362,
@@ -21515,7 +21885,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1368,
@@ -21573,7 +21944,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1370,
@@ -21631,7 +22003,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1373,
@@ -21689,7 +22062,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1381,
@@ -21747,7 +22121,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1382,
@@ -21805,7 +22180,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1384,
@@ -21863,7 +22239,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1390,
@@ -21921,7 +22298,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1393,
@@ -21979,7 +22357,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1394,
@@ -22037,7 +22416,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1396,
@@ -22095,7 +22475,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1400,
@@ -22153,7 +22534,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1411,
@@ -22211,7 +22593,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1414,
@@ -22269,7 +22652,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1415,
@@ -22327,7 +22711,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1417,
@@ -22385,7 +22770,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1424,
@@ -22443,7 +22829,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1427,
@@ -22501,7 +22888,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1432,
@@ -22559,7 +22947,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1434,
@@ -22617,7 +23006,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1435,
@@ -22675,7 +23065,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1448,
@@ -22733,7 +23124,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1452,
@@ -22791,7 +23183,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1455,
@@ -22849,7 +23242,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1457,
@@ -22907,7 +23301,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1458,
@@ -22965,7 +23360,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1460,
@@ -23023,7 +23419,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1468,
@@ -23081,7 +23478,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1470,
@@ -23139,7 +23537,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1471,
@@ -23197,7 +23596,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1478,
@@ -23255,7 +23655,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1491,
@@ -23313,7 +23714,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1497,
@@ -23371,7 +23773,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1513,
@@ -23429,7 +23832,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1516,
@@ -23487,7 +23891,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "LOW",
+    "risk_level": "LOW"
   },
   {
     "sample_index": 1522,
@@ -23545,7 +23950,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1524,
@@ -23603,7 +24009,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1534,
@@ -23661,7 +24068,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1536,
@@ -23719,7 +24127,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1538,
@@ -23777,7 +24186,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "CRITICAL"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1541,
@@ -23835,7 +24245,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1545,
@@ -23893,7 +24304,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1547,
@@ -23951,7 +24363,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1550,
@@ -24009,7 +24422,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1553,
@@ -24067,7 +24481,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1554,
@@ -24125,7 +24540,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "HIGH"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1555,
@@ -24183,7 +24599,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1558,
@@ -24241,7 +24658,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1568,
@@ -24299,7 +24717,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1569,
@@ -24357,7 +24776,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1571,
@@ -24415,7 +24835,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1573,
@@ -24473,7 +24894,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1578,
@@ -24531,7 +24953,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1579,
@@ -24589,7 +25012,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1582,
@@ -24647,7 +25071,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1590,
@@ -24705,7 +25130,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1592,
@@ -24763,7 +25189,8 @@
     },
     "consensus": "3/4 models flagged",
     "detector_consensus": "3/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1596,
@@ -24821,7 +25248,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1606,
@@ -24879,7 +25307,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1608,
@@ -24937,7 +25366,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "MEDIUM",
+    "risk_level": "MEDIUM"
   },
   {
     "sample_index": 1611,
@@ -24995,7 +25425,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1612,
@@ -25053,7 +25484,8 @@
     },
     "consensus": "2/4 models flagged",
     "detector_consensus": "2/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1614,
@@ -25111,7 +25543,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "MEDIUM"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1624,
@@ -25169,7 +25602,8 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   },
   {
     "sample_index": 1625,
@@ -25227,7 +25661,8 @@
     },
     "consensus": "4/4 models flagged",
     "detector_consensus": "4/4",
-    "severity": "HIGH"
+    "severity": "HIGH",
+    "risk_level": "HIGH"
   },
   {
     "sample_index": 1630,
@@ -25285,6 +25720,7 @@
     },
     "consensus": "1/4 models flagged",
     "detector_consensus": "1/4",
-    "severity": "LOW"
+    "severity": "NORMAL",
+    "risk_level": "NORMAL"
   }
 ]

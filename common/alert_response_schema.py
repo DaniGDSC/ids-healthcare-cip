@@ -52,6 +52,25 @@ class EscalationChain(BaseModel):
     tertiary: str | None
 
 
+class ActionMetadata(BaseModel):
+    """Per-action operational properties surfaced to stakeholder views.
+
+    Sourced from ``module5_responses.config.ACTION_CATALOGUE`` so the
+    response engine, audit trail, and dashboard see the same values.
+    Added in Phase 1.3 of the faithfulness/actionability upgrade —
+    clinician + admin views render reversibility / disruption badges
+    from this list instead of re-walking the catalogue.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    cost: float = Field(ge=0.0, le=1.0)
+    reversible: bool
+    requires_approval: bool
+    expected_disruption: str = ""
+
+
 class Response(BaseModel):
     """Output of ``select_adaptive_response`` — the policy-engine verdict."""
 
@@ -59,6 +78,7 @@ class Response(BaseModel):
 
     actions: list[str]
     action_descriptions: list[str]
+    actions_metadata: list[ActionMetadata] = Field(default_factory=list)
     escalation_chain: EscalationChain
     escalation_rationale: str
     max_response_min: int = Field(ge=0)
@@ -66,6 +86,13 @@ class Response(BaseModel):
     rationale: str
     device_tier: str
     device_constraint_applied: bool
+    # Phase 2.4 — counterfactual-derived "try first" remediation. Set when
+    # the alert has a feasible counterfactual; the value is the
+    # ``remediation_hint`` from ``module4_explanations.counterfactual``,
+    # surfaced as a less-disruptive option the operator should attempt
+    # before the containment actions in ``actions``. Empty string when
+    # no counterfactual is available.
+    try_first_action: str = ""
 
 
 class MVEPayload(BaseModel):
@@ -111,6 +138,11 @@ class Explanation(BaseModel):
     clinician_summary: str
     analyst_available: bool
     mve: MVEPayload | None = None
+    # Phase 2 — minimal-sparsity feature perturbation that would have
+    # flipped the model from "attack" to "benign". Shape mirrors
+    # ``module4_explanations.counterfactual.CounterfactualResult.to_dict``.
+    # Optional so pre-Phase-2 artefacts still validate.
+    counterfactual: dict | None = None
 
 
 class AlertRecord(BaseModel):

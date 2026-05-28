@@ -91,19 +91,33 @@ def main() -> None:
         len(X_test), n_alerts,
     )
 
+    # Module 3 risk scores anchor severity in the online explainer too.
+    risk_npz = PROJECT_ROOT / "results/reports/risk_scores.npz"
+    if risk_npz.exists():
+        risk_scores_arr = np.load(risk_npz, allow_pickle=True)["R"]
+    else:
+        logger.warning(
+            "Risk scores not found at %s — online severity falls back "
+            "to LOW. Run Module 3 first.", risk_npz,
+        )
+        risk_scores_arr = None
+
     # Initialize explainer with feat_names at construction (Y10 fix).
     logger.info("Loading AlertExplainer (one-time startup)...")
     explainer = AlertExplainer(feat_names)
 
     # Warmup: single call to trigger any lazy compilation
-    _ = explainer.explain(X_test[0])
+    warmup_score = (
+        float(risk_scores_arr[0]) if risk_scores_arr is not None else None
+    )
+    _ = explainer.explain(X_test[0], risk_score=warmup_score)
     logger.info("Warmup complete")
 
     # Batch simulation
     logger.info("")
     logger.info("── Per-Alert Simulation ──")
     all_timings, sample_explanations = run_batch_simulation(
-        explainer, X_test, y_pred_xgb, feat_names,
+        explainer, X_test, y_pred_xgb, feat_names, risk_scores_arr,
     )
 
     stats = compute_latency_stats(all_timings)

@@ -29,6 +29,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": True,
         "requires_approval": False,
         "description": "Log event to SIEM for audit trail",
+        "expected_disruption": "No clinical or network disruption — passive logging only.",
     },
     "enhanced_monitoring": {
         "severity_floor": "LOW",
@@ -36,6 +37,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": True,
         "requires_approval": False,
         "description": "Enable enhanced logging and monitoring on device",
+        "expected_disruption": "No patient-facing impact; ~5% extra network telemetry overhead.",
     },
     "re_authenticate": {
         "severity_floor": "MEDIUM",
@@ -43,6 +45,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": True,
         "requires_approval": False,
         "description": "Force device re-authentication and credential verification",
+        "expected_disruption": "Brief device pause (~30s) during credential handshake; vitals may freeze on monitor.",
     },
     "forensic_snapshot": {
         "severity_floor": "HIGH",
@@ -50,6 +53,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": True,
         "requires_approval": False,
         "description": "Capture full packet capture and device state for forensics",
+        "expected_disruption": "No clinical impact; storage burst (~50–500 MB) on capture host.",
     },
     "restrict_traffic": {
         "severity_floor": "MEDIUM",
@@ -57,6 +61,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": True,
         "requires_approval": False,
         "description": "Restrict device to essential clinical traffic only (whitelist mode)",
+        "expected_disruption": "Vendor telemetry and software updates blocked; clinical traffic preserved.",
     },
     "escalate_clinical": {
         "severity_floor": "HIGH",
@@ -64,6 +69,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": False,
         "requires_approval": False,
         "description": "Escalate to clinical staff — verify patient vitals independently",
+        "expected_disruption": "Interrupts on-shift clinician; bedside verification needed within minutes.",
     },
     "isolate_device": {
         "severity_floor": "HIGH",
@@ -71,6 +77,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": True,
         "requires_approval": True,
         "description": "Isolate device from network segment via VLAN quarantine",
+        "expected_disruption": "Device offline ~5 min; monitor switches to bedside backup if available.",
     },
     "escalate_incident": {
         "severity_floor": "CRITICAL",
@@ -78,6 +85,7 @@ ACTION_CATALOGUE: dict[str, dict] = {
         "reversible": False,
         "requires_approval": False,
         "description": "Initiate full incident response — page CISO + on-call physician",
+        "expected_disruption": "Full IR mobilisation; possible department-wide procedural changes.",
     },
 }
 
@@ -240,6 +248,61 @@ DEFAULT_ROUTING: dict = {
     "attack_specific_actions": ["restrict_traffic", "forensic_snapshot"],
     "add_actions": [],
 }
+
+
+# ── Phase 1.2 — escalation contact table ──────────────────────────────
+# Static role → extension/SLA lookup. The MVE Layer 3 enrichment in
+# ``src.mve_generator.generate_mve`` joins this with the bare role
+# strings already emitted by ``_escalation`` so non-network stakeholders
+# can dial a real extension instead of guessing.
+#
+# Extensions are placeholders for the development corpus; in deployment
+# they get overridden by the hospital's actual on-call directory. Treat
+# the source of truth as the directory feed, not this file.
+
+ESCALATION_CONTACTS: dict[str, dict[str, str]] = {
+    "IT Security":            {"ext": "ext 4400", "sla": "5 min"},
+    "Security lead":          {"ext": "ext 4401", "sla": "5 min"},
+    "SOC":                    {"ext": "ext 4402", "sla": "8 min"},
+    "CISO":                   {"ext": "ext 4410", "sla": "15 min"},
+    "Biomedical Engineering": {"ext": "ext 4420", "sla": "30 min"},
+    "Biomed Engineering":     {"ext": "ext 4420", "sla": "30 min"},
+    "Clinical Engineering":   {"ext": "ext 4421", "sla": "20 min"},
+    "Network Admin":          {"ext": "ext 4430", "sla": "20 min"},
+    "Privacy Officer":        {"ext": "ext 4440", "sla": "30 min"},
+    "HR":                     {"ext": "ext 4450", "sla": "1 h"},
+    "Incident Commander":     {"ext": "ext 4460", "sla": "5 min"},
+    "Charge Nurse":           {"ext": "ext 4470", "sla": "10 min"},
+    "On-call Physician":      {"ext": "ext 4480", "sla": "15 min"},
+    "ICU charge nurse":       {"ext": "ext 4471", "sla": "10 min"},
+    "Floor charge nurse":     {"ext": "ext 4472", "sla": "10 min"},
+    "ICU/floor charge nurse": {"ext": "ext 4471", "sla": "10 min"},
+    "Department IT admin":    {"ext": "ext 4431", "sla": "30 min"},
+}
+
+
+def annotate_role(role_phrase: str) -> str:
+    """Append ``(ext NNNN, SLA Xmin)`` when ``role_phrase`` matches a
+    known role in ``ESCALATION_CONTACTS``.
+
+    Match is case-insensitive substring (upstream ``_escalation`` strings
+    mix capitalisations — "Charge Nurse" vs "Charge nurse on duty" — so
+    we lowercase both sides). The longest matching key wins so "ICU
+    charge nurse" doesn't get mis-annotated as "Charge Nurse". Returns
+    the input unchanged when no role matches.
+    """
+    if not role_phrase:
+        return role_phrase
+    role_lc = role_phrase.lower()
+    best_key: str | None = None
+    for key in ESCALATION_CONTACTS:
+        if key.lower() in role_lc and (best_key is None or len(key) > len(best_key)):
+            best_key = key
+    if best_key is None:
+        return role_phrase
+    info = ESCALATION_CONTACTS[best_key]
+    return f"{role_phrase} ({info['ext']}, SLA {info['sla']})"
+
 
 # ── Acuity overrides ───────────────────────────────────────────────────
 

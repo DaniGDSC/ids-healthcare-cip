@@ -103,9 +103,10 @@ def test_generate_example_explanations_picks_attack_samples(monkeypatch, tmp_pat
     y_test = np.array([1] * 10 + [0] * 10)
     attack_cats = np.array(["Spoofing"] * 5 + ["Data Alteration"] * 5 + ["normal"] * 10)
 
+    risk_levels = np.array(["LOW"] * n)
     examples = generate_example_explanations(
         all_shap, all_preds, dae_preds, weighted_err,
-        feat_names, y_test, attack_cats, output_dir=tmp_path,
+        feat_names, y_test, attack_cats, risk_levels, output_dir=tmp_path,
     )
     # At most 5 examples
     assert len(examples) <= 5
@@ -153,9 +154,10 @@ def test_generate_example_explanations_includes_risk_score_when_available(
     y_test = np.array([1] * 6 + [0] * 6)
     attack_cats = np.array(["Spoofing"] * 6 + ["normal"] * 6)
 
+    risk_levels = np.array(["HIGH"] * n)
     examples = generate_example_explanations(
         all_shap, all_preds, dae_preds, weighted_err,
-        feat_names, y_test, attack_cats, output_dir=tmp_path,
+        feat_names, y_test, attack_cats, risk_levels, output_dir=tmp_path,
     )
 
     # At least one example should have non-zero risk_score in the
@@ -192,9 +194,10 @@ def test_generate_example_explanations_writes_json(monkeypatch, tmp_path):
     y_test = np.array([1] * 4 + [0] * 4)
     attack_cats = np.array(["Spoofing"] * 4 + ["normal"] * 4)
 
+    risk_levels = np.array(["LOW"] * n)
     generate_example_explanations(
         all_shap, all_preds, dae_preds, weighted_err,
-        feat_names, y_test, attack_cats, output_dir=tmp_path,
+        feat_names, y_test, attack_cats, risk_levels, output_dir=tmp_path,
     )
 
     out_path = tmp_path / "example_explanations.json"

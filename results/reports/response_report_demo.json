@@ -5,44 +5,43 @@
   "statistics": {
     "total_alerts": 1632,
     "alerts_by_level": {
-      "LOW": 1375,
-      "HIGH": 185,
-      "CRITICAL": 18,
+      "LOW": 1380,
+      "HIGH": 196,
+      "CRITICAL": 2,
       "MEDIUM": 54
     },
     "actions_triggered": {
       "log_event": 1632,
-      "enhanced_monitoring": 1614,
+      "enhanced_monitoring": 1630,
       "re_authenticate": 113,
-      "forensic_snapshot": 203,
-      "restrict_traffic": 159,
-      "isolate_device": 203,
-      "escalate_clinical": 343
+      "forensic_snapshot": 198,
+      "restrict_traffic": 158,
+      "isolate_device": 198,
+      "escalate_clinical": 342
     },
     "true_positives_by_level": {
-      "HIGH": 164,
-      "LOW": 16,
-      "CRITICAL": 17,
-      "MEDIUM": 8
+      "HIGH": 175,
+      "LOW": 19,
+      "CRITICAL": 2,
+      "MEDIUM": 9
     },
     "false_positives_by_level": {
-      "LOW": 1359,
+      "LOW": 1361,
       "HIGH": 21,
-      "MEDIUM": 46,
-      "CRITICAL": 1
+      "MEDIUM": 45
     },
     "precision_by_level": {
-      "LOW": 0.0116,
-      "HIGH": 0.8865,
-      "CRITICAL": 0.9444,
-      "MEDIUM": 0.1481
+      "LOW": 0.0138,
+      "HIGH": 0.8929,
+      "CRITICAL": 1.0,
+      "MEDIUM": 0.1667
     }
   },
   "effectiveness": {
     "outcome_distribution": {
-      "benign_logged": 1359,
+      "benign_logged": 1361,
       "threat_contained": 205,
-      "false_positive_isolated": 68,
+      "false_positive_isolated": 66,
       "threat_logged_not_mitigated": 0
     },
     "per_action_stats": {
@@ -54,11 +53,11 @@
         "false_positive_rate": 0.8744
       },
       "enhanced_monitoring": {
-        "true_attacks": 188,
-        "false_positives": 1426,
-        "total": 1614,
-        "precision": 0.1165,
-        "false_positive_rate": 0.8835
+        "true_attacks": 203,
+        "false_positives": 1427,
+        "total": 1630,
+        "precision": 0.1245,
+        "false_positive_rate": 0.8755
       },
       "re_authenticate": {
         "true_attacks": 113,
@@ -68,58 +67,58 @@
         "false_positive_rate": 0.0
       },
       "forensic_snapshot": {
-        "true_attacks": 181,
-        "false_positives": 22,
-        "total": 203,
-        "precision": 0.8916,
-        "false_positive_rate": 0.1084
+        "true_attacks": 177,
+        "false_positives": 21,
+        "total": 198,
+        "precision": 0.8939,
+        "false_positive_rate": 0.1061
       },
       "restrict_traffic": {
         "true_attacks": 113,
-        "false_positives": 46,
-        "total": 159,
-        "precision": 0.7107,
-        "false_positive_rate": 0.2893
+        "false_positives": 45,
+        "total": 158,
+        "precision": 0.7152,
+        "false_positive_rate": 0.2848
       },
       "isolate_device": {
-        "true_attacks": 181,
-        "false_positives": 22,
-        "total": 203,
-        "precision": 0.8916,
-        "false_positive_rate": 0.1084
+        "true_attacks": 177,
+        "false_positives": 21,
+        "total": 198,
+        "precision": 0.8939,
+        "false_positive_rate": 0.1061
       },
       "escalate_clinical": {
-        "true_attacks": 164,
+        "true_attacks": 163,
         "false_positives": 179,
-        "total": 343,
-        "precision": 0.4781,
-        "false_positive_rate": 0.5219
+        "total": 342,
+        "precision": 0.4766,
+        "false_positive_rate": 0.5234
       }
     },
     "proportionality_analysis": [
       {
         "action": "isolate_device",
         "cost": 0.8,
-        "precision": 0.8916,
-        "total": 203
+        "precision": 0.8939,
+        "total": 198
       },
       {
         "action": "escalate_clinical",
         "cost": 0.7,
-        "precision": 0.4781,
-        "total": 343
+        "precision": 0.4766,
+        "total": 342
       },
       {
         "action": "restrict_traffic",
         "cost": 0.5,
-        "precision": 0.7107,
-        "total": 159
+        "precision": 0.7152,
+        "total": 158
       },
       {
         "action": "forensic_snapshot",
         "cost": 0.4,
-        "precision": 0.8916,
-        "total": 203
+        "precision": 0.8939,
+        "total": 198
       },
       {
         "action": "re_authenticate",
@@ -130,8 +129,8 @@
       {
         "action": "enhanced_monitoring",
         "cost": 0.2,
-        "precision": 0.1165,
-        "total": 1614
+        "precision": 0.1245,
+        "total": 1630
       },
       {
         "action": "log_event",
@@ -140,19 +139,19 @@
         "total": 1632
       }
     ],
-    "over_response_count": 68,
+    "over_response_count": 66,
     "under_response_count": 0,
-    "over_response_rate": 0.0417,
+    "over_response_rate": 0.0404,
     "under_response_rate": 0.0
   },
   "mitigation_catalogue": {
     "log_event": "Log event to SIEM for audit trail",
     "enhanced_monitoring": "Enable enhanced logging and monitoring on device",
     "re_authenticate": "Force device re-authentication and credential verification",
-    "restrict_traffic": "Restrict device to essential clinical traffic only (whitelist mode)",
-    "isolate_device": "Isolate device from network segment via VLAN quarantine",
     "forensic_snapshot": "Capture full packet capture and device state for forensics",
+    "restrict_traffic": "Restrict device to essential clinical traffic only (whitelist mode)",
     "escalate_clinical": "Escalate to clinical staff \u2014 verify patient vitals independently",
+    "isolate_device": "Isolate device from network segment via VLAN quarantine",
     "escalate_incident": "Initiate full incident response \u2014 page CISO + on-call physician"
   },
   "escalation_routing": {
@@ -160,44 +159,60 @@
       "primary": "IT Security",
       "secondary": "Biomedical Engineering",
       "tertiary": null,
-      "rationale": "Spoofing targets device identity \u2014 biomed must verify physical device integrity"
+      "rationale": "Spoofing targets device identity \u2014 biomed must verify physical device integrity",
+      "add_actions": [
+        "re_authenticate"
+      ]
     },
     "Data Alteration": {
       "primary": "IT Security",
       "secondary": "Charge Nurse",
       "tertiary": "On-call Physician",
-      "rationale": "Data alteration may corrupt biometric readings \u2014 clinical verification required"
+      "rationale": "Data alteration may corrupt biometric readings \u2014 clinical verification required",
+      "add_actions": [
+        "forensic_snapshot",
+        "escalate_clinical"
+      ]
     },
     "normal": {
       "primary": null,
       "secondary": null,
       "tertiary": null,
-      "rationale": "No attack detected"
+      "rationale": "No attack detected",
+      "add_actions": []
     }
   },
   "device_constraints": {
     "life_sustaining": {
       "max_action": "restrict_traffic",
+      "max_action_cost": 0.5,
+      "isolation_blocked": true,
       "fallback_required": true,
-      "clinical_escalation_mandatory": true,
+      "clinical_approval_required": true,
       "examples": "infusion pump, ventilator"
     },
     "vital_monitoring": {
       "max_action": "isolate_device",
+      "max_action_cost": 0.8,
+      "isolation_blocked": false,
       "fallback_required": true,
-      "clinical_escalation_mandatory": false,
+      "clinical_approval_required": true,
       "examples": "ECG monitor, pulse oximeter"
     },
     "diagnostic": {
       "max_action": "isolate_device",
+      "max_action_cost": 0.8,
+      "isolation_blocked": false,
       "fallback_required": false,
-      "clinical_escalation_mandatory": false,
+      "clinical_approval_required": false,
       "examples": "blood pressure monitor, thermometer"
     },
     "auxiliary": {
       "max_action": "isolate_device",
+      "max_action_cost": 0.8,
+      "isolation_blocked": false,
       "fallback_required": false,
-      "clinical_escalation_mandatory": false,
+      "clinical_approval_required": false,
       "examples": "environmental sensor, room monitor"
     }
   }

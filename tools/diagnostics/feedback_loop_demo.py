@@ -49,7 +49,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "results" / "reports"
 CHARTS_DIR = PROJECT_ROOT / "results" / "charts"
 
-DEFAULT_THRESHOLDS = {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40}
+DEFAULT_THRESHOLDS = {"CRITICAL": 0.80, "HIGH": 0.60, "MEDIUM": 0.40, "LOW": 0.30}
 N_ITERATIONS = 5
 
 

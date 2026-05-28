@@ -86,14 +86,20 @@ def test_canonical_row_present_in_grid(sensitivity):
 
 def test_surfacing_threshold_canonical(sensitivity):
     """Surfacing threshold must equal the canonical MEDIUM cutoff (0.40)
-    from `module3.RISK_THRESHOLDS[-1]` — not the old heuristic 0.30.
+    — the boundary above which alerts are shown to operators.
+
+    Previously this looked up ``RISK_THRESHOLDS[-1]`` which was MEDIUM
+    while there were 3 thresholds. After the formula-fix upgrade added
+    a 4th threshold for NORMAL at the bottom, ``RISK_THRESHOLDS[-1]``
+    is the LOW cutoff (0.30). We now look up MEDIUM by name to keep
+    the assertion semantic-stable across future threshold additions.
     """
     from module3_risk_scoring.module3_risk_scores import RISK_THRESHOLDS
-    canonical_threshold = float(RISK_THRESHOLDS[-1][0])
+    medium_threshold = next(t for t, name in RISK_THRESHOLDS if name == "MEDIUM")
     artifact_threshold = sensitivity["_meta"]["surfacing_threshold_on_R"]
-    assert abs(artifact_threshold - canonical_threshold) < 1e-9, (
-        f"surfacing threshold {artifact_threshold} != canonical "
-        f"{canonical_threshold} from RISK_THRESHOLDS"
+    assert abs(artifact_threshold - medium_threshold) < 1e-9, (
+        f"surfacing threshold {artifact_threshold} != canonical MEDIUM "
+        f"cutoff {medium_threshold}"
     )
 
 

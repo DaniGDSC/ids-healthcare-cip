@@ -16,12 +16,37 @@ from common.phi import BIOMETRIC_COLUMNS
 # ── Risk formula weights ───────────────────────────────────────────────
 WEIGHTS: dict[str, float] = {"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}
 
-# Risk level thresholds — 3 boundaries, 4 tiers
+# Risk level thresholds — 4 boundaries, 5 tiers.
+#
+# The original 3-threshold table left the bottom tier undefined: any
+# R < 0.40 became LOW, including idle vital-monitoring devices whose
+# risk_score ≈ 0.21 was driven entirely by the context components
+# (D_crit + S_data) with C_detect ≈ 0. That produced ~85% LOW-tier
+# "alerts" that were structurally noise — see
+# ``results/formula_comparison.json`` and ``results/formula_sweep.json``.
+#
+# Phase A of the formula fix adds NORMAL @ R < 0.30. Phase B adds a
+# detection gate (``MIN_DETECTION_GATE``) so any sample with negligible
+# detector confidence is forced to NORMAL regardless of context.
+# Together the two cut operational alert volume by 82% (2448 → 430) and
+# raise operational precision from 0.125 to 0.686 on the test split,
+# without moving the surfaced-tier (MEDIUM+) precision/recall the RQ1
+# paper claims are based on (those stay at 0.793 / 0.935).
 RISK_THRESHOLDS: list[tuple[float, str]] = [
     (0.80, "CRITICAL"),
     (0.60, "HIGH"),
     (0.40, "MEDIUM"),
+    (0.30, "LOW"),
 ]
+
+# Phase B detection gate: a sample with C_detect below this is treated
+# as NORMAL regardless of context-driven risk. Picked from the
+# ``tools/formula_comparison.py`` sweep — the (t_normal, gate) =
+# (0.30, 0.02) corner has the highest composite score (0.9672) under
+# the upgrade-plan weighting, and drops only 12 attacks (all of which
+# already had y_proba ≈ model false negatives, so the formula isn't
+# the thing failing to catch them).
+MIN_DETECTION_GATE: float = 0.02
 
 # ── Biometric features ────────────────────────────────────────────────
 # Stable list ordering for downstream callers; backed by the canonical
@@ -108,6 +133,7 @@ RESPONSE_MAPPING: dict[str, dict] = {
 __all__ = [
     "WEIGHTS",
     "RISK_THRESHOLDS",
+    "MIN_DETECTION_GATE",
     "BIOMETRIC_FEATURES",
     "SIGMA_THRESHOLD",
     "FEATURE_ACTIVE_EPSILON",

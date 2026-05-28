@@ -33,6 +33,8 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # ── Backward-compat re-exports ────────────────────────────────────────
@@ -89,7 +91,6 @@ from module4_explanations.plotting import (  # noqa: E402,F401
     plot_waterfalls,
 )
 from module4_explanations.stakeholder import (  # noqa: E402,F401
-    _severity,
     build_admin_dashboard,
     build_analyst_report,
     build_clinician_summaries,
@@ -220,24 +221,50 @@ def main() -> None:
         )
 
     # ── Stakeholder outputs ──
+    # Severity is anchored on Module 3's canonical risk_level — load the
+    # split-matched risk_scores.npz so all three stakeholder builders see
+    # the same severity per sample. Falls back to a synthetic LOW vector
+    # if Module 3 hasn't been run yet (so Module 4 still functions; the
+    # admin dashboard simply won't show any HIGH/CRITICAL bins).
+    from common import split_paths as sp
+
+    risk_npz = sp.risk_scores(args.split)
+    if risk_npz.exists():
+        risk_levels = np.load(risk_npz, allow_pickle=True)["risk_levels"]
+        if len(risk_levels) != n_samples:
+            raise ValueError(
+                f"risk_scores npz length {len(risk_levels)} != "
+                f"split parquet length {n_samples}. Re-run Module 3."
+            )
+    else:
+        logger.warning(
+            "Risk scores not found at %s — falling back to all-LOW "
+            "severity. Run Module 3 first for canonical severity.",
+            risk_npz,
+        )
+        risk_levels = np.array(["LOW"] * n_samples)
+
     alerts = build_analyst_report(
         all_shap, all_preds, weighted_err, dae_preds, feat_names,
+        risk_levels,
         suffix=suffix,
     )
     build_clinician_summaries(
-        all_shap, all_preds, dae_preds, feat_names, suffix=suffix,
+        all_shap, all_preds, dae_preds, feat_names, risk_levels,
+        suffix=suffix,
+        X_test=X_test,
     )
 
     if not explanations_only:
         build_admin_dashboard(
             all_shap, all_preds, dae_preds, feat_names, feat_weights,
-            global_importances, attack_cats,
+            global_importances, attack_cats, risk_levels,
         )
         export_feature_concepts()
         export_nlg_templates()
         generate_example_explanations(
             all_shap, all_preds, dae_preds, weighted_err, feat_names,
-            y_test, attack_cats, split=args.split,
+            y_test, attack_cats, risk_levels, split=args.split,
         )
 
         logger.info("")

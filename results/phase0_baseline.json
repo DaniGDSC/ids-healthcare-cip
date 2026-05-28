@@ -1,0 +1,152 @@
+{
+  "_meta": {
+    "reports_dir": "/home/un1/project/ids-healthcare-cip/results/reports",
+    "n_analyst_alerts": 2415,
+    "n_clinician_summaries": 315,
+    "n_alert_responses": 430,
+    "generated_at": "2026-05-28T11:39:57.834238+00:00",
+    "git_rev": "42bc65d"
+  },
+  "narrative_faithfulness": {
+    "metric": "narrative_faithfulness",
+    "description": "P(clinician narrative top-1 category == SHAP top-1 category) for model=xgboost",
+    "n": 307,
+    "n_matched": 297,
+    "rate": 0.9674,
+    "n_unknown_narrative": 8,
+    "n_unknown_shap_category": 0,
+    "sample_mismatches": [
+      {
+        "sample_index": 60,
+        "shap_top_feature": "Temp",
+        "shap_category": "biometric",
+        "narrative_category": "network_protocol"
+      },
+      {
+        "sample_index": 452,
+        "shap_top_feature": "Pulse_Rate",
+        "shap_category": "biometric",
+        "narrative_category": "network_timing"
+      },
+      {
+        "sample_index": 515,
+        "shap_top_feature": "Pulse_Rate",
+        "shap_category": "biometric",
+        "narrative_category": "network_protocol"
+      },
+      {
+        "sample_index": 1008,
+        "shap_top_feature": "SrcLoad",
+        "shap_category": "network_volume",
+        "narrative_category": "network_protocol"
+      },
+      {
+        "sample_index": 1650,
+        "shap_top_feature": "Temp",
+        "shap_category": "biometric",
+        "narrative_category": "network_protocol"
+      },
+      {
+        "sample_index": 1898,
+        "shap_top_feature": "Flgs",
+        "shap_category": "network_protocol",
+        "narrative_category": "network_timing"
+      },
+      {
+        "sample_index": 1946,
+        "shap_top_feature": "Flgs",
+        "shap_category": "network_protocol",
+        "narrative_category": "network_timing"
+      },
+      {
+        "sample_index": 2096,
+        "shap_top_feature": "Pulse_Rate",
+        "shap_category": "biometric",
+        "narrative_category": "network_protocol"
+      },
+      {
+        "sample_index": 2246,
+        "shap_top_feature": "Pulse_Rate",
+        "shap_category": "biometric",
+        "narrative_category": "network_protocol"
+      },
+      {
+        "sample_index": 2424,
+        "shap_top_feature": "DIntPkt",
+        "shap_category": "network_timing",
+        "narrative_category": "network_protocol"
+      }
+    ]
+  },
+  "action_specificity": {
+    "metric": "action_specificity",
+    "description": "% of action strings (MVE Layer 3 + clinician summary + response.action_descriptions) containing at least one concrete identifier (IP/port/device/contact/MITRE/alert id).",
+    "overall_rate": 0.5358,
+    "per_source_rate": {
+      "layer3_action": 1.0,
+      "layer3_escalation": 1.0,
+      "action_descriptions": 0.0,
+      "clinician_summary": 0.0
+    },
+    "per_source_seen": {
+      "layer3_action": 430,
+      "layer3_escalation": 430,
+      "action_descriptions": 430,
+      "clinician_summary": 315
+    },
+    "per_source_specific": {
+      "layer3_action": 430,
+      "layer3_escalation": 430,
+      "action_descriptions": 0,
+      "clinician_summary": 0
+    },
+    "signal_breakdown": {
+      "ipv4": 0,
+      "mac_address": 0,
+      "port_number": 0,
+      "bed_or_room": 0,
+      "device_id": 0,
+      "extension": 430,
+      "named_person": 0,
+      "mitre_id": 0,
+      "alert_id": 430
+    }
+  },
+  "counterfactual_coverage": {
+    "metric": "counterfactual_coverage",
+    "description": "% of alert records with a counterfactual payload. The ``actionable_rate`` (denominator = CRITICAL+HIGH+MEDIUM) is the Phase 2 acceptance signal; the overall ``rate`` is kept for backwards-compat with Phase 0 baselines.",
+    "n": 430,
+    "n_with_counterfactual": 315,
+    "rate": 0.7326,
+    "actionable_rate": 0.8481,
+    "actionable_feasible_rate": 0.8481,
+    "by_severity": {
+      "CRITICAL": {
+        "seen": 12,
+        "with_cf": 12,
+        "feasible": 12
+      },
+      "HIGH": {
+        "seen": 285,
+        "with_cf": 268,
+        "feasible": 268
+      },
+      "MEDIUM": {
+        "seen": 65,
+        "with_cf": 27,
+        "feasible": 27
+      },
+      "LOW": {
+        "seen": 68,
+        "with_cf": 8,
+        "feasible": 8
+      }
+    }
+  },
+  "_floors": {
+    "narrative_faithfulness": 0.9674,
+    "action_specificity": 0.5358,
+    "counterfactual_coverage": 0.7326,
+    "counterfactual_actionable_feasible_rate": 0.8481
+  }
+}

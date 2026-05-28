@@ -23,7 +23,6 @@ import numpy as np
 from .compute import _top_features_dae
 from .io import OUTPUT_DIR, write_json_strict
 from .nlg import route_explanation
-from .stakeholder import _severity
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +55,16 @@ def generate_example_explanations(
     feat_names: list,
     y_test: np.ndarray,
     attack_cats: np.ndarray | None,
+    risk_levels: np.ndarray,
     *,
     split: str = "test",
     output_dir: Path | None = None,
 ) -> list:
-    """Generate multi-view examples for 5 alerts across all 3 stakeholders."""
+    """Generate multi-view examples for 5 alerts across all 3 stakeholders.
+
+    Severity per example is the Module 3 canonical ``risk_level`` for the
+    picked sample.
+    """
     logger.info("Generating example explanations for thesis figures...")
     out_dir = output_dir or OUTPUT_DIR
 
@@ -93,6 +97,8 @@ def generate_example_explanations(
     # Y3 fix: canonical risk-scores path via common.split_paths.
     risk_data = _load_risk_scores(split)
 
+    risk_levels = np.asarray(risk_levels).astype(str)
+
     examples = []
     for idx in picks:
         sv_row = xgb_sv[idx]
@@ -101,7 +107,7 @@ def generate_example_explanations(
             1 for name in all_preds if all_preds[name]["y_pred"][idx] == 1
         )
         n_flagged += 1 if dae_preds["y_pred"][idx] == 1 else 0
-        severity = _severity(n_flagged)
+        severity = str(risk_levels[idx])
         consensus = f"{n_flagged}/4 models flagged"
 
         dae_top = _top_features_dae(weighted_err[idx], feat_names, k=3)

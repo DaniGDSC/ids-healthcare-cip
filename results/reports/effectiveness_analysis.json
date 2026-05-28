@@ -28,11 +28,11 @@
       "false_positive_rate": 0.0606
     },
     "escalate_clinical": {
-      "true_attacks": 256,
-      "false_positives": 271,
-      "total": 527,
-      "precision": 0.4858,
-      "false_positive_rate": 0.5142
+      "true_attacks": 263,
+      "false_positives": 162,
+      "total": 425,
+      "precision": 0.6188,
+      "false_positive_rate": 0.3812
     },
     "isolate_device": {
       "true_attacks": 279,
@@ -66,8 +66,8 @@
     {
       "action": "escalate_clinical",
       "cost": 0.7,
-      "precision": 0.4858,
-      "total": 527
+      "precision": 0.6188,
+      "total": 425
     },
     {
       "action": "restrict_traffic",

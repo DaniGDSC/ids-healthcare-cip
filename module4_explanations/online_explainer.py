@@ -26,6 +26,24 @@ from .compute import (
 from .config import SKIP_SHAP_MODELS, TRACK_A_MODELS, format_clinician_template
 from .nlg import build_shap_context, clinician_nlg
 
+
+def _risk_level_from_score(risk_score: float | None) -> str:
+    """Severity tier from Module 3 risk_score (canonical thresholds).
+
+    Mirrors :func:`module3_risk_scoring.composition.assign_risk_levels`
+    for a single scalar. ``None`` → ``"LOW"`` (severity gating in
+    :meth:`AlertExplainer.explain` returns the minimal explanation).
+    """
+    if risk_score is None:
+        return "LOW"
+    if risk_score >= 0.80:
+        return "CRITICAL"
+    if risk_score >= 0.60:
+        return "HIGH"
+    if risk_score >= 0.40:
+        return "MEDIUM"
+    return "LOW"
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,15 +106,6 @@ class AlertExplainer:
         self._startup_ms = round((time.perf_counter() - t0) * 1000, 1)
         logger.info("AlertExplainer loaded in %.1fms", self._startup_ms)
 
-    def _severity(self, n_flagged: int) -> str:
-        if n_flagged >= 4:
-            return "CRITICAL"
-        if n_flagged == 3:
-            return "HIGH"
-        if n_flagged == 2:
-            return "MEDIUM"
-        return "LOW"
-
     @staticmethod
     def _sanitise(x: np.ndarray) -> np.ndarray:
         """Replace NaN/Inf with zeros (OOD-05 fix)."""
@@ -119,6 +128,8 @@ class AlertExplainer:
         self,
         x_sample: np.ndarray,
         feat_names: Sequence[str] | None = None,
+        *,
+        risk_score: float | None = None,
     ) -> dict:
         """Generate per-alert explanation with component-level timing.
 
@@ -128,6 +139,11 @@ class AlertExplainer:
                 must match the constructor's feat_names exactly —
                 otherwise raises ValueError. Pass ``None`` to use the
                 instance feat_names directly.
+            risk_score: Module 3 composite risk score for this sample.
+                Determines severity tier (canonical thresholds). When
+                ``None``, severity falls back to ``"LOW"``; callers in
+                production should always pass the value computed by the
+                Module 3 pipeline.
         """
         self._validate_feat_names(feat_names)
         feats = list(self.feat_names)
@@ -158,8 +174,11 @@ class AlertExplainer:
         timings["predict_ms"] = round((time.perf_counter() - t0) * 1000, 3)
 
         # ── Step 2: Severity ──
+        # Severity is the Module 3 canonical tier (risk_score thresholds).
+        # n_flagged is preserved as the detector-agreement signal but no
+        # longer drives severity.
         n_flagged = sum(1 for v in votes.values() if v["prediction"] == 1)
-        severity = self._severity(n_flagged)
+        severity = _risk_level_from_score(risk_score)
 
         if severity == "LOW" and n_flagged <= 1:
             timings["total_ms"] = round((time.perf_counter() - t_total) * 1000, 3)
@@ -250,4 +269,4 @@ class AlertExplainer:
         return build_shap_context(top_features)
 
 
-__all__ = ["AlertExplainer"]
+__all__ = ["AlertExplainer", "_risk_level_from_score"]

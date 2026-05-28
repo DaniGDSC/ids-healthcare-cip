@@ -251,9 +251,15 @@ def _load_mitre_mapping() -> dict:
 
 
 def _lookup_mitre_reference(attack_category: str) -> Optional[dict[str, str]]:
-    """Return {'id', 'name'} for the primary MITRE technique of an
-    attack category, or None when no mapping applies (benign baseline,
-    unknown category, or low-confidence association).
+    """Return ``{'id', 'name', 'plain_gloss'}`` for the primary MITRE
+    technique of an attack category, or None when no mapping applies
+    (benign baseline, unknown category, or low-confidence association).
+
+    Phase 1.4 — ``plain_gloss`` is a short, jargon-free clause that
+    explains the technique without security expertise (sourced from
+    ``config/attack_to_mitre_mapping.yaml``). Empty string when the
+    YAML entry doesn't define one yet, so renderers can guard on
+    truthiness rather than ``KeyError``.
     """
     if not attack_category:
         return None
@@ -267,7 +273,11 @@ def _lookup_mitre_reference(attack_category: str) -> Optional[dict[str, str]]:
     pconf = str(primary.get("confidence", "")).lower()
     if not pid or pid == "NONE" or pconf == "low":
         return None
-    return {"id": pid, "name": pname}
+    return {
+        "id": pid,
+        "name": pname,
+        "plain_gloss": primary.get("plain_gloss", "") or "",
+    }
 
 
 def _normalize_device_type(raw: str) -> str:
@@ -1267,9 +1277,55 @@ def generate_mve(
     mitre_ref = _lookup_mitre_reference(attack_category)
     if mitre_ref:
         existing = mve.layer_1.get("deviation_description", "")
+        # Phase 1.4 — append the plain-language gloss when the YAML entry
+        # defines one, so non-security stakeholders aren't left to decode
+        # the bare technique ID.
+        gloss = mitre_ref.get("plain_gloss", "") if isinstance(mitre_ref, dict) else ""
+        gloss_clause = f" — {gloss}" if gloss else ""
         mve.layer_1["deviation_description"] = (
-            f"{existing} Consistent with MITRE {mitre_ref['id']} ({mitre_ref['name']})."
+            f"{existing} Consistent with MITRE {mitre_ref['id']} "
+            f"({mitre_ref['name']}{gloss_clause})."
         ).strip()
+
+    # ── Phase 1.2 — Parametrize Layer 3 with alert_id + escalation contacts ──
+    # Prepend the alert ID and the rendered device type to immediate_action
+    # so non-network stakeholders can dial back to a specific record / device
+    # instead of guessing. Annotate escalation_path with extensions + SLA
+    # from ``ESCALATION_CONTACTS``. Both are no-ops when their inputs are
+    # missing (alert_id absent, role unknown) so legacy callers without
+    # the new metadata still render the same text.
+    try:
+        from module5_responses.config import annotate_role as _annotate_role
+    except ImportError:
+        _annotate_role = None
+
+    alert_id = str(raw_alert.get("alert_id", "")).strip()
+    raw_device_type = str(device_context.get("device_type", "")).strip()
+    if alert_id or raw_device_type:
+        existing_action = mve.layer_3.get("immediate_action", "")
+        prefix_bits: list[str] = []
+        if alert_id:
+            prefix_bits.append(alert_id)
+        if raw_device_type and raw_device_type not in ("device", "system"):
+            prefix_bits.append(raw_device_type)
+        if prefix_bits:
+            prefix = " · ".join(prefix_bits)
+            mve.layer_3["immediate_action"] = f"[{prefix}] {existing_action}".strip()
+
+    if _annotate_role is not None:
+        existing_esc = mve.layer_3.get("escalation_path", "")
+        if existing_esc:
+            # Escalation strings look like
+            #   ``(1) Privacy Officer, (2) Security lead, (3) HR.``
+            # Match each ``(N) <Role>`` group up to the next ``, (N+1)``
+            # or a trailing period / EOS, then re-emit with the extension
+            # / SLA from ``ESCALATION_CONTACTS`` appended to the role text.
+            mve.layer_3["escalation_path"] = re.sub(
+                r"\((\d+)\)\s*([^()]+?)(?=,\s*\(\d+\)|\.|$)",
+                lambda m: f"({m.group(1)}) "
+                          f"{_annotate_role(m.group(2).strip().rstrip(',.'))}",
+                existing_esc,
+            )
 
     mve.provider = provider_used
 

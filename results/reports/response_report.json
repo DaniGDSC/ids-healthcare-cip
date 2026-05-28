@@ -14,7 +14,7 @@
       "log_event": 2448,
       "enhanced_monitoring": 2436,
       "forensic_snapshot": 297,
-      "escalate_clinical": 527,
+      "escalate_clinical": 425,
       "isolate_device": 297,
       "re_authenticate": 169,
       "restrict_traffic": 226
@@ -67,11 +67,11 @@
         "false_positive_rate": 0.0606
       },
       "escalate_clinical": {
-        "true_attacks": 256,
-        "false_positives": 271,
-        "total": 527,
-        "precision": 0.4858,
-        "false_positive_rate": 0.5142
+        "true_attacks": 263,
+        "false_positives": 162,
+        "total": 425,
+        "precision": 0.6188,
+        "false_positive_rate": 0.3812
       },
       "isolate_device": {
         "true_attacks": 279,
@@ -105,8 +105,8 @@
       {
         "action": "escalate_clinical",
         "cost": 0.7,
-        "precision": 0.4858,
-        "total": 527
+        "precision": 0.6188,
+        "total": 425
       },
       {
         "action": "restrict_traffic",

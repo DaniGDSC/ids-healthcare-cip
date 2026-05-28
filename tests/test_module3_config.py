@@ -27,15 +27,16 @@ def test_weights_keys():
 
 
 def test_risk_thresholds_monotonic_descending():
-    """CRITICAL > HIGH > MEDIUM."""
+    """CRITICAL > HIGH > MEDIUM > LOW — 4 thresholds after the
+    formula-fix upgrade adds the NORMAL tier at R < 0.30."""
     thresholds = [t for t, _ in RISK_THRESHOLDS]
     assert thresholds == sorted(thresholds, reverse=True)
-    assert thresholds == [0.80, 0.60, 0.40]
+    assert thresholds == [0.80, 0.60, 0.40, 0.30]
 
 
 def test_risk_threshold_labels():
     labels = [name for _, name in RISK_THRESHOLDS]
-    assert labels == ["CRITICAL", "HIGH", "MEDIUM"]
+    assert labels == ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
 
 
 def test_device_tiers_in_unit_interval():

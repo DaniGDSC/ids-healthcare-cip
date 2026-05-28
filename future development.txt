@@ -1,0 +1,540 @@
+# FUTURE DEVELOPMENT — DAE Calibration + Cost-tier Threshold + Plausibility Gate
+
+Ghi chú: Plan này được lưu lại để triển khai sau. Mục tiêu là giải quyết
+vấn đề precision rất thấp ở LOW/MEDIUM tier (LOW = 0.96%, MEDIUM = 12.3%)
+mà KHÔNG hi sinh khả năng phát hiện attack đã biết, KHÔNG vứt bỏ DAE,
+và DEFENSIBLE trước hội đồng nặng về security.
+
+================================================================================
+## VẤN ĐỀ GỐC RỄ
+================================================================================
+
+Trong detection_engine/engine.py:275:
+    c_detect = max(c_track_a, c_track_b)
+
+Lấy max() là phép so sánh "táo và cam" vì:
+- c_track_a (XGBoost): calibrated probability — đúng nghĩa P(attack | features)
+- c_track_b (DAE): min-max scaled reconstruction error trên benign training
+  errors (xem module2_detection/models/DAE.py:421-430). KHÔNG phải xác suất.
+
+Hệ quả: c_track_b = 0.7 không có nghĩa "70% xác suất attack" — có thể chỉ
+là 5–15% xác suất thật. Khi fused bằng max(), DAE elevate sai rất nhiều
+flow benign biên → 2066 false positives ở LOW tier.
+
+Bằng chứng phụ: dynamic_threshold_results.json cho thấy adaptive threshold
+đã được thử và làm tệ hơn (F1: 0.51 → 0.37). Vì nó tune trên scale không
+calibrated → vô nghĩa.
+
+================================================================================
+## GIẢI PHÁP: 3 TẦNG ĐỘC LẬP
+================================================================================
+
+```
+                   [Track A: XGBoost]──────────────┐
+                          │ (already calibrated)    │
+[Raw flow] ──► engine ────┤                         ├──► c_detect_calibrated
+                          │                         │           │
+                   [Track B: DAE]──► [NEW: Isotonic]┘           │
+                                       Tier 1 ▲                  ▼
+                                                  [Module 3: risk score]
+                                                                 │
+                                                                 ▼
+                              [NEW: Cost-tier threshold] ◄── Tier 2
+                                                                 │
+                                                                 ▼
+                              [NEW: Clinical plausibility]  ◄── Tier 3
+                                                                 │
+                                                                 ▼
+                                                      [Module 5: response]
+```
+
+3 tầng có thể rollback độc lập, ablate độc lập qua feature flags.
+
+================================================================================
+## MỤC TIÊU ĐỊNH LƯỢNG
+================================================================================
+
+| Metric                    | Baseline | Target  | Acceptable |
+|---------------------------|----------|---------|------------|
+| Precision LOW             | 0.96%    | ≥50%    | ≥100%       |
+| Precision MEDIUM          | 12.3%    | ≥70%    | ≥100%       |
+| Precision HIGH            | 93.7%    | ≥90%    | ≥98%       |
+| Precision CRITICAL        | 100%     | 100%    | ≥95%       |
+| Recall Spoofing           | baseline | ≥95%bl  | ≥90%bl     |
+| Recall Data Alteration    | baseline | ≥95%bl  | ≥90%bl     |
+| over_response_count       | 75       | ≤20     | ≤30        |
+| Module 4/6 tests          | pass     | pass    | pass       |
+
+================================================================================
+## PHASE 0 — SETUP & BASELINE (30 phút)
+================================================================================
+
+Mục đích: branch riêng, baseline snapshot, verify validation set sạch.
+
+Steps:
+- git checkout -b feature/dae-calibration-cost-tier-plausibility
+- mkdir -p results/baselines
+- Snapshot:
+    cp results/reports/effectiveness_analysis.json results/baselines/
+    cp results/reports/response_report.json results/baselines/
+    cp results/reports/risk_scores_detail.csv results/baselines/
+    cp results/rq1_metrics.json results/baselines/
+- Tạo results/baselines/BASELINE.md ghi:
+    * precision_by_level (LOW/MEDIUM/HIGH/CRITICAL)
+    * over_response_count
+    * recall per attack category
+    * commit SHA, ngày snapshot
+- Verify split không leak: đọc data/processed/split_metadata.yaml,
+  confirm random_state=42, stratified, val/test tách rõ.
+- Verify lib: python -c "from sklearn.isotonic import IsotonicRegression"
+
+Acceptance:
+- Branch tồn tại
+- BASELINE.md có đủ 4 metrics chính
+- Validation set readable
+
+================================================================================
+## PHASE 1 — TIER 1: DAE PROBABILITY CALIBRATION (90 phút)
+================================================================================
+
+Mục đích: c_track_b trở thành xác suất thực, so sánh được với c_track_a.
+
+Files:
+- module2_detection/models/DAE.py        (sửa — thêm calibrator field hoặc method inject)
+- module2_detection/calibration.py       (TẠO MỚI — fit + save calibrator)
+- common/model_registry.py               (sửa — thêm get_dae_calibrator)
+- detection_engine/engine.py             (sửa — apply calibration ở engine.predict)
+- models/dae/dae_calibrator.joblib       (ARTIFACT MỚI)
+- models/dae/dae_calibration_report.json (ARTIFACT MỚI — diagnostics)
+
+Steps chi tiết:
+
+1.1 Tạo module2_detection/calibration.py:
+    - Load DAE từ registry
+    - Load val_phase1.parquet (KHÔNG dùng test)
+    - raw_scores = dae.predict_proba(X_val)   # uncalibrated min-max
+    - cal = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0)
+    - cal.fit(raw_scores, y_val_binary)
+    - joblib.dump(cal, "models/dae/dae_calibrator.joblib")
+    - Tính Brier score, ECE before/after → lưu calibration_report.json
+    - CLI: python -m module2_detection.calibration --out <path>
+
+1.2 Sửa module2_detection/models/DAE.py:
+    - Option A: thêm field self._calibrator + set_calibrator() (clean separation)
+    - Option B: thêm method predict_proba_calibrated(X, calibrator) nhận từ ngoài
+    - KHÔNG bake calibrator vào DAE class — giữ separation of concerns
+
+1.3 Sửa common/model_registry.py:
+    - Thêm get_dae_calibrator() → joblib.load với cache
+    - Pattern giống get_dae() / get_track_a_classifiers()
+
+1.4 Sửa detection_engine/engine.py:264:
+    # Trước:
+    c_track_b[to_score_mask] = self._dae.predict_proba(x_sub).astype(np.float32)
+    # Sau:
+    raw_scores = self._dae.predict_proba(x_sub)
+    if self._calibrator is not None:
+        calibrated = self._calibrator.predict(raw_scores)
+        c_track_b[to_score_mask] = calibrated.astype(np.float32)
+    else:
+        logger.warning("DAE calibrator missing — falling back to raw scores")
+        c_track_b[to_score_mask] = raw_scores.astype(np.float32)
+    - Trong _load(): self._calibrator = get_dae_calibrator()
+
+1.5 Diagnostics artifact:
+    - Brier score before vs after
+    - Expected Calibration Error (ECE)
+    - Reliability curve points (10 bins)
+
+1.6 Chạy: python -m module2_detection.calibration --out models/dae/dae_calibrator.joblib
+
+Acceptance:
+- Artifact tồn tại
+- Brier score after < before
+- ECE after < 0.05 (chuẩn ngành)
+- Engine load calibrator không throw
+
+Rollback:
+- Delete models/dae/dae_calibrator.joblib → engine auto-fallback raw
+
+Risk:
+- Calibrator over-fit val → test degrade
+- Mitigation: isotonic là monotonic/smooth, kiểm tra Brier trên train+val
+
+================================================================================
+## PHASE 2 — TIER 2: COST-TIER THRESHOLD OPTIMIZATION (90 phút)
+================================================================================
+
+Mục đích: mỗi risk tier có ngưỡng tune theo precision target gắn với action cost.
+
+Files:
+- module3_risk_scoring/threshold_tuning.py  (TẠO MỚI)
+- module3_risk_scoring/config.py            (sửa — RISK_THRESHOLDS auto-load)
+- models/module3/tier_thresholds.json       (ARTIFACT MỚI)
+- results/reports/threshold_tuning_report.json (ARTIFACT MỚI)
+
+Steps:
+
+2.1 Định nghĩa precision target theo cost của action ở tier đó:
+    TIER_PRECISION_TARGETS = {
+        "CRITICAL": 0.95,   # isolate_device cost 0.8 → cực đắt
+        "HIGH":     0.85,   # forensic+isolate cost ~0.6
+        "MEDIUM":   0.65,   # restrict_traffic cost 0.5
+        "LOW":      0.40,   # log + monitor cost 0.2
+    }
+    Justification trong docstring: link cost ↔ precision floor.
+
+2.2 Tạo threshold_tuning.py:
+    def tune_tier_thresholds(R_val, y_val, targets):
+        sorted_R = np.sort(np.unique(R_val))[::-1]
+        thresholds = {}
+        for tier, p_target in sorted(targets.items(), key=lambda x: -x[1]):
+            for tau in sorted_R:
+                mask = R_val >= tau
+                if mask.sum() < 50:    # min support
+                    continue
+                prec = y_val[mask].mean()
+                if prec >= p_target:
+                    thresholds[tier] = float(tau)
+                    break
+        return thresholds
+    CLI: python -m module3_risk_scoring.threshold_tuning --out <path>
+
+2.3 Sửa module3_risk_scoring/config.py:20-24:
+    Thay hardcoded RISK_THRESHOLDS bằng _load_tier_thresholds() đọc JSON.
+    Fallback về (0.80, 0.60, 0.40) nếu file không tồn tại.
+
+2.4 Diagnostics: per-tier PR curve points, threshold chosen, support, precision
+    achieved → threshold_tuning_report.json
+
+2.5 Chạy: python -m module3_risk_scoring.threshold_tuning --out models/module3/tier_thresholds.json
+
+Acceptance:
+- 3 ngưỡng, mỗi cái đạt precision target ± 0.02 trên val
+- Ngược chiều: CRITICAL > HIGH > MEDIUM (sanity)
+- Mỗi tier support ≥ 50 trên val
+
+Rollback:
+- Delete tier_thresholds.json → fallback hardcoded
+
+Risk:
+- Threshold đẩy lên sát 1.0 → tier rỗng
+- Mitigation: min support 50, sanity log
+
+================================================================================
+## PHASE 3 — TIER 3: CLINICAL PLAUSIBILITY GATE (60 phút)
+================================================================================
+
+Mục đích: demote alert LOW/MEDIUM xuống NORMAL nếu vital signs hoàn toàn
+trong dải sinh lý bình thường (max|z| < 1σ trên tất cả biometric features).
+QUAN TRỌNG: KHÔNG áp dụng cho HIGH/CRITICAL (attack có thể không kèm
+vital change — reconnaissance, lateral movement).
+
+Files:
+- module3_risk_scoring/plausibility.py        (TẠO MỚI)
+- module3_risk_scoring/module3_risk_scores.py (sửa — gọi gate sau tier)
+- module3_risk_scoring/config.py              (sửa — thêm flags)
+- models/module3/biometric_baselines.json     (ARTIFACT MỚI — mean/std)
+- results/reports/plausibility_gate_report.json (ARTIFACT MỚI)
+
+Steps:
+
+3.1 Thêm config:
+    PLAUSIBILITY_GATE_TIERS: set[str] = {"LOW", "MEDIUM"}
+    PLAUSIBILITY_SIGMA: float = 1.0   # stricter than SIGMA_THRESHOLD=1.5
+
+3.2 Tạo plausibility.py:
+    def apply_plausibility_gate(R, tiers, biometric_z, sigma, gated_tiers):
+        in_scope = np.array([t in gated_tiers for t in tiers])
+        clinically_normal = (np.abs(biometric_z).max(axis=1) < sigma)
+        gated_mask = in_scope & clinically_normal
+        new_tiers = tiers.copy()
+        new_tiers[gated_mask] = "NORMAL"
+        return new_tiers, gated_mask
+
+3.3 Tính biometric_z:
+    - Đã có BIOMETRIC_FEATURES ở module3_risk_scoring/config.py:29
+    - Tính mean/std trên benign-only train (file đã có:
+      data/processed/benign_only_train.parquet)
+    - Lưu mean/std vào models/module3/biometric_baselines.json
+    - At inference: z = (X[bio] - benign_mean) / benign_std
+
+3.4 Integrate vào pipeline ở module3_risk_scores.py:
+    Sau khi assign_risk_tier(R):
+        biometric_z = compute_biometric_zscores(X_raw, baselines)
+        tiers, gated_mask = apply_plausibility_gate(
+            R, tiers, biometric_z,
+            sigma=PLAUSIBILITY_SIGMA,
+            gated_tiers=PLAUSIBILITY_GATE_TIERS,
+        )
+        logger.info("Plausibility gate: %d alerts demoted", gated_mask.sum())
+
+3.5 Artifacts:
+    - risk_scores_detail.csv: thêm cột plausibility_demoted (bool)
+    - plausibility_gate_report.json: tổng demoted, breakdown per original tier,
+      10 sample demoted để inspect
+
+Acceptance:
+- LOW tier alerts giảm rõ
+- Recall HIGH/CRITICAL KHÔNG đổi (gate không động đến)
+- plausibility_gate_report.json có sample inspect được
+
+Rollback:
+- Set PLAUSIBILITY_GATE_TIERS = set() (empty)
+
+Risk:
+- Demote nhầm quiet attack ở MEDIUM
+- Mitigation: chỉ LOW/MEDIUM + spot-check sample demoted
+
+================================================================================
+## PHASE 4 — RE-RUN + COMPARE (45 phút)
+================================================================================
+
+Mục đích: tạo metrics mới, ablation table cho defense.
+
+Steps:
+
+4.1 Re-run pipeline:
+    python -m module2_detection.calibration
+    python -m module3_risk_scoring.threshold_tuning
+    python -m module3_risk_scoring.module3_risk_scores
+    python -m module5_responses.module5_pipeline
+
+4.2 Feature flags (env vars) để ablate:
+    ENABLE_DAE_CALIBRATION=1
+    ENABLE_COST_TIER_THRESHOLD=1
+    ENABLE_PLAUSIBILITY_GATE=1
+    Chạy 3 lần với cấu hình:
+    - t1_only:    1 0 0
+    - t1_t2:      1 1 0
+    - t1_t2_t3:   1 1 1
+
+4.3 Tạo scripts/diff_baseline.py để so sánh metrics.
+
+4.4 Tạo results/baselines/COMPARISON.md với bảng:
+    Metric              | Baseline | +T1 | +T1+T2 | +T1+T2+T3
+    ---                 | ---      | --- | ---    | ---
+    Precision LOW       | 0.96%    | ?   | ?      | ?
+    Precision MEDIUM    | 12.3%    | ?   | ?      | ?
+    Precision HIGH      | 93.7%    | ?   | ?      | ?
+    Recall Spoofing     | ?        | ?   | ?      | ?
+    Recall Data Alter.  | ?        | ?   | ?      | ?
+    Over-response count | 75       | ?   | ?      | ?
+
+4.5 Lưu artifact mỗi config vào results/ablations/{t1_only,t1_t2,t1_t2_t3}/
+
+Acceptance:
+- COMPARISON.md đầy đủ
+- Acceptable targets đạt
+- Nếu KHÔNG đạt: rollback từng tầng theo ablation
+
+================================================================================
+## PHASE 5 — REFRAME THESIS-FACING ARTIFACTS (90 phút)
+================================================================================
+
+Mục đích: bỏ claim "zero-day" không có bằng chứng, dùng ngôn ngữ security panel.
+
+Steps:
+
+5.1 Grep & reframe:
+    grep -rn "zero.day\|zero-day" --include="*.md" --include="*.py" \
+        --include="*.yaml" results/ docs/ survey/ module*/
+    - Code comment kỹ thuật: giữ
+    - User-facing report/summary: đổi thành "novelty channel for
+      defense-in-depth" / "monitoring scaffolding"
+
+5.2 Update results/rq1_summary.md:
+    - Thêm subsection "Calibrated fusion" giải thích Tier 1
+    - Thêm subsection "Cost-proportional thresholds" giải thích Tier 2
+    - Paste ablation table từ Phase 4.4
+
+5.3 Update results/rq3_summary.md:
+    - Thêm "Clinical plausibility gate" giải thích Tier 3
+    - Link tới plausibility_gate_report.json
+
+5.4 Tạo docs/security_posture.md (one-pager):
+    # Security Posture
+    ## Detection
+    - Calibrated supervised (XGBoost) + calibrated novelty (DAE)
+      fused via probability-aware max()
+    - Cost-proportional decision thresholds per risk tier
+    - Clinical plausibility gate for low-tier alerts
+    ## Response Proportionality
+    - Action cost ↔ precision target (table)
+    - Device-tier protection (life_sustaining → isolation_blocked)
+    - Clinical safety override workflow
+    ## Audit & Compliance
+    - Tamper-evident logging (Ed25519 signatures)
+    - Role-based action authorization (NIST AC-3 alignment)
+    - Immutable audit trail (audit_log.jsonl)
+    ## Calibration & Validation
+    - Held-out validation split (random_state=42, stratified)
+    - Test split frozen
+    - Periodic recalibration policy
+
+5.5 Update docs/ README link tới security_posture.md.
+
+Acceptance:
+- 0 unprovable "zero-day" claim trong user-facing docs
+- security_posture.md có 6 mục
+- Ablation table trong rq1_summary.md
+
+================================================================================
+## PHASE 6 — VALIDATE & DEFENSE REHEARSAL (60 phút)
+================================================================================
+
+Steps:
+
+6.1 Test suite: python run_tests.py — all pass
+
+6.2 Module 4 spot check:
+    python -m module4_explanations.example_explanations
+    - Verify example_explanations.json có c_detect, c_track_a, c_track_b
+    - Verify SHAP top features render
+
+6.3 Module 6 spot check:
+    python -m module6_evaluation.module6_app --check
+    - Dashboard load
+    - Alerts render với new thresholds
+
+6.4 Sanity:
+    - Pick 1 alert Tier-3-demoted → trace audit_log
+    - Pick 1 alert HIGH có c_track_b cao + c_track_a thấp → confirm
+      calibration elevate đúng (không suppress)
+
+6.5 Defense rehearsal — chuẩn bị Q&A cho 6 câu reviewer chắc chắn hỏi:
+
+| Q                                       | A                                                   |
+|-----------------------------------------|-----------------------------------------------------|
+| Tại sao calibrate DAE?                  | DAE outputs min-max scaled error, không phải proba. |
+|                                         | Max() chỉ hợp lệ khi cùng scale → calibrate là      |
+|                                         | tiền đề toán học.                                   |
+| Tại sao không over-fit val?             | Isotonic là non-parametric monotonic, capacity hạn  |
+|                                         | chế. Brier on test < before-cal validates.          |
+| Tại sao threshold khác per tier?        | Action cost khác nhau → precision floor phải tương  |
+|                                         | xứng. Cost-sensitive learning chuẩn ngành.          |
+| Tại sao gate chỉ LOW/MEDIUM?            | HIGH/CRITICAL có thể là reconnaissance không kèm    |
+|                                         | vital change. Bảo vệ recall ở high-confidence.      |
+| Recalibration policy?                   | Link security_posture.md → Periodic recalibration.  |
+| Test set có leak?                       | split_metadata.yaml stratified random_state=42,     |
+|                                         | val cho tuning, test chỉ chạm 1 lần final eval.     |
+
+6.6 Tạo docs/defense_qa.md chứa Q&A trên.
+
+Acceptance:
+- Tests pass
+- Module 4/6 OK
+- defense_qa.md tồn tại
+
+================================================================================
+## DEPENDENCY GRAPH
+================================================================================
+
+Phase 0 (setup)
+     │
+     ├─► Phase 1 (Tier 1: Calibration)
+     │       │
+     │       └─► Phase 2 (Tier 2: Cost-tier threshold)
+     │               │
+     │               └─► Phase 3 (Tier 3: Plausibility gate)
+     │                       │
+     │                       └─► Phase 4 (Re-run + compare)
+     │                               │
+     │                               ├─► Phase 5 (Reframe docs)
+     │                               │
+     │                               └─► Phase 6 (Validate)
+
+Critical path: 0 → 1 → 2 → 3 → 4 → 6
+Phase 5 chạy song song với 6.
+
+Total: ~7 giờ (chia 2 buổi).
+
+================================================================================
+## ARTIFACT TREE SAU KHI XONG
+================================================================================
+
+models/
+├── dae/
+│   ├── dae.h5                          (existing)
+│   ├── dae_calibrator.joblib           (NEW — Tier 1)
+│   └── dae_calibration_report.json     (NEW — Tier 1 diagnostics)
+├── module3/
+│   ├── tier_thresholds.json            (NEW — Tier 2)
+│   └── biometric_baselines.json        (NEW — Tier 3)
+
+results/
+├── baselines/
+│   ├── BASELINE.md                     (NEW)
+│   ├── COMPARISON.md                   (NEW — ablation table)
+│   └── *.json *.csv                    (snapshot)
+├── ablations/
+│   ├── t1_only/                        (NEW)
+│   ├── t1_t2/                          (NEW)
+│   └── t1_t2_t3/                       (NEW)
+└── reports/
+    ├── threshold_tuning_report.json    (NEW)
+    └── plausibility_gate_report.json   (NEW)
+
+docs/
+├── security_posture.md                 (NEW)
+└── defense_qa.md                       (NEW)
+
+================================================================================
+## RỦI RO TỔNG & MITIGATION
+================================================================================
+
+| Rủi ro                                       | Khả năng | Mitigation                                |
+|----------------------------------------------|----------|-------------------------------------------|
+| Recall giảm sau Tier 1 (calibrator under-fit)| Trung    | Phase 4 ablation phát hiện → rollback T1  |
+| Tier 2 threshold quá cao → tier rỗng         | Thấp     | Min support 50 + sanity check             |
+| Tier 3 demote attack thật ở MEDIUM           | Trung    | Gate chỉ LOW/MEDIUM + spot-check          |
+| Module 4/6 break vì schema                   | Thấp     | Schema additive, không xóa cột            |
+| Test set bị chạm trong tuning                | CỰC CAO  | Code review chéo — chỉ load val_phase1    |
+
+================================================================================
+## CÂU HỎI CẦN QUYẾT ĐỊNH TRƯỚC KHI EXECUTE
+================================================================================
+
+1. Validation set: confirm val_phase1.parquet đủ samples cho calibration.
+   - Hiện tại 15% × 16318 = ~2447 samples → đủ cho isotonic regression
+     (recommend ≥1000)
+
+2. Calibration target: calibrate DAE riêng (preserve interpretability)
+   vs calibrate fused score (better precision).
+   - Khuyến nghị: calibrate DAE riêng → max() trên 2 calibrated probas
+
+3. Threshold tuning metric: precision-only vs cost-weighted F-score.
+   - Khuyến nghị: precision-only với min support 50 (đơn giản, defensible)
+
+4. Plausibility sigma:
+   - Đề xuất 1.0σ (stricter than SIGMA_THRESHOLD=1.5)
+   - Có thể tune trên val set nếu thấy demote rate quá cao/thấp
+
+5. Periodic recalibration policy:
+   - Đề xuất: monthly cron job re-fit calibrator nếu Brier drift > 0.05
+   - Implement sau khi có production logs
+
+================================================================================
+## REFERENCES (cho thesis defense)
+================================================================================
+
+- Platt, J. (1999). Probabilistic outputs for support vector machines.
+  Advances in Large Margin Classifiers.
+- Zadrozny, B., & Elkan, C. (2002). Transforming classifier scores into
+  accurate multiclass probability estimates. KDD.
+- Niculescu-Mizil, A., & Caruana, R. (2005). Predicting good probabilities
+  with supervised learning. ICML.
+- Elkan, C. (2001). The foundations of cost-sensitive learning. IJCAI.
+  → Cost-sensitive thresholding rationale.
+- NIST SP 800-94. Guide to Intrusion Detection and Prevention Systems.
+  → Defense-in-depth language for security panel.
+
+================================================================================
+## TIMESTAMP & STATUS
+================================================================================
+
+Created:      2026-05-28
+Status:       PLANNED — chưa execute
+Branch:       feature/dae-calibration-cost-tier-plausibility (chưa tạo)
+Owner:        TBD
+Next action:  Quyết định 5 câu hỏi ở section trên → execute Phase 0

@@ -198,7 +198,9 @@ def synthesize_raw_alert(
     # to [0, 1], so multiply by 10 to land in the same bucket the live
     # detection pipeline uses.
     return {
+        "alert_id": f"ALERT-{int(sample_index):04d}",
         "alert_name": f"{attack_category} anomaly (sample {sample_index})",
+        "attack_category": attack_category,
         "protocol": _ATTACK_TO_PROTO_HINT.get(attack_category, "unknown"),
         "severity_score": float(risk_score) * 10.0,
     }
