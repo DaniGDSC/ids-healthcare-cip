@@ -10,9 +10,9 @@ Applied BEFORE scaling so synthetic points are generated in the original
 feature space, not in a normalised space where inter-feature distances
 are distorted.
 
-This class is intentionally NOT exported from ``module1_preprocessing.phase1``
+This class is intentionally NOT exported from ``module1_preprocessing``
 to avoid the misleading API surface "Phase 1 also runs SMOTE". Import it
-directly from ``module1_preprocessing.phase1.smote`` if you need to.
+directly from ``module1_preprocessing.smote`` if you need to.
 """
 
 from __future__ import annotations

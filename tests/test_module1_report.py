@@ -10,7 +10,7 @@ that caused the rendered §4.1 to print:
 from __future__ import annotations
 
 
-from module1_preprocessing.phase1.report import render_preprocessing_report
+from module1_preprocessing.report import render_preprocessing_report
 
 
 def _report(*, bio="median", net="dropna", threshold=0.95, n_red=3):

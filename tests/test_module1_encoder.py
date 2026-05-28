@@ -13,7 +13,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from module1_preprocessing.phase1.encoder import CategoricalEncoder
+from module1_preprocessing.encoder import CategoricalEncoder
 
 
 def test_mapping_is_sorted_alphabetical_not_observation_order():

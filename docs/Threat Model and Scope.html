@@ -360,7 +360,7 @@
         <tr><td>Audit chain forgery</td><td>Hash-chained JSONL + ECDSA signed records; tamper detected on replay</td><td><code>module5_responses/audit/verify.py:102,140</code></td></tr>
         <tr><td>Demo-split leakage</td><td><code>_assert_no_demo_leakage</code> on every training-side loader</td><td><code>module2_detection/tuning/_data.py:33-46</code></td></tr>
         <tr><td>Context-only false alerts</td><td><code>MIN_DETECTION_GATE = 0.02</code> — forces NORMAL when detector silent (formula v2)</td><td><code>module3_risk_scoring/config.py</code></td></tr>
-        <tr><td>PHI exposure in artifacts</td><td><code>drop_phi_columns()</code> + audit payload <code>[REDACTED-PHI]</code></td><td><code>module0_analysis/security.py:613</code> · <code>module1_preprocessing/phase1/hipaa.py:31</code></td></tr>
+        <tr><td>PHI exposure in artifacts</td><td><code>drop_phi_columns()</code> + audit payload <code>[REDACTED-PHI]</code></td><td><code>module0_analysis/security.py:613</code> · <code>module1_preprocessing/hipaa.py:31</code></td></tr>
         <tr><td>Silent dismissal</td><td>Required-rationale modal; empty rationale → early return; signed dismissal record</td><td><code>module5_responses/adaptive.py:30,116,173</code></td></tr>
         <tr><td>Critical-device suppression</td><td>Safety floor (Invariant 2) — <code>d_crit ≥ 0.8</code> always surfaces, regardless of composite tier</td><td><code>src/risk_scorer.py:145-147</code></td></tr>
       </tbody>
@@ -615,9 +615,9 @@
       <tbody>
         <tr><td><strong>Vantage:</strong> span port / TAP downstream of edge firewall, upstream of IoMT VLAN</td><td><code>docs/rq1_threat_model_scope.md:18-19</code></td></tr>
         <tr><td><strong>Aggregation:</strong> per-flow records (not per-packet, not per-session)</td><td><code>docs/rq1_threat_model_scope.md:17</code></td></tr>
-        <tr><td><strong>Schema:</strong> 47 features in → 25 features out after preprocessing; column order fixed</td><td><code>module1_preprocessing/phase1/config.py:16</code></td></tr>
-        <tr><td><strong>Split contract:</strong> 60/15/15/10 train/val/test/demo, frozen, demo never reaches training paths</td><td><code>module1_preprocessing/phase1/config.py:96-100</code> · <code>module2_detection/tuning/_data.py:33-46</code></td></tr>
-        <tr><td><strong>Random state:</strong> <code>random_state ∈ {0, 7, 42}</code> canonical allowlist; deviation → WARN</td><td><code>module1_preprocessing/phase1/config.py:148-168</code></td></tr>
+        <tr><td><strong>Schema:</strong> 47 features in → 25 features out after preprocessing; column order fixed</td><td><code>module1_preprocessing/config.py:16</code></td></tr>
+        <tr><td><strong>Split contract:</strong> 60/15/15/10 train/val/test/demo, frozen, demo never reaches training paths</td><td><code>module1_preprocessing/config.py:96-100</code> · <code>module2_detection/tuning/_data.py:33-46</code></td></tr>
+        <tr><td><strong>Random state:</strong> <code>random_state ∈ {0, 7, 42}</code> canonical allowlist; deviation → WARN</td><td><code>module1_preprocessing/config.py:148-168</code></td></tr>
         <tr><td><strong>Dataset:</strong> WUSTL-EHMS-2020 + MedSec-25, 16,318 rows total</td><td><code>docs/rq1_threat_model_scope.md:20-22</code></td></tr>
       </tbody>
     </table>

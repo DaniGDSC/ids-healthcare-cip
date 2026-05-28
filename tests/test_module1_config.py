@@ -13,7 +13,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from module1_preprocessing.phase1.config import (
+from module1_preprocessing.config import (
     ALLOWED_TOP_LEVEL,
     ConfigError,
     Phase1Config,

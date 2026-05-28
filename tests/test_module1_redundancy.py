@@ -11,7 +11,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from module1_preprocessing.phase1.redundancy import RedundancyRemover
+from module1_preprocessing.redundancy import RedundancyRemover
 
 
 @pytest.fixture

@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from module1_preprocessing.phase1.exporter import PreprocessingExporter
-from module1_preprocessing.phase1.scaler import RobustScalerTransformer
+from module1_preprocessing.exporter import PreprocessingExporter
+from module1_preprocessing.scaler import RobustScalerTransformer
 
 
 @pytest.fixture

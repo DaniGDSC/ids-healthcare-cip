@@ -27,7 +27,7 @@ When invoked with ``--patch-split-metadata``, this tool ALSO backfills
 the ``source_dataset_sha256`` field in ``data/processed/split_metadata.yaml``
 if it is currently empty. Future Phase-1 runs populate that field
 automatically via the splitter fallback in
-``module1_preprocessing/phase1/pipeline.py``; this one-shot fixup
+``module1_preprocessing/pipeline.py``; this one-shot fixup
 closes the gap on the existing artefact.
 """
 from __future__ import annotations

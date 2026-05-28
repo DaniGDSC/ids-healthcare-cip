@@ -47,7 +47,7 @@ def splits() -> dict:
     if not _RAW_CSV.exists():
         pytest.skip(f"raw CSV not found at {_RAW_CSV}")
 
-    from module1_preprocessing.phase1.splitter import DataSplitter
+    from module1_preprocessing.splitter import DataSplitter
 
     raw = pd.read_csv(_RAW_CSV, low_memory=False)
     raw = raw.reset_index().rename(columns={"index": "raw_csv_row"})

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from module1_preprocessing.phase1.hipaa import HIPAASanitizer
+from module1_preprocessing.hipaa import HIPAASanitizer
 
 
 def test_drops_listed_columns():

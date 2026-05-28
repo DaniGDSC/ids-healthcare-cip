@@ -318,7 +318,7 @@
       </thead>
       <tbody>
         <tr><td>M0</td><td><code>module0_analysis/</code></td><td>Phase 0 EDA + signed dataset-integrity baseline</td><td><code>module0_analysis/__init__.py</code></td></tr>
-        <tr><td>M1</td><td><code>module1_preprocessing/phase1/</code></td><td>HIPAA strip · encoding · imputation · variance/redundancy filter · 60/15/15/10 stratified split · RobustScaler fit on train</td><td><code>module1_preprocessing/phase1/__init__.py</code></td></tr>
+        <tr><td>M1</td><td><code>module1_preprocessing/</code></td><td>HIPAA strip · encoding · imputation · variance/redundancy filter · 60/15/15/10 stratified split · RobustScaler fit on train</td><td><code>module1_preprocessing/__init__.py</code></td></tr>
         <tr><td>M2</td><td><code>module2_detection/</code></td><td>Track A (supervised classifiers) and Track B (DAE benign-only novelty detector)</td><td><code>module2_detection/__init__.py</code></td></tr>
         <tr><td>M3</td><td><code>module3_risk_scoring/</code></td><td>Composite risk score from C<sub>detect</sub>, D<sub>crit</sub>, S<sub>data</sub>, A<sub>patient</sub>; 5-tier mapping</td><td><code>module3_risk_scoring/__init__.py</code></td></tr>
         <tr><td>M4</td><td><code>module4_explanations/</code></td><td>TreeSHAP attribution + DAE per-feature reconstruction error + 3-layer MVE generation</td><td><code>module4_explanations/__init__.py</code></td></tr>
@@ -348,7 +348,7 @@
       </thead>
       <tbody>
         <tr><td>M0 ingest</td><td>raw CSV &rarr; signed <code>module0_analysis/dataset_integrity.json</code> + descriptive-stats reports</td><td><code>module0_analysis/loader.py</code></td></tr>
-        <tr><td>M1 preprocess</td><td>raw CSV &rarr; <code>data/processed/{train,val,test,demo}_phase1.parquet</code></td><td><code>module1_preprocessing/phase1/pipeline.py</code></td></tr>
+        <tr><td>M1 preprocess</td><td>raw CSV &rarr; <code>data/processed/{train,val,test,demo}_phase1.parquet</code></td><td><code>module1_preprocessing/pipeline.py</code></td></tr>
         <tr><td>M2 train+predict</td><td>parquets &rarr; <code>results/models/*.pkl</code> · <code>dae_model.weights.h5</code> · <code>*_predictions.npz</code></td><td><code>module2_detection/module2_train_models.py</code></td></tr>
         <tr><td>M3 score</td><td>predictions + features &rarr; <code>risk_scores.npz</code> · <code>demo_scores.npz</code></td><td><code>module3_risk_scoring/module3_risk_scores.py</code></td></tr>
         <tr><td>M4 explain</td><td><code>risk_scores.npz</code> + models &rarr; <code>analyst_report.json</code> · <code>clinician_summaries.json</code> · <code>admin_dashboard.json</code> · SHAP/DAE artefacts</td><td><code>module4_explanations/module4_explanations.py</code></td></tr>

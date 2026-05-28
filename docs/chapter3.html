@@ -729,7 +729,7 @@ _render_provider_badge(alert)</pre>
         <code>module5_responses/</code>, <code>module6_evaluation/</code>.
         Each has a non-empty <code>__init__.py</code> docstring asserting its
         role, except <code>module1_preprocessing/__init__.py</code> which is
-        empty (its docstring lives in <code>module1_preprocessing/phase1/__init__.py</code>).</li>
+        empty (its docstring lives in <code>module1_preprocessing/__init__.py</code>).</li>
       <li>Orchestrator <strong>does NOT cover all 7</strong>. <code>MODULES</code>
         in <code>run_all_modules.py:30-67</code> runs <code>2 → 3 → 4 → 5 → 5b → 6</code>.
         Comment at <code>run_all_modules.py:4</code>: <em>"Module 1: Preprocessing
@@ -749,7 +749,7 @@ _render_provider_badge(alert)</pre>
       <thead><tr><th>M</th><th>Dir</th><th>Responsibility</th><th>Anchor</th></tr></thead>
       <tbody>
         <tr><td class="id-col">M0</td><td><code>module0_analysis/</code></td><td>"Phase 0 analysis package — SOLID-architected EDA for WUSTL-EHMS-2020" + integrity verification</td><td><code>module0_analysis/__init__.py:1-21</code></td></tr>
-        <tr><td class="id-col">M1</td><td><code>module1_preprocessing/phase1/</code></td><td>"Phase 1 preprocessing… orchestrates all steps… Dual-track outputs: Track A (supervised) + Track B (novelty) X_train_benign"</td><td><code>module1_preprocessing/phase1/__init__.py:1-22</code></td></tr>
+        <tr><td class="id-col">M1</td><td><code>module1_preprocessing/</code></td><td>"Phase 1 preprocessing… orchestrates all steps… Dual-track outputs: Track A (supervised) + Track B (novelty) X_train_benign"</td><td><code>module1_preprocessing/__init__.py:1-22</code></td></tr>
         <tr><td class="id-col">M2</td><td><code>module2_detection/</code></td><td>"Module 2 — Detection. Track A supervised + Track B DAE benign-only novelty"</td><td><code>module2_detection/__init__.py:1-8</code></td></tr>
         <tr><td class="id-col">M3</td><td><code>module3_risk_scoring/</code></td><td>"Module 3 — Composite Risk Scoring"</td><td><code>module3_risk_scoring/__init__.py:1</code></td></tr>
         <tr><td class="id-col">M4</td><td><code>module4_explanations/</code></td><td>"Module 4 — Generate Explanations (RQ1/RO1)… offline batch + online per-alert"</td><td><code>module4_explanations/__init__.py:1-7</code></td></tr>
@@ -763,7 +763,7 @@ _render_provider_badge(alert)</pre>
       <thead><tr><th>Stage</th><th>Input → Output</th><th>Producer</th></tr></thead>
       <tbody>
         <tr><td>M0 ingest + integrity</td><td>raw CSV → signed <code>module0_analysis/dataset_integrity.json</code> + stats reports</td><td><code>module0_analysis/__init__.py:15-20</code></td></tr>
-        <tr><td>M1 preprocess</td><td>raw CSV → <code>data/processed/{train,val,test,demo}_phase1.parquet</code></td><td><code>module1_preprocessing/phase1/__init__.py:18-22</code></td></tr>
+        <tr><td>M1 preprocess</td><td>raw CSV → <code>data/processed/{train,val,test,demo}_phase1.parquet</code></td><td><code>module1_preprocessing/__init__.py:18-22</code></td></tr>
         <tr><td>M2 train+predict</td><td>parquets → <code>results/models/*.pkl</code> + DAE <code>.weights.h5</code> + <code>*_predictions.npz</code></td><td><code>module2_detection/module2_train_models.py:1-22</code></td></tr>
         <tr><td>M3 score</td><td>predictions + features → <code>risk_scores.npz</code> (+ <code>demo_scores.npz</code>)</td><td><code>module3_risk_scoring/module3_risk_scores.py:1-31</code></td></tr>
         <tr><td>M4 explain</td><td><code>risk_scores.npz</code> + models → <code>analyst_report.json</code>, <code>clinician_summaries.json</code>, <code>admin_dashboard.json</code>, SHAP / DAE artifacts</td><td><code>module4_explanations/__init__.py:1-7</code></td></tr>

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from module1_preprocessing.phase1.variance import VarianceFilter
+from module1_preprocessing.variance import VarianceFilter
 
 
 def test_drops_unary_columns():

@@ -605,7 +605,7 @@
           <div class="stage-header">
             <div class="num">STAGE 1 · CLEAN &amp; FILTER</div>
             <div class="title">Pre-split transforms</div>
-            <div class="source">module1_preprocessing/phase1/pipeline.py (Steps 1–4)</div>
+            <div class="source">module1_preprocessing/pipeline.py (Steps 1–4)</div>
             <div class="vol">
               <span class="vol-key">rows</span> <span class="vol-val">16,318</span> (unchanged — column-only)<br>
               <span class="vol-key">cols</span> <span class="vol-val">25 features</span> + Label + Attack Category<br>
@@ -642,7 +642,7 @@
           <div class="stage-header">
             <div class="num">STAGE 2 · 4-WAY STRATIFIED SPLIT</div>
             <div class="title">Train / Val / Test / Demo</div>
-            <div class="source">module1_preprocessing/phase1/splitter.py · DataSplitter</div>
+            <div class="source">module1_preprocessing/splitter.py · DataSplitter</div>
             <div class="vol">
               <span class="vol-key">strategy</span> <span class="vol-val">Strategy 1 — Frozen Test + Demo Pool</span><br>
               <span class="vol-key">stratify</span> <span class="vol-val">Attack Category</span> (multi-class, NOT binary Label)<br>
@@ -678,7 +678,7 @@
           <div class="stage-header">
             <div class="num">STAGE 3 · SCALE &amp; TRACK B</div>
             <div class="title">Scaled splits + benign subsets</div>
-            <div class="source">module1_preprocessing/phase1/{scaler,exporter}.py</div>
+            <div class="source">module1_preprocessing/{scaler,exporter}.py</div>
             <div class="vol">
               <span class="vol-key">artifact A</span> <span class="vol-val">{train,val,test,demo}_phase1.parquet</span><br>
               <span class="vol-key">artifact B</span> <span class="vol-val">benign_only_{train,val}.parquet</span> (Track B)<br>
@@ -1224,7 +1224,7 @@
 
       <div class="inv-card security">
         <div class="inv-title">TOCTOU-safe ingest</div>
-        <div class="inv-where">module1_preprocessing/phase1/pipeline.py · _ingest_with_integrity</div>
+        <div class="inv-where">module1_preprocessing/pipeline.py · _ingest_with_integrity</div>
         <div class="inv-body">
           Each raw CSV is hashed AND parsed from the same in-memory
           bytes. Closes the TOCTOU window where a previous flow hashed

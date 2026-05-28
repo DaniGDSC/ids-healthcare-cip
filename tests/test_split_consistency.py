@@ -31,7 +31,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from module1_preprocessing.phase1.splitter import DataSplitter
+from module1_preprocessing.splitter import DataSplitter
 
 
 def _make_df(n_rows: int = 1000, attack_rate: float = 0.10,

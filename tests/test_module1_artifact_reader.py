@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
+from module1_preprocessing.artifact_reader import Phase0ArtifactReader
 
 
 def test_read_stats_success(tmp_path):

@@ -244,9 +244,9 @@ class Phase1Config(BaseModel):
         track_b = raw.get("track_b", {})
         output = raw.get("output", {})
 
-        # Phase 1 lives at module1_preprocessing/phase1/config.py
-        # → workspace root is four parents up.
-        root = workspace_root or Path(__file__).resolve().parents[2]
+        # Phase 1 lives at module1_preprocessing/config.py
+        # → workspace root is two parents up.
+        root = workspace_root or Path(__file__).resolve().parents[1]
         # Lazy import: keep config.py importable even if a developer
         # builds a venv without the Phase 0 package on the path.
         from module0_analysis.security import PathValidator

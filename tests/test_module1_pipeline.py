@@ -96,7 +96,7 @@ def _setup_workspace(tmp_path: Path) -> Path:
 
 
 def _make_config(ws: Path):
-    from module1_preprocessing.phase1.config import Phase1Config
+    from module1_preprocessing.config import Phase1Config
     return Phase1Config(
         input_dir=ws / "data" / "raw" / "WUSTL-EHMS",
         output_dir=ws / "data" / "processed",
@@ -127,8 +127,8 @@ def _make_config(ws: Path):
 
 
 def test_pipeline_runs_end_to_end(tmp_path):
-    from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-    from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+    from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+    from module1_preprocessing.pipeline import PreprocessingPipeline
 
     ws = _setup_workspace(tmp_path)
     cfg = _make_config(ws)
@@ -152,8 +152,8 @@ def test_pipeline_runs_end_to_end(tmp_path):
 def test_pipeline_writes_source_sha256_in_split_metadata(tmp_path):
     """C2 fix: source_dataset_sha256 must be populated (was always empty)."""
     import yaml
-    from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-    from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+    from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+    from module1_preprocessing.pipeline import PreprocessingPipeline
 
     ws = _setup_workspace(tmp_path)
     cfg = _make_config(ws)
@@ -176,8 +176,8 @@ def test_pipeline_writes_source_sha256_in_split_metadata(tmp_path):
 
 def test_pipeline_writes_split_artifact_manifest(tmp_path):
     """Phase 4: manifest with SHA-256 per parquet."""
-    from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-    from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+    from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+    from module1_preprocessing.pipeline import PreprocessingPipeline
 
     ws = _setup_workspace(tmp_path)
     cfg = _make_config(ws)
@@ -203,8 +203,8 @@ def test_pipeline_writes_split_artifact_manifest(tmp_path):
 
 def test_pipeline_manifest_hashes_match_parquet_files(tmp_path):
     """Manifest digests must match a fresh SHA-256 of each parquet."""
-    from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-    from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+    from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+    from module1_preprocessing.pipeline import PreprocessingPipeline
 
     ws = _setup_workspace(tmp_path)
     cfg = _make_config(ws)
@@ -226,8 +226,8 @@ def test_pipeline_manifest_hashes_match_parquet_files(tmp_path):
 def test_pipeline_refuses_unbaselined_csv(tmp_path):
     """Multi-file bypass guard: a CSV not in the baseline must abort."""
     from module0_analysis.security import IntegrityError
-    from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-    from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+    from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+    from module1_preprocessing.pipeline import PreprocessingPipeline
 
     ws = _setup_workspace(tmp_path)
     # Drop a SECOND CSV that no one baselined
@@ -246,8 +246,8 @@ def test_pipeline_refuses_unbaselined_csv(tmp_path):
 
 def test_pipeline_refuses_path_pattern_with_separator():
     """file_pattern must be a basename glob — no path traversal."""
-    from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-    from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+    from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+    from module1_preprocessing.pipeline import PreprocessingPipeline
     import tempfile
 
     with tempfile.TemporaryDirectory() as tmp:

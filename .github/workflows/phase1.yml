@@ -69,9 +69,9 @@ jobs:
       - name: Run Phase 1 unit tests with coverage
         run: >
           python -m pytest
-          module1_preprocessing/phase1/tests/
+          tests/test_module1_*.py
           -v
-          --cov=module1_preprocessing.phase1
+          --cov=module1_preprocessing
           --cov-report=xml:coverage-phase1.xml
           --cov-report=term-missing
           --cov-fail-under=80
@@ -323,9 +323,9 @@ jobs:
           logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
           from pathlib import Path
-          from module1_preprocessing.phase1.config import Phase1Config
-          from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-          from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+          from module1_preprocessing.config import Phase1Config
+          from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+          from module1_preprocessing.pipeline import PreprocessingPipeline
 
           PROJECT_ROOT = Path.cwd()
           config = Phase1Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase1.yaml')
@@ -357,7 +357,7 @@ jobs:
         run: |
           python -c "
           import pandas as pd, numpy as np, json, sys
-          from module1_preprocessing.phase1.scaler import RobustScalerTransformer
+          from module1_preprocessing.scaler import RobustScalerTransformer
 
           errors = []
 
@@ -485,8 +485,8 @@ jobs:
           docker run --rm analyst/phase0-phase1:${{ github.sha }}
           -c "
           from module0_analysis import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
-          from module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
-          from module1_preprocessing.phase1.scaler import RobustScalerTransformer;
+          from module1_preprocessing import Phase1Config, PreprocessingPipeline;
+          from module1_preprocessing.scaler import RobustScalerTransformer;
           print('Phase 0 + Phase 1: OK')
           "
 

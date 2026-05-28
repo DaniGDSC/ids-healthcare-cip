@@ -710,7 +710,7 @@
       (<code>random_state = 42</code>, demo training-side forbidden).
       <strong><code>source_dataset_sha256</code> now populates</strong>
       via the splitter fallback in
-      <code>module1_preprocessing/phase1/pipeline.py</code>; the
+      <code>module1_preprocessing/pipeline.py</code>; the
       production value
       <code>8359da96154fa602…</code> is also cross-referenced in
       <code>results/reports/evaluation_manifest.json</code>
@@ -728,7 +728,7 @@
           exactly one partition and freeze test / demo from training so
           paper metrics and user-study scoring can't be silently
           corrupted. The split lives at
-          <code>module1_preprocessing/phase1/splitter.py</code>;
+          <code>module1_preprocessing/splitter.py</code>;
           any training-side import that misroutes the frozen splits would
           leak — the risk lives at
           <code>module2_detection/tuning/_data.py:67-68</code>.
@@ -743,7 +743,7 @@
           <code>module1_preprocessing/phase1_config.yaml:14</code>.
           <strong>4-way stratified split</strong>
           (<code>DataSplitter.split</code> at
-          <code>module1_preprocessing/phase1/splitter.py:97-224</code>) is
+          <code>module1_preprocessing/splitter.py:97-224</code>) is
           three sequential <code>StratifiedShuffleSplit</code> calls
           stratified on <code>Attack Category</code>:
           demo (10%) → test (15% absolute) → val (15% absolute) → train (60%).
@@ -2162,7 +2162,7 @@
           <td>§4.1 <code>split_metadata.yaml:38</code> has empty <code>source_dataset_sha256</code></td>
           <td><span class="pill do-impl">IMPLEMENT</span></td>
           <td>
-            ~10 LOC in <code>module1_preprocessing/phase1/pipeline.py</code>: compute <code>sha256(raw_csv_bytes)</code> at load time and write it into the splitter's metadata payload. Closes the "split provenance" chain from raw bytes → parquets.
+            ~10 LOC in <code>module1_preprocessing/pipeline.py</code>: compute <code>sha256(raw_csv_bytes)</code> at load time and write it into the splitter's metadata payload. Closes the "split provenance" chain from raw bytes → parquets.
             Bundle the change with #14's manifest writer.
           </td>
           <td><span class="effort tr">TRIVIAL</span></td>
@@ -2457,7 +2457,7 @@
         <div class="k">Files</div>
         <div>
           New <code>tools/build_evaluation_manifest.py</code>;
-          modify <code>module1_preprocessing/phase1/pipeline.py</code> (or <code>splitter.py</code>) to populate <code>source_dataset_sha256</code>;
+          modify <code>module1_preprocessing/pipeline.py</code> (or <code>splitter.py</code>) to populate <code>source_dataset_sha256</code>;
           new <code>tests/test_evaluation_manifest_integrity.py</code>.
         </div>
 

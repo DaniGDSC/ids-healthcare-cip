@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from module1_preprocessing.phase1.missing import MissingValueHandler
+from module1_preprocessing.missing import MissingValueHandler
 
 
 @pytest.fixture

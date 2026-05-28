@@ -13,7 +13,7 @@ NetFlow-shaped network telemetry** (post-feature-extraction flow records).
 Specifically:
 
 - **Input modality**: bidirectional flow records with the 47 numeric +
-  categorical features documented in `module1_preprocessing/phase1/config.py`.
+  categorical features documented in `module1_preprocessing/config.py`.
 - **Aggregation window**: per-flow (not per-packet, not per-session).
 - **Vantage point**: clinical-network span port / TAP downstream of the
   edge firewall, upstream of the IoMT VLAN.

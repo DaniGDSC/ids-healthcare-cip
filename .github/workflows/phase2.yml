@@ -309,9 +309,9 @@ jobs:
           logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
           from pathlib import Path
-          from module1_preprocessing.phase1.config import Phase1Config
-          from module1_preprocessing.phase1.artifact_reader import Phase0ArtifactReader
-          from module1_preprocessing.phase1.pipeline import PreprocessingPipeline
+          from module1_preprocessing.config import Phase1Config
+          from module1_preprocessing.artifact_reader import Phase0ArtifactReader
+          from module1_preprocessing.pipeline import PreprocessingPipeline
 
           PROJECT_ROOT = Path.cwd()
           config = Phase1Config.from_yaml(PROJECT_ROOT / 'config' / 'ci_test_phase1.yaml')
@@ -455,7 +455,7 @@ jobs:
           docker run --rm analyst/phase0-phase2:${{ github.sha }}
           -c "
           from module0_analysis import Phase0Config, DataLoader, IntegrityVerifier, PathValidator;
-          from module1_preprocessing.phase1 import Phase1Config, PreprocessingPipeline;
+          from module1_preprocessing import Phase1Config, PreprocessingPipeline;
           from module2_detection.models.DAE import DAEDetector;
           from module2_detection.models.XGBoost import XGBoostDetector;
           from module2_detection.models.RandomForest import RandomForestDetector;

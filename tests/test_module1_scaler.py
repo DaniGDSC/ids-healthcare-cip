@@ -13,7 +13,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from module1_preprocessing.phase1.scaler import RobustScalerTransformer
+from module1_preprocessing.scaler import RobustScalerTransformer
 
 
 @pytest.fixture

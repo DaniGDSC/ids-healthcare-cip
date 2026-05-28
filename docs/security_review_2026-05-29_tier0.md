@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-29
 **Branch:** `main` @ `49a57db`
-**Scope:** `common/phi.py`, `common/signed_pickle.py`, `common/artifact_versioning.py`, `common/model_registry.py`, `module5_responses/signing.py`, `module5_responses/audit/signing.py`, `module0_analysis/security.py`, `module0_analysis/bootstrap_integrity.py`, `module1_preprocessing/phase1/hipaa.py`, all deserialization call-sites, DAE load path, `pip-audit` on `requirements.txt`.
+**Scope:** `common/phi.py`, `common/signed_pickle.py`, `common/artifact_versioning.py`, `common/model_registry.py`, `module5_responses/signing.py`, `module5_responses/audit/signing.py`, `module0_analysis/security.py`, `module0_analysis/bootstrap_integrity.py`, `module1_preprocessing/hipaa.py`, all deserialization call-sites, DAE load path, `pip-audit` on `requirements.txt`.
 
 ## Executive summary
 
@@ -148,7 +148,7 @@ The trust anchor for Phase 0 integrity verification is the **private key file** 
 ## Surface that was checked and is clean
 
 - **PHI scrubbing in audit log.** `log_phase0_event` defensively redacts biometric column keys in the payload before logging ([security.py:611-613](module0_analysis/security.py#L611-L613)). Producer code is the responsible party, but the defensive check is correct.
-- **HIPAA sanitizer.** `HIPAASanitizer.transform` drops network-identifier columns by name only; the dropped-column report contains only column names, not values ([module1_preprocessing/phase1/hipaa.py](module1_preprocessing/phase1/hipaa.py)). Biometric values flow through training intentionally (per the threat model).
+- **HIPAA sanitizer.** `HIPAASanitizer.transform` drops network-identifier columns by name only; the dropped-column report contains only column names, not values ([module1_preprocessing/hipaa.py](module1_preprocessing/hipaa.py)). Biometric values flow through training intentionally (per the threat model).
 - **`yaml.load` usage.** Every call uses `yaml.safe_load`. No unsafe yaml deserialization sinks found.
 - **`subprocess` usage.** All call-sites pass list args, none use `shell=True`, and the only commands invoked are `git rev-parse` (constant arg) and `[sys.executable, module_script]` (constant arg). No injection surface.
 - **`.env` hygiene.** `.env.local` (mode `0600`) is not tracked. `.env.example` is committed and contains only path constants. Both are covered by `.gitignore`.

@@ -716,7 +716,7 @@ class PreprocessingPipeline:
 # Entry Point
 # ======================================================================
 
-PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
+PROJECT_ROOT: Path = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:

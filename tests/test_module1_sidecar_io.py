@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from module1_preprocessing.phase1._sidecar_io import (
+from module1_preprocessing._sidecar_io import (
     atomic_write_json,
     load_sidecar,
     migrate_legacy_pkl,
