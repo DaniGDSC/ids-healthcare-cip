@@ -58,7 +58,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest-cov
+        run: |
+          if [ -s requirements.lock ]; then
+            pip install --require-hashes -r requirements.lock
+          else
+            pip install -r requirements.txt
+          fi
+          pip install pytest-cov
 
       - name: Run Phase 1 unit tests with coverage
         run: >
@@ -90,19 +96,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install security tools + dependencies
+      # Tier 3 F6: sec-tools live in their own venv so pip-audit reports
+      # only production CVEs, not bandit/cyclonedx transitive noise.
+      - name: Install security tools (isolated)
         run: |
-          pip install -r requirements.txt
-          pip install bandit[toml] pip-audit cyclonedx-bom
+          python -m venv /tmp/sec-tools
+          /tmp/sec-tools/bin/pip install --upgrade pip
+          /tmp/sec-tools/bin/pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — Phase 1 static analysis
-        run: bandit -r module1_preprocessing/ -c pyproject.toml -ll
+        run: /tmp/sec-tools/bin/bandit -r module1_preprocessing/ -c pyproject.toml -ll
 
       - name: pip-audit — dependency vulnerabilities
-        run: pip-audit --strict --desc
+        run: /tmp/sec-tools/bin/pip-audit -r requirements.in --strict --desc
 
       - name: CycloneDX SBOM (Phase 0 + Phase 1 combined)
-        run: cyclonedx-py requirements -i requirements.txt -o sbom-phase1.json --format json
+        run: /tmp/sec-tools/bin/cyclonedx-py requirements -i requirements.in -o sbom-phase1.json --format json
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
@@ -124,7 +133,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+        run: |
+          if [ -s requirements.lock ]; then
+            pip install --require-hashes -r requirements.lock
+          else
+            pip install -r requirements.txt
+          fi
+          pip install pytest
 
       - name: Create 100-row test subset
         run: |

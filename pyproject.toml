@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ids-healthcare-cip"
+version = "0.1.0"
+description = "Healthcare IoMT IDS — Track A (XGBoost) + Track B (DAE) cascade with explainability"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.bandit]
+# Scan only first-party code; tests/fixtures/backups contain intentional patterns.
+exclude_dirs = [
+  "tests",
+  "backups",
+  ".venv",
+  "venv",
+  "__pycache__",
+  ".mypy_cache",
+  ".ruff_cache",
+  ".pytest_cache",
+  ".hypothesis",
+  "results",
+  "data",
+  "analysis/outputs",
+]
+# B101 (assert_used) — used as a HIPAA-policy guard in mve_generator
+# (_filter_for_llm raises AssertionError on forbidden fields); intentional.
+# B404 / B603 (subprocess) — every call site uses list args, audited in
+# security review tier 1 F9 / tier 3 F10. Skip the noisy generic warnings.
+skips = ["B101", "B404", "B603"]
+
+[tool.bandit.assert_used]
+skips = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["backups", "results", "data", "analysis/outputs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "C4", "UP"]
+ignore = [
+  "E501",  # line length handled by black
+  "B008",  # default args with Pydantic-style is acceptable
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+extend-exclude = "backups|results|data|analysis/outputs"

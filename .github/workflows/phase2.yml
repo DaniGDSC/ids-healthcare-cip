@@ -54,6 +54,12 @@ jobs:
   test-phase2:
     runs-on: ubuntu-latest
     needs: lint-phase2
+    # Tier 3 F8: re-assert the workflow_run guard at every job level
+    # so a Phase 0 failure cannot run downstream jobs even if `needs:`
+    # would skip them transitively.
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
 
@@ -62,7 +68,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest-cov
+        run: |
+          if [ -s requirements.lock ]; then
+            pip install --require-hashes -r requirements.lock
+          else
+            pip install -r requirements.txt
+          fi
+          pip install pytest-cov
 
       - name: Run Phase 2 unit tests with coverage
         env:
@@ -90,6 +102,9 @@ jobs:
   security-scan-phase2:
     runs-on: ubuntu-latest
     needs: lint-phase2
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
 
@@ -97,19 +112,20 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install security tools + dependencies
+      - name: Install security tools (isolated)
         run: |
-          pip install -r requirements.txt
-          pip install bandit[toml] pip-audit cyclonedx-bom
+          python -m venv /tmp/sec-tools
+          /tmp/sec-tools/bin/pip install --upgrade pip
+          /tmp/sec-tools/bin/pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — Phase 2 static analysis
-        run: bandit -r module2_detection/ -c pyproject.toml -ll
+        run: /tmp/sec-tools/bin/bandit -r module2_detection/ -c pyproject.toml -ll
 
       - name: pip-audit — dependency vulnerabilities (fail on CVSS > 7.0)
-        run: pip-audit --strict --desc
+        run: /tmp/sec-tools/bin/pip-audit -r requirements.in --strict --desc
 
       - name: CycloneDX SBOM (Phase 0 + Phase 1 + Phase 2 combined)
-        run: cyclonedx-py requirements -i requirements.txt -o sbom-phase2.json --format json
+        run: /tmp/sec-tools/bin/cyclonedx-py requirements -i requirements.in -o sbom-phase2.json --format json
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
@@ -123,6 +139,9 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     needs: [test-phase2, security-scan-phase2]
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     env:
       CUDA_VISIBLE_DEVICES: ""
       TF_DETERMINISTIC_OPS: "1"
@@ -134,7 +153,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+        run: |
+          if [ -s requirements.lock ]; then
+            pip install --require-hashes -r requirements.lock
+          else
+            pip install -r requirements.txt
+          fi
+          pip install pytest
 
       - name: Create 100-row test subset
         run: |
@@ -416,6 +441,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: integration-test
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
 

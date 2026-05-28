@@ -44,20 +44,27 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install security tools
-        run: pip install bandit[toml] pip-audit cyclonedx-bom
+      # Install security tools in an isolated venv so their own CVEs do
+      # not pollute the production pip-audit report (tier 3 F6).
+      - name: Install security tools (isolated)
+        run: |
+          python -m venv /tmp/sec-tools
+          /tmp/sec-tools/bin/pip install --upgrade pip
+          /tmp/sec-tools/bin/pip install bandit[toml] pip-audit cyclonedx-bom
 
       - name: Bandit — static security analysis
-        run: bandit -r module0_analysis/ common/ -c pyproject.toml -f json -o bandit-report.json || true
+        run: /tmp/sec-tools/bin/bandit -r module0_analysis/ common/ -c pyproject.toml -f json -o bandit-report.json || true
 
       - name: Bandit — fail on high/critical
-        run: bandit -r module0_analysis/ common/ -c pyproject.toml -ll
+        run: /tmp/sec-tools/bin/bandit -r module0_analysis/ common/ -c pyproject.toml -ll
 
+      # Audit the source-of-truth dependency set (requirements.in) so
+      # the report is not polluted by sec-tools transitive CVEs.
       - name: pip-audit — dependency vulnerabilities
-        run: pip install -r requirements.txt && pip-audit --strict --desc
+        run: /tmp/sec-tools/bin/pip-audit -r requirements.in --strict --desc
 
       - name: CycloneDX SBOM generation
-        run: cyclonedx-py requirements -i requirements.txt -o sbom.json --format json
+        run: /tmp/sec-tools/bin/cyclonedx-py requirements -i requirements.in -o sbom.json --format json
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
@@ -86,7 +93,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest-cov
+        run: |
+          if [ -s requirements.lock ]; then
+            pip install --require-hashes -r requirements.lock
+          else
+            pip install -r requirements.txt
+          fi
+          pip install pytest-cov
 
       - name: Run Phase 0 tests with coverage
         run: >

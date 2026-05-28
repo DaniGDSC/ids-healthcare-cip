@@ -1,7 +1,8 @@
 .PHONY: phase0-baseline phase0-check phase0-update-floors test-phase0 \
         phase1-baselines phase1-regen phase1-verify test-phase1 \
         phase2-regen phase2-verify test-phase2 \
-        phase4-gate phase4-round2-sim test-phase4 help
+        phase4-gate phase4-round2-sim test-phase4 help \
+        lock security-scan
 
 PYTHON ?= python3
 
@@ -58,3 +59,29 @@ phase4-round2-sim:
 
 test-phase4:
 	$(PYTHON) -m pytest tests/test_phase4_stability.py -v
+
+# ── Supply chain / security ────────────────────────────────────────
+# `make lock` regenerates requirements.lock with --generate-hashes.
+# MUST run in a Python 3.11+ environment because keras>=3.13.2 (required
+# to close CVE-2026-1462 and PYSEC-2026-73) only ships wheels for 3.11+.
+lock:
+	@PY_MINOR=$$($(PYTHON) -c "import sys;print(sys.version_info.minor)"); \
+	if [ "$$PY_MINOR" -lt 11 ]; then \
+	  echo "ERROR: make lock requires Python 3.11+ (current = 3.$$PY_MINOR)."; \
+	  echo "  Use a 3.11+ venv: python3.11 -m venv .venv && . .venv/bin/activate"; \
+	  exit 1; \
+	fi
+	$(PYTHON) -m pip install --quiet pip-tools
+	$(PYTHON) -m piptools compile --generate-hashes --resolver=backtracking \
+	  --output-file=requirements.lock requirements.in
+
+# Local security scan mirroring the CI matrix. Uses an isolated venv
+# so sec-tool CVEs do not pollute the report.
+security-scan:
+	@test -d /tmp/sec-tools-local || \
+	  (python3 -m venv /tmp/sec-tools-local && \
+	   /tmp/sec-tools-local/bin/pip install --quiet --upgrade pip bandit[toml] pip-audit cyclonedx-bom)
+	@echo "── Bandit ──"
+	/tmp/sec-tools-local/bin/bandit -r module0_analysis/ common/ -c pyproject.toml -ll || true
+	@echo "── pip-audit (requirements.in) ──"
+	/tmp/sec-tools-local/bin/pip-audit -r requirements.in --strict --desc || true
