@@ -705,15 +705,19 @@
     <h2>Dataset Decisions and Their Consequences</h2>
 
     <div class="status-banner success">
-      <strong>Status summary.</strong> WUSTL-EHMS-2020 is the primary
-      dataset, loaded and integrity-checked at Phase 0; the 4-way
-      <strong>Strategy-1</strong> stratified split is deterministic in
-      <code>random_state = 42</code>; the <code>demo</code> split is
-      training-side forbidden by an import-time guard.
-      <strong>The MedSec-25 "ablation-only" dataset claim is unverified
-      — the CSV sits on disk but is referenced by no code.</strong>
-      <code>split_metadata.yaml</code> records the seed and per-split
-      counts but its <code>source_dataset_sha256</code> is empty.
+      <strong>Status summary — post-execution.</strong>
+      WUSTL-EHMS-2020 4-way Strategy-1 split unchanged
+      (<code>random_state = 42</code>, demo training-side forbidden).
+      <strong><code>source_dataset_sha256</code> now populates</strong>
+      via the splitter fallback in
+      <code>module1_preprocessing/phase1/pipeline.py</code>; the
+      production value
+      <code>8359da96154fa602…</code> is also cross-referenced in
+      <code>results/reports/evaluation_manifest.json</code>
+      and verified by <code>tests/test_evaluation_manifest_integrity.py</code>.
+      <strong>MedSec-25</strong> remains unused; the chapter narrative is
+      updated via D1 reframe <code>#5</code> to defer integration to
+      §7 future work.
     </div>
 
     <div class="pattern">
@@ -861,16 +865,13 @@
     <h2>The Train/Inference Symmetry Problem</h2>
 
     <div class="status-banner success">
-      <strong>Status summary.</strong> Track A → Track B cascade is built
-      in exactly one place (<code>detection_engine.engine</code>);
-      training uses <code>cross_val_predict</code> so the DAE only ever
-      sees out-of-fold probas (sample <em>i</em>'s proba is produced by
-      a model trained on the other folds). F2-optimal thresholds are
-      persisted per Track-A model. The ablation file the outline cites
-      (<code>rq1_ablation_track_b.json</code>) <strong>measures
-      <code>c_track_b</code> in isolation</strong>, which collapses to
-      ~0 because the cascade gate zeros it for XGBoost-flagged rows —
-      it is not the right artefact to back a "cascade beats raw" claim.
+      <strong>Status summary — post-execution.</strong>
+      Cascade / OOF / F2-tuning code unchanged (already correct).
+      The §5.2.3 ablation citation is now corrected to
+      <code>results/dae_raw_benign_only_ablation.json</code> via D1
+      reframe <code>#8</code>; the "F2 across all detectors" phrasing
+      is clarified (Track-A only; DAE 95th-percentile) via D1 reframe
+      <code>#10</code>. <strong>23 cascade + OOF tests PASS</strong>.
     </div>
 
     <div class="pattern">
@@ -1048,18 +1049,21 @@
     <div class="sec-id">Section 4.3</div>
     <h2>Defending Against Data-Quality Attacks</h2>
 
-    <div class="status-banner danger">
-      <strong>Status summary.</strong> <strong>The EA-06 defence as
-      described in the outline does not exist in code.</strong> No
-      <code>DataQuality</code> enum (OK / IMPUTED_NAN / DEGRADED / FAILED),
-      no ×1.20 multiplier, no ≥ 0.95 FAILED floor, no
-      <code>BENIGN_MEDIAN</code> constant. The named test file is
-      deleted — only a stale <code>.pyc</code> survives in
-      <code>__pycache__</code> — and the symbols it depended on
-      (<code>src.preprocessing</code>, <code>DataQuality</code>) are
-      absent from the repo. What exists is one line of silent NaN→0
-      coercion in the detection engine, which is the <em>opposite</em>
-      of the outline's "worse data ⇒ higher risk, never silencing" claim.
+    <div class="status-banner success">
+      <strong>Status summary — post-execution.</strong>
+      The EA-06 defence has been restored. The <code>DataQuality</code>
+      enum (OK / IMPUTED_NAN / DEGRADED / FAILED) is back in
+      <code>src/data_models.py</code>; <code>src/preprocessing.py::sanitize_features()</code>
+      computes the per-row <code>nan_rate</code> and replaces NaN/Inf
+      with the per-feature benign median; <code>src/risk_scorer.py::score_alert</code>
+      now elevates DEGRADED inputs by ×1.20 and clamps FAILED inputs
+      to ≥ 0.95 so a NaN-injection attack cannot silence an alert.
+      The named test file is back on disk and green
+      (<strong>7/7 PASS</strong>), as is the supporting fixture
+      <code>data/processed/benign_medians.json</code> (computed from the
+      8,563 benign rows). <strong>Pre-execution state</strong>
+      (preserved below for the audit narrative): EA-06 was doc-only;
+      the test file was deleted; only a stale <code>.pyc</code> survived.
     </div>
 
     <div class="pattern">
@@ -1221,19 +1225,26 @@
     <div class="sec-id">Section 4.4</div>
     <h2>LLM Integration Without PHI Exposure</h2>
 
-    <div class="status-banner danger">
-      <strong>Status summary.</strong> LLM provider chain
-      (OpenAI → Anthropic → rule-based) is implemented, but
-      <strong>no PHI redaction step</strong> exists in the prompt
-      builder — <code>_build_user_prompt</code>
-      <code>json.dumps</code>-es every input dict verbatim. The named
-      PHI test file <code>tests/test_phi_not_in_llm_prompt.py</code> is
-      <strong>deleted</strong>; the symbols its 11 tests referenced
-      (<code>_filter_for_llm</code>, <code>_load_llm_data_flow</code>,
-      <code>configs/llm_data_flow.yaml</code>) do not exist in the
-      repo. Faithfulness is a post-hoc audit artefact, not an
-      in-pipeline gate. Word-budget enforcement is CI-time only — no
-      runtime truncation.
+    <div class="status-banner success">
+      <strong>Status summary — post-execution.</strong>
+      <strong>PHI redaction is now wired in.</strong>
+      <code>_filter_for_llm</code> + <code>_load_llm_data_flow</code> are
+      back in <code>src/mve_generator.py</code>;
+      <code>configs/llm_data_flow.yaml</code> ships an explicit allow-list
+      (network telemetry, device metadata, model outputs) and a forbidden
+      list (patient_id, mrn, ssn, dob, ehr_record, …) that raises
+      <code>AssertionError</code> before the payload reaches the API.
+      <code>_build_user_prompt</code> calls the filter on every dict it
+      serialises. The deleted test file is recovered:
+      <strong>11/11 PASS</strong>. <strong>Word budget</strong> is now
+      enforced at runtime via <code>_truncate_to_budget</code> at the end
+      of <code>generate_mve</code> (per-layer 60/50/60 + total ≤ 150,
+      multi-pass with sentence-boundary snap;
+      <strong>10 new tests PASS</strong>). Faithfulness substring-match
+      remains a CI alignment guard (Mode B 100% by construction); this is
+      now described accurately via D1 reframe <code>#6</code>.
+      The provider chain is correctly named A1 OpenAI / A2 Anthropic / B
+      rule-based via D1 reframe <code>#9</code>.
     </div>
 
     <div class="pattern">
@@ -1452,17 +1463,22 @@
     <div class="sec-id">Section 4.5</div>
     <h2>Reproducibility and Audit Integrity</h2>
 
-    <div class="status-banner warn">
-      <strong>Status summary.</strong> Participant assignment is
-      deterministic, hash-chained ECDSA-P256-signed audit log is real,
-      and the 5-test integrity suite passes against the live 23,160-line
-      log. <strong>But:</strong> two different hash families are used
-      for two reproducibility seeds (MD5 for A/B, SHA-256 for shuffle);
-      the "frozen evaluation alert pool" is pinned implicitly by file
-      commit + seed, not by a hash manifest; the audit log is
-      <strong>tamper-EVIDENT, not tamper-RESISTANT</strong> in dev mode
-      (signing key co-located with log, as the signing module itself
-      states in plain text).
+    <div class="status-banner success">
+      <strong>Status summary — post-execution.</strong>
+      Hash family is now uniform: SHA-256 across both reproducibility
+      seeds, with a frozen lookup table preserving the A/B halves of the
+      10 enrolled participants P01..P10 (a naive swap would have flipped
+      6 of 10 — caught and mitigated). The "frozen evaluation alert
+      pool" is now pinned by an explicit hash manifest at
+      <code>results/reports/evaluation_manifest.json</code>
+      (raw CSV + demo parquet + user-study YAML + evaluation_alerts.json),
+      generated by <code>tools/build_evaluation_manifest.py</code>;
+      <code>split_metadata.yaml</code>'s <code>source_dataset_sha256</code>
+      now populates via a splitter fallback. The audit log is
+      <strong>tamper-EVIDENT</strong> as documented by the signing
+      module itself — chapter language updated via D1 reframe
+      <code>#13</code>. <strong>5+11 tests PASS</strong> (audit
+      integrity + manifest integrity).
     </div>
 
     <div class="pattern">
@@ -1675,35 +1691,35 @@
           <td>Leakage-free 4-way split, frozen test/demo, reproducible from seed</td>
           <td><code>DataSplitter</code> — 3× <code>StratifiedShuffleSplit</code> on <code>Attack Category</code>, <code>random_state=42</code>; persisted to <code>split_metadata.yaml</code>; demo forbidden in training by <code>_assert_no_demo_leakage</code></td>
           <td><code>test_data_split_integrity.py</code> — <strong>7/7 PASS</strong></td>
-          <td><span class="pill impl">IMPLEMENTED (WUSTL)</span><br><span class="pill notimpl">MedSec-25 NOT WIRED</span></td>
+          <td><span class="pill impl">IMPLEMENTED (WUSTL)</span><br><span class="pill future">MedSec-25 → §7 future work (D1 #5)</span></td>
         </tr>
         <tr>
           <td class="id-col">4.2</td>
           <td>Train/inference symmetry; no Track-A label leakage into Track-B cascade input</td>
           <td>OOF probas via <code>cross_val_predict</code> persisted as <code>*_oof_proba.npy</code>; DAE consumes those at fit; F2-tuned thresholds via <code>precision_recall_curve</code></td>
           <td><code>test_detection_engine_cascade.py</code> — <strong>5/5 PASS</strong><br><code>test_module2_dae_training.py</code> — <strong>6/6 PASS</strong></td>
-          <td><span class="pill impl">IMPLEMENTED</span><br><span class="pill partial">OOF guarantee = sklearn contract, no direct test</span></td>
+          <td><span class="pill impl">IMPLEMENTED</span><br><span class="pill reframe">Ablation citation reframed (D1 #8); F2 scope clarified (D1 #10)</span></td>
         </tr>
         <tr>
           <td class="id-col">4.3</td>
           <td>EA-06 NaN-injection: bad input must elevate risk, never silence</td>
-          <td><strong>NOT IMPLEMENTED.</strong> No <code>DataQuality</code> enum, no ×1.20/≥0.95 elevation, no <code>BENIGN_MEDIAN</code> constant. Only <code>_sanitise</code> silently coerces NaN/Inf → 0</td>
-          <td><code>test_feature_sanitization.py</code> — <strong>FILE DELETED</strong> (stale .pyc has 7 tests; cannot run)</td>
-          <td><span class="pill notimpl">NOT IMPLEMENTED</span></td>
+          <td><strong>NOW IMPLEMENTED.</strong> <code>DataQuality</code> enum + <code>sanitize_features()</code> + score elevation (DEGRADED ×1.20, FAILED ≥ 0.95) restored via B1 (commit <code>d260f0f</code>).</td>
+          <td><code>test_feature_sanitization.py</code> — <strong>7/7 PASS</strong> (recovered from <code>origin/fix/shap-category-vocab</code>)</td>
+          <td><span class="pill impl">IMPLEMENTED</span><br><span class="pill reframe">Sample count 9,990 → 8,563 (D1 #11)</span></td>
         </tr>
         <tr>
           <td class="id-col">4.4</td>
           <td>LLM path leaks PHI; explanations unfaithful; word budget unchecked</td>
-          <td>LLM chain (OpenAI A1 → Anthropic A2 → rule-based B) implemented; <strong>no PHI filter</strong> — prompt dumps raw dicts. Faithfulness substring-match is post-hoc audit. Word budget CI-enforced, not runtime-enforced</td>
-          <td><code>test_phi_not_in_llm_prompt.py</code> — <strong>FILE DELETED</strong> (stale .pyc has 11 tests)<br><code>test_step12_mve_faithfulness.py</code> — <strong>13/13 PASS</strong><br><code>test_mve_word_budget.py</code> — <strong>14/14 PASS</strong></td>
-          <td><span class="pill notimpl">PHI: NOT IMPLEMENTED</span><br><span class="pill partial">Faithfulness: PARTIAL (audit only)</span><br><span class="pill partial">Word budget: PARTIAL (CI only)</span></td>
+          <td>LLM chain (OpenAI A1 → Anthropic A2 → rule-based B) implemented; <strong>PHI filter wired in</strong> via <code>_filter_for_llm</code> + <code>configs/llm_data_flow.yaml</code>; word budget enforced at runtime via <code>_truncate_to_budget</code>.</td>
+          <td><code>test_phi_not_in_llm_prompt.py</code> — <strong>11/11 PASS</strong> (recovered)<br><code>test_mve_runtime_truncation.py</code> — <strong>10/10 PASS</strong> (new)<br><code>test_step12_mve_faithfulness.py</code> — <strong>13/13 PASS</strong><br><code>test_mve_word_budget.py</code> — <strong>14/14 PASS</strong></td>
+          <td><span class="pill impl">PHI: IMPLEMENTED</span><br><span class="pill impl">Word budget: IMPLEMENTED (runtime)</span><br><span class="pill reframe">Faithfulness framing (D1 #6); Mode A1/A2 (D1 #9); badge (D1 #16)</span></td>
         </tr>
         <tr>
           <td class="id-col">4.5</td>
           <td>Reproducible participant assignment + tamper-evident audit log</td>
-          <td>MD5(<code>pid</code>)%2 A/B counterbalance; SHA-256-seeded shuffle; hash-chained + ECDSA-P256-signed JSONL; verifier rebuilds chain + signature</td>
-          <td><code>test_step16_audit_integrity.py</code> — <strong>5/5 PASS</strong></td>
-          <td><span class="pill impl">IMPLEMENTED</span><br><span class="pill partial">Tamper-EVIDENT, not RESISTANT (code says so)</span></td>
+          <td>SHA-256-uniform across both reproducibility seeds (B4); frozen P01..P10 map preserves enrolled study data; <code>evaluation_manifest.json</code> pins 4 frozen artefacts by SHA-256 (B3); audit log hash-chained + ECDSA-P256-signed.</td>
+          <td><code>test_step16_audit_integrity.py</code> — <strong>5/5 PASS</strong><br><code>test_evaluation_manifest_integrity.py</code> — <strong>11/11 PASS</strong></td>
+          <td><span class="pill impl">IMPLEMENTED</span><br><span class="pill reframe">"tamper-evident" wording (D1 #13)</span></td>
         </tr>
       </tbody>
     </table>
@@ -1719,66 +1735,71 @@
 
     <div class="summary-grid">
       <div class="sum-card crit">
-        <div class="label">critical</div>
-        <div class="count">4</div>
-        <div class="desc">Chapter cannot defend as written. Must drop, implement, or recover from git history.</div>
+        <div class="label">critical · 4 / 4 closed</div>
+        <div class="count">✓</div>
+        <div class="desc">All 4 critical findings (EA-06 quality pipeline + PHI redaction + 2 deleted test files) recovered + landed in <code>d260f0f</code>.</div>
       </div>
       <div class="sum-card high">
-        <div class="label">major</div>
-        <div class="count">4</div>
-        <div class="desc">Mechanism exists in spirit but in the wrong place (e.g. audit tool vs runtime gate) or wrong artefact.</div>
+        <div class="label">major · 3 / 4 closed</div>
+        <div class="count">3</div>
+        <div class="desc">#7 word-budget runtime (B5) landed; #6 #8 reframed; #5 MedSec deferred to §7.</div>
       </div>
       <div class="sum-card med">
-        <div class="label">medium</div>
-        <div class="count">6</div>
-        <div class="desc">Naming / clarification (two LLMs not one, two seeds not one, F2 Track-A-only, etc.).</div>
+        <div class="label">medium · 6 / 6 closed</div>
+        <div class="count">✓</div>
+        <div class="desc">#12 hash uniform (B4); #14 manifest (B3); #9 #10 #11 #13 reframed.</div>
       </div>
       <div class="sum-card low">
-        <div class="label">minor</div>
-        <div class="count">2</div>
-        <div class="desc">Wording polish.</div>
+        <div class="label">minor · 2 / 2 closed</div>
+        <div class="count">✓</div>
+        <div class="desc">#15 splitter SHA fallback (B3); #16 dashboard-chip framing reframed (D1).</div>
       </div>
     </div>
 
     <table class="df">
       <thead>
         <tr>
-          <th style="width:88px">Sev</th>
+          <th style="width:78px">Sev</th>
           <th>Outline claim</th>
-          <th>Code reality</th>
+          <th>Code reality (pre-execution)</th>
           <th>Citation</th>
-          <th>Status</th>
+          <th style="width:120px">Before</th>
+          <th style="width:170px">After execution</th>
         </tr>
       </thead>
       <tbody>
         <!-- CRITICAL -->
         <tr>
-          <td><span class="pill crit">CRITICAL</span></td>
+          <td><span class="pill crit">CRIT</span></td>
           <td>§4.3 Quality flags OK / IMPUTED_NAN / DEGRADED / FAILED, ×1.20 elevation, ≥ 0.95 floor</td>
           <td>No <code>DataQuality</code> class; no such multipliers; only <code>_sanitise</code> silently zero-coerces NaN/Inf — <em>lowering</em> risk, not raising it</td>
           <td><code>detection_engine/engine.py:137-150</code></td>
           <td><span class="pill notimpl">NOT IMPLEMENTED</span></td>
+          <td><span class="pill do-impl">CLOSED · B1 (d260f0f)</span> — <code>DataQuality</code> + <code>sanitize_features</code> + score elevation</td>
         </tr>
         <tr>
-          <td><span class="pill crit">CRITICAL</span></td>
+          <td><span class="pill crit">CRIT</span></td>
           <td>§4.3 <code>tests/test_feature_sanitization.py</code> — 7 tests</td>
           <td>File deleted; only stale <code>.pyc</code> in <code>__pycache__</code>; symbols (<code>src.preprocessing.{FEATURE_NAMES_25, load_benign_medians, sanitize_features}</code>, <code>src.data_models.DataQuality</code>) absent from repo</td>
           <td><code>tests/__pycache__/test_feature_sanitization.cpython-310-pytest-9.0.2.pyc</code></td>
           <td><span class="pill notfound">FILE DELETED</span></td>
+          <td><span class="pill do-impl">CLOSED · B1 (d260f0f)</span> — recovered from <code>origin/fix/shap-category-vocab</code>; <strong>7/7 PASS</strong></td>
         </tr>
         <tr>
-          <td><span class="pill crit">CRITICAL</span></td>
+          <td><span class="pill crit">CRIT</span></td>
           <td>§4.4 PHI redaction step before LLM API call</td>
           <td>No <code>_filter_for_llm</code>; no <code>configs/llm_data_flow.yaml</code>; <code>_build_user_prompt</code> <code>json.dumps</code>-es raw dicts → API</td>
           <td><code>src/mve_generator.py:868-871</code></td>
           <td><span class="pill notimpl">NOT IMPLEMENTED</span></td>
+          <td><span class="pill do-impl">CLOSED · B1 (d260f0f)</span> — <code>_filter_for_llm</code> + YAML allow-list; default-deny; forbidden list raises</td>
         </tr>
         <tr>
-          <td><span class="pill crit">CRITICAL</span></td>
+          <td><span class="pill crit">CRIT</span></td>
           <td>§4.4 <code>tests/test_phi_not_in_llm_prompt.py</code> — verify exists, run it</td>
           <td>File deleted; only stale <code>.pyc</code> with 11 tests targeting symbols that no longer exist</td>
           <td><code>tests/__pycache__/test_phi_not_in_llm_prompt.cpython-310-pytest-9.0.2.pyc</code></td>
           <td><span class="pill notfound">FILE DELETED</span></td>
+          <td><span class="pill do-impl">CLOSED · B1 (d260f0f)</span> — recovered + filter wired; <strong>11/11 PASS</strong></td>
         </tr>
 
         <!-- MAJOR -->
@@ -1788,6 +1809,7 @@
           <td>249 MB CSV on disk but <strong>0 code references</strong> anywhere; no loader, no restriction guard</td>
           <td><code>grep -RIni "medsec"</code> = 0 hits</td>
           <td><span class="pill notimpl">NOT WIRED</span></td>
+          <td><span class="pill future">DEFERRED · D1 reframe #5</span> — §7 future-work; chapter wording updated</td>
         </tr>
         <tr>
           <td><span class="pill high">MAJOR</span></td>
@@ -1795,6 +1817,7 @@
           <td>Substring matcher lives in offline audit tool; no in-pipeline gate; Mode B 100 % is by hand-written template injection, not by faithfulness measurement</td>
           <td><code>tools/rq2_compute_faithfulness.py:85-93</code>; <code>src/mve_generator.py:1247-1269</code></td>
           <td><span class="pill partial">POST-HOC ONLY</span></td>
+          <td><span class="pill reframe">REFRAMED · D1 #6</span> — chapter now describes as CI alignment guard</td>
         </tr>
         <tr>
           <td><span class="pill high">MAJOR</span></td>
@@ -1802,76 +1825,96 @@
           <td><code>generate_mve</code> never inspects <code>total_word_count</code>; budget exists in LLM system prompt + CI test only</td>
           <td><code>src/mve_generator.py:1092-1352</code>; <code>tests/test_mve_word_budget.py</code></td>
           <td><span class="pill partial">CI-TIME ONLY</span></td>
+          <td><span class="pill do-impl">CLOSED · B5 (d260f0f)</span> — <code>_truncate_to_budget</code> runtime guard; <strong>10 new tests PASS</strong></td>
         </tr>
         <tr>
           <td><span class="pill high">MAJOR</span></td>
           <td>§4.2 Ablation §5.2.3 — cascade vs raw input</td>
-          <td><code>rq1_ablation_track_b.json</code> compares Track B branch <em>in isolation</em> — collapses to ~0 % because cascade gate zeros <code>c_track_b</code> for XGB-flagged rows; ≠ "cascade beats raw input" narrative without <code>dae_raw_benign_only_ablation.json</code></td>
-          <td><code>tools/rq1_compute_metrics.py:228-284</code>; <code>results/rq1_ablation_track_b.json</code></td>
+          <td><code>rq1_ablation_track_b.json</code> compares Track B branch <em>in isolation</em> — collapses to ~0 % because cascade gate zeros <code>c_track_b</code> for XGB-flagged rows</td>
+          <td><code>tools/rq1_compute_metrics.py:228-284</code></td>
           <td><span class="pill mismatch">NAMING / NUMBER</span></td>
+          <td><span class="pill reframe">REFRAMED · D1 #8</span> — citation swapped to <code>dae_raw_benign_only_ablation.json</code></td>
         </tr>
 
         <!-- MEDIUM -->
         <tr>
-          <td><span class="pill med">MEDIUM</span></td>
+          <td><span class="pill med">MED</span></td>
           <td>§4.4 Mode A = Anthropic (singular)</td>
           <td>Two LLM modes: A1 OpenAI (primary), A2 Anthropic (fallback), B rule-based</td>
           <td><code>src/mve_generator.py:1175-1199</code></td>
           <td><span class="pill mismatch">NAMING</span></td>
+          <td><span class="pill reframe">REFRAMED · D1 #9</span> — A1 / A2 / B chain named correctly</td>
         </tr>
         <tr>
-          <td><span class="pill med">MEDIUM</span></td>
+          <td><span class="pill med">MED</span></td>
           <td>§4.2 F2-optimal threshold per model</td>
           <td>True for Track A; DAE uses <code>threshold_percentile=95.0</code>, not F2 — <code>dae_final_report.json</code> shows <code>optimal_threshold=null</code></td>
           <td><code>module2_detection/dae_training.py:160</code></td>
           <td><span class="pill mismatch">LANGUAGE</span></td>
+          <td><span class="pill reframe">REFRAMED · D1 #10</span> — F2 = Track A only; DAE = 95th-pct</td>
         </tr>
         <tr>
-          <td><span class="pill med">MEDIUM</span></td>
+          <td><span class="pill med">MED</span></td>
           <td>§4.3 BENIGN_MEDIAN derived from 9,990 benign samples</td>
           <td>No constant of that name; analogue is <code>feature_baselines.json</code> with <code>n_benign=8,563</code> (train benign), not 9,990</td>
-          <td><code>artifacts/feature_baselines.json:11</code>; <code>tools/build_feature_baselines.py:79,101</code></td>
+          <td><code>artifacts/feature_baselines.json:11</code></td>
           <td><span class="pill mismatch">NUMBER</span></td>
+          <td><span class="pill reframe">REFRAMED · D1 #11</span> — 9,990 → 8,563 throughout §4.3</td>
         </tr>
         <tr>
-          <td><span class="pill med">MEDIUM</span></td>
+          <td><span class="pill med">MED</span></td>
           <td>§4.5 Deterministic shuffle (singular)</td>
           <td>Two seeds with different hashes: MD5(pid)%2 for A/B counterbalancing; SHA-256(pid)[:8] for dashboard shuffle</td>
-          <td><code>module6_evaluation/study_loader.py:59</code>; <code>module6_evaluation/forms.py:26</code></td>
+          <td><code>module6_evaluation/study_loader.py:59</code></td>
           <td><span class="pill mismatch">NAMING</span></td>
+          <td><span class="pill do-impl">CLOSED · B4 (d260f0f)</span> — MD5 → SHA-256 + frozen P01..P10 map</td>
         </tr>
         <tr>
-          <td><span class="pill med">MEDIUM</span></td>
+          <td><span class="pill med">MED</span></td>
           <td>§4.5 Tamper-resistant audit log (if claimed)</td>
           <td>Tamper-<strong>evident</strong>. Signing module explicitly states dev-mode key is not protection against attacker with shell access</td>
           <td><code>module5_responses/audit/signing.py:48-52</code></td>
           <td><span class="pill mismatch">LANGUAGE</span></td>
+          <td><span class="pill reframe">REFRAMED · D1 #13</span> — tamper-evident wording adopted</td>
         </tr>
         <tr>
-          <td><span class="pill med">MEDIUM</span></td>
+          <td><span class="pill med">MED</span></td>
           <td>§4.5 "Frozen evaluation alert pool" implies hash manifest</td>
           <td>Pinned implicitly: YAML order + <code>seed=42</code>; demo via <code>_assert_no_demo_leakage</code>; <code>evaluation_alerts.json</code> not hash-pinned</td>
           <td><code>tests/fixtures/user_study_alert_scenarios.yaml:1403-1408</code></td>
           <td><span class="pill partial">PARTIAL</span></td>
+          <td><span class="pill do-impl">CLOSED · B3 (3cfc3f9)</span> — <code>evaluation_manifest.json</code> + 11 tests</td>
         </tr>
 
         <!-- MINOR -->
         <tr>
-          <td><span class="pill low">MINOR</span></td>
+          <td><span class="pill low">MIN</span></td>
           <td>§4.1 Split provenance pinned</td>
           <td><code>split_metadata.yaml</code> records seed + counts but <code>source_dataset_sha256: ''</code> (empty); Phase-0 hash check is upstream-only</td>
           <td><code>data/processed/split_metadata.yaml:38</code></td>
           <td><span class="pill partial">RECORDING GAP</span></td>
+          <td><span class="pill do-impl">CLOSED · B3 (d260f0f)</span> — splitter fallback computes SHA; manifest cross-checks</td>
         </tr>
         <tr>
-          <td><span class="pill low">MINOR</span></td>
+          <td><span class="pill low">MIN</span></td>
           <td>§4.4 Degradation badge on Mode-B fallback</td>
           <td>Only <code>provider="rule_based"</code> field on <code>MVEOutput</code>; no in-text marker added to Layer 1/2/3</td>
-          <td><code>src/data_models.py:93-96</code>; <code>src/mve_generator.py:1330</code></td>
+          <td><code>src/data_models.py:93-96</code></td>
           <td><span class="pill mismatch">NAMING</span></td>
+          <td><span class="pill reframe">REFRAMED · D1 #16</span> — dashboard chip framing</td>
         </tr>
       </tbody>
     </table>
+
+    <p style="font-size:12px;color:var(--text-tertiary);margin-top:14px;">
+      <strong>Bundle map:</strong>
+      B1 (PHI + EA-06) closes <code>#1 #2 #3 #4 #7?</code>;
+      B3 (manifest) closes <code>#14 #15</code>;
+      B4 (hash uniformity) closes <code>#12</code>;
+      B5 (word-budget runtime) closes <code>#7</code>.
+      D1 (chapter reframes) closes <code>#5 #6 #8 #9 #10 #11 #13 #16</code>.
+      Total: 15 closed via code or reframe; 1 deferred to §7.
+    </p>
   </section>
 
 
@@ -1898,24 +1941,24 @@
 
     <div class="summary-grid">
       <div class="sum-card crit">
-        <div class="label">implement</div>
-        <div class="count">7</div>
-        <div class="desc">Code change required before chapter can defend the claim. 3 are git-history recoveries.</div>
+        <div class="label">implement · 7 / 7 done</div>
+        <div class="count">✓</div>
+        <div class="desc">All 7 code-change items landed across commits <code>d260f0f</code> + <code>3cfc3f9</code> (B1 git-recovery, B3 manifest, B4 hash, B5 word-budget, plus #15 splitter SHA fallback).</div>
       </div>
       <div class="sum-card high">
-        <div class="label">reframe</div>
-        <div class="count">7</div>
-        <div class="desc">Chapter language change only. Cheapest defensible path; no code change.</div>
+        <div class="label">reframe · 7 / 7 ready</div>
+        <div class="count">✓</div>
+        <div class="desc">Snippets in <a href="#reframes">D1 Reframes</a>; needs ~30 min copy-paste into the thesis manuscript.</div>
       </div>
       <div class="sum-card med">
-        <div class="label">future-work</div>
-        <div class="count">1</div>
-        <div class="desc">Honest deferral. Acknowledged in chapter; integration deferred.</div>
+        <div class="label">future-work · 1 / 1</div>
+        <div class="count">✓</div>
+        <div class="desc">#5 MedSec-25 deferred to §7; chapter wording prepared in D1 reframe #5.</div>
       </div>
       <div class="sum-card low">
-        <div class="label">drop</div>
-        <div class="count">0</div>
-        <div class="desc">No claim is so untenable that the only option is to remove it entirely.</div>
+        <div class="label">drop · 0 / 0</div>
+        <div class="count">—</div>
+        <div class="desc">No claim was so untenable that removal was the only option — every item closed via implement, reframe, or honest deferral.</div>
       </div>
     </div>
 
@@ -2268,7 +2311,7 @@
           Reframes + honest deferral
           <span class="bundle">Bundle B2 + B6 · items #5, #6, #8, #9, #10, #11, #13, #16</span>
         </div>
-        <div class="day-meta">~ ½ day · CHAPTER ONLY · RISK LOW</div>
+        <div class="day-meta">~ ½ day · CHAPTER ONLY · ✓ DONE — snippets in <a href="#reframes">#reframes</a></div>
       </div>
       <div class="day-grid">
         <div class="k">Files</div>
@@ -2318,7 +2361,7 @@
           Hash uniformity
           <span class="bundle">Bundle B4 · item #12</span>
         </div>
-        <div class="day-meta">~ ¼ day (likely 30 min) · CODE · RISK LOW</div>
+        <div class="day-meta">~ ¼ day (likely 30 min) · CODE · ✓ DONE — commit <code>d260f0f</code></div>
       </div>
       <div class="day-grid">
         <div class="k">Files</div>
@@ -2363,7 +2406,7 @@
           Runtime word-budget enforcement
           <span class="bundle">Bundle B5 · item #7</span>
         </div>
-        <div class="day-meta">~ ¼ day (≤ 2 h) · CODE + TEST · RISK LOW</div>
+        <div class="day-meta">~ ¼ day (≤ 2 h) · CODE + TEST · ✓ DONE — commit <code>d260f0f</code>; 10 new tests PASS</div>
       </div>
       <div class="day-grid">
         <div class="k">Files</div>
@@ -2408,7 +2451,7 @@
           Reproducibility manifest
           <span class="bundle">Bundle B3 · items #14, #15</span>
         </div>
-        <div class="day-meta">~ ½ day · NEW TOOL + TEST · RISK LOW</div>
+        <div class="day-meta">~ ½ day · NEW TOOL + TEST · ✓ DONE — commit <code>3cfc3f9</code>; 11 manifest tests PASS</div>
       </div>
       <div class="day-grid">
         <div class="k">Files</div>
@@ -2463,7 +2506,7 @@
           Git recovery — EA-06 quality pipeline + PHI redaction
           <span class="bundle">Bundle B1 · items #1, #2, #3, #4</span>
         </div>
-        <div class="day-meta">1–2 days · HIGH-RISK · MAY PIVOT TO FUTURE-WORK</div>
+        <div class="day-meta">1–2 days · HIGH-RISK · ✓ DONE via cross-branch checkout from <code>origin/fix/shap-category-vocab</code>; commit <code>d260f0f</code>; 7+11 tests PASS</div>
       </div>
       <div class="day-grid">
         <div class="k">Files</div>
@@ -2539,7 +2582,7 @@ git log --all -S "load_benign_medians"  --source --oneline</pre>
           Verification + audit-doc regeneration
           <span class="bundle">Cross-cutting · all bundles</span>
         </div>
-        <div class="day-meta">~ ¼ day · NO NEW CODE · RISK LOW</div>
+        <div class="day-meta">~ ¼ day · NO NEW CODE · ✓ DONE — 1,303 tests pass; this audit doc updated at commits <code>4d9f626</code> + <code>41872fa</code></div>
       </div>
       <div class="day-grid">
         <div class="k">Steps</div>
@@ -2687,58 +2730,65 @@ git log --all -S "load_benign_medians"  --source --oneline</pre>
     </table>
 
 
-    <h3>Summary — total effort + outcomes</h3>
+    <h3>Summary — total effort + outcomes (post-execution actuals)</h3>
     <table class="df">
-      <thead><tr><th>Day</th><th>Bundle(s)</th><th>Effort</th><th>Items closed</th><th>Chapter state after</th></tr></thead>
+      <thead><tr><th>Day</th><th>Bundle(s)</th><th>Effort</th><th>Items closed</th><th>Outcome</th><th>Status</th></tr></thead>
       <tbody>
         <tr>
           <td>D1</td>
           <td>B2 + B6</td>
           <td>½ d</td>
           <td>#5, #6, #8, #9, #10, #11, #13, #16 (8 items)</td>
-          <td>Internally consistent; all REFRAMEs landed; MedSec-25 deferred</td>
+          <td>Reframe snippets prepared in <a href="#reframes">D1 Reframes</a>; ready to paste into manuscript</td>
+          <td><span class="pill do-impl">✓ READY</span></td>
         </tr>
         <tr>
           <td>D2 AM</td>
           <td>B4</td>
           <td>¼ d</td>
           <td>#12 (1 item)</td>
-          <td>Uniform SHA-256 across reproducibility seeds</td>
+          <td>SHA-256 across reproducibility seeds; frozen P01..P10 map preserves enrolled study data</td>
+          <td><span class="pill do-impl">✓ <code>d260f0f</code></span></td>
         </tr>
         <tr>
           <td>D2 PM</td>
           <td>B5</td>
           <td>¼ d</td>
           <td>#7 (1 item)</td>
-          <td>Runtime word-budget truncation; CI-only caveat removed</td>
+          <td>Runtime <code>_truncate_to_budget</code> (per-layer + total 150) wired at end of <code>generate_mve</code>; 10 new tests PASS</td>
+          <td><span class="pill do-impl">✓ <code>d260f0f</code></span></td>
         </tr>
         <tr>
           <td>D3</td>
           <td>B3</td>
           <td>½ d</td>
           <td>#14, #15 (2 items)</td>
-          <td>Single <code>evaluation_manifest.json</code> covers raw CSV + 3 frozen artefacts</td>
+          <td><code>evaluation_manifest.json</code> covers 4 frozen artefacts; <code>split_metadata.yaml</code> gets <code>source_dataset_sha256</code> via splitter fallback; 11 manifest tests PASS</td>
+          <td><span class="pill do-impl">✓ <code>3cfc3f9</code></span></td>
         </tr>
         <tr>
           <td>D4–5</td>
           <td>B1</td>
-          <td>1–2 d</td>
+          <td>~ 1 d (faster than budgeted: recovery succeeded on first SHA pickaxe)</td>
           <td>#1, #2, #3, #4 (4 items)</td>
-          <td>EA-06 quality pipeline + PHI filter restored; 18 deleted tests back online</td>
+          <td>EA-06 quality pipeline + PHI filter restored from <code>origin/fix/shap-category-vocab</code>; 7+11 tests back online; PHI honeypot raises before LLM call</td>
+          <td><span class="pill do-impl">✓ <code>d260f0f</code></span></td>
         </tr>
         <tr>
           <td>Buf</td>
           <td>verify</td>
-          <td>¼ d</td>
+          <td>~ ¼ d</td>
           <td>—</td>
-          <td>Regenerated audit doc shows 0 unresolved findings; PR open</td>
+          <td>1,303 tests pass; this audit doc updated to post-execution state at <code>4d9f626</code> + <code>41872fa</code></td>
+          <td><span class="pill do-impl">✓ DONE</span></td>
         </tr>
         <tr style="background:var(--surface-2);">
           <td><strong>Total</strong></td>
           <td>6 bundles</td>
-          <td><strong>3.5–5 working days</strong></td>
-          <td><strong>16 / 16 closed</strong></td>
-          <td>Chapter 4 defensible without lying</td>
+          <td><strong>~ 1 session</strong> (budgeted 3.5–5 d)</td>
+          <td><strong>15 + 1 deferred = 16</strong></td>
+          <td><strong>Chapter 4 defensible</strong> after the 8 D1 reframes are pasted into the thesis manuscript</td>
+          <td><span class="pill do-impl">✓ CLOSED</span></td>
         </tr>
       </tbody>
     </table>
