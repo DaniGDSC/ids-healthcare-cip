@@ -159,8 +159,11 @@ class AlertExplainer:
             pred = int(proba >= self.thresholds[name])
             votes[name] = {"prediction": pred, "confidence": round(proba, 4)}
 
-        from detection_engine import DetectionEngine
-        x_augmented = DetectionEngine().build_augmented(x_2d)
+        # Tier 1 F8: reuse the process-scoped DetectionEngine instead
+        # of constructing a fresh one per call. The lazy model registry
+        # load now happens exactly once per process.
+        from detection_engine import get_shared_engine
+        x_augmented = get_shared_engine().build_augmented(x_2d)
         dae_error_arr, dae_per_feature = self.dae.reconstruction_error_decomposed(
             x_augmented,
         )

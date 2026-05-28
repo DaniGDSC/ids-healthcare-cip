@@ -58,6 +58,33 @@ and require separate evidence to defend any production claim:
 6. **Physical-layer attacks** — RF interference, signal jamming,
    physical device tampering produce no NetFlow signal.
 
+### 3.1 Trust boundaries documented by the 2026-05-29 security review
+
+Captured here because each is a *positive* property of the current
+codebase that a future architect adding a new entry point must
+deliberately preserve (or surrender, with operator awareness):
+
+- **No inbound HTTP / RPC server.** `grep -rE "Flask|FastAPI|uvicorn|
+  gunicorn|HTTPServer|socketserver"` returns zero hits in production
+  code (tier 1 F9, tier 2 F10). Every runtime entry point is a batch
+  job iterating a frozen parquet; "online" in `online_explainer.py`
+  refers to per-alert latency, not network exposure.
+- **One inbound listener: the Streamlit dashboard at module 6.** Pinned
+  to `127.0.0.1:8501` via `.streamlit/config.toml` (tier 2 F2). The
+  dashboard's signed-chain writes are additionally gated on a
+  participant id resolved through the enrolment table in
+  `module6_evaluation/study_loader.py`.
+- **`module5_responses.executor.ActionExecutor` is simulation-only**
+  (tier 1 F10). It appends to an in-memory log and never performs
+  isolation / traffic-restriction / re-auth side effects. Any future
+  PR that wires the executor to a real network control MUST add an
+  authz boundary; the current codebase has none.
+
+Adding a real inference server, exposing the dashboard externally,
+or wiring real side effects into the executor are each a scope
+expansion that requires fresh threat-model work — they are not
+covered by the current evidence.
+
 ## 4. Assumptions on adversary
 
 - **Knowledge**: adversary may know the architecture but does not have

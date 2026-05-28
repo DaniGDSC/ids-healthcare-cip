@@ -9,6 +9,6 @@ The exact set of Track A models that feed the DAE is defined in
 automatically.
 """
 
-from .engine import DetectionEngine, DetectionResult
+from .engine import DetectionEngine, DetectionResult, get_shared_engine
 
-__all__ = ["DetectionEngine", "DetectionResult"]
+__all__ = ["DetectionEngine", "DetectionResult", "get_shared_engine"]

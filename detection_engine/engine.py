@@ -41,6 +41,25 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
+_SHARED_ENGINE: "DetectionEngine | None" = None
+
+
+def get_shared_engine() -> "DetectionEngine":
+    """Process-scoped singleton.
+
+    Tier 1 F8: ``AlertExplainer.explain`` previously created a fresh
+    ``DetectionEngine()`` per call (cheap individually but the lazy
+    model_registry init still ran once per instance). Routing through
+    this accessor reuses a single engine across the process, which
+    also means the per-alert ``predict_proba`` cost is paid exactly
+    once when the explainer warms.
+    """
+    global _SHARED_ENGINE
+    if _SHARED_ENGINE is None:
+        _SHARED_ENGINE = DetectionEngine()
+    return _SHARED_ENGINE
+
+
 @dataclass
 class DetectionResult:
     """One batch of detection outputs.
@@ -134,17 +153,60 @@ class DetectionEngine:
 
     # ── Helpers ────────────────────────────────────────────────────────
 
+    # Tier 1 F7: the previous implementation logged a WARNING per call
+    # which either floods the log on a hot inference path or, when
+    # downgraded to DEBUG, hides bad inputs entirely. Replace with a
+    # batch-level summary line and a ratio gate: a batch where >5% of
+    # rows are non-finite is suspicious enough to surface as an ERROR
+    # event (configurable via `IDS_NAN_RATIO_GATE`, default 0.05).
     @staticmethod
-    def _sanitise(X: np.ndarray) -> np.ndarray:
+    def _nan_ratio_gate() -> float:
+        import os
+        raw = os.environ.get("IDS_NAN_RATIO_GATE")
+        if raw is None:
+            return 0.05
+        try:
+            value = float(raw)
+        except ValueError:
+            logger.warning(
+                "IDS_NAN_RATIO_GATE=%r is not a float; using default 0.05", raw,
+            )
+            return 0.05
+        if not (0.0 <= value <= 1.0):
+            logger.warning(
+                "IDS_NAN_RATIO_GATE=%r out of [0,1]; using default 0.05", raw,
+            )
+            return 0.05
+        return value
+
+    @classmethod
+    def _sanitise(cls, X: np.ndarray) -> np.ndarray:
         """Replace NaN/Inf with zeros (OOD-05 guard — see Module 3).
 
         GradientBoostingClassifier raises on NaN; this keeps a single
-        malformed row from crashing a batch.
+        malformed row from crashing a batch. Tier 1 F7: the warning
+        now reports a per-batch summary (`m/n rows sanitised`) instead
+        of firing once per malformed row, and a batch whose
+        non-finite ratio exceeds ``IDS_NAN_RATIO_GATE`` (default 5%)
+        is surfaced as ERROR — an attacker injecting NaN into a single
+        row can force a known-class prediction, but a wide attack
+        spreads across the batch and is now visible.
         """
         finite_mask = np.isfinite(X)
         if not finite_mask.all():
-            logger.warning(
-                "detection_engine: NaN/Inf in features — replacing with zeros"
+            n_total = int(X.size)
+            n_bad = int(n_total - finite_mask.sum())
+            n_rows = int(X.shape[0])
+            # Per-row tracking so a single-row attack is still surfaced.
+            n_bad_rows = int(np.sum(~finite_mask.all(axis=1)))
+            ratio = (n_bad_rows / n_rows) if n_rows else 0.0
+            gate = cls._nan_ratio_gate()
+            level = logging.ERROR if ratio > gate else logging.WARNING
+            logger.log(
+                level,
+                "detection_engine: sanitised %d/%d cells across %d/%d rows "
+                "(row ratio %.3f, gate %.3f) — NaN/Inf replaced with zeros",
+                n_bad, n_total, n_bad_rows, n_rows, ratio, gate,
             )
             X = np.where(finite_mask, X, 0.0)
         return X.astype(np.float32, copy=False)
