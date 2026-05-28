@@ -370,6 +370,8 @@ class PreprocessingPipeline:
             y_val=y_val,     y_multi_val=y_multi_val,
             y_test=y_test,   y_multi_test=y_multi_test,
             y_demo=y_demo,   y_multi_demo=y_multi_demo,
+            input_dir=cfg.input_dir,
+            file_pattern=cfg.file_pattern,
         )
 
         # ── split_artifact_manifest.txt: byte-level audit anchor ──
@@ -433,6 +435,8 @@ class PreprocessingPipeline:
         y_val: np.ndarray,   y_multi_val: np.ndarray,
         y_test: np.ndarray,  y_multi_test: np.ndarray,
         y_demo: np.ndarray,  y_multi_demo: np.ndarray,
+        input_dir: Path | None = None,
+        file_pattern: str | None = None,
     ) -> None:
         """Write ``split_metadata.yaml`` documenting the 4-way split.
 
@@ -474,6 +478,20 @@ class PreprocessingPipeline:
             files = integrity_section.get("files") or []
             if files and isinstance(files[0], dict):
                 source_sha256 = files[0].get("sha256", "") or ""
+        # Fallback: integrity baseline may be skipped in dev / CI runs;
+        # compute the SHA directly from the input files so chapter §4.5's
+        # reproducibility manifest never starts empty. The integrity
+        # verifier's hash takes precedence when present.
+        if not source_sha256 and input_dir is not None and file_pattern:
+            try:
+                input_files = sorted(Path(input_dir).glob(file_pattern))
+                if input_files:
+                    hasher = hashlib.sha256()
+                    for f in input_files:
+                        hasher.update(f.read_bytes())
+                    source_sha256 = hasher.hexdigest()
+            except (OSError, ValueError):
+                source_sha256 = ""
 
         payload: Dict[str, Any] = {
             "format": "phase1.split_metadata.v1",

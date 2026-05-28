@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from src.data_models import ScoredAlert
+from src.data_models import DataQuality, ScoredAlert
 
 # ── Constants ───────────────────────────────────────────────────────────
 
@@ -68,6 +68,7 @@ def score_alert(
     anomaly_score: float,
     device_context: dict[str, Any],
     event_context: Optional[dict[str, Any]],
+    data_quality: "DataQuality | str | None" = None,
 ) -> ScoredAlert:
     """Adjust alert threshold and multiplier based on device context.
 
@@ -100,6 +101,21 @@ def score_alert(
     score = float(anomaly_score)
     criticality = str(device_context.get("criticality", "LOW")).upper()
     patchable = bool(device_context.get("patchable", True))
+
+    # EA-06 mitigation: NaN-injection attempts must not let an attacker
+    # mask an anomaly. DEGRADED inputs nudge the score up (×1.20); FAILED
+    # inputs force an upper-bound score so the alert always surfaces for
+    # the operator to verify, even if the imputed features look benign.
+    # Applied BEFORE downstream multipliers so the elevation compounds
+    # with device-tier risk.
+    try:
+        dq = DataQuality(data_quality) if data_quality else DataQuality.OK
+    except ValueError:
+        dq = DataQuality.OK
+    if dq == DataQuality.FAILED:
+        score = max(score, 0.95)
+    elif dq == DataQuality.DEGRADED:
+        score = min(1.0, score * 1.20)
 
     # Rule: maintenance window + known vendor IP → reduced confidence
     # EA-02 fix: binary suppression created a guaranteed evasion window.

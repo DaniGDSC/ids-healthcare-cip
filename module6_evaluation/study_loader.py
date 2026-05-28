@@ -50,15 +50,37 @@ def load_study_alerts() -> list[AlertScenario]:
     return scenarios
 
 
+# Frozen parity map for the 10 enrolled study participants. Their
+# survey responses were collected under the original MD5-seeded
+# counterbalancing; replacing the hash for them would invalidate the
+# already-collected analysis. New participants (any PID outside this
+# table) use SHA-256 to match the rest of the project's reproducibility
+# seeds — keeps the documented hash family uniform going forward.
+_FROZEN_PID_PARITY: dict[str, int] = {
+    "P01": 1, "P02": 1, "P03": 1, "P04": 1, "P05": 0,
+    "P06": 0, "P07": 0, "P08": 0, "P09": 0, "P10": 0,
+}
+
+
 def assign_ab_condition(participant_id: str, alert_index: int,
                         n_alerts: int = 20) -> bool:
     """
     Returns True = show MVE (Group B), False = hide MVE (Group A).
     Counterbalanced: first half and second half swap based on participant.
+
+    Hash family: SHA-256 of the participant ID, matching the rest of the
+    project's reproducibility seeds (e.g. ``forms.assign_ab_conditions``).
+    The 10 enrolled study participants (P01..P10) use a frozen lookup
+    table because their survey responses were already collected under
+    the original MD5 algorithm; switching their hash would invalidate
+    the analysis.
     """
-    pid_num = int(hashlib.md5(participant_id.encode()).hexdigest(), 16)
-    half = n_alerts // 2
-    if pid_num % 2 == 0:
-        return alert_index < half   # even PID: MVE first
+    if participant_id in _FROZEN_PID_PARITY:
+        pid_parity = _FROZEN_PID_PARITY[participant_id]
     else:
-        return alert_index >= half  # odd PID: no-MVE first
+        pid_parity = int(hashlib.sha256(participant_id.encode()).hexdigest(), 16) % 2
+    half = n_alerts // 2
+    if pid_parity == 0:
+        return alert_index < half   # even parity: MVE first
+    else:
+        return alert_index >= half  # odd parity: no-MVE first

@@ -33,6 +33,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Optional
 
 from src import sanitize_for_log
@@ -43,6 +44,74 @@ logger = logging.getLogger(__name__)
 # ── Constants ───────────────────────────────────────────────────────────
 
 VALID_SEVERITY = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
+
+# ── ARCHITECTURE.md Step [12] — Mode A LLM PHI allow-list ───────────────
+
+_LLM_DATA_FLOW_YAML = (
+    Path(__file__).resolve().parent.parent / "configs" / "llm_data_flow.yaml"
+)
+
+
+@functools.lru_cache(maxsize=1)
+def _load_llm_data_flow() -> dict[str, Any]:
+    """Load + cache the PHI allow-list YAML.
+
+    Returns a dict with ``allowed`` and ``forbidden`` tuples. If the YAML
+    is missing the function returns empty tuples and emits a warning —
+    in that case Mode A will degrade to a no-op (no fields cross the
+    boundary) and the caller falls back to rule-based.
+    """
+    import yaml
+    if not _LLM_DATA_FLOW_YAML.exists():
+        logger.warning(
+            "Mode A LLM: %s missing — no fields will be sent to the API "
+            "(PHI allow-list defaults to empty). Add the YAML to enable "
+            "Mode A.",
+            _LLM_DATA_FLOW_YAML,
+        )
+        return {"allowed": tuple(), "forbidden": tuple()}
+    with _LLM_DATA_FLOW_YAML.open(encoding="utf-8") as f:
+        body = yaml.safe_load(f) or {}
+    inputs = body.get("mode_a_llm_inputs") or {}
+    return {
+        "allowed":   tuple(inputs.get("allowed") or []),
+        "forbidden": tuple(inputs.get("forbidden") or []),
+    }
+
+
+def _filter_for_llm(payload: dict[str, Any]) -> dict[str, Any]:
+    """Whittle a dict to the PHI allow-list before sending to the LLM.
+
+    Returns a new dict containing only keys that appear in
+    ``configs/llm_data_flow.yaml::mode_a_llm_inputs.allowed``. Keys not
+    on the allow-list are silently dropped (logged at DEBUG); keys on
+    the explicit ``forbidden`` list raise :class:`AssertionError` —
+    presence of an explicitly-forbidden field in the alert payload is
+    a HIPAA red flag the system refuses to silently honor.
+    """
+    if not isinstance(payload, dict):
+        return {}
+    cfg = _load_llm_data_flow()
+    allowed = set(cfg["allowed"])
+    forbidden = set(cfg["forbidden"])
+
+    leaked = [k for k in payload if k in forbidden]
+    if leaked:
+        raise AssertionError(
+            f"Mode A LLM: PHI red flag — alert payload contains "
+            f"{leaked!r}, which is on the explicit forbidden list in "
+            f"{_LLM_DATA_FLOW_YAML.name}. Refusing to send."
+        )
+
+    out = {k: v for k, v in payload.items() if k in allowed}
+    dropped = set(payload) - set(out)
+    if dropped:
+        logger.debug(
+            "Mode A LLM: dropped %d non-allowlisted field(s) from "
+            "payload: %s",
+            len(dropped), sorted(dropped),
+        )
+    return out
 
 # N8 fix: single dict carries both rationale + timeframe per tier (was
 # two parallel dicts keyed identically). Helper proxies preserve the
@@ -864,11 +933,22 @@ def _build_user_prompt(
         if risk_level
         else ""
     )
+    # PHI redaction (ARCHITECTURE.md Step [12], Mode A):
+    # ``_filter_for_llm`` enforces the allow-list at
+    # ``configs/llm_data_flow.yaml``. Any key not on the allow-list is
+    # silently dropped (default-deny); any key on the explicit forbidden
+    # list (patient_id / mrn / ssn / dob / ehr_record / …) raises
+    # AssertionError. ``sanitize_for_log`` runs after as defence-in-depth
+    # against control-char injection in the serialized JSON.
+    safe_alert    = _filter_for_llm(raw_alert)
+    safe_device   = _filter_for_llm(device_context)
+    safe_baseline = _filter_for_llm(baseline) if baseline else {}
+    safe_user     = _filter_for_llm(user_context) if user_context else None
     return f"""Alert type: {alert_type}
-{pipeline_line}Raw alert: {json.dumps(raw_alert)}
-Device context: {json.dumps(device_context)}
-Behavioral baseline: {json.dumps(baseline)}
-User context: {json.dumps(user_context)}
+{pipeline_line}Raw alert: {sanitize_for_log(json.dumps(safe_alert))}
+Device context: {sanitize_for_log(json.dumps(safe_device))}
+Behavioral baseline: {sanitize_for_log(json.dumps(safe_baseline))}
+User context: {sanitize_for_log(json.dumps(safe_user))}
 
 Return JSON with this exact structure:
 {{
@@ -1198,6 +1278,24 @@ def generate_mve(
             raw_alert, device_context, baseline, user_context, alert_type
         )
 
+    # ── Path B · commit 3 — Hard word-budget rejection ─────────────────
+    # The 150-word total cap (Layer 1 + 2 + 3) is documented as a
+    # non-negotiable property of the MVE in src/data_models.py:71. Prior
+    # to this change the cap was instructed in the LLM prompt but never
+    # enforced at runtime — an over-budget LLM output would propagate.
+    # When the LLM path overshoots, fall back to the deterministic
+    # rule-based template (which is budget-safe by construction).
+    if provider_used != "rule_based" and mve.total_word_count > 150:
+        logger.warning(
+            "MVE word-budget exceeded (%d > 150) from provider=%s — "
+            "falling back to rule_based to enforce 150-word cap",
+            mve.total_word_count, provider_used,
+        )
+        mve = _generate_rule_based(
+            raw_alert, device_context, baseline, user_context, alert_type
+        )
+        provider_used = "rule_based"
+
     # ── FIX-D: Prefix Layer 1 for unknown/unregistered devices ──────────
     if is_unknown:
         existing_bl = mve.layer_1.get("baseline_behavior", "")
@@ -1349,4 +1447,123 @@ def generate_mve(
                 if note not in rationale:
                     mve.layer_2["severity_rationale"] = f"{rationale}{note}".strip()
 
+    # ── Word-budget enforcement (post-generation guard) ────────────────
+    # The system prompt asks the LLM for L1 ≤ 60 / L2 ≤ 50 / L3 ≤ 60 but
+    # a non-compliant model (or the SHAP/MITRE injections above) can
+    # overrun. The CI guard in tests/test_mve_word_budget.py asserts the
+    # rule-based path stays within budget; this clip is the runtime
+    # backstop for any path.
+    mve = _truncate_to_budget(mve)
+
+    return mve
+
+
+# ── Word-budget truncation helper ──────────────────────────────────────
+
+_TRUNCATE_SKIP_FIELDS = frozenset({"severity_label"})
+
+
+def _truncate_to_budget(
+    mve: MVEOutput,
+    l1: int = 60,
+    l2: int = 50,
+    l3: int = 60,
+    total_cap: int = 150,
+) -> MVEOutput:
+    """Trim each layer to its word budget. Mutates ``mve`` in place.
+
+    Strategy: multi-pass. Each pass picks the *largest* trimmable field
+    in the layer and trims it by the current overrun (snapping to a
+    sentence boundary inside the allowed window when possible);
+    recomputes the layer total and repeats until either under budget or
+    nothing more to trim. Bounded by ``len(fields)`` passes per layer.
+
+    ``severity_label`` is excluded — it's a single-word enum that
+    downstream code reads verbatim.
+    """
+    layers = (
+        ("layer_1", mve._L1, mve.layer_1, l1),
+        ("layer_2", mve._L2, mve.layer_2, l2),
+        ("layer_3", mve._L3, mve.layer_3, l3),
+    )
+    for name, fields, layer, budget in layers:
+        words_per_field = {f: layer.get(f, "").split() for f in fields}
+        total = sum(len(w) for w in words_per_field.values())
+        if total <= budget:
+            continue
+        original_total = total
+        trimmed_fields: list[str] = []
+        for _attempt in range(len(fields)):
+            if total <= budget:
+                break
+            biggest_field: str | None = None
+            biggest_n = 0
+            for f in fields:
+                if f in _TRUNCATE_SKIP_FIELDS:
+                    continue
+                n = len(words_per_field[f])
+                if n > biggest_n:
+                    biggest_n = n
+                    biggest_field = f
+            if biggest_field is None or biggest_n == 0:
+                break
+            overrun = total - budget
+            new_n = max(0, biggest_n - overrun)
+            new_words = words_per_field[biggest_field][:new_n]
+            trimmed = " ".join(new_words)
+            last_dot = trimmed.rfind(".")
+            if last_dot >= 0 and last_dot >= max(1, int(len(trimmed) * 0.4)):
+                trimmed = trimmed[: last_dot + 1]
+            layer[biggest_field] = trimmed
+            words_per_field[biggest_field] = trimmed.split()
+            trimmed_fields.append(biggest_field)
+            total = sum(len(w) for w in words_per_field.values())
+        if trimmed_fields:
+            logger.warning(
+                "MVE %s overran word-budget %d (was %d → %d); trimmed %s",
+                name, budget, original_total, total, trimmed_fields,
+            )
+
+    # ── Second pass: enforce TOTAL budget across layers ──────────────
+    # The per-layer caps sum to 170 (60+50+60); the MVEOutput contract
+    # caps the total at 170. After per-layer enforcement, trim further
+    # from the largest non-skip field anywhere until total ≤ ``total``.
+    grand_total = mve.total_word_count
+    if grand_total > total_cap:
+        original_grand = grand_total
+        all_layers = mve._L1 + mve._L2 + mve._L3
+        layer_for_field: dict[str, dict] = {}
+        for f in mve._L1: layer_for_field[f] = mve.layer_1
+        for f in mve._L2: layer_for_field[f] = mve.layer_2
+        for f in mve._L3: layer_for_field[f] = mve.layer_3
+        trimmed_total_fields: list[str] = []
+        for _attempt in range(len(all_layers)):
+            grand_total = mve.total_word_count
+            if grand_total <= total_cap:
+                break
+            biggest_field: str | None = None
+            biggest_n = 0
+            for f in all_layers:
+                if f in _TRUNCATE_SKIP_FIELDS:
+                    continue
+                n = len(layer_for_field[f].get(f, "").split())
+                if n > biggest_n:
+                    biggest_n = n
+                    biggest_field = f
+            if biggest_field is None or biggest_n == 0:
+                break
+            overrun = grand_total - total_cap
+            new_n = max(0, biggest_n - overrun)
+            words = layer_for_field[biggest_field][biggest_field].split()
+            trimmed = " ".join(words[:new_n])
+            last_dot = trimmed.rfind(".")
+            if last_dot >= 0 and last_dot >= max(1, int(len(trimmed) * 0.4)):
+                trimmed = trimmed[: last_dot + 1]
+            layer_for_field[biggest_field][biggest_field] = trimmed
+            trimmed_total_fields.append(biggest_field)
+        if trimmed_total_fields:
+            logger.warning(
+                "MVE total budget %d enforced (was %d → %d); trimmed %s",
+                total_cap, original_grand, mve.total_word_count, trimmed_total_fields,
+            )
     return mve

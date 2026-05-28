@@ -6,7 +6,33 @@ Build order step 1: all shared dataclasses used by Components 1, 2, and 3.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, List, Optional
+
+
+# ── Data-quality flag (ARCHITECTURE.md Step [5] — EA-06 defence) ────────
+
+
+class DataQuality(str, Enum):
+    """Per-alert sanitization outcome from ``src.preprocessing``.
+
+    Severity ladder:
+      OK          — input clean OR nan_rate <= 5% (rare, isolated NaN/Inf).
+      IMPUTED_NAN — row-level marker used by Module-3 batch path;
+                    equivalent to OK at alert-severity level (kept for
+                    back-compat).
+      DEGRADED    — nan_rate > 5%; likely sensor/capture issue or
+                    NaN-injection attempt (EA-06). Operator should treat
+                    the explanation as fragile.
+      FAILED      — nan_rate >= 50%; input is essentially garbage; route
+                    to biomed for a device check.
+    """
+
+    OK = "OK"
+    IMPUTED_NAN = "IMPUTED_NAN"
+    DEGRADED = "DEGRADED"
+    FAILED = "FAILED"
+
 
 # ── Component 2 output ──────────────────────────────────────────────────
 
