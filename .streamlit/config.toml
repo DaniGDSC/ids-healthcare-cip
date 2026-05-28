@@ -1,0 +1,34 @@
+# Streamlit configuration for the IoMT IDS evaluation dashboard.
+#
+# Tier 2 F2 hardening: pin the server to loopback so the dashboard
+# cannot be reached by anyone on the network. The dashboard writes
+# reviewer-attributed records into the ECDSA-signed Module 5 audit
+# chain (see `_capture_dashboard_action` in `module6_app.py`); a
+# default Streamlit binding (0.0.0.0:8501) would let any LAN visitor
+# forge attributed entries with `participant_id="dashboard_user"`.
+#
+# Remote participants: do NOT lift this binding. Front the dashboard
+# with an authenticated reverse proxy (OIDC / shared secret) that
+# propagates the operator identity into `st.session_state["participant_id"]`
+# via header pass-through. The dashboard refuses to write to the
+# signed chain unless the participant id resolves through the
+# enrolment table in `module6_evaluation/study_loader.py`.
+
+[server]
+address        = "127.0.0.1"
+port           = 8501
+enableCORS     = true
+enableXsrfProtection = true
+headless       = true
+fileWatcherType = "none"
+
+[browser]
+serverAddress  = "127.0.0.1"
+gatherUsageStats = false
+
+[client]
+showErrorDetails = false
+toolbarMode      = "viewer"
+
+[runner]
+fastReruns       = true

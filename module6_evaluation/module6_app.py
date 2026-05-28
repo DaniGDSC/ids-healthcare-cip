@@ -543,8 +543,16 @@ def assign_ab_conditions(n_alerts: int, participant_id: str) -> list[bool]:
     the same assignment, but different participants get different
     orderings.  Latin-square style: even PIDs get XAI-first,
     odd PIDs get no-XAI-first.
+
+    Tier 2 F3: hash swapped MD5 → SHA-256 to remove the only MD5
+    callsite in production code (compliance scanners flag any MD5
+    near an audit-attribution boundary regardless of intent). The
+    frozen participants P01..P10 keep their pre-Sprint-4 assignments
+    via the lookup table in ``module6_evaluation.forms.assign_ab_conditions``
+    /``study_loader._FROZEN_PID_PARITY``; any unfrozen pid is hashed
+    with SHA-256 going forward.
     """
-    seed = int(hashlib.md5(participant_id.encode()).hexdigest(), 16) % (2**31)
+    seed = int(hashlib.sha256(participant_id.encode()).hexdigest(), 16) % (2**31)
     rng = random.Random(seed)
 
     # Build balanced list: exactly half True, half False
