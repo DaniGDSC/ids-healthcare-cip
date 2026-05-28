@@ -158,11 +158,14 @@ def save_shap_values(
     out_dir = output_dir or OUTPUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"shap_values_{model_name}.npz"
+    # Sprint 6 / Tầng 3.5 — schema_version embedded for the version gate.
+    from common.artifact_versioning import version_kwarg_for
     np.savez(
         path,
         shap_values=sv,
         expected_value=np.array(expected),
         feature_names=np.array(feat_names),
+        **version_kwarg_for(path.name),
     )
     logger.info("  Saved: %s", path)
     return path
@@ -195,12 +198,14 @@ def save_dae_errors(
     out_dir = output_dir or OUTPUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "dae_feature_errors.npz"
+    from common.artifact_versioning import version_kwarg_for
     np.savez(
         path,
         per_feature_error=sq_err,
         weighted_per_feature_error=weighted_err,
         feature_weights=feat_weights,
         feature_names=np.array(feat_names),
+        **version_kwarg_for(path.name),
     )
     logger.info("  Saved: %s", path)
     return path

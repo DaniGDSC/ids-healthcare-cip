@@ -1,0 +1,186 @@
+{
+  "_meta": {
+    "generated_at": "2026-05-28T14:51:55.549115+00:00",
+    "n_registered": 9,
+    "n_pending": 2
+  },
+  "registered": [
+    {
+      "name": "risk_scores.npz",
+      "rows": [
+        {
+          "path": "results/reports/risk_scores.npz",
+          "artifact": "risk_scores.npz",
+          "on_disk": "2.0",
+          "expected": "2.0",
+          "ok": true,
+          "reason": "matches registry"
+        },
+        {
+          "path": "results/reports/demo_scores.npz",
+          "artifact": "risk_scores.npz",
+          "on_disk": "2.0",
+          "expected": "2.0",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "shap_values_xgboost.npz",
+      "rows": [
+        {
+          "path": "results/reports/shap_values_xgboost.npz",
+          "artifact": "shap_values_xgboost.npz",
+          "on_disk": "1.0",
+          "expected": "1.0",
+          "ok": true,
+          "reason": "matches registry"
+        },
+        {
+          "path": "results/reports/shap_values_xgboost_demo.npz",
+          "artifact": "shap_values_xgboost.npz",
+          "on_disk": "1.0",
+          "expected": "1.0",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "alert_responses.json",
+      "rows": [
+        {
+          "path": "results/reports/alert_responses.json",
+          "artifact": "alert_responses.json",
+          "on_disk": "3.2",
+          "expected": "3.2",
+          "ok": true,
+          "reason": "matches registry"
+        },
+        {
+          "path": "results/reports/alert_responses_demo.json",
+          "artifact": "alert_responses.json",
+          "on_disk": "3.2",
+          "expected": "3.2",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "phase0_baseline.json",
+      "rows": [
+        {
+          "path": "results/phase0_baseline.json",
+          "artifact": "phase0_baseline.json",
+          "on_disk": "2.1",
+          "expected": "2.1",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "faithfulness_gate.json",
+      "rows": [
+        {
+          "path": "results/faithfulness_gate.json",
+          "artifact": "faithfulness_gate.json",
+          "on_disk": "1.1",
+          "expected": "1.1",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "coverage_audit.json",
+      "rows": [
+        {
+          "path": "results/coverage_audit.json",
+          "artifact": "coverage_audit.json",
+          "on_disk": "1.0",
+          "expected": "1.0",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "formula_comparison.json",
+      "rows": [
+        {
+          "path": "results/formula_comparison.json",
+          "artifact": "formula_comparison.json",
+          "on_disk": "1.0",
+          "expected": "1.0",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "v1_v2_comparison.json",
+      "rows": [
+        {
+          "path": "results/v1_v2_comparison.json",
+          "artifact": "v1_v2_comparison.json",
+          "on_disk": "1.0",
+          "expected": "1.0",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    },
+    {
+      "name": "stability_variant_comparison.json",
+      "rows": [
+        {
+          "path": "results/stability_variant_comparison.json",
+          "artifact": "stability_variant_comparison.json",
+          "on_disk": "1.0",
+          "expected": "1.0",
+          "ok": true,
+          "reason": "matches registry"
+        }
+      ]
+    }
+  ],
+  "pending": {
+    "pending": [
+      {
+        "path": "results/reports/analyst_report.json",
+        "artifact": "analyst_report.json",
+        "on_disk": null,
+        "expected": null,
+        "ok": true,
+        "reason": "pending envelope migration \u2014 gate inert"
+      },
+      {
+        "path": "results/reports/analyst_report_demo.json",
+        "artifact": "analyst_report.json",
+        "on_disk": null,
+        "expected": null,
+        "ok": true,
+        "reason": "pending envelope migration \u2014 gate inert"
+      },
+      {
+        "path": "results/reports/clinician_summaries.json",
+        "artifact": "clinician_summaries.json",
+        "on_disk": null,
+        "expected": null,
+        "ok": true,
+        "reason": "pending envelope migration \u2014 gate inert"
+      },
+      {
+        "path": "results/reports/clinician_summaries_demo.json",
+        "artifact": "clinician_summaries.json",
+        "on_disk": null,
+        "expected": null,
+        "ok": true,
+        "reason": "pending envelope migration \u2014 gate inert"
+      }
+    ]
+  }
+}

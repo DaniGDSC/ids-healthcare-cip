@@ -1,0 +1,150 @@
+{
+  "_meta": {
+    "description": "DAE-raw (no cascade) trained on benign-only \u2014 ablation against the production cascaded DAE.",
+    "generated_at": "2026-05-28T15:03:45.665492+00:00",
+    "elapsed_seconds": 44.4,
+    "random_state": 42
+  },
+  "input": {
+    "architecture": "raw",
+    "n_features": 25,
+    "feature_names": [
+      "Flgs",
+      "Sport",
+      "SrcBytes",
+      "DstBytes",
+      "SrcLoad",
+      "DstLoad",
+      "SIntPkt",
+      "DIntPkt",
+      "SIntPktAct",
+      "sMaxPktSz",
+      "dMaxPktSz",
+      "sMinPktSz",
+      "Dur",
+      "TotBytes",
+      "Load",
+      "pSrcLoss",
+      "pDstLoss",
+      "Temp",
+      "SpO2",
+      "Pulse_Rate",
+      "SYS",
+      "DIA",
+      "Heart_rate",
+      "Resp_Rate",
+      "ST"
+    ],
+    "n_benign_train": 8563,
+    "n_test": 2448,
+    "n_test_attacks": 307,
+    "n_test_benign": 2141
+  },
+  "hyperparameters": {
+    "base_encoding_dims": [
+      16,
+      8,
+      16
+    ],
+    "adjusted_encoding_dims": [
+      21,
+      8,
+      21
+    ],
+    "noise_rate": 0.05,
+    "learning_rate": 0.001,
+    "threshold_percentile": 90.0,
+    "clip_percentile": 1.0,
+    "epochs": 100,
+    "batch_size": 256
+  },
+  "training": {
+    "epochs_run": 100,
+    "final_loss": 0.006195793393999338,
+    "final_val_loss": 0.004218956455588341
+  },
+  "threshold_fixed": 1.1458862822235762e-06,
+  "test_metrics_evaluate": {
+    "attack_f1": 0.48801128349788436,
+    "attack_f2": 0.5306748466257669,
+    "weighted_f1": 0.8599678759720926,
+    "macro_f1": 0.7006571822313878,
+    "auc_roc": 0.7587340081273477,
+    "threshold": 1.1458862822235762e-06,
+    "mean_benign_error": 35.52058269942196,
+    "mean_attack_error": 240.75390904236795
+  },
+  "test_auc_roc": 0.758734,
+  "test_average_precision": 0.583645,
+  "operating_points": {
+    "fixed_p90_from_train": {
+      "threshold": 1.1458862822235762e-06,
+      "tp": 173,
+      "fp": 229,
+      "tn": 1912,
+      "fn": 134,
+      "sensitivity": 0.563518,
+      "specificity": 0.893041,
+      "precision": 0.430348,
+      "recall": 0.563518,
+      "fnr": 0.436482,
+      "fpr": 0.106959,
+      "f1": 0.488011
+    },
+    "p95_from_train": {
+      "threshold": 2.1966568607043696e-06,
+      "tp": 167,
+      "fp": 110,
+      "tn": 2031,
+      "fn": 140,
+      "sensitivity": 0.543974,
+      "specificity": 0.948622,
+      "precision": 0.602888,
+      "recall": 0.543974,
+      "fnr": 0.456026,
+      "fpr": 0.051378,
+      "f1": 0.571918
+    },
+    "p99_from_train": {
+      "threshold": 6.787483744838363e-06,
+      "tp": 163,
+      "fp": 30,
+      "tn": 2111,
+      "fn": 144,
+      "sensitivity": 0.530945,
+      "specificity": 0.985988,
+      "precision": 0.84456,
+      "recall": 0.530945,
+      "fnr": 0.469055,
+      "fpr": 0.014012,
+      "f1": 0.652
+    }
+  },
+  "feature_weights": [
+    0.17661635973366085,
+    4.9530451944154297e-08,
+    0.028151188140711478,
+    0.07326141196806514,
+    4.7181189610113036e-08,
+    1.6317666737410218e-07,
+    1.9261129499618302e-08,
+    3.902774711103786e-09,
+    0.007292492793006499,
+    0.19525868929633386,
+    0.13561296235509737,
+    0.0703765298308249,
+    2.4723861095597497e-08,
+    0.01373135227944395,
+    6.525726472600007e-08,
+    0.22082234387374888,
+    0.07887627469337766,
+    3.693882998368199e-09,
+    4.652437165471249e-10,
+    4.728767497135798e-09,
+    1.3793230682538236e-09,
+    8.997847146050003e-09,
+    9.85863921233866e-10,
+    1.3307663471168965e-09,
+    4.206957889264287e-10
+  ]
+}

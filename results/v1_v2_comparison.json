@@ -53,5 +53,6 @@
     "n_low": 76,
     "n_low_attacks": -4,
     "n_surfaced_attacks": 4
-  }
+  },
+  "_schema_version": "1.0"
 }

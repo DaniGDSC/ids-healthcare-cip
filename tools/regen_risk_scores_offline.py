@@ -71,6 +71,10 @@ def main(argv: list[str] | None = None) -> int:
     d["R"] = R
     d["risk_levels"] = levels
     d["formula_version"] = np.array(formula_version, dtype=str)
+    # Sprint 6 / Tầng 3.5 — embed schema_version so the version gate
+    # can verify post-regen artifact freshness.
+    from common.artifact_versioning import version_kwarg_for
+    d.update(version_kwarg_for(npz_path.name))
 
     np.savez(npz_path, **d)
 

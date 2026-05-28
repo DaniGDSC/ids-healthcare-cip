@@ -1,0 +1,12 @@
+{
+  "n_samples": 80,
+  "n_perturbations_each": 20,
+  "sigma": 0.01,
+  "top_k": 5,
+  "single_shot_mean_jaccard": 0.6870535714285715,
+  "robust_mean_jaccard": 0.9053571428571429,
+  "delta": 0.21830357142857137,
+  "target_delta": 0.1,
+  "met_target": true,
+  "_schema_version": "1.0"
+}

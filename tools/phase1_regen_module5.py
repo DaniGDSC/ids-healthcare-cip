@@ -98,8 +98,10 @@ def main(split: str = "test") -> int:
     print(f"[phase1-regen-m5] injected counterfactual into {n_cf_injected} records, "
           f"stability into {n_stab_injected} records")
 
+    from common.artifact_versioning import ARTIFACT_VERSIONS
     envelope = {
         "_provenance": {
+            "_schema_version": ARTIFACT_VERSIONS["alert_responses.json"],
             "split": split,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "module5_git_rev": _git_rev(),

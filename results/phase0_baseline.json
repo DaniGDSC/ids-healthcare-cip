@@ -4,8 +4,8 @@
     "n_analyst_alerts": 2325,
     "n_clinician_summaries": 315,
     "n_alert_responses": 520,
-    "generated_at": "2026-05-28T14:11:39.328329+00:00",
-    "git_rev": "2d423bf"
+    "generated_at": "2026-05-28T14:51:53.028964+00:00",
+    "git_rev": "fa72276"
   },
   "narrative_faithfulness": {
     "metric": "narrative_faithfulness",
@@ -165,5 +165,6 @@
     "counterfactual_coverage": 0.6058,
     "counterfactual_actionable_feasible_rate": 0.8058,
     "operational_precision": 0.5692
-  }
+  },
+  "_schema_version": "2.1"
 }

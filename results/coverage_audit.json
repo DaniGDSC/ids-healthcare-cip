@@ -94,8 +94,9 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-28T13:56:46.108581+00:00",
+    "generated_at": "2026-05-28T14:47:01.595397+00:00",
     "n_signals": 7,
     "n_below_floor": 0
-  }
+  },
+  "_schema_version": "1.0"
 }

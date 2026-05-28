@@ -173,6 +173,9 @@ def save_outputs(
     out_dir = output_dir or OUTPUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     npz_path = out_npz or (out_dir / "risk_scores.npz")
+    # Sprint 6 / Tầng 3.5 — schema_version embedded so the version
+    # gate can reject stale artifacts at consume time.
+    from common.artifact_versioning import version_kwarg_for
     np.savez(
         npz_path,
         R=R, c_detect=c_detect, d_crit=d_crit,
@@ -180,6 +183,7 @@ def save_outputs(
         c_track_a=c_track_a, c_track_b=c_track_b,
         risk_levels=levels, y_true=y_true,
         formula_version=np.array(formula_version, dtype=str),
+        **version_kwarg_for(npz_path.name),
     )
     logger.info("  Saved: %s", npz_path.name)
 

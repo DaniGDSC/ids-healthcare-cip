@@ -336,7 +336,8 @@ def main() -> int:
 
     _print_table(comparison)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(comparison, indent=2))
+    from common.artifact_versioning import embed_version_in_dict
+    OUTPUT.write_text(json.dumps(embed_version_in_dict(comparison, OUTPUT.name), indent=2))
     print(f"\n[formula-comparison] wrote {OUTPUT.relative_to(PROJECT_ROOT)}")
     return 0
 

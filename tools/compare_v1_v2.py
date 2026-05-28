@@ -148,7 +148,8 @@ def main() -> int:
         },
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(report, indent=2))
+    from common.artifact_versioning import embed_version_in_dict
+    OUT.write_text(json.dumps(embed_version_in_dict(report, OUT.name), indent=2))
     print(f"\nWrote {OUT.relative_to(PROJECT_ROOT)}")
     return 0
 

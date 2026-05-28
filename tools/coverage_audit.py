@@ -255,7 +255,8 @@ def main() -> int:
     suffix = "_demo" if args.split == "demo" else ""
     out = PROJECT_ROOT / "results" / f"coverage_audit{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report, indent=2))
+    from common.artifact_versioning import embed_version_in_dict
+    out.write_text(json.dumps(embed_version_in_dict(report, out.name), indent=2))
 
     _print(report)
     print(f"\n  wrote {out.relative_to(PROJECT_ROOT)}")

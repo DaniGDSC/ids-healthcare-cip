@@ -203,8 +203,86 @@ def stability_badge(band: str) -> str:
     return _BADGE_BY_BAND.get(band, "")
 
 
+# ── Sprint 5 / Tầng 3.2 — robust top features ──────────────────────
+
+
+def compute_robust_top_features(
+    explainer,
+    x_row: np.ndarray,
+    feat_names: list[str],
+    *,
+    n_perturbations: int = N_PERTURBATIONS_DEFAULT,
+    sigma: float = SIGMA_DEFAULT,
+    top_k: int = TOP_K_DEFAULT,
+    rng: np.random.Generator | None = None,
+) -> list[dict]:
+    """Return the top-K features by *mean* |SHAP| over N perturbations.
+
+    Sprint 5 / Tầng 3.2 — single-shot TreeSHAP attribution on the
+    current corpus is empirically unstable (54% UNSTABLE band on the
+    test split). Retraining XGBoost with stability regularisation is
+    a large architectural lift deferred to a follow-up sprint.
+
+    A cheaper mitigation is to *report* the top-K by the **mean
+    SHAP** across the same perturbation ensemble the stability check
+    already runs. The mean is by construction more stable than any
+    individual draw because the perturbation noise averages out;
+    features that genuinely drive the prediction remain at the top,
+    while features that win the top-1 spot only on a single noise
+    realisation drop down.
+
+    This does NOT fix the underlying model fragility — it just gives
+    the analyst a feature set they can rely on more confidently when
+    the per-shot band is UNSTABLE. The Phase 4.1 badge still warns
+    them; the robust attribution is the recommended view to use
+    when investigating an UNSTABLE alert.
+
+    Args:
+        explainer: SHAP TreeExplainer-compatible.
+        x_row: feature vector for the alert, shape ``(F,)``.
+        feat_names: column names aligned with ``x_row``.
+        n_perturbations: number of noisy draws averaged. Default 20.
+        sigma: Gaussian noise std-dev in normalised feature space.
+        top_k: how many features to return.
+        rng: optional ``np.random.Generator`` for deterministic tests.
+
+    Returns:
+        List of ``{feature, mean_shap, std_shap, direction}`` dicts,
+        ordered by |mean_shap| descending. ``std_shap`` exposes the
+        per-feature variance so the analyst can see how confident the
+        attribution is (high std → the feature pops in/out depending
+        on noise).
+    """
+    from .compute import _normalise_shap_output
+
+    rng = rng if rng is not None else np.random.default_rng()
+    F = len(x_row)
+
+    accum = np.zeros((n_perturbations, F), dtype=np.float64)
+    for i in range(n_perturbations):
+        noise   = rng.normal(0.0, sigma, size=F).astype(x_row.dtype)
+        perturb = (x_row + noise).reshape(1, -1)
+        sv      = _normalise_shap_output(explainer.shap_values(perturb))
+        accum[i] = sv[0]
+
+    mean_shap = accum.mean(axis=0)
+    std_shap  = accum.std(axis=0)
+    abs_mean  = np.abs(mean_shap)
+    order     = np.argsort(abs_mean)[::-1][:top_k]
+    return [
+        {
+            "feature":    feat_names[i],
+            "mean_shap":  round(float(mean_shap[i]), 6),
+            "std_shap":   round(float(std_shap[i]), 6),
+            "direction":  "increases_risk" if mean_shap[i] > 0 else "decreases_risk",
+        }
+        for i in order
+    ]
+
+
 __all__ = [
     "StabilityResult",
+    "compute_robust_top_features",
     "compute_stability",
     "stability_band",
     "stability_badge",

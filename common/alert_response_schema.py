@@ -226,10 +226,15 @@ class Provenance(BaseModel):
     Lets the Dashboard surface a stale-data warning when an upstream
     artefact (risk_scores.npz, analyst_report.json, ...) has been
     regenerated since this file was built.
+
+    Sprint 6 / Tầng 3.5 — ``_schema_version`` carries the version of
+    the on-disk format so the version gate can reject stale artifacts.
+    Optional with a default for backwards compatibility with v1 files.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
+    schema_version: str = Field(default="", alias="_schema_version")
     split: Literal["test", "demo"]
     generated_at: str
     module5_git_rev: str | None

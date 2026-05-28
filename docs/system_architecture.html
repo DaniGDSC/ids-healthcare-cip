@@ -452,12 +452,17 @@
       generation, and operator-facing presentation. Built around two
       contributions (C1: dual-track detection, C2: role-adaptive MVE) and a
       C3 invariant (no-auto-execution, audit-first, no-silent-suppression).
+      Sprints 4&ndash;6 added the faithfulness/actionability upgrade: formula v2
+      (2-layer detect&times;context), counterfactual explanations, stability
+      bands, role-mismatch routing, and an artifact schema-version chain.
     </p>
     <div class="meta">
       <span>repo&nbsp;<code>ids-healthcare-cip</code></span>
       <span>branch&nbsp;<code>feature/dashboard-design</code></span>
       <span>dataset&nbsp;<code>WUSTL-EHMS-2020 + MedSec-25</code></span>
       <span>16,318 rows · 60:15:15:10 split</span>
+      <span>sprints 0&ndash;6 · phase-0&ndash;4 instrumentation</span>
+      <span>revised&nbsp;2026-05-28</span>
     </div>
   </header>
 
@@ -542,18 +547,21 @@
         <!-- Module 3 -->
         <div class="module m3">
           <div class="num">MODULE 3</div>
-          <div class="title">Composite Risk Scoring</div>
+          <div class="title">Composite Risk Scoring (v2)</div>
           <div class="path">module3_risk_scoring/</div>
           <div class="role">
+            <strong>Formula v2 (Sprint 4 · 2-layer):</strong>
             <span class="font-mono" style="color:var(--text-primary);">
-              R = w<sub>1</sub>&middot;C<sub>detect</sub> + w<sub>2</sub>&middot;D<sub>crit</sub>
-              + w<sub>3</sub>&middot;S<sub>data</sub> + w<sub>4</sub>&middot;A<sub>patient</sub>
-            </span><br>
-            Weights from <code class="font-mono">configs/composite_risk_weights.yaml</code>
-            (0.40 / 0.25 / 0.15 / 0.20). Tier boundaries 0.40 / 0.60 / 0.80.
-            <code>C<sub>detect</sub></code> comes from
-            <code>detection_engine.DetectionEngine.predict(X)</code> — Module 3 no
-            longer reconstructs the cascaded input itself.
+              R = C<sub>detect</sub> &times; (1 + &alpha;&middot;D<sub>crit</sub>
+              + &beta;&middot;S<sub>data</sub> + &gamma;&middot;A<sub>patient</sub>)
+            </span> &mdash; detection gates emission; context only amplifies.
+            Constants in <code class="font-mono">module3_risk_scoring/config.py</code>
+            (&alpha;/&beta;/&gamma; = 0.6/0.4/0.5; 5-tier thresholds 0.05/0.20/0.45/0.80;
+            <code>MIN_DETECTION_GATE</code> forces NORMAL when detector silent).
+            Eliminates v1's ~2,000 zero-detection LOW alerts; see
+            <code>docs/formula_v2_rationale.md</code>.
+            <code>C<sub>detect</sub></code> always comes from
+            <code>detection_engine.DetectionEngine.predict(X)</code>.
           </div>
           <div class="io">
             <div class="row"><span class="label">in</span><span class="val"><code>test_phase1.parquet</code> + <code>detection_engine</code></span></div>
@@ -565,20 +573,29 @@
         <!-- Module 4 -->
         <div class="module m4">
           <div class="num">MODULE 4</div>
-          <div class="title">Explanations (TreeSHAP + DAE + MVE)</div>
+          <div class="title">Explanations + Counterfactuals + Stability</div>
           <div class="path">module4_explanations/</div>
           <div class="role">
-            Batch: TreeSHAP (xgboost only — set by <code>SHAP_MODELS</code>) +
+            Batch: TreeSHAP (xgboost + RF; set by <code>SHAP_MODELS</code>) +
             DAE per-feature reconstruction-error decomposition (cascaded input
             via <code>detection_engine.build_augmented</code>, sliced back to
-            25 raw cols) + global importance plots. Online: per-alert MVE with
-            p95 &lt; 150&nbsp;ms SLA. MVE provider chain: OpenAI &rarr;
-            Anthropic &rarr; rule-based.
+            25 raw cols).
+            <strong>Phase&nbsp;2 counterfactuals</strong>
+            (<code>counterfactual.py</code>): minimal SHAP-guided
+            perturbation that flips the model to benign — gives operators a
+            verifiable handle ("if <code>Sport</code> ≈ 0, no alert").
+            <strong>Phase&nbsp;4 stability</strong> (<code>stability.py</code>):
+            top-K Jaccard under Gaussian noise &rarr; STABLE / BORDERLINE /
+            UNSTABLE band; demotes auto-execute when fragile.
+            <strong>Phase&nbsp;0 metrics</strong> (<code>phase0_metrics.py</code>):
+            narrative_faithfulness, action_specificity, counterfactual_coverage.
+            Online: per-alert MVE with p95&nbsp;&lt;&nbsp;150&nbsp;ms SLA;
+            provider chain OpenAI &rarr; Anthropic &rarr; rule-based.
           </div>
           <div class="io">
             <div class="row"><span class="label">in</span><span class="val"><code>risk_scores.npz</code> + models + raw features</span></div>
-            <div class="row"><span class="label">out</span><span class="val"><code>results/charts/waterfall_*_sample_*.png</code></span></div>
-            <div class="row"><span class="label">out</span><span class="val"><code>global_importance_*.json</code> + <code>dae_feature_errors.npz</code></span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>analyst_report.json</code> · <code>clinician_summaries.json</code> (with <code>counterfactual</code> + <code>stability</code> payloads)</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>global_importance_*.json</code> + <code>shap_values_*.npz</code> + <code>dae_feature_errors.npz</code></span></div>
             <div class="row"><span class="label">out</span><span class="val"><code>online_latency_profile.json</code> (p50/p95/p99)</span></div>
           </div>
         </div>
@@ -586,16 +603,24 @@
         <!-- Module 5 -->
         <div class="module m5">
           <div class="num">MODULE 5</div>
-          <div class="title">Response &amp; Audit</div>
+          <div class="title">Adaptive Response &amp; Audit</div>
           <div class="path">module5_responses/</div>
           <div class="role">
-            Per-alert response policy (escalation chain, max-response-min,
-            rationale, clinical constraints). Signed ECDSA-P256 audit chain.
+            <code>adaptive.py</code> selects per-alert actions from the
+            unified taxonomy in <code>config.py</code> (tiers, attack routing,
+            device classes), driven by <code>config/tier_routing.yaml</code>
+            and <code>config/role_action_authorization.yaml</code>.
+            <strong>Phase&nbsp;3.2 role-routing</strong>
+            (<code>role_routing.py</code>): cross-checks SHAP top-category
+            against the routing engine's primary role and emits a
+            <code>RoutingWarning</code> on mismatch (e.g. biometric anomaly
+            routed to IT Security).
+            Signed ECDSA-P256 audit chain via <code>HardenedAuditLogger</code>.
             Closed-loop feedback via reviewer confirm/reject.
           </div>
           <div class="io">
-            <div class="row"><span class="label">in</span><span class="val">explanations + risk scores + device tier</span></div>
-            <div class="row"><span class="label">out</span><span class="val"><code>alert_responses.json</code> (4,896 records)</span></div>
+            <div class="row"><span class="label">in</span><span class="val">explanations (with stability band) + risk scores + device tier</span></div>
+            <div class="row"><span class="label">out</span><span class="val"><code>alert_responses.json</code> (with <code>routing_warning</code> + <code>auto_execute</code> gated by stability)</span></div>
             <div class="row"><span class="label">out</span><span class="val"><code>audit_trail.{json,jsonl}</code> + signed <code>audit_log.jsonl</code></span></div>
             <div class="row"><span class="label">out</span><span class="val"><code>effectiveness_analysis.json</code> + <code>response_policy.json</code></span></div>
           </div>
@@ -680,12 +705,30 @@
           <div class="cc-label">cross-cutting · standalone</div>
           <div class="cc-title">Operational simulators</div>
           <div class="cc-body">
-            Three top-level scripts run outside the orchestrator:
+            Top-level scripts run outside the orchestrator:
             <code>drift_detection.py</code> (PSI / KS over temporal stream),
             <code>dynamic_threshold_sim.py</code> (static vs adaptive
             thresholds), <code>feedback_loop_demo.py</code> (closed-loop
-            iteration with AUROC reweighting). Outputs feed Module 6's System
+            AUROC reweighting), plus <code>tools/build_simulation_stream.py</code>
+            (temporal replay stream) and <code>tools/phase4_round2_simulator.py</code>
+            (RQ2 round-2 SHAP stability). Outputs feed Module 6's System
             Health panels.
+          </div>
+        </div>
+        <div class="cc-card">
+          <div class="cc-label">cross-cutting · contracts</div>
+          <div class="cc-title">Artifact schema versioning (Sprint 6)</div>
+          <div class="cc-body">
+            <code>common/artifact_versioning.py</code> is the single source
+            of truth for the expected <code>_schema_version</code> on every
+            artifact under <code>results/</code> &mdash; producers stamp at
+            write time, consumers verify at load time, mismatches raise
+            <code>ArtifactVersionMismatch</code> (or route through a
+            migration function in <code>artifact_versioning_migrations</code>).
+            <code>tools/version_gate.py</code> sweeps the registry in CI and
+            writes <code>results/version_gate.json</code>. Catches the
+            "silent contract drift" class of bugs that previously surfaced
+            as obscure numpy broadcast errors three modules downstream.
           </div>
         </div>
       </div>
@@ -728,6 +771,12 @@
         <tr><td>Module 5</td><td class="dir">&rarr;</td><td><code>alert_responses.json</code> (4,896 rec · val+test)</td><td>Module 6 (filtered to test-only in Triage)</td></tr>
         <tr><td>Module 5</td><td class="dir">&rarr;</td><td><code>response_policy.json</code> · <code>effectiveness_analysis.json</code></td><td>Module 6</td></tr>
         <tr><td>Module 5</td><td class="dir">&rarr;</td><td><code>audit_log.jsonl</code> (ECDSA-P256 signed chain)</td><td>Module 6 dashboard actions append here</td></tr>
+        <tr><td><code>tools/phase0_baseline.py</code></td><td class="dir">&rarr;</td><td><code>results/phase0_baseline.json</code> (narrative_faithfulness, action_specificity, counterfactual_coverage)</td><td>Faithfulness gate · thesis baseline table</td></tr>
+        <tr><td><code>tools/faithfulness_gate.py</code></td><td class="dir">&rarr;</td><td><code>results/faithfulness_gate.json</code> (5 checks: narrative, perturbation, CF feasibility, stability shares)</td><td>CI pre-merge gate</td></tr>
+        <tr><td><code>tools/version_gate.py</code></td><td class="dir">&rarr;</td><td><code>results/version_gate.json</code> (per-artifact <code>_schema_version</code> diff)</td><td>CI pre-merge gate</td></tr>
+        <tr><td><code>tools/coverage_audit.py</code></td><td class="dir">&rarr;</td><td><code>results/coverage_audit{,_demo}.json</code> (MITRE ATT&amp;CK coverage)</td><td>RQ2 audit · Module 6 audit panel</td></tr>
+        <tr><td><code>tools/compare_stability_variants.py</code></td><td class="dir">&rarr;</td><td><code>results/stability_variant_comparison.json</code> (Sprint 5 robustness sweep)</td><td>Stability calibration docs</td></tr>
+        <tr><td><code>tools/formula_comparison.py</code></td><td class="dir">&rarr;</td><td><code>results/formula_comparison.json</code> · <code>formula_sweep.json</code> · <code>v1_v2_comparison.json</code></td><td>Sprint 4 ablation · §formula rationale</td></tr>
         <tr><td>Module 6</td><td class="dir">&larr;</td><td>Operator interactions (Confirm / Acknowledge / Escalate / Dismiss)</td><td>Module 5 audit chain (closed loop)</td></tr>
         <tr><td>Module 6</td><td class="dir">&larr;</td><td>RQ3 study participant responses</td><td><code>results/reports/study_responses_*.json</code></td></tr>
       </tbody>
@@ -755,7 +804,7 @@
           <div class="sbody">
             Flat per-interaction log, buffered with <code class="font-mono">_FLUSH_AFTER = 10</code>.
             Owner: <code class="font-mono">_online_writer</code> (<code class="font-mono">AuditTrailWriter</code>
-            instance at <code class="font-mono">module6_app.py:403</code>).
+            instance at <code class="font-mono">module6_app.py:477</code>).
             Optimized for high-frequency render events; not the trust anchor.
           </div>
         </div>
@@ -765,7 +814,7 @@
           <div class="sbody">
             SHA-256 hash-chained append-only log via
             <code class="font-mono">AuditTrailWriter</code>
-            (<code class="font-mono">module6_app.py:353</code>).
+            (<code class="font-mono">module6_app.py:427</code>).
             Each record carries <code class="font-mono">prev_hash</code> +
             <code class="font-mono">integrity_hash</code> &mdash; tampering
             is detectable on replay.
@@ -781,6 +830,74 @@
             (<code class="font-mono">results/reports/audit_signing_key.pub.pem</code>).
             Reviewer attribution bound from <code class="font-mono">st.session_state["participant_id"]</code> /
             <code class="font-mono">["sim_role"]</code>. The trust anchor.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUALITY GATES & CI
+       ============================================================ -->
+  <section>
+    <h2>Quality gates &amp; CI</h2>
+    <p class="section-intro">
+      Four read-only gates run in CI after the regen tools finish. Each
+      writes a machine-readable report under <code class="font-mono">results/</code>
+      and exits non-zero on failure &mdash; no human attestation required.
+    </p>
+    <div class="audit-chain">
+      <h3>Gate fan-out (independent, runnable on demand)</h3>
+      <div class="audit-grid">
+        <div class="audit-sink signed">
+          <div class="sname">gate 1 · faithfulness</div>
+          <div class="stitle">faithfulness_gate.py</div>
+          <div class="sbody">
+            5 checks: <code class="font-mono">narrative_faithfulness</code>
+            &ge; 0.85, perturbation faithfulness (F1 drop &gt; 5% when
+            top-5 SHAP masked), <code class="font-mono">counterfactual_actionable_feasible</code>
+            &ge; 0.80 on M+H+C, stability <code class="font-mono">unstable_share</code>
+            &le; 0.60, <code class="font-mono">fragile_share</code> &le; 0.90.
+            Floors versioned in the script. Report:
+            <code class="font-mono">results/faithfulness_gate.json</code>.
+          </div>
+        </div>
+        <div class="audit-sink signed">
+          <div class="sname">gate 2 · schema versions</div>
+          <div class="stitle">version_gate.py</div>
+          <div class="sbody">
+            Walks <code class="font-mono">ARTIFACT_VERSIONS</code> registry
+            in <code class="font-mono">common/artifact_versioning.py</code>;
+            verifies each artifact's on-disk
+            <code class="font-mono">_schema_version</code> matches the
+            registered current version. Skips artifacts pending migration;
+            fails the build on stale or unknown versions. Report:
+            <code class="font-mono">results/version_gate.json</code>.
+          </div>
+        </div>
+        <div class="audit-sink signed">
+          <div class="sname">gate 3 · MITRE coverage</div>
+          <div class="stitle">coverage_audit.py</div>
+          <div class="sbody">
+            Cross-checks attack categories present in
+            <code class="font-mono">alert_responses.json</code> against the
+            mapping in <code class="font-mono">config/attack_to_mitre_mapping.yaml</code>;
+            confirms every routed alert has at least one MITRE ATT&amp;CK
+            technique. Reports:
+            <code class="font-mono">results/coverage_audit{,_demo}.json</code>.
+          </div>
+        </div>
+        <div class="audit-sink">
+          <div class="sname">gate 4 · phase-0 baseline</div>
+          <div class="stitle">phase0_baseline.py</div>
+          <div class="sbody">
+            Snapshots the three Phase-0 metrics
+            (<code class="font-mono">narrative_faithfulness</code>,
+            <code class="font-mono">action_specificity</code>,
+            <code class="font-mono">counterfactual_coverage</code>) over the
+            current artifacts. Not a fail-the-build gate; provides the
+            baseline that later phases lift against. Report:
+            <code class="font-mono">results/phase0_baseline.json</code>.
           </div>
         </div>
       </div>
@@ -838,15 +955,35 @@
         <h4>results/reports/  · Modules 3–5 outputs</h4>
         <ul>
           <li><code>risk_scores.npz</code> · <code>demo_scores.npz</code> (Module 3)</li>
-          <li><code>evaluation_alerts.json</code> (Module 4 batch)</li>
-          <li><code>online_latency_profile.json</code> (Module 4 online)</li>
-          <li><code>clinician_summaries.json</code> · <code>analyst_report.json</code></li>
-          <li><code>global_importance_{xgboost,rf,dt}.json</code></li>
-          <li><code>alert_responses.json</code> · <code>response_policy.json</code> (Module 5)</li>
-          <li><code>effectiveness_analysis.json</code> · <code>feedback_*.json</code></li>
+          <li><code>evaluation_alerts.json</code> · <code>example_explanations.json</code> (Module 4 batch)</li>
+          <li><code>online_latency_profile.json</code> · <code>online_sample_explanations.json</code> (Module 4 online)</li>
+          <li><code>clinician_summaries.json</code> · <code>analyst_report.json</code> · <code>admin_dashboard.json</code> (role surfaces)</li>
+          <li><code>global_importance_{xgboost,random_forest,decision_tree}.json</code></li>
+          <li><code>shap_values_{xgboost,random_forest,decision_tree}.npz</code> · <code>dae_feature_errors.npz</code></li>
+          <li><code>per_category_importance_*.json</code> · <code>worked_examples.json</code></li>
+          <li><code>validation_{perturbation,cross_model,consistency}.json</code> (Module 4 validation)</li>
+          <li><code>alert_responses.json</code> · <code>response_policy.json</code> · <code>response_report.json</code> (Module 5)</li>
+          <li><code>effectiveness_analysis.json</code> · <code>feedback_{analysis,recommendations}.json</code></li>
           <li><code>audit_trail.{json,jsonl}</code> · <code>audit_log.jsonl</code> (signed)</li>
           <li><code>audit_signing_key.pub.pem</code> &mdash; ECDSA-P256 public key</li>
           <li><code>drift_detection_results.json</code> · <code>dynamic_threshold_results.json</code></li>
+          <li><code>simulation_stream{,_demo}.json</code> &mdash; temporal replay (Sprint 5)</li>
+          <li><code>*_demo.json</code> mirror for every operator-facing artifact</li>
+        </ul>
+      </div>
+
+      <div class="art-group">
+        <h4>results/  · Quality gates &amp; RQ ablations</h4>
+        <ul>
+          <li><code>faithfulness_gate.json</code> · <code>version_gate.json</code> &mdash; CI gates</li>
+          <li><code>phase0_baseline.json</code> &mdash; Phase-0 baseline metrics snapshot</li>
+          <li><code>coverage_audit{,_demo}.json</code> &mdash; MITRE ATT&amp;CK coverage</li>
+          <li><code>stability_variant_comparison.json</code> &mdash; Sprint 5 robustness sweep</li>
+          <li><code>formula_comparison.json</code> · <code>formula_sweep.json</code> · <code>v1_v2_comparison.json</code> · <code>v2_threshold_calibration.json</code> (Sprint 4)</li>
+          <li><code>over_response_ablation.json</code> &mdash; sensitivity to over-response</li>
+          <li><code>rq1_metrics.json</code> · <code>rq1_ablation_track_{a,b}.json</code> · <code>rq1_weight_sensitivity.json</code> · <code>rq1_track_b_per_class.json</code></li>
+          <li><code>rq2_mve_shap_alignment.json</code> · <code>rq2_mitre_coverage.json</code> · <code>rq2_shap_stability.json</code> · <code>rq2_round2_simulation.json</code></li>
+          <li><code>rq3_audit_integrity.json</code> · <code>rq3_invariants_status.json</code></li>
         </ul>
       </div>
     </div>
@@ -868,14 +1005,43 @@
         <tr><td><code>src/risk_scorer.py</code></td><td>Composite-risk formula primitive used by Module 3 + the dashboard's preview path.</td></tr>
         <tr><td><code>src/data_models.py</code></td><td>Typed dataclasses (<code>MVEOutput</code>, alert schemas) shared across modules.</td></tr>
         <tr><td><code>src/harness.py</code></td><td>Reproducibility harness — seed pinning, environment capture for thesis §3.4.</td></tr>
+        <tr><td><code>common/artifact_versioning.py</code></td><td>Sprint 6 schema-version registry (<code>ARTIFACT_VERSIONS</code>) + <code>ArtifactVersionMismatch</code>; producers stamp, consumers verify, CI gates.</td></tr>
+        <tr><td><code>common/dae_input.py</code></td><td>Defines <code>TRACK_A_FOR_DAE</code> &mdash; the single source of truth for the cascade augmentation set (currently <code>("xgboost",)</code>).</td></tr>
+        <tr><td><code>common/alert_response_schema.py</code></td><td>Versioned alert &amp; response schema (3.x) shared by Modules 4–6.</td></tr>
+        <tr><td><code>common/device_class.py</code></td><td>Device-class &rarr; criticality tier mapping (CRITICAL_LIFE_SUPPORT / VITAL_MONITORING / ADMIN).</td></tr>
+        <tr><td><code>common/signed_pickle.py</code></td><td>ECDSA-signed pickle envelopes for model checkpoints.</td></tr>
+        <tr><td><code>common/split_paths.py</code></td><td>Centralised parquet/artifact path resolution per split (test vs demo suffix).</td></tr>
+        <tr><td><code>detection_engine/engine.py</code></td><td>Track A + DAE fusion authority: <code>build_augmented</code>, <code>predict</code>, fused <code>c_detect</code>, asserts on DAE input width.</td></tr>
+        <tr><td><code>module4_explanations/counterfactual.py</code></td><td>Phase 2: SHAP-guided minimal counterfactual perturbation (greedy coordinate descent over top-K).</td></tr>
+        <tr><td><code>module4_explanations/stability.py</code></td><td>Phase 4: top-K Jaccard stability under Gaussian noise &rarr; STABLE / BORDERLINE / UNSTABLE band.</td></tr>
+        <tr><td><code>module4_explanations/phase0_metrics.py</code></td><td>Phase 0 instrumentation: narrative_faithfulness, action_specificity, counterfactual_coverage.</td></tr>
+        <tr><td><code>module4_explanations/feature_groups.py</code></td><td>Feature &rarr; narrative-category mapping shared by NLG + phase-0 metric reverse map.</td></tr>
+        <tr><td><code>module5_responses/adaptive.py</code></td><td>Adaptive response selection from the unified taxonomy in <code>config.py</code> (tiers, attack routing, device classes).</td></tr>
+        <tr><td><code>module5_responses/role_routing.py</code></td><td>Phase 3.2: SHAP-category &rarr; expected primary role; emits <code>RoutingWarning</code> on mismatch.</td></tr>
         <tr><td><code>drift_detection.py</code></td><td>PSI + KS over temporal stream; outputs feed Module 6 System Health panels.</td></tr>
         <tr><td><code>dynamic_threshold_sim.py</code></td><td>Static vs adaptive threshold comparison; F1 + threshold-over-time PNG.</td></tr>
         <tr><td><code>feedback_loop_demo.py</code></td><td>Closed-loop iteration — single + multi-iteration AUROC reweighting; demonstrates C.3–C.6.</td></tr>
         <tr><td><code>run_all_modules.py</code></td><td>Orchestrator — starts at Module 2 by default (Modules 0 + 1 are standalone). Sequential <code>subprocess.run()</code> per module with elapsed-time logging.</td></tr>
+        <tr><td><code>run_tests.py</code></td><td>Pytest wrapper used by CI &amp; the architecture defense suite.</td></tr>
+        <tr><td><code>tools/phase1_regen_module4.py</code></td><td>Re-runs Module 4 with stability + counterfactual payloads attached (Phase 1 of the upgrade).</td></tr>
+        <tr><td><code>tools/phase1_regen_module5.py</code></td><td>Re-runs Module 5 picking up stability bands &amp; role-routing warnings.</td></tr>
+        <tr><td><code>tools/faithfulness_gate.py</code></td><td>CI gate: 5 faithfulness/stability/CF acceptance checks &rarr; <code>results/faithfulness_gate.json</code>.</td></tr>
+        <tr><td><code>tools/version_gate.py</code></td><td>CI gate: walks <code>ARTIFACT_VERSIONS</code>, verifies on-disk <code>_schema_version</code> &rarr; <code>results/version_gate.json</code>.</td></tr>
+        <tr><td><code>tools/phase0_baseline.py</code></td><td>Phase-0 baseline driver &rarr; <code>results/phase0_baseline.json</code>.</td></tr>
+        <tr><td><code>tools/coverage_audit.py</code></td><td>MITRE ATT&amp;CK coverage audit over <code>alert_responses.json</code>.</td></tr>
+        <tr><td><code>tools/compare_stability_variants.py</code></td><td>Sprint 5 stability-variant sweep &rarr; <code>results/stability_variant_comparison.json</code>.</td></tr>
+        <tr><td><code>tools/compare_v1_v2.py</code> · <code>formula_comparison.py</code> · <code>calibrate_thresholds_v2.py</code></td><td>Sprint 4 formula v1 &rarr; v2 ablation, sweep &amp; threshold calibration.</td></tr>
+        <tr><td><code>tools/rq{1,2,3}_*.py</code></td><td>Per-RQ compute + plot + verification scripts (metrics, plots, audit verify, MITRE coverage, user-study analysis).</td></tr>
+        <tr><td><code>tools/build_simulation_stream.py</code> · <code>build_feature_baselines.py</code></td><td>Temporal replay stream + feature baseline tables for drift / dashboard.</td></tr>
+        <tr><td><code>tools/regen_{demo_shap,demo_predictions,risk_scores_offline}.py</code></td><td>Targeted artifact regeneration without re-running the full orchestrator.</td></tr>
+        <tr><td><code>tools/resign_models.py</code> · <code>patch_demo_artifacts.py</code></td><td>Re-sign model checkpoints; patch demo artifacts after schema bumps.</td></tr>
         <tr><td><code>module6_evaluation/sentinel_theme.py</code></td><td>Sentinel design-system injection (Phase 3 of dashboard refactor) — emits the prototype's full <code>:root</code> token block + Google Fonts + component class definitions.</td></tr>
         <tr><td><code>module6_evaluation/components.py</code></td><td>HTML-string helpers for the Triage view (tier glyphs, calibration bars, factor rows, audit timeline, status strip).</td></tr>
         <tr><td><code>tests/test_split_contract.py</code></td><td>16-test pytest suite locking the 4-way 60:15:15:10 split. Re-runs the splitter against the raw CSV and verifies n + attack_rate + Attack Category counts per split.</td></tr>
-        <tr><td><code>configs/composite_risk_weights.yaml</code></td><td>Risk-formula weights + tier boundaries (signed SHA-256 baseline).</td></tr>
+        <tr><td><code>tests/test_sprint5_upgrades.py</code> · <code>test_phase{0,1,2,3,4}_*.py</code> · <code>test_formula_v2.py</code></td><td>Phase-by-phase regression suites for the faithfulness/actionability upgrade.</td></tr>
+        <tr><td><code>module3_risk_scoring/config.py</code></td><td>Single source of truth for risk-formula constants (v1 <code>WEIGHTS</code>, v2 <code>CONTEXT_WEIGHTS_V2</code>, thresholds, <code>MIN_DETECTION_GATE</code>).</td></tr>
+        <tr><td><code>config/{tier_routing,role_action_authorization,attack_to_mitre_mapping}.yaml</code></td><td>Response routing + role authz + MITRE mapping; consumed by Module 5 adaptive + role-routing + coverage_audit.</td></tr>
+        <tr><td><code>docs/{formula_v2_rationale,stability_calibration,user_study_protocol}.md</code></td><td>Sprint 4 formula-v2 derivation · Sprint 5 stability tuning guide · RQ3 study protocol (n=24, A/B, IRR).</td></tr>
       </tbody>
     </table>
   </section>
@@ -964,11 +1130,76 @@
           <td><strong>Role-adaptive MVE (C2)</strong></td>
           <td>
             Three render functions in <code>module6_app.py</code>:
-            <code>render_analyst</code> (L633), <code>render_clinician</code> (L677),
-            <code>render_admin</code> (L713). Same alert, different surface:
+            <code>render_analyst</code> (L711), <code>render_clinician</code> (L791),
+            <code>render_admin</code> (L834). Same alert, different surface:
             SOC sees SHAP top-features + DAE indicators; Clinician sees plain-
             language summary + patient-safety note; Admin sees aggregate
             tier breakdown.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Detection gates emission (formula v2)</strong></td>
+          <td>
+            Module 3 v2 formula is multiplicative — <code>R = C_detect &times;
+            (1 + &alpha;D_crit + &beta;S_data + &gamma;A_patient)</code> —
+            and <code>MIN_DETECTION_GATE</code> in
+            <code>module3_risk_scoring/config.py</code> forces NORMAL whenever
+            <code>C_detect</code> is below the gate. Eliminates the v1
+            failure mode where idle-but-critical devices triggered LOW alerts
+            at <code>R&nbsp;&asymp;&nbsp;0.21</code> with zero detector signal
+            (see <code>docs/formula_v2_rationale.md</code>).
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Stability-gated auto-execute</strong></td>
+          <td>
+            <code>module4_explanations/stability.py</code> attaches a band
+            (STABLE / BORDERLINE / UNSTABLE) from top-K Jaccard under
+            Gaussian noise. <code>module5_responses/adaptive.py</code> demotes
+            <code>auto_execute</code> on BORDERLINE/UNSTABLE.
+            <code>faithfulness_gate</code> fails the build if the unstable
+            share exceeds 60% or the fragile share exceeds 90%.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Counterfactual feasibility floor</strong></td>
+          <td>
+            Every M+H+C alert carries a counterfactual payload
+            (<code>module4_explanations/counterfactual.py</code>). The CI gate
+            requires <code>counterfactual_actionable_feasible</code>&nbsp;&ge;&nbsp;0.80;
+            currently at <code>0.81</code>. Sparsity preference (1&nbsp;&rarr;&nbsp;2&nbsp;&rarr;&nbsp;3
+            feature edits) makes the explanation actionable for non-ML users.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Role-routing mismatch surfaced</strong></td>
+          <td>
+            <code>module5_responses/role_routing.py</code> compares the SHAP
+            top-category's expected primary role against
+            <code>ATTACK_ROUTING</code>'s assignment; mismatches attach a
+            <code>RoutingWarning</code> on the response record, which the
+            dashboard surfaces as a one-click reroute button.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Artifact schema versions enforced</strong></td>
+          <td>
+            Every artifact under <code>results/</code> carries
+            <code>_schema_version</code> (top-level or in <code>_provenance</code>).
+            <code>common/artifact_versioning.py</code> is the registry;
+            <code>tools/version_gate.py</code> sweeps it in CI and refuses
+            the build on stale, missing, or unknown versions. Catches
+            "silent contract drift" before it surfaces as a downstream
+            numpy broadcast error.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Narrative faithfulness floor</strong></td>
+          <td>
+            <code>phase0_metrics.narrative_faithfulness</code> &mdash;
+            <code>P(clinician narrative top-1 category == SHAP top-1 category)</code>
+            on xgboost &mdash; must stay &ge; 0.85. Last recorded:
+            <code>0.9674</code> over n=307 (<code>results/phase0_baseline.json</code>).
           </td>
         </tr>
       </tbody>
@@ -976,9 +1207,10 @@
   </section>
 
   <div class="footnote">
-    Architecture review &middot; generated from a read of all 6 modules + <code>src/</code> + standalone scripts<br>
-    Path conventions: all module roots are at repo top-level (post-A3 flatten, commit <code>898e7c7</code>)<br>
-    Render: open this file directly in any browser &mdash; self-contained, no build step, fonts loaded from Google Fonts CDN
+    Architecture review &middot; revised 2026-05-28 from a read of all 6 modules + <code>common/</code> + <code>detection_engine/</code> + <code>src/</code> + <code>tools/</code> + standalone scripts<br>
+    Includes Sprint 4 (formula v2), Sprint 5 (stability sweep + simulation stream), Sprint 6 (artifact-versioning chain), and the Phase 0&ndash;4 faithfulness/actionability upgrade.<br>
+    Path conventions: all module roots are at repo top-level (post-A3 flatten, commit <code>898e7c7</code>); upgrade work tracked through commit <code>fa72276</code>.<br>
+    Render: open this file directly in any browser &mdash; self-contained, no build step, fonts loaded from Google Fonts CDN.
   </div>
 
 </div>

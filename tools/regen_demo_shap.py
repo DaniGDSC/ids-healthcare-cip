@@ -1,27 +1,19 @@
 #!/usr/bin/env python3
-"""Compute and cache Track-A SHAP values for the demo split.
+"""Compute and cache Track-A SHAP values for a chosen split.
 
-The demo split has no cached SHAP values on disk because Module 4 was
-previously run in ``--explanations-only`` (thin) mode for demo, which
-skips SHAP persistence. ``tools/phase1_regen_module4.py`` reads SHAP
-from the cache so it can run offline (no signed-pickle load on the
-hot path); without a demo SHAP cache, the Phase 2 (counterfactual) +
-Phase 4 (stability) enrichments can't be applied to demo records.
+Originally a demo-only helper (Sprint 2 1.3). Sprint 5 generalised it
+to accept either ``test`` or ``demo`` so the test SHAP cache can be
+refreshed offline when it goes stale (e.g. when Module 4 demo regen
+overwrites the test file).
 
-This tool fixes that: load the (Sprint 1.1 re-signed) classifier,
-compute TreeSHAP for the demo split, and write the cache file in the
-same schema the test split uses::
-
-    results/reports/shap_values_<model>_demo.npz
-      ├── shap_values:    float64[N, F]   (attack-class slice)
-      ├── expected_value: float64         (base value)
-      └── feature_names:  str[F]
-
-The naming uses an ``_demo`` suffix so callers can pick the right file
-per split.
+Output: ``results/reports/shap_values_<model>{_demo}.npz`` with
+``shap_values`` (attack-class slice), ``expected_value`` (base) and
+``feature_names``. Test runs use no suffix to stay byte-compatible
+with the original RQ1 paper artifact name.
 """
 from __future__ import annotations
 
+import argparse
 import sys
 import time
 from pathlib import Path
@@ -31,20 +23,26 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from common import split_paths as sp  # noqa: E402
 from module4_explanations.compute import compute_tree_shap  # noqa: E402
 from module4_explanations.config import SHAP_MODELS, TRACK_A_MODELS  # noqa: E402
 from module4_explanations.io import load_test_data  # noqa: E402
 
-DEMO_PARQUET = PROJECT_ROOT / "data/processed/demo_phase1.parquet"
-
 
 def main() -> int:
-    if not DEMO_PARQUET.exists():
-        print(f"ERROR: {DEMO_PARQUET} not found", file=sys.stderr)
-        return 2
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("split", nargs="?", default="demo", choices=("test", "demo"))
+    args = p.parse_args()
+    split = args.split
 
-    X, _y, _attack_cats, feat_names = load_test_data(DEMO_PARQUET)
-    print(f"[regen-demo-shap] loaded {len(X)} demo samples × {len(feat_names)} features")
+    parquet = sp.parquet(split)
+    if not parquet.exists():
+        print(f"ERROR: {parquet} not found", file=sys.stderr)
+        return 2
+    suffix = "_demo" if split == "demo" else ""
+
+    X, _y, _attack_cats, feat_names = load_test_data(parquet)
+    print(f"[regen-shap] split={split}  loaded {len(X)} samples × {len(feat_names)} features")
 
     for name in SHAP_MODELS:
         cfg = TRACK_A_MODELS[name]
@@ -53,12 +51,14 @@ def main() -> int:
             name, PROJECT_ROOT / cfg["pipeline"], X, list(feat_names),
         )
         elapsed = time.perf_counter() - t0
-        out = PROJECT_ROOT / f"results/reports/shap_values_{name}_demo.npz"
+        out = PROJECT_ROOT / f"results/reports/shap_values_{name}{suffix}.npz"
+        from common.artifact_versioning import version_kwarg_for
         np.savez(
             out,
             shap_values=sv.astype(np.float64),
             expected_value=np.float64(expected),
             feature_names=np.array(feat_names),
+            **version_kwarg_for(out.name),
         )
         print(f"  ✓ {name:<15s} shape={sv.shape} → {out.relative_to(PROJECT_ROOT)}  ({elapsed:.1f}s)")
     return 0

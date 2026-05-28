@@ -12,14 +12,14 @@
         "f1": 0.2229
       },
       "surfaced": {
-        "tp": 287,
-        "fp": 75,
-        "fn": 20,
-        "tn": 2066,
-        "alert_volume": 362,
-        "precision": 0.7928,
-        "recall": 0.9349,
-        "f1": 0.858
+        "tp": 288,
+        "fp": 93,
+        "fn": 19,
+        "tn": 2048,
+        "alert_volume": 381,
+        "precision": 0.7559,
+        "recall": 0.9381,
+        "f1": 0.8372
       },
       "by_tier": {
         "CRITICAL": {
@@ -28,19 +28,19 @@
           "benign": 0
         },
         "HIGH": {
-          "total": 285,
-          "attacks": 267,
-          "benign": 18
+          "total": 301,
+          "attacks": 268,
+          "benign": 33
         },
         "MEDIUM": {
-          "total": 65,
+          "total": 68,
           "attacks": 8,
-          "benign": 57
+          "benign": 60
         },
         "LOW": {
-          "total": 2086,
-          "attacks": 20,
-          "benign": 2066
+          "total": 2067,
+          "attacks": 19,
+          "benign": 2048
         },
         "NORMAL": {
           "total": 0,
@@ -50,9 +50,9 @@
       },
       "counterfactual": {
         "actionable_feasible_est": {
-          "seen": 362,
+          "seen": 381,
           "feasible_est": 307,
-          "rate": 0.8481
+          "rate": 0.8058
         },
         "any_alert_feasible_est": {
           "seen": 2448,
@@ -66,7 +66,7 @@
           "operational_recall": 1.0,
           "surfaced_precision_keep": 1.0,
           "surfaced_recall_keep": 1.0,
-          "actionable_cf_coverage": 0.8481,
+          "actionable_cf_coverage": 0.8058,
           "noise_reduction": 0.0
         },
         "weights": {
@@ -77,29 +77,29 @@
           "actionable_cf_coverage": 0.1,
           "noise_reduction": 0.1
         },
-        "total_score": 0.5848
+        "total_score": 0.5806
       }
     },
     "v1_phase_a": {
       "operational": {
         "tp": 298,
-        "fp": 231,
+        "fp": 269,
         "fn": 9,
-        "tn": 1910,
-        "alert_volume": 529,
-        "precision": 0.5633,
+        "tn": 1872,
+        "alert_volume": 567,
+        "precision": 0.5256,
         "recall": 0.9707,
-        "f1": 0.7129
+        "f1": 0.6819
       },
       "surfaced": {
-        "tp": 287,
-        "fp": 75,
-        "fn": 20,
-        "tn": 2066,
-        "alert_volume": 362,
-        "precision": 0.7928,
-        "recall": 0.9349,
-        "f1": 0.858
+        "tp": 288,
+        "fp": 93,
+        "fn": 19,
+        "tn": 2048,
+        "alert_volume": 381,
+        "precision": 0.7559,
+        "recall": 0.9381,
+        "f1": 0.8372
       },
       "by_tier": {
         "CRITICAL": {
@@ -108,206 +108,46 @@
           "benign": 0
         },
         "HIGH": {
-          "total": 285,
-          "attacks": 267,
-          "benign": 18
+          "total": 301,
+          "attacks": 268,
+          "benign": 33
         },
         "MEDIUM": {
-          "total": 65,
-          "attacks": 8,
-          "benign": 57
-        },
-        "LOW": {
-          "total": 167,
-          "attacks": 11,
-          "benign": 156
-        },
-        "NORMAL": {
-          "total": 1919,
-          "attacks": 9,
-          "benign": 1910
-        }
-      },
-      "counterfactual": {
-        "actionable_feasible_est": {
-          "seen": 362,
-          "feasible_est": 307,
-          "rate": 0.8481
-        },
-        "any_alert_feasible_est": {
-          "seen": 529,
-          "feasible_est": 317,
-          "rate": 0.5992
-        }
-      },
-      "score": {
-        "components": {
-          "operational_precision": 0.8758,
-          "operational_recall": 1.0,
-          "surfaced_precision_keep": 1.0,
-          "surfaced_recall_keep": 1.0,
-          "actionable_cf_coverage": 0.8481,
-          "noise_reduction": 0.7839
-        },
-        "weights": {
-          "operational_precision": 0.3,
-          "operational_recall": 0.2,
-          "surfaced_precision_keep": 0.15,
-          "surfaced_recall_keep": 0.15,
-          "actionable_cf_coverage": 0.1,
-          "noise_reduction": 0.1
-        },
-        "total_score": 0.9259
-      }
-    },
-    "v1_phase_b": {
-      "operational": {
-        "tp": 296,
-        "fp": 413,
-        "fn": 11,
-        "tn": 1728,
-        "alert_volume": 709,
-        "precision": 0.4175,
-        "recall": 0.9642,
-        "f1": 0.5827
-      },
-      "surfaced": {
-        "tp": 287,
-        "fp": 75,
-        "fn": 20,
-        "tn": 2066,
-        "alert_volume": 362,
-        "precision": 0.7928,
-        "recall": 0.9349,
-        "f1": 0.858
-      },
-      "by_tier": {
-        "CRITICAL": {
-          "total": 12,
-          "attacks": 12,
-          "benign": 0
-        },
-        "HIGH": {
-          "total": 285,
-          "attacks": 267,
-          "benign": 18
-        },
-        "MEDIUM": {
-          "total": 65,
-          "attacks": 8,
-          "benign": 57
-        },
-        "LOW": {
-          "total": 347,
-          "attacks": 9,
-          "benign": 338
-        },
-        "NORMAL": {
-          "total": 1739,
-          "attacks": 11,
-          "benign": 1728
-        }
-      },
-      "counterfactual": {
-        "actionable_feasible_est": {
-          "seen": 362,
-          "feasible_est": 307,
-          "rate": 0.8481
-        },
-        "any_alert_feasible_est": {
-          "seen": 709,
-          "feasible_est": 341,
-          "rate": 0.481
-        }
-      },
-      "score": {
-        "components": {
-          "operational_precision": 0.5842,
-          "operational_recall": 1.0,
-          "surfaced_precision_keep": 1.0,
-          "surfaced_recall_keep": 1.0,
-          "actionable_cf_coverage": 0.8481,
-          "noise_reduction": 0.7104
-        },
-        "weights": {
-          "operational_precision": 0.3,
-          "operational_recall": 0.2,
-          "surfaced_precision_keep": 0.15,
-          "surfaced_recall_keep": 0.15,
-          "actionable_cf_coverage": 0.1,
-          "noise_reduction": 0.1
-        },
-        "total_score": 0.8311
-      }
-    },
-    "v1_phase_a_plus_b": {
-      "operational": {
-        "tp": 295,
-        "fp": 135,
-        "fn": 12,
-        "tn": 2006,
-        "alert_volume": 430,
-        "precision": 0.686,
-        "recall": 0.9609,
-        "f1": 0.8005
-      },
-      "surfaced": {
-        "tp": 287,
-        "fp": 75,
-        "fn": 20,
-        "tn": 2066,
-        "alert_volume": 362,
-        "precision": 0.7928,
-        "recall": 0.9349,
-        "f1": 0.858
-      },
-      "by_tier": {
-        "CRITICAL": {
-          "total": 12,
-          "attacks": 12,
-          "benign": 0
-        },
-        "HIGH": {
-          "total": 285,
-          "attacks": 267,
-          "benign": 18
-        },
-        "MEDIUM": {
-          "total": 65,
-          "attacks": 8,
-          "benign": 57
-        },
-        "LOW": {
           "total": 68,
           "attacks": 8,
           "benign": 60
         },
+        "LOW": {
+          "total": 186,
+          "attacks": 10,
+          "benign": 176
+        },
         "NORMAL": {
-          "total": 2018,
-          "attacks": 12,
-          "benign": 2006
+          "total": 1881,
+          "attacks": 9,
+          "benign": 1872
         }
       },
       "counterfactual": {
         "actionable_feasible_est": {
-          "seen": 362,
+          "seen": 381,
           "feasible_est": 307,
-          "rate": 0.8481
+          "rate": 0.8058
         },
         "any_alert_feasible_est": {
-          "seen": 430,
-          "feasible_est": 315,
-          "rate": 0.7326
+          "seen": 567,
+          "feasible_est": 317,
+          "rate": 0.5591
         }
       },
       "score": {
         "components": {
-          "operational_precision": 1.0,
+          "operational_precision": 0.8004,
           "operational_recall": 1.0,
           "surfaced_precision_keep": 1.0,
           "surfaced_recall_keep": 1.0,
-          "actionable_cf_coverage": 0.8481,
-          "noise_reduction": 0.8243
+          "actionable_cf_coverage": 0.8058,
+          "noise_reduction": 0.7684
         },
         "weights": {
           "operational_precision": 0.3,
@@ -317,38 +157,199 @@
           "actionable_cf_coverage": 0.1,
           "noise_reduction": 0.1
         },
-        "total_score": 0.9672
+        "total_score": 0.8975
+      }
+    },
+    "v1_phase_b": {
+      "operational": {
+        "tp": 297,
+        "fp": 485,
+        "fn": 10,
+        "tn": 1656,
+        "alert_volume": 782,
+        "precision": 0.3798,
+        "recall": 0.9674,
+        "f1": 0.5455
+      },
+      "surfaced": {
+        "tp": 288,
+        "fp": 93,
+        "fn": 19,
+        "tn": 2048,
+        "alert_volume": 381,
+        "precision": 0.7559,
+        "recall": 0.9381,
+        "f1": 0.8372
+      },
+      "by_tier": {
+        "CRITICAL": {
+          "total": 12,
+          "attacks": 12,
+          "benign": 0
+        },
+        "HIGH": {
+          "total": 301,
+          "attacks": 268,
+          "benign": 33
+        },
+        "MEDIUM": {
+          "total": 68,
+          "attacks": 8,
+          "benign": 60
+        },
+        "LOW": {
+          "total": 401,
+          "attacks": 9,
+          "benign": 392
+        },
+        "NORMAL": {
+          "total": 1666,
+          "attacks": 10,
+          "benign": 1656
+        }
+      },
+      "counterfactual": {
+        "actionable_feasible_est": {
+          "seen": 381,
+          "feasible_est": 307,
+          "rate": 0.8058
+        },
+        "any_alert_feasible_est": {
+          "seen": 782,
+          "feasible_est": 340,
+          "rate": 0.4348
+        }
+      },
+      "score": {
+        "components": {
+          "operational_precision": 0.5088,
+          "operational_recall": 1.0,
+          "surfaced_precision_keep": 1.0,
+          "surfaced_recall_keep": 1.0,
+          "actionable_cf_coverage": 0.8058,
+          "noise_reduction": 0.6806
+        },
+        "weights": {
+          "operational_precision": 0.3,
+          "operational_recall": 0.2,
+          "surfaced_precision_keep": 0.15,
+          "surfaced_recall_keep": 0.15,
+          "actionable_cf_coverage": 0.1,
+          "noise_reduction": 0.1
+        },
+        "total_score": 0.8013
+      }
+    },
+    "v1_phase_a_plus_b": {
+      "operational": {
+        "tp": 296,
+        "fp": 224,
+        "fn": 11,
+        "tn": 1917,
+        "alert_volume": 520,
+        "precision": 0.5692,
+        "recall": 0.9642,
+        "f1": 0.7158
+      },
+      "surfaced": {
+        "tp": 288,
+        "fp": 93,
+        "fn": 19,
+        "tn": 2048,
+        "alert_volume": 381,
+        "precision": 0.7559,
+        "recall": 0.9381,
+        "f1": 0.8372
+      },
+      "by_tier": {
+        "CRITICAL": {
+          "total": 12,
+          "attacks": 12,
+          "benign": 0
+        },
+        "HIGH": {
+          "total": 301,
+          "attacks": 268,
+          "benign": 33
+        },
+        "MEDIUM": {
+          "total": 68,
+          "attacks": 8,
+          "benign": 60
+        },
+        "LOW": {
+          "total": 139,
+          "attacks": 8,
+          "benign": 131
+        },
+        "NORMAL": {
+          "total": 1928,
+          "attacks": 11,
+          "benign": 1917
+        }
+      },
+      "counterfactual": {
+        "actionable_feasible_est": {
+          "seen": 381,
+          "feasible_est": 307,
+          "rate": 0.8058
+        },
+        "any_alert_feasible_est": {
+          "seen": 520,
+          "feasible_est": 315,
+          "rate": 0.6058
+        }
+      },
+      "score": {
+        "components": {
+          "operational_precision": 0.8876,
+          "operational_recall": 1.0,
+          "surfaced_precision_keep": 1.0,
+          "surfaced_recall_keep": 1.0,
+          "actionable_cf_coverage": 0.8058,
+          "noise_reduction": 0.7876
+        },
+        "weights": {
+          "operational_precision": 0.3,
+          "operational_recall": 0.2,
+          "surfaced_precision_keep": 0.15,
+          "surfaced_recall_keep": 0.15,
+          "actionable_cf_coverage": 0.1,
+          "noise_reduction": 0.1
+        },
+        "total_score": 0.9256
       }
     }
   },
   "ranking": [
     [
       "v1_phase_a_plus_b",
-      0.9672
+      0.9256
     ],
     [
       "v1_phase_a",
-      0.9259
+      0.8975
     ],
     [
       "v1_phase_b",
-      0.8311
+      0.8013
     ],
     [
       "v1_baseline",
-      0.5848
+      0.5806
     ]
   ],
   "winner": "v1_phase_a_plus_b",
-  "winner_rationale": "v1_phase_a_plus_b: operational precision 0.1254 \u2192 0.6860 (+0.5606); recall 1.0000 \u2192 0.9609 (-0.0391); surfaced precision/recall kept at 0.7928/0.9349 (vs 0.7928/0.9349); counterfactual actionable coverage est. 84.8%; alert volume 2448 \u2192 430 (82% reduction).",
+  "winner_rationale": "v1_phase_a_plus_b: operational precision 0.1254 \u2192 0.5692 (+0.4438); recall 1.0000 \u2192 0.9642 (-0.0358); surfaced precision/recall kept at 0.7559/0.9381 (vs 0.7559/0.9381); counterfactual actionable coverage est. 80.6%; alert volume 2448 \u2192 520 (79% reduction).",
   "params": {
     "t_normal": 0.3,
     "gate": 0.02,
     "threshold": 0.006032602763694183
   },
   "_meta": {
-    "generated_at": "2026-05-28T11:24:10.513814+00:00",
+    "generated_at": "2026-05-28T14:47:02.025433+00:00",
     "n_samples": 2448,
     "threshold": 0.006032602763694183
-  }
+  },
+  "_schema_version": "1.0"
 }

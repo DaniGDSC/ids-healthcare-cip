@@ -1,8 +1,9 @@
 {
   "_provenance": {
+    "_schema_version": "3.2",
     "split": "demo",
-    "generated_at": "2026-05-28T13:56:26.021315+00:00",
-    "module5_git_rev": "2d423bf",
+    "generated_at": "2026-05-28T14:47:51.750045+00:00",
+    "module5_git_rev": "fa72276",
     "n_input_samples": 1632,
     "n_alerts_emitted": 320,
     "n_normal_excluded": 1312,

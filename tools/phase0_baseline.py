@@ -177,7 +177,12 @@ def main() -> int:
         print("\n[phase0] All metrics ≥ recorded floors")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(baseline, indent=2))
+    # Sprint 6 / Tầng 3.5 — embed _schema_version so the version gate
+    # can detect stale baseline files.
+    from common.artifact_versioning import embed_version_in_dict
+    args.output.write_text(json.dumps(
+        embed_version_in_dict(baseline, args.output.name), indent=2,
+    ))
     print(f"[phase0] Wrote {args.output.relative_to(PROJECT_ROOT)}")
     return 0
 

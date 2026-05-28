@@ -206,6 +206,54 @@ def main(split: str = "test") -> int:
             f"UNSTABLE={band_counts['UNSTABLE']}"
         )
 
+        # ── Sprint 5 / Tầng 3.4 — RandomForest counterfactual augment ──
+        # The XGBoost engine misses LOW-tier alerts flagged only by RF
+        # (Phase 0 baseline showed ~6% LOW-tier CF coverage). Loop over
+        # RF-flagged samples that XGBoost did NOT flag and run the same
+        # counterfactual engine — SHAP for RF is computed on the fly
+        # since only XGBoost SHAP is cached.
+        try:
+            rf_preds_data = np.load(sp.model_predictions("random_forest", split))
+        except FileNotFoundError:
+            rf_preds_data = None
+
+        if rf_preds_data is not None:
+            rf_y_pred = rf_preds_data["y_pred"]
+            xgb_y_pred = all_preds["xgboost"]["y_pred"]
+            rf_only = np.where((rf_y_pred == 1) & (xgb_y_pred == 0))[0]
+            if len(rf_only):
+                print(f"[phase1-regen] augmenting CF for {len(rf_only)} RF-only-flagged samples")
+                from common import loads_signed
+                rf_pkl = PROJECT_ROOT / "results/models/random_forest_final_pipeline.pkl"
+                rf_obj = loads_signed(rf_pkl)
+                rf_clf = rf_obj.named_steps["classifier"] if hasattr(rf_obj, "named_steps") else rf_obj
+                rf_explainer = shap.TreeExplainer(rf_clf)
+                try:
+                    from common.model_registry import get_baseline_thresholds
+                    rf_thr = float(get_baseline_thresholds()["random_forest"])
+                except Exception:
+                    rf_thr = 0.5
+                rf_feasible = 0
+                for k, idx in enumerate(rf_only):
+                    idx = int(idx)
+                    sv = rf_explainer.shap_values(X_test[idx].reshape(1, -1))
+                    if isinstance(sv, list):
+                        sv_row = sv[1][0] if len(sv) > 1 else sv[0][0]
+                    elif sv.ndim == 3:
+                        sv_row = sv[0, :, 1]
+                    else:
+                        sv_row = sv[0]
+                    r = compute_counterfactual(
+                        rf_clf, X_test[idx], sv_row,
+                        list(feat_names), rf_thr,
+                    )
+                    counterfactuals_by_idx[idx] = r.to_dict()
+                    if r.feasible:
+                        rf_feasible += 1
+                    if (k + 1) % 50 == 0:
+                        print(f"  …{k+1}/{len(rf_only)} RF samples ({rf_feasible} feasible)")
+                print(f"[phase1-regen] RF CF augment: {rf_feasible}/{len(rf_only)} feasible")
+
     # Build outputs — Phase 1.1: X_test is now passed through;
     # Phase 2: counterfactuals injected when present;
     # Phase 4.1: stability badges injected when present.

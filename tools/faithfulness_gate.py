@@ -284,7 +284,10 @@ def main() -> int:
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2))
+    from common.artifact_versioning import embed_version_in_dict
+    args.output.write_text(json.dumps(
+        embed_version_in_dict(report, args.output.name), indent=2,
+    ))
 
     # Print summary
     print()
