@@ -109,20 +109,29 @@ class IntegrityVerifier:
         baselined, returns the existing digest (no-op) instead of
         refusing or duplicating.
 
+        Tier 0 F1: when a baseline already exists on disk we read it
+        through ``_read_metadata_verified`` so the idempotent shortcut
+        cannot fire against attacker-injected rows. A baseline whose
+        signature fails verification causes ``IntegrityError`` instead
+        of being silently extended.
+
         Returns the SHA-256 hex digest written to the baseline.
 
         Raises:
             FileNotFoundError: if *file_path* does not exist.
-            IntegrityError: if a different file is already baselined
-                under the same hash (impossible without collision, so
-                this is a sanity assert).
+            IntegrityError: if the existing baseline fails signature
+                verification, or if a different file is already baselined
+                under the same hash (sanity assert).
         """
         data = self._read_bytes(file_path)
         digest = hashlib.new(_HASH_ALGORITHM, data).hexdigest()
         size = len(data)
         filename = file_path.name
 
-        existing = self._read_metadata()
+        if self._metadata_path.exists() and self._metadata_path.stat().st_size > 0:
+            existing = self._read_metadata_verified()
+        else:
+            existing = self._read_metadata()
         self._assert_supported_version(existing)
         entries = existing.get("entries", {})
         prior = entries.get(digest)
@@ -337,7 +346,15 @@ class IntegrityVerifier:
         return meta
 
     def _write_signed_metadata(self, digest: str, record: Dict[str, Any]) -> None:
-        """Add *record* under *digest* (v3 hash key) and re-sign the entries block."""
+        """Add *record* under *digest* (v3 hash key) and re-sign the entries block.
+
+        Tier 0 F1: when the existing baseline contains any entries we
+        verify its signature **before** re-signing the augmented body.
+        Without this, an attacker who can write
+        ``dataset_integrity.json`` can inject a malicious row and have
+        the operator's next ``bootstrap`` call laundered as a signed
+        legitimisation of that row.
+        """
         from module5_responses.signing import (
             HAVE_CRYPTOGRAPHY,
             canonical_json,
@@ -353,8 +370,23 @@ class IntegrityVerifier:
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import ec
 
-        meta = self._read_metadata()
-        # Empty/new metadata is fine; non-empty must be supported version.
+        # Tier 0 F1: refuse to re-sign over an unverified baseline.
+        # Empty/new metadata is fine; any non-empty baseline must pass
+        # signature verification before we accept its entries into the
+        # new signed body.
+        if self._metadata_path.exists() and self._metadata_path.stat().st_size > 0:
+            try:
+                meta = self._read_metadata_verified()
+            except IntegrityError:
+                log_phase0_event(
+                    "INTEGRITY_BOOTSTRAP_REFUSED",
+                    {"path": str(self._metadata_path),
+                     "reason": "existing baseline failed verification"},
+                    level=logging.CRITICAL,
+                )
+                raise
+        else:
+            meta = self._read_metadata()
         if meta.get("entries"):
             self._assert_supported_version(meta)
         entries = meta.get("entries", {})
