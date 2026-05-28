@@ -1,0 +1,35 @@
+{
+  "format": "evaluation_manifest.v1",
+  "generated_at": "2026-05-28T17:29:39.319066+00:00",
+  "splitter_seed": 42,
+  "artifacts": {
+    "source_dataset": {
+      "path": "data/raw/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv",
+      "exists": true,
+      "sha256": "8359da96154fa60247df9d75e52d232077acb9886c09c36de2a0aaaee6cf2c25",
+      "size": 3946888,
+      "mtime": "2026-05-06T01:24:03.239960+00:00"
+    },
+    "demo_split": {
+      "path": "data/processed/demo_phase1.parquet",
+      "exists": true,
+      "sha256": "c8aab30ee4ac81319d5514c4fdf2d5c027bfefb95a74904261d48a6c87169ffb",
+      "size": 93972,
+      "mtime": "2026-05-22T08:41:05.931372+00:00"
+    },
+    "user_study_scenarios": {
+      "path": "tests/fixtures/user_study_alert_scenarios.yaml",
+      "exists": true,
+      "sha256": "b914cb6c3ebea08a051c488a6c8c43572018083b1a8059a9573b7b485b68f49a",
+      "size": 84738,
+      "mtime": "2026-05-27T15:14:10.305920+00:00"
+    },
+    "evaluation_alerts": {
+      "path": "results/reports/evaluation_alerts.json",
+      "exists": true,
+      "sha256": "4432a6650f09416f84cb3773b09e495e53aad5e08051fcd9b2b6678683c9cc4f",
+      "size": 31425,
+      "mtime": "2026-05-27T15:14:10.302919+00:00"
+    }
+  }
+}
