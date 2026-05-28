@@ -155,6 +155,7 @@ def save_outputs(
     *,
     out_npz: Path | None = None,
     output_dir: Path | None = None,
+    formula_version: str = "v1",
 ) -> None:
     """Save all risk score artifacts.
 
@@ -164,6 +165,10 @@ def save_outputs(
             canonical paths to preserve test as the source-of-truth for
             paper artifacts.
         output_dir: override for CSV/JSON outputs (used by tests).
+        formula_version: ``"v1"`` (default) or ``"v2"`` — recorded as a
+            0-d numpy string in the npz so downstream consumers
+            (dashboard, regen tools) can pick the right
+            interpretation. Sprint 4 / Tầng 3.1.
     """
     out_dir = output_dir or OUTPUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -174,6 +179,7 @@ def save_outputs(
         s_data=s_data, d_clinical_tier=d_clinical_tier,
         c_track_a=c_track_a, c_track_b=c_track_b,
         risk_levels=levels, y_true=y_true,
+        formula_version=np.array(formula_version, dtype=str),
     )
     logger.info("  Saved: %s", npz_path.name)
 

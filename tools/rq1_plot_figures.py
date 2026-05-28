@@ -84,7 +84,7 @@ def _load_data():
 def plot_roc(data):
     y = data["y_true"]
     series = [
-        ("Track A (XGBoost+RF+DT)", data["c_track_a"], COLOR["track_a"]),
+        ("Track A (XGBoost)",      data["c_track_a"], COLOR["track_a"]),
         ("Track B (DAE cascade)",   data["c_track_b"], COLOR["track_b"]),
         ("Fused C_detect",          data["c_detect"], COLOR["fused"]),
         ("Composite risk R",        data["R"],        COLOR["composite"]),

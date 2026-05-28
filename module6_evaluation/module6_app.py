@@ -989,6 +989,41 @@ def load_responses_for(split: str | None) -> list:
 
 
 @st.cache_data
+def load_simulation_stream(split: str | None) -> list:
+    """Cached wrapper around
+    :func:`module6_evaluation.loaders.load_simulation_stream_inner`.
+
+    Used by the Online Simulation "Full stream" data-source mode — the
+    array has one entry per arrival timestamp (1632 for demo / 2448 for
+    test). NORMAL rows carry ``alert=None``; LOW+ rows embed the M5
+    payload. Empty list when the artefact is missing (operator told to
+    run :mod:`tools.build_simulation_stream`).
+    """
+    from module6_evaluation.loaders import (
+        LoaderError, load_simulation_stream_inner,
+    )
+    try:
+        return load_simulation_stream_inner(split)
+    except LoaderError as e:
+        st.error(
+            f"{e}\n\nRun `python -m tools.build_simulation_stream "
+            f"--split={split}` to rebuild."
+        )
+        st.stop()
+
+
+@st.cache_data
+def load_simulation_stream_meta(split: str | None) -> dict | None:
+    """Cached wrapper for the simulation_stream ``_meta`` block.
+
+    Returns the dict with split label, counts, and stream anchor — or
+    None when the artefact is absent.
+    """
+    from module6_evaluation.loaders import load_simulation_stream_meta_inner
+    return load_simulation_stream_meta_inner(split)
+
+
+@st.cache_data
 def load_provenance_for(split: str | None) -> dict | None:
     """Return the ``_provenance`` block from an envelope-formatted
     responses file, or ``None`` if the file is legacy bare-list shape.
@@ -2251,6 +2286,12 @@ def simulation_mode():
     audit_trail = load_audit_trail(PAGE_SPLIT["Online Simulation"])
     latency_profile = load_latency_profile()
     live_df = load_live_stream_source()
+    # Full-stream artefact (1632 entries for demo) — built by
+    # tools.build_simulation_stream. Empty list when the file is missing,
+    # in which case the new "Full stream" radio option silently falls
+    # back to alerts-only.
+    full_stream = load_simulation_stream(PAGE_SPLIT["Online Simulation"])
+    full_stream_meta = load_simulation_stream_meta(PAGE_SPLIT["Online Simulation"])
     # Join analyst_report data — Module 5 strips the full analyst payload
     # (consensus / models / top_features) before serializing the response
     # records; we restore it here so render_analyst / render_admin can
@@ -2312,26 +2353,51 @@ def simulation_mode():
         st.session_state.setdefault("_render_caption_enabled", False)
         st.session_state.setdefault("_render_log_enabled", False)
 
-    # ── Data source toggle (6C.11 mock live source) ──
+    # ── Data source toggle (6C.11 mock live source + Full-stream B3) ──
     st.sidebar.divider()
     st.sidebar.markdown("## Data Source")
+    # Full-stream is the third option — added so the operator can see
+    # the entire demo dataset as a stream (NORMAL placeholders + LOW+
+    # alerts), not just the 320 LOW+ alerts surfaced by M5. The new mode
+    # is silently hidden when the artefact is absent so a clean clone
+    # behaves identically to the pre-B3 build.
+    source_options = ["Pre-computed alerts (Module 5)", "Live parquet (mock TAP)"]
+    if full_stream:
+        source_options.append("Full stream (1632 samples)")
+    source_index = {
+        "alerts": 0, "live_parquet": 1, "full_stream": 2,
+    }.get(st.session_state.sim_source, 0)
+    # Coerce stored state to a valid index when full_stream artefact
+    # disappeared between reruns.
+    if source_index >= len(source_options):
+        source_index = 0
     source_label = st.sidebar.radio(
         "Stream from:",
-        ["Pre-computed alerts (Module 5)", "Live parquet (mock TAP)"],
-        index=0 if st.session_state.sim_source == "alerts" else 1,
+        source_options,
+        index=source_index,
         help=(
-            "Pre-computed alerts replays Module 5 demo-split outputs.\n\n"
+            "Pre-computed alerts replays Module 5 demo-split outputs "
+            "(320 LOW+ alerts).\n\n"
             "Live parquet reads data/processed/demo_phase1.parquet row by row "
             "and attaches synthetic arrival timestamps, simulating a feature-"
             "extracted flow stream from a network TAP. Alert metadata is "
-            "joined from Module 5 by sample index where available. The demo "
-            "split is used here (not test) because operator interactions on "
-            "this page can feed the audit/feedback loop — test is reserved "
-            "for paper-clean metrics."
+            "joined from Module 5 by sample index where available.\n\n"
+            "Full stream replays the entire demo split (1632 entries — "
+            "320 alerts + 1312 NORMAL placeholders that just tick the "
+            "stream clock). NORMAL rows are not auditable; Confirm/Reject "
+            "buttons are disabled on them. Run "
+            "`python -m tools.build_simulation_stream --split demo` to "
+            "rebuild after Module 3/5 regen."
         ),
     )
-    st.session_state.sim_source = "live_parquet" if "Live" in source_label else "alerts"
+    if source_label.startswith("Live"):
+        st.session_state.sim_source = "live_parquet"
+    elif source_label.startswith("Full"):
+        st.session_state.sim_source = "full_stream"
+    else:
+        st.session_state.sim_source = "alerts"
     using_live = st.session_state.sim_source == "live_parquet"
+    using_full_stream = st.session_state.sim_source == "full_stream"
 
     if using_live and live_df is None:
         st.sidebar.warning(
@@ -2340,6 +2406,19 @@ def simulation_mode():
         )
         using_live = False
         st.session_state.sim_source = "alerts"
+
+    # iteration_list is the single iteration backbone: 320 LOW+ alerts in
+    # the legacy two modes, 1632 stream entries in full_stream mode. The
+    # rest of the page (sim_index clamps, position display, tier counters,
+    # end-of-stream callout) reads len(iteration_list) so the same code
+    # serves both shapes — the only divergence is the per-entry render
+    # path (NORMAL placeholder vs full alert card).
+    iteration_list: list = full_stream if using_full_stream else responses
+    n_iteration = len(iteration_list)
+    if using_full_stream and st.session_state.sim_index >= n_iteration:
+        # Stored sim_index from a prior alerts-mode session may exceed the
+        # new bound when switching back to alerts (320 vs 1632). Clamp.
+        st.session_state.sim_index = 0
 
     # ── Smoother playback controls ──
     # Speed is now pills (was selectbox — 2 clicks → 1 click for frequent
@@ -2381,7 +2460,7 @@ def simulation_mode():
     with ctrl_c:
         if st.button("Step", width="stretch", icon=":material/skip_next:",
                      help="Advance one alert (works while paused)."):
-            st.session_state.sim_index = min(st.session_state.sim_index + 1, len(responses) - 1)
+            st.session_state.sim_index = min(st.session_state.sim_index + 1, n_iteration - 1)
             push_latency_sample(latency_profile)
 
     with ctrl_d:
@@ -2395,7 +2474,7 @@ def simulation_mode():
         # widget level anyway, but the label is the first place a user
         # looks. 1-based to match the progress bar and "Stream position"
         # metric — see corresponding comment near the playhead.
-        max_n = len(responses)
+        max_n = n_iteration
         jump_target = st.number_input(
             f"Jump to stream position # (1–{max_n})",
             min_value=1,
@@ -2575,8 +2654,8 @@ def simulation_mode():
     def _playhead():
         # Auto-advance: only when running and not at the end. Step/Reset/
         # Jump live in the control row above and mutate sim_index there.
-        if st.session_state.sim_running and st.session_state.sim_index < len(responses) - 1:
-            st.session_state.sim_index = min(st.session_state.sim_index + 1, len(responses) - 1)
+        if st.session_state.sim_running and st.session_state.sim_index < n_iteration - 1:
+            st.session_state.sim_index = min(st.session_state.sim_index + 1, n_iteration - 1)
             push_latency_sample(latency_profile)
 
         idx_local = st.session_state.sim_index
@@ -2585,22 +2664,28 @@ def simulation_mode():
         # distribution chart which uses the incremental _tier_history state.
         # current_batch_local is a bounded O(3) slice — kept as-is.
         window_size = 3
-        current_batch_local = responses[max(0, idx_local - window_size + 1) : idx_local + 1]
+        current_batch_local = iteration_list[max(0, idx_local - window_size + 1) : idx_local + 1]
 
         # ── Issues 2 & 3: incremental accumulators ──────────────────────
         # Replace O(n) Counter + sum(1 for ...) on growing history_local
         # with O(1) session-state accumulators updated on each tick delta.
         # On a playhead jump backward, rebuild is O(k) where k = new_idx.
+        # NORMAL bucket is included so the full-stream mode's tier strip
+        # is faithful to the population the operator is reviewing.
         _acc = st.session_state.setdefault("_sim_acc", {
             "idx": -1,
-            "tier": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
+            "tier": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "NORMAL": 0},
             "attacks": 0,
         })
+        # Backfill NORMAL bucket on legacy session states that pre-date
+        # full_stream mode — without this, a switch into full_stream on
+        # the same session would silently drop NORMAL hits.
+        _acc["tier"].setdefault("NORMAL", 0)
         if idx_local < _acc["idx"]:
             # Jumped backward — rebuild from scratch up to idx_local
-            _acc["tier"] = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+            _acc["tier"] = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "NORMAL": 0}
             _acc["attacks"] = 0
-            for _r in responses[:idx_local + 1]:
+            for _r in iteration_list[:idx_local + 1]:
                 _lv = _r.get("risk_level", "LOW")
                 if _lv in _acc["tier"]:
                     _acc["tier"][_lv] += 1
@@ -2610,7 +2695,7 @@ def simulation_mode():
         elif idx_local > _acc["idx"]:
             # Advanced forward — only process new records (delta)
             for _i in range(_acc["idx"] + 1, idx_local + 1):
-                _r = responses[_i]
+                _r = iteration_list[_i]
                 _lv = _r.get("risk_level", "LOW")
                 if _lv in _acc["tier"]:
                     _acc["tier"][_lv] += 1
@@ -2625,7 +2710,7 @@ def simulation_mode():
         status_col, prog_col = st.columns([1, 4])
         with status_col:
             running_local = st.session_state.sim_running
-            at_end = idx_local >= len(responses) - 1
+            at_end = idx_local >= n_iteration - 1
             if at_end:
                 state_label = "Complete"
                 state_dot = "pulse-static"
@@ -2650,63 +2735,106 @@ def simulation_mode():
             )
         with prog_col:
             st.progress(
-                (idx_local + 1) / max(1, len(responses)),
-                text=f"Position {idx_local + 1} / {len(responses)}",
+                (idx_local + 1) / max(1, n_iteration),
+                text=f"Position {idx_local + 1} / {n_iteration}",
             )
 
         # End-of-stream callout (OS-12). Without this the simulation just
         # quietly stops auto-advancing and the operator has no signal that
-        # they've reviewed everything.
-        if idx_local >= len(responses) - 1:
-            st.success(
-                f"🏁 End of stream — reviewed all {len(responses)} alerts in "
-                f"the demo split. Use **Reset** to start over, or **Jump to "
-                f"stream position #** to revisit a specific position."
-            )
+        # they've reviewed everything. Full-stream mode adds the alert /
+        # NORMAL breakdown so the operator sees the population they just
+        # scrubbed through (not just the count of cells advanced).
+        if idx_local >= n_iteration - 1:
+            if using_full_stream and full_stream_meta:
+                n_alerts = int(full_stream_meta.get("n_surfaced", 0))
+                n_normal_m = int(full_stream_meta.get("n_normal", 0))
+                st.success(
+                    f"🏁 End of stream — processed all {n_iteration} samples "
+                    f"({n_alerts} alerts, {n_normal_m} NORMAL skipped). Use "
+                    f"**Reset** to start over, or **Jump to stream position #** "
+                    f"to revisit a specific position."
+                )
+            else:
+                st.success(
+                    f"🏁 End of stream — reviewed all {n_iteration} alerts in "
+                    f"the demo split. Use **Reset** to start over, or **Jump to "
+                    f"stream position #** to revisit a specific position."
+                )
 
-        # Mock live source preview (only when live mode active)
-        if using_live and live_df is not None and idx_local < len(live_df):
-            live_row = live_df.iloc[idx_local]
-            with st.expander(
-                f"📡 Live source — row {idx_local} arrived at {live_row['arrived_at']}",
-                expanded=False,
-            ):
-                st.caption(
-                    "Mock TAP: feature-extracted flow read directly from "
-                    f"data/processed/{PAGE_SPLIT['Online Simulation']}_phase1.parquet."
-                )
-                preview_cache = st.session_state.setdefault("_live_preview_cache", {})
-                if idx_local not in preview_cache:
-                    preview_cols = [c for c in live_row.index if c != "arrived_at"][:8]
-                    preview_cache[idx_local] = pd.DataFrame(
-                        {"feature": preview_cols, "value": [live_row[c] for c in preview_cols]}
+        # Mock live source preview (only when live mode active).
+        # B5: index live_df by the alert's sample_index, NOT by idx_local —
+        # idx_local was the alert position (0..n-1), so live_df.iloc[idx_local]
+        # was previewing the first n parquet rows (mostly NORMAL) instead of
+        # the actual parquet row that produced the alert at the playhead.
+        if using_live and live_df is not None:
+            current_entry = iteration_list[idx_local] if idx_local < n_iteration else {}
+            sample_index = int(current_entry.get("sample_index", idx_local))
+            if 0 <= sample_index < len(live_df):
+                live_row = live_df.iloc[sample_index]
+                with st.expander(
+                    f"📡 Live source — row {sample_index} arrived at "
+                    f"{live_row['arrived_at']}",
+                    expanded=False,
+                ):
+                    st.caption(
+                        "Mock TAP: feature-extracted flow read directly from "
+                        f"data/processed/{PAGE_SPLIT['Online Simulation']}_phase1.parquet."
                     )
-                    if len(preview_cache) > 256:
-                        preview_cache.pop(next(iter(preview_cache)))
-                st.dataframe(
-                    preview_cache[idx_local],
-                    hide_index=True,
-                    width="stretch",
-                )
+                    preview_cache = st.session_state.setdefault("_live_preview_cache", {})
+                    if sample_index not in preview_cache:
+                        preview_cols = [c for c in live_row.index if c != "arrived_at"][:8]
+                        preview_cache[sample_index] = pd.DataFrame(
+                            {"feature": preview_cols, "value": [live_row[c] for c in preview_cols]}
+                        )
+                        if len(preview_cache) > 256:
+                            preview_cache.pop(next(iter(preview_cache)))
+                    st.dataframe(
+                        preview_cache[sample_index],
+                        hide_index=True,
+                        width="stretch",
+                    )
 
         # Summary metrics — O(1) reads from incremental accumulators.
         # All four tiers are shown so the operator sees the full tier
         # distribution at a glance (was CRITICAL+HIGH only, hiding the
         # MEDIUM/LOW volume that contextualizes how noisy the stream is).
         st.markdown("---")
-        mc1, mc2, mc3, mc4, mc5, mc6 = st.columns(6)
-        mc1.metric(
-            "Stream position",
-            f"{idx_local + 1} / {len(responses)}",
-            help="Current playhead position in the alert stream (1-based). "
-                 "This is NOT the alert ID — see expander labels below.",
-        )
-        mc2.metric("CRITICAL", _acc["tier"].get("CRITICAL", 0))
-        mc3.metric("HIGH", _acc["tier"].get("HIGH", 0))
-        mc4.metric("MEDIUM", _acc["tier"].get("MEDIUM", 0))
-        mc5.metric("LOW", _acc["tier"].get("LOW", 0))
-        mc6.metric("True attacks", _acc["attacks"],
-                   help="Ground-truth attack count among samples processed so far.")
+        # Full-stream mode adds a NORMAL column so the tier strip totals
+        # to the population the operator is reviewing. Alerts-only mode
+        # keeps the original 6-column layout (no NORMAL since the iter
+        # list is already pre-filtered LOW+).
+        if using_full_stream:
+            mc1, mc2, mc3, mc4, mc5, mc6, mc7 = st.columns(7)
+            mc1.metric(
+                "Stream position",
+                f"{idx_local + 1} / {n_iteration}",
+                help="Current playhead position in the full stream (1-based). "
+                     "NORMAL rows are included; the iteration covers the "
+                     "entire demo dataset.",
+            )
+            mc2.metric("CRITICAL", _acc["tier"].get("CRITICAL", 0))
+            mc3.metric("HIGH", _acc["tier"].get("HIGH", 0))
+            mc4.metric("MEDIUM", _acc["tier"].get("MEDIUM", 0))
+            mc5.metric("LOW", _acc["tier"].get("LOW", 0))
+            mc6.metric("NORMAL", _acc["tier"].get("NORMAL", 0),
+                       help="Stream ticks where Module 3 assigned NORMAL "
+                            "(no operator action required).")
+            mc7.metric("True attacks", _acc["attacks"],
+                       help="Ground-truth attack count among samples processed so far.")
+        else:
+            mc1, mc2, mc3, mc4, mc5, mc6 = st.columns(6)
+            mc1.metric(
+                "Stream position",
+                f"{idx_local + 1} / {n_iteration}",
+                help="Current playhead position in the alert stream (1-based). "
+                     "This is NOT the alert ID — see expander labels below.",
+            )
+            mc2.metric("CRITICAL", _acc["tier"].get("CRITICAL", 0))
+            mc3.metric("HIGH", _acc["tier"].get("HIGH", 0))
+            mc4.metric("MEDIUM", _acc["tier"].get("MEDIUM", 0))
+            mc5.metric("LOW", _acc["tier"].get("LOW", 0))
+            mc6.metric("True attacks", _acc["attacks"],
+                       help="Ground-truth attack count among samples processed so far.")
 
         # Latest risk score + 4-component breakdown
         if current_batch_local:
@@ -2825,6 +2953,39 @@ def simulation_mode():
             # formula still holds since len(current_batch_local) reflects
             # the actual slice length.
             position = idx_local - (len(current_batch_local) - 1 - offset) + 1
+
+            # Full-stream NORMAL row: render a compact placeholder and skip
+            # the M5 alert pipeline entirely — process_alert expects the
+            # alert-record shape, and NORMAL entries have alert=None.
+            # B4: visible but un-actionable; no operator buttons.
+            if level == "NORMAL":
+                arrived_at = r.get("arrived_at", "")
+                st.markdown(
+                    f'<div style="padding:10px 12px;border-left:3px solid '
+                    f'var(--text-tertiary);background:var(--surface-2);'
+                    f'opacity:0.65;margin-bottom:6px;">'
+                    f'<div class="font-mono" style="font-size:11px;'
+                    f'color:var(--text-tertiary);">'
+                    f'Position {position} · sample #{sample_idx} · {arrived_at}'
+                    f'</div>'
+                    f'<div style="font-size:13px;color:var(--text-secondary);'
+                    f'margin-top:4px;">'
+                    f'<strong>NORMAL</strong> — no operator action required '
+                    f'<span class="font-mono" style="margin-left:8px;'
+                    f'font-size:11px;color:var(--text-tertiary);">'
+                    f'R={score:.3f}</span>'
+                    f'</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+                continue
+
+            # Full-stream LOW+ row: unwrap the embedded M5 alert payload so
+            # the downstream render path sees the alert-record shape it
+            # expects (explanation, response, risk_components ...). In
+            # alerts-only mode, r is already the M5 record — no unwrap.
+            if using_full_stream and isinstance(r.get("alert"), dict):
+                r = r["alert"]
 
             with st.expander(
                 f"Position {position} · Alert A-{sample_idx:04d} — "

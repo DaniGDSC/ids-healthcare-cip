@@ -1,16 +1,16 @@
 {
   "xgboost": {
     "top_features_masked": [
-      "SIntPkt",
+      "Dur",
       "Sport",
       "DIntPkt",
       "Temp",
       "Flgs"
     ],
-    "f1_baseline": 0.8989,
-    "f1_after_masking": 0.2342,
-    "f1_drop": 0.6647,
-    "f1_drop_pct": 73.9,
+    "f1_baseline": 0.8833,
+    "f1_after_masking": 0.2236,
+    "f1_drop": 0.6597,
+    "f1_drop_pct": 74.7,
     "faithful": true
   }
 }

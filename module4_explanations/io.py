@@ -39,8 +39,6 @@ def _split_paths(split: str) -> dict:
     return {
         "parquet": sp.parquet(split),
         "xgboost_preds": sp.model_predictions("xgboost", split),
-        "random_forest_preds": sp.model_predictions("random_forest", split),
-        "decision_tree_preds": sp.model_predictions("decision_tree", split),
         "dae_preds": sp.dae_predictions(split),
         "suffix": sp.suffix(split),
     }

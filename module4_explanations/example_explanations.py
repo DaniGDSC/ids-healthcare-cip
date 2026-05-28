@@ -107,8 +107,9 @@ def generate_example_explanations(
             1 for name in all_preds if all_preds[name]["y_pred"][idx] == 1
         )
         n_flagged += 1 if dae_preds["y_pred"][idx] == 1 else 0
+        n_detectors = len(all_preds) + 1  # Track A models + DAE
         severity = str(risk_levels[idx])
-        consensus = f"{n_flagged}/4 models flagged"
+        consensus = f"{n_flagged}/{n_detectors} detectors flagged"
 
         dae_top = _top_features_dae(weighted_err[idx], feat_names, k=3)
 

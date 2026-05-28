@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from module4_explanations.config import (
+    BASELINE_TRACK_A_MODELS,
     CLINICIAN_TEMPLATES,
     FEATURE_CONCEPTS,
     NLG_TEMPLATES,
@@ -60,6 +61,17 @@ def test_skip_shap_complements_shap_models():
     """SKIP_SHAP_MODELS = TRACK_A_MODELS - SHAP_MODELS."""
     assert SKIP_SHAP_MODELS | set(SHAP_MODELS) == set(TRACK_A_MODELS.keys())
     assert SKIP_SHAP_MODELS & set(SHAP_MODELS) == set()
+
+
+def test_track_a_runtime_is_xgboost_only():
+    """Runtime Track A registry must expose only XGBoost (post Phase 2)."""
+    assert set(TRACK_A_MODELS.keys()) == {"xgboost"}
+
+
+def test_baseline_models_disjoint_from_runtime():
+    """RF/DT live in BASELINE_TRACK_A_MODELS only — never in TRACK_A_MODELS."""
+    assert set(BASELINE_TRACK_A_MODELS.keys()) == {"random_forest", "decision_tree"}
+    assert set(BASELINE_TRACK_A_MODELS.keys()) & set(TRACK_A_MODELS.keys()) == set()
 
 
 def test_feature_concepts_carry_required_keys():

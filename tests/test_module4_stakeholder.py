@@ -18,14 +18,14 @@ from module4_explanations.stakeholder import (
 
 @pytest.fixture
 def synthetic_predictions():
-    """3 samples, 3 models — sample 0 flagged by all, sample 1 by xgb only."""
+    """3 samples — sample 0 flagged by XGBoost, sample 1 by XGBoost, sample 2 unflagged.
+
+    After Phase 2 the runtime registry exposes only XGBoost; the fixture
+    mirrors that so the (xgb, dae) pair is the full detector ensemble.
+    """
     return {
         "xgboost": {"y_pred": np.array([1, 1, 0]),
                     "y_proba": np.array([0.9, 0.55, 0.2])},
-        "random_forest": {"y_pred": np.array([1, 0, 0]),
-                          "y_proba": np.array([0.85, 0.45, 0.15])},
-        "decision_tree": {"y_pred": np.array([1, 0, 0]),
-                          "y_proba": np.array([0.8, 0.4, 0.1])},
     }
 
 
@@ -74,8 +74,8 @@ def test_analyst_report_includes_flagged_samples_only(
         dae_predictions, feat_names, synthetic_risk_levels,
         output_dir=tmp_path,
     )
-    # Sample 0 flagged by all 4 (3 track A + dae), sample 1 by xgb only
-    # Sample 2 has nothing flagged AND risk_level=LOW → excluded
+    # Sample 0 flagged by both detectors (xgb + dae), sample 1 by xgb only.
+    # Sample 2 has nothing flagged AND risk_level=LOW → excluded.
     indices = [a["sample_index"] for a in alerts]
     assert 0 in indices
     assert 1 in indices
@@ -95,7 +95,7 @@ def test_analyst_report_severity_from_risk_level(
     a0 = next(a for a in alerts if a["sample_index"] == 0)
     assert a0["severity"] == "CRITICAL"  # risk_levels[0] == CRITICAL
     assert a0["risk_level"] == "CRITICAL"
-    assert a0["consensus"] == "4/4 models flagged"  # detector signal preserved
+    assert a0["consensus"] == "2/2 detectors flagged"  # detector signal preserved
     a1 = next(a for a in alerts if a["sample_index"] == 1)
     assert a1["severity"] == "LOW"  # risk_levels[1] == LOW (despite xgb flag)
 
@@ -120,7 +120,7 @@ def test_analyst_report_includes_high_risk_unflagged(
     assert 2 in indices
     a2 = next(a for a in alerts if a["sample_index"] == 2)
     assert a2["severity"] == "HIGH"
-    assert a2["consensus"] == "0/4 models flagged"
+    assert a2["consensus"] == "0/2 detectors flagged"
 
 
 def test_analyst_report_writes_json(
@@ -205,9 +205,9 @@ def test_admin_dashboard_severity_counts(
         {"rank": 1, "feature": "f1", "mean_abs_shap": 0.5},
         {"rank": 2, "feature": "f3", "mean_abs_shap": 0.3},
     ]}
-    # Sample 0 flagged 4/4 but risk_level=HIGH → bucketed HIGH
-    # Sample 1 flagged 1/4 but risk_level=MEDIUM → bucketed MEDIUM
-    # Sample 2 flagged 0 and risk_level=LOW → excluded from total
+    # Sample 0 flagged 2/2 (xgb + dae) but risk_level=HIGH → bucketed HIGH
+    # Sample 1 flagged 1/2 (xgb only) but risk_level=MEDIUM → bucketed MEDIUM
+    # Sample 2 flagged 0/2 and risk_level=LOW → excluded from total
     risk_levels = np.array(["HIGH", "MEDIUM", "LOW"])
     dashboard = build_admin_dashboard(
         synthetic_shap, synthetic_predictions, dae_predictions, feat_names,
@@ -219,9 +219,9 @@ def test_admin_dashboard_severity_counts(
     assert dashboard["alerts_by_severity"]["CRITICAL"] == 0
     assert dashboard["alerts_by_severity"]["LOW"] == 0
     assert dashboard["total_alerts"] == 2
-    # model_agreement keeps the per-N-of-4 distribution as before.
-    assert dashboard["model_agreement"]["4_of_4"] == 1
-    assert dashboard["model_agreement"]["1_of_4"] == 1
+    # model_agreement now bucketed over the 2-detector ensemble (xgb + dae).
+    assert dashboard["model_agreement"]["2_of_2"] == 1
+    assert dashboard["model_agreement"]["1_of_2"] == 1
 
 
 def test_admin_dashboard_attack_categories_vectorised(

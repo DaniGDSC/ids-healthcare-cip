@@ -9,7 +9,27 @@ from __future__ import annotations
 
 import numpy as np
 
-from .config import MIN_DETECTION_GATE, RISK_THRESHOLDS, WEIGHTS
+from .config import (
+    CONTEXT_WEIGHTS_V2,
+    MIN_DETECTION_GATE,
+    RISK_THRESHOLDS,
+    RISK_THRESHOLDS_V2,
+    WEIGHTS,
+)
+
+
+# Supported formula versions. ``v1`` is the original linear weighted
+# sum (paper-frozen). ``v2`` is the Sprint-4 two-layer architecture
+# (production-deployed). Keeping both alongside lets RQ1 reproduction
+# stay byte-exact while new builds use the architecturally honest
+# formula.
+SUPPORTED_FORMULA_VERSIONS = ("v1", "v2")
+# Default = v1 so existing call sites (tests, downstream modules,
+# diagnostics) keep their current behaviour. v2 is opted into via the
+# ``module3_risk_scores --formula-version v2`` CLI flag for new regen
+# runs; the resulting npz carries a ``formula_version`` field so the
+# dashboard can render the right interpretation.
+DEFAULT_FORMULA_VERSION = "v1"
 
 
 def compute_composite_risk(
@@ -18,28 +38,81 @@ def compute_composite_risk(
     s_data: np.ndarray,
     d_clinical_tier: np.ndarray,
     weights: dict | None = None,
+    *,
+    formula_version: str = DEFAULT_FORMULA_VERSION,
 ) -> np.ndarray:
-    """R = w1·C_detect + w2·D_crit + w3·S_data + w4·D_clinical_tier.
+    """Composite risk score — dispatches between v1 (paper) and v2 (deployed).
 
     Args:
         c_detect: Cascaded Track A → Track B fused detection score in [0, 1].
         d_crit:   Device criticality × CIA threat interaction in [0, 1].
         s_data:   Data sensitivity in [0, 1].
         d_clinical_tier: Patient-acuity proxy in [0, 1].
-        weights:  Optional override of WEIGHTS. Must carry keys w1..w4.
+        weights:  v1 override only — must carry keys w1..w4. Ignored by v2.
+        formula_version: ``"v1"`` (legacy linear sum, paper-frozen) or
+            ``"v2"`` (Sprint-4 two-layer gate + amplification — default).
 
     Returns:
-        R in [0, 1] (output is clipped — extreme weights cannot push
-        the composite outside the unit interval).
+        R in [0, 1] (output is clipped).
+
+    Raises:
+        ValueError on unsupported ``formula_version``.
     """
-    w = weights or WEIGHTS
-    R = (
-        w["w1"] * c_detect
-        + w["w2"] * d_crit
-        + w["w3"] * s_data
-        + w["w4"] * d_clinical_tier
+    if formula_version == "v1":
+        w = weights or WEIGHTS
+        R = (
+            w["w1"] * c_detect
+            + w["w2"] * d_crit
+            + w["w3"] * s_data
+            + w["w4"] * d_clinical_tier
+        )
+        return np.clip(R, 0.0, 1.0)
+    if formula_version == "v2":
+        return _compute_composite_risk_v2(c_detect, d_crit, s_data, d_clinical_tier)
+    raise ValueError(
+        f"Unknown formula_version {formula_version!r}; supported: {SUPPORTED_FORMULA_VERSIONS}"
     )
-    return np.clip(R, 0.0, 1.0)
+
+
+def _compute_composite_risk_v2(
+    c_detect: np.ndarray,
+    d_crit: np.ndarray,
+    s_data: np.ndarray,
+    d_clinical_tier: np.ndarray,
+    weights: dict | None = None,
+) -> np.ndarray:
+    """Sprint-4 two-layer formula::
+
+        Layer 1 (gate):       passthrough if C_detect ≥ MIN_DETECTION_GATE,
+                              else 0
+        Layer 2 (modulate):   R = C_detect × (1 + α·D_crit
+                                              + β·S_data
+                                              + γ·D_clinical_tier)
+
+    Context never creates an alert when detection is silent —
+    fixing the v1 "vital-monitoring-idle floor at R ≈ 0.21" bug.
+    The full derivation lives in ``docs/formula_v2_rationale.md``.
+    """
+    w = weights or CONTEXT_WEIGHTS_V2
+    c_detect = np.asarray(c_detect, dtype=float)
+    context = (
+        w["alpha"] * np.asarray(d_crit, dtype=float)
+        + w["beta"]  * np.asarray(s_data, dtype=float)
+        + w["gamma"] * np.asarray(d_clinical_tier, dtype=float)
+    )
+    R = c_detect * (1.0 + context)
+    gated = np.where(c_detect < MIN_DETECTION_GATE, 0.0, R)
+    return np.clip(gated, 0.0, 1.0)
+
+
+def _default_thresholds_for(formula_version: str) -> tuple[float, float, float, float]:
+    table = (
+        RISK_THRESHOLDS_V2 if formula_version == "v2" else RISK_THRESHOLDS
+    )
+    by_name = {name: t for t, name in table}
+    return (
+        by_name["CRITICAL"], by_name["HIGH"], by_name["MEDIUM"], by_name["LOW"],
+    )
 
 
 def assign_risk_levels(
@@ -48,52 +121,38 @@ def assign_risk_levels(
     *,
     c_detect: np.ndarray | None = None,
     detection_gate: float | None = None,
+    formula_version: str = DEFAULT_FORMULA_VERSION,
 ) -> np.ndarray:
-    """Map composite scores to 5 alert tiers using 4 thresholds.
+    """Map composite scores to 5 alert tiers.
 
-    Tiers (descending severity):
-      - ``CRITICAL`` when ``R >= 0.80``
-      - ``HIGH``     when ``R >= 0.60``
-      - ``MEDIUM``   when ``R >= 0.40``
-      - ``LOW``      when ``R >= 0.30``
-      - ``NORMAL``   otherwise (anything below the LOW threshold,
-                     or — when ``c_detect`` is supplied — any sample
-                     whose detector confidence is below ``detection_gate``)
+    The default threshold table depends on ``formula_version`` so v2's
+    different R distribution doesn't get mismapped through v1 cutoffs.
+    Both versions share the 5-tier vocabulary (CRITICAL/HIGH/MEDIUM/
+    LOW/NORMAL); only the numeric cutoffs differ.
 
     Args:
         R: Composite risk scores in [0, 1].
-        thresholds: Optional dict ``{"CRITICAL": 0.80, "HIGH": 0.60,
-            "MEDIUM": 0.40, "LOW": 0.30}``. Falls back to the canonical
-            ``RISK_THRESHOLDS`` constant when *None*.
-        c_detect: Optional cascaded-detection score array aligned with
-            ``R``. When provided, samples with ``c_detect <
-            detection_gate`` are forced to NORMAL. This implements
-            Phase B of the formula fix — a sample with negligible
-            detector signal must not be promoted to LOW by
-            context-component weight alone.
-        detection_gate: Threshold for the detection gate. Defaults to
-            ``MIN_DETECTION_GATE`` (0.02) when ``c_detect`` is given
-            and this is None. Ignored when ``c_detect`` is None, so
-            callers that only want the tier table can omit both.
-
-    Returns:
-        np.ndarray of tier labels — one of ``"CRITICAL"``, ``"HIGH"``,
-        ``"MEDIUM"``, ``"LOW"``, ``"NORMAL"``.
-
-    The detection gate's empirical rationale is recorded in
-    ``results/formula_comparison.json``: on the test split it cuts
-    ~2000 context-driven false alerts while dropping only 12 attacks
-    whose model probability is already below the XGBoost decision
-    threshold (i.e. those were already false negatives at the model
-    layer — the formula isn't the thing that should rescue them).
+        thresholds: Optional explicit override (any keys missing fall
+            back to the version's defaults).
+        c_detect: Optional detection-score array. When supplied, samples
+            below ``detection_gate`` are forced to NORMAL. v2 already
+            embeds the gate in ``compute_composite_risk`` (returns 0
+            below the gate, which falls below any positive LOW
+            threshold), so passing c_detect here is redundant but
+            harmless.
+        detection_gate: Override the gate value used at the tier-
+            assignment step.
+        formula_version: ``"v1"`` or ``"v2"`` — selects which threshold
+            table to use as the default.
     """
+    defaults = _default_thresholds_for(formula_version)
     if thresholds is None:
-        t_crit, t_high, t_med, t_low = 0.80, 0.60, 0.40, 0.30
+        t_crit, t_high, t_med, t_low = defaults
     else:
-        t_crit = thresholds.get("CRITICAL", 0.80)
-        t_high = thresholds.get("HIGH", 0.60)
-        t_med  = thresholds.get("MEDIUM", 0.40)
-        t_low  = thresholds.get("LOW", 0.30)
+        t_crit = thresholds.get("CRITICAL", defaults[0])
+        t_high = thresholds.get("HIGH",     defaults[1])
+        t_med  = thresholds.get("MEDIUM",   defaults[2])
+        t_low  = thresholds.get("LOW",      defaults[3])
 
     conditions = [R >= t_crit, R >= t_high, R >= t_med, R >= t_low]
     choices = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
@@ -105,4 +164,9 @@ def assign_risk_levels(
     return tiers
 
 
-__all__ = ["compute_composite_risk", "assign_risk_levels"]
+__all__ = [
+    "compute_composite_risk",
+    "assign_risk_levels",
+    "SUPPORTED_FORMULA_VERSIONS",
+    "DEFAULT_FORMULA_VERSION",
+]

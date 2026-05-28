@@ -1,0 +1,57 @@
+{
+  "v1_paper_frozen": {
+    "n_alert_records": 520,
+    "tier_distribution": {
+      "HIGH": 301,
+      "LOW": 139,
+      "MEDIUM": 68,
+      "CRITICAL": 12
+    },
+    "operational_precision": 0.5692,
+    "operational_recall": 1.0,
+    "surfaced_precision": 0.7559,
+    "surfaced_recall": 0.973,
+    "low_tier_attack_density": 0.0576,
+    "counterfactual_overall_rate": 0.6058,
+    "counterfactual_actionable_feasible_rate": 0.8058,
+    "n_attacks_in_pool": 296,
+    "n_low": 139,
+    "n_low_attacks": 8,
+    "n_surfaced_attacks": 288
+  },
+  "v2_deployed": {
+    "n_alert_records": 684,
+    "tier_distribution": {
+      "LOW": 215,
+      "CRITICAL": 355,
+      "MEDIUM": 82,
+      "HIGH": 32
+    },
+    "operational_precision": 0.4327,
+    "operational_recall": 1.0,
+    "surfaced_precision": 0.6226,
+    "surfaced_recall": 0.9865,
+    "low_tier_attack_density": 0.0186,
+    "counterfactual_overall_rate": 0.4912,
+    "counterfactual_actionable_feasible_rate": 0.6759,
+    "n_attacks_in_pool": 296,
+    "n_low": 215,
+    "n_low_attacks": 4,
+    "n_surfaced_attacks": 292
+  },
+  "delta": {
+    "n_alert_records": 164,
+    "tier_distribution": null,
+    "operational_precision": -0.13650000000000007,
+    "operational_recall": 0.0,
+    "surfaced_precision": -0.13329999999999997,
+    "surfaced_recall": 0.013500000000000068,
+    "low_tier_attack_density": -0.039,
+    "counterfactual_overall_rate": -0.11459999999999998,
+    "counterfactual_actionable_feasible_rate": -0.12990000000000002,
+    "n_attacks_in_pool": 0,
+    "n_low": 76,
+    "n_low_attacks": -4,
+    "n_surfaced_attacks": 4
+  }
+}

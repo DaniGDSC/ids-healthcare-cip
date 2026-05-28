@@ -163,8 +163,6 @@ def main() -> None:
 
     pred_paths = {
         "xgboost":       paths["xgboost_preds"],
-        "random_forest": paths["random_forest_preds"],
-        "decision_tree": paths["decision_tree_preds"],
     }
 
     # ── Track A: TreeSHAP ──

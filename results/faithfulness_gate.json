@@ -1,0 +1,61 @@
+{
+  "generated_at": "2026-05-28T14:11:39.443454+00:00",
+  "all_ok": true,
+  "n_checks": 5,
+  "n_failing": 0,
+  "checks": [
+    {
+      "name": "narrative_faithfulness",
+      "value": 0.9674,
+      "floor": 0.85,
+      "ok": true,
+      "reason": "0.9674 >= 0.85"
+    },
+    {
+      "name": "perturbation_faithfulness",
+      "value": 1.0,
+      "floor": 1.0,
+      "ok": true,
+      "reason": "all 1 models faithful",
+      "per_model": {
+        "xgboost": {
+          "f1_drop_pct": 74.7,
+          "faithful": true
+        }
+      }
+    },
+    {
+      "name": "counterfactual_actionable_feasible",
+      "value": 0.8058,
+      "floor": 0.8,
+      "ok": true,
+      "reason": "0.8058 >= 0.80"
+    },
+    {
+      "name": "stability_unstable_share",
+      "value": 0.5399,
+      "ceiling": 0.6,
+      "ok": true,
+      "reason": "54.0% <= 60%",
+      "band_distribution": {
+        "STABLE": 55,
+        "BORDERLINE": 112,
+        "UNSTABLE": 196
+      }
+    },
+    {
+      "name": "stability_fragile_share",
+      "value": 0.8485,
+      "ceiling": 0.9,
+      "ok": true,
+      "reason": "84.8% <= 90%"
+    }
+  ],
+  "floors": {
+    "narrative_faithfulness": 0.85,
+    "counterfactual_actionable_feasible": 0.8,
+    "perturbation_faithful_share": 1.0,
+    "max_unstable_share": 0.6,
+    "max_fragile_share": 0.9
+  }
+}

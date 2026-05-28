@@ -59,15 +59,14 @@ class AlertExplainer:
             Stored at construction; cannot change per call (Y10 fix).
             ``explain()`` will reject calls that pass a different list.
 
-    Models in ``SKIP_SHAP_MODELS`` (defaults to non-XGBoost models) are
-    still consulted for the vote / severity computation but their
-    TreeExplainer is skipped because:
-      1. RF dominates startup_ms (~1.5 s of the 2.0 s baseline)
-      2. RF dominates treeshap_ms (~95 of the 108 ms baseline)
-      3. Nothing downstream reads ``analyst.track_a.random_forest`` —
-         the clinician summary uses XGBoost, the analyst waterfall is
-         XGBoost-only, and the offline batch explainer is the source
-         of all RF charts.
+    After the Phase 2 cleanup ``TRACK_A_MODELS`` contains only XGBoost,
+    so ``SKIP_SHAP_MODELS`` is empty and the per-alert vote dict has
+    exactly two detectors: XGBoost (Track A) and DAE (Track B). The
+    online ``n_models_flagged`` and ``consensus = N/2`` mirror the
+    offline analyst-report values. RandomForest and DecisionTree are
+    no longer loaded at runtime — they remain on disk as RQ1 R2
+    baselines and the offline batch explainer is the source of all
+    per-baseline charts.
     """
 
     def __init__(self, feat_names: Sequence[str]) -> None:

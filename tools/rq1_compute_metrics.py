@@ -155,29 +155,40 @@ def compute_headline_metrics():
 # R2: Track A model comparison (XGBoost vs RF vs DT)
 # ──────────────────────────────────────────────────────────────────────
 def compute_track_a_ablation():
+    """Compare XGBoost (runtime) vs RF / DT (baselines) on the full test set.
+
+    After Phase 2 the analyst report no longer carries RF/DT prediction
+    blocks (Module 4 only consults XGBoost + DAE), so this function reads
+    each model's per-sample predictions directly from the npz files that
+    Module 2's ``predict_split`` writes — those still cover all three
+    models because M2 merges the runtime + baseline registries.
+    """
+    from common import split_paths as sp
+
     d = np.load(REPORTS / "risk_scores.npz", allow_pickle=True)
-    y_true_full = d["y_true"].astype(int)
-
-    with open(REPORTS / "analyst_report.json") as f:
-        analyst = json.load(f)
-
-    # Index alignment — analyst report is subset of test set
-    sample_indices = [a["sample_index"] for a in analyst]
-    y_true = y_true_full[sample_indices]
+    y_true = d["y_true"].astype(int)
 
     models = ("xgboost", "random_forest", "decision_tree")
     per_model = {}
     for m in models:
-        confidence = np.array([
-            (a.get("models", {}).get(m) or {}).get("confidence", 0.0)
-            for a in analyst
-        ], dtype=float)
-        prediction = np.array([
-            (a.get("models", {}).get(m) or {}).get("prediction", 0)
-            for a in analyst
-        ], dtype=int)
+        npz_path = sp.model_predictions(m, "test")
+        if not npz_path.exists():
+            per_model[m] = {"_skipped": f"missing {npz_path.name} — run module2"}
+            continue
+        npz = np.load(npz_path)
+        confidence = npz["y_proba"].astype(float)
+        prediction = npz["y_pred"].astype(int)
+        # Length guard: should match risk_scores y_true row-for-row since
+        # both come from the same test parquet.
+        if len(confidence) != len(y_true):
+            per_model[m] = {
+                "_skipped": (
+                    f"length mismatch: y_proba={len(confidence)} vs "
+                    f"y_true={len(y_true)} (test parquet drifted?)"
+                ),
+            }
+            continue
         metrics_at_05 = _binary_metrics(y_true, confidence, threshold=0.5)
-        # Use prediction directly (from model's own decision boundary)
         cm = confusion_matrix(y_true, prediction, labels=[0, 1])
         tn, fp, fn, tp = cm.ravel()
         prec, rec, _, _ = precision_recall_fscore_support(
@@ -199,9 +210,13 @@ def compute_track_a_ablation():
 
     return {
         "_meta": {
-            "description": "Track A model comparison on analyst_report subset",
+            "description": (
+                "Track A model comparison on full test set "
+                "(reads per-model npz directly; analyst_report no longer "
+                "carries RF/DT after Phase 2 runtime cleanup)."
+            ),
             "n_samples": int(len(y_true)),
-            "n_attacks_in_subset": int(y_true.sum()),
+            "n_attacks": int(y_true.sum()),
         },
         "models": per_model,
     }
@@ -276,13 +291,20 @@ def compute_track_b_per_class():
     d = np.load(REPORTS / "risk_scores.npz", allow_pickle=True)
     y_true = d["y_true"].astype(int)
     c_track_b = d["c_track_b"].astype(float)
+    n_total = int(len(y_true))
 
     with open(REPORTS / "alert_responses.json") as f:
         records = json.load(f)["records"]
-    # sample_index 1:1 with risk_scores row
-    categories = np.array(
-        [r.get("attack_category", "unknown") for r in records], dtype=object
-    )
+    # alert_responses.json is a subset of test rows (surfaced alerts);
+    # build a full-length (n_total,) categories array by joining on
+    # sample_index. Rows that did not surface inherit "normal" so the
+    # one-vs-rest AUC for "normal" still has the right negative class.
+    categories = np.full(n_total, "normal", dtype=object)
+    for r in records:
+        idx = r.get("sample_index")
+        if idx is None or not (0 <= idx < n_total):
+            continue
+        categories[int(idx)] = r.get("attack_category", "unknown")
 
     per_class = {}
     for cat in sorted(set(categories)):
@@ -371,9 +393,14 @@ def compute_weight_sensitivity():
     }
 
     # MEDIUM cutoff = surfacing threshold (anything below this lands in LOW
-    # and is suppressed). Canonical value from RISK_THRESHOLDS (the last
-    # tuple's threshold is the MEDIUM/LOW boundary).
-    surfacing_threshold = float(_MODULE3_TIER_THRESHOLDS[-1][0])
+    # and is suppressed). Lookup by tier name — RISK_THRESHOLDS gained a
+    # 4th NORMAL row in the formula-fix upgrade, so ``[-1]`` no longer
+    # points at MEDIUM. Look up by name to stay stable across future
+    # threshold additions (matches the assertion in
+    # tests/test_rq1_weight_sensitivity.py::test_surfacing_threshold_canonical).
+    surfacing_threshold = float(
+        next(t for t, name in _MODULE3_TIER_THRESHOLDS if name == "MEDIUM")
+    )
 
     d = np.load(REPORTS / "risk_scores.npz", allow_pickle=True)
     y_true = d["y_true"].astype(int)

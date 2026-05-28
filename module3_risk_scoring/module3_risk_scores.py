@@ -120,9 +120,22 @@ def main() -> None:
             "`risk_scores.npz`; 'demo' writes `demo_scores.npz`."
         ),
     )
+    parser.add_argument(
+        "--formula-version",
+        choices=["v1", "v2"],
+        default="v1",
+        help=(
+            "Risk-composition formula. 'v1' (default) is the paper-frozen "
+            "linear weighted sum; 'v2' is the Sprint-4 two-layer "
+            "(gate + amplification) — see docs/formula_v2_rationale.md. "
+            "v2 npz includes a ``formula_version`` field so downstream "
+            "consumers can render the right interpretation."
+        ),
+    )
     args = parser.parse_args()
 
     splits_to_run = ["test", "demo"] if args.split == "both" else [args.split]
+    formula_version = args.formula_version
 
     logging.basicConfig(
         level=logging.INFO,
@@ -134,7 +147,7 @@ def main() -> None:
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
     for split in splits_to_run:
-        _run_one_split(split, sep)
+        _run_one_split(split, sep, formula_version=formula_version)
     logger.info(
         "Module 3 complete (%.1fs, splits=%s)",
         time.perf_counter() - t0,
@@ -142,7 +155,7 @@ def main() -> None:
     )
 
 
-def _run_one_split(split: str, sep: str) -> None:
+def _run_one_split(split: str, sep: str, *, formula_version: str = "v1") -> None:
     paths = _split_paths(split)
     logger.info(sep)
     logger.info("MODULE 3 — COMPOSITE RISK SCORES (RQ2/RO2) — split=%s", split)
@@ -204,8 +217,19 @@ def _run_one_split(split: str, sep: str) -> None:
     # is forced to NORMAL regardless of context — this prevents the
     # context-only "alert floor" that previously surfaced ~2000 noise
     # records on the test split.
-    R = compute_composite_risk(c_detect, d_crit, s_data, d_clinical_tier)
-    levels = assign_risk_levels(R, c_detect=c_detect)
+    #
+    # Sprint 4 — formula_version routed through to the composition
+    # helper. v2 embeds the gate inside ``compute_composite_risk_v2``
+    # already, so passing ``c_detect=`` to ``assign_risk_levels`` for
+    # v2 is redundant but kept for shape symmetry with v1.
+    logger.info("Using formula_version=%s", formula_version)
+    R = compute_composite_risk(
+        c_detect, d_crit, s_data, d_clinical_tier,
+        formula_version=formula_version,
+    )
+    levels = assign_risk_levels(
+        R, c_detect=c_detect, formula_version=formula_version,
+    )
     logger.info("")
     logger.info(
         "Composite risk R: mean=%.4f, median=%.4f, std=%.4f",
@@ -270,6 +294,7 @@ def _run_one_split(split: str, sep: str) -> None:
         levels, y_test, attack_cats, fusion, contributions,
         sensitivity, worked_examples,
         out_npz=paths["out_npz"],
+        formula_version=formula_version,
     )
 
     # ── Visualizations + config JSON exports (test split only) ──

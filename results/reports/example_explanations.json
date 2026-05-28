@@ -1,166 +1,75 @@
 [
   {
-    "sample_index": 425,
-    "ground_truth": "attack",
-    "attack_category": "Spoofing",
-    "views": {
-      "clinician": {
-        "role": "clinician",
-        "format": "text",
-        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +15.562).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +6.786). Clinical review of this vital sign is recommended.\n\nSource Port showed abnormal source port used (SHAP contribution: +4.715).\n\nFlow Duration showed unusually brief connection (SHAP contribution: -1.780).\n\nPatient Systolic Blood Pressure showed elevated systolic BP (hypertension) (SHAP contribution: +1.444). Clinical review of this vital sign is recommended.\n\nComposite risk score: 0.64 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.72, data sensitivity: 0.40, clinical tier: 0.00.\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
-      },
-      "analyst": {
-        "role": "analyst",
-        "format": "json",
-        "content": {
-          "sample_index": 425,
-          "severity": "HIGH",
-          "consensus": "4/4 models flagged",
-          "top_features_shap": [
-            {
-              "feature": "Flgs",
-              "shap_value": 15.561818,
-              "direction": "increases_risk"
-            },
-            {
-              "feature": "Temp",
-              "shap_value": 6.786421,
-              "direction": "increases_risk"
-            },
-            {
-              "feature": "Sport",
-              "shap_value": 4.71507,
-              "direction": "increases_risk"
-            },
-            {
-              "feature": "Dur",
-              "shap_value": -1.780248,
-              "direction": "decreases_risk"
-            },
-            {
-              "feature": "SYS",
-              "shap_value": 1.443658,
-              "direction": "increases_risk"
-            }
-          ],
-          "dae_top_features": [
-            {
-              "feature": "dMaxPktSz",
-              "weighted_error": 7.4e-07,
-              "pct_contribution": 19.3
-            },
-            {
-              "feature": "TotBytes",
-              "weighted_error": 6.5e-07,
-              "pct_contribution": 17.1
-            },
-            {
-              "feature": "SIntPktAct",
-              "weighted_error": 6.2e-07,
-              "pct_contribution": 16.2
-            }
-          ],
-          "risk_score": 0.6403466446159267,
-          "risk_components": {
-            "c_detect": 1.0,
-            "d_crit": 0.7200000000000001,
-            "s_data": 0.4023109243697479,
-            "d_clinical_tier": 0.0
-          },
-          "charts": [
-            "waterfall_xgboost_sample_0425.png",
-            "force_xgboost_sample_0425.png"
-          ]
-        }
-      },
-      "administrator": {
-        "role": "administrator",
-        "format": "json",
-        "content": {
-          "sample_index": 425,
-          "severity": "HIGH",
-          "risk_score": 0.6403466446159267,
-          "risk_level": "HIGH",
-          "action_required": true,
-          "global_charts": [
-            "global_importance_xgboost.png",
-            "beeswarm_xgboost.png"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "sample_index": 393,
+    "sample_index": 1131,
     "ground_truth": "attack",
     "attack_category": "Data Alteration",
     "views": {
       "clinician": {
         "role": "clinician",
         "format": "text",
-        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +13.990).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +4.862).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +2.580). Clinical review of this vital sign is recommended.\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.470).\n\nSource Inter-Packet Gap showed abnormal packet timing (slow) (SHAP contribution: +2.032).\n\nComposite risk score: 0.69 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.80, data sensitivity: 0.58, clinical tier: 0.00.\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
+        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 2/2 detectors flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +11.914).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +4.663).\n\nPatient Pulse Rate showed elevated heart rate (tachycardia) (SHAP contribution: +2.282). Clinical review of this vital sign is recommended.\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.022).\n\nSource Inter-Packet Gap showed abnormal packet timing (slow) (SHAP contribution: +1.912).\n\nComposite risk score: 0.77 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.80, data sensitivity: 0.83, clinical tier: 0.25.\n\nNote: 2 of 8 biometric readings are outside normal range. Verify patient condition independently.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
       },
       "analyst": {
         "role": "analyst",
         "format": "json",
         "content": {
-          "sample_index": 393,
+          "sample_index": 1131,
           "severity": "HIGH",
-          "consensus": "4/4 models flagged",
+          "consensus": "2/2 detectors flagged",
           "top_features_shap": [
             {
               "feature": "Flgs",
-              "shap_value": 13.990293,
+              "shap_value": 11.914478,
               "direction": "increases_risk"
             },
             {
               "feature": "DIntPkt",
-              "shap_value": 4.862231,
+              "shap_value": 4.663319,
               "direction": "increases_risk"
             },
             {
-              "feature": "Temp",
-              "shap_value": 2.579648,
+              "feature": "Pulse_Rate",
+              "shap_value": 2.281781,
               "direction": "increases_risk"
             },
             {
               "feature": "Dur",
-              "shap_value": 2.469706,
+              "shap_value": 2.021649,
               "direction": "increases_risk"
             },
             {
               "feature": "SIntPkt",
-              "shap_value": 2.031957,
+              "shap_value": 1.911866,
               "direction": "increases_risk"
             }
           ],
           "dae_top_features": [
             {
               "feature": "SIntPktAct",
-              "weighted_error": 3.25e-06,
-              "pct_contribution": 25.5
+              "weighted_error": 1.03e-06,
+              "pct_contribution": 62.7
             },
             {
-              "feature": "TotBytes",
-              "weighted_error": 3.12e-06,
-              "pct_contribution": 24.5
+              "feature": "pDstLoss",
+              "weighted_error": 3.8e-07,
+              "pct_contribution": 23.0
             },
             {
               "feature": "SrcBytes",
-              "weighted_error": 2.52e-06,
-              "pct_contribution": 19.7
+              "weighted_error": 1.2e-07,
+              "pct_contribution": 7.4
             }
           ],
-          "risk_score": 0.6871323589016409,
+          "risk_score": 0.774789921926851,
           "risk_components": {
             "c_detect": 1.0,
             "d_crit": 0.8,
-            "s_data": 0.5808823529411765,
-            "d_clinical_tier": 0.0
+            "s_data": 0.8319327731092439,
+            "d_clinical_tier": 0.25
           },
           "charts": [
-            "waterfall_xgboost_sample_0393.png",
-            "force_xgboost_sample_0393.png"
+            "waterfall_xgboost_sample_1131.png",
+            "force_xgboost_sample_1131.png"
           ]
         }
       },
@@ -168,9 +77,9 @@
         "role": "administrator",
         "format": "json",
         "content": {
-          "sample_index": 393,
+          "sample_index": 1131,
           "severity": "HIGH",
-          "risk_score": 0.6871323589016409,
+          "risk_score": 0.774789921926851,
           "risk_level": "HIGH",
           "action_required": true,
           "global_charts": [
@@ -182,167 +91,76 @@
     }
   },
   {
-    "sample_index": 20,
-    "ground_truth": "attack",
-    "attack_category": "Spoofing",
-    "views": {
-      "clinician": {
-        "role": "clinician",
-        "format": "text",
-        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 1/4 models flagged using a confidence of 100%.\n\nSource Port showed abnormal source port used (SHAP contribution: +7.550).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +3.659). Clinical review of this vital sign is recommended.\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -3.070).\n\nDest Inter-Packet Gap showed unusually fast responses (SHAP contribution: -2.157).\n\nFlow Duration showed unusually brief connection (SHAP contribution: -1.241).\n\nComposite risk score: 0.71 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.72, data sensitivity: 0.74, clinical tier: 0.12.\n\nNote: 1 of 8 biometric readings are outside normal range. Verify patient condition independently.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
-      },
-      "analyst": {
-        "role": "analyst",
-        "format": "json",
-        "content": {
-          "sample_index": 20,
-          "severity": "HIGH",
-          "consensus": "1/4 models flagged",
-          "top_features_shap": [
-            {
-              "feature": "Sport",
-              "shap_value": 7.549739,
-              "direction": "increases_risk"
-            },
-            {
-              "feature": "Temp",
-              "shap_value": 3.658745,
-              "direction": "increases_risk"
-            },
-            {
-              "feature": "Flgs",
-              "shap_value": -3.069843,
-              "direction": "decreases_risk"
-            },
-            {
-              "feature": "DIntPkt",
-              "shap_value": -2.157209,
-              "direction": "decreases_risk"
-            },
-            {
-              "feature": "Dur",
-              "shap_value": -1.240519,
-              "direction": "decreases_risk"
-            }
-          ],
-          "dae_top_features": [
-            {
-              "feature": "SIntPktAct",
-              "weighted_error": 2.23e-06,
-              "pct_contribution": 45.7
-            },
-            {
-              "feature": "dMaxPktSz",
-              "weighted_error": 7.7e-07,
-              "pct_contribution": 15.7
-            },
-            {
-              "feature": "DstBytes",
-              "weighted_error": 5.2e-07,
-              "pct_contribution": 10.6
-            }
-          ],
-          "risk_score": 0.7145641921548284,
-          "risk_components": {
-            "c_detect": 0.9954178333282471,
-            "d_crit": 0.7200000000000001,
-            "s_data": 0.7426470588235295,
-            "d_clinical_tier": 0.125
-          },
-          "charts": [
-            "waterfall_xgboost_sample_0020.png",
-            "force_xgboost_sample_0020.png"
-          ]
-        }
-      },
-      "administrator": {
-        "role": "administrator",
-        "format": "json",
-        "content": {
-          "sample_index": 20,
-          "severity": "HIGH",
-          "risk_score": 0.7145641921548284,
-          "risk_level": "HIGH",
-          "action_required": true,
-          "global_charts": [
-            "global_importance_xgboost.png",
-            "beeswarm_xgboost.png"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "sample_index": 5,
+    "sample_index": 211,
     "ground_truth": "attack",
     "attack_category": "Data Alteration",
     "views": {
       "clinician": {
         "role": "clinician",
         "format": "text",
-        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 4/4 models flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +12.188).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +3.889).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.030).\n\nDestination Load showed normal destination load (SHAP contribution: -1.109).\n\nPatient Pulse Rate showed low heart rate (bradycardia) (SHAP contribution: -1.034). Clinical review of this vital sign is recommended.\n\nComposite risk score: 0.66 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.80, data sensitivity: 0.40, clinical tier: 0.00.\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
+        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 2/2 detectors flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +14.120).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +3.686).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.168).\n\nSource Inter-Packet Gap showed abnormal packet timing (slow) (SHAP contribution: +1.698).\n\nPatient Blood Oxygen Saturation showed normal SpO2 (SHAP contribution: +1.397). Clinical review of this vital sign is recommended.\n\nComposite risk score: 0.79 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.80, data sensitivity: 0.76, clinical tier: 0.38.\n\nNote: 3 of 8 biometric readings are outside normal range. Verify patient condition independently.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
       },
       "analyst": {
         "role": "analyst",
         "format": "json",
         "content": {
-          "sample_index": 5,
+          "sample_index": 211,
           "severity": "HIGH",
-          "consensus": "4/4 models flagged",
+          "consensus": "2/2 detectors flagged",
           "top_features_shap": [
             {
               "feature": "Flgs",
-              "shap_value": 12.187801,
+              "shap_value": 14.120288,
               "direction": "increases_risk"
             },
             {
               "feature": "DIntPkt",
-              "shap_value": 3.889036,
+              "shap_value": 3.686325,
               "direction": "increases_risk"
             },
             {
               "feature": "Dur",
-              "shap_value": 2.029648,
+              "shap_value": 2.167768,
               "direction": "increases_risk"
             },
             {
-              "feature": "DstLoad",
-              "shap_value": -1.108603,
-              "direction": "decreases_risk"
+              "feature": "SIntPkt",
+              "shap_value": 1.698447,
+              "direction": "increases_risk"
             },
             {
-              "feature": "Pulse_Rate",
-              "shap_value": -1.03449,
-              "direction": "decreases_risk"
+              "feature": "SpO2",
+              "shap_value": 1.397385,
+              "direction": "increases_risk"
             }
           ],
           "dae_top_features": [
             {
-              "feature": "TotBytes",
-              "weighted_error": 4.2e-06,
-              "pct_contribution": 27.4
-            },
-            {
               "feature": "SIntPktAct",
-              "weighted_error": 2.45e-06,
-              "pct_contribution": 16.0
+              "weighted_error": 4.5e-07,
+              "pct_contribution": 71.8
             },
             {
-              "feature": "pSrcLoss",
-              "weighted_error": 2.43e-06,
-              "pct_contribution": 15.9
+              "feature": "pDstLoss",
+              "weighted_error": 8e-08,
+              "pct_contribution": 13.0
+            },
+            {
+              "feature": "SrcBytes",
+              "weighted_error": 5e-08,
+              "pct_contribution": 7.2
             }
           ],
-          "risk_score": 0.6603465254066371,
+          "risk_score": 0.7889180731873553,
           "risk_components": {
-            "c_detect": 0.9999997019767761,
+            "c_detect": 1.0,
             "d_crit": 0.8,
-            "s_data": 0.4023109243697479,
-            "d_clinical_tier": 0.0
+            "s_data": 0.7594537815126051,
+            "d_clinical_tier": 0.375
           },
           "charts": [
-            "waterfall_xgboost_sample_0005.png",
-            "force_xgboost_sample_0005.png"
+            "waterfall_xgboost_sample_0211.png",
+            "force_xgboost_sample_0211.png"
           ]
         }
       },
@@ -350,9 +168,9 @@
         "role": "administrator",
         "format": "json",
         "content": {
-          "sample_index": 5,
+          "sample_index": 211,
           "severity": "HIGH",
-          "risk_score": 0.6603465254066371,
+          "risk_score": 0.7889180731873553,
           "risk_level": "HIGH",
           "action_required": true,
           "global_charts": [
@@ -364,76 +182,258 @@
     }
   },
   {
-    "sample_index": 1389,
+    "sample_index": 11,
+    "ground_truth": "attack",
+    "attack_category": "Spoofing",
+    "views": {
+      "clinician": {
+        "role": "clinician",
+        "format": "text",
+        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 1/2 detectors flagged using a confidence of 100%.\n\nSource Port showed abnormal source port used (SHAP contribution: +11.674).\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -3.546).\n\nSource Inter-Packet Gap showed rapid packet bursts (SHAP contribution: -3.045).\n\nPatient Blood Oxygen Saturation showed normal SpO2 (SHAP contribution: +1.868). Clinical review of this vital sign is recommended.\n\nFlow Duration showed unusually brief connection (SHAP contribution: -1.808).\n\nComposite risk score: 0.70 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.72, data sensitivity: 0.83, clinical tier: 0.00.\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
+      },
+      "analyst": {
+        "role": "analyst",
+        "format": "json",
+        "content": {
+          "sample_index": 11,
+          "severity": "HIGH",
+          "consensus": "1/2 detectors flagged",
+          "top_features_shap": [
+            {
+              "feature": "Sport",
+              "shap_value": 11.674341,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Flgs",
+              "shap_value": -3.545943,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "SIntPkt",
+              "shap_value": -3.044659,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "SpO2",
+              "shap_value": 1.867929,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Dur",
+              "shap_value": -1.808163,
+              "direction": "decreases_risk"
+            }
+          ],
+          "dae_top_features": [
+            {
+              "feature": "DstLoad",
+              "weighted_error": 0.0,
+              "pct_contribution": 26.3
+            },
+            {
+              "feature": "pSrcLoss",
+              "weighted_error": 0.0,
+              "pct_contribution": 22.7
+            },
+            {
+              "feature": "Load",
+              "weighted_error": 0.0,
+              "pct_contribution": 14.7
+            }
+          ],
+          "risk_score": 0.704787150310869,
+          "risk_components": {
+            "c_detect": 0.999993085861206,
+            "d_crit": 0.7200000000000001,
+            "s_data": 0.8319327731092439,
+            "d_clinical_tier": 0.0
+          },
+          "charts": [
+            "waterfall_xgboost_sample_0011.png",
+            "force_xgboost_sample_0011.png"
+          ]
+        }
+      },
+      "administrator": {
+        "role": "administrator",
+        "format": "json",
+        "content": {
+          "sample_index": 11,
+          "severity": "HIGH",
+          "risk_score": 0.704787150310869,
+          "risk_level": "HIGH",
+          "action_required": true,
+          "global_charts": [
+            "global_importance_xgboost.png",
+            "beeswarm_xgboost.png"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "sample_index": 40,
+    "ground_truth": "attack",
+    "attack_category": "Data Alteration",
+    "views": {
+      "clinician": {
+        "role": "clinician",
+        "format": "text",
+        "content": "HIGH PRIORITY ALERT \u2014 Active investigation needed.\n\nThe intrusion detection system flagged this network flow with 2/2 detectors flagged using a confidence of 100%.\n\nTCP Flag Pattern showed unusual flag combination detected (SHAP contribution: +12.513).\n\nPatient Body Temperature showed below-normal temperature (SHAP contribution: -3.323). Clinical review of this vital sign is recommended.\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +3.268).\n\nSource Port showed abnormal source port used (SHAP contribution: +2.322).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +2.272).\n\nComposite risk score: 0.66 (HIGH). Components \u2014 detection confidence: 1.00, device criticality: 0.80, data sensitivity: 0.40, clinical tier: 0.00.\n\nPatient vitals are within normal ranges.\n\nRecommended: Isolate network segment. Notify SOC and biomedical engineering."
+      },
+      "analyst": {
+        "role": "analyst",
+        "format": "json",
+        "content": {
+          "sample_index": 40,
+          "severity": "HIGH",
+          "consensus": "2/2 detectors flagged",
+          "top_features_shap": [
+            {
+              "feature": "Flgs",
+              "shap_value": 12.513324,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Temp",
+              "shap_value": -3.323412,
+              "direction": "decreases_risk"
+            },
+            {
+              "feature": "DIntPkt",
+              "shap_value": 3.26821,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Sport",
+              "shap_value": 2.322281,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Dur",
+              "shap_value": 2.27204,
+              "direction": "increases_risk"
+            }
+          ],
+          "dae_top_features": [
+            {
+              "feature": "SIntPktAct",
+              "weighted_error": 4e-08,
+              "pct_contribution": 66.9
+            },
+            {
+              "feature": "pDstLoss",
+              "weighted_error": 1e-08,
+              "pct_contribution": 10.8
+            },
+            {
+              "feature": "sMaxPktSz",
+              "weighted_error": 0.0,
+              "pct_contribution": 5.8
+            }
+          ],
+          "risk_score": 0.6603459889648341,
+          "risk_components": {
+            "c_detect": 0.9999983906745911,
+            "d_crit": 0.8,
+            "s_data": 0.4023109243697479,
+            "d_clinical_tier": 0.0
+          },
+          "charts": [
+            "waterfall_xgboost_sample_0040.png",
+            "force_xgboost_sample_0040.png"
+          ]
+        }
+      },
+      "administrator": {
+        "role": "administrator",
+        "format": "json",
+        "content": {
+          "sample_index": 40,
+          "severity": "HIGH",
+          "risk_score": 0.6603459889648341,
+          "risk_level": "HIGH",
+          "action_required": true,
+          "global_charts": [
+            "global_importance_xgboost.png",
+            "beeswarm_xgboost.png"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "sample_index": 786,
     "ground_truth": "benign",
     "attack_category": "normal",
     "views": {
       "clinician": {
         "role": "clinician",
         "format": "text",
-        "content": "LOW PRIORITY \u2014 Logged for audit.\n\nThe intrusion detection system flagged this network flow with 1/4 models flagged using a confidence of 0%.\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -3.129).\n\nDest Inter-Packet Gap showed abnormal response timing (SHAP contribution: +2.046).\n\nSource Port showed standard port range (SHAP contribution: -1.735).\n\nSource Load showed normal source load (SHAP contribution: -1.730).\n\nPatient Body Temperature showed elevated temperature reading (SHAP contribution: +1.260). Clinical review of this vital sign is recommended.\n\nComposite risk score: 0.28 (LOW). Components \u2014 detection confidence: 0.02, device criticality: 0.40, data sensitivity: 0.83, clinical tier: 0.25.\n\nNote: 2 of 8 biometric readings are outside normal range. Verify patient condition independently.\n\nRecommended: No immediate action. Review at next security audit."
+        "content": "NORMAL\n\nThe intrusion detection system flagged this network flow with 1/2 detectors flagged using a confidence of 1%.\n\nDest Inter-Packet Gap showed unusually fast responses (SHAP contribution: -5.120).\n\nTCP Flag Pattern showed normal flag pattern (SHAP contribution: -3.398).\n\nSource Port showed abnormal source port used (SHAP contribution: +3.081).\n\nFlow Duration showed prolonged connection duration (SHAP contribution: +1.978).\n\nSource Load showed normal source load (SHAP contribution: -1.492).\n\nComposite risk score: 0.16 (NORMAL). Components \u2014 detection confidence: 0.01, device criticality: 0.40, data sensitivity: 0.39, clinical tier: 0.00.\n\nPatient vitals are within normal ranges."
       },
       "analyst": {
         "role": "analyst",
         "format": "json",
         "content": {
-          "sample_index": 1389,
-          "severity": "LOW",
-          "consensus": "1/4 models flagged",
+          "sample_index": 786,
+          "severity": "NORMAL",
+          "consensus": "1/2 detectors flagged",
           "top_features_shap": [
             {
-              "feature": "Flgs",
-              "shap_value": -3.128692,
+              "feature": "DIntPkt",
+              "shap_value": -5.119756,
               "direction": "decreases_risk"
             },
             {
-              "feature": "DIntPkt",
-              "shap_value": 2.045975,
-              "direction": "increases_risk"
+              "feature": "Flgs",
+              "shap_value": -3.398177,
+              "direction": "decreases_risk"
             },
             {
               "feature": "Sport",
-              "shap_value": -1.734898,
-              "direction": "decreases_risk"
+              "shap_value": 3.080641,
+              "direction": "increases_risk"
+            },
+            {
+              "feature": "Dur",
+              "shap_value": 1.978285,
+              "direction": "increases_risk"
             },
             {
               "feature": "SrcLoad",
-              "shap_value": -1.730062,
+              "shap_value": -1.492033,
               "direction": "decreases_risk"
-            },
-            {
-              "feature": "Temp",
-              "shap_value": 1.260372,
-              "direction": "increases_risk"
             }
           ],
           "dae_top_features": [
             {
-              "feature": "SrcBytes",
-              "weighted_error": 1e-08,
-              "pct_contribution": 43.6
-            },
-            {
-              "feature": "SIntPktAct",
-              "weighted_error": 1e-08,
-              "pct_contribution": 30.1
-            },
-            {
-              "feature": "dMaxPktSz",
+              "feature": "pSrcLoss",
               "weighted_error": 0.0,
-              "pct_contribution": 8.5
+              "pct_contribution": 73.5
+            },
+            {
+              "feature": "sMaxPktSz",
+              "weighted_error": 0.0,
+              "pct_contribution": 9.5
+            },
+            {
+              "feature": "Sport",
+              "weighted_error": 0.0,
+              "pct_contribution": 9.3
             }
           ],
-          "risk_score": 0.2827907042452643,
+          "risk_score": 0.16070601609613777,
           "risk_components": {
-            "c_detect": 0.02000197023153305,
+            "c_detect": 0.007200964260846376,
             "d_crit": 0.4,
-            "s_data": 0.8319327731092439,
-            "d_clinical_tier": 0.25
+            "s_data": 0.3855042016806723,
+            "d_clinical_tier": 0.0
           },
           "charts": [
-            "waterfall_xgboost_sample_1389.png",
-            "force_xgboost_sample_1389.png"
+            "waterfall_xgboost_sample_0786.png",
+            "force_xgboost_sample_0786.png"
           ]
         }
       },
@@ -441,10 +441,10 @@
         "role": "administrator",
         "format": "json",
         "content": {
-          "sample_index": 1389,
-          "severity": "LOW",
-          "risk_score": 0.2827907042452643,
-          "risk_level": "LOW",
+          "sample_index": 786,
+          "severity": "NORMAL",
+          "risk_score": 0.16070601609613777,
+          "risk_level": "NORMAL",
           "action_required": false,
           "global_charts": [
             "global_importance_xgboost.png",

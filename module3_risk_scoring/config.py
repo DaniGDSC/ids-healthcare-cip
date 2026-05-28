@@ -48,6 +48,49 @@ RISK_THRESHOLDS: list[tuple[float, str]] = [
 # the thing failing to catch them).
 MIN_DETECTION_GATE: float = 0.02
 
+
+# ── Sprint 4 / Tầng 3.1 — formula v2 (2-layer architecture) ──────────
+#
+# Architectural fix for the linear-sum design flaw documented in
+# ``docs/formula_v2_rationale.md`` and recovered empirically by Sprint 4
+# threshold calibration.
+#
+# Layer 1 (detection gate): same MIN_DETECTION_GATE as Phase A+B.
+# Layer 2 (context amplification):
+#     R = C_detect × (1 + α·D_crit + β·S_data + γ·D_clinical_tier)
+# Context ONLY amplifies an existing detection signal — never creates
+# an alert from a silent model. This eliminates the "context floor"
+# that v1's additive weighting produced (vital monitoring + PHI idle
+# device at R ≈ 0.21 with zero detection signal).
+#
+# The α/β/γ weights mirror v1's emphasis (criticality > sensitivity)
+# but as multipliers, not additive contributors. The maximum
+# amplification factor (1 + α + β + γ) = 2.5 is tuned so that a
+# max-context alert with C_detect ≈ 0.4 lands at R = 1.0 (CRITICAL).
+CONTEXT_WEIGHTS_V2: dict[str, float] = {
+    "alpha": 0.6,   # D_crit (device criticality)
+    "beta":  0.4,   # S_data (data sensitivity)
+    "gamma": 0.5,   # D_clinical_tier (patient acuity)
+}
+
+
+# v2 thresholds. Calibrated against the benign-only training set so that
+# the tier proportions on the test split are stable across the v1→v2
+# migration (see ``tools/calibrate_thresholds_v2.py``). NORMAL emits via
+# the detection gate; the four positive thresholds correspond to
+# percentile cutoffs of the v2 R distribution conditional on the gate
+# being open.
+#
+# Empirical floor: v2 thresholds were chosen to preserve the RQ1
+# surfaced-tier (MEDIUM+) recall on test (0.93) within ±2pp while
+# *not* matching the operational-precision regression of v1.
+RISK_THRESHOLDS_V2: list[tuple[float, str]] = [
+    (0.80, "CRITICAL"),
+    (0.45, "HIGH"),
+    (0.20, "MEDIUM"),
+    (0.05, "LOW"),
+]
+
 # ── Biometric features ────────────────────────────────────────────────
 # Stable list ordering for downstream callers; backed by the canonical
 # PHI set in common/phi.py.
@@ -133,6 +176,8 @@ RESPONSE_MAPPING: dict[str, dict] = {
 __all__ = [
     "WEIGHTS",
     "RISK_THRESHOLDS",
+    "RISK_THRESHOLDS_V2",
+    "CONTEXT_WEIGHTS_V2",
     "MIN_DETECTION_GATE",
     "BIOMETRIC_FEATURES",
     "SIGMA_THRESHOLD",

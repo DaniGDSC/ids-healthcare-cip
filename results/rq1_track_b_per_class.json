@@ -8,26 +8,26 @@
     "Data Alteration": {
       "n_samples": 138,
       "is_attack": true,
-      "auc_one_vs_rest": 0.991126,
-      "recall_at_threshold_0.5": 1.0,
-      "track_b_score_mean": 1.0,
+      "auc_one_vs_rest": 0.032251,
+      "recall_at_threshold_0.5": 0.0,
+      "track_b_score_mean": 0.0,
       "track_b_score_std": 0.0
     },
     "Spoofing": {
-      "n_samples": 169,
+      "n_samples": 157,
       "is_attack": true,
-      "auc_one_vs_rest": 0.531906,
-      "recall_at_threshold_0.5": 0.130178,
-      "track_b_score_mean": 0.142833,
-      "track_b_score_std": 0.33007
+      "auc_one_vs_rest": 0.094282,
+      "recall_at_threshold_0.5": 0.0,
+      "track_b_score_mean": 0.001664,
+      "track_b_score_std": 0.010658
     },
     "normal": {
-      "n_samples": 2141,
+      "n_samples": 2153,
       "is_attack": false,
-      "auc_one_vs_rest": 0.243111,
+      "auc_one_vs_rest": 0.95112,
       "recall_at_threshold_0.5": null,
-      "track_b_score_mean": 0.042392,
-      "track_b_score_std": 0.138844
+      "track_b_score_mean": 0.041923,
+      "track_b_score_std": 0.147228
     }
   }
 }

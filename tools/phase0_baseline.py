@@ -76,6 +76,15 @@ def _print_summary(baseline: dict) -> None:
                 cov = b["feasible"] / b["seen"]
                 print(f"      {tier:10s}  feasible {b['feasible']}/{b['seen']}  ({cov:.1%})")
 
+    # Sprint 2.4 — operational_health
+    oh = baseline.get("operational_health", {})
+    if oh.get("n"):
+        print(f"  operational_health       op_prec={oh['operational_precision']:.1%}, "
+              f"op_recall={oh['operational_recall']:.1%}, "
+              f"surf_prec={oh['surfaced_precision']:.1%}")
+        print(f"    LOW-tier attack density:  {oh['low_tier_attack_density']:.1%} "
+              f"({oh['low_tier_attacks']}/{oh['low_tier_n']})")
+
 
 def _check_against_floors(baseline: dict, prior: dict) -> tuple[bool, list[str]]:
     floors = prior.get(_FLOORS_KEY) or {}
@@ -94,13 +103,17 @@ def _check_against_floors(baseline: dict, prior: dict) -> tuple[bool, list[str]]
     _check("action_specificity",      baseline["action_specificity"]["overall_rate"])
     _check("counterfactual_coverage", baseline["counterfactual_coverage"]["rate"])
     # Phase 2 — additional floor on the actionable-tier counterfactual
-    # rate (CRITICAL+HIGH+MEDIUM). This is the meaningful signal for
-    # the "non-ML user can verify the call" outcome; the overall rate
-    # is dragged down by LOW alerts that aren't XGBoost-flagged and
-    # therefore can't have a TreeSHAP-derived counterfactual.
+    # rate (CRITICAL+HIGH+MEDIUM).
     af = baseline["counterfactual_coverage"].get("actionable_feasible_rate")
     if af is not None:
         _check("counterfactual_actionable_feasible_rate", af)
+    # Sprint 2.4 — operational precision floor. This is the bottom-up
+    # health check that would have flagged the pre-formula-fix
+    # 0.125 noise floor; lifting the floor here ensures we never
+    # silently regress to that state again.
+    oh = baseline.get("operational_health", {})
+    if oh.get("n"):
+        _check("operational_precision", oh["operational_precision"])
 
     return (len(regressions) == 0), regressions
 
@@ -142,6 +155,10 @@ def main() -> int:
             "counterfactual_coverage": baseline["counterfactual_coverage"]["rate"],
             "counterfactual_actionable_feasible_rate":
                 baseline["counterfactual_coverage"].get("actionable_feasible_rate", 0.0),
+            # Sprint 2.4 — operational precision floor (the
+            # bottom-up "did the formula start spamming?" sentinel)
+            "operational_precision":
+                baseline.get("operational_health", {}).get("operational_precision", 0.0),
         }
         floors_action = "wrote new" if args.update_floors else "initialised"
         print(f"[phase0] {floors_action} floors block")

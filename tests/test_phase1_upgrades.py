@@ -217,14 +217,16 @@ def test_response_schema_default_actions_metadata_empty_for_legacy():
 def test_annotate_role_known():
     from module5_responses.config import annotate_role
     out = annotate_role("Security lead")
-    assert "ext 4401" in out
-    assert "SLA" in out
+    # Compact format ``[NNNN/Nm]`` adopted to keep MVE Layer 3 inside the
+    # 150-word budget — see annotate_role docstring.
+    assert "4401" in out
+    assert "/" in out and "m]" in out
 
 
 def test_annotate_role_case_insensitive():
     from module5_responses.config import annotate_role
     out = annotate_role("Charge nurse on duty")
-    assert "ext 4470" in out
+    assert "4470" in out
 
 
 def test_annotate_role_unknown_pass_through():
@@ -238,7 +240,7 @@ def test_annotate_role_prefers_longest_match():
     when both are valid prefixes — the longest key wins."""
     from module5_responses.config import annotate_role
     out = annotate_role("(3) ICU charge nurse")
-    assert "ext 4471" in out
+    assert "4471" in out
 
 
 def test_synthesize_raw_alert_includes_alert_id():
@@ -275,5 +277,7 @@ def test_generate_mve_prepends_alert_id_and_annotates_escalation():
     esc = mve.layer_3["escalation_path"]
     assert "ALERT-0017" in action
     assert "patient_monitor" in action
-    assert "ext" in esc, f"escalation_path missing extension annotation: {esc!r}"
-    assert "SLA" in esc
+    # Compact role annotation ``[ext/SLA]`` — see annotate_role.
+    assert "[" in esc and "/" in esc and "m]" in esc, (
+        f"escalation_path missing compact ext/SLA annotation: {esc!r}"
+    )

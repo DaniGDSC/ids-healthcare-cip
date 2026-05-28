@@ -71,6 +71,24 @@ class ActionMetadata(BaseModel):
     expected_disruption: str = ""
 
 
+class RoutingWarning(BaseModel):
+    """Per-alert routing-mismatch signal (Phase 3.2).
+
+    Populated when the alert's SHAP top-category implies a different
+    primary audience than the one the response engine assigned (e.g.
+    biometric SHAP routed to IT Security). ``mismatch=False`` for
+    aligned alerts; ``mismatch=True`` carries the suggested alternate
+    role and a one-sentence reason a non-ML user can follow.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    mismatch: bool
+    current_primary: str = ""
+    suggested_role: str = ""
+    reason: str = ""
+
+
 class Response(BaseModel):
     """Output of ``select_adaptive_response`` — the policy-engine verdict."""
 
@@ -93,6 +111,20 @@ class Response(BaseModel):
     # before the containment actions in ``actions``. Empty string when
     # no counterfactual is available.
     try_first_action: str = ""
+    # Phase 3.1 — conditional action playbook. Each step is one node in
+    # a decision tree the operator can follow without ML knowledge.
+    # Shape mirrors ``module5_responses.playbooks.Playbook.to_dict``.
+    # Optional so pre-Phase-3 artefacts still validate.
+    playbook: dict | None = None
+    # Phase 3.2 — routing-mismatch warning. Always present (default
+    # mismatch=False); the dashboard only surfaces it when
+    # ``mismatch=True``.
+    routing_warning: RoutingWarning | None = None
+    # Phase 4.1 — auto_execute may be demoted to False when the
+    # explanation is UNSTABLE (Phase 4 stability gate). Default True
+    # so legacy artefacts without the field continue to behave
+    # exactly as before.
+    auto_execute: bool = True
 
 
 class MVEPayload(BaseModel):
@@ -143,6 +175,12 @@ class Explanation(BaseModel):
     # ``module4_explanations.counterfactual.CounterfactualResult.to_dict``.
     # Optional so pre-Phase-2 artefacts still validate.
     counterfactual: dict | None = None
+    # Phase 4.1 — explanation-stability score (bootstrap perturbation
+    # of top-K SHAP). Shape mirrors
+    # ``module4_explanations.stability.StabilityResult.to_dict``.
+    # An UNSTABLE band downstream demotes ``auto_execute`` and adds an
+    # escalate_clinical step.
+    stability: dict | None = None
 
 
 class AlertRecord(BaseModel):

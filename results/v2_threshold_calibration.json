@@ -1,0 +1,33 @@
+{
+  "v1_distribution": {
+    "min": 0.13203840373849943,
+    "max": 0.8273109303302123,
+    "mean": 0.2929357876776773,
+    "tier_proportions": {
+      "CRITICAL": 0.004901960784313725,
+      "HIGH": 0.12295751633986927,
+      "MEDIUM": 0.027777777777777776,
+      "LOW": 0.07598039215686274,
+      "NORMAL": 0.7683823529411765
+    },
+    "rq1_surfaced_recall_at_0.40": 0.9381107491856677
+  },
+  "v2_distribution": {
+    "min": 0.0,
+    "max": 1.0,
+    "mean": 0.17369677070596645
+  },
+  "policy_A_matched_medium": 0.458,
+  "policy_B_thresholds": {
+    "CRITICAL": 1.0,
+    "HIGH": 1.0,
+    "MEDIUM": 0.5245349827887285,
+    "LOW": 0.09291079884640083
+  },
+  "recommended_v2_thresholds": {
+    "CRITICAL": 1.0,
+    "HIGH": 1.0,
+    "MEDIUM": 0.46,
+    "LOW": 0.11
+  }
+}

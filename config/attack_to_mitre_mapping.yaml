@@ -29,7 +29,7 @@ attack_categories:
     primary_technique:
       id: T1557
       name: "Adversary-in-the-Middle"
-      plain_gloss: "an attacker intercepts traffic between two trusted devices and may impersonate either side"
+      plain_gloss: "attacker intercepts and impersonates trusted device traffic"
       confidence: high
       url: "https://attack.mitre.org/techniques/T1557/"
     sub_techniques:
@@ -54,7 +54,7 @@ attack_categories:
     primary_technique:
       id: T1565
       name: "Data Manipulation"
-      plain_gloss: "an attacker silently changes data so that the value clinicians or systems see is no longer what was originally measured"
+      plain_gloss: "displayed value silently differs from measured"
       confidence: high
       url: "https://attack.mitre.org/techniques/T1565/"
     sub_techniques:
@@ -89,7 +89,7 @@ attack_categories:
     primary_technique:
       id: T1595
       name: "Active Scanning"
-      plain_gloss: "an attacker probes the network to map devices and find which ones to target next"
+      plain_gloss: "attacker probes the network to identify target devices"
       confidence: high
     sub_techniques:
       - id: T1595.001
@@ -105,7 +105,7 @@ attack_categories:
     primary_technique:
       id: T1190
       name: "Exploit Public-Facing Application"
-      plain_gloss: "an attacker breaks in through a flaw in a service that is reachable from outside the hospital network"
+      plain_gloss: "entry via externally reachable service flaw"
       confidence: high
     related_techniques:
       - id: T1078
@@ -121,7 +121,7 @@ attack_categories:
     primary_technique:
       id: T1021
       name: "Remote Services"
-      plain_gloss: "after gaining a foothold, an attacker hops from one device to another inside the network to reach the medical devices"
+      plain_gloss: "pivots between internal devices toward medical systems"
       confidence: high
     sub_techniques:
       - id: T1021.001
@@ -137,7 +137,7 @@ attack_categories:
     primary_technique:
       id: T1041
       name: "Exfiltration Over C2 Channel"
-      plain_gloss: "an attacker steals patient data or device readings and sends them out of the hospital network"
+      plain_gloss: "patient data leaves the hospital network"
       confidence: high
     related_techniques:
       - id: T1048

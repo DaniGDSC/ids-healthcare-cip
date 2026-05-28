@@ -1,0 +1,97 @@
+{
+  "per_role": {
+    "analyst": {
+      "comprehensibility": {
+        "round1": 3.84,
+        "round2": 4.183,
+        "delta": 0.343,
+        "meets_acceptance": true
+      },
+      "trust": {
+        "round1": 4.22,
+        "round2": 4.564,
+        "delta": 0.344,
+        "meets_acceptance": true
+      },
+      "usefulness": {
+        "round1": 4.44,
+        "round2": 4.695,
+        "delta": 0.255,
+        "meets_acceptance": false
+      },
+      "actionability": {
+        "round1": 4.18,
+        "round2": 4.557,
+        "delta": 0.377,
+        "meets_acceptance": true
+      }
+    },
+    "clinician": {
+      "comprehensibility": {
+        "round1": 4.14,
+        "round2": 4.452,
+        "delta": 0.312,
+        "meets_acceptance": true
+      },
+      "trust": {
+        "round1": 4.56,
+        "round2": 4.847,
+        "delta": 0.287,
+        "meets_acceptance": false
+      },
+      "usefulness": {
+        "round1": 4.62,
+        "round2": 4.875,
+        "delta": 0.255,
+        "meets_acceptance": false
+      },
+      "actionability": {
+        "round1": 4.56,
+        "round2": 5.0,
+        "delta": 0.44,
+        "meets_acceptance": true
+      }
+    },
+    "administrator": {
+      "comprehensibility": {
+        "round1": 4.1,
+        "round2": 4.365,
+        "delta": 0.265,
+        "meets_acceptance": false
+      },
+      "trust": {
+        "round1": 4.26,
+        "round2": 4.518,
+        "delta": 0.258,
+        "meets_acceptance": false
+      },
+      "usefulness": {
+        "round1": 4.42,
+        "round2": 4.688,
+        "delta": 0.268,
+        "meets_acceptance": false
+      },
+      "actionability": {
+        "round1": 4.2,
+        "round2": 4.709,
+        "delta": 0.509,
+        "meets_acceptance": true
+      }
+    }
+  },
+  "signal_totals": {
+    "observation": 307,
+    "counterfactual": 315,
+    "stability_badge": 315,
+    "playbook": 315,
+    "ext_sla": 430,
+    "mitre_gloss": 295,
+    "routing_mismatch": 36
+  },
+  "n_records": 430,
+  "_meta": {
+    "generated_at": "2026-05-28T12:03:13.976093+00:00",
+    "acceptance_delta": 0.3,
+    "scope_note": "DETERMINISTIC SIMULATION \u2014 deltas are upper-bound estimates based on artifact-level signal presence, not human ratings. Replace with a live round-2 study before quoting in the thesis."
+  }
+}

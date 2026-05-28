@@ -2,8 +2,8 @@
   "pairwise_comparisons": {},
   "consensus_top5_all_models": [
     "DIntPkt",
+    "Dur",
     "Flgs",
-    "SIntPkt",
     "Sport",
     "Temp"
   ]

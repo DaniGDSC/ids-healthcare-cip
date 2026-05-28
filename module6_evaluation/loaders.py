@@ -107,10 +107,54 @@ def load_provenance_inner(split: str | None) -> dict | None:
     return None
 
 
+def load_simulation_stream_inner(split: str | None) -> list:
+    """Pure variant of the Online Simulation "Full stream" loader.
+
+    Returns the ``stream`` array from ``simulation_stream_<split>.json`` —
+    a per-arrival list of 1632 (demo) / 2448 (test) entries. NORMAL rows
+    carry ``alert=None`` and serve as clock ticks; LOW+ rows embed the
+    M5 alert payload under ``alert``. Empty list when the file is
+    missing — caller (UI) can fall back to alerts-only mode.
+
+    See :mod:`tools.build_simulation_stream` for the producer.
+    """
+    if split is None or split not in _SPLIT_FILES:
+        return []
+    suffix = _SPLIT_FILES[split]
+    path = EVAL_DIR / f"simulation_stream{suffix}.json"
+    if not path.exists():
+        return []
+    with open(path) as f:
+        raw = json.load(f)
+    stream = raw.get("stream") if isinstance(raw, dict) else None
+    if not isinstance(stream, list):
+        raise LoaderError(
+            f"{path.name} missing 'stream' array — rebuild via "
+            f"tools.build_simulation_stream --split {split}."
+        )
+    return stream
+
+
+def load_simulation_stream_meta_inner(split: str | None) -> dict | None:
+    """Return the ``_meta`` block of simulation_stream_<split>.json
+    (split label, counts, anchor timestamp). None when file is missing."""
+    if split is None or split not in _SPLIT_FILES:
+        return None
+    suffix = _SPLIT_FILES[split]
+    path = EVAL_DIR / f"simulation_stream{suffix}.json"
+    if not path.exists():
+        return None
+    with open(path) as f:
+        raw = json.load(f)
+    return raw.get("_meta") if isinstance(raw, dict) else None
+
+
 __all__ = [
     "EVAL_DIR", "CHARTS_DIR", "PROJECT_ROOT", "ENRICH_KEYS",
     "enrich_with_device_context",
     "load_responses_inner",
     "load_provenance_inner",
+    "load_simulation_stream_inner",
+    "load_simulation_stream_meta_inner",
     "LoaderError",
 ]

@@ -99,10 +99,29 @@ def test_assign_risk_levels_handles_empty_input():
 
 
 def test_assign_risk_levels_uses_module_constant():
-    """Boundaries must match module-level RISK_THRESHOLDS — 4 thresholds
-    after Phase A adds the NORMAL tier."""
-    expected_boundaries = sorted([t for t, _ in RISK_THRESHOLDS], reverse=True)
-    assert expected_boundaries == [0.80, 0.60, 0.40, 0.30]
+    """Invariant: ``assign_risk_levels``'s default boundaries are exactly
+    those in ``RISK_THRESHOLDS`` (no hard-coded values inside the
+    function). Sprint 1.4 — pin the invariant, not the specific values,
+    so a future calibration only touches ``config.py``.
+    """
+    import numpy as np
+    # Build a probe R that brackets every boundary by ±0.005 so each
+    # tier is reachable. Synthesize from RISK_THRESHOLDS so the test
+    # picks up new tiers when added.
+    boundaries = sorted([t for t, _ in RISK_THRESHOLDS], reverse=True)
+    probes = []
+    expected_tiers = []
+    for i, b in enumerate(boundaries):
+        probes.extend([b, b - 0.005])  # exactly-at + just-below
+        expected_tiers.append([n for t, n in RISK_THRESHOLDS if t == b][0])
+        # Just below this boundary should be the next tier (or NORMAL if
+        # this is the bottom-most).
+        expected_tiers.append(
+            [n for t, n in RISK_THRESHOLDS if t == boundaries[i + 1]][0]
+            if i + 1 < len(boundaries) else "NORMAL"
+        )
+    out = assign_risk_levels(np.array(probes)).tolist()
+    assert out == expected_tiers
 
 
 def test_assign_risk_levels_detection_gate_forces_normal():

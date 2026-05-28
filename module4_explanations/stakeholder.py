@@ -41,6 +41,7 @@ def build_analyst_report(
     suffix: str = "",
     output_dir: Path | None = None,
     counterfactuals_by_idx: dict | None = None,
+    stability_by_idx: dict | None = None,
 ) -> list:
     """Build per-alert analyst report.
 
@@ -59,6 +60,7 @@ def build_analyst_report(
         [all_preds[name]["y_pred"] for name in TRACK_A_MODELS] + [dae_preds["y_pred"]]
     )
     n_flagged_all = pred_matrix.sum(axis=1)
+    n_detectors = int(pred_matrix.shape[1])
     risk_levels = np.asarray(risk_levels).astype(str)
     flagged_indices = np.where((n_flagged_all > 0) | (risk_levels != "LOW"))[0]
 
@@ -89,7 +91,9 @@ def build_analyst_report(
             "top_features": _top_features_dae(weighted_err[idx], feat_names),
         }
 
-        entry["consensus"] = f"{int(n_flagged_all[idx])}/4 models flagged"
+        entry["consensus"] = (
+            f"{int(n_flagged_all[idx])}/{n_detectors} detectors flagged"
+        )
         entry["severity"] = str(risk_levels[idx])
         entry["risk_level"] = str(risk_levels[idx])
 
@@ -99,6 +103,12 @@ def build_analyst_report(
         # pre-Phase-2 shape with no ``counterfactual`` field.
         if counterfactuals_by_idx is not None and idx in counterfactuals_by_idx:
             entry["counterfactual"] = counterfactuals_by_idx[idx]
+
+        # Phase 4.1 — stability score for the SHAP top-K under input
+        # noise. UNSTABLE alerts are flagged to downstream so they get
+        # demoted from auto_execute to human review.
+        if stability_by_idx is not None and idx in stability_by_idx:
+            entry["stability"] = stability_by_idx[idx]
 
         alerts.append(entry)
 
@@ -122,6 +132,7 @@ def build_clinician_summaries(
     output_dir: Path | None = None,
     X_test: np.ndarray | None = None,
     counterfactuals_by_idx: dict | None = None,
+    stability_by_idx: dict | None = None,
 ) -> list:
     """Build plain-language clinician summaries for XGBoost-flagged alerts.
 
@@ -226,6 +237,35 @@ def build_clinician_summaries(
                     record["summary"] = f"{summary} {clause}"
                 record["counterfactual"] = cf
 
+        # Phase 4.1 — stability badge. Clinician sees the coloured band
+        # only (no number); the analyst report carries the raw score.
+        if stability_by_idx is not None and idx in stability_by_idx:
+            stab = stability_by_idx[idx]
+            try:
+                from .stability import stability_badge
+                badge = stability_badge(stab.get("band", ""))
+                if badge:
+                    record["summary"] = f"{record['summary']} {badge}"
+            except Exception:
+                pass
+            record["stability"] = stab
+
+        # Phase 3.1 — append a Markdown decision-tree playbook so the
+        # clinician has a step-by-step procedure rather than a single
+        # prescribed action. Selection is driven by the top SHAP
+        # category and the canonical severity.
+        try:
+            from module5_responses.playbooks import render_markdown, select_playbook
+            playbook = select_playbook(category, severity)
+            record["summary"] = (
+                f"{record['summary']}\n\n{render_markdown(playbook)}"
+            )
+            record["playbook"] = playbook.to_dict()
+        except Exception:
+            # Module 5 isn't importable in some test environments — fall
+            # back to the pre-Phase-3 summary shape.
+            pass
+
         summaries.append(record)
 
     path = out_dir / f"clinician_summaries{suffix}.json"
@@ -266,6 +306,7 @@ def build_admin_dashboard(
     )
     n_flagged_all = pred_matrix.sum(axis=1)
     n_samples = int(pred_matrix.shape[0])
+    n_detectors = int(pred_matrix.shape[1])
     risk_levels = np.asarray(risk_levels).astype(str)
     flagged_mask = (n_flagged_all > 0) | (risk_levels != "LOW")
 
@@ -275,7 +316,8 @@ def build_admin_dashboard(
         if tier in severity_counts:
             severity_counts[tier] = int(c)
     agreement_counts = {
-        f"{k}_of_4": int((n_flagged_all == k).sum()) for k in range(1, 5)
+        f"{k}_of_{n_detectors}": int((n_flagged_all == k).sum())
+        for k in range(1, n_detectors + 1)
     }
     total_alerts = int(flagged_mask.sum())
 

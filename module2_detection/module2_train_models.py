@@ -446,6 +446,8 @@ def predict_split(split: str) -> dict:
     can log a summary table for whichever split was scored.
     """
     from common.model_registry import (
+        get_baseline_classifiers,
+        get_baseline_thresholds,
         get_track_a_classifiers,
         get_track_a_thresholds,
     )
@@ -457,8 +459,11 @@ def predict_split(split: str) -> dict:
     logger.info(sep)
 
     X, y, _feat_names = load_split_data(split)
-    classifiers = get_track_a_classifiers()
-    thresholds = get_track_a_thresholds()
+    # Predict for runtime (XGBoost) + baselines (RF, DT). Module 2 owns
+    # the baseline npz outputs that RQ1 R2 ablation consumes; only the
+    # runtime classifier feeds the engine / Module 4.
+    classifiers = {**get_track_a_classifiers(), **get_baseline_classifiers()}
+    thresholds = {**get_track_a_thresholds(), **get_baseline_thresholds()}
 
     output_dir = PROJECT_ROOT / "results/models"
     output_dir.mkdir(parents=True, exist_ok=True)

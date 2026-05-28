@@ -21,6 +21,12 @@ TOP_K_FEATURES: int = 10
 
 
 # ── Track A model registry ─────────────────────────────────────────────
+#
+# Runtime split: Module 4 (and downstream M5/M6) consume only XGBoost +
+# DAE. RandomForest and DecisionTree are RQ1 R2 baselines whose
+# predictions live on disk in ``results/models/{rf,dt}_test_predictions.npz``
+# but are NOT loaded by the analyst/clinician/admin builders — only by
+# ``tools/rq1_compute_metrics.compute_track_a_ablation``.
 
 TRACK_A_MODELS: dict[str, dict[str, str]] = {
     "xgboost": {
@@ -28,6 +34,9 @@ TRACK_A_MODELS: dict[str, dict[str, str]] = {
         "predictions": "results/models/xgboost_test_predictions.npz",
         "report": "results/models/xgboost_final_report.json",
     },
+}
+
+BASELINE_TRACK_A_MODELS: dict[str, dict[str, str]] = {
     "random_forest": {
         "pipeline": "results/models/random_forest_final_pipeline.pkl",
         "predictions": "results/models/random_forest_test_predictions.npz",
@@ -46,6 +55,7 @@ TRACK_A_MODELS: dict[str, dict[str, str]] = {
 SHAP_MODELS: tuple[str, ...] = ("xgboost",)
 
 # Inverse view used by online path for predict-but-not-explain models.
+# Empty after Phase 2 — RF/DT no longer participate in the runtime vote.
 SKIP_SHAP_MODELS: frozenset[str] = frozenset(
     set(TRACK_A_MODELS.keys()) - set(SHAP_MODELS)
 )
@@ -322,6 +332,7 @@ __all__ = [
     "TOP_N_WATERFALL",
     "TOP_K_FEATURES",
     "TRACK_A_MODELS",
+    "BASELINE_TRACK_A_MODELS",
     "SHAP_MODELS",
     "SKIP_SHAP_MODELS",
     "CLINICIAN_TEMPLATES",

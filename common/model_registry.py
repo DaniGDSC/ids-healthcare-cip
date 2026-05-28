@@ -31,9 +31,15 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Canonical model paths — single source of truth for all pipeline modules
-_TRACK_A_PATHS = {
+# Canonical model paths — single source of truth for all pipeline modules.
+# Runtime path uses only XGBoost (decision driver). RandomForest and
+# DecisionTree remain on disk as RQ1 R2 ablation baselines and are loaded
+# lazily by get_baseline_classifiers() — never by the runtime engine, the
+# online explainer, or any M4/M5/M6 module.
+_RUNTIME_TRACK_A_PATHS = {
     "xgboost":       "results/models/xgboost_final_pipeline.pkl",
+}
+_BASELINE_TRACK_A_PATHS = {
     "random_forest": "results/models/random_forest_final_pipeline.pkl",
     "decision_tree": "results/models/decision_tree_final_pipeline.pkl",
 }
@@ -41,24 +47,10 @@ _DAE_JSON    = PROJECT_ROOT / "results/models/dae_detector.json"
 _DAE_WEIGHTS = PROJECT_ROOT / "results/models/dae_model.weights.h5"
 
 
-@lru_cache(maxsize=None)
-def get_track_a_classifiers() -> dict:
-    """Load all three Track A classifiers once and cache for the process lifetime.
-
-    Returns:
-        dict mapping model name → fitted sklearn classifier (bare, not Pipeline).
-        The bare classifier is extracted when the artefact is a full sklearn
-        Pipeline with a named 'classifier' step (legacy format); otherwise the
-        loaded object is used directly.
-
-    Raises:
-        FileNotFoundError: if any model artefact is missing.
-        RuntimeError: if loads_signed() rejects the signature.
-    """
+def _load_classifiers(paths: dict[str, str]) -> dict:
     from common import loads_signed
-
-    classifiers = {}
-    for name, rel_path in _TRACK_A_PATHS.items():
+    classifiers: dict = {}
+    for name, rel_path in paths.items():
         path = PROJECT_ROOT / rel_path
         logger.info("ModelRegistry: loading %s from %s", name, path)
         obj = loads_signed(path)
@@ -67,7 +59,44 @@ def get_track_a_classifiers() -> dict:
             obj.named_steps["classifier"]
             if hasattr(obj, "named_steps") else obj
         )
-    logger.info("ModelRegistry: Track A classifiers loaded (3 models)")
+    return classifiers
+
+
+@lru_cache(maxsize=None)
+def get_track_a_classifiers() -> dict:
+    """Load runtime Track A classifiers (XGBoost only) once per process.
+
+    Returns:
+        dict ``{"xgboost": fitted_classifier}``. The bare classifier is
+        extracted when the artefact is a full sklearn Pipeline with a
+        named 'classifier' step; otherwise the loaded object is used
+        directly.
+
+    Raises:
+        FileNotFoundError: if the artefact is missing.
+        RuntimeError: if loads_signed() rejects the signature.
+    """
+    classifiers = _load_classifiers(_RUNTIME_TRACK_A_PATHS)
+    logger.info("ModelRegistry: Track A runtime classifiers loaded (%d)",
+                len(classifiers))
+    return classifiers
+
+
+@lru_cache(maxsize=None)
+def get_baseline_classifiers() -> dict:
+    """Load RQ1 R2 baseline classifiers (RandomForest, DecisionTree).
+
+    These are NOT consulted at runtime — the engine, online explainer,
+    and all M4/M5/M6 builders use only :func:`get_track_a_classifiers`.
+    Returned objects are intended for offline ablation tooling
+    (``tools/rq1_compute_metrics.compute_track_a_ablation``).
+
+    Returns:
+        dict ``{"random_forest": clf, "decision_tree": clf}``.
+    """
+    classifiers = _load_classifiers(_BASELINE_TRACK_A_PATHS)
+    logger.info("ModelRegistry: baseline classifiers loaded (%d)",
+                len(classifiers))
     return classifiers
 
 
@@ -92,32 +121,52 @@ def get_dae():
     return dae
 
 
-@lru_cache(maxsize=None)
-def get_track_a_thresholds() -> dict:
-    """Load optimal thresholds for each Track A model once.
+_RUNTIME_THRESHOLD_PATHS = {
+    "xgboost": "results/models/xgboost_final_report.json",
+}
+_BASELINE_THRESHOLD_PATHS = {
+    "random_forest": "results/models/random_forest_final_report.json",
+    "decision_tree": "results/models/decision_tree_final_report.json",
+}
 
-    Returns:
-        dict mapping model name → float threshold.
-    """
+
+def _load_thresholds(paths: dict[str, str]) -> dict:
     import json
-
-    _REPORT_PATHS = {
-        "xgboost":       "results/models/xgboost_final_report.json",
-        "random_forest": "results/models/random_forest_final_report.json",
-        "decision_tree": "results/models/decision_tree_final_report.json",
-    }
-    thresholds = {}
-    for name, rel_path in _REPORT_PATHS.items():
+    thresholds: dict = {}
+    for name, rel_path in paths.items():
         path = PROJECT_ROOT / rel_path
         with open(path) as f:
             thresholds[name] = json.load(f)["optimal_threshold"]
-    logger.info("ModelRegistry: Track A thresholds loaded")
+    return thresholds
+
+
+@lru_cache(maxsize=None)
+def get_track_a_thresholds() -> dict:
+    """Load runtime Track A thresholds (XGBoost only).
+
+    Returns:
+        dict ``{"xgboost": optimal_threshold}``.
+    """
+    thresholds = _load_thresholds(_RUNTIME_THRESHOLD_PATHS)
+    logger.info("ModelRegistry: Track A runtime thresholds loaded (%d)",
+                len(thresholds))
+    return thresholds
+
+
+@lru_cache(maxsize=None)
+def get_baseline_thresholds() -> dict:
+    """Load RQ1 R2 baseline thresholds (RandomForest, DecisionTree)."""
+    thresholds = _load_thresholds(_BASELINE_THRESHOLD_PATHS)
+    logger.info("ModelRegistry: baseline thresholds loaded (%d)",
+                len(thresholds))
     return thresholds
 
 
 def invalidate_cache() -> None:
     """Clear all cached model objects (test utility — not for production use)."""
     get_track_a_classifiers.cache_clear()
+    get_baseline_classifiers.cache_clear()
     get_dae.cache_clear()
     get_track_a_thresholds.cache_clear()
+    get_baseline_thresholds.cache_clear()
     logger.info("ModelRegistry: cache cleared")

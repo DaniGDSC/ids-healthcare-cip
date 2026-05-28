@@ -51,15 +51,15 @@ VALID_SEVERITY = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
 _SEVERITY_META = {
     "CRITICAL": {
         "rationale": "Life-sustaining system actively supporting patient care.",
-        "timeframe": "Act within 15 minutes. Preserve network logs from the past 30 minutes.",
+        "timeframe": "Act within 15m; preserve 30m of network logs.",
     },
     "HIGH": {
-        "rationale": "Active clinical system with direct patient-care and PHI exposure risk.",
-        "timeframe": "Act within 1 hour. Preserve logs from the past 4 hours.",
+        "rationale": "Active clinical system with direct patient-care risk.",
+        "timeframe": "Act within 1h; preserve 4h logs.",
     },
     "MEDIUM": {
         "rationale": "Clinical-support system not immediately affecting patient safety.",
-        "timeframe": "Act within 4 hours. Flag for next scheduled security review.",
+        "timeframe": "Act within 4h; flag for next security review.",
     },
     "LOW": {
         "rationale": "Administrative system with minimal PHI — monitoring sufficient.",
@@ -310,8 +310,8 @@ _PATIENT_CARE_IMPACT = {
         "delivery. Active infusion therapy at risk."
     ),
     "patient_monitor": (
-        "Compromise could produce false vital sign readings. Clinical "
-        "staff may miss patient deterioration or respond to false alarms."
+        "Compromise could produce false vital signs; "
+        "staff may miss deterioration or react to false alarms."
     ),
     "insulin_pump": (
         "Compromise could alter insulin dosing. Hypoglycemia or "

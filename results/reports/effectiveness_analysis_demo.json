@@ -1,107 +1,107 @@
 {
   "outcome_distribution": {
-    "benign_logged": 1361,
-    "threat_contained": 205,
-    "false_positive_isolated": 66,
+    "benign_logged": 107,
+    "threat_contained": 191,
+    "false_positive_isolated": 22,
     "threat_logged_not_mitigated": 0
   },
   "per_action_stats": {
     "log_event": {
-      "true_attacks": 205,
-      "false_positives": 1427,
-      "total": 1632,
-      "precision": 0.1256,
-      "false_positive_rate": 0.8744
+      "true_attacks": 191,
+      "false_positives": 129,
+      "total": 320,
+      "precision": 0.5969,
+      "false_positive_rate": 0.4031
     },
     "enhanced_monitoring": {
-      "true_attacks": 203,
-      "false_positives": 1427,
-      "total": 1630,
-      "precision": 0.1245,
-      "false_positive_rate": 0.8755
+      "true_attacks": 189,
+      "false_positives": 129,
+      "total": 318,
+      "precision": 0.5943,
+      "false_positive_rate": 0.4057
+    },
+    "escalate_clinical": {
+      "true_attacks": 163,
+      "false_positives": 90,
+      "total": 253,
+      "precision": 0.6443,
+      "false_positive_rate": 0.3557
     },
     "re_authenticate": {
-      "true_attacks": 113,
+      "true_attacks": 99,
       "false_positives": 0,
-      "total": 113,
+      "total": 99,
       "precision": 1.0,
       "false_positive_rate": 0.0
     },
     "forensic_snapshot": {
-      "true_attacks": 177,
-      "false_positives": 21,
-      "total": 198,
-      "precision": 0.8939,
-      "false_positive_rate": 0.1061
+      "true_attacks": 178,
+      "false_positives": 22,
+      "total": 200,
+      "precision": 0.89,
+      "false_positive_rate": 0.11
     },
     "restrict_traffic": {
-      "true_attacks": 113,
-      "false_positives": 45,
-      "total": 158,
-      "precision": 0.7152,
-      "false_positive_rate": 0.2848
+      "true_attacks": 99,
+      "false_positives": 0,
+      "total": 99,
+      "precision": 1.0,
+      "false_positive_rate": 0.0
     },
     "isolate_device": {
-      "true_attacks": 177,
-      "false_positives": 21,
-      "total": 198,
-      "precision": 0.8939,
-      "false_positive_rate": 0.1061
-    },
-    "escalate_clinical": {
-      "true_attacks": 163,
-      "false_positives": 179,
-      "total": 342,
-      "precision": 0.4766,
-      "false_positive_rate": 0.5234
+      "true_attacks": 178,
+      "false_positives": 22,
+      "total": 200,
+      "precision": 0.89,
+      "false_positive_rate": 0.11
     }
   },
   "proportionality_analysis": [
     {
       "action": "isolate_device",
       "cost": 0.8,
-      "precision": 0.8939,
-      "total": 198
+      "precision": 0.89,
+      "total": 200
     },
     {
       "action": "escalate_clinical",
       "cost": 0.7,
-      "precision": 0.4766,
-      "total": 342
+      "precision": 0.6443,
+      "total": 253
     },
     {
       "action": "restrict_traffic",
       "cost": 0.5,
-      "precision": 0.7152,
-      "total": 158
+      "precision": 1.0,
+      "total": 99
     },
     {
       "action": "forensic_snapshot",
       "cost": 0.4,
-      "precision": 0.8939,
-      "total": 198
+      "precision": 0.89,
+      "total": 200
     },
     {
       "action": "re_authenticate",
       "cost": 0.3,
       "precision": 1.0,
-      "total": 113
+      "total": 99
     },
     {
       "action": "enhanced_monitoring",
       "cost": 0.2,
-      "precision": 0.1245,
-      "total": 1630
+      "precision": 0.5943,
+      "total": 318
     },
     {
       "action": "log_event",
       "cost": 0.1,
-      "precision": 0.1256,
-      "total": 1632
+      "precision": 0.5969,
+      "total": 320
     }
   ],
-  "over_response_count": 66,
+  "over_response_count": 22,
   "under_response_count": 0,
-  "over_response_rate": 0.0404,
+  "over_response_rate": 0.0688,
   "under_response_rate": 0.0
 }

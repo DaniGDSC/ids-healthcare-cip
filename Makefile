@@ -1,6 +1,7 @@
 .PHONY: phase0-baseline phase0-check phase0-update-floors test-phase0 \
         phase1-baselines phase1-regen phase1-verify test-phase1 \
-        phase2-regen phase2-verify test-phase2 help
+        phase2-regen phase2-verify test-phase2 \
+        phase4-gate phase4-round2-sim test-phase4 help
 
 PYTHON ?= python3
 
@@ -48,3 +49,12 @@ phase2-verify: phase1-baselines phase2-regen phase0-baseline
 
 test-phase2:
 	$(PYTHON) -m pytest tests/test_phase2_counterfactual.py -v
+
+phase4-gate:
+	$(PYTHON) -m tools.faithfulness_gate --check
+
+phase4-round2-sim:
+	$(PYTHON) -m tools.phase4_round2_simulator
+
+test-phase4:
+	$(PYTHON) -m pytest tests/test_phase4_stability.py -v

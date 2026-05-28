@@ -390,13 +390,15 @@ def render_consensus_badge(
     """Visual badge for the Module 4 detector-ensemble consensus.
 
     `n_flagged` is the number of detectors that flagged the sample as
-    anomalous; `total` is the ensemble size (4 in the current pipeline).
-    Tone is mapped to consensus strength:
-      * 4/4 → success (unanimous)
-      * 3/4 → accent  (strong)
-      * 2/4 → tier-medium (mixed)
-      * 1/4 → tier-low (weak)
-      * 0/4 → text-tertiary (no flags)
+    anomalous; `total` is the ensemble size (2 after the Phase 2 cleanup
+    — XGBoost + DAE; RandomForest / DecisionTree were demoted to RQ1
+    baselines). Tone is mapped to fractional consensus strength so the
+    badge stays correct regardless of ensemble size:
+      * n == total          → success (unanimous)
+      * n/total ≥ 0.75      → accent (strong)
+      * n/total ≥ 0.50      → tier-medium (mixed)
+      * 0 < n/total < 0.50  → tier-low (weak)
+      * n == 0              → text-tertiary (no flags)
 
     The badge renders both as N filled / M-N empty dots AND a numeric
     string so colour-blind operators retain the signal. A tooltip
@@ -460,11 +462,9 @@ def render_model_breakdown(models: Mapping[str, Mapping]) -> str:
     """
     if not models:
         return ""
-    expected = ("xgboost", "random_forest", "decision_tree", "dae")
+    expected = ("xgboost", "dae")
     display_names = {
         "xgboost":       "XGBoost",
-        "random_forest": "Random Forest",
-        "decision_tree": "Decision Tree",
         "dae":           "DAE (autoencoder)",
     }
     rows = ""

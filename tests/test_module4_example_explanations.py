@@ -88,14 +88,6 @@ def test_generate_example_explanations_picks_attack_samples(monkeypatch, tmp_pat
             "y_pred": np.array([1] * 10 + [0] * 10),
             "y_proba": np.concatenate([np.linspace(0.5, 0.95, 10), np.zeros(10)]),
         },
-        "random_forest": {
-            "y_pred": np.zeros(n, dtype=int),
-            "y_proba": np.zeros(n),
-        },
-        "decision_tree": {
-            "y_pred": np.zeros(n, dtype=int),
-            "y_proba": np.zeros(n),
-        },
     }
     dae_preds = {"y_pred": np.zeros(n, dtype=int), "reconstruction_error": np.zeros(n)}
     weighted_err = rng.random((n, 5))
@@ -145,8 +137,6 @@ def test_generate_example_explanations_includes_risk_score_when_available(
             "y_pred": np.array([1] * 6 + [0] * 6),
             "y_proba": np.concatenate([np.linspace(0.6, 0.95, 6), np.zeros(6)]),
         },
-        "random_forest": {"y_pred": np.zeros(n, dtype=int), "y_proba": np.zeros(n)},
-        "decision_tree": {"y_pred": np.zeros(n, dtype=int), "y_proba": np.zeros(n)},
     }
     dae_preds = {"y_pred": np.zeros(n, dtype=int), "reconstruction_error": np.zeros(n)}
     weighted_err = rng.random((n, 5))
@@ -185,8 +175,6 @@ def test_generate_example_explanations_writes_json(monkeypatch, tmp_path):
             "y_pred": np.array([1] * 4 + [0] * 4),
             "y_proba": np.concatenate([np.linspace(0.5, 0.9, 4), np.zeros(4)]),
         },
-        "random_forest": {"y_pred": np.zeros(n, dtype=int), "y_proba": np.zeros(n)},
-        "decision_tree": {"y_pred": np.zeros(n, dtype=int), "y_proba": np.zeros(n)},
     }
     dae_preds = {"y_pred": np.zeros(n, dtype=int), "reconstruction_error": np.zeros(n)}
     weighted_err = rng.random((n, 5))

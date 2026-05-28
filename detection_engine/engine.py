@@ -1,10 +1,17 @@
 """Inference-time detection engine: Track A + Track B fusion.
 
 The cascaded architecture (see :mod:`module2_detection.dae_training`):
-  - Track A: supervised classifiers (XGBoost, RandomForest, DecisionTree).
+  - Track A: supervised classifiers. XGBoost is the decision driver
+    (``c_track_a``, cascade gate, DAE augmentation). RandomForest and
+    DecisionTree are also loaded by :func:`common.model_registry.\
+get_track_a_classifiers` and forward-passed in :meth:`predict` so
+    their predictions populate ``track_a_probas`` / ``track_a_preds``
+    — Module 4 consumes those for the ``n_models_flagged`` vote count
+    and the ``consensus = N/4`` analyst-report string, *not* for any
+    severity / risk / NLG decision. They originated as RQ1 R2 baselines.
   - Track B: DAE novelty detector trained on benign rows whose input is
     ``[raw_features || Track_A_probas]`` — the augmentation set is
-    defined by :data:`common.dae_input.TRACK_A_FOR_DAE`.
+    defined by :data:`common.dae_input.TRACK_A_FOR_DAE` (XGBoost only).
 
 This module is the *single* place that:
   1. Builds the augmented inference input.
@@ -22,7 +29,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import joblib
 import numpy as np
 
 from common.dae_input import TRACK_A_FOR_DAE
@@ -108,6 +114,7 @@ class DetectionEngine:
                 get_track_a_classifiers,
                 get_track_a_thresholds,
             )
+
             self._classifiers = get_track_a_classifiers()
             self._thresholds = get_track_a_thresholds()
             self._dae = get_dae()
@@ -143,20 +150,18 @@ class DetectionEngine:
         return X.astype(np.float32, copy=False)
 
     def _track_a_probas_all(self, X: np.ndarray) -> dict:
-        """Run every Track A classifier and return {name: proba}.
+        """Run every runtime Track A classifier and return {name: proba}.
 
-        Runs in a joblib threading pool — sklearn / xgboost release the
-        GIL during predict_proba, so threading achieves real parallelism
-        without pickling overhead.
+        After the Phase 2 cleanup the runtime registry only contains
+        XGBoost, so this is effectively a single ``predict_proba`` call.
+        The dict shape is preserved (rather than returning a bare array)
+        for downstream compat — Module 4's ``track_a_probas`` field still
+        reads per-name and the augmentation logic in :meth:`build_augmented`
+        loops over :data:`TRACK_A_FOR_DAE`.
         """
-        def _one(name, clf):
-            return name, clf.predict_proba(X)[:, 1]
-
-        pairs = joblib.Parallel(n_jobs=len(self._classifiers), backend="threading")(
-            joblib.delayed(_one)(name, clf)
-            for name, clf in self._classifiers.items()
-        )
-        return dict(pairs)
+        return {
+            name: clf.predict_proba(X)[:, 1] for name, clf in self._classifiers.items()
+        }
 
     # ── Public API ─────────────────────────────────────────────────────
 
@@ -173,9 +178,9 @@ class DetectionEngine:
         n, n_raw = X_clean.shape
 
         probas = self._track_a_probas_all(X_clean)
-        proba_cols = np.column_stack(
-            [probas[name] for name in TRACK_A_FOR_DAE]
-        ).astype(np.float32)
+        proba_cols = np.column_stack([probas[name] for name in TRACK_A_FOR_DAE]).astype(
+            np.float32
+        )
 
         expected = self._dae_expected_dim
         actual = n_raw + proba_cols.shape[1]
@@ -235,9 +240,9 @@ class DetectionEngine:
         # column_stack is cheap and Module 4 reads x_augmented for the
         # full batch.
         n, n_raw = X_clean.shape
-        proba_cols = np.column_stack(
-            [probas[name] for name in TRACK_A_FOR_DAE]
-        ).astype(np.float32)
+        proba_cols = np.column_stack([probas[name] for name in TRACK_A_FOR_DAE]).astype(
+            np.float32
+        )
         expected = self._dae_expected_dim
         actual = n_raw + proba_cols.shape[1]
         if expected != actual:
@@ -266,7 +271,10 @@ class DetectionEngine:
         logger.info(
             "detection_engine.predict: %d/%d rows scored by DAE "
             "(%d gated by XGBoost>=%.2f, %.1f%% compute saved)%s",
-            n_scored, n, n - n_scored, self.TAU_SKIP_DAE,
+            n_scored,
+            n,
+            n - n_scored,
+            self.TAU_SKIP_DAE,
             100.0 * (n - n_scored) / max(n, 1),
             " [forced full-DAE]" if _force_full_dae else "",
         )
@@ -328,9 +336,11 @@ class DetectionEngine:
             reconstruction_error=recon_err,
         )
         logger.info(
-            "detection_engine: wrote %s (%d samples, c_detect range "
-            "[%.4f, %.4f])",
-            out_path, len(y), result.c_detect.min(), result.c_detect.max(),
+            "detection_engine: wrote %s (%d samples, c_detect range [%.4f, %.4f])",
+            out_path,
+            len(y),
+            result.c_detect.min(),
+            result.c_detect.max(),
         )
         return out_path
 
@@ -342,6 +352,7 @@ class DetectionEngine:
         callers continue to work; new code should call ``write_predictions``.
         """
         import warnings
+
         warnings.warn(
             "DetectionEngine.write_test_predictions is deprecated; "
             "use write_predictions(...) instead.",

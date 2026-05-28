@@ -23,6 +23,7 @@ analyst entry (under ``counterfactual``) and the clinician summary
 Does NOT regenerate admin_dashboard.json or the example_explanations
 artefact — those are not the targets of Phase 0/1/2 metrics.
 """
+
 from __future__ import annotations
 
 import logging
@@ -37,6 +38,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from common import split_paths as sp  # noqa: E402
 from module4_explanations.config import SHAP_MODELS, TRACK_A_MODELS  # noqa: E402
 from module4_explanations.counterfactual import compute_counterfactual  # noqa: E402
+from module4_explanations.stability import compute_stability  # noqa: E402
 from module4_explanations.io import OUTPUT_DIR, load_test_data  # noqa: E402
 from module4_explanations.stakeholder import (  # noqa: E402
     build_analyst_report,
@@ -48,24 +50,22 @@ def main(split: str = "test") -> int:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     paths = {
-        "parquet":            sp.parquet(split),
-        "xgboost_preds":      sp.model_predictions("xgboost", split),
-        "random_forest_preds": sp.model_predictions("random_forest", split),
-        "decision_tree_preds": sp.model_predictions("decision_tree", split),
-        "dae_preds":          sp.dae_predictions(split),
-        "risk_npz":           sp.risk_scores(split),
-        "suffix":             sp.suffix(split),
+        "parquet": sp.parquet(split),
+        "xgboost_preds": sp.model_predictions("xgboost", split),
+        "dae_preds": sp.dae_predictions(split),
+        "risk_npz": sp.risk_scores(split),
+        "suffix": sp.suffix(split),
     }
 
     X_test, y_test, attack_cats, feat_names = load_test_data(paths["parquet"])
     n_samples = len(y_test)
-    print(f"[phase1-regen] split={split} n_samples={n_samples} n_features={len(feat_names)}")
+    print(
+        f"[phase1-regen] split={split} n_samples={n_samples} n_features={len(feat_names)}"
+    )
 
-    # Predictions — same order as TRACK_A_MODELS dict iteration
+    # Predictions — same order as TRACK_A_MODELS dict iteration (XGBoost only after Phase 2)
     pred_paths = {
-        "xgboost":       paths["xgboost_preds"],
-        "random_forest": paths["random_forest_preds"],
-        "decision_tree": paths["decision_tree_preds"],
+        "xgboost": paths["xgboost_preds"],
     }
     all_preds: dict = {}
     for name in TRACK_A_MODELS:
@@ -74,10 +74,16 @@ def main(split: str = "test") -> int:
     dae_data = np.load(paths["dae_preds"])
     dae_preds = {k: dae_data[k] for k in dae_data.files}
 
-    # Cached SHAP from npz — same shape contract as compute_tree_shap
+    # Cached SHAP from npz — same shape contract as compute_tree_shap.
+    # Per-split suffix matches the prediction npz scheme: the demo
+    # cache file is ``shap_values_<model>_demo.npz`` (Sprint 2 1.3),
+    # while test stays at ``shap_values_<model>.npz``.
+    suffix_npz = "_demo" if split == "demo" else ""
     all_shap: dict = {}
     for name in SHAP_MODELS:
-        npz_path = PROJECT_ROOT / "results" / "reports" / f"shap_values_{name}.npz"
+        npz_path = (
+            PROJECT_ROOT / "results" / "reports" / f"shap_values_{name}{suffix_npz}.npz"
+        )
         if not npz_path.exists():
             print(f"  WARN: missing {npz_path.name} — skipping {name}")
             continue
@@ -90,10 +96,25 @@ def main(split: str = "test") -> int:
                 f"and parquet ({len(feat_names)} feats). Re-run Module 4 fully."
             )
 
-    # DAE per-feature errors (needed by build_analyst_report)
-    dae_err_path = PROJECT_ROOT / "results" / "reports" / "dae_feature_errors.npz"
-    dae_err = np.load(dae_err_path, allow_pickle=True)
-    weighted_err = dae_err["weighted_per_feature_error"]
+    # DAE per-feature errors (needed by build_analyst_report).
+    # For the demo split, compute on the fly because Module 4 in
+    # explanations-only mode didn't cache them (and re-running full
+    # mode is expensive). Falls back gracefully when the demo cache
+    # exists too.
+    dae_err_path = (
+        PROJECT_ROOT / "results" / "reports" / f"dae_feature_errors{suffix_npz}.npz"
+    )
+    if dae_err_path.exists():
+        dae_err = np.load(dae_err_path, allow_pickle=True)
+        weighted_err = dae_err["weighted_per_feature_error"]
+    else:
+        from module4_explanations.compute import compute_dae_feature_errors
+
+        print(
+            f"[phase1-regen] DAE per-feature errors not cached for split={split} — "
+            "computing on the fly"
+        )
+        _sq, weighted_err, _w = compute_dae_feature_errors(X_test, list(feat_names))
 
     # Risk levels (Module 3 canonical severity)
     if not paths["risk_npz"].exists():
@@ -103,56 +124,114 @@ def main(split: str = "test") -> int:
     risk_levels = np.load(paths["risk_npz"], allow_pickle=True)["risk_levels"]
 
     # ── Phase 2 — counterfactual per XGBoost-flagged alert ──
-    # Direct joblib.load is used here because ``loads_signed`` refuses
-    # stale-sha pickles, and the dev corpus has been re-trained without
-    # a fresh sidecar. This is offline tooling — the production read
-    # path in ``module4_explanations.compute.compute_tree_shap`` still
-    # goes through ``loads_signed`` and enforces integrity.
+    # Loads via the signed-pickle verifier. Sprint 1.1 added
+    # ``tools/resign_models`` so the sidecar stays current; if this raises
+    # ``SignedPickleError`` it means the operator needs to re-run
+    # ``python -m tools.resign_models`` first.
     counterfactuals_by_idx: dict[int, dict] = {}
+    stability_by_idx: dict[int, dict] = {}
     if "xgboost" in all_shap:
-        import joblib
+        import shap
+        from common import loads_signed
+
         pkl_path = PROJECT_ROOT / "results/models/xgboost_final_pipeline.pkl"
-        obj = joblib.load(pkl_path)
+        obj = loads_signed(pkl_path)
         clf = obj.named_steps["classifier"] if hasattr(obj, "named_steps") else obj
 
         try:
             from common.model_registry import get_track_a_thresholds
+
             threshold = float(get_track_a_thresholds()["xgboost"])
         except Exception:
             threshold = 0.5
 
         xgb_preds = all_preds["xgboost"]["y_pred"]
         flagged_idx = np.where(xgb_preds == 1)[0]
-        print(f"[phase1-regen] computing counterfactuals for {len(flagged_idx)} "
-              f"XGBoost-flagged samples (threshold={threshold:.4f})")
+        print(
+            f"[phase1-regen] computing counterfactuals for {len(flagged_idx)} "
+            f"XGBoost-flagged samples (threshold={threshold:.4f})"
+        )
         n_feasible = 0
         for k, idx in enumerate(flagged_idx):
             idx = int(idx)
             r = compute_counterfactual(
-                clf, X_test[idx], all_shap["xgboost"][idx],
-                list(feat_names), threshold,
+                clf,
+                X_test[idx],
+                all_shap["xgboost"][idx],
+                list(feat_names),
+                threshold,
             )
             counterfactuals_by_idx[idx] = r.to_dict()
             if r.feasible:
                 n_feasible += 1
             if (k + 1) % 100 == 0:
-                print(f"  …{k + 1}/{len(flagged_idx)} processed "
-                      f"({n_feasible} feasible so far)")
-        print(f"[phase1-regen] counterfactual coverage: "
-              f"{n_feasible}/{len(flagged_idx)} feasible")
+                print(
+                    f"  …{k + 1}/{len(flagged_idx)} processed "
+                    f"({n_feasible} feasible so far)"
+                )
+        print(
+            f"[phase1-regen] counterfactual coverage: "
+            f"{n_feasible}/{len(flagged_idx)} feasible"
+        )
+
+        # ── Phase 4.1 — stability badge per XGBoost-flagged alert ──
+        # Deterministic RNG seeded by alert index so per-alert
+        # stability is reproducible across CI runs.
+        explainer = shap.TreeExplainer(clf)
+        print(f"[phase1-regen] computing stability for {len(flagged_idx)} samples")
+        band_counts = {"STABLE": 0, "BORDERLINE": 0, "UNSTABLE": 0}
+        for k, idx in enumerate(flagged_idx):
+            idx = int(idx)
+            rng = np.random.default_rng(seed=42 + idx)
+            r = compute_stability(
+                explainer,
+                X_test[idx],
+                list(feat_names),
+                rng=rng,
+                baseline_shap_row=all_shap["xgboost"][idx],
+            )
+            stability_by_idx[idx] = r.to_dict()
+            band_counts[r.band] = band_counts.get(r.band, 0) + 1
+            if (k + 1) % 100 == 0:
+                print(
+                    f"  …{k + 1}/{len(flagged_idx)} processed  "
+                    f"(STABLE={band_counts['STABLE']}, "
+                    f"BORDERLINE={band_counts['BORDERLINE']}, "
+                    f"UNSTABLE={band_counts['UNSTABLE']})"
+                )
+        print(
+            f"[phase1-regen] stability bands: "
+            f"STABLE={band_counts['STABLE']}, "
+            f"BORDERLINE={band_counts['BORDERLINE']}, "
+            f"UNSTABLE={band_counts['UNSTABLE']}"
+        )
 
     # Build outputs — Phase 1.1: X_test is now passed through;
-    # Phase 2: counterfactuals injected when present.
+    # Phase 2: counterfactuals injected when present;
+    # Phase 4.1: stability badges injected when present.
     build_analyst_report(
-        all_shap, all_preds, weighted_err, dae_preds, feat_names,
-        risk_levels, suffix=paths["suffix"], output_dir=OUTPUT_DIR,
+        all_shap,
+        all_preds,
+        weighted_err,
+        dae_preds,
+        feat_names,
+        risk_levels,
+        suffix=paths["suffix"],
+        output_dir=OUTPUT_DIR,
         counterfactuals_by_idx=counterfactuals_by_idx or None,
+        stability_by_idx=stability_by_idx or None,
     )
     build_clinician_summaries(
-        all_shap, all_preds, dae_preds, feat_names, risk_levels,
-        suffix=paths["suffix"], output_dir=OUTPUT_DIR,
+        all_shap,
+        all_preds,
+        dae_preds,
+        feat_names,
+        risk_levels,
+        suffix=paths["suffix"],
+        output_dir=OUTPUT_DIR,
         X_test=X_test,
         counterfactuals_by_idx=counterfactuals_by_idx or None,
+        stability_by_idx=stability_by_idx or None,
     )
 
     print(f"[phase1-regen] wrote outputs under {OUTPUT_DIR.relative_to(PROJECT_ROOT)}")

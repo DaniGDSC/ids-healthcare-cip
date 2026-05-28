@@ -1,11 +1,11 @@
 {
   "_meta": {
     "reports_dir": "/home/un1/project/ids-healthcare-cip/results/reports",
-    "n_analyst_alerts": 2415,
+    "n_analyst_alerts": 2325,
     "n_clinician_summaries": 315,
-    "n_alert_responses": 430,
-    "generated_at": "2026-05-28T11:39:57.834238+00:00",
-    "git_rev": "42bc65d"
+    "n_alert_responses": 520,
+    "generated_at": "2026-05-28T14:11:39.328329+00:00",
+    "git_rev": "2d423bf"
   },
   "narrative_faithfulness": {
     "metric": "narrative_faithfulness",
@@ -81,7 +81,7 @@
   "action_specificity": {
     "metric": "action_specificity",
     "description": "% of action strings (MVE Layer 3 + clinician summary + response.action_descriptions) containing at least one concrete identifier (IP/port/device/contact/MITRE/alert id).",
-    "overall_rate": 0.5358,
+    "overall_rate": 0.5547,
     "per_source_rate": {
       "layer3_action": 1.0,
       "layer3_escalation": 1.0,
@@ -89,14 +89,14 @@
       "clinician_summary": 0.0
     },
     "per_source_seen": {
-      "layer3_action": 430,
-      "layer3_escalation": 430,
-      "action_descriptions": 430,
+      "layer3_action": 520,
+      "layer3_escalation": 520,
+      "action_descriptions": 520,
       "clinician_summary": 315
     },
     "per_source_specific": {
-      "layer3_action": 430,
-      "layer3_escalation": 430,
+      "layer3_action": 520,
+      "layer3_escalation": 520,
       "action_descriptions": 0,
       "clinician_summary": 0
     },
@@ -106,20 +106,20 @@
       "port_number": 0,
       "bed_or_room": 0,
       "device_id": 0,
-      "extension": 430,
+      "extension": 520,
       "named_person": 0,
       "mitre_id": 0,
-      "alert_id": 430
+      "alert_id": 520
     }
   },
   "counterfactual_coverage": {
     "metric": "counterfactual_coverage",
     "description": "% of alert records with a counterfactual payload. The ``actionable_rate`` (denominator = CRITICAL+HIGH+MEDIUM) is the Phase 2 acceptance signal; the overall ``rate`` is kept for backwards-compat with Phase 0 baselines.",
-    "n": 430,
+    "n": 520,
     "n_with_counterfactual": 315,
-    "rate": 0.7326,
-    "actionable_rate": 0.8481,
-    "actionable_feasible_rate": 0.8481,
+    "rate": 0.6058,
+    "actionable_rate": 0.8058,
+    "actionable_feasible_rate": 0.8058,
     "by_severity": {
       "CRITICAL": {
         "seen": 12,
@@ -127,26 +127,43 @@
         "feasible": 12
       },
       "HIGH": {
-        "seen": 285,
+        "seen": 301,
         "with_cf": 268,
         "feasible": 268
       },
       "MEDIUM": {
-        "seen": 65,
+        "seen": 68,
         "with_cf": 27,
         "feasible": 27
       },
       "LOW": {
-        "seen": 68,
+        "seen": 139,
         "with_cf": 8,
         "feasible": 8
       }
     }
   },
+  "operational_health": {
+    "metric": "operational_health",
+    "description": "Operational alert-pool precision/recall + sentinel metrics. ``operational_precision`` is the key signal: a drop indicates the formula is emitting context-driven noise the operator has to triage.",
+    "n": 520,
+    "operational_precision": 0.5692,
+    "operational_recall": 1.0,
+    "operational_f1": 0.7255,
+    "surfaced_precision": 0.7559,
+    "surfaced_recall": 0.973,
+    "surfaced_f1": 0.8508,
+    "tp_pool": 296,
+    "fp_pool": 224,
+    "low_tier_n": 139,
+    "low_tier_attacks": 8,
+    "low_tier_attack_density": 0.0576
+  },
   "_floors": {
     "narrative_faithfulness": 0.9674,
-    "action_specificity": 0.5358,
-    "counterfactual_coverage": 0.7326,
-    "counterfactual_actionable_feasible_rate": 0.8481
+    "action_specificity": 0.5547,
+    "counterfactual_coverage": 0.6058,
+    "counterfactual_actionable_feasible_rate": 0.8058,
+    "operational_precision": 0.5692
   }
 }

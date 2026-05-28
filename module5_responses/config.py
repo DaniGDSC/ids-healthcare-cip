@@ -172,9 +172,19 @@ TIER_POLICIES: dict[str, dict] = {
     },
     "MEDIUM": {
         "priority": 3,
+        # restrict_traffic intentionally absent from the MEDIUM default:
+        # the over-response ablation
+        # (tools/over_response_ablation.py, strategy B) showed that
+        # leaving it here drove 57/93 (61%) of all false-positive
+        # isolations on the test split — benign rows whose composite
+        # risk just crossed the MEDIUM boundary and inherited a
+        # mitigation action they didn't need. True attacks at MEDIUM
+        # still receive restrict_traffic via ATTACK_ROUTING (Spoofing)
+        # or DEFAULT_ROUTING (unknown category), so containment is
+        # preserved. Result: over_response_rate 17.9% → 6.3%, recall
+        # unchanged at 96.4%, FNR_critical unchanged at 0%.
         "default_actions": [
             "log_event",
-            "restrict_traffic",
             "enhanced_monitoring",
         ],
         "max_response_min": 60,
@@ -282,14 +292,14 @@ ESCALATION_CONTACTS: dict[str, dict[str, str]] = {
 
 
 def annotate_role(role_phrase: str) -> str:
-    """Append ``(ext NNNN, SLA Xmin)`` when ``role_phrase`` matches a
-    known role in ``ESCALATION_CONTACTS``.
+    """Append ``[ext/SLA]`` when ``role_phrase`` matches a known role.
 
-    Match is case-insensitive substring (upstream ``_escalation`` strings
-    mix capitalisations — "Charge Nurse" vs "Charge nurse on duty" — so
-    we lowercase both sides). The longest matching key wins so "ICU
-    charge nurse" doesn't get mis-annotated as "Charge Nurse". Returns
-    the input unchanged when no role matches.
+    Compact form keeps the MVE Layer 3 escalation_path inside the
+    150-word total budget. Match is case-insensitive substring (upstream
+    ``_escalation`` strings mix capitalisations — "Charge Nurse" vs
+    "Charge nurse on duty" — so we lowercase both sides). The longest
+    matching key wins so "ICU charge nurse" doesn't get mis-annotated
+    as "Charge Nurse". Returns the input unchanged when no role matches.
     """
     if not role_phrase:
         return role_phrase
@@ -301,7 +311,11 @@ def annotate_role(role_phrase: str) -> str:
     if best_key is None:
         return role_phrase
     info = ESCALATION_CONTACTS[best_key]
-    return f"{role_phrase} ({info['ext']}, SLA {info['sla']})"
+    # Strip "ext " / "min" so the compact form is "[NNNN/Nm]" instead
+    # of "(ext NNNN, SLA N min)" — saves ~3 words per role.
+    ext = info["ext"].replace("ext ", "").strip()
+    sla = info["sla"].replace(" min", "m").replace("min", "m").strip()
+    return f"{role_phrase} [{ext}/{sla}]"
 
 
 # ── Acuity overrides ───────────────────────────────────────────────────

@@ -26,17 +26,43 @@ def test_weights_keys():
     assert set(WEIGHTS.keys()) == {"w1", "w2", "w3", "w4"}
 
 
-def test_risk_thresholds_monotonic_descending():
-    """CRITICAL > HIGH > MEDIUM > LOW — 4 thresholds after the
-    formula-fix upgrade adds the NORMAL tier at R < 0.30."""
+def test_risk_thresholds_invariants():
+    """Threshold invariants (Sprint 1.4 — invariant-pinning).
+
+    Pin *properties* of the table, not the specific numeric values, so
+    a legitimate threshold recalibration (Sprint 5 retrain, future
+    formula version) doesn't require editing this test:
+
+      - strictly monotonic descending (no equal-tier boundaries)
+      - every threshold in [0, 1]
+      - CRITICAL is the highest, lowest is non-NORMAL (NORMAL is the
+        implicit ``default=`` tier, not in the table)
+    """
     thresholds = [t for t, _ in RISK_THRESHOLDS]
-    assert thresholds == sorted(thresholds, reverse=True)
-    assert thresholds == [0.80, 0.60, 0.40, 0.30]
-
-
-def test_risk_threshold_labels():
     labels = [name for _, name in RISK_THRESHOLDS]
-    assert labels == ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+
+    # Strictly descending — no equal boundaries
+    assert thresholds == sorted(thresholds, reverse=True)
+    assert len(set(thresholds)) == len(thresholds)
+    # All in [0, 1]
+    assert all(0.0 <= t <= 1.0 for t in thresholds)
+    # CRITICAL is the first (highest) entry; LOW is the last (lowest).
+    # NORMAL is the implicit default — must NOT appear in the table.
+    assert labels[0] == "CRITICAL"
+    assert labels[-1] == "LOW"
+    assert "NORMAL" not in labels
+
+
+def test_risk_threshold_covers_canonical_severities():
+    """Every canonical severity that ``assign_risk_levels`` can emit
+    above the NORMAL default must have a threshold entry. NORMAL is
+    the default, so it does NOT need a threshold."""
+    labels = [name for _, name in RISK_THRESHOLDS]
+    canonical = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
+    assert set(labels) == canonical, (
+        f"Threshold labels {set(labels)} != canonical surfaced "
+        f"severities {canonical}"
+    )
 
 
 def test_device_tiers_in_unit_interval():

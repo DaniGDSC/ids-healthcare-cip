@@ -76,20 +76,27 @@ def main(split: str = "test") -> int:
     # and the counterfactual-derived try-first remediation hint
     # (under response.try_first_action) for every record whose
     # corresponding analyst entry has a feasible counterfactual.
+    # Phase 4.1 — also inject stability (under explanation.stability)
+    # so consumers see the band alongside counterfactual.
     n_cf_injected = 0
+    n_stab_injected = 0
     for rec in records:
         idx = rec["sample_index"]
         analyst_entry = analyst_by_idx.get(idx)
         if not analyst_entry:
             continue
         cf = analyst_entry.get("counterfactual")
-        if not cf:
-            continue
-        rec.setdefault("explanation", {})["counterfactual"] = cf
-        if cf.get("feasible") and cf.get("remediation_hint"):
-            rec.setdefault("response", {})["try_first_action"] = cf["remediation_hint"]
-        n_cf_injected += 1
-    print(f"[phase1-regen-m5] injected counterfactual into {n_cf_injected} records")
+        if cf:
+            rec.setdefault("explanation", {})["counterfactual"] = cf
+            if cf.get("feasible") and cf.get("remediation_hint"):
+                rec.setdefault("response", {})["try_first_action"] = cf["remediation_hint"]
+            n_cf_injected += 1
+        stab = analyst_entry.get("stability")
+        if stab:
+            rec.setdefault("explanation", {})["stability"] = stab
+            n_stab_injected += 1
+    print(f"[phase1-regen-m5] injected counterfactual into {n_cf_injected} records, "
+          f"stability into {n_stab_injected} records")
 
     envelope = {
         "_provenance": {

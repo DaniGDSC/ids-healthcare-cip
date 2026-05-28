@@ -97,7 +97,7 @@ def test_six_step_alert_includes_all_sections():
     feat_names = ["DIntPkt", "SrcLoad", "Pulse_Rate", "TotBytes", "ST"]
     out = generate_clinician_alert(
         idx=42, sv_row=sv_row, feat_names=feat_names,
-        severity="CRITICAL", confidence=0.95, consensus="4/4",
+        severity="CRITICAL", confidence=0.95, consensus="2/2",
         risk_score=0.75, risk_components={
             "c_detect": 0.8, "d_crit": 0.5, "s_data": 0.6, "d_clinical_tier": 0.4,
         },
@@ -114,7 +114,7 @@ def test_six_step_alert_acuity_note_normal_when_d_clinical_zero():
     feat_names = ["a", "b", "c", "d", "e"]
     out = generate_clinician_alert(
         idx=0, sv_row=sv_row, feat_names=feat_names,
-        severity="HIGH", confidence=0.7, consensus="3/4",
+        severity="HIGH", confidence=0.7, consensus="1/2",
         d_clinical_tier_val=0.0,
     )
     assert "within normal ranges" in out
@@ -128,7 +128,7 @@ def test_route_clinician_returns_text():
     out = route_explanation(
         idx=0, stakeholder_role="clinician",
         sv_row=sv_row, feat_names=["a", "b"],
-        severity="HIGH", confidence=0.8, consensus="3/4",
+        severity="HIGH", confidence=0.8, consensus="1/2",
         risk_score=0.6, risk_components={},
         d_clinical_tier_val=0.0, dae_top_features=[],
     )
@@ -141,7 +141,7 @@ def test_route_analyst_returns_json_with_charts():
     out = route_explanation(
         idx=7, stakeholder_role="analyst",
         sv_row=sv_row, feat_names=["a", "b"],
-        severity="HIGH", confidence=0.8, consensus="3/4",
+        severity="HIGH", confidence=0.8, consensus="1/2",
         risk_score=0.6, risk_components={"c_detect": 0.5},
         d_clinical_tier_val=0.0, dae_top_features=[{"feature": "a"}],
     )
@@ -155,7 +155,7 @@ def test_route_administrator_action_required_flag():
     out = route_explanation(
         idx=0, stakeholder_role="administrator",
         sv_row=np.zeros(2), feat_names=["a", "b"],
-        severity="CRITICAL", confidence=0.95, consensus="4/4",
+        severity="CRITICAL", confidence=0.95, consensus="2/2",
         risk_score=0.8, risk_components={},
         d_clinical_tier_val=0.0, dae_top_features=[],
     )
@@ -166,7 +166,7 @@ def test_route_unknown_role_fallback():
     out = route_explanation(
         idx=0, stakeholder_role="unknown_role",
         sv_row=np.zeros(2), feat_names=["a", "b"],
-        severity="LOW", confidence=0.5, consensus="1/4",
+        severity="LOW", confidence=0.5, consensus="0/2",
         risk_score=0.3, risk_components={},
         d_clinical_tier_val=0.0, dae_top_features=[],
     )

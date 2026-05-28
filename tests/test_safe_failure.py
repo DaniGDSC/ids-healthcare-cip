@@ -228,15 +228,32 @@ def test_response_requires_operator_approval(alert_responses):
 
 
 def test_audit_chain_records_carry_ground_truth(audit_log_records):
-    """Each audit record must carry the ground-truth label so post-hoc
-    accuracy review is possible (a `ground_truth=unknown` placeholder
-    breaks the catastrophic-miss analysis).
+    """Each *classification* audit record must carry the ground-truth
+    label so post-hoc accuracy review is possible. Non-classification
+    events (operator dashboard actions, reviewer ACKs, phase0_security
+    operational events) legitimately lack ground_truth and are filtered
+    out before the tolerance check — the test's intent is "every alert
+    classification has GT", not "every audit row has GT".
     """
-    missing = [r.get("alert_id") for r in audit_log_records
-               if not r.get("ground_truth") or r.get("ground_truth") == "unknown"]
+    # event_type taxonomy (as of 2026-05):
+    #   - missing  → original alert classification record (must have GT)
+    #   - reviewer_interaction / dashboard_action → reviewer ACK/escalate
+    #   - phase0_security → operational security events (no GT)
+    NON_CLASSIFICATION_EVENTS = {
+        "reviewer_interaction", "dashboard_action", "phase0_security",
+    }
+    classification_records = [
+        r for r in audit_log_records
+        if r.get("event_type") not in NON_CLASSIFICATION_EVENTS
+    ]
+    missing = [
+        r.get("alert_id") for r in classification_records
+        if not r.get("ground_truth") or r.get("ground_truth") == "unknown"
+    ]
     # Allow a small tolerance for legitimately unknown-at-log-time samples.
-    fraction_missing = len(missing) / max(1, len(audit_log_records))
+    fraction_missing = len(missing) / max(1, len(classification_records))
     assert fraction_missing < 0.10, (
-        f"{len(missing)} / {len(audit_log_records)} records "
-        f"({fraction_missing*100:.1f}%) lack ground_truth — exceeds 10% tolerance."
+        f"{len(missing)} / {len(classification_records)} classification "
+        f"records ({fraction_missing*100:.1f}%) lack ground_truth — "
+        f"exceeds 10% tolerance."
     )

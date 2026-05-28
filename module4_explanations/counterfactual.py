@@ -1,10 +1,17 @@
-"""Counterfactual explanations for Track-A (XGBoost) alerts.
+"""Counterfactual explanations for Track-A alerts.
 
 Phase 2 of the faithfulness/actionability upgrade. Produces, for each
 flagged alert, a *minimal* feature-space perturbation that would have
 flipped the model from "attack" to "benign". This gives non-ML users a
 verifiable handle on the alert: "if `Sport` had been near 0, the
 system would NOT have alerted."
+
+The engine itself is model-agnostic — it only needs a sklearn-style
+``predict_proba`` and a SHAP attribution vector for candidate
+selection. Sprint 5 / Tầng 3.4 extends usage from XGBoost to
+RandomForest so LOW-tier alerts flagged only by RF can also carry
+counterfactuals; see ``tools/phase1_regen_module4.py`` for the call
+site that loops over models.
 
 Design choices:
 

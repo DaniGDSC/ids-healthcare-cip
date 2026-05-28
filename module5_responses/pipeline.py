@@ -71,6 +71,7 @@ def build_all_records(
         gt = "attack" if y_true[idx] == 1 else "benign"
 
         bio_in_top = False
+        top_category = "unknown"
         if idx in analyst_by_idx:
             xgb_top = (
                 analyst_by_idx[idx]
@@ -79,6 +80,11 @@ def build_all_records(
                 .get("top_features", [])
             )
             bio_in_top = any(f["feature"] in BIOMETRIC_COLUMNS for f in xgb_top)
+            # Phase 3 — pin the top SHAP category so playbook selection
+            # + role-mismatch detection both see the same value.
+            if xgb_top:
+                from module4_explanations.feature_groups import _feature_to_narrative
+                _, top_category = _feature_to_narrative(xgb_top[0]["feature"])
 
         response = select_adaptive_response(
             risk_level=level,
@@ -86,6 +92,61 @@ def build_all_records(
             attack_category=cat,
             biometric_in_top_features=bio_in_top,
         )
+
+        # Phase 4.1 / Sprint 2.5 — always emit auto_execute explicitly so
+        # the field surfacing test never sees a missing key. The default
+        # comes from the canonical tier policy and gets demoted below if
+        # the explanation is UNSTABLE.
+        from .config import TIER_POLICIES
+        response["auto_execute"] = bool(
+            TIER_POLICIES.get(level, TIER_POLICIES["LOW"]).get("auto_execute", False)
+        )
+
+        # Phase 3.1 — attach the conditional playbook for this
+        # (top_category, severity) combination. Skipped for NORMAL
+        # since those records aren't surfaced to operators.
+        if level != "NORMAL":
+            from .playbooks import select_playbook
+            response["playbook"] = select_playbook(top_category, level).to_dict()
+
+        # Phase 3.2 — detect routing mismatch (e.g. biometric alert
+        # routed to IT Security). Always written so downstream
+        # consumers can rely on the field's presence; ``mismatch=False``
+        # for aligned alerts.
+        from .role_routing import detect_routing_mismatch
+        response["routing_warning"] = detect_routing_mismatch(
+            top_category,
+            response.get("escalation_chain", {}).get("primary"),
+        ).to_dict()
+
+        # Phase 4.1 — UNSTABLE explanation triggers auto-escalate +
+        # auto_execute demotion. The stability dict is sourced from the
+        # analyst entry where the regen tool attached it.
+        stability_info = None
+        if idx in analyst_by_idx:
+            stability_info = analyst_by_idx[idx].get("stability")
+        if stability_info and stability_info.get("band") == "UNSTABLE":
+            response["auto_execute"] = False
+            if "escalate_clinical" not in response["actions"]:
+                response["actions"].append("escalate_clinical")
+                response["action_descriptions"].append(
+                    "Escalate to clinical staff — explanation unstable, "
+                    "verify patient vitals independently."
+                )
+                from .config import ACTION_CATALOGUE
+                spec = ACTION_CATALOGUE["escalate_clinical"]
+                response["actions_metadata"].append({
+                    "name": "escalate_clinical",
+                    "cost": float(spec["cost"]),
+                    "reversible": bool(spec["reversible"]),
+                    "requires_approval": bool(spec["requires_approval"]),
+                    "expected_disruption": spec.get("expected_disruption", ""),
+                })
+            response["rationale"] = (
+                response.get("rationale", "")
+                + "; Stability UNSTABLE — auto_execute demoted, "
+                "clinical escalation added"
+            ).strip("; ")
 
         clin_summary = ""
         if idx in clinician_by_idx:

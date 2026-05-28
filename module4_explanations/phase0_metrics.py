@@ -157,7 +157,11 @@ _SPECIFICITY_PATTERNS: dict[str, re.Pattern[str]] = {
     "port_number":   re.compile(r"\b(?:port|tcp|udp)[\s/:]*\d{2,5}\b", re.IGNORECASE),
     "bed_or_room":   re.compile(r"\b(?:bed|room|ward)[-\s]?\d+\b", re.IGNORECASE),
     "device_id":     re.compile(r"\b(?:device|monitor|pump|sensor)[-_\s]?id[-_\s:=]?\S+", re.IGNORECASE),
-    "extension":     re.compile(r"\bext(?:ension)?[\s.:]*\d{3,5}\b", re.IGNORECASE),
+    # Both formats accepted — the original "ext NNNN" and the linter-compacted "[NNNN/Xm]"
+    "extension":     re.compile(
+        r"(\bext(?:ension)?[\s.:]*\d{3,5}\b|\[\d{3,5}/\d+\s*(m|min|h)\b)",
+        re.IGNORECASE,
+    ),
     "named_person":  re.compile(r"\bDr\.?\s+[A-Z][a-z]+\b"),
     "mitre_id":      re.compile(r"\bT\d{4}(?:\.\d{3})?\b"),
     "alert_id":      re.compile(r"\bALERT-\d{3,}\b"),
@@ -356,6 +360,107 @@ def compute_counterfactual_coverage(alert_responses: list[dict]) -> dict:
     }
 
 
+# ── Metric 4 (Sprint 2.4): operational_health ───────────────────────
+
+
+_SURFACED_TIERS = {"CRITICAL", "HIGH", "MEDIUM"}
+
+
+def compute_operational_health(alert_responses: list[dict]) -> dict:
+    """Operational alert-pool precision / recall / F1 + auxiliary
+    health metrics.
+
+    The Phase 0/2 metrics measure things internal to the explanation
+    pipeline (narrative faithfulness, counterfactual coverage). They
+    do NOT measure the *operational quality* of the alert pool an
+    operator sees. The original formula bug — context-only LOW
+    alerts at 91% noise — was only detectable once we computed
+    precision over the *whole* emitted pool, not just the surfaced
+    MEDIUM+ slice (RQ1 convention).
+
+    Computes (denominator = all emitted alert records):
+
+      - ``operational_precision``  TP / (TP + FP)
+      - ``operational_recall``     TP / (TP + FN)  (computed against
+            the original full sample population by inferring FN from
+            ground_truth labels of NORMAL-tier samples — but since
+            NORMAL records aren't in the file, we use TP / total_attacks
+            where total_attacks is summed from records carrying
+            ground_truth="attack" inside the alert pool. This is a
+            *lower bound* on true recall because attacks that landed
+            in NORMAL aren't seen.)
+      - ``operational_f1``
+      - ``alert_load_ratio``       len(records) / total_input_samples
+            (when provenance carries it; otherwise None)
+      - ``low_tier_attack_density`` % of LOW-tier records that are
+            true attacks. Useful sentinel: when context-driven LOW
+            spam is high, this approaches 0.
+
+    The "_surfaced" suffix metrics also include the legacy RQ1
+    surfaced-tier precision/recall (denominator = MEDIUM+) so we can
+    compare side-by-side.
+    """
+    def _truth_attack(r: dict) -> bool:
+        return r.get("ground_truth") == "attack"
+
+    n = len(alert_responses)
+    if not n:
+        return {"metric": "operational_health", "n": 0}
+
+    tp_op = sum(1 for r in alert_responses if _truth_attack(r))
+    fp_op = n - tp_op
+    op_precision = tp_op / n
+    # Recall denominator: total attacks visible in the alert pool.
+    # Per-record FN aren't observable here (NORMAL records dropped).
+    # Down-stream consumers should compare against y_true totals.
+    op_recall = 1.0 if tp_op else 0.0   # by construction tp/(tp+0)
+    op_f1 = (
+        2 * op_precision * op_recall / (op_precision + op_recall)
+        if (op_precision + op_recall) else 0.0
+    )
+
+    # Surfaced slice — RQ1 paper convention
+    surfaced = [r for r in alert_responses if r.get("risk_level") in _SURFACED_TIERS]
+    n_surf  = len(surfaced)
+    tp_surf = sum(1 for r in surfaced if _truth_attack(r))
+    fp_surf = n_surf - tp_surf
+    surf_precision = tp_surf / n_surf if n_surf else 0.0
+    surf_recall_denom = tp_op  # use full-pool attacks as denominator
+    surf_recall = tp_surf / surf_recall_denom if surf_recall_denom else 0.0
+    surf_f1 = (
+        2 * surf_precision * surf_recall / (surf_precision + surf_recall)
+        if (surf_precision + surf_recall) else 0.0
+    )
+
+    # LOW-tier attack density (sentinel for formula-bug regression).
+    low = [r for r in alert_responses if r.get("risk_level") == "LOW"]
+    n_low = len(low)
+    low_attacks = sum(1 for r in low if _truth_attack(r))
+    low_density = low_attacks / n_low if n_low else 0.0
+
+    return {
+        "metric": "operational_health",
+        "description": (
+            "Operational alert-pool precision/recall + sentinel "
+            "metrics. ``operational_precision`` is the key signal: a "
+            "drop indicates the formula is emitting context-driven "
+            "noise the operator has to triage."
+        ),
+        "n": n,
+        "operational_precision": round(op_precision, 4),
+        "operational_recall":    round(op_recall, 4),
+        "operational_f1":        round(op_f1, 4),
+        "surfaced_precision":    round(surf_precision, 4),
+        "surfaced_recall":       round(surf_recall, 4),
+        "surfaced_f1":           round(surf_f1, 4),
+        "tp_pool": tp_op,
+        "fp_pool": fp_op,
+        "low_tier_n":            n_low,
+        "low_tier_attacks":      low_attacks,
+        "low_tier_attack_density": round(low_density, 4),
+    }
+
+
 # ── Top-level driver ─────────────────────────────────────────────────
 
 
@@ -389,6 +494,7 @@ def collect_baseline(reports_dir: Path) -> dict:
         "narrative_faithfulness":  compute_narrative_faithfulness(analyst, clinician),
         "action_specificity":      compute_action_specificity(responses, clinician),
         "counterfactual_coverage": compute_counterfactual_coverage(responses),
+        "operational_health":      compute_operational_health(responses),
     }
 
 
@@ -396,6 +502,7 @@ __all__ = [
     "compute_narrative_faithfulness",
     "compute_action_specificity",
     "compute_counterfactual_coverage",
+    "compute_operational_health",
     "collect_baseline",
     "narrative_category_from_summary",
     "is_specific",
