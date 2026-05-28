@@ -5,7 +5,7 @@ import hashlib
 import json
 import logging
 import subprocess
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -201,7 +201,7 @@ def _build_provenance(
         b = p.read_bytes()
         return InputFile(
             path=str(p.relative_to(PROJECT_ROOT)),
-            mtime_iso=datetime.fromtimestamp(p.stat().st_mtime, UTC).isoformat(),
+            mtime_iso=datetime.fromtimestamp(p.stat().st_mtime, timezone.utc).isoformat(),
             sha256=hashlib.sha256(b).hexdigest(),
             size_bytes=len(b),
         )
@@ -217,7 +217,7 @@ def _build_provenance(
 
     return Provenance(
         split=paths["split"],
-        generated_at=datetime.now(UTC).isoformat(),
+        generated_at=datetime.now(timezone.utc).isoformat(),
         module5_git_rev=rev,
         n_input_samples=len(risk_data["R"]),
         n_alerts_emitted=n_alerts,

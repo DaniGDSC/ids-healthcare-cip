@@ -28,13 +28,13 @@ Two artefacts are intentionally NOT split-aware here:
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-class Split(StrEnum):
+class Split(str, Enum):
     """Frozen splits the project supports."""
     TEST = "test"
     DEMO = "demo"
