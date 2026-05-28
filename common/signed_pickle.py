@@ -148,7 +148,7 @@ def _get_verifying_key():
 # Public API
 # ─────────────────────────────────────────────────────────────────────
 
-def dumps_signed(obj: Any, path: Path) -> Path:
+def dumps_signed(obj: Any, path: Path, *, metadata: dict[str, Any] | None = None) -> Path:
     """Pickle *obj* to *path* and write a signature sidecar next to it.
 
     Atomic write via ``tmp + os.replace`` so a crash mid-write cannot
@@ -161,6 +161,13 @@ def dumps_signed(obj: Any, path: Path) -> Path:
             used so large numpy arrays land in efficient buffers.
         path: Destination ``.pkl`` path. The sidecar is written to
             ``path.with_suffix(path.suffix + ".sig")``.
+        metadata: optional dict of JSON-serialisable values bound into
+            the signed sidecar (tier 0 F5). Use this to carry
+            integrity-critical scalars next to the pickled object —
+            e.g. the model's ``optimal_threshold`` — instead of writing
+            them to an unsigned JSON next door. The metadata digest is
+            included in the signed payload so tampering is caught at
+            load time.
 
     Returns:
         The path to the written pickle.
@@ -185,13 +192,27 @@ def dumps_signed(obj: Any, path: Path) -> Path:
     digest = hashlib.sha256(raw).digest()
     digest_hex = digest.hex()
 
+    # Bind metadata (tier 0 F5) by hashing its canonical encoding and
+    # including the hash in the signed payload. The metadata itself is
+    # stored in the sidecar as plain JSON.
+    meta_normalised: dict[str, Any] = dict(metadata or {})
+    meta_bytes = json.dumps(meta_normalised, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    meta_digest_hex = hashlib.sha256(meta_bytes).hexdigest()
+
     # Write the pickle bytes to a temp file for the atomic rename dance.
     tmp_pkl = path.with_suffix(path.suffix + ".tmp")
     tmp_pkl.write_bytes(raw)
 
-    # Step 2: sign the digest (not the raw bytes — keeps the
-    # signature step constant-time in pickle size).
-    signature = private_key.sign(digest, ec.ECDSA(hashes.SHA256()))
+    # Step 2: sign sha256(pickle_digest || meta_digest) so neither half
+    # can be swapped independently. Backwards compatible: when metadata
+    # is empty, the meta_digest is the sha256 of "{}" which is a known
+    # constant — old signatures (no metadata) continue to verify because
+    # we degrade to the legacy single-digest payload below.
+    if meta_normalised:
+        signed_payload = hashlib.sha256(digest + bytes.fromhex(meta_digest_hex)).digest()
+    else:
+        signed_payload = digest
+    signature = private_key.sign(signed_payload, ec.ECDSA(hashes.SHA256()))
 
     sidecar = {
         "format":         _SIDECAR_FORMAT,
@@ -202,6 +223,9 @@ def dumps_signed(obj: Any, path: Path) -> Path:
         "signature":      base64.b64encode(signature).decode("ascii"),
         "signed_at":      datetime.now(timezone.utc).isoformat(),
     }
+    if meta_normalised:
+        sidecar["metadata"] = meta_normalised
+        sidecar["metadata_sha256"] = meta_digest_hex
     sig_path = path.with_suffix(path.suffix + _SIG_SUFFIX)
     tmp_sig = sig_path.with_suffix(sig_path.suffix + ".tmp")
     tmp_sig.write_text(json.dumps(sidecar, indent=2, sort_keys=True))
@@ -211,10 +235,19 @@ def dumps_signed(obj: Any, path: Path) -> Path:
     # signature.
     os.replace(tmp_sig, sig_path)
     os.replace(tmp_pkl, path)
+    # Tier 3 F5: chmod 0640 (group readable, not group writable). Best
+    # effort — if the volume does not support chmod (e.g. some FUSE
+    # mounts) log and continue. The signature still protects integrity;
+    # the chmod is defence in depth.
+    for written in (path, sig_path):
+        try:
+            os.chmod(written, 0o640)
+        except OSError as exc:
+            logger.warning("chmod 0640 on %s failed: %s", written, exc)
 
     logger.info(
-        "signed_pickle: wrote %s (sha256=%s, key=%s)",
-        path.name, digest_hex[:16], signing_key_id,
+        "signed_pickle: wrote %s (sha256=%s, key=%s, has_metadata=%s)",
+        path.name, digest_hex[:16], signing_key_id, bool(meta_normalised),
     )
     return path
 
@@ -293,11 +326,32 @@ def loads_signed(path: Path) -> Any:
             f"needs to be re-signed)."
         )
 
+    # Tier 0 F5: when the sidecar carries metadata, verify the
+    # signature against sha256(pickle_digest || meta_digest); otherwise
+    # fall back to the legacy single-digest payload. The metadata's own
+    # sha256 is recomputed and compared to ``metadata_sha256`` so a
+    # tampered metadata block fails closed before signature verify even
+    # runs.
+    if "metadata" in sidecar:
+        meta_bytes_recomputed = json.dumps(
+            sidecar["metadata"], sort_keys=True, separators=(",", ":"),
+        ).encode("utf-8")
+        meta_digest_hex_recomputed = hashlib.sha256(meta_bytes_recomputed).hexdigest()
+        if meta_digest_hex_recomputed != sidecar.get("metadata_sha256", ""):
+            raise SignedPickleError(
+                f"metadata digest mismatch for {path.name}: sidecar "
+                "metadata has been tampered with."
+            )
+        signed_payload = hashlib.sha256(
+            bytes.fromhex(actual_digest) + bytes.fromhex(meta_digest_hex_recomputed)
+        ).digest()
+    else:
+        signed_payload = bytes.fromhex(actual_digest)
     try:
         signature = base64.b64decode(sidecar["signature"])
         public_key.verify(
             signature,
-            bytes.fromhex(actual_digest),
+            signed_payload,
             ec.ECDSA(hashes.SHA256()),
         )
     except InvalidSignature as exc:
@@ -316,7 +370,33 @@ def loads_signed(path: Path) -> Any:
     obj = joblib.load(io.BytesIO(raw))
     del raw  # release pickle bytes immediately; obj holds the live object
     logger.info(
-        "signed_pickle: verified %s (sha256=%s, key=%s)",
-        path.name, actual_digest[:16], sidecar_key_id,
+        "signed_pickle: verified %s (sha256=%s, key=%s, has_metadata=%s)",
+        path.name, actual_digest[:16], sidecar_key_id, "metadata" in sidecar,
     )
     return obj
+
+
+def loads_signed_with_metadata(path: Path) -> tuple[Any, dict[str, Any]]:
+    """Verify and load a signed pickle, returning ``(obj, metadata_dict)``.
+
+    Tier 0 F5: callers that need an integrity-bound scalar (e.g.
+    ``optimal_threshold``) should use this entry point instead of
+    reading an unsigned JSON next to the pickle. The metadata block is
+    bound into the signature; tamper raises :class:`SignedPickleError`.
+
+    Returns ``(obj, {})`` when the sidecar carries no metadata block,
+    preserving compatibility with legacy pickles.
+    """
+    path = Path(path)
+    sig_path = path.with_suffix(path.suffix + _SIG_SUFFIX)
+    obj = loads_signed(path)
+    if not sig_path.exists():
+        return obj, {}
+    try:
+        sidecar = json.loads(sig_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return obj, {}
+    metadata = sidecar.get("metadata")
+    if not isinstance(metadata, dict):
+        return obj, {}
+    return obj, dict(metadata)

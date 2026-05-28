@@ -89,9 +89,17 @@ def _save_artefacts(
     # SMOTE is training-only and bloats the deserialiser surface
     # (finding #15). Signed via the Module 5 ECDSA key so downstream
     # consumers refuse to deserialise tampered files (finding #3a).
+    # Tier 0 F5: embed optimal_threshold into the signed sidecar.
     pipeline_path = output_dir / "best_pipeline.pkl"
     classifier_only = detector.pipeline.named_steps["classifier"]
-    dumps_signed(classifier_only, pipeline_path)
+    dumps_signed(
+        classifier_only,
+        pipeline_path,
+        metadata={
+            "optimal_threshold": float(detector.optimal_threshold),
+            "threshold_source": "tuning._runner",
+        },
+    )
     logger.info("Saved signed classifier: %s", pipeline_path)
 
     # 2. Full report — strict JSON serialisation (no default=str coercion).

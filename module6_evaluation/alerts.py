@@ -88,10 +88,12 @@ def curate_evaluation_alerts(split: str = "test") -> list:
     paths = _curate_split_paths(split)
     logger.info("Curating evaluation alert set (split=%s)...", split)
 
-    risk_data = np.load(paths["risk_npz"], allow_pickle=True)
-    R = risk_data["R"]
-    levels = risk_data["risk_levels"]
-    y_true = risk_data["y_true"]
+    # Tier 2 F1: verified pair load — drops allow_pickle.
+    from common.risk_scores_loader import load_risk_scores
+    risk_data = load_risk_scores(paths["risk_npz"])
+    R = risk_data.R
+    levels = risk_data.risk_levels
+    y_true = risk_data.y_true
 
     df = pd.read_parquet(paths["parquet"])
     attack_cats = df["Attack Category"].values

@@ -114,7 +114,28 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--dry-run", action="store_true",
                    help="Show what would be re-signed; don't touch disk.")
+    p.add_argument(
+        "--i-trust-local-bytes",
+        action="store_true",
+        dest="trust_local",
+        help=(
+            "REQUIRED for non-dry-run re-sign. The intentional bypass of "
+            "loads_signed (tier 0 F6) means the operator is asserting "
+            "that the pickle bytes on disk are not attacker-controlled. "
+            "Run this only on a known-good host."
+        ),
+    )
     args = p.parse_args()
+
+    if not args.dry_run and not args.trust_local:
+        print(
+            "REFUSED: re-sign bypasses signature verification by design. "
+            "Pass --i-trust-local-bytes to authorise (operator must "
+            "assert the pickles on disk are not attacker-controlled). "
+            "Or use --dry-run to inspect.",
+            file=__import__("sys").stderr,
+        )
+        return 2
 
     results = [_resign_one(path, args.dry_run) for path in MODEL_PATHS]
 

@@ -92,9 +92,11 @@ def main() -> None:
     )
 
     # Module 3 risk scores anchor severity in the online explainer too.
+    # Tier 2 F1: verified pair load.
     risk_npz = PROJECT_ROOT / "results/reports/risk_scores.npz"
     if risk_npz.exists():
-        risk_scores_arr = np.load(risk_npz, allow_pickle=True)["R"]
+        from common.risk_scores_loader import load_risk_scores
+        risk_scores_arr = load_risk_scores(risk_npz).R
     else:
         logger.warning(
             "Risk scores not found at %s — online severity falls back "

@@ -173,19 +173,71 @@ def save_outputs(
     out_dir = output_dir or OUTPUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     npz_path = out_npz or (out_dir / "risk_scores.npz")
-    # Sprint 6 / Tầng 3.5 — schema_version embedded so the version
-    # gate can reject stale artifacts at consume time.
-    from common.artifact_versioning import version_kwarg_for
+
+    # Tier 2 F1: keep ONLY numeric arrays in the .npz so consumers can
+    # load with the default allow_pickle=False. String fields
+    # (risk_levels, formula_version, schema_version) move into a JSON
+    # sidecar `<name>.meta.json` and the pair is signed via
+    # `common.signed_sidecar.write_signed_pair`.
+    from common.artifact_versioning import ARTIFACT_VERSIONS, _normalise_artifact_name
+
+    # Encode risk levels as small integers; the lookup table goes into
+    # the JSON sidecar so consumers can decode without object arrays.
+    level_codes_table = {"NORMAL": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
+    level_strs = [str(x) for x in np.asarray(levels).tolist()]
+    risk_level_codes = np.array(
+        [level_codes_table.get(s, 0) for s in level_strs], dtype=np.int8,
+    )
+
     np.savez(
         npz_path,
         R=R, c_detect=c_detect, d_crit=d_crit,
         s_data=s_data, d_clinical_tier=d_clinical_tier,
         c_track_a=c_track_a, c_track_b=c_track_b,
-        risk_levels=levels, y_true=y_true,
-        formula_version=np.array(formula_version, dtype=str),
-        **version_kwarg_for(npz_path.name),
+        risk_level_codes=risk_level_codes,
+        y_true=y_true,
     )
+    try:
+        import os as _os
+        _os.chmod(npz_path, 0o640)
+    except OSError as exc:
+        logger.warning("chmod 0640 on %s failed: %s", npz_path, exc)
     logger.info("  Saved: %s", npz_path.name)
+
+    # JSON metadata sidecar — carries the string-typed fields previously
+    # written as object arrays in the .npz. Pair-signed with the .npz.
+    schema_version = ARTIFACT_VERSIONS.get(_normalise_artifact_name(npz_path.name))
+    meta_path = npz_path.with_suffix(".meta.json")
+    meta_body = {
+        "format": "risk_scores.meta.v1",
+        "format_version": 1,
+        "npz_file": npz_path.name,
+        "schema_version": schema_version,
+        "formula_version": formula_version,
+        "risk_level_codes": level_codes_table,
+        "risk_levels": level_strs,
+    }
+    meta_path.write_text(json.dumps(meta_body, indent=2), encoding="utf-8")
+    try:
+        import os as _os
+        _os.chmod(meta_path, 0o640)
+    except OSError as exc:
+        logger.warning("chmod 0640 on %s failed: %s", meta_path, exc)
+    logger.info("  Saved: %s", meta_path.name)
+
+    # Sign the pair so readers (Module 4, Module 6, dashboard) can refuse
+    # tampered bytes — closes the tier 2 F1 allow_pickle deserialization sink.
+    try:
+        from common.signed_sidecar import write_signed_pair
+        write_signed_pair(meta_path, npz_path)
+    except Exception as exc:  # noqa: BLE001
+        logger.error(
+            "save_outputs: signed-sidecar write failed for (%s, %s): %s. "
+            "Consumers WILL REFUSE to load these artefacts. Re-run with "
+            "the signing key available.",
+            meta_path.name, npz_path.name, exc,
+        )
+        raise
 
     # CSV detail
     df = pd.DataFrame({

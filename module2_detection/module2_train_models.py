@@ -328,7 +328,21 @@ def train_track_a(
     # ECDSA-signed; verifier in common.signed_pickle refuses
     # to deserialise without a valid signature against the Module 5
     # public key. Closes the pickle-RCE sink in finding #3a.
-    dumps_signed(classifier_only, pipeline_path)
+    #
+    # Tier 0 F5: bind `optimal_threshold` into the signed sidecar so
+    # the decision threshold cannot be tampered with via the unsigned
+    # report JSON. Model registry reads the threshold from this
+    # metadata block via loads_signed_with_metadata; the JSON path is
+    # kept as a fallback for legacy artefacts.
+    dumps_signed(
+        classifier_only,
+        pipeline_path,
+        metadata={
+            "model_name": name,
+            "optimal_threshold": float(threshold),
+            "threshold_source": "cross_val_predict oof_proba",
+        },
+    )
 
     # Report
     report = {

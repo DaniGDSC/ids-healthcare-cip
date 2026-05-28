@@ -625,12 +625,38 @@ class DAEDetector:
         tmp = json_path.with_suffix(json_path.suffix + ".tmp")
         tmp.write_text(json.dumps(body, indent=2))
         os.replace(tmp, json_path)
+        try:
+            os.chmod(json_path, 0o640)
+        except OSError as exc:
+            logger.warning("chmod 0640 on %s failed: %s", json_path, exc)
 
         # Keras weights — non-executable HDF5.
         self._model.save_weights(str(weights_path))
+        try:
+            os.chmod(weights_path, 0o640)
+        except OSError as exc:
+            logger.warning("chmod 0640 on %s failed: %s", weights_path, exc)
+
+        # Tier 0 F2: sign the (json, weights) pair together so neither
+        # half can be swapped independently. `from_artefacts` refuses to
+        # load when the signature does not verify.
+        try:
+            from common.signed_sidecar import write_signed_pair
+
+            write_signed_pair(json_path, weights_path)
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                "DAEDetector.save_artefacts: failed to write signed "
+                "sidecar for (%s, %s): %s. Artefacts are on disk but "
+                "WILL BE REJECTED by from_artefacts. Re-run save with "
+                "the signing key available.",
+                json_path.name, weights_path.name, exc,
+            )
+            raise
 
         logger.info(
-            "DAEDetector.save_artefacts: wrote %s and %s " "(no pickle on the load path)",
+            "DAEDetector.save_artefacts: wrote %s + %s + signed sidecar "
+            "(no pickle on the load path)",
             json_path.name,
             weights_path.name,
         )
@@ -671,6 +697,22 @@ class DAEDetector:
         if not weights_path.exists():
             raise FileNotFoundError(f"DAE weights not found: {weights_path}")
 
+        # Tier 0 F2: refuse to load unless the (json, weights) pair has
+        # a valid signature. The signed_sidecar module rejects tampered
+        # bytes, key-id mismatches, and missing sidecars.
+        from common.signed_sidecar import (
+            SignedSidecarError,
+            verify_signed_pair,
+        )
+        try:
+            verify_signed_pair(json_path, weights_path)
+        except SignedSidecarError as exc:
+            raise ValueError(
+                f"DAEDetector.from_artefacts: signed-sidecar verification "
+                f"failed for ({json_path.name}, {weights_path.name}): {exc}. "
+                "Refusing to instantiate."
+            ) from exc
+
         body = json.loads(json_path.read_text())
         if body.get("format") != _SIDECAR_FORMAT:
             raise ValueError(
@@ -679,14 +721,43 @@ class DAEDetector:
             )
 
         hp = body.get("hyperparameters", {})
+
+        # Tier 2 F6: bound check before allocating a Keras model with
+        # attacker-controlled shape. Limits are generous (real fitted
+        # DAEs have encoding_dims in the tens / hundreds of neurons,
+        # batch sizes in the thousands at most) but eliminate the
+        # "n_features = 2**31" memory exhaustion combo with Keras
+        # PYSEC-2026-73.
+        def _bounded(name: str, value: float, lo: float, hi: float) -> float:
+            v = float(value)
+            if not (lo <= v <= hi):
+                raise ValueError(
+                    f"{json_path.name}: hyperparameter {name}={v!r} out of "
+                    f"bounds [{lo}, {hi}]. Refusing to instantiate."
+                )
+            return v
+
+        encoding_dims = list(hp.get("encoding_dims", [16, 8, 16]))
+        if not encoding_dims or len(encoding_dims) > 16:
+            raise ValueError(
+                f"{json_path.name}: encoding_dims must have 1..16 entries, "
+                f"got {len(encoding_dims)}."
+            )
+        for dim in encoding_dims:
+            _bounded("encoding_dims[*]", dim, 1, 4096)
+
         instance = cls(
-            encoding_dims=list(hp.get("encoding_dims", [16, 8, 16])),
-            noise_rate=float(hp.get("noise_rate", 0.1)),
-            epochs=int(hp.get("epochs", 100)),
-            batch_size=int(hp.get("batch_size", 256)),
-            learning_rate=float(hp.get("learning_rate", 1e-3)),
-            threshold_percentile=float(hp.get("threshold_percentile", 95.0)),
-            clip_percentile=float(hp.get("clip_percentile", 1.0)),
+            encoding_dims=encoding_dims,
+            noise_rate=_bounded("noise_rate", hp.get("noise_rate", 0.1), 0.0, 1.0),
+            epochs=int(_bounded("epochs", hp.get("epochs", 100), 1, 100000)),
+            batch_size=int(_bounded("batch_size", hp.get("batch_size", 256), 1, 1_048_576)),
+            learning_rate=_bounded("learning_rate", hp.get("learning_rate", 1e-3), 1e-9, 10.0),
+            threshold_percentile=_bounded(
+                "threshold_percentile", hp.get("threshold_percentile", 95.0), 0.0, 100.0,
+            ),
+            clip_percentile=_bounded(
+                "clip_percentile", hp.get("clip_percentile", 1.0), 0.0, 100.0,
+            ),
             random_state=int(hp.get("random_state", 42)),
         )
 
@@ -728,7 +799,14 @@ class DAEDetector:
             instance._proba_e_span = e_max - e_min if e_max > e_min else 1.0
 
         # Build the Keras model with the right shape and load weights.
+        # Tier 2 F6: bound n_features so a crafted sidecar cannot
+        # request a 2**31-wide input layer (Keras PYSEC-2026-73 combo).
         n_features = int(body.get("n_features", instance._feat_weights.shape[0]))
+        if not (1 <= n_features <= 65536):
+            raise ValueError(
+                f"{json_path.name}: n_features={n_features!r} out of "
+                f"bounds [1, 65536]. Refusing to allocate the model."
+            )
         instance._model = instance._build_model(n_features)
         instance._model.load_weights(str(weights_path))
 

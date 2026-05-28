@@ -1116,12 +1116,63 @@ def load_all_responses() -> list:
     return load_responses_for("test")
 
 
-@st.cache_data
-def load_risk_scores():
-    path = EVAL_DIR / "risk_scores.npz"
-    if not path.exists():
+def _risk_scores_cache_key() -> tuple[str, int, int, str, int, int] | None:
+    """Hash of (npz, meta, sig) mtime+size so cache busts when artefacts change.
+
+    Tier 2 F5: previously the cache was unkeyed so a single malicious
+    npz loaded once at server start served every subsequent visitor.
+    The key now mixes mtime + size of every file in the signed pair.
+    """
+    npz = EVAL_DIR / "risk_scores.npz"
+    meta = npz.with_suffix(".meta.json")
+    sig = meta.with_suffix(meta.suffix + ".sig")
+    if not (npz.exists() and meta.exists() and sig.exists()):
         return None
-    return dict(np.load(path, allow_pickle=True))
+    return (
+        str(npz),
+        npz.stat().st_size, int(npz.stat().st_mtime_ns),
+        str(meta),
+        meta.stat().st_size, int(meta.stat().st_mtime_ns),
+    )
+
+
+@st.cache_data(ttl=60)
+def _load_risk_scores_cached(cache_key: tuple) -> dict | None:
+    """Inner cached loader — key controls cache invalidation.
+
+    Tier 2 F1: load via the verified-pair loader; no allow_pickle.
+    Returns a plain dict view so legacy callers continue to work.
+    """
+    from common.risk_scores_loader import load_risk_scores as _verified_load
+    npz_path = EVAL_DIR / "risk_scores.npz"
+    art = _verified_load(npz_path)
+    return {
+        "R": art.R,
+        "c_detect": art.c_detect,
+        "c_track_a": art.c_track_a,
+        "c_track_b": art.c_track_b,
+        "d_crit": art.d_crit,
+        "s_data": art.s_data,
+        "d_clinical_tier": art.d_clinical_tier,
+        "y_true": art.y_true,
+        "risk_levels": art.risk_levels,
+        "schema_version": art.schema_version,
+        "formula_version": art.formula_version,
+    }
+
+
+def load_risk_scores() -> dict | None:
+    """Verified, hash-keyed risk-score loader for the dashboard.
+
+    Returns None when the pair is absent; raises SignedSidecarError when
+    the pair is present but signature verification fails (Tier 2 F1) —
+    the dashboard surfaces that as an error rather than silently
+    rendering tampered values.
+    """
+    key = _risk_scores_cache_key()
+    if key is None:
+        return None
+    return _load_risk_scores_cached(key)
 
 
 @st.cache_data

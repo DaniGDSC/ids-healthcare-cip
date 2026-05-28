@@ -102,7 +102,11 @@ def compute_shap_stability(n_samples: int = 80, n_perturbations: int = 5,
                             noise_sigma: float = 0.005, top_k: int = 5,
                             seed: int = 42) -> dict:
     """Perturbation-based SHAP stability over a subset of attack samples."""
-    pipe = joblib.load(MODELS / "xgboost_final_pipeline.pkl")
+    # Tier 0 F6: signed-pickle verification instead of raw joblib.load.
+    # The XGBoost pipeline carries an ECDSA signature; this CLI must
+    # refuse tampered bytes like every other consumer.
+    from common.signed_pickle import loads_signed
+    pipe = loads_signed(MODELS / "xgboost_final_pipeline.pkl")
 
     # Load test data
     df = pd.read_parquet(PROJECT_ROOT / "data/processed/test_phase1.parquet")

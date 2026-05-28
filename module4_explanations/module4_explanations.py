@@ -228,7 +228,9 @@ def main() -> None:
 
     risk_npz = sp.risk_scores(args.split)
     if risk_npz.exists():
-        risk_levels = np.load(risk_npz, allow_pickle=True)["risk_levels"]
+        # Tier 2 F1: verified pair load; no allow_pickle.
+        from common.risk_scores_loader import load_risk_scores
+        risk_levels = load_risk_scores(risk_npz).risk_levels
         if len(risk_levels) != n_samples:
             raise ValueError(
                 f"risk_scores npz length {len(risk_levels)} != "

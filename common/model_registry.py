@@ -48,18 +48,42 @@ _DAE_WEIGHTS = PROJECT_ROOT / "results/models/dae_model.weights.h5"
 
 
 def _load_classifiers(paths: dict[str, str]) -> dict:
-    from common import loads_signed
+    """Load + verify each classifier and stash the signed metadata.
+
+    Tier 0 F5: when the signed sidecar carries a ``metadata.optimal_threshold``
+    field we cache it in ``_SIGNED_THRESHOLDS`` so :func:`_load_thresholds`
+    can read it without re-touching the (unsigned) report JSON.
+    """
+    from common.signed_pickle import loads_signed_with_metadata
     classifiers: dict = {}
     for name, rel_path in paths.items():
         path = PROJECT_ROOT / rel_path
         logger.info("ModelRegistry: loading %s from %s", name, path)
-        obj = loads_signed(path)
+        obj, meta = loads_signed_with_metadata(path)
         # Extract bare classifier if artefact is a full Pipeline
         classifiers[name] = (
             obj.named_steps["classifier"]
             if hasattr(obj, "named_steps") else obj
         )
+        if "optimal_threshold" in meta:
+            t = float(meta["optimal_threshold"])
+            if not (0.0 <= t <= 1.0):
+                raise ValueError(
+                    f"signed threshold metadata for {name} is out of "
+                    f"range [0,1]: {t!r}. Refusing to load."
+                )
+            _SIGNED_THRESHOLDS[name] = t
+            logger.info(
+                "ModelRegistry: bound optimal_threshold=%.6f for %s from "
+                "signed sidecar metadata",
+                t, name,
+            )
     return classifiers
+
+
+# Process-scoped cache of signed-metadata thresholds. Populated by
+# `_load_classifiers` whenever a sidecar carries `metadata.optimal_threshold`.
+_SIGNED_THRESHOLDS: dict[str, float] = {}
 
 
 @lru_cache(maxsize=None)
@@ -131,12 +155,39 @@ _BASELINE_THRESHOLD_PATHS = {
 
 
 def _load_thresholds(paths: dict[str, str]) -> dict:
+    """Resolve the per-model threshold.
+
+    Resolution order (tier 0 F5):
+      1. Signed sidecar metadata cached in ``_SIGNED_THRESHOLDS`` —
+         populated by ``_load_classifiers`` when it deserialises the
+         pickle. This is the integrity-bound path.
+      2. Fallback: the unsigned ``<name>_final_report.json``. Logged
+         as a WARNING because the value is not bound to the pickle
+         signature.
+
+    Either path bounds the loaded value to [0, 1]; out-of-range
+    thresholds are refused.
+    """
     import json
     thresholds: dict = {}
     for name, rel_path in paths.items():
+        if name in _SIGNED_THRESHOLDS:
+            thresholds[name] = _SIGNED_THRESHOLDS[name]
+            continue
         path = PROJECT_ROOT / rel_path
+        logger.warning(
+            "ModelRegistry: %s has no signed-sidecar threshold; falling "
+            "back to unsigned %s. Re-train the model so the threshold is "
+            "embedded in the signed pickle.",
+            name, path.name,
+        )
         with open(path) as f:
-            thresholds[name] = json.load(f)["optimal_threshold"]
+            value = float(json.load(f)["optimal_threshold"])
+        if not (0.0 <= value <= 1.0):
+            raise ValueError(
+                f"unsigned threshold for {name} is out of range [0,1]: {value!r}"
+            )
+        thresholds[name] = value
     return thresholds
 
 
@@ -147,6 +198,10 @@ def get_track_a_thresholds() -> dict:
     Returns:
         dict ``{"xgboost": optimal_threshold}``.
     """
+    # Force-load classifiers first so signed-sidecar metadata is in
+    # `_SIGNED_THRESHOLDS` before _load_thresholds runs (tier 0 F5).
+    # @lru_cache makes this a no-op once primed.
+    get_track_a_classifiers()
     thresholds = _load_thresholds(_RUNTIME_THRESHOLD_PATHS)
     logger.info("ModelRegistry: Track A runtime thresholds loaded (%d)",
                 len(thresholds))
@@ -156,6 +211,7 @@ def get_track_a_thresholds() -> dict:
 @lru_cache(maxsize=None)
 def get_baseline_thresholds() -> dict:
     """Load RQ1 R2 baseline thresholds (RandomForest, DecisionTree)."""
+    get_baseline_classifiers()
     thresholds = _load_thresholds(_BASELINE_THRESHOLD_PATHS)
     logger.info("ModelRegistry: baseline thresholds loaded (%d)",
                 len(thresholds))

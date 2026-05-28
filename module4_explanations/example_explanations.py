@@ -43,8 +43,16 @@ def _load_risk_scores(split: str = "test") -> dict:
             path,
         )
         return {}
-    rd = np.load(path, allow_pickle=True)
-    return {k: rd[k] for k in rd.files}
+    # Tier 2 F1: verified pair load. Dropped allow_pickle=True. The
+    # `dict` view preserves the legacy "data['risk_levels']" call shape.
+    from common.risk_scores_loader import load_risk_scores
+    art = load_risk_scores(path)
+    return {
+        "R": art.R, "c_detect": art.c_detect, "c_track_a": art.c_track_a,
+        "c_track_b": art.c_track_b, "d_crit": art.d_crit, "s_data": art.s_data,
+        "d_clinical_tier": art.d_clinical_tier, "y_true": art.y_true,
+        "risk_levels": art.risk_levels,
+    }
 
 
 def generate_example_explanations(
