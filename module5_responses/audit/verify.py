@@ -33,7 +33,7 @@ def verify_audit_log(
     path: Path,
     public_key_path: Path | None = None,
     *,
-    legacy_ok: bool = True,
+    legacy_ok: bool = False,
 ) -> dict:
     """Walk an audit log and verify hash chain + signatures.
 
@@ -41,10 +41,13 @@ def verify_audit_log(
         path: path to the audit log JSONL file.
         public_key_path: PEM file containing the ECDSA P-256 public key.
             Defaults to :data:`DEFAULT_PUBLIC_KEY_PATH`.
-        legacy_ok: if True, records without a ``signature`` field are
-            accepted as ``legacy`` (chain still verified). If False,
-            they are reported as ``unsigned``. The migration default
-            is True; flip to False after a clean rotation.
+        legacy_ok: when False (post-Sprint-3 default — tier 1 F1) any
+            unsigned record is reported as broken. When True, unsigned
+            records and unsigned ``prev_hash=0`` chain restarts are
+            accepted as legacy migration markers. The migration default
+            flipped to False after Sprint 3 sealed the historical log
+            into an archive — set ``legacy_ok=True`` only when walking
+            those archives.
 
     Returns:
         Dict with totals, the line number of the first break (if any),

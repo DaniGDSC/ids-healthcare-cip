@@ -59,7 +59,11 @@ def rotate_and_purge(
         report["reason"] = "active log empty or missing"
         return report
 
-    verify_report = verify_audit_log(audit.path, audit.public_key_path, legacy_ok=True)
+    # Tier 1 F1: post-Sprint-3 default is legacy_ok=False. If the active
+    # log has been carrying legacy unsigned records we expect the
+    # operator to have already sealed it via the rotate_key CLI before
+    # invoking rotate_and_purge.
+    verify_report = verify_audit_log(audit.path, audit.public_key_path, legacy_ok=False)
     report["verify_before_rotate"] = {
         "total": verify_report["total"],
         "valid_signed": verify_report["valid_signed"],
@@ -77,6 +81,25 @@ def rotate_and_purge(
                 "subtype": "rotate_refused_chain_broken",
                 "first_break_at": verify_report["first_break_at"],
                 "broken_count": len(verify_report["broken"]),
+            }
+        )
+        return report
+
+    # Tier 1 F1 follow-up: legacy_chain_restarts > 0 was an informational
+    # counter pre-Sprint 3. Post-flip it must be 0 — any non-zero count
+    # is a chain-restart marker that should not exist in the post-
+    # migration log.
+    if verify_report.get("legacy_chain_restarts", 0) > 0:
+        report["reason"] = (
+            f"refusing to rotate a log with "
+            f"{verify_report['legacy_chain_restarts']} legacy chain "
+            f"restart(s); seal via rotate_key CLI first"
+        )
+        audit.log(
+            {
+                "event_type": "SECURITY_INCIDENT",
+                "subtype": "rotate_refused_legacy_restart_present",
+                "legacy_chain_restarts": verify_report["legacy_chain_restarts"],
             }
         )
         return report
@@ -131,6 +154,12 @@ def rotate_and_purge(
     manifest_path = archived_path.with_suffix(".manifest.json")
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
+    # Tier 1 F2: write a cross_rotation_anchor that binds the new
+    # chain's genesis to the archived chain's last integrity_hash.
+    # Forensic walkers can follow archives → active chain without
+    # trusting filesystem ordering: the anchor field in the first
+    # record points at the archive that immediately preceded it.
+    archived_last_integrity_hash = last_record.get("integrity_hash")
     audit.prev_hash = "0" * 64
     audit.log(
         {
@@ -139,8 +168,9 @@ def rotate_and_purge(
             "archived_first_ts": first_ts.isoformat(),
             "archived_last_ts": last_ts.isoformat(),
             "archived_n_records": verify_report["total"],
-            "archived_last_integrity_hash": last_record.get("integrity_hash"),
+            "archived_last_integrity_hash": archived_last_integrity_hash,
             "archived_first_integrity_hash": first_record.get("integrity_hash"),
+            "cross_rotation_anchor": archived_last_integrity_hash,
             "manifest_path": str(manifest_path),
             "retention_days": days,
             "rotated_at": datetime.now(timezone.utc).isoformat(),

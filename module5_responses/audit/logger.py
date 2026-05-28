@@ -75,6 +75,7 @@ class AuditLogger:
         public_key_path: Path | None = None,
         retention_days: int | None = None,
         sign: bool = True,
+        verify_on_open: bool = True,
     ) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -102,6 +103,24 @@ class AuditLogger:
             self.retention_days = int(env_days)
         else:
             self.retention_days = DEFAULT_RETENTION_DAYS
+
+        # Tier 1 F2: walk the existing log under the post-Sprint-3
+        # default (legacy_ok=False) before we open it for append.
+        # A broken chain raises before any new record can extend it.
+        # `verify_on_open=False` is reserved for the rotation CLI which
+        # owns the recovery dance (rotate_key writes to a fresh file).
+        if verify_on_open and self.path.exists() and self.path.stat().st_size > 0:
+            from .verify import verify_audit_log
+
+            report = verify_audit_log(self.path, self.public_key_path, legacy_ok=False)
+            if report.get("first_break_at") is not None:
+                raise RuntimeError(
+                    f"AuditLogger refusing to append to a tampered chain: "
+                    f"first break at line {report['first_break_at']} of "
+                    f"{self.path}. Run `python -m module5_responses.audit."
+                    f"rotate_key --i-understand-this-orphans-old-signatures` "
+                    f"to seal the prior chain and start a new one."
+                )
 
         self.prev_hash = self._recover_prev_hash()
 
@@ -193,8 +212,22 @@ class AuditLogger:
             record["signature_alg"] = SIGNATURE_ALG
 
         self.prev_hash = record["integrity_hash"]
+        is_new_file = not self.path.exists() or self.path.stat().st_size == 0
         with open(self.path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
+        # Tier 1 F3 / tier 2 F7: chmod 0640 on first write so the audit
+        # log is not world-readable by default umask. Skip on subsequent
+        # writes where the mode is already set.
+        if is_new_file:
+            try:
+                os.chmod(self.path, 0o640)
+            except OSError as exc:
+                logger.warning(
+                    "AuditLogger: chmod 0640 on %s failed: %s. Tighten "
+                    "permissions manually so the chain is not group/world "
+                    "readable.",
+                    self.path, exc,
+                )
         return record
 
     # ── verification (delegates) ───────────────────────────────────
@@ -205,9 +238,14 @@ class AuditLogger:
         path: Path,
         public_key_path: Path | None = None,
         *,
-        legacy_ok: bool = True,
+        legacy_ok: bool = False,
     ) -> dict:
-        """Walk an audit log and verify hash chain + signatures."""
+        """Walk an audit log and verify hash chain + signatures.
+
+        Tier 1 F1: post-Sprint-3 default is ``legacy_ok=False``. Callers
+        walking archived pre-migration logs (under ``audit_archive/``)
+        should opt in by passing ``legacy_ok=True`` explicitly.
+        """
         from .verify import verify_audit_log
         return verify_audit_log(path, public_key_path, legacy_ok=legacy_ok)
 

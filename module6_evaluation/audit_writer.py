@@ -52,8 +52,29 @@ class AuditTrailWriter:
             "epoch_sec": time.time(),
             **event,
         }
+        # Tier 2 F7: chmod 0640 on first write. open(..., "a") creates
+        # the file with the process umask (typically 0022 → 0644); we
+        # force the audit-trail JSONL to be group-readable only.
+        import os as _os
+        is_new = not self.path.exists() or self.path.stat().st_size == 0
         with open(self.path, "a", encoding="utf-8") as f:
             f.write(json.dumps(event) + "\n")
+        if is_new:
+            try:
+                _os.chmod(self.path, 0o640)
+            except OSError as exc:
+                logger.warning(
+                    "AuditTrailWriter: chmod 0640 on %s failed: %s",
+                    self.path, exc,
+                )
+
+
+class HardenedAuditUnavailable(RuntimeError):
+    """Raised by ``audit_log`` when ``sign=True`` was requested but the
+    hardened signed chain could not record the event. Tier 2 F4: refuses
+    to silently degrade to plain JSONL because that is indistinguishable
+    from a successful signed write at the rendering layer.
+    """
 
 
 def audit_log(
@@ -67,9 +88,13 @@ def audit_log(
 ) -> None:
     """Append an event to both the plain JSONL writer and the hardened chain.
 
-    When ``sign=True`` (the default), the same payload is bound through the
-    hardened logger with reviewer attribution so participant decisions are
-    cryptographically attestable.
+    When ``sign=True`` (the default), the same payload is bound through
+    the hardened logger with reviewer attribution so participant
+    decisions are cryptographically attestable. Tier 2 F4: a hardened-
+    write failure raises :class:`HardenedAuditUnavailable` instead of
+    silently degrading to plain JSONL only. Callers can decide whether
+    to surface the failure to the operator or fall back to a degraded
+    workflow (see ``_capture_dashboard_action`` in the module 6 app).
     """
     payload = {"event_type": event_type, **kwargs}
     if participant_id is not None:
@@ -91,15 +116,21 @@ def audit_log(
             review_action=action,
         )
     except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "audit_log: hardened sign failed (%s) — plain JSONL still wrote.", exc,
+        logger.error(
+            "audit_log: hardened sign failed (%s). Plain JSONL wrote, but "
+            "the signed chain did NOT record this event. Raising so the "
+            "caller can surface the failure.", exc,
         )
+        raise HardenedAuditUnavailable(
+            f"hardened audit sign failed: {exc}"
+        ) from exc
 
 
 __all__ = [
     "AuditTrailWriter",
     "audit_log",
     "get_hardened_audit",
+    "HardenedAuditUnavailable",
     "EVAL_DIR",
     "PROJECT_ROOT",
 ]

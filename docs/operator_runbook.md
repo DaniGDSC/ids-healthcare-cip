@@ -23,11 +23,13 @@ root has been disturbed.
 ## 2. First-time install
 
 1. Clone the repo, install dependencies:
-   ```
+
+   ```bash
    python3.11 -m venv .venv
    . .venv/bin/activate
    pip install --require-hashes -r requirements.lock
    ```
+
    (Or `make lock` first if `requirements.lock` is stale.)
 2. Bootstrap the audit signing key by running any signed-write code path
    ONCE (e.g. `python -m module5_responses` against a tiny smoke input).
@@ -37,9 +39,11 @@ root has been disturbed.
    inspect the log) into `config/signing_key_id.txt`, commit the change
    alongside the public-key sidecar (`results/reports/audit_signing_key.pub.pem`).
 4. Bootstrap the dataset integrity baseline:
-   ```
+
+   ```bash
    python -m module0_analysis.bootstrap_integrity --config module0_analysis/config.yaml
    ```
+
 5. Run the full pipeline once to seed signed model pickles, DAE sidecars,
    risk score artefacts, and the initial audit log entries.
 
@@ -58,16 +62,20 @@ A planned rotation:
 
 1. Stop every process that holds the cached private key (`@lru_cache`).
 2. Move the existing key to a sealed offline location:
-   ```
+
+   ```bash
    mv ~/.iomt-ids/audit_signing_key.pem ~/.iomt-ids/audit_signing_key.retired-$(date +%Y%m%d).pem
    chmod 0400 ~/.iomt-ids/audit_signing_key.retired-*.pem
    ```
+
 3. Trigger the bootstrap path (run any signed-write smoke). It will
    **refuse** because signed artefacts exist on disk. That refusal is the
    correct behaviour. The operator must explicitly run the rotation CLI:
-   ```
+
+   ```bash
    python -m module5_responses.audit.rotate_key --i-understand-this-orphans-old-signatures
    ```
+
    (The CLI emits a `SIGNING_KEY_ROTATED` event into the audit chain,
    archives the old log via `rotate_and_purge`, and seeds a new chain
    with `cross_rotation_anchor` pointing at the archive's last
@@ -76,7 +84,8 @@ A planned rotation:
    the new fingerprint and commit. Re-sign the model pickles via
    `python -m tools.resign_models`.
 5. Re-bootstrap the dataset integrity baseline:
-   ```
+
+   ```bash
    python -m module0_analysis.bootstrap_integrity --config module0_analysis/config.yaml
    ```
 
@@ -88,7 +97,8 @@ copy:
 1. Existing signed artefacts can no longer be verified by future loads.
    Treat them as forensically read-only.
 2. Capture the pre-loss state for audit:
-   ```
+
+   ```bash
    tar czf /secure/iomt-loss-$(date +%Y%m%dT%H%M%S).tar.gz \
        results/reports/audit_log.jsonl \
        results/reports/audit_archive/ \
@@ -96,6 +106,7 @@ copy:
        results/models/*.pkl.sig \
        config/signing_key_id.txt
    ```
+
 3. Run the rotation CLI with the `--key-lost` flag. The CLI will:
    - Refuse if the signed-artefacts presence guard is on (it is, by
      default).
@@ -137,7 +148,40 @@ reviewer-attributed records into the audit chain. Tier 2 F2 hardening:
   `get_hardened_audit().log` unless a validated participant id is
   present (Sprint 4 hardening).
 
-## 8. CI gates
+## 8. Sprint 3 one-time migration
+
+The `legacy_ok=False` default in `verify_audit_log` /
+`AuditLogger.__init__` rejects any active log that carries unsigned
+records or pre-hardening chain restarts. Existing deployments MUST seal
+their legacy log once before re-running any module-5 code path:
+
+```bash
+python -m module5_responses.audit.seal_legacy --dry-run
+python -m module5_responses.audit.seal_legacy
+```
+
+The CLI walks the log under `legacy_ok=True` to surface any tamper,
+archives the file with a sealed manifest, and writes an
+`AUDIT_LOG_MIGRATED` genesis record whose `cross_rotation_anchor`
+points at the archived chain's last integrity hash.
+
+If `verify_audit_log` reports a break (`first_break_at` is not `None`)
+the seal refuses. Options:
+
+1. Restore the log from a known-good backup, re-run `seal_legacy`.
+2. If the break is downstream of a known-good prefix, archive the
+   prefix manually:
+
+   ```bash
+   head -n <prefix_n> results/reports/audit_log.jsonl \
+       > results/reports/audit_archive/audit_log.partial.jsonl
+   rm results/reports/audit_log.jsonl
+   python -m module5_responses.audit.seal_legacy
+   ```
+
+   The post-prefix records are quarantined for forensic review.
+
+## 9. CI gates
 
 Defined in `.github/workflows/phase{0,1,2}.yml`:
 

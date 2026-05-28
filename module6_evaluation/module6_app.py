@@ -2153,32 +2153,63 @@ def _capture_dashboard_action(sample_idx: int, action: str, details: dict | None
     """Route a Triage-view action through the existing triple-sink audit fan-out.
 
     Mirrors the contract of `capture_interaction` (L520) but for the dashboard
-    page (where no participant_id is set in study mode). Action vocabulary
-    extension: adds "acknowledge" as the explicit ownership signal.
+    page (where no participant_id is set in study mode).
+
+    Tier 2 F2 + F4 hardening:
+      - The hardened signed-chain write is ONLY attempted when a
+        validated participant id is present (operator authentication,
+        proxied or local). Anonymous / placeholder visitors continue to
+        write to the plain JSONL trail but never extend the signed
+        chain.
+      - A signed-write failure surfaces through ``st.error`` instead of
+        being silently swallowed, so the operator can act.
     """
+    pid = st.session_state.get("participant_id") or ""
+    role = st.session_state.get("sim_role", "")
     payload = {
         "timestamp": datetime.now().isoformat(),
-        "participant_id": st.session_state.get("participant_id", "dashboard_user"),
+        "participant_id": pid or "dashboard_user",
         "alert_id": f"ALERT-{sample_idx:05d}",
         "action_type": action,
         "details": details or {},
     }
     try:
         _online_writer.log(action, **payload)
-    except Exception:
-        pass
-    audit_log("dashboard_action", **payload)
-    try:
-        get_hardened_audit().log(
-            {"event_type": "dashboard_action",
-             "alert_id": payload["alert_id"],
-             "action": action,
-             "details": details or {}},
-            reviewer_id=payload["participant_id"],
-            reviewer_role=st.session_state.get("sim_role", ""),
+    except Exception as exc:  # noqa: BLE001
+        st.warning(f"Local audit buffer write failed: {exc}")
+    # Plain JSONL — always, signed=False so a hardened-chain outage does
+    # not block the visible UI feedback.
+    audit_log("dashboard_action", sign=False, **payload)
+
+    # Hardened signed chain — only when the visitor has an enrolment id
+    # we trust. ``study_loader._FROZEN_PID_PARITY`` is the source of
+    # truth for enrolled participants; anything else writes to the
+    # plain trail only.
+    from module6_evaluation.study_loader import _FROZEN_PID_PARITY
+    if pid and pid in _FROZEN_PID_PARITY:
+        try:
+            get_hardened_audit().log(
+                {"event_type": "dashboard_action",
+                 "alert_id": payload["alert_id"],
+                 "action": action,
+                 "details": details or {}},
+                reviewer_id=pid,
+                reviewer_role=role,
+            )
+        except Exception as exc:  # noqa: BLE001
+            # Tier 2 F4: do not silently degrade. Surface to operator.
+            st.error(
+                f"Audit chain write failed for {payload['alert_id']}: "
+                f"{exc}. Plain trail wrote; signed chain DID NOT record "
+                "this action. Notify the security operator."
+            )
+    else:
+        # No enrolled participant id; signed chain is intentionally skipped.
+        # The plain JSONL above is the only record.
+        st.info(
+            "Action recorded to the local audit trail. Signed chain entry "
+            "skipped — no enrolled participant id in this session."
         )
-    except Exception:
-        pass
 
 
 @st.dialog("Dismiss alert")
