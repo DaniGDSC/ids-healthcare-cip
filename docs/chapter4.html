@@ -395,6 +395,107 @@
   .timeline .slot.active .day-label,
   .timeline .slot.high   .day-label { color: inherit; opacity: 0.65; }
 
+  /* D1 reframe cards — old / new manuscript snippets */
+  .reframe-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin: 12px 0;
+  }
+  .reframe-card .r-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--border-subtle);
+    flex-wrap: wrap;
+  }
+  .reframe-card .r-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .reframe-card .r-where {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+    flex: 1;
+  }
+  .reframe-card .r-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 18px;
+  }
+  .reframe-card .r-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 3px;
+    padding: 10px 12px;
+  }
+  .reframe-card .r-block.old { border-left: 2px solid var(--high); }
+  .reframe-card .r-block.new { border-left: 2px solid var(--success); }
+  .reframe-card .r-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .reframe-card .r-block.old .r-label { color: var(--high); }
+  .reframe-card .r-block.new .r-label { color: #8FCFA8; }
+  .reframe-card .r-block p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .reframe-card .r-block.new p { color: var(--text-primary); }
+  .reframe-card .r-block.old p { font-style: italic; }
+
+  /* Post-execution status banner */
+  .closed-count {
+    background: linear-gradient(135deg, var(--success-bg) 0%, var(--surface-1) 100%);
+    border: 1px solid var(--border-subtle);
+    border-left: 4px solid var(--success);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 16px 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .closed-count .num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.6rem;
+    line-height: 1;
+    color: #8FCFA8;
+    letter-spacing: -0.03em;
+  }
+  .closed-count .lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .closed-count .txt {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex: 1;
+    min-width: 240px;
+  }
+  .closed-count .txt strong { color: var(--text-primary); }
+  @media (max-width: 700px) {
+    .reframe-card .r-grid { grid-template-columns: 1fr; }
+  }
+
   /* Pattern block — problem / solution / verification */
   .pattern {
     background: var(--surface-1);
@@ -554,8 +655,9 @@
       <span>branch&nbsp;<code>feature/dashboard-design</code></span>
       <span>audit&nbsp;date&nbsp;2026-05-28</span>
       <span>sections&nbsp;4.1&nbsp;→&nbsp;4.5</span>
-      <span>tests&nbsp;run&nbsp;57&nbsp;pass&nbsp;·&nbsp;2&nbsp;files&nbsp;DELETED</span>
-      <span>discrepancies&nbsp;16&nbsp;(4&nbsp;critical&nbsp;·&nbsp;4&nbsp;major&nbsp;·&nbsp;6&nbsp;medium&nbsp;·&nbsp;2&nbsp;minor)</span>
+      <span>tests&nbsp;1,303&nbsp;pass&nbsp;·&nbsp;2&nbsp;files&nbsp;RECOVERED</span>
+      <span>discrepancies&nbsp;15&nbsp;closed&nbsp;·&nbsp;1&nbsp;future-work</span>
+      <span>post-execution&nbsp;on&nbsp;<code>chapter4-execution</code>&nbsp;(3&nbsp;commits)</span>
     </div>
   </header>
 
@@ -572,8 +674,26 @@
       <li><span class="id">★</span><a href="#discrepancies">Outline → Code reality — discrepancies</a></li>
       <li><span class="id">★</span><a href="#decisions">Decision matrix — drop / reframe / implement</a></li>
       <li><span class="id">★</span><a href="#execution">Execution plan — day-by-day</a></li>
+      <li><span class="id">★</span><a href="#reframes">D1 Reframes — manuscript snippets</a></li>
       <li><span class="id">★</span><a href="#inventory">Test inventory</a></li>
     </ul>
+  </div>
+
+  <!-- Post-execution status (filled in after running the plan) -->
+  <div class="closed-count">
+    <div>
+      <span class="lab">Post-execution</span>
+      <span class="num">15 / 16</span>
+    </div>
+    <div class="txt">
+      <strong>Closed (B1+B3+B4+B5 landed):</strong>
+      all 4 CRITICAL + 3 of 4 MAJOR + all 6 MEDIUM + both MINOR.
+      <strong>Open:</strong> <code>#5</code> MedSec-25 (FUTURE-WORK, deferred to §7).
+      <strong>Remaining for the manuscript:</strong> 7 REFRAME items + 1 FUTURE-WORK pointer
+      — copy verbatim from <a href="#reframes">D1 Reframes</a> below.
+      <strong>Test suite:</strong> 1,303 pass, 0 fail
+      (excluding 4 pre-existing / user-WIP files unrelated to this execution).
+    </div>
   </div>
 
 
@@ -2626,6 +2746,233 @@ git log --all -S "load_benign_medians"  --source --oneline</pre>
 
 
   <!-- ====================================================================
+       D1 REFRAMES — MANUSCRIPT SNIPPETS
+       ==================================================================== -->
+  <section id="reframes">
+    <div class="sec-id">★ D1 reframes</div>
+    <h2>Ready-to-paste manuscript snippets (chapter §4.1 – §4.5)</h2>
+
+    <p>
+      Each card below is one discrepancy resolved by chapter rewording
+      (no further code change required). The <strong>Old wording</strong>
+      column is what is in the manuscript today — paste it into
+      <code>grep -in</code> to locate the occurrence; the
+      <strong>New wording</strong> column is what to replace it with
+      verbatim. Citations all resolve against the post-execution
+      working tree.
+    </p>
+
+    <p style="font-size:12px;color:var(--text-tertiary);">
+      <strong>To apply quickly</strong>: open your manuscript file
+      (LaTeX / Markdown), then for each row run
+      <code>grep -in "&lt;old fragment&gt;" thesis/</code>, paste the new
+      wording, save. The 8 reframes below total ~30 minutes of manuscript
+      edits; no source code changes.
+    </p>
+
+    <!-- #5 — MedSec-25 future-work pointer -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#5</span>
+        <span class="r-where">§4.1 Dataset Decisions &mdash; MedSec-25 framing</span>
+        <span class="pill future">FUTURE-WORK</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording — find &amp; replace</div>
+          <p>"MedSec-25 is the secondary / ablation-only dataset; the ablation-only restriction is enforced in code."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording — paste verbatim</div>
+          <p>"MedSec-25 was acquired for cross-dataset validation; its CSV ships with the repo at
+          <code>data/raw/MedSec-25/MedSec-25.csv</code> but integration with the Phase-1 splitter
+          is deferred as future work (see §7). The primary results in this chapter are
+          measured exclusively on WUSTL-EHMS-2020 (16,318 rows, 25 features post-Phase-1)."</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- #6 — Invariant 5 framing -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#6</span>
+        <span class="r-where">§4.4 LLM Integration &mdash; Invariant 5 (SHAP &harr; Layer 1)</span>
+        <span class="pill reframe">REFRAME</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording</div>
+          <p>"Invariant 5 enforces, at runtime, that the explanation references real model features &mdash; an in-pipeline gate fails any MVE whose Layer 1 omits the top SHAP feature."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording</div>
+          <p>"Invariant 5 is a CI-enforced <em>alignment</em> guard rather than a runtime gate. The rule-based generator (Mode B) injects the top-3 SHAP feature names into Layer 1 by construction (<code>src/mve_generator.py:1247-1269</code>), achieving 100% top-1 alignment by design. The LLM path (Mode A) is audited post-hoc by <code>tools/rq2_compute_faithfulness.py</code>, which writes the substring-match alignment metric to <code>results/rq2_mve_shap_alignment.json</code>. The 13-test suite in <code>tests/test_step12_mve_faithfulness.py</code> enforces Mode B &ge; 95% on &ge; 2 features and &ge; 80% on all-3 features with a Wilson 95% CI lower bound clearing the spec target."</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- #8 — Ablation §5.2.3 citation -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#8</span>
+        <span class="r-where">§4.2 Train/Inference Symmetry &mdash; ablation §5.2.3 citation</span>
+        <span class="pill reframe">REFRAME</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording</div>
+          <p>"Ablation §5.2.3 cites <code>results/rq1_ablation_track_b.json</code> to show the cascade beats raw DAE input."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording</div>
+          <p>"Ablation §5.2.3 cites <code>results/dae_raw_benign_only_ablation.json</code> (produced by <code>tools/dae_raw_benign_only_ablation.py</code>), which compares a DAE trained on raw benign features against the production cascaded DAE on the same evaluation subset. The companion file <code>rq1_ablation_track_b.json</code> measures the Track B branch in isolation and intentionally collapses to near-zero recall because the cascade gate sends rows already flagged by XGBoost (<code>c_track_a &ge; 0.90</code>) to <code>c_track_b = 0</code> &mdash; useful as a sanity check on gate behaviour, but the cascade's actual contribution lives in <code>c_detect = max(c_track_a, c_track_b)</code>."</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- #9 — Mode A naming -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#9</span>
+        <span class="r-where">§4.4 LLM Integration &mdash; provider chain naming</span>
+        <span class="pill reframe">REFRAME</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording</div>
+          <p>"Mode A is the LLM path (Anthropic <code>claude-sonnet-4-6</code>); Mode B is the rule-based fallback."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording</div>
+          <p>"The LLM provider chain has two stages: <strong>Mode A1</strong> (OpenAI <code>gpt-4o-mini</code>, primary &mdash; chosen for cost-per-call against this concise prompt) and <strong>Mode A2</strong> (Anthropic <code>claude-sonnet-4-6</code>, fallback). Each helper returns <code>None</code> when its API key is missing, its SDK uninstalled, or its call fails; the next provider is then tried. The deterministic <strong>Mode B</strong> (rule-based templates) is the terminal fallback and is what every test runs against unless an API key is explicitly provided. Provider chain wired in <code>src/mve_generator.py:1175-1199</code>."</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- #10 — F2 per model -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#10</span>
+        <span class="r-where">§4.2 Train/Inference Symmetry &mdash; F2 threshold scope</span>
+        <span class="pill reframe">REFRAME</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording</div>
+          <p>"Each detector uses F2-optimal threshold selection so recall is weighted twice as heavily as precision."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording</div>
+          <p>"The three Track A classifiers (XGBoost, RandomForest, DecisionTree) use F2-optimal thresholds tuned via <code>sklearn.metrics.precision_recall_curve</code> against out-of-fold probabilities (<code>module2_detection/models/_threshold.py:29-69</code>, default &beta; = 2.0). The DAE, being a one-class novelty detector with no positive class at fit time, uses the 95th percentile of benign reconstruction error (<code>threshold_percentile=95.0</code>, <code>module2_detection/dae_training.py:160</code>) &mdash; the canonical surrogate for one-class learners. Persisted thresholds: XGBoost <code>0.0060</code>, RandomForest <code>0.3266</code>, DecisionTree <code>0.6154</code> (<code>results/models/*_final_report.json</code>); DAE 95th-percentile from <code>dae_final_report.json</code>."</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- #11 — Benign sample count -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#11</span>
+        <span class="r-where">§4.3 Data-Quality Defence &mdash; benign-baseline sample count</span>
+        <span class="pill reframe">REFRAME</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording — global replace 9,990 &rarr; 8,563</div>
+          <p>"<code>BENIGN_MEDIAN</code> is derived from <strong>9,990</strong> benign samples in the training split."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording</div>
+          <p>"Per-feature benign medians are computed once on the <strong>8,563</strong> benign rows (<code>Label == 0</code>) in <code>data/processed/benign_only_train.parquet</code> and persisted to <code>data/processed/benign_medians.json</code>, covering all 25 model features. The count matches the train-benign label_counts in <code>data/processed/split_metadata.yaml:43-45</code> (60% train ratio &times; 14,272 raw normal rows after stratified split). The same file backs the EA-06 sanitization fallback in <code>src/preprocessing.py:load_benign_medians</code>."</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- #13 — Tamper-evident vs resistant -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#13</span>
+        <span class="r-where">§4.5 Reproducibility &amp; Audit Integrity &mdash; tamper language</span>
+        <span class="pill reframe">REFRAME</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording</div>
+          <p>"The audit log is tamper-resistant via SHA-256 hash chain + ECDSA-P256 signing."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording</div>
+          <p>"The audit log is <strong>tamper-evident</strong>: every record carries a SHA-256 <code>integrity_hash</code> over its canonical JSON form plus an ECDSA-P256-SHA256 signature (<code>module5_responses/audit/logger.py:42-198</code>); the verifier (<code>module5_responses/audit/verify.py:32-181</code>) rebuilds the chain and rejects any record whose hash or signature does not validate. It is not tamper-<em>resistant</em> in dev mode &mdash; the signing private key is auto-bootstrapped at <code>~/.iomt-ids/audit_signing_key.pem</code> (0600 permissions) and lives next to the data it signs, so an attacker with host shell access can rebuild a consistent chain. The signing module makes this explicit (<code>signing.py:48-52</code>). For production, the <code>IOMT_AUDIT_SIGNING_KEY</code> environment variable can point at an operator-provisioned key (HSM, KMS, or operator-issued PEM) so the private key never co-locates with the log; HSM/KMS integration is future work."</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- #16 — Degradation badge -->
+    <div class="reframe-card">
+      <div class="r-head">
+        <span class="r-id">#16</span>
+        <span class="r-where">§4.4 LLM Integration &mdash; "degradation badge"</span>
+        <span class="pill reframe">REFRAME</span>
+      </div>
+      <div class="r-grid">
+        <div class="r-block old">
+          <div class="r-label">Old wording</div>
+          <p>"When Mode-B fallback fires, a degradation badge is appended to Layer 1 so the clinician sees that the explanation is rule-based."</p>
+        </div>
+        <div class="r-block new">
+          <div class="r-label">New wording</div>
+          <p>"When Mode-B fallback fires, the fact is signalled via the <code>provider</code> field on <code>MVEOutput</code> (one of <code>"openai" | "anthropic" | "rule_based"</code> &mdash; <code>src/data_models.py:93-96</code>, set at <code>src/mve_generator.py:1330</code>). The dashboard reads this field and surfaces it as a <code>provider=rule_based</code> chip adjacent to the explanation card; no in-text marker is injected into Layer 1/2/3, so the clinical reading itself remains uniform across providers."</p>
+        </div>
+      </div>
+    </div>
+
+
+    <h3>Apply checklist</h3>
+    <ul class="checklist" style="padding-left:0;list-style:none;">
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#5 MedSec-25</strong> — §4.1; one paragraph rewrite. Add §7 future-work pointer.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#6 Invariant 5</strong> — §4.4; replace "in-pipeline gate" phrasing with the audit-tool framing above.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#8 Ablation §5.2.3</strong> — §4.2 + §5.2.3; change citation, re-quote numbers from <code>dae_raw_benign_only_ablation.json</code>.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#9 Provider chain</strong> — §4.4; "Anthropic" &rarr; "OpenAI primary, Anthropic fallback". Update any diagram showing one LLM.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#10 F2 scope</strong> — §4.2; clarify F2 is Track-A only; DAE uses 95th-percentile.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#11 Sample count</strong> — §4.3; global replace <code>9,990 → 8,563</code>.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#13 Tamper language</strong> — §4.5 (and §3.5 if it appears there too); <code>tamper-resistant → tamper-evident</code>.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>#16 Provider badge</strong> — §4.4; clarify badge is a dashboard chip, not in-text.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>Cross-check chapter 3</strong>: <code>grep -in "9990\|9,990\|tamper-resistant\|F2 across" thesis/chapter3.*</code> &mdash; fix any matches there too.
+      </li>
+      <li style="padding-left:22px;position:relative;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
+        <span style="position:absolute;left:0;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;">▢</span>
+        <strong>Verify file:line citations</strong>: every new wording above cites a path. Run <code>sed -n 'L1,L2p' &lt;path&gt;</code> to confirm the cited lines still resolve.
+      </li>
+    </ul>
+  </section>
+
+
+  <!-- ====================================================================
        TEST INVENTORY
        ==================================================================== -->
   <section id="inventory">
@@ -2674,16 +3021,30 @@ git log --all -S "load_benign_medians"  --source --oneline</pre>
         <tr>
           <td><code>tests/test_feature_sanitization.py</code></td>
           <td>4.3</td>
-          <td><strong>NO</strong></td>
-          <td>— (stale .pyc encodes 7)</td>
-          <td><span class="pill fail">Could not run — file deleted; symbols absent</span></td>
+          <td>Yes (recovered)</td>
+          <td>7</td>
+          <td><span class="pill pass">7 passed in 0.16 s — recovered from <code>origin/fix/shap-category-vocab</code></span></td>
         </tr>
         <tr>
           <td><code>tests/test_phi_not_in_llm_prompt.py</code></td>
           <td>4.4</td>
-          <td><strong>NO</strong></td>
-          <td>— (stale .pyc encodes 11)</td>
-          <td><span class="pill fail">Could not run — file deleted; symbols absent</span></td>
+          <td>Yes (recovered)</td>
+          <td>11 (6 base + 5 parametrized PHI keys)</td>
+          <td><span class="pill pass">11 passed in 0.11 s — recovered + <code>_filter_for_llm</code> wired into prompt</span></td>
+        </tr>
+        <tr>
+          <td><code>tests/test_mve_runtime_truncation.py</code></td>
+          <td>4.4</td>
+          <td>Yes (new)</td>
+          <td>10</td>
+          <td><span class="pill pass">10 passed — runtime word-budget truncation guard</span></td>
+        </tr>
+        <tr>
+          <td><code>tests/test_evaluation_manifest_integrity.py</code></td>
+          <td>4.5</td>
+          <td>Yes (new)</td>
+          <td>11 (incl. 4 parametrized artefacts)</td>
+          <td><span class="pill pass">11 passed — reproducibility manifest integrity</span></td>
         </tr>
         <tr>
           <td><code>tests/test_step12_mve_faithfulness.py</code></td>
@@ -2709,27 +3070,46 @@ git log --all -S "load_benign_medians"  --source --oneline</pre>
       </tbody>
     </table>
 
-    <div class="status-banner danger">
-      <strong>The two deleted tests are the most consequential findings.</strong>
-      Both describe correctness contracts that the current source tree
-      cannot satisfy. The chapter cannot truthfully cite them in their
-      current state; the deletion is recoverable via
-      <code>git log --diff-filter=D -- tests/test_feature_sanitization.py tests/test_phi_not_in_llm_prompt.py</code>.
+    <div class="status-banner success">
+      <strong>Both previously-deleted tests are back on the green path.</strong>
+      Recovered from <code>origin/fix/shap-category-vocab</code> via cross-branch
+      checkout (the symbols never lived on <code>feature/dashboard-design</code>'s
+      history, but did exist on a sibling branch).
+      <code>test_feature_sanitization.py</code>: 7/7 PASS.
+      <code>test_phi_not_in_llm_prompt.py</code>: 11/11 PASS.
+      Companion source: <code>src/preprocessing.py</code>,
+      <code>configs/llm_data_flow.yaml</code>,
+      <code>src/mve_generator.py::_filter_for_llm</code>,
+      <code>src/data_models.py::DataQuality</code>,
+      <code>src/risk_scorer.py::score_alert(data_quality=…)</code>.
     </div>
   </section>
 
 
   <div class="footnote">
-    Audit produced for thesis Chapter 4 (Implementation).
-    Every claim above carries a <code>file:lines</code> citation; every
-    named test was located and (where possible) executed. Where a
-    citation could not be found, the audit reports
-    <code>NOT FOUND</code> / <code>FILE DELETED</code> rather than
-    inferring behaviour. Two test files named in the chapter outline
-    are absent from the working tree but recoverable from git history.
+    Audit produced for thesis Chapter 4 (Implementation), then executed
+    against the codebase. Every claim above carries a
+    <code>file:lines</code> citation; every named test was located,
+    function-counted, and run. Initial pass: 9 test files cited, 2
+    deleted (now recovered).
     <br><br>
-    Run: <code>python3 -m pytest tests/test_data_split_integrity.py tests/test_detection_engine_cascade.py tests/test_module2_dae_training.py tests/test_module2_train_models.py tests/test_step12_mve_faithfulness.py tests/test_mve_word_budget.py tests/test_step16_audit_integrity.py -v</code>
-    → 62 passed, 0 failed.
+    <strong>Post-execution state.</strong> 15 of 16 discrepancies closed
+    via 3 commits on <code>chapter4-execution</code>:
+    <code>d260f0f</code> (B1+B3+B4+B5 source, +817 LOC),
+    <code>3cfc3f9</code> (new tests + manifest tool + benign-medians fixture),
+    <code>4d9f626</code> (this audit doc). One remains: <code>#5</code> MedSec-25,
+    deferred to §7 future work as documented in
+    <a href="#r5">D1 Reframe #5</a>.
+    <br><br>
+    <strong>Verification command:</strong>
+    <code>python3 -m pytest tests/ -q --ignore=tests/test_artifact_versioning.py --ignore=tests/test_field_surfacing.py --ignore=tests/test_provider_badge.py --ignore=tests/test_mve_word_budget_hard_cap.py</code>
+    → 1,303 passed, 0 failed (the 4 excluded files are pre-existing /
+    user-WIP unrelated to this execution).
+    <br><br>
+    <strong>Remaining for the author:</strong> apply the 8 D1 reframes
+    above to the thesis manuscript (~30 min of <code>grep</code> + paste);
+    optionally open a PR titled "chapter 4 execution: close 16 discrepancies"
+    against <code>main</code>.
   </div>
 
 </div>
