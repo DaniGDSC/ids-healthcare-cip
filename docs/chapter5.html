@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 5 — Evaluation &amp; Results · Artifact-Cited Extraction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0F12;
+    --surface-1: #16181D;
+    --surface-2: #1D2026;
+    --surface-3: #24272F;
+    --border-subtle: #1F2229;
+    --border: #262A33;
+    --border-strong: #353944;
+    --text-primary: #E8E9EB;
+    --text-secondary: #9CA0AB;
+    --text-tertiary: #6A6F7B;
+    --text-quaternary: #4A4F5A;
+    --accent: #7BA7BC;
+    --accent-bg: rgba(123, 167, 188, 0.12);
+    --success: #5F9E7B;
+    --success-bg: rgba(95, 158, 123, 0.12);
+    --warn: #D4A445;
+    --warn-bg: rgba(212, 164, 69, 0.12);
+    --high: #E07A5F;
+    --high-bg: rgba(224, 122, 95, 0.12);
+    --danger: #C53030;
+    --danger-bg: rgba(197, 48, 48, 0.14);
+  }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .font-display { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--text-primary); }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    background: transparent;
+    word-break: break-word;
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Header */
+  header.page-head { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  header.page-head .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 8px;
+  }
+  header.page-head h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 3rem;
+    margin: 0 0 10px;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  header.page-head .sub {
+    color: var(--text-secondary);
+    font-size: 0.98rem;
+    max-width: 820px;
+  }
+  header.page-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 14px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  header.page-head .meta span::before { content: "· "; color: var(--text-quaternary); }
+  header.page-head .meta span:first-child::before { content: ""; }
+
+  /* TOC */
+  .toc {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-bottom: 48px;
+  }
+  .toc h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 12px;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .toc li { font-size: 13px; }
+  .toc li a { color: var(--text-secondary); }
+  .toc li a:hover { color: var(--text-primary); }
+  .toc li .id { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--accent); margin-right: 8px; }
+
+  /* Sections */
+  section { margin-top: 64px; scroll-margin-top: 24px; }
+  section > .sec-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 6px;
+  }
+  section > h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.125rem;
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  section h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.375rem;
+    margin: 32px 0 10px;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+  }
+  section h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+    margin: 26px 0 8px;
+  }
+  section p { margin: 8px 0 14px; color: var(--text-secondary); }
+  section p strong { color: var(--text-primary); }
+  section ul { padding-left: 20px; margin: 8px 0 14px; }
+  section ul li { color: var(--text-secondary); margin-bottom: 6px; }
+  section ul li strong { color: var(--text-primary); }
+
+  /* Status banner */
+  .status-banner {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 12px 0 24px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .status-banner strong { color: var(--text-primary); }
+  .status-banner.warn { border-left-color: var(--warn); }
+  .status-banner.danger { border-left-color: var(--danger); }
+  .status-banner.success { border-left-color: var(--success); }
+
+  /* Tables */
+  table.df {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 12.5px;
+    margin: 10px 0 18px;
+  }
+  table.df th, table.df td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+  }
+  table.df th {
+    background: var(--surface-2);
+    color: var(--text-tertiary);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  table.df tr:last-child td { border-bottom: none; }
+  table.df td.num { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-primary); }
+  table.df td.id-col {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+    width: 70px;
+    letter-spacing: 0.04em;
+  }
+  table.df caption { caption-side: top; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 6px; }
+
+  /* Status pills */
+  .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .pill.pass    { background: var(--success-bg); color: #8FCFA8; }
+  .pill.fail    { background: var(--danger-bg); color: #EF8A8A; }
+  .pill.complete{ background: var(--success-bg); color: #8FCFA8; }
+  .pill.partial { background: var(--warn-bg); color: var(--warn); }
+  .pill.nodata  { background: var(--danger-bg); color: #EF8A8A; }
+  .pill.match   { background: var(--success-bg); color: #8FCFA8; }
+  .pill.mismatch{ background: var(--warn-bg); color: var(--warn); }
+  .pill.stale   { background: var(--high-bg); color: var(--high); }
+  .pill.fresh   { background: var(--success-bg); color: #8FCFA8; }
+
+  /* Code block */
+  pre.code {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 8px 0 14px;
+  }
+  pre.code .c { color: var(--text-tertiary); }
+  pre.code .k { color: var(--accent); }
+
+  /* Summary cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 16px 0 30px;
+  }
+  .sum-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .sum-card.crit { border-left: 3px solid var(--danger); }
+  .sum-card.high { border-left: 3px solid var(--high); }
+  .sum-card.med  { border-left: 3px solid var(--warn); }
+  .sum-card.low  { border-left: 3px solid var(--text-tertiary); }
+  .sum-card.ok   { border-left: 3px solid var(--success); }
+  .sum-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+  }
+  .sum-card.crit .label { color: #EF8A8A; }
+  .sum-card.high .label { color: var(--high); }
+  .sum-card.med  .label { color: var(--warn); }
+  .sum-card.ok   .label { color: #8FCFA8; }
+  .sum-card .count {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.2rem;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 4px 0 2px;
+  }
+  .sum-card .desc { font-size: 12px; color: var(--text-secondary); }
+
+  /* Footer */
+  .footnote {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 1100px) {
+    .toc ul { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 700px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    header.page-head h1 { font-size: 2.25rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="page-head">
+    <div class="eyebrow">Thesis · Chapter 5 — Evaluation &amp; Results · Artifact-cited extraction</div>
+    <h1>What the Code Has Actually Produced</h1>
+    <p class="sub">
+      Every number on this page is sourced from a results artifact already on
+      disk or from a script re-run in this session whose stdout is quoted.
+      No value is estimated, interpolated, or rounded from memory. Missing
+      table cells are marked <span class="pill nodata">NO DATA</span> with the
+      command needed to produce them. Discrepancies between stored and
+      recomputed artifacts are listed in §★.
+    </p>
+    <div class="meta">
+      <span>repo&nbsp;<code>ids-healthcare-cip</code></span>
+      <span>branch&nbsp;<code>feature/dashboard-design</code></span>
+      <span>extraction&nbsp;date&nbsp;2026-05-28</span>
+      <span>last&nbsp;update&nbsp;2026-05-29</span>
+      <span>sections&nbsp;5.1&nbsp;→&nbsp;5.5&nbsp;+&nbsp;readiness&nbsp;matrix&nbsp;+&nbsp;action&nbsp;ledger</span>
+      <span>11/11&nbsp;implement&nbsp;items&nbsp;closed</span>
+    </div>
+  </header>
+
+  <!-- Headline summary -->
+  <div class="summary-grid">
+    <div class="sum-card ok">
+      <div class="label">RQ1 detection</div>
+      <div class="count">0.9941</div>
+      <div class="desc">Track A AUC (XGBoost, n=2448 frozen test). FNR<sub>critical</sub>=0.0, target met.</div>
+    </div>
+    <div class="sum-card med">
+      <div class="label">RQ2 explanation</div>
+      <div class="count">100%</div>
+      <div class="desc">Mode B MVE-SHAP all-3 alignment (n=200). Mode A: 0%.</div>
+    </div>
+    <div class="sum-card ok">
+      <div class="label">RQ3 HITL</div>
+      <div class="count">19/19</div>
+      <div class="desc">Invariant tests pass; MWU p=0.00019, Cohen's d=1.32 (PASS).</div>
+    </div>
+    <div class="sum-card ok">
+      <div class="label">Decision-matrix closed</div>
+      <div class="count">22/25</div>
+      <div class="desc">11 IMPLEMENT + 3 DROP + 7 FIX-WORDING + 1 partial DROP applied this session; 3 FUTURE-WORK items carried to §6 (MedSec-25, Mode-A/B MITRE split, strict-match appendix).</div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>Contents</h3>
+    <ul>
+      <li><span class="id">5.0</span><a href="#s50">Inventory of results artifacts</a></li>
+      <li><span class="id">5.1</span><a href="#s51">Evaluation methodology</a></li>
+      <li><span class="id">5.2</span><a href="#s52">RQ1 — Detection</a></li>
+      <li><span class="id">5.3</span><a href="#s53">RQ2 — Explanation</a></li>
+      <li><span class="id">5.4</span><a href="#s54">RQ3 — HITL (verification)</a></li>
+      <li><span class="id">5.5</span><a href="#s55">Cross-RQ synthesis</a></li>
+      <li><span class="id">★</span><a href="#summary">Readiness matrix · discrepancies · do-not-publish</a></li>
+    </ul>
+  </div>
+
+
+  <!-- ====================================================================
+       5.0 — INVENTORY
+       ==================================================================== -->
+  <section id="s50">
+    <div class="sec-id">Section 5.0 · Inventory</div>
+    <h2>What artifacts exist, and when were they written</h2>
+
+    <div class="status-banner warn">
+      <strong>Freshness summary.</strong> Most metric JSONs were written
+      2026-05-27 22:14 (RQ2/RQ3) and 2026-05-28 19:51 (RQ1). The underlying
+      <code>risk_scores.npz</code> and <code>audit_log.jsonl</code> were
+      written later (2026-05-28 21:03 / 21:47), so some RQ2/RQ3 numbers can
+      be stale relative to the current model state. Each section notes
+      stored-vs-recomputed match.
+    </div>
+
+    <h3>Results root (<code>results/</code>)</h3>
+    <ul>
+      <li><strong>RQ1:</strong> <code>rq1_metrics.json</code>, <code>rq1_ablation_track_a.json</code>,
+        <code>rq1_ablation_track_b.json</code>, <code>rq1_track_b_per_class.json</code>,
+        <code>rq1_weight_sensitivity.json</code>, <code>rq1_summary.md</code> (May 27–28).</li>
+      <li><strong>RQ2:</strong> <code>rq2_shap_stability.json</code>, <code>rq2_mve_shap_alignment.json</code>,
+        <code>rq2_mitre_coverage.json</code>, <code>rq2_round2_simulation.json</code>,
+        <code>rq2_summary.md</code>.</li>
+      <li><strong>RQ3:</strong> <code>rq3_audit_integrity.json</code>, <code>rq3_invariants_status.json</code>,
+        <code>rq3_summary.md</code>.</li>
+      <li><strong>Ablations:</strong> <code>dae_raw_benign_only_ablation.json</code>,
+        <code>formula_comparison.json</code>, <code>formula_sweep.json</code>,
+        <code>over_response_ablation.json</code>, <code>phase0_baseline.json</code>,
+        <code>coverage_audit.json</code>, <code>faithfulness_gate.json</code>,
+        <code>stability_variant_comparison.json</code>, <code>v1_v2_comparison.json</code>,
+        <code>v2_threshold_calibration.json</code>, <code>version_gate.json</code>.</li>
+      <li><strong>Subdirs:</strong> <code>reports/</code> (per-detector model + prediction artifacts +
+        audit log + alert responses), <code>models/</code> (pickled pipelines + SHAP npz + best-params),
+        <code>charts/</code> (~80 PNGs), <code>figures/</code> (was empty until this turn — ROC/PR
+        regenerated).</li>
+    </ul>
+
+    <h3>Survey root (<code>survey/</code>)</h3>
+    <ul>
+      <li><code>m5_result.yaml</code> (May 22) — primary M5 outcome with N=25/arm.</li>
+      <li><code>study_responses_A.json</code> / <code>_B.json</code> — bulk responses.</li>
+      <li><code>survey/result/</code> — 50 per-participant files (P01–P25 × A/B) plus
+        <code>responses_v2_independent.json</code>.</li>
+      <li><code>rescore_v2_result.yaml</code>, <code>v2_comparison_report.yaml</code>,
+        <code>v2_responses_scored.json</code>.</li>
+    </ul>
+
+    <h3>Auxiliary analysis (<code>analysis/outputs/</code>)</h3>
+    <ul>
+      <li><code>rq3_primary.json</code> (the canonical MWU result for M5).</li>
+      <li><code>rq3_per_role.json</code>, <code>rq3_escalation_chi2.json</code>.</li>
+      <li><code>rq2c_per_role.json</code>, <code>rq2d_failure_modes.json</code>.</li>
+    </ul>
+  </section>
+
+
+  <!-- ====================================================================
+       5.1 — METHODOLOGY
+       ==================================================================== -->
+  <section id="s51">
+    <div class="sec-id">Section 5.1 · Methodology</div>
+    <h2>Evaluation methodology — verified facts</h2>
+
+    <div class="status-banner warn">
+      <strong>Status:</strong> <span class="pill partial">PARTIAL</span>
+      Methodology for WUSTL-EHMS, FNR<sub>critical</sub>/F2 definitions,
+      A/B counterbalancing (MD5 seed), N=25, and MWU/Chi-square locations
+      are all backed by code. The thesis statement
+      "MedSec-25 ablation-only" has <em>no</em> backing script or artifact
+      and must either be downgraded or implemented.
+    </div>
+
+    <h3>Datasets &amp; split</h3>
+    <table class="df">
+      <caption>Source: <code>data/processed/split_metadata.yaml</code></caption>
+      <thead><tr><th>Quantity</th><th>Value</th><th>Source line</th></tr></thead>
+      <tbody>
+        <tr><td>WUSTL-EHMS total (post-filter)</td><td class="num">16 318</td><td><code>split_metadata.yaml:10</code></td></tr>
+        <tr><td>Train n / ratio</td><td class="num">9 790 / 0.60</td><td><code>:41</code></td></tr>
+        <tr><td>Validation n / ratio</td><td class="num">2 448 / 0.15</td><td><code>:51</code></td></tr>
+        <tr><td><strong>Test n / ratio</strong></td><td class="num"><strong>2 448 / 0.15</strong></td><td><code>:61</code></td></tr>
+        <tr><td>Demo pool n / ratio</td><td class="num">1 632 / 0.10</td><td><code>:71</code></td></tr>
+        <tr><td>Test attack rate</td><td class="num">0.125408</td><td><code>:62</code></td></tr>
+        <tr><td>Test labels (0 / 1)</td><td class="num">2 141 / 307</td><td><code>:63-65</code></td></tr>
+        <tr><td>Test categories (DA / Spoof / normal)</td><td class="num">138 / 169 / 2 141</td><td><code>:67-69</code></td></tr>
+        <tr><td>Random state</td><td class="num">42</td><td><code>:3</code></td></tr>
+        <tr><td>n_features</td><td class="num">25</td><td><code>:11</code></td></tr>
+        <tr><td>Stratification key</td><td class="num">Attack Category</td><td><code>:4</code></td></tr>
+        <tr><td>MedSec-25 raw rows (file present, never loaded by any module)</td><td class="num">554 535</td><td>command: <code>wc -l data/raw/MedSec-25/MedSec-25.csv</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Metric definitions (as implemented)</h3>
+    <p><strong>FNR<sub>critical</sub></strong> — <code>tools/rq1_compute_metrics.py:107-111</code>:</p>
+<pre class="code">crit_device_mask = d_crit &gt;= CRITICAL_DEVICE_THRESHOLD   <span class="c"># 0.8</span>
+crit_attack_mask = crit_device_mask &amp; (y_true == 1)
+n_crit_attacks = int(crit_attack_mask.sum())
+n_crit_attacks_surfaced = int((crit_attack_mask &amp; surfaced_mask).sum())
+fnr_critical = (n_crit_attacks - n_crit_attacks_surfaced) / n_crit_attacks</pre>
+    <p>Surfaced tiers: <code>("MEDIUM", "HIGH", "CRITICAL")</code>. Target = 0.05
+      (<code>rq1_compute_metrics.py:126</code>). Labelled
+      <code>"primary_safety_metric"</code> in the JSON (line 124) and is the
+      selection objective for weight sensitivity (lines 474-475).</p>
+
+    <p><strong>F2</strong> — <code>tools/rq1_compute_metrics.py:63-64</code>:</p>
+<pre class="code">f2 = 5 * prec * rec / (4 * prec + rec)   <span class="c"># closed form of F-β with β=2</span></pre>
+    <p>Threshold selection uses the same β=2 via
+      <code>module2_detection/models/_threshold.py:29-69</code>
+      (<code>precision_recall_curve</code> vectorised, default <code>beta=2.0</code>),
+      called by every Track A detector through <code>_base_detector.py:235-241</code>.</p>
+
+    <p><strong>Nuance for the thesis:</strong> FNR<sub>critical</sub> is the
+      <em>primary safety gate</em>; F2 is the <em>threshold-selection
+      objective</em>. The two roles must not be conflated in §5.1's prose.</p>
+
+    <h3>User-study design — A/B counterbalancing</h3>
+    <p>Implementation: <code>module6_evaluation/module6_app.py:539-568</code>.
+      Seed line (<code>:547</code>):</p>
+<pre class="code">seed = int(hashlib.md5(participant_id.encode()).hexdigest(), 16) % (2**31)</pre>
+    <p>Latin-square block order by PID parity; balanced True/False blocks;
+      shuffle within each block. <strong>MD5 seed confirmed.</strong></p>
+    <p>N participants: <strong>25 per arm</strong> — recorded independently
+      in <code>survey/m5_result.yaml:9-10</code> and
+      <code>analysis/outputs/rq3_primary.json:40,52</code>.
+      <code>survey/result/</code> contains 50 per-participant files
+      (P01–P25 × A/B), consistent with a within-subjects design.</p>
+
+    <h3>Statistical tests</h3>
+    <ul>
+      <li><strong>Mann-Whitney U</strong> — <code>tools/rq3_compute_analysis.py:70</code>
+        (composite accuracy, A vs B), <code>:147</code> (confidence),
+        <code>:148</code> (decision time), <code>:246</code> (per-role pairwise).
+        Uses <code>scipy.stats.mannwhitneyu</code>.</li>
+      <li><strong>Chi-square</strong> — <code>tools/rq3_compute_analysis.py:273-303</code>:
+        <code>chi2_contingency</code> on a 2×2 group × escalated table.
+        Output → <code>analysis/outputs/rq3_escalation_chi2.json</code>.</li>
+    </ul>
+
+    <h3>What's missing for §5.1</h3>
+    <ul>
+      <li><strong>MedSec-25 ablation evidence</strong> — no script, no metrics
+        JSON, no <code>data/phase2/medsec*</code> folder. <code>grep -rln "MedSec" .</code>
+        returns only HTML docs. The thesis statement must be downgraded to
+        "MedSec-25 is described but not used in present experiments," or a
+        feature-mapper + cross-dataset evaluator script must be written.</li>
+      <li><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">D-02 RESOLVED</span>
+        <code>source_dataset_sha256</code> now patched to
+        <code>8359da96154fa60247df9d75e52d232077acb9886c09c36de2a0aaaee6cf2c25</code>
+        in <code>data/processed/split_metadata.yaml:38</code>
+        (<code>sha256sum data/raw/WUSTL-EHMS/wustl-ehms-2020_with_attacks_categories.csv</code>).</li>
+    </ul>
+  </section>
+
+
+  <!-- ====================================================================
+       5.2 — RQ1
+       ==================================================================== -->
+  <section id="s52">
+    <div class="sec-id">Section 5.2 · RQ1 — Detection</div>
+    <h2>Headline detection metrics, ablations &amp; spoofing failure</h2>
+
+    <div class="status-banner warn">
+      <strong>Status:</strong> <span class="pill partial">PARTIAL</span> —
+      Table 5.1 and 5.3 (excluding MedSec-25 row) are fully backed; Table 5.2
+      is only at threshold=0.5 with no max-fusion row (none exists in code);
+      Table 5.4 perturbs by ±0.10 absolute, not ±5%/±10% relative, and does
+      not compute tier-agreement κ.
+    </div>
+
+    <h3>Table 5.1 — Headline metrics (frozen test n=2448, n<sub>attacks</sub>=307)</h3>
+    <table class="df">
+      <caption>Source: <code>results/rq1_metrics.json</code> · stored values match recomputed byte-for-byte</caption>
+      <thead><tr><th>Metric</th><th>Track A (XGBoost)</th><th>Track B (DAE cascade)</th><th>Fused C_detect</th><th>Composite R</th></tr></thead>
+      <tbody>
+        <tr><td>AUC</td><td class="num">0.994133</td><td class="num">0.04888</td><td class="num">0.965162</td><td class="num">0.983443</td></tr>
+        <tr><td>Sensitivity (TPR)</td><td class="num">0.915309</td><td class="num">0.003257</td><td class="num">0.918567</td><td>—</td></tr>
+        <tr><td>Specificity (TNR)</td><td class="num">0.991126</td><td class="num">0.975245</td><td class="num">0.966371</td><td>—</td></tr>
+        <tr><td>Precision</td><td class="num">0.936667</td><td class="num">0.018519</td><td class="num">0.79661</td><td>—</td></tr>
+        <tr><td>F1</td><td class="num">0.925865</td><td class="num">0.00554</td><td class="num">0.853253</td><td>—</td></tr>
+        <tr><td>F2</td><td class="num">0.919503</td><td class="num">0.0039</td><td class="num">0.891277</td><td>—</td></tr>
+        <tr><td>FNR</td><td class="num">0.084691</td><td class="num">0.996743</td><td class="num">0.081433</td><td>—</td></tr>
+        <tr><td>FPR</td><td class="num">0.008874</td><td class="num">0.024755</td><td class="num">0.033629</td><td>—</td></tr>
+        <tr><td>TP / FP / TN / FN</td><td class="num">281 / 19 / 2122 / 26</td><td class="num">1 / 53 / 2088 / 306</td><td class="num">282 / 72 / 2069 / 25</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p><strong>FNR<sub>critical</sub> (primary safety metric)</strong>:
+      <code>0.0</code> (target ≤ 0.05, target met). 138/138 critical-device
+      attacks surfaced. <code>rq1_metrics.json:16-23</code>.</p>
+    <p><strong>Surfacing decision</strong> (tier ∈ {MEDIUM, HIGH, CRITICAL}):
+      AUC 0.947337, sensitivity 0.938111, specificity 0.956562, F2 0.894966.
+      <code>rq1_metrics.json:89-107</code>.</p>
+    <p><strong>Tier distribution</strong>: CRITICAL 12, HIGH 301, MEDIUM 68,
+      LOW 139 (sum = 520; this is the alert-pool count, <em>not</em> the
+      2448-row test set — do not present as such).
+      <code>rq1_metrics.json:108-113</code>.</p>
+    <p><strong>Literature baseline column:</strong> <span class="pill nodata">NO DATA</span>
+      in repo. No comparison artifact stores literature numbers. Must be
+      cited from §2.6.1's sources manually and clearly marked as such.</p>
+
+    <h3>Table 5.2 — Track A per-model ablation (n=2448)</h3>
+    <p><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">D-05 RESOLVED</span>
+      <code>tools/rq1_compute_metrics.py</code> extended to read
+      <code>optimal_threshold</code> from
+      <code>results/models/*_final_report.json</code> and emit a second
+      metrics block <code>metrics_at_f2_optimal_threshold</code>. The table
+      below shows both views.</p>
+    <table class="df">
+      <caption>Source: <code>results/rq1_ablation_track_a.json</code> (recomputed 2026-05-29)</caption>
+      <thead><tr><th>Model</th><th>Threshold</th><th>AUC</th><th>F1</th><th>F2</th><th>Sens</th><th>Spec</th><th>FNR</th><th>FPR</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2">XGBoost</td><td class="num">0.5 (fixed)</td><td class="num">0.994132</td><td class="num">0.925865</td><td class="num">0.919503</td><td class="num">0.915309</td><td class="num">0.991126</td><td class="num">0.084691</td><td class="num">0.008874</td></tr>
+        <tr><td class="num">0.006033 (F2-opt)</td><td class="num">0.994132</td><td class="num">0.901366</td><td class="num"><strong>0.939873</strong></td><td class="num">0.967427</td><td class="num">0.974311</td><td class="num">0.032573</td><td class="num">0.025689</td></tr>
+        <tr><td rowspan="2">Random Forest</td><td class="num">0.5 (fixed)</td><td class="num">0.965877</td><td class="num">0.802721</td><td class="num">0.781975</td><td class="num">0.768730</td><td class="num">0.978982</td><td class="num">0.231270</td><td class="num">0.021018</td></tr>
+        <tr><td class="num">0.326595 (F2-opt)</td><td class="num">0.965877</td><td class="num">0.770538</td><td class="num"><strong>0.835894</strong></td><td class="num">0.885993</td><td class="num">0.940682</td><td class="num">0.114007</td><td class="num">0.059318</td></tr>
+        <tr><td rowspan="2">Decision Tree</td><td class="num">0.5 (fixed)</td><td class="num">0.848055</td><td class="num">0.678038</td><td class="num">0.571942</td><td class="num">0.517915</td><td class="num">0.998599</td><td class="num">0.482085</td><td class="num">0.001401</td></tr>
+        <tr><td class="num">0.615385 (F2-opt)</td><td class="num">0.848055</td><td class="num">0.680942</td><td class="num">0.572767</td><td class="num">0.517915</td><td class="num">0.999533</td><td class="num">0.482085</td><td class="num">0.000467</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Reading the table.</strong> Each model is reported at two
+      thresholds: the comparable fixed 0.5 (top row) and the F2-optimal
+      derived during training (bottom row). The F2-optimal threshold lifts
+      XGBoost F2 from 0.9195 → <strong>0.9399</strong> and cuts FNR by
+      ~61% (0.0847 → 0.0326), at the cost of a small FPR rise
+      (0.0089 → 0.0257). RF benefits similarly; DT's F2-optimal threshold
+      sits above 0.5 (0.615) so behaviour barely changes.</p>
+    <p><span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">D-04 DROPPED</span>
+      The "max-fusion of XGB/RF/DT" row was removed from the table.
+      <code>detection_engine/engine.py:236</code> sets
+      <code>c_track_a = probas[PRIMARY_TRACK_A]</code> (XGBoost only); the
+      only fusion in code (<code>engine.py:283</code>) is Track A ⊕ Track B
+      and is already the "Fused C_detect" column in Table 5.1.</p>
+
+    <h3>Table 5.3 — Track B ablation (recomputed; stored differed on n)</h3>
+    <table class="df">
+      <caption>Source: <code>results/rq1_ablation_track_b.json</code> (recomputed this turn)</caption>
+      <thead><tr><th>Variant</th><th>n</th><th>AUC</th><th>Sens</th><th>F1</th><th>F2</th><th>FNR</th><th>TP / FP / TN / FN</th></tr></thead>
+      <tbody>
+        <tr><td>DAE raw reconstruction error</td><td class="num">2 325</td><td class="num">0.775037</td><td class="num">0.452769</td><td class="num">0.616408</td><td class="num">0.50656</td><td class="num">0.547231</td><td class="num">139 / 5 / 2013 / 168</td></tr>
+        <tr><td>DAE native prediction</td><td class="num">2 325</td><td>—</td><td class="num">0.517915</td><td>—</td><td>—</td><td>—</td><td class="num">159 / 91 / 1927 / 148</td></tr>
+        <tr><td>Cascade c_track_b (post-gating)</td><td class="num">2 325</td><td class="num">0.05148</td><td class="num">0.003257</td><td class="num">0.00554</td><td class="num">0.0039</td><td class="num">0.996743</td><td class="num">1 / 53 / 1965 / 306</td></tr>
+        <tr><td><strong>MedSec-25 — same variants</strong></td><td colspan="7"><span class="pill nodata">NO DATA</span> — no script loads <code>data/raw/MedSec-25/MedSec-25.csv</code>; needs a feature-mapper to align to the 25-feature WUSTL schema.</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Per-attack-category Track B</strong> (from <code>rq1_track_b_per_class.json</code>,
+      recomputed 2026-05-29 after D-06 fix):</p>
+    <table class="df">
+      <thead><tr><th>Class</th><th>n_samples</th><th>AUC (one-vs-rest)</th><th>Recall @ 0.5</th><th>Track-B score mean</th><th>Track-B score std</th></tr></thead>
+      <tbody>
+        <tr><td>Data Alteration</td><td class="num">138</td><td class="num">0.032251</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0.000000</td></tr>
+        <tr><td>Spoofing</td><td class="num"><strong>169</strong></td><td class="num"><strong>0.117276</strong></td><td class="num">0.005917</td><td class="num">0.007568</td><td class="num">0.077258</td></tr>
+        <tr><td>normal</td><td class="num">2 141</td><td class="num">0.951120</td><td>—</td><td class="num">0.041682</td><td class="num">0.146152</td></tr>
+      </tbody>
+    </table>
+    <p><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">D-06 RESOLVED</span>
+      Root cause was that
+      <code>compute_track_b_per_class()</code> read the attack category from
+      <code>alert_responses.json</code> (alert-pool subset), so non-surfaced
+      attack rows fell into the "normal" bucket — inflating it by 11 and
+      stealing Spoofing samples. The fix in
+      <code>tools/rq1_compute_metrics.py:286-309</code> now reads
+      <code>Attack Category</code> directly from
+      <code>data/processed/test_phase1.parquet</code>; counts now match
+      <code>split_metadata.yaml</code> exactly (138 / 169 / 2 141 = 2 448).
+      Spoofing AUC<sub>OvR</sub> shifted 0.100014 → <strong>0.117276</strong>
+      — still well below random (0.5) so the spoofing-blind-spot
+      conclusion stands.</p>
+
+    <h3>Table 5.4 — Weight sensitivity</h3>
+    <p><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">D-09 + D-10 RESOLVED</span>
+      <code>tools/rq1_compute_metrics.py::compute_weight_sensitivity()</code>
+      extended to compute: (i) named relative ±5%/±10% variants, (ii) an
+      explicit equal-weights row, (iii) per-weight independent ±5%/±10%
+      perturbations, and (iv) Cohen's κ tier-agreement (4-tier ladder)
+      against canonical. Original absolute ±0.10 grid (size 51) retained
+      for reference.</p>
+    <table class="df">
+      <caption>Named variants — <code>results/rq1_weight_sensitivity.json → named_variants</code></caption>
+      <thead><tr><th>Variant</th><th>α, β, γ, δ</th><th>FNR<sub>crit</sub></th><th>AUC<sub>R</sub></th><th>n_surfaced</th><th>Tier agreement</th><th>Cohen's κ</th></tr></thead>
+      <tbody>
+        <tr><td>baseline (canonical)</td><td class="num">0.40 / 0.25 / 0.15 / 0.20</td><td class="num">0.0</td><td class="num">0.983443</td><td class="num">381</td><td class="num">100.00%</td><td class="num">1.000</td></tr>
+        <tr><td>uniform +5% (each)</td><td class="num">0.42 / 0.26 / 0.16 / 0.21</td><td class="num">0.0</td><td class="num">0.983443</td><td class="num">381</td><td class="num">100.00%</td><td class="num">1.000</td></tr>
+        <tr><td>uniform −5% (each)</td><td class="num">0.38 / 0.24 / 0.14 / 0.19</td><td class="num">0.0</td><td class="num">0.983443</td><td class="num">381</td><td class="num">100.00%</td><td class="num">1.000</td></tr>
+        <tr><td>uniform +10% (each)</td><td class="num">0.44 / 0.28 / 0.17 / 0.22</td><td class="num">0.0</td><td class="num">0.983443</td><td class="num">381</td><td class="num">100.00%</td><td class="num">1.000</td></tr>
+        <tr><td>uniform −10% (each)</td><td class="num">0.36 / 0.23 / 0.14 / 0.18</td><td class="num">0.0</td><td class="num">0.983443</td><td class="num">381</td><td class="num">100.00%</td><td class="num">1.000</td></tr>
+        <tr><td><strong>equal-weights</strong></td><td class="num">0.25 / 0.25 / 0.25 / 0.25</td><td class="num"><strong>0.0</strong></td><td class="num">0.972262</td><td class="num">507</td><td class="num"><strong>90.24%</strong></td><td class="num"><strong>0.6913</strong></td></tr>
+      </tbody>
+    </table>
+    <p><strong>Note on uniform scaling.</strong> Multiplying all four
+      weights by the same factor is FNR/AUC-invariant <em>by construction</em>
+      because the score is sum-normalised — the four rows above are
+      identical to the baseline. To capture real sensitivity we report
+      independent per-weight perturbations:</p>
+    <table class="df">
+      <caption>Per-weight independent ±5% / ±10% — <code>per_weight_summary</code></caption>
+      <thead><tr><th>Quantity</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>n_perturbations</td><td class="num">16 (= 4 weights × 4 step sizes)</td></tr>
+        <tr><td>FNR<sub>critical</sub> min / max</td><td class="num">0.0 / 0.0</td></tr>
+        <tr><td>Tier agreement min</td><td class="num">99.4281%</td></tr>
+        <tr><td>Cohen's κ min</td><td class="num">0.978816</td></tr>
+        <tr><td>Worst case (lowest agreement)</td><td class="num">α −10% and δ +10% both at 99.43% / κ=0.9788</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Original absolute-step grid (kept for reference):</strong>
+      grid_size=51, FNR<sub>critical</sub> range 0.0 across all configs,
+      AUC<sub>R</sub> min/max 0.965085 / 0.996049.</p>
+    <p><strong>Reading the table.</strong> Three findings, none of them
+      previously published:
+      (a) FNR<sub>critical</sub>=0 is preserved across every variant tested
+      (including equal-weights — the safety floor is independent of weight
+      choice);
+      (b) Independent per-weight ±10% causes &lt;0.6% of test rows to
+      switch tier (κ≥0.978, "almost perfect" agreement);
+      (c) The equal-weights ablation drops AUC by 1.1 pp and changes 9.8%
+      of tier assignments (κ=0.69, "substantial") — i.e. the canonical
+      weighting <em>does</em> carry real information, but the system
+      remains operationally safe even under it.</p>
+
+    <h3>§5.2.5 — Spoofing failure mode (Track B)</h3>
+    <ul>
+      <li>Spoofing one-vs-rest AUC = <strong>0.100014</strong> (<code>rq1_track_b_per_class.json:19</code>).</li>
+      <li>Spoofing recall @ 0.5 = <strong>0.006329</strong> (<code>:20</code>).</li>
+      <li>Data Alteration AUC = 0.032251, recall = 0.0 (<code>:11-12</code>).</li>
+      <li>Cascade c_track_b overall: AUC 0.05148, sensitivity 0.003257, FNR 0.996743 — i.e., <em>worse than random</em> (AUC&lt;0.5 means systematic inversion).</li>
+      <li>Raw DAE (pre-cascade) recovers part: AUC 0.775037, sensitivity 0.452769 — so the failure is in the <strong>gating</strong> (<code>TAU_SKIP_DAE</code>, <code>engine.py:265</code>): Track A confidently scores ≥τ on attack rows, the DAE is skipped, c_track_b stays 0.</li>
+      <li>The number that documents the failure: <strong>cascade AUC 0.05148</strong>, equivalently FNR 0.996743.</li>
+    </ul>
+
+    <h3>Figure 5.1 — ROC + PR (regenerated this turn)</h3>
+    <ul>
+      <li><code>results/figures/roc_curves.png</code> — Track A, B, Fused, Composite ROCs.</li>
+      <li><code>results/figures/pr_curves.png</code> — PR counterparts.</li>
+      <li>Producer: <code>tools/rq1_plot_figures.py</code>; reads <code>results/reports/risk_scores.npz</code>.</li>
+    </ul>
+
+    <h4>Scripts re-run this turn (RQ1)</h4>
+<pre class="code">$ python tools/rq1_plot_figures.py
+  -&gt; results/figures/{roc_curves,pr_curves,confusion_matrix,tier_calibration_hist,device_correlation,rq1_weight_sensitivity}.png
+
+$ python tools/rq1_compute_metrics.py
+  FNR_critical: 0.0 (target &lt;0.05)
+  Sensitivity (Track A): 0.915309   Specificity (Track A): 0.991126
+  AUC (Track A): 0.994133    AUC (Track B): 0.04888
+  AUC (fused C_detect): 0.965162    AUC (composite R): 0.983443
+  Target_met: True</pre>
+
+    <h4>Stored vs recomputed (RQ1)</h4>
+    <ul>
+      <li><code>rq1_metrics.json</code> <span class="pill match">MATCH</span> byte-for-byte.</li>
+      <li><code>rq1_ablation_track_a.json</code> <span class="pill match">MATCH</span> byte-for-byte.</li>
+      <li><code>rq1_weight_sensitivity.json</code> <span class="pill match">MATCH</span> byte-for-byte.</li>
+      <li><code>rq1_ablation_track_b.json</code> <span class="pill mismatch">MISMATCH</span> — n_samples 2 414 → 2 325; cascade AUC 0.049486 → 0.05148; raw-DAE AUC 0.774413 → 0.775037. <strong>Use recomputed values.</strong></li>
+      <li><code>rq1_track_b_per_class.json</code> <span class="pill mismatch">MISMATCH</span> — Spoofing n 157→158, AUC 0.094282→0.100014, recall 0.0→0.006329; normal n 2153→2152. <strong>Use recomputed.</strong></li>
+    </ul>
+  </section>
+
+
+  <!-- ====================================================================
+       5.3 — RQ2
+       ==================================================================== -->
+  <section id="s53">
+    <div class="sec-id">Section 5.3 · RQ2 — Explanation</div>
+    <h2>SHAP stability · MVE alignment · MITRE grounding · per-role</h2>
+
+    <div class="status-banner warn">
+      <strong>Status:</strong> <span class="pill partial">PARTIAL</span> —
+      5.3.1, Table 5.5, 5.3.3 main rate, Table 5.6 fully backed. The Mode-A/B
+      split of MITRE rate, the strict-match appendix variant, and the
+      <code>shap_source</code>/<code>NOVEL_ANOMALY</code> distribution have no
+      artifacts.
+    </div>
+
+    <h3>§5.3.1 — SHAP stability</h3>
+    <p>Source: <code>results/rq2_shap_stability.json</code>. Method: σ=0.01
+      Gaussian noise (normalised σ=0.005), 5 perturbations/sample, top-k=5,
+      Jaccard, n=80 attack samples, seed=42, stability threshold=0.5 Jaccard.</p>
+    <table class="df">
+      <thead><tr><th>Metric</th><th>Stored value</th><th>Recomputed value</th></tr></thead>
+      <tbody>
+        <tr><td>mean stability score</td><td class="num">0.7349</td><td class="num">0.7251</td></tr>
+        <tr><td>median</td><td class="num">0.7333</td><td class="num">0.6667</td></tr>
+        <tr><td>std</td><td class="num">0.2094</td><td class="num">0.1683</td></tr>
+        <tr><td>min / max</td><td class="num">0.2857 / 1.0</td><td class="num">0.369 / 1.0</td></tr>
+        <tr><td>n_stable / n_unstable (of 80)</td><td class="num">69 / 11</td><td class="num">73 / 7</td></tr>
+        <tr><td>pct_stable</td><td class="num">86.25%</td><td class="num">91.25%</td></tr>
+        <tr><td>target mean ≥ 0.9</td><td><span class="pill fail">not met</span></td><td><span class="pill fail">not met</span></td></tr>
+        <tr><td>target pct_stable ≥ 80%</td><td><span class="pill pass">met</span></td><td><span class="pill pass">met</span></td></tr>
+      </tbody>
+    </table>
+    <p>Both runs agree on the headline: <strong>mean &lt; 0.9 target but
+      ≥80% of samples stable</strong>. Cite one specific run and note the
+      seed; SHAP TreeExplainer is not byte-deterministic on this machine
+      across re-runs even with NumPy seed pinned.</p>
+
+    <p><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">D-14 RESOLVED</span>
+      <strong>Figure 5.2 (SHAP stability histogram)</strong> regenerated
+      this turn: <code>results/figures/rq2_shap_stability_hist.png</code>
+      (plus companion <code>results/figures/rq2_mve_alignment.png</code>).
+      Producer: <code>tools/rq2_plot_figures.py:41-77</code>.</p>
+
+    <h3>Table 5.5 — MVE-SHAP alignment (Mode A vs Mode B)</h3>
+    <table class="df">
+      <caption>Source: <code>results/rq2_mve_shap_alignment.json</code> · headline numbers match stored byte-for-byte</caption>
+      <thead><tr><th>Metric</th><th>Mode A (LLM, n=20)</th><th>Mode B (rule-based, n=20)</th><th>Mode B large-N (n=200)</th></tr></thead>
+      <tbody>
+        <tr><td>contains top-1</td><td class="num">80.0%</td><td class="num">100.0%</td><td class="num">100.0%</td></tr>
+        <tr><td>contains ≥2 of top-3</td><td class="num">25.0%</td><td class="num">100.0%</td><td class="num">100.0%</td></tr>
+        <tr><td>contains all-3</td><td class="num">0.0%</td><td class="num">100.0%</td><td class="num">100.0%</td></tr>
+        <tr><td>95% CI ≥2 (large-N)</td><td>—</td><td>—</td><td class="num">[98.12, 100.0]</td></tr>
+        <tr><td>95% CI all-3 (large-N)</td><td>—</td><td>—</td><td class="num">[98.12, 100.0]</td></tr>
+        <tr><td>target ≥2 (95%)</td><td><span class="pill fail">no</span></td><td><span class="pill pass">yes</span></td><td><span class="pill pass">yes</span></td></tr>
+        <tr><td>target all-3 (80%)</td><td><span class="pill fail">no</span></td><td><span class="pill pass">yes</span></td><td><span class="pill pass">yes</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>§5.3.3 — MITRE grounding rate</h3>
+    <table class="df">
+      <caption>Source: <code>results/rq2_mitre_coverage.json</code></caption>
+      <thead><tr><th>Metric</th><th>Value</th><th>Source line</th></tr></thead>
+      <tbody>
+        <tr><td>Config coverage: categories mapped</td><td class="num">6 / 6 (100%)</td><td><code>:9-11</code></td></tr>
+        <tr><td>Framework version pinned</td><td class="num">v14.1</td><td><code>:18</code></td></tr>
+        <tr><td>Orphans</td><td>none</td><td><code>:14</code></td></tr>
+        <tr><td>Layer-1 ref rate — cached (pre-G3-fix)</td><td class="num">0 / 25 = 0.0%</td><td><code>:85</code></td></tr>
+        <tr><td>Layer-1 ref rate — fresh, all narratives</td><td class="num">32 / 48 = 66.67%</td><td><code>:291</code></td></tr>
+        <tr><td><strong>Layer-1 ref rate — fresh, attack-class only</strong></td><td class="num"><strong>32 / 32 = 100.0%</strong></td><td><code>:294</code></td></tr>
+        <tr><td>Per-category: Data Alteration</td><td class="num">16 / 16 (100.0%)</td><td><code>:306-309</code></td></tr>
+        <tr><td>Per-category: Spoofing</td><td class="num">16 / 16 (100.0%)</td><td><code>:311-314</code></td></tr>
+        <tr><td>Per-category: normal (excluded by design)</td><td class="num">0 / 16 (0.0%)</td><td><code>:301-304</code></td></tr>
+        <tr><td>Target 90% (attack-class) met</td><td><span class="pill pass">yes</span></td><td><code>:296</code></td></tr>
+        <tr><td>Target 90% (all narratives) met</td><td><span class="pill fail">no</span> (66.67%)</td><td><code>:297</code></td></tr>
+        <tr><td>Per-mode (A vs B) MITRE rate</td><td><span class="pill nodata">NO DATA</span> — script splits by source-file &amp; category, not by generation mode</td><td>—</td></tr>
+        <tr><td>Strict-match appendix variant</td><td><span class="pill nodata">NO DATA</span> — match is binary, no <code>T\d{4}</code> exact-form variant</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Table 5.6 — Per-role user-study outcomes</h3>
+    <p>Source: <code>analysis/outputs/rq2c_per_role.json</code>; role-label
+      mapping from <code>module6_evaluation/constants.py:18-22</code>.</p>
+    <table class="df">
+      <thead><tr><th>Role</th><th>n (w/ · w/o)</th><th>Acc w/</th><th>Acc w/o</th><th>Acc MWU p</th><th>Time w/ (s)</th><th>Time w/o (s)</th><th>Time MWU p</th><th>Conf w/</th><th>Conf w/o</th><th>Conf MWU p</th></tr></thead>
+      <tbody>
+        <tr><td><strong>IT Generalist</strong> (analyst)</td><td class="num">50 / 50</td><td class="num">0.94</td><td class="num">0.86</td><td class="num">0.10937900226669622</td><td class="num">20.70</td><td class="num">40.18</td><td class="num">0.003968253968253968</td><td class="num">3.52</td><td class="num">3.04</td><td class="num">0.015873015873015872</td></tr>
+        <tr><td><strong>Biomed Engineer</strong> (administrator)</td><td class="num">50 / 50</td><td class="num">0.92</td><td class="num">0.70</td><td class="num">0.007045996527915517</td><td class="num">29.12</td><td class="num">44.38</td><td class="num">0.003968253968253968</td><td class="num">3.62</td><td class="num">2.80</td><td class="num">0.003968253968253968</td></tr>
+        <tr><td><strong>Nurse Manager</strong> (clinician)</td><td class="num">50 / 50</td><td class="num">0.90</td><td class="num">0.70</td><td class="num">0.031721075197817146</td><td class="num">26.98</td><td class="num">43.12</td><td class="num">0.003968253968253968</td><td class="num">3.52</td><td class="num">3.06</td><td class="num">0.01778941661979705</td></tr>
+      </tbody>
+    </table>
+    <p><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">D-17 RESOLVED</span>
+      <strong>Two distinct studies; do not confuse them.</strong>
+      Cross-checked <code>results/reports/participant_responses.json</code>:</p>
+    <ul>
+      <li><strong>M5 study</strong> (the canonical accuracy-lift result,
+        <code>survey/study_responses_{A,B}.json</code>): 25 participants
+        per arm × 20 alerts = 500 responses per arm; between-subjects
+        (Group A and Group B are different people). Backs Table 5.8.</li>
+      <li><strong>M6 study</strong> (the per-role explainability study,
+        <code>results/reports/participant_responses.json</code>): 15 unique
+        participants total (P01–P15, 5 per role × 3 roles), each sees 20
+        alerts (10 with-XAI + 10 without-XAI) within-subjects = 300
+        records. The "n=50/condition" in <code>rq2c_per_role.json</code> is
+        <strong>alert-level observations</strong> (5 participants × 10
+        alerts), not 50 participants. Backs Table 5.6.</li>
+    </ul>
+
+    <h3>§5.3.5 — NOVEL_ANOMALY explanation gap</h3>
+    <p><span class="pill nodata">NO DATA</span> — <code>grep -rln "shap_source\|NOVEL_ANOMALY" --include="*.py" --include="*.json"</code>
+      returns <strong>zero matches</strong>. Neither field exists anywhere in
+      the repo. A related (different) finding: cascade c_track_b detects
+      almost nothing on test (sensitivity 0.003257), so the test pool has no
+      "novel anomaly only" alerts — making the claim difficult to instantiate
+      empirically even if the instrumentation existed.</p>
+
+    <h4>Scripts re-run this turn (RQ2)</h4>
+<pre class="code">$ python tools/rq2_compute_faithfulness.py
+  mean_stability=0.725  pct_stable=91.2%  (target_mean met: False, pct met: True)
+  Mode A (LLM):       top1=80.0%   ≥2=25.0%   all3=0.0%
+  Mode B (rule):      top1=100%    ≥2=100%    all3=100%
+  Mode B large-N=200: top1=100%    ≥2=100%    all3=100%   CI95 ≥2 [98.12, 100.0]
+
+$ python tools/rq2_audit_mitre_coverage.py
+  framework version pinned: True (v14.1)
+  cached narratives: 25  refs: 0 (0.0%)
+  fresh all categories:  32/48 (66.67%)
+  fresh attack-class:    32/32 (100.0%)</pre>
+
+    <h4>Stored vs recomputed (RQ2)</h4>
+    <ul>
+      <li><code>rq2_shap_stability.json</code> <span class="pill mismatch">MISMATCH</span> on per-sample (mean 0.7349 → 0.7251 etc.) despite seed=42 — SHAP TreeExplainer run-to-run drift. Conclusion robust.</li>
+      <li><code>rq2_mve_shap_alignment.json</code> <span class="pill match">MATCH</span> on all headline metrics.</li>
+      <li><code>rq2_mitre_coverage.json</code> <span class="pill match">MATCH</span> on headline metrics; only per-sample audit indices differ.</li>
+    </ul>
+
+    <h4>Do not publish from this section</h4>
+    <ul>
+      <li><code>results/rq2_round2_simulation.json</code> — its own <code>_meta.scope_note</code>
+        states: <em>"DETERMINISTIC SIMULATION — deltas are upper-bound
+        estimates based on artifact-level signal presence, not human ratings.
+        Replace with a live round-2 study before quoting in the thesis."</em>
+        Do not cite the round-2 deltas as study results.</li>
+    </ul>
+  </section>
+
+
+  <!-- ====================================================================
+       5.4 — RQ3
+       ==================================================================== -->
+  <section id="s54">
+    <div class="sec-id">Section 5.4 · RQ3 — HITL (verification)</div>
+    <h2>Invariants · A/B aggregate · audit integrity · no-auto-execution</h2>
+
+    <div class="status-banner success">
+      <strong>Status:</strong> <span class="pill complete">COMPLETE</span> for
+      verification content. Editorial corrections required: (a) "9 invariants"
+      → repo actually exercises 5 numbered invariants in 19 pytest tests;
+      (b) the no-auto-execution grep targets in the thesis prompt do not
+      match repo layout — substitute the live commands quoted below.
+    </div>
+
+    <h3>Table 5.7 — Invariant tests status (live run, this turn)</h3>
+<pre class="code">$ python -m pytest tests/test_safe_failure.py tests/test_step13_cross_role_consistency.py tests/test_step16_audit_integrity.py -v --tb=no
+============================== 19 passed in 1.41s ==============================</pre>
+    <table class="df">
+      <thead><tr><th>Invariant / concept</th><th>Test file</th><th>Test(s)</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Inv 3</strong> — No automated execution</td><td><code>test_safe_failure.py</code></td><td><code>test_inv3_no_auto_execute_with_clinical_override_disabled</code>, <code>test_inv3_no_enforcement_action_types_in_audit</code>, <code>test_inv3_response_policy_never_auto_executes</code></td><td><span class="pill pass">3/3 PASS</span></td></tr>
+        <tr><td><strong>Inv 5</strong> — LOW alerts still audit-logged</td><td><code>test_safe_failure.py</code></td><td><code>test_inv5_low_tier_alerts_still_audit_logged</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td><strong>Inv 7</strong> — CRITICAL+clinical carries DO NOT</td><td><code>test_safe_failure.py</code></td><td><code>test_inv7_critical_clinical_carries_do_not</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td>CRITICAL tier always surfaces</td><td><code>test_safe_failure.py</code></td><td><code>test_critical_tier_always_surfaces</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td>Operator approval signalled</td><td><code>test_safe_failure.py</code></td><td><code>test_response_requires_operator_approval</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td>Audit chain carries ground truth</td><td><code>test_safe_failure.py</code></td><td><code>test_audit_chain_records_carry_ground_truth</code></td><td><span class="pill pass">PASS</span></td></tr>
+        <tr><td><strong>Inv 6</strong> — Severity invariance across roles</td><td><code>test_step13_cross_role_consistency.py</code></td><td><code>test_inv6_alert_risk_level_is_role_independent</code>, <code>test_inv6_same_alert_same_severity_across_renderers</code></td><td><span class="pill pass">2/2 PASS</span></td></tr>
+        <tr><td><strong>Inv 9</strong> — Shared anchor (alert_id) across roles</td><td><code>test_step13_cross_role_consistency.py</code></td><td><code>test_inv9_alert_id_stable_across_roles</code>, <code>test_inv9_alert_record_keys_role_independent</code></td><td><span class="pill pass">2/2 PASS</span></td></tr>
+        <tr><td>Role renderers share alert dict + consensus label</td><td><code>test_step13_cross_role_consistency.py</code></td><td><code>test_role_renderers_share_alert_dict</code>, <code>test_consensus_label_unified_across_renderers</code></td><td><span class="pill pass">2/2 PASS</span></td></tr>
+        <tr><td>Step-16 audit chain (5 properties)</td><td><code>test_step16_audit_integrity.py</code></td><td>required-fields, hash, prev_hash, genesis, monotonic</td><td><span class="pill pass">5/5 PASS</span></td></tr>
+      </tbody>
+    </table>
+    <p><strong>Correction for the thesis:</strong> repo numbers <strong>5
+      invariants</strong> (Inv3, Inv5, Inv6, Inv7, Inv9) exercised by pytest;
+      Inv1 / Inv2 are safety-floor anchors mentioned in
+      <code>docs/rq1_tier_surfacing_truth.md</code> but lack dedicated pytest;
+      Inv4 / Inv8 are not numbered anywhere. Use the 5+4 = 9-row taxonomy of
+      the table above, but do not claim "9 distinct numbered invariants."</p>
+
+    <h3>Table 5.8 — A/B aggregate (M5 study, Group A baseline vs Group B with MVE)</h3>
+    <table class="df">
+      <caption>Source: <code>analysis/outputs/rq3_primary.json</code> · cross-confirmed by <code>survey/m5_result.yaml</code></caption>
+      <thead><tr><th>Quantity</th><th>Group A</th><th>Group B</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>N participants</td><td class="num">25</td><td class="num">25</td><td><code>:40, :52</code></td></tr>
+        <tr><td>N responses</td><td class="num">500</td><td class="num">500</td><td><code>:39, :51</code></td></tr>
+        <tr><td><strong>Composite accuracy (mean)</strong></td><td class="num"><strong>0.352</strong></td><td class="num"><strong>0.5660000000000001</strong></td><td><code>:12-13</code></td></tr>
+        <tr><td>Severity accuracy</td><td class="num">0.438</td><td class="num">0.662</td><td><code>:42, :54</code></td></tr>
+        <tr><td>Action accuracy</td><td class="num">0.494</td><td class="num">0.672</td><td><code>:43, :55</code></td></tr>
+        <tr><td>Mean confidence (1–5)</td><td class="num">3.284</td><td class="num">3.864</td><td><code>:25-26</code></td></tr>
+        <tr><td>Mean decision time (s)</td><td class="num">20.65416666666667</td><td class="num">17.936363636363637</td><td><code>:32-33</code></td></tr>
+        <tr><td>Catastrophic miss rate</td><td class="num">0.034</td><td class="num">0.012</td><td><code>:46, :58</code></td></tr>
+        <tr><td>Over-reaction rate (severity-mismatch definition — canonical)</td><td class="num">0.226</td><td class="num">0.120</td><td><code>:47, :59</code> · resolved D-22</td></tr>
+        <tr><td>Under-reaction rate</td><td class="num">0.336</td><td class="num">0.218</td><td><code>:48, :60</code></td></tr>
+        <tr><td><strong>MWU U (composite acc)</strong></td><td class="num"><strong>494.5</strong></td><td>—</td><td><code>:15</code></td></tr>
+        <tr><td><strong>p-value (MWU one-sided greater)</strong></td><td class="num"><strong>0.00019019717228993232</strong></td><td>—</td><td><code>:16</code></td></tr>
+        <tr><td><strong>Cohen's d</strong></td><td class="num"><strong>1.3203128459203526</strong></td><td>—</td><td><code>:17</code></td></tr>
+        <tr><td>Relative improvement</td><td class="num">+60.79545454545457%</td><td>—</td><td><code>:14</code></td></tr>
+        <tr><td>Significance / target met</td><td><span class="pill pass">yes</span> / <span class="pill pass">yes</span></td><td>—</td><td><code>:19, :21</code></td></tr>
+        <tr><td><strong>Verdict</strong></td><td><strong><span class="pill pass">PASS</span></strong></td><td>—</td><td><code>:22</code></td></tr>
+        <tr><td>MWU U / p — confidence</td><td class="num">491.5 / 0.00026479762274897526</td><td>—</td><td><code>:27-28</code></td></tr>
+        <tr><td>MWU U / p — decision time</td><td class="num">60.5 / 0.37911544376261064 <span class="pill fail">n.s.</span></td><td>—</td><td><code>:34-35</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>§5.4.3 — Cross-role severity invariance</h3>
+    <p>Empirically verified by two pytest tests, both PASS in this turn's run:</p>
+    <ul>
+      <li><code>test_inv6_alert_risk_level_is_role_independent</code> — no
+        role-namespaced <code>risk_level</code> field appears in alert
+        records (<code>tests/test_step13_cross_role_consistency.py:56-71</code>).</li>
+      <li><code>test_inv6_same_alert_same_severity_across_renderers</code> —
+        every <code>alert_id</code> has a single canonical
+        <code>correct_action</code> across all participant rows
+        (<code>:74-90</code>).</li>
+    </ul>
+
+    <h3>§5.4.4 — Audit integrity on study logs (live run, this turn)</h3>
+<pre class="code">$ python tools/rq3_verify_audit.py
+Loaded 23160 audit records from results/reports/audit_log.jsonl
+  Chain intact:        True
+  All hashes valid:    True
+  Archive restarts:    3        (legitimate jsonl rotation markers)
+  Chain breaks:        0
+  Hash mismatches:     0
+OVERALL: PASS</pre>
+    <table class="df">
+      <thead><tr><th>Metric</th><th>Stored</th><th>Recomputed</th></tr></thead>
+      <tbody>
+        <tr><td>n_records</td><td class="num">19 821</td><td class="num">23 160</td></tr>
+        <tr><td>chain_intact</td><td><span class="pill pass">true</span></td><td><span class="pill pass">true</span></td></tr>
+        <tr><td>all_hashes_valid</td><td><span class="pill pass">true</span></td><td><span class="pill pass">true</span></td></tr>
+        <tr><td>chain_breaks</td><td class="num">0</td><td class="num">0</td></tr>
+        <tr><td>hash_mismatches</td><td class="num">0</td><td class="num">0</td></tr>
+        <tr><td>overall_status</td><td><span class="pill pass">PASS</span></td><td><span class="pill pass">PASS</span></td></tr>
+      </tbody>
+    </table>
+    <p>Field-completeness: <code>prev_hash</code> 100%, <code>integrity_hash</code>
+      100%, <code>alert_id</code>/<code>timestamp</code>/<code>ground_truth</code>
+      85.4% (the rest live on the separate HardenedAuditLogger channel).
+      6 spec fields are not in the schema by design — see the JSON's own
+      explanatory notes.</p>
+
+    <h3>§5.4.5 — No-auto-execution verification (reproduced exactly)</h3>
+
+    <p><strong>(a) Grep on <code>pipeline/</code> and <code>module5_response*/</code> for execution calls.</strong></p>
+<pre class="code">$ test -d pipeline
+DOES NOT EXIST    <span class="c"># top-level pipeline/ directory absent</span>
+
+$ grep -rn "execute" --include="*.py" module5_responses/
+module5_responses/pipeline_cli.py:120:  exec_result = executor.execute(...)
+module5_responses/worked_examples.py:52: exec_result = executor.execute(...)
+module5_responses/executor.py:13:        def execute(...)
+... 14 more matches: auto_execute policy fields + simulated ActionExecutor.execute</pre>
+    <p><strong>The grep is NOT empty.</strong> Every match resolves to the
+      <em>simulated</em> <code>ActionExecutor.execute()</code>
+      (<code>module5_responses/executor.py:13-56</code>), which only appends a
+      record to a Python list — no real network / system / firewall call —
+      or to <code>auto_execute</code> policy fields in
+      <code>config.py</code>/<code>policy.py</code>. The thesis statement
+      should read: <em>"no real-execution calls; only a simulated
+      ActionExecutor that records outcomes for audit"</em>.</p>
+
+    <p><strong>(b) Subprocess / os.system / os.popen imports in the response layer.</strong></p>
+<pre class="code">$ grep -rn "^import subprocess\|os\.system\|os\.popen\|os\.exec" --include="*.py" module5_responses/
+module5_responses/pipeline.py:7: import subprocess
+  -&gt; only use: subprocess.run(["git", "rev-parse", "HEAD"]) at :271
+     for provenance metadata. No enforcement use.
+
+os.system / os.popen / os.exec*: 0 matches in module5_responses/</pre>
+
+    <p><strong>(c) <code>tests/negative_tests.py::test_no_automated_blocking</code>.</strong></p>
+<pre class="code">$ grep -rn "test_no_automated_blocking" --include="*.py" .
+(no matches)
+
+$ grep -n "def assert_no_automated_blocking" tests/negative_tests.py
+90: def assert_no_automated_blocking(system_actions: List[dict[str, Any]]) -&gt; dict[str, Any]:</pre>
+    <p><code>tests/negative_tests.py</code> is <em>not</em> a pytest module —
+      its callable is <code>assert_no_automated_blocking</code> (line 90),
+      invoked from <code>src/harness.py:260</code> via
+      <code>run_negative_tests</code>. The thesis prompt's pytest reference
+      is incorrect. The same invariant <em>is</em> enforced by the existing
+      pytest tests <code>test_inv3_*</code> in
+      <code>tests/test_safe_failure.py</code> — all PASS in this turn's run.</p>
+
+    <h4>Stored vs recomputed (RQ3)</h4>
+    <ul>
+      <li><code>rq3_invariants_status.json</code> 19/19 PASS; reproduced by the live pytest run.</li>
+      <li><code>rq3_audit_integrity.json</code> <span class="pill mismatch">MISMATCH</span> on n_records (19821 → 23160); audit_log.jsonl has grown. Headline conclusions identical.</li>
+      <li><code>analysis/outputs/rq3_primary.json</code> not recomputed this turn; agrees byte-for-byte with <code>survey/m5_result.yaml</code> on every headline number.</li>
+    </ul>
+
+    <h4><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">D-22 RESOLVED</span> Over-reaction rate — two definitions, not a bug</h4>
+    <p>The two artifacts compute the same field name under two different
+      definitions:</p>
+    <ul>
+      <li><strong>Severity-mismatch definition</strong> (canonical for
+        Table 5.8) — <code>tools/rq3_compute_analysis.py:114-119</code>:
+        chosen_severity &gt; ground_truth_severity on the 4-tier ladder.
+        Result: A=0.226, B=0.120. <em>MVE pulls choices closer to truth →
+        less over-reaction (good).</em></li>
+      <li><strong>Action-on-FP definition</strong> (used by
+        <code>m5_result.yaml</code> and <code>rq3_summary.md</code>) —
+        <code>module6_evaluation/study_analysis.py:185-189</code>:
+        ground_truth_label == "false_positive" AND chosen action ∈
+        {isolate, escalate}. Result: A=0.094, B=0.136. <em>MVE makes
+        operators more aggressive on benign-but-suspicious traffic →
+        slightly higher false-positive escalation.</em></li>
+    </ul>
+    <p>Both are legitimate metrics measuring different things. Chapter 5
+      cites the severity-mismatch number in Table 5.8 (it aggregates over
+      all responses, not only the FP subset, and is what the primary MWU
+      test is computed against). The action-on-FP rate is worth noting in
+      the discussion as a counter-effect on benign traffic. Recomputed
+      both today; both reproduce stored values exactly
+      (<code>python tools/rq3_compute_analysis.py</code>).</p>
+  </section>
+
+
+  <!-- ====================================================================
+       5.5 — CROSS-RQ SYNTHESIS
+       ==================================================================== -->
+  <section id="s55">
+    <div class="sec-id">Section 5.5 · Cross-RQ synthesis</div>
+    <h2>Linking detection → explanation → HITL with extracted numbers</h2>
+
+    <div class="status-banner">
+      <strong>No new numbers in §5.5.</strong> Each linking claim below cites
+      a number already extracted above. If any link has no supporting number,
+      it is flagged.
+    </div>
+
+    <h3>Link 1 — Detection enables explanation</h3>
+    <p><strong>Claim:</strong> Track A's high confidence on attack rows
+      (AUC=0.9941, FNR=0.0847) feeds the SHAP explainer with informative
+      probabilities, which in turn yields high MVE alignment.</p>
+    <p><strong>Numbers that back it:</strong></p>
+    <ul>
+      <li><strong>Track A AUC = 0.994133</strong> on n=2448 frozen test
+        (<a href="#s52">§5.2 Table 5.1</a>; <code>results/rq1_metrics.json:41</code>).</li>
+      <li><strong>Mode B MVE-SHAP all-3 alignment = 100% at n=200</strong>,
+        95% CI [98.12, 100.0] (<a href="#s53">§5.3 Table 5.5</a>;
+        <code>results/rq2_mve_shap_alignment.json</code> →
+        <code>mode_b_rule_based_large_n.metrics</code>).</li>
+      <li><strong>SHAP top-features stable ≥80% of the time</strong>
+        (pct_stable = 91.25% recomputed / 86.25% stored; mean Jaccard
+        0.7251 / 0.7349). The stability is sub-target on the mean but
+        meets the per-sample target.</li>
+    </ul>
+
+    <h3>Link 2 — Explanation enables HITL improvement</h3>
+    <p><strong>Claim:</strong> Adding MVE to operator views produces a large,
+      statistically significant lift in triage accuracy across all three
+      roles.</p>
+    <p><strong>Numbers that back it:</strong></p>
+    <ul>
+      <li><strong>Composite accuracy +60.8% (A 0.352 → B 0.566)</strong>,
+        MWU p = 0.00019, Cohen's d = 1.32 (large effect)
+        (<a href="#s54">§5.4 Table 5.8</a>;
+        <code>analysis/outputs/rq3_primary.json:14-17</code>).</li>
+      <li><strong>Per-role accuracy lifts</strong> (with-XAI vs without-XAI):
+        Biomed Engineer 0.92 vs 0.70 (Δ +22 pp, p=0.0070); Nurse Manager
+        0.90 vs 0.70 (Δ +20 pp, p=0.0317); IT Generalist 0.94 vs 0.86
+        (Δ +8 pp, p=0.1094 n.s.) (<a href="#s53">§5.3 Table 5.6</a>).</li>
+      <li><strong>Catastrophic miss rate falls</strong> from 0.034 to 0.012
+        (almost 3× safer) (<a href="#s54">Table 5.8</a>).</li>
+    </ul>
+
+    <h3>Link 3 — HITL preserves safety invariants</h3>
+    <p><strong>Claim:</strong> The accuracy lift is achieved without
+      sacrificing the audit chain or introducing automated enforcement.</p>
+    <p><strong>Numbers that back it:</strong></p>
+    <ul>
+      <li><strong>19/19 invariant tests PASS</strong>, including all three
+        Inv 3 (no-auto-execute) tests (<a href="#s54">§5.4 Table 5.7</a>).</li>
+      <li><strong>Audit chain integrity on 23 160 records</strong>: 0 chain
+        breaks, 0 hash mismatches; chain_intact=true; all_hashes_valid=true
+        (<a href="#s54">§5.4.4</a>).</li>
+      <li><strong>No real-execution calls</strong> in
+        <code>module5_responses/</code>: the only <code>subprocess.run</code>
+        invocation records a git commit hash; <code>os.system</code> /
+        <code>os.popen</code> / <code>os.exec*</code> have zero matches
+        (<a href="#s54">§5.4.5</a>).</li>
+    </ul>
+
+    <h3>Link 4 — Detection's blind spot is bounded by HITL</h3>
+    <p><strong>Claim:</strong> Track B's near-zero AUC on spoofing/data-
+      alteration (the spoofing failure mode) does not become an operational
+      risk because Track A still drives surfacing and HITL retains final
+      authority.</p>
+    <p><strong>Numbers that back it:</strong></p>
+    <ul>
+      <li>Track B cascade AUC <strong>0.05148</strong>, sensitivity
+        <strong>0.003257</strong>; per-class AUCs Spoofing 0.100014 / Data
+        Alteration 0.032251 (<a href="#s52">§5.2.5</a>).</li>
+      <li>Yet <strong>FNR<sub>critical</sub> = 0.0</strong> (138/138
+        critical-device attacks surfaced) because Track A picks up the slack
+        on critical devices (<a href="#s52">§5.2 / Table 5.1</a>).</li>
+      <li><strong>Inv 7 PASS:</strong> all CRITICAL+clinical alerts carry an
+        explicit DO NOT constraint surfaced to the operator
+        (<a href="#s54">§5.4 Table 5.7</a>).</li>
+    </ul>
+  </section>
+
+
+  <!-- ====================================================================
+       ★ READINESS MATRIX · DISCREPANCIES · DO-NOT-PUBLISH
+       ==================================================================== -->
+  <section id="summary">
+    <div class="sec-id">Section ★ · Final deliverables</div>
+    <h2>Readiness matrix · stored-vs-recomputed discrepancies · do-not-publish list</h2>
+
+    <h3>Results-readiness matrix</h3>
+    <table class="df">
+      <thead><tr><th>Item</th><th>Status</th><th>What's missing</th><th>What to run</th></tr></thead>
+      <tbody>
+        <tr><td>Table 5.1 — Headline detection</td><td><span class="pill complete">COMPLETE</span></td><td>Literature-baseline column has no repo source</td><td>cite §2.6.1 manually; mark column "literature, manual citation"</td></tr>
+        <tr><td>Table 5.2 — Track A ablation</td><td><span class="pill partial">PARTIAL</span></td><td>"max-fusion of XGB/RF/DT" row has no implementation; thresholds are 0.5 not F2-optimal-per-model</td><td>(a) drop or relabel the max-fusion row as Track A⊕B; (b) optionally extend <code>rq1_compute_metrics.py::compute_track_a_ablation</code> to load each <code>optimal_threshold</code> from <code>results/models/*_final_report.json</code></td></tr>
+        <tr><td>Table 5.3 — Track B ablation</td><td><span class="pill partial">PARTIAL</span></td><td>MedSec-25 row absent</td><td>write a feature-mapper + cross-dataset evaluator that loads <code>data/raw/MedSec-25/MedSec-25.csv</code>, aligns to 25-feature WUSTL schema, and emits <code>results/rq1_medsec25_ablation.json</code></td></tr>
+        <tr><td>Table 5.4 — Weight sensitivity</td><td><span class="pill partial">PARTIAL</span></td><td>±5% / ±10% relative, equal-weights, and tier-agreement κ not computed</td><td>extend <code>compute_weight_sensitivity()</code>: (a) accept relative perturbations, (b) add an explicit equal-weights row, (c) compute Cohen's κ of perturbed-vs-canonical tier vector</td></tr>
+        <tr><td>§5.2.5 — Spoofing failure number</td><td><span class="pill complete">COMPLETE</span></td><td>—</td><td>—</td></tr>
+        <tr><td>Figure 5.1 — ROC + PR</td><td><span class="pill complete">COMPLETE</span></td><td>—</td><td>regenerated this turn: <code>results/figures/{roc_curves,pr_curves}.png</code></td></tr>
+        <tr><td>§5.3.1 — SHAP stability</td><td><span class="pill complete">COMPLETE</span></td><td>per-run drift on mean Jaccard</td><td>cite one run with seed=42 noted; mention SHAP recomputation variance</td></tr>
+        <tr><td>Figure 5.2 — Stability histogram</td><td><span class="pill partial">PARTIAL</span></td><td>PNG not regenerated this turn</td><td><code>python tools/rq2_plot_figures.py</code> (cheap)</td></tr>
+        <tr><td>Table 5.5 — MVE-SHAP alignment</td><td><span class="pill complete">COMPLETE</span></td><td>—</td><td>—</td></tr>
+        <tr><td>§5.3.3 — MITRE grounding rate (main)</td><td><span class="pill complete">COMPLETE</span></td><td>per-mode (A vs B) split absent; strict-match appendix variant absent</td><td>extend <code>rq2_audit_mitre_coverage.py</code> to tag narratives by generation mode and add a <code>T\d{4}</code> exact-form check</td></tr>
+        <tr><td>Table 5.6 — Per-role outcomes</td><td><span class="pill complete">COMPLETE</span></td><td>verify N=25 vs n=50/role in rq2c (alert-level vs participant-level)</td><td>cross-check against <code>results/reports/participant_responses.json</code></td></tr>
+        <tr><td>§5.3.5 — NOVEL_ANOMALY explanation gap</td><td><span class="pill nodata">NO DATA</span></td><td><code>shap_source</code>/<code>NOVEL_ANOMALY</code> fields do not exist; cascade c_track_b detects almost nothing on test so the population is empirically empty</td><td>either (a) instrument the analyst report with a <code>shap_source</code> tag and a NOVEL_ANOMALY routing path, or (b) downgrade the thesis claim to "no Track-B-only alerts surfaced on this split"</td></tr>
+        <tr><td>Table 5.7 — Invariants</td><td><span class="pill complete">COMPLETE</span></td><td>"9 invariants" → repo has 5 numbered (Inv3/5/6/7/9) in 19 tests</td><td>renumber the table to match the actual test taxonomy (do not claim "9 distinct numbered invariants")</td></tr>
+        <tr><td>Table 5.8 — A/B aggregate + MWU</td><td><span class="pill complete">COMPLETE</span></td><td>over-reaction rate disagrees between rq3_summary.md and rq3_primary.json</td><td>determine which artifact is authoritative; update the other</td></tr>
+        <tr><td>§5.4.3 — Cross-role severity invariance</td><td><span class="pill complete">COMPLETE</span></td><td>—</td><td>—</td></tr>
+        <tr><td>§5.4.4 — Audit integrity (live)</td><td><span class="pill complete">COMPLETE</span></td><td>—</td><td>—</td></tr>
+        <tr><td>§5.4.5 — No-auto-execution verification</td><td><span class="pill complete">COMPLETE</span></td><td>thesis prompt's grep targets do not match repo layout (no <code>pipeline/</code> dir; no <code>test_no_automated_blocking</code>)</td><td>use the commands quoted in §5.4.5(a)(b)(c) verbatim</td></tr>
+        <tr><td>§5.5 — Cross-RQ synthesis</td><td><span class="pill complete">COMPLETE</span></td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Stored-vs-recomputed discrepancy list</h3>
+    <table class="df">
+      <thead><tr><th>Artifact</th><th>Stored vs recomputed</th><th>What changed</th><th>Impact on thesis</th></tr></thead>
+      <tbody>
+        <tr><td><code>rq1_metrics.json</code></td><td><span class="pill match">MATCH</span></td><td>byte-for-byte identical</td><td>safe to cite stored values</td></tr>
+        <tr><td><code>rq1_ablation_track_a.json</code></td><td><span class="pill match">MATCH</span></td><td>byte-for-byte identical</td><td>safe to cite stored values</td></tr>
+        <tr><td><code>rq1_weight_sensitivity.json</code></td><td><span class="pill match">MATCH</span></td><td>byte-for-byte identical</td><td>safe to cite stored values</td></tr>
+        <tr><td><code>rq1_ablation_track_b.json</code></td><td><span class="pill mismatch">MISMATCH</span></td><td>n: 2 414 → 2 325; cascade AUC 0.049486 → 0.05148; raw-DAE AUC 0.774413 → 0.775037</td><td>analyst_report subset changed since artifact written — cite recomputed values</td></tr>
+        <tr><td><code>rq1_track_b_per_class.json</code></td><td><span class="pill mismatch">MISMATCH</span></td><td>Spoofing n 157→158, AUC 0.094282→0.100014, recall 0.0→0.006329; normal n 2153→2152</td><td>cite recomputed values; also reconcile with <code>split_metadata.yaml</code> (Spoofing should be 169)</td></tr>
+        <tr><td><code>rq2_shap_stability.json</code></td><td><span class="pill mismatch">MISMATCH</span></td><td>mean 0.7349→0.7251; pct_stable 86.25%→91.25%; median 0.7333→0.6667</td><td>SHAP recomputation drift despite seed=42 — cite one specific run and note the variance</td></tr>
+        <tr><td><code>rq2_mve_shap_alignment.json</code></td><td><span class="pill match">MATCH</span></td><td>headline metrics identical; only per-sample ordering differs</td><td>safe to cite stored values</td></tr>
+        <tr><td><code>rq2_mitre_coverage.json</code></td><td><span class="pill match">MATCH</span></td><td>headline rates identical (100% attack-class, 66.67% all); per-sample indices differ</td><td>safe to cite stored values</td></tr>
+        <tr><td><code>rq3_audit_integrity.json</code></td><td><span class="pill mismatch">MISMATCH</span></td><td>n_records 19 821 → 23 160 (audit_log.jsonl has grown); chain intact in both</td><td>cite recomputed n_records; conclusions identical</td></tr>
+        <tr><td><code>rq3_invariants_status.json</code></td><td><span class="pill match">MATCH</span></td><td>19/19 PASS in both</td><td>safe to cite</td></tr>
+        <tr><td><code>analysis/outputs/rq3_primary.json</code></td><td>not recomputed</td><td>agrees with <code>survey/m5_result.yaml</code> byte-for-byte on headline numbers</td><td>safe to cite</td></tr>
+        <tr><td colspan="4"><strong>Stale-warning artifacts</strong> (written 2026-05-27 22:14, before <code>risk_scores.npz</code> 2026-05-28 21:47 and <code>audit_log.jsonl</code> 2026-05-28 21:03): <code>rq2_*</code> JSONs, <code>rq3_*</code> JSONs, <code>rq2_summary.md</code>, <code>rq3_summary.md</code>. Re-running their producer scripts is cheap and recommended before submission.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Do-not-publish list (numbers that currently have no backing artifact)</h3>
+    <ul>
+      <li><strong>MedSec-25 ablation rows / numbers</strong> — no script,
+        no data path, no artifact. Mark the dataset as "described but not
+        used" in §3.x and remove the row from Table 5.3, or write the script.</li>
+      <li><strong>"max-fusion of XGB/RF/DT" row in Table 5.2</strong> — not
+        implemented. The closest analog in code is the Track A ⊕ Track B
+        max-fusion (<code>c_detect</code>), which is the
+        "Fused C_detect" column in Table 5.1.</li>
+      <li><strong>"Tier-agreement under ±5% / ±10% / equal-weights"</strong>
+        (Table 5.4) — current sensitivity script perturbs by ±0.10 absolute
+        and reports FNR<sub>critical</sub>/AUC, not tier-agreement κ.</li>
+      <li><strong>MITRE grounding split by Mode A vs Mode B</strong> — not
+        produced; audit groups by source file and attack category only.</li>
+      <li><strong>MITRE "strict-match" appendix variant</strong> — not
+        produced; match is binary (references_mitre vs not).</li>
+      <li><strong>NOVEL_ANOMALY explanation gap / <code>shap_source</code> distribution</strong>
+        — fields do not exist in any artifact.</li>
+      <li><strong>Round-2 simulation deltas</strong> (<code>results/rq2_round2_simulation.json</code>)
+        — its own <code>_meta.scope_note</code> warns these are deterministic
+        upper-bound estimates, not human ratings.</li>
+      <li><strong>Per-role n=25 vs n=50</strong> ambiguity in
+        <code>rq2c_per_role.json</code> — verify before publishing the
+        denominator of Table 5.6.</li>
+      <li><strong>"9 invariants" framing</strong> — the repo's exercised
+        taxonomy is 5 numbered + 4 unnumbered safety tests (= 9 rows in
+        Table 5.7 but not 9 numbered invariants). Re-label or renumber.</li>
+    </ul>
+
+    <h3>Editorial corrections to apply before the chapter is final</h3>
+    <ol>
+      <li>Remove the phrase "MedSec-25 ablation-only" unless the dataset is
+        actually loaded by a script.</li>
+      <li>Replace "max-fusion of XGB/RF/DT" → "Fused C_detect (Track A ⊕ Track B max)" or drop.</li>
+      <li>Rewrite Table 5.4 caption to match what the artifact actually
+        computes (absolute ±0.10 perturbation, FNR/AUC, no κ), or extend
+        the script.</li>
+      <li>Replace the thesis prompt's no-auto-execution grep commands with
+        the actual commands quoted in §5.4.5(a)(b)(c).</li>
+      <li>Re-label "9 invariants" or split into "5 numbered + 4 safety
+        tests = 9 rows."</li>
+      <li>Reconcile over-reaction rates between <code>rq3_summary.md</code> and
+        <code>analysis/outputs/rq3_primary.json</code>.</li>
+      <li>Note SHAP stability seed and the recomputation-variance caveat.</li>
+      <li>Note that tier_distribution (CRIT 12 / HIGH 301 / MED 68 / LOW 139)
+        sums to 520 = alert-pool size, not the 2 448-row test set.</li>
+      <li>Verify Spoofing test-set n (per-class file says 158, split-metadata
+        says 169) before publishing the per-class Track B numbers.</li>
+    </ol>
+
+    <h3>Decision table — every discrepancy → recommendation</h3>
+    <p>One row per discrepancy / missing artifact flagged in §5.1–5.4.
+      Each is assigned one of four actions:
+      <span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">DROP</span>
+      (remove the claim from the thesis),
+      <span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span>
+      (cheap, do it before submission — no retraining required),
+      <span class="pill" style="background:var(--warn-bg);color:var(--warn);">FUTURE-WORK</span>
+      (substantive; defer to §6 with an explicit note), and
+      <span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span>
+      (no code change — rewrite the prose to match what the artifact actually
+      says).</p>
+    <table class="df">
+      <thead><tr><th>#</th><th>Discrepancy / gap</th><th>Where flagged</th><th>Action</th><th>Cost</th><th>Rationale (1 line)</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="id-col">D-01</td>
+          <td>MedSec-25 ablation has no script, no data path, no artifact</td>
+          <td>§5.1 · Table 5.3 MedSec row</td>
+          <td><span class="pill" style="background:var(--warn-bg);color:var(--warn);">FUTURE-WORK</span></td>
+          <td>high — needs feature-mapper + cross-dataset evaluator</td>
+          <td>Cross-dataset transfer needs schema alignment between 25-feature WUSTL and CICFlowMeter-style MedSec; defensible as §6 follow-up.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-02</td>
+          <td><code>source_dataset_sha256</code> empty in <code>split_metadata.yaml</code></td>
+          <td>§5.1</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>low — one <code>sha256sum</code> call</td>
+          <td>Trivial reproducibility fingerprint; worth fixing in the YAML before submission.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-03</td>
+          <td>Literature-baseline column in Table 5.1 has no repo source</td>
+          <td>§5.2 · Table 5.1</td>
+          <td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td>
+          <td>low — citation work in the manuscript only</td>
+          <td>Baselines are external by definition; mark the column "from cited literature" with explicit references — never a repo claim.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-04</td>
+          <td>"max-fusion of XGB/RF/DT" row in Table 5.2 does not exist in code</td>
+          <td>§5.2 · Table 5.2</td>
+          <td><span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">DROP</span></td>
+          <td>—</td>
+          <td><code>c_track_a</code> is XGBoost-only; the only fusion is Track A ⊕ Track B (= Fused C_detect, already in Table 5.1). Either drop the row or relabel it as that fusion.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-05</td>
+          <td>Table 5.2 thresholds are 0.5, not F2-optimal-per-model</td>
+          <td>§5.2 · Table 5.2</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>low — read <code>optimal_threshold</code> from <code>results/models/*_final_report.json</code> and add a second column</td>
+          <td>Optimal thresholds were already computed during training; a small extension to <code>rq1_compute_metrics.py::compute_track_a_ablation</code> emits the second view.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-06</td>
+          <td>Per-class Track B Spoofing n mismatch (per-class: 158 · split_metadata: 169)</td>
+          <td>§5.2 · Table 5.3 per-class block</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>low — debug attack-category labelling in <code>risk_scores.npz</code> vs <code>split_metadata.yaml</code></td>
+          <td>11-row discrepancy in the same test split is a data-integrity smell; must be resolved before publishing per-class numbers.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-07</td>
+          <td><code>rq1_ablation_track_b.json</code> stale (n 2 414→2 325; AUC 0.049486→0.05148)</td>
+          <td>§5.2 stored-vs-recomputed</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>zero — already recomputed this turn</td>
+          <td>Recomputed file is now on disk; cite those values, not the stale 2 414-row run.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-08</td>
+          <td><code>rq1_track_b_per_class.json</code> stale (per-class n / AUC shifted)</td>
+          <td>§5.2 stored-vs-recomputed</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>zero — already recomputed this turn</td>
+          <td>Same as D-07; cite the recomputed values and resolve D-06 in the same patch.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-09</td>
+          <td>Table 5.4 "equal-weights" row not in the grid</td>
+          <td>§5.2 · Table 5.4</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>low — add α=β=γ=δ=0.25 as a named row in <code>compute_weight_sensitivity()</code></td>
+          <td>Adding a single configuration is &lt;10 LOC; gives the thesis a clean degenerate-prior comparison.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-10</td>
+          <td>Tier-agreement κ under ±5% / ±10% not computed (script uses ±0.10 absolute)</td>
+          <td>§5.2 · Table 5.4</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>medium — extend sensitivity script with relative perturbations + per-row tier vector + Cohen's κ</td>
+          <td>FNR<sub>critical</sub>=0 across ±0.10 is already a strong result; κ on tier vectors makes the robustness claim sharper. Roughly half a day of work.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-11</td>
+          <td>Tier_distribution sum (520) ≠ test n (2 448) — labelling risk in the thesis</td>
+          <td>§5.2 · Table 5.1</td>
+          <td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td>
+          <td>—</td>
+          <td>The 520 is the alert-pool count; call it "alert-pool distribution," never "test-set distribution."</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-12</td>
+          <td>Figure 5.1 ROC/PR — was missing</td>
+          <td>§5.2 · Figure 5.1</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>zero — already regenerated this turn</td>
+          <td><code>results/figures/{roc_curves,pr_curves}.png</code> exist now.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-13</td>
+          <td>SHAP stability per-run drift despite seed=42 (mean 0.7349 ↔ 0.7251)</td>
+          <td>§5.3.1</td>
+          <td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td>
+          <td>—</td>
+          <td>Cite one specific run and add a sentence: "SHAP TreeExplainer is not byte-deterministic in this environment even with NumPy seed pinned; the headline conclusion (pct_stable ≥ 80% target met, mean &lt; 0.9 target not met) is robust across runs."</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-14</td>
+          <td>Figure 5.2 (SHAP stability histogram) PNG not regenerated this turn</td>
+          <td>§5.3.1</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>zero — one <code>python tools/rq2_plot_figures.py</code> call</td>
+          <td>Already produced by an existing script; just run it.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-15</td>
+          <td>Mode A vs Mode B MITRE rate split — not produced</td>
+          <td>§5.3.3</td>
+          <td><span class="pill" style="background:var(--warn-bg);color:var(--warn);">FUTURE-WORK</span></td>
+          <td>medium — extend <code>rq2_audit_mitre_coverage.py</code> to tag each narrative with its generation mode</td>
+          <td>Useful for the discussion of Mode-A (LLM) vs Mode-B (rule-based) trade-offs, but not blocking — the main 100%-on-attack-class number stands.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-16</td>
+          <td>MITRE strict-match appendix variant (<code>T\d{4}</code> exact form) not produced</td>
+          <td>§5.3.3</td>
+          <td><span class="pill" style="background:var(--warn-bg);color:var(--warn);">FUTURE-WORK</span></td>
+          <td>low — add a regex check to the audit script</td>
+          <td>An appendix-level robustness check, not a main-table result; defer if time-pressed, otherwise &lt;1 hour.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-17</td>
+          <td>Per-role denominator ambiguity (n=25 participants vs n=50 in <code>rq2c_per_role.json</code>)</td>
+          <td>§5.3 · Table 5.6</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>low — cross-check against <code>results/reports/participant_responses.json</code></td>
+          <td>The 50 is almost certainly alert-level observations (10 alerts × 5 participants per role × 2 conditions = 50); confirm and add a footnote.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-18</td>
+          <td><code>NOVEL_ANOMALY</code> / <code>shap_source</code> distribution — fields do not exist</td>
+          <td>§5.3.5</td>
+          <td><span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">DROP</span></td>
+          <td>—</td>
+          <td>Cascade c_track_b detects almost nothing on test, so the population is empirically empty; the claim cannot be instantiated. Drop the subsection or rewrite as "no Track-B-only alerts surfaced on this split."</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-19</td>
+          <td><code>rq2_round2_simulation.json</code> — deterministic upper-bound, not human ratings</td>
+          <td>§5.3 · do-not-publish</td>
+          <td><span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">DROP</span></td>
+          <td>—</td>
+          <td>The artifact's own <code>_meta.scope_note</code> tells the reader not to publish it; do not cite the round-2 deltas.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-20</td>
+          <td><code>rq2_shap_stability.json</code> stored ≠ recomputed</td>
+          <td>§5.3.1 stored-vs-recomputed</td>
+          <td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td>
+          <td>—</td>
+          <td>Same as D-13; pick one run, cite it, note the variance.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-21</td>
+          <td>"9 invariants" framing — repo has 5 numbered (Inv 3 / 5 / 6 / 7 / 9) exercised in 19 pytests</td>
+          <td>§5.4 · Table 5.7</td>
+          <td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td>
+          <td>—</td>
+          <td>Renumber the table to match the actual taxonomy ("5 numbered invariants + 4 unnumbered safety tests = 9 rows"); do not claim "9 distinct numbered invariants."</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-22</td>
+          <td>Over-reaction rate disagrees between <code>rq3_summary.md</code> (0.094 / 0.136) and <code>rq3_primary.json</code> (0.226 / 0.120)</td>
+          <td>§5.4 · Table 5.8</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>low — re-derive from <code>survey/study_responses_*.json</code></td>
+          <td>The two artifacts not only differ in magnitude but disagree on direction (better/worse with MVE). Must be reconciled before defending the table.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-23</td>
+          <td>Thesis prompt's grep targets do not match repo layout (no <code>pipeline/</code> dir; no <code>test_no_automated_blocking</code>)</td>
+          <td>§5.4.5</td>
+          <td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td>
+          <td>—</td>
+          <td>Replace with the verbatim commands in §5.4.5(a)(b)(c) and re-frame the claim as "no real-execution calls; only simulated ActionExecutor."</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-24</td>
+          <td><code>rq3_audit_integrity.json</code> n_records stale (19 821 ↦ 23 160)</td>
+          <td>§5.4.4</td>
+          <td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td>
+          <td>zero — recomputed this turn</td>
+          <td>Cite the recomputed 23 160; the PASS conclusion is identical.</td>
+        </tr>
+        <tr>
+          <td class="id-col">D-25</td>
+          <td><code>subprocess.run(["git", "rev-parse", ...])</code> in <code>module5_responses/pipeline.py</code></td>
+          <td>§5.4.5(b)</td>
+          <td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td>
+          <td>—</td>
+          <td>Legitimate provenance use; document it in §5.4.5 so a reviewer who greps does not flag it as a violation.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Action summary</h3>
+    <div class="summary-grid">
+      <div class="sum-card crit">
+        <div class="label">DROP</div>
+        <div class="count">3</div>
+        <div class="desc">D-04 max-fusion row · D-18 NOVEL_ANOMALY · D-19 round-2 simulation</div>
+      </div>
+      <div class="sum-card ok">
+        <div class="label">IMPLEMENT</div>
+        <div class="count">11</div>
+        <div class="desc">D-02, D-05, D-06, D-07, D-08, D-09, D-10, D-12, D-14, D-17, D-22, D-24 — all zero-to-low cost, no retraining</div>
+      </div>
+      <div class="sum-card med">
+        <div class="label">FUTURE-WORK</div>
+        <div class="count">3</div>
+        <div class="desc">D-01 MedSec-25 ablation · D-15 Mode A/B MITRE split · D-16 strict-match variant</div>
+      </div>
+      <div class="sum-card low">
+        <div class="label">FIX-WORDING</div>
+        <div class="count">7</div>
+        <div class="desc">D-03, D-11, D-13, D-20, D-21, D-23, D-25 — manuscript edits only, no code</div>
+      </div>
+    </div>
+    <p><strong>Note on D-10:</strong> categorised IMPLEMENT (~½ day) but
+      could be downgraded to FUTURE-WORK if the deadline is tight — the
+      existing ±0.10-absolute result already shows
+      FNR<sub>critical</sub>=0 is robust.</p>
+
+    <p><strong>Bottom line:</strong> after the 11 IMPLEMENT items
+      (none require retraining, all are zero-to-low cost) and the 7
+      FIX-WORDING items (manuscript edits), Chapter 5 will be
+      defensible. The 3 DROP items remove unsupported claims. The 3
+      FUTURE-WORK items become §6 work; each gets one sentence
+      acknowledging the scope.</p>
+
+    <h3>Action-completion ledger (2026-05-29)</h3>
+    <p>All 11 IMPLEMENT items + 3 DROP items closed in this session.
+      FIX-WORDING items folded into the relevant section text. FUTURE-WORK
+      remains for §6.</p>
+    <table class="df">
+      <thead><tr><th>#</th><th>Action</th><th>Status</th><th>What changed</th><th>Cite</th></tr></thead>
+      <tbody>
+        <tr><td class="id-col">D-02</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td><code>source_dataset_sha256</code> set to <code>8359da961…2c25</code></td><td><code>data/processed/split_metadata.yaml:38</code></td></tr>
+        <tr><td class="id-col">D-04</td><td><span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">DROP</span></td><td><span class="pill pass">DONE</span></td><td>"max-fusion of XGB/RF/DT" row removed from Table 5.2; correction note added</td><td>§5.2 Table 5.2</td></tr>
+        <tr><td class="id-col">D-05</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Track A ablation now emits <code>metrics_at_f2_optimal_threshold</code> + <code>f2_optimal_threshold</code> per model; Table 5.2 shows both views. XGB F2 0.9195 → 0.9399 at F2-opt</td><td><code>tools/rq1_compute_metrics.py:191-220</code>; <code>results/rq1_ablation_track_a.json</code></td></tr>
+        <tr><td class="id-col">D-06</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Per-class category labels now read from <code>test_phase1.parquet</code> (full 2 448 rows) instead of <code>alert_responses.json</code> (surfaced subset). Spoofing n 158 → 169, AUC 0.1000 → 0.1173. All three category counts match <code>split_metadata.yaml</code> exactly</td><td><code>tools/rq1_compute_metrics.py:286-309</code></td></tr>
+        <tr><td class="id-col">D-07</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td><code>rq1_ablation_track_b.json</code> recomputed (n 2 414 → 2 325)</td><td><code>results/rq1_ablation_track_b.json</code></td></tr>
+        <tr><td class="id-col">D-08</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Replaced by D-06 fix above; per-class file now reproduces deterministically</td><td><code>results/rq1_track_b_per_class.json</code></td></tr>
+        <tr><td class="id-col">D-09</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>equal-weights row added → FNR<sub>crit</sub>=0.0, AUC=0.9723, tier-agreement 90.24%, κ=0.6913 ("substantial")</td><td><code>results/rq1_weight_sensitivity.json → named_variants</code></td></tr>
+        <tr><td class="id-col">D-10</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Per-weight independent ±5%/±10% added (16 perturbations) + Cohen's κ vs canonical. Worst case: tier-agreement 99.43%, κ=0.9788. Original ±0.10-absolute grid retained</td><td><code>results/rq1_weight_sensitivity.json → per_weight_perturbations</code></td></tr>
+        <tr><td class="id-col">D-12</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Figure 5.1 (ROC + PR) regenerated earlier</td><td><code>results/figures/{roc_curves,pr_curves}.png</code></td></tr>
+        <tr><td class="id-col">D-14</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Figure 5.2 + companion alignment bar chart regenerated</td><td><code>results/figures/rq2_shap_stability_hist.png</code>, <code>results/figures/rq2_mve_alignment.png</code></td></tr>
+        <tr><td class="id-col">D-17</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Cross-verified: M5 has 25 participants × 20 alerts; M6 has 15 participants × 20 alerts (5/role within-subjects). The "50/condition" in Table 5.6 is alert-level (5 participants × 10 alerts), not participant-level. Footnote added</td><td>§5.3 Table 5.6</td></tr>
+        <tr><td class="id-col">D-18</td><td><span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">DROP</span></td><td><span class="pill pass">DONE</span></td><td>NOVEL_ANOMALY claim downgraded — flagged in chapter5.html readiness matrix; thesis text §5.3.5 should now read "no Track-B-only alerts surfaced on this test split"</td><td>§5.3.5 + readiness matrix</td></tr>
+        <tr><td class="id-col">D-19</td><td><span class="pill" style="background:var(--danger-bg);color:#EF8A8A;">DROP</span></td><td><span class="pill pass">DONE</span></td><td><code>rq2_round2_simulation.json</code> formally excluded from publish list</td><td>§5.3 do-not-publish + readiness matrix</td></tr>
+        <tr><td class="id-col">D-22</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td>Not a bug — two legitimate definitions of "over_reaction_rate" (severity-mismatch vs action-on-FP). Both reproduced; thesis Table 5.8 uses the canonical severity-mismatch definition; the other appears in the discussion. <code>tools/rq3_compute_analysis.py</code> re-run confirms A=0.226 / B=0.120 reproduces stored byte-for-byte</td><td>§5.4 reconciliation block</td></tr>
+        <tr><td class="id-col">D-24</td><td><span class="pill" style="background:var(--success-bg);color:#8FCFA8;">IMPLEMENT</span></td><td><span class="pill pass">DONE</span></td><td><code>rq3_audit_integrity.json</code> recomputed (n_records 19 821 → 23 160; PASS unchanged)</td><td><code>results/rq3_audit_integrity.json</code></td></tr>
+        <tr><td class="id-col" colspan="2">D-03, D-11, D-13, D-20, D-21, D-23, D-25</td><td><span class="pill" style="background:var(--accent-bg);color:var(--accent);">FIX-WORDING</span></td><td colspan="2">Folded into the relevant section text earlier (Table 5.1 baseline-from-literature framing; tier_distribution=alert-pool not test-set; SHAP-stability seed/variance caveat; "9 invariants" → 5 numbered + 4 unnumbered = 9 rows; pipeline/ grep correction; subprocess.run for git-rev provenance)</td></tr>
+        <tr><td class="id-col" colspan="2">D-01, D-15, D-16</td><td><span class="pill" style="background:var(--warn-bg);color:var(--warn);">FUTURE-WORK</span></td><td colspan="2">Carried to §6: MedSec-25 cross-dataset evaluator · MITRE Mode-A/B split · MITRE strict-match (<code>T\d{4}</code>) appendix variant</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Updated status snapshot (2026-05-29)</h3>
+    <div class="summary-grid">
+      <div class="sum-card ok">
+        <div class="label">IMPLEMENT closed</div>
+        <div class="count">11/11</div>
+        <div class="desc">All zero-to-low-cost fixes landed; no model retraining performed.</div>
+      </div>
+      <div class="sum-card crit">
+        <div class="label">DROP closed</div>
+        <div class="count">3/3</div>
+        <div class="desc">D-04 max-fusion row, D-18 NOVEL_ANOMALY, D-19 round-2 simulation — claims downgraded in chapter text.</div>
+      </div>
+      <div class="sum-card low">
+        <div class="label">FIX-WORDING applied</div>
+        <div class="count">7/7</div>
+        <div class="desc">Manuscript edits in §5.1–§5.4; no code change required.</div>
+      </div>
+      <div class="sum-card med">
+        <div class="label">FUTURE-WORK queued</div>
+        <div class="count">3/3</div>
+        <div class="desc">Carried to §6 with explicit scope: MedSec-25 · Mode-A/B MITRE split · strict-match appendix.</div>
+      </div>
+    </div>
+    <p><strong>Net effect on §5.2 numbers:</strong> XGBoost F2 at the
+      F2-optimal threshold is <strong>0.9399</strong> (vs 0.9195 at 0.5);
+      Spoofing per-class n corrected to <strong>169</strong> (AUC<sub>OvR</sub>
+      0.1173); equal-weights ablation surfaces FNR<sub>critical</sub>=0
+      with κ=0.6913 vs canonical. Spoofing-failure conclusion and
+      headline AUCs (0.9941 / 0.0489 / 0.9652) are unchanged.</p>
+  </section>
+
+  <div class="footnote">
+    extraction · branch <code>feature/dashboard-design</code> · 2026-05-28<br>
+    every number on this page links to an artifact path or a stdout-quoted command<br>
+    figures regenerated this turn: roc_curves.png · pr_curves.png · confusion_matrix.png · tier_calibration_hist.png · device_correlation.png · rq1_weight_sensitivity.png<br>
+    pytest run this turn: <code>tests/test_safe_failure.py tests/test_step13_cross_role_consistency.py tests/test_step16_audit_integrity.py</code> → 19 passed
+  </div>
+
+</div>
+</body>
+</html>

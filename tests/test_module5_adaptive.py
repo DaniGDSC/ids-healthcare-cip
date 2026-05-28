@@ -112,7 +112,7 @@ def test_audit_record_required_fields(sample_response):
         "alert_id", "timestamp", "device_tier", "attack_category",
         "risk_score", "risk_level", "recommended_actions",
         "action_rationale", "escalation_chain", "explanation_summary",
-        "simulated_outcome", "integrity_hash",
+        "simulated_outcome", "record_fingerprint",
     }
     assert required.issubset(rec.keys())
 
@@ -136,7 +136,7 @@ def test_audit_record_false_positive_for_benign_with_mitigation(sample_response)
     assert rec["simulated_outcome"]["outcome"] == "false_positive_isolated"
 
 
-def test_audit_record_integrity_hash_is_hex_16():
+def test_audit_record_record_fingerprint_is_hex_16():
     response = select_adaptive_response(
         risk_level="LOW", risk_score=0.1,
         attack_category="normal", device_tier="diagnostic",
@@ -146,8 +146,8 @@ def test_audit_record_integrity_hash_is_hex_16():
         attack_category="normal", ground_truth="benign",
         response=response, explanation_summary="",
     )
-    assert len(rec["integrity_hash"]) == 16
-    int(rec["integrity_hash"], 16)  # hex parse must succeed
+    assert len(rec["record_fingerprint"]) == 16
+    int(rec["record_fingerprint"], 16)  # hex parse must succeed
 
 
 def test_audit_record_explanation_summary_truncated_at_200(sample_response):

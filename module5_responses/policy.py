@@ -64,7 +64,7 @@ class PolicyEngine:
         tier_policies = self.policy.get("tier_policies") or {
             t: {"default_actions": list(p["default_actions"]),
                 "max_response_min": p["max_response_min"],
-                "auto_execute": p["auto_execute"]}
+                "auto_execute_recommended": p["auto_execute_recommended"]}
             for t, p in TIER_POLICIES.items() if t != "NORMAL"
         }
         tier_policy = tier_policies.get(alert_tier, tier_policies["LOW"])
@@ -111,7 +111,7 @@ class PolicyEngine:
         return {
             "actions": actions,
             "max_response_min": tier_policy["max_response_min"],
-            "auto_execute": tier_policy["auto_execute"],
+            "auto_execute_recommended": tier_policy["auto_execute_recommended"],
             "primary_notify": routing.get("primary_notify", "IT Security"),
             "secondary_notify": routing.get("secondary_notify"),
             "clinical_override": override,

@@ -97,7 +97,14 @@ def test_inv3_no_auto_execute_with_clinical_override_disabled(audit_log_records)
     for r in audit_log_records:
         if r.get("event_type"):  # reviewer/security events, different schema
             continue
-        if r.get("auto_executed") is not True:
+        # Path B · commit 6 — accept both legacy `auto_executed` and the
+        # renamed `auto_executed_simulated` for backwards compatibility
+        # with on-disk audit logs produced before the rename.
+        is_auto = (
+            r.get("auto_executed_simulated") is True
+            or r.get("auto_executed") is True
+        )
+        if not is_auto:
             continue
         if r.get("clinical_override") is True:
             continue  # override engaged → safe

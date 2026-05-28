@@ -43,7 +43,16 @@ class ActionExecutor:
             "sample_index": sample_index,
             "timestamp": timestamp.isoformat(),
             "actions_executed": actions,
-            "auto_executed": recommendation.get("auto_execute", False),
+            # Path B · commit 6 — field renames disambiguate
+            # "recommendation only" from "actually executed":
+            #   input  `auto_execute` → `auto_execute_recommended`
+            #   output `auto_executed` → `auto_executed_simulated`
+            # Nothing in this codebase actually executes; both names
+            # make that property obvious to a reviewer reading the
+            # audit chain.
+            "auto_executed_simulated": recommendation.get(
+                "auto_execute_recommended", False
+            ),
             "clinical_override": recommendation.get("clinical_override", {}).get(
                 "triggered", False
             ),

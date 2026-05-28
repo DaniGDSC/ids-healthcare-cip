@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "generated_at": "2026-05-28T14:51:55.549115+00:00",
+    "generated_at": "2026-05-28T17:49:13.800682+00:00",
     "n_registered": 9,
     "n_pending": 2
   },
@@ -150,22 +150,6 @@
   "pending": {
     "pending": [
       {
-        "path": "results/reports/analyst_report.json",
-        "artifact": "analyst_report.json",
-        "on_disk": null,
-        "expected": null,
-        "ok": true,
-        "reason": "pending envelope migration \u2014 gate inert"
-      },
-      {
-        "path": "results/reports/analyst_report_demo.json",
-        "artifact": "analyst_report.json",
-        "on_disk": null,
-        "expected": null,
-        "ok": true,
-        "reason": "pending envelope migration \u2014 gate inert"
-      },
-      {
         "path": "results/reports/clinician_summaries.json",
         "artifact": "clinician_summaries.json",
         "on_disk": null,
@@ -176,6 +160,22 @@
       {
         "path": "results/reports/clinician_summaries_demo.json",
         "artifact": "clinician_summaries.json",
+        "on_disk": null,
+        "expected": null,
+        "ok": true,
+        "reason": "pending envelope migration \u2014 gate inert"
+      },
+      {
+        "path": "results/reports/analyst_report.json",
+        "artifact": "analyst_report.json",
+        "on_disk": null,
+        "expected": null,
+        "ok": true,
+        "reason": "pending envelope migration \u2014 gate inert"
+      },
+      {
+        "path": "results/reports/analyst_report_demo.json",
+        "artifact": "analyst_report.json",
         "on_disk": null,
         "expected": null,
         "ok": true,

@@ -17,7 +17,7 @@ def test_action_executor_attack_with_isolation_contained(ts):
     ex = ActionExecutor()
     rec = ex.execute(
         "A-001", 0, ["log_event", "isolate_device"],
-        recommendation={"auto_execute": True, "requires_approval": True,
+        recommendation={"auto_execute_recommended": True, "requires_approval": True,
                         "clinical_override": {"triggered": False}},
         ground_truth="attack", timestamp=ts,
     )
@@ -29,7 +29,7 @@ def test_action_executor_attack_without_mitigation_logged(ts):
     ex = ActionExecutor()
     rec = ex.execute(
         "A-002", 1, ["log_event"],
-        recommendation={"auto_execute": False, "requires_approval": False,
+        recommendation={"auto_execute_recommended": False, "requires_approval": False,
                         "clinical_override": {"triggered": False}},
         ground_truth="attack", timestamp=ts,
     )
@@ -41,7 +41,7 @@ def test_action_executor_benign_with_isolation_false_positive(ts):
     ex = ActionExecutor()
     rec = ex.execute(
         "A-003", 2, ["isolate_device"],
-        recommendation={"auto_execute": False, "requires_approval": True,
+        recommendation={"auto_execute_recommended": False, "requires_approval": True,
                         "clinical_override": {"triggered": False}},
         ground_truth="benign", timestamp=ts,
     )
@@ -53,7 +53,7 @@ def test_action_executor_benign_logged(ts):
     ex = ActionExecutor()
     rec = ex.execute(
         "A-004", 3, ["log_event"],
-        recommendation={"auto_execute": False, "requires_approval": False,
+        recommendation={"auto_execute_recommended": False, "requires_approval": False,
                         "clinical_override": {"triggered": False}},
         ground_truth="benign", timestamp=ts,
     )
@@ -66,7 +66,7 @@ def test_action_executor_accumulates_log(ts):
     for i in range(3):
         ex.execute(
             f"A-{i:03d}", i, ["log_event"],
-            recommendation={"auto_execute": False, "requires_approval": False,
+            recommendation={"auto_execute_recommended": False, "requires_approval": False,
                             "clinical_override": {"triggered": False}},
             ground_truth="benign", timestamp=ts,
         )

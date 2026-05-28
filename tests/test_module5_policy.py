@@ -21,7 +21,7 @@ def test_critical_tier_includes_isolate_and_high_response(engine):
     assert "isolate_device" in rec["actions"]
     assert "forensic_snapshot" in rec["actions"]
     assert "escalate_clinical" in rec["actions"]
-    assert rec["auto_execute"] is True
+    assert rec["auto_execute_recommended"] is True
     assert rec["max_response_min"] == 5
 
 
@@ -30,7 +30,7 @@ def test_low_tier_minimal_actions(engine):
                            attack_category="normal", patient_acuity=0.0)
     assert "log_event" in rec["actions"]
     assert "isolate_device" not in rec["actions"]
-    assert rec["auto_execute"] is False
+    assert rec["auto_execute_recommended"] is False
 
 
 def test_life_sustaining_blocks_isolation(engine):

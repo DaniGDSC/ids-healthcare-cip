@@ -139,6 +139,25 @@ def test_cascade_contract_vs_full_dae(engine_and_split):
         )
 
 
+def test_elevation_only_invariant(engine_and_split):
+    """Path B · commit 2 — DAE elevates c_detect but never lowers it.
+
+    The fusion line ``c_detect = max(c_track_a, c_track_b)`` makes this
+    invariant structurally true; this test guarantees, row-by-row over
+    the full test split with ``_force_full_dae=True``, that fusion
+    never drops a row below its Track A confidence.
+    """
+    engine, X_test, _y = engine_and_split
+    r = engine.predict(X_test, _force_full_dae=True)
+    drop = r.c_track_a - r.c_detect
+    worst = float(drop.max())
+    assert worst <= 1e-6, (
+        f"Fusion lowered c_detect below c_track_a on at least one row — "
+        f"elevation-only invariant violated. Worst drop: {worst:.6f}. "
+        f"Anchor: detection_engine/engine.py:283 (c_detect = max(...))."
+    )
+
+
 def test_x_augmented_shape_and_population(engine_and_split):
     """x_augmented must be fully built for every row, gated or not."""
     engine, X_test, _y = engine_and_split

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDS-Healthcare-CIP — Threat Model and Scope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0F12;
+    --surface-1: #16181D;
+    --surface-2: #1D2026;
+    --surface-3: #24272F;
+    --border-subtle: #1F2229;
+    --border: #262A33;
+    --border-strong: #353944;
+    --text-primary: #E8E9EB;
+    --text-secondary: #9CA0AB;
+    --text-tertiary: #6A6F7B;
+    --text-quaternary: #4A4F5A;
+    --tier-low: #5B8FB9;
+    --tier-medium: #D4A445;
+    --tier-high: #E07A5F;
+    --tier-critical: #C53030;
+    --accent: #7BA7BC;
+    --accent-bg: rgba(123, 167, 188, 0.12);
+    --success: #5F9E7B;
+    --success-bg: rgba(95, 158, 123, 0.10);
+    --danger: #C53030;
+    --danger-bg: rgba(197, 48, 48, 0.10);
+  }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .font-display { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--text-primary); }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  header.page-head { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  header.page-head h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 3rem;
+    margin: 0 0 8px;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  header.page-head .sub { color: var(--text-secondary); font-size: 0.95rem; max-width: 760px; }
+  header.page-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 12px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  header.page-head .meta span::before { content: "· "; color: var(--text-quaternary); }
+  header.page-head .meta span:first-child::before { content: ""; }
+
+  section { margin-top: 56px; }
+  section > h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.875rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  section > h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.375rem;
+    margin: 28px 0 8px;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+  }
+  section > .section-intro {
+    color: var(--text-secondary);
+    margin: 0 0 24px;
+    max-width: 780px;
+  }
+
+  /* Card grids */
+  .card-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  .card-grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  .card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 14px 14px 12px;
+  }
+  .card.danger { border-left-color: var(--danger); }
+  .card.warn { border-left-color: var(--tier-medium); }
+  .card.success { border-left-color: var(--success); }
+  .card.high { border-left-color: var(--tier-high); }
+  .card .clabel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .card.danger .clabel { color: var(--danger); }
+  .card.warn .clabel   { color: var(--tier-medium); }
+  .card.success .clabel { color: var(--success); }
+  .card.high .clabel   { color: var(--tier-high); }
+  .card .ctitle {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+  .card .cbody {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .card .cbody code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--accent);
+    background: transparent;
+  }
+
+  /* Tables */
+  table.df {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 12.5px;
+    margin: 8px 0 12px;
+  }
+  table.df th, table.df td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+  }
+  table.df th {
+    background: var(--surface-2);
+    color: var(--text-tertiary);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  table.df tr:last-child td { border-bottom: none; }
+  table.df td code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: transparent;
+    padding: 0;
+  }
+  table.df td.id-col {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+    width: 90px;
+    letter-spacing: 0.06em;
+  }
+  table.df td .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+  }
+  table.df td .pill.high { background: rgba(95,158,123,0.18); color: #8FCFA8; }
+  table.df td .pill.medium { background: rgba(212,164,69,0.15); color: var(--tier-medium); }
+  table.df td .pill.low { background: rgba(106,111,123,0.18); color: var(--text-secondary); }
+  table.df td .pill.no { background: rgba(197,48,48,0.18); color: #EF8A8A; }
+  table.df td .pill.yes { background: rgba(95,158,123,0.18); color: #8FCFA8; }
+
+  /* Callout block */
+  .callout {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--tier-medium);
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin: 16px 0 24px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .callout .callout-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--tier-medium);
+    margin-bottom: 6px;
+  }
+  .callout code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: transparent;
+  }
+  .callout.danger { border-left-color: var(--danger); }
+  .callout.danger .callout-title { color: #EF8A8A; }
+
+  /* Checklist */
+  ol.checklist {
+    padding-left: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  ol.checklist li {
+    counter-increment: step;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 10px 14px 10px 44px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    position: relative;
+    line-height: 1.55;
+  }
+  ol.checklist li::before {
+    content: counter(step);
+    position: absolute;
+    left: 14px;
+    top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  ol.checklist li code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: transparent;
+  }
+  ol.checklist li strong { color: var(--text-primary); }
+
+  .footnote {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 1100px) {
+    .card-grid-3, .card-grid-4 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="page-head">
+    <h1>Threat Model &amp; Scope</h1>
+    <p class="sub">
+      Adversary capabilities, attack surface in scope (MITRE ATT&amp;CK
+      mapped), what is deliberately out-of-scope, and the deployment
+      assumptions the codebase relies on. Every item is anchored to a
+      file:line so a reviewer can verify the claim against the current
+      tree.
+    </p>
+    <div class="meta">
+      <span>repo&nbsp;<code>ids-healthcare-cip</code></span>
+      <span>branch&nbsp;<code>feature/dashboard-design</code></span>
+      <span>scope&nbsp;<code>RQ1 detection · RQ2 explanation · RQ3 response/audit</code></span>
+      <span>mitre&nbsp;<code>v14.1 (Enterprise + ICS)</code></span>
+      <span>generated&nbsp;2026-05-28</span>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       1. ADVERSARY MODEL
+       ============================================================ -->
+  <section>
+    <h2>1 · Adversary model</h2>
+    <p class="section-intro">
+      The pipeline is hardened against a network-side adversary with
+      black-box knowledge of the model. The threat model is documented
+      in <code class="font-mono">docs/rq1_threat_model_scope.md</code>
+      and enforced in code through a small number of named TM-IDs plus
+      a wider set of unnamed defenses.
+    </p>
+
+    <h3>Adversary assumptions</h3>
+    <table class="df">
+      <thead><tr><th style="width:18%">Axis</th><th>In-scope adversary</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Knowledge</strong></td><td>May know the architecture; <strong>no</strong> white-box access to model weights or training-data ordering.</td></tr>
+        <tr><td><strong>Capability</strong></td><td>Can issue arbitrary NetFlow-shaped traffic from the clinical network or external sources routed through the span port.</td></tr>
+        <tr><td><strong>Adaptivity</strong></td><td><span class="pill no">not assessed</span> Reported metrics assume <em>non-adaptive</em> attackers.</td></tr>
+        <tr><td><strong>Persistence</strong></td><td>Sustained probing against TM-04 jitter is acknowledged out-of-scope (averaging defeats jitter; rate-limit assumed external).</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Named TM identifiers in code</h3>
+    <table class="df">
+      <thead><tr><th style="width:80px">TM-ID</th><th>Threat &amp; defense</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="id-col">TM-02</td>
+          <td>Baseline-quarantine for newly-enrolled devices (&lt;14 days history). DAE baseline is unreliable → tier threshold reduced 30% to surface alerts earlier rather than miss them.</td>
+          <td><code>src/risk_scorer.py:132</code></td>
+        </tr>
+        <tr>
+          <td class="id-col">TM-04</td>
+          <td>Adversarial-probing defense. <code>_noisy_threshold()</code> applies ±10% jitter to the DAE decision boundary so casual binary-search probing can't map the exact threshold. <span class="pill medium">design assumes</span> rate-limit + audit-log of probes (delegated to deployment layer).</td>
+          <td><code>module2_detection/models/DAE.py:384-417</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Unnamed enforcement points</h3>
+    <table class="df">
+      <thead><tr><th>Threat</th><th>Defense in code</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>Dataset tampering</td><td><code>IntegrityVerifier</code> — signed SHA-256 baseline; refuses to run without one</td><td><code>module0_analysis/security.py:73-100</code></td></tr>
+        <tr><td>TOCTOU hash → parse window</td><td>Single in-memory read; hash and parse from the same bytes</td><td><code>module0_analysis/security.py:86</code></td></tr>
+        <tr><td>Path traversal</td><td><code>PathValidator</code> — <code>Path.resolve()</code> + <code>relative_to(root)</code> workspace containment</td><td><code>module0_analysis/security.py:408-435</code></td></tr>
+        <tr><td>Column injection</td><td><code>ColumnAllowlist</code> — static whitelist enforcement at ingest</td><td><code>module0_analysis/security.py:516-560</code></td></tr>
+        <tr><td>Model pickle tampering</td><td><code>signed_pickle</code> — ECDSA P-256 sidecar; <code>loads_signed</code> mandatory, plain <code>joblib.load</code> forbidden</td><td><code>common/signed_pickle.py</code></td></tr>
+        <tr><td>Audit chain forgery</td><td>Hash-chained JSONL + ECDSA signed records; tamper detected on replay</td><td><code>module5_responses/audit/verify.py:102,140</code></td></tr>
+        <tr><td>Demo-split leakage</td><td><code>_assert_no_demo_leakage</code> on every training-side loader</td><td><code>module2_detection/tuning/_data.py:33-46</code></td></tr>
+        <tr><td>Context-only false alerts</td><td><code>MIN_DETECTION_GATE = 0.02</code> — forces NORMAL when detector silent (formula v2)</td><td><code>module3_risk_scoring/config.py</code></td></tr>
+        <tr><td>PHI exposure in artifacts</td><td><code>drop_phi_columns()</code> + audit payload <code>[REDACTED-PHI]</code></td><td><code>module0_analysis/security.py:613</code> · <code>module1_preprocessing/phase1/hipaa.py:31</code></td></tr>
+        <tr><td>Silent dismissal</td><td>Required-rationale modal; empty rationale → early return; signed dismissal record</td><td><code>module5_responses/adaptive.py:30,116,173</code></td></tr>
+        <tr><td>Critical-device suppression</td><td>Safety floor (Invariant 2) — <code>d_crit ≥ 0.8</code> always surfaces, regardless of composite tier</td><td><code>src/risk_scorer.py:145-147</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ============================================================
+       2. ATTACK SURFACE IN SCOPE — MITRE ATT&CK MAPPING
+       ============================================================ -->
+  <section>
+    <h2>2 · Attack surface in scope — MITRE ATT&amp;CK</h2>
+    <p class="section-intro">
+      Single source of truth:
+      <code class="font-mono">config/attack_to_mitre_mapping.yaml</code>
+      (pinned to ATT&amp;CK v14.1, last synced 2026-05-26). The mapping
+      is consumed by the MVE narrative generator, the response-routing
+      table, and the RQ2 coverage audit; the framework version is gated
+      so a silent ATT&amp;CK bump cannot pass CI.
+    </p>
+
+    <h3>In current corpus (WUSTL-EHMS + IDS-HC-IoMT-2024)</h3>
+    <table class="df">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Primary technique</th>
+          <th>Sub-techniques</th>
+          <th>Related</th>
+          <th>ICS matrix</th>
+          <th>Conf</th>
+          <th>n test</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Spoofing</strong></td>
+          <td><code>T1557</code> Adversary-in-the-Middle</td>
+          <td><code>T1557.002</code> ARP Cache Poisoning <span class="pill medium">med</span></td>
+          <td><code>T1071</code> App-Layer Protocol · <code>T1036</code> Masquerading</td>
+          <td><code>T0830</code> AiTM (ICS) <span class="pill high">high</span></td>
+          <td><span class="pill high">high</span></td>
+          <td>169</td>
+        </tr>
+        <tr>
+          <td><strong>Data Alteration</strong></td>
+          <td><code>T1565</code> Data Manipulation</td>
+          <td><code>T1565.002</code> Transmitted <span class="pill high">high</span> · <code>T1565.001</code> Stored <span class="pill medium">med</span></td>
+          <td><code>T1499</code> Endpoint DoS <span class="pill low">low</span></td>
+          <td><code>T0832</code> Manipulation of View <span class="pill high">high</span> · <code>T0836</code> Modify Parameter <span class="pill medium">med</span></td>
+          <td><span class="pill high">high</span></td>
+          <td>138</td>
+        </tr>
+        <tr>
+          <td><code>normal</code></td>
+          <td>—</td><td>—</td><td>—</td><td>—</td>
+          <td><span class="pill low">n/a</span></td>
+          <td>2,141</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Out-of-current-corpus — mapped for future expansion</h3>
+    <table class="df">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Primary technique</th>
+          <th>Sub-techniques</th>
+          <th>Related</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Reconnaissance</td><td><code>T1595</code> Active Scanning</td><td><code>T1595.001</code> IP Blocks · <code>T1595.002</code> Vuln Scanning</td><td>—</td><td><span class="pill">placeholder</span></td></tr>
+        <tr><td>Initial Access</td><td><code>T1190</code> Exploit Public-Facing App</td><td>—</td><td><code>T1078</code> Valid Accounts · <code>T1566</code> Phishing</td><td><span class="pill">placeholder</span></td></tr>
+        <tr><td>Lateral Movement</td><td><code>T1021</code> Remote Services</td><td><code>T1021.001</code> RDP · <code>T1021.002</code> SMB</td><td>—</td><td><span class="pill">placeholder</span></td></tr>
+        <tr><td>Exfiltration</td><td><code>T1041</code> Over C2 Channel</td><td>—</td><td><code>T1048</code> Alt Protocol · <code>T1567</code> Web Service</td><td><span class="pill">placeholder</span></td></tr>
+      </tbody>
+    </table>
+    <p class="section-intro" style="margin-top:8px;">
+      Tactic-level <code class="font-mono">future_categories</code>
+      (Credential Access, Privilege Escalation, Defense Evasion, Impact —
+      Clinical Disruption) are listed in the YAML but have no technique
+      mapping yet, because NetFlow features cannot discriminate them
+      without endpoint telemetry.
+    </p>
+
+    <h3>Downstream consumers</h3>
+    <table class="df">
+      <thead><tr><th>Consumer</th><th>Anchor</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>MVE Layer-1 narrative</td><td><code>src/mve_generator.py:224-260</code></td><td><code>_load_mitre_mapping()</code> lru-cached lookup</td></tr>
+        <tr><td>MVE technique injection</td><td><code>src/mve_generator.py:1271-1286</code></td><td>Append <em>"Consistent with MITRE TXXXX (Name)."</em> — RQ2.e G3</td></tr>
+        <tr><td>Response routing</td><td><code>module5_responses/config.py:214-249</code></td><td><code>ATTACK_ROUTING[cat]</code> → primary/secondary/tertiary role + attack-specific actions</td></tr>
+        <tr><td>Coverage audit (CI gate)</td><td><code>tools/rq2_audit_mitre_coverage.py</code></td><td>Coverage % + Layer-1 reference rate; report <code>results/rq2_mitre_coverage.json</code></td></tr>
+        <tr><td>Generic narrative audit</td><td><code>tools/coverage_audit.py</code></td><td>Regex <code>\bMITRE T\d{4}.*? — \w</code> on narratives</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Coverage gate status</h3>
+    <table class="df">
+      <thead><tr><th>Gate</th><th>Current</th><th>Target</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>% categories mapped (config)</td><td>100% (6/6)</td><td>100%</td><td><span class="pill yes">pass</span></td></tr>
+        <tr><td>Orphan categories</td><td>0</td><td>0</td><td><span class="pill yes">pass</span></td></tr>
+        <tr><td>Framework version pinned</td><td>v14.1</td><td>pinned</td><td><span class="pill yes">pass</span></td></tr>
+        <tr><td>Layer-1 narrative MITRE-reference rate (cached, pre-fix)</td><td>0% (0/25)</td><td>≥ 90%</td><td><span class="pill no">fail</span></td></tr>
+      </tbody>
+    </table>
+    <p class="section-intro" style="margin-top:8px;">
+      The G3 reference-rate fix is implemented in
+      <code class="font-mono">mve_generator.py:1271-1286</code> and verified
+      against
+      <code class="font-mono">backups/v2_deployed_snapshot/alert_responses.json</code>
+      (which contains rendered <em>"Consistent with MITRE T1557…"</em> /
+      <em>"…T1565…"</em> strings). The 0% number is a measurement on 25
+      pre-fix cached narratives; re-running the audit on fresh narratives
+      lifts the rate.
+    </p>
+  </section>
+
+
+  <!-- ============================================================
+       3. DELIBERATELY OUT OF SCOPE
+       ============================================================ -->
+  <section>
+    <h2>3 · Deliberately out of scope</h2>
+    <p class="section-intro">
+      Four classes of threat / capability the codebase makes no claim
+      against. Each item is named with an <code class="font-mono">OOS-*</code>
+      identifier and anchored to a quotable comment or doc reference.
+      The four classes correspond to the four cards below.
+    </p>
+
+    <div class="card-grid-4">
+      <div class="card warn">
+        <div class="clabel">class · detection</div>
+        <div class="ctitle">Detection surface</div>
+        <div class="cbody">
+          What network features cannot see. Payload content, endpoint-only
+          activity, encrypted exfiltration with normal flow shape, novel
+          attack families, insider misuse, physical-layer attacks.
+          6 items (OOS-D1 → D6).
+        </div>
+      </div>
+      <div class="card warn">
+        <div class="clabel">class · adversary</div>
+        <div class="ctitle">Adversary capability</div>
+        <div class="cbody">
+          Adaptive evasion, white-box weight access, sustained
+          probe-and-average against TM-04 jitter, flow-shape
+          perturbation evasion. 4 items (OOS-A1 → A4).
+        </div>
+      </div>
+      <div class="card danger">
+        <div class="clabel">class · crypto</div>
+        <div class="ctitle">Cryptographic boundary</div>
+        <div class="cbody">
+          Anything past a compromised audit signing key, malicious
+          authoring at training time, bugs in restored model code,
+          hostile-controlled pickle bytes, auto-bootstrap key on shell-
+          compromised host. 5 items (OOS-K1 → K5).
+        </div>
+      </div>
+      <div class="card warn">
+        <div class="clabel">class · evaluation</div>
+        <div class="ctitle">Evaluation scope</div>
+        <div class="cbody">
+          Response-action correctness (RQ1 does not claim it), raw
+          detector recall on critical devices (gated by safety floor),
+          specificity↔FNR_critical trade-off, per-class detection on the
+          4 placeholder categories. 4 items (OOS-E1 → E4).
+        </div>
+      </div>
+    </div>
+
+    <h3>Detection-surface out-of-scope</h3>
+    <table class="df">
+      <thead><tr><th style="width:90px">ID</th><th>Threat</th><th>Reason out-of-scope</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td class="id-col">OOS-D1</td><td>Payload-content attacks (DPI, TLS-decrypted content, SQLi, XSS, command injection)</td><td>Not in 25-feature input</td><td><code>docs/rq1_threat_model_scope.md:42-44</code></td></tr>
+        <tr><td class="id-col">OOS-D2</td><td>Endpoint-only attacks (FS tampering, USB drops, local privesc)</td><td>No network signal until lateral movement</td><td><code>docs/rq1_threat_model_scope.md:45-47</code></td></tr>
+        <tr><td class="id-col">OOS-D3</td><td>Encrypted exfiltration with normal flow shape</td><td>Trickle bandwidth over permitted TLS does not perturb flow features</td><td><code>docs/rq1_threat_model_scope.md:48-51</code></td></tr>
+        <tr><td class="id-col">OOS-D4</td><td>Zero-day attack categories beyond the 2 corpus families</td><td>Track A supervised on 2 classes; Track B / DAE recall on novel families "uncertain"</td><td><code>docs/rq1_threat_model_scope.md:52-55</code></td></tr>
+        <tr><td class="id-col">OOS-D5</td><td>Insider misuse with valid credentials</td><td>No behavioral baseline tied to user identity</td><td><code>docs/rq1_threat_model_scope.md:56-57</code></td></tr>
+        <tr><td class="id-col">OOS-D6</td><td>Physical-layer attacks (RF interference, jamming, device tamper)</td><td>No NetFlow signal</td><td><code>docs/rq1_threat_model_scope.md:58-59</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Adversary-capability out-of-scope</h3>
+    <table class="df">
+      <thead><tr><th style="width:90px">ID</th><th>Capability</th><th>Quotable</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td class="id-col">OOS-A1</td><td>Adaptive attacks</td><td>"NOT assessed. Reported metrics assume non-adaptive attackers."</td><td><code>docs/rq1_threat_model_scope.md:68-71</code></td></tr>
+        <tr><td class="id-col">OOS-A2</td><td>White-box access to weights / training-data ordering</td><td>"adversary may know the architecture but does not have white-box access"</td><td><code>docs/rq1_threat_model_scope.md:63-64</code></td></tr>
+        <tr><td class="id-col">OOS-A3</td><td>Sustained probing → averaging out TM-04 jitter</td><td>"jitter chống casual boundary probing, NOT cryptographic randomness… can still average it out"</td><td><code>module2_detection/models/DAE.py:392-395</code></td></tr>
+        <tr><td class="id-col">OOS-A4</td><td>Flow-shape perturbation evasion</td><td>"Evasion via flow-shape perturbation is a known weakness; mitigation depends on cascade re-baselining"</td><td><code>docs/rq1_threat_model_scope.md:69-71</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Cryptographic / trust-boundary out-of-scope</h3>
+    <table class="df">
+      <thead><tr><th style="width:90px">ID</th><th>Out-of-scope</th><th>Quotable</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td class="id-col">OOS-K1</td><td>Compromise of audit signing private key</td><td>"❌ Compromise of the private key → <strong>game over</strong>"</td><td><code>common/signed_pickle.py:51</code></td></tr>
+        <tr><td class="id-col">OOS-K2</td><td>Malicious authoring at training time</td><td>"❌ Malicious authoring at training time → unrelated to this layer"</td><td><code>common/signed_pickle.py:52</code></td></tr>
+        <tr><td class="id-col">OOS-K3</td><td>Bugs in model code that the pickle restores</td><td>"❌ Bugs in the model code that the pickle restores → unrelated to this layer"</td><td><code>common/signed_pickle.py:53</code></td></tr>
+        <tr><td class="id-col">OOS-K4</td><td>Hostile party controlling pickle bytes</td><td>"does NOT make the pickle bytes safe to read from a hostile party who controls the file"</td><td><code>common/signed_pickle.py:21-22</code></td></tr>
+        <tr><td class="id-col">OOS-K5</td><td>Auto-bootstrap key on shell-compromised host</td><td>"auto-generated key is convenient for development but offers no protection against an attacker who already has shell access"</td><td><code>module5_responses/audit/signing.py:48-52</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Evaluation-scope out-of-scope</h3>
+    <table class="df">
+      <thead><tr><th style="width:90px">ID</th><th>Out-of-scope</th><th>Where to look instead</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td class="id-col">OOS-E1</td><td>Response-action correctness (RQ1 makes no claim)</td><td>RQ2 (policy correctness) · RQ3 (user study)</td><td><code>docs/rq1_threat_model_scope.md:73-80</code></td></tr>
+        <tr><td class="id-col">OOS-E2</td><td>Raw detector recall on critical devices</td><td>Reported separately in the ablation table; <code>FNR_critical = 0</code> is policy-gated</td><td><code>docs/rq1_threat_model_scope.md:95-96</code></td></tr>
+        <tr><td class="id-col">OOS-E3</td><td>Specificity ↔ FNR_critical trade-off interpretation</td><td>Invariant 2 is a <em>policy override</em>, not a detection improvement</td><td><code>docs/rq1_threat_model_scope.md:86-88</code></td></tr>
+        <tr><td class="id-col">OOS-E4</td><td>Per-class detection on the 4 placeholder categories</td><td>MITRE mapping present; training data absent; expansion path is config-only</td><td><code>config/attack_to_mitre_mapping.yaml:81-149</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout danger">
+      <div class="callout-title">trust boundary</div>
+      The system trusts three things: (a) the audit signing private key,
+      (b) the signed dataset baseline in
+      <code>module0_analysis/dataset_integrity.json</code>, (c) the host
+      running Module 0 ingest. Compromise of any of these defeats every
+      downstream defense in the table.
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       4. DEPLOYMENT ASSUMPTIONS
+       ============================================================ -->
+  <section>
+    <h2>4 · Deployment assumptions</h2>
+    <p class="section-intro">
+      Constraints the codebase silently relies on. A deployer must
+      satisfy each one for the security properties above to hold. Items
+      are grouped by deployment surface; the "delegated" badge marks
+      controls the codebase does <em>not</em> implement and explicitly
+      hands off to the deployment layer.
+    </p>
+
+    <h3>Network &amp; input shape</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Vantage:</strong> span port / TAP downstream of edge firewall, upstream of IoMT VLAN</td><td><code>docs/rq1_threat_model_scope.md:18-19</code></td></tr>
+        <tr><td><strong>Aggregation:</strong> per-flow records (not per-packet, not per-session)</td><td><code>docs/rq1_threat_model_scope.md:17</code></td></tr>
+        <tr><td><strong>Schema:</strong> 47 features in → 25 features out after preprocessing; column order fixed</td><td><code>module1_preprocessing/phase1/config.py:16</code></td></tr>
+        <tr><td><strong>Split contract:</strong> 60/15/15/10 train/val/test/demo, frozen, demo never reaches training paths</td><td><code>module1_preprocessing/phase1/config.py:96-100</code> · <code>module2_detection/tuning/_data.py:33-46</code></td></tr>
+        <tr><td><strong>Random state:</strong> <code>random_state ∈ {0, 7, 42}</code> canonical allowlist; deviation → WARN</td><td><code>module1_preprocessing/phase1/config.py:148-168</code></td></tr>
+        <tr><td><strong>Dataset:</strong> WUSTL-EHMS-2020 + MedSec-25, 16,318 rows total</td><td><code>docs/rq1_threat_model_scope.md:20-22</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Runtime &amp; hardware</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>Python 3.12.x</td><td>reproducibility report</td></tr>
+        <tr><td>TensorFlow ≥ 2.13, Keras ≥ 2.13</td><td><code>requirements.txt:11-12</code></td></tr>
+        <tr><td>GPU optional — Keras inference runs on CPU; DAE persists as <code>.weights.h5</code> (no pickle)</td><td><code>module2_detection/models/DAE.py:22-29</code></td></tr>
+        <tr><td><code>python3</code> resolvable in shell; Makefile uses <code>PYTHON ?= python3</code></td><td><code>Makefile:6</code></td></tr>
+        <tr><td>Local writable filesystem for <code>results/</code>, <code>data/processed/</code>, audit logs</td><td>implicit</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Cryptographic / key management</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>ECDSA P-256 signing key exists, else auto-bootstrapped at <code>~/.iomt-ids/audit_signing_key.pem</code> (0600)</td><td><code>module5_responses/audit/signing.py:24-78</code></td></tr>
+        <tr><td><strong>Production:</strong> operator must set <code>IOMT_AUDIT_SIGNING_KEY</code> env var to an HSM/KMS / operator-provisioned PEM (auto-bootstrap is dev-only)</td><td><code>module5_responses/audit/signing.py:48-52</code></td></tr>
+        <tr><td>Public key is co-located with the audit log so verifiers find it without configuration</td><td><code>module5_responses/audit/signing.py:28</code></td></tr>
+        <tr><td>All sklearn models loaded through <code>loads_signed()</code>; plain <code>joblib.load</code> forbidden</td><td><code>common/signed_pickle.py:55-56</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Operators &amp; attribution</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>6 roles with hard-coded extension + SLA: IT Security (5m), Charge Nurse (10m), On-call Physician (15m), Biomedical Eng (30m), Security Lead, CISO</td><td><code>module5_responses/config.py:273-291</code></td></tr>
+        <tr><td>Attack routing: Spoofing → IT Sec + Biomed; Data Alteration → IT Sec + Charge Nurse + On-call MD</td><td><code>module5_responses/config.py:214-249</code></td></tr>
+        <tr><td><strong>RBAC not enforced</strong> in Module 6 dashboard — roles are for routing + render only</td><td>Streamlit session state</td></tr>
+        <tr><td>Operator identity (<code>participant_id</code>, <code>sim_role</code>) bootstrapped by an external auth flow — codebase has no auth layer</td><td><code>module6_evaluation/module6_app.py</code> <code>init_session()</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Audit chain &amp; storage</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Append-only filesystem</strong> semantics for <code>results/reports/audit_log.jsonl</code></td><td><code>module5_responses/audit/retention.py:33-82</code></td></tr>
+        <tr><td>Rotation seals an archive under <code>audit_archive/</code>; refuses to rotate if the chain is broken</td><td><code>module5_responses/audit/retention.py:69-82</code></td></tr>
+        <tr><td><strong>Key-rotation policy unspecified</strong> — sentinel <code>prev_hash="0"*64</code> marks the archive boundary, but cadence is operator-driven</td><td>—</td></tr>
+        <tr><td>Tamper detection is on replay, not real-time</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Drift &amp; retraining</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>PSI threshold 0.10 · KS α = 0.05 · window = 200 samples</td><td><code>tools/diagnostics/drift_detection.py:45-48</code></td></tr>
+        <tr><td>Drift detected → flag; <strong>no auto-retrain</strong> — operator must invoke <code>module2_detection.dae_training</code> or the regen tools</td><td>—</td></tr>
+        <tr><td>Retraining cadence / SLA not codified</td><td>—</td></tr>
+        <tr><td>Module 0 baseline re-bootstrap is an explicit CLI action, never automatic</td><td><code>module0_analysis/security.py:73-151</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Rate-limiting &amp; abuse prevention</h3>
+    <div class="callout danger">
+      <div class="callout-title">delegated · not implemented in codebase</div>
+      DAE TM-04 jitter ships with this comment:
+      <em>"the design assumes Module 3+ rate-limits queries and Module 5
+      audit-logs all probes"</em>
+      (<code>module2_detection/models/DAE.py:394-395</code>).
+      <strong>Rate-limiting is not implemented anywhere</strong> — no
+      throttle / quota / RateLimit class exists in Module 3, 4, or 6.
+      The deployment layer (firewall, NAC, HTTP middleware) must
+      provide it; otherwise OOS-A3 (sustained probing defeats jitter)
+      becomes practical.
+    </div>
+
+    <h3>LLM provider chain (MVE)</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>Outbound HTTPS to OpenAI + Anthropic allowed from the clinical zone (optional — rule-based fallback works offline)</td><td>implicit</td></tr>
+        <tr><td>API keys via env: <code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code></td><td><code>src/mve_generator.py:6-20</code></td></tr>
+        <tr><td>Tripwire <code>IOMT_MVE_TRIPWIRE</code> (default 5 fails) forces rule-based for the rest of a batch</td><td><code>module5_responses/config.py:335</code></td></tr>
+        <tr><td>API-key storage is env var only — no HSM/KMS integration in codebase</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Compliance posture</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>HIPAA Safe Harbor §164.514(b)(2) — 5 identifier columns (IP, MAC, port, flags) stripped at ingest</td><td>Phase 1 HIPAA module</td></tr>
+        <tr><td>Biometric columns marked <code>phi_realtime = 1.0</code> sensitivity</td><td><code>module3_risk_scoring/config.py:140</code> · <code>common/phi.py</code></td></tr>
+        <tr><td>Module 5 emits an "FDA-style audit record" structure (suggests regulatory submission path)</td><td><code>module5_responses/adaptive.py:178</code></td></tr>
+        <tr><td><strong>No GDPR / IEC 62443 references</strong> — codebase is HIPAA-centric</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Tenancy</h3>
+    <table class="df">
+      <thead><tr><th>Assumption</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Single-hospital, single-deployment, single filesystem</strong>; no tenant isolation</td><td>implicit</td></tr>
+        <tr><td>Workspace root: <code>Path(__file__).resolve().parents[N]</code> resolved at import</td><td><code>module0_analysis/loader.py:23</code></td></tr>
+        <tr><td><code>PathValidator</code> enforces workspace containment</td><td><code>module0_analysis/security.py:252-254</code></td></tr>
+        <tr><td>Multi-hospital deployment = separate process + workspace + signing key + audit log per site</td><td>operator responsibility</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Hard-coded constants (not operator-configurable in code)</h3>
+    <table class="df">
+      <thead><tr><th>Constant</th><th>Value</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>Risk formula context weights (α, β, γ)</td><td>0.6 / 0.4 / 0.5</td><td><code>module3_risk_scoring/config.py:70-74</code></td></tr>
+        <tr><td><code>MIN_DETECTION_GATE</code></td><td>0.02</td><td><code>module3_risk_scoring/config.py</code></td></tr>
+        <tr><td>Device criticality tiers</td><td>life=1.0 · vital=0.8 · diag=0.5 · aux=0.3</td><td><code>module3_risk_scoring/config.py:123-129</code></td></tr>
+        <tr><td>Risk thresholds (CRITICAL / HIGH / MEDIUM / LOW)</td><td>0.80 / 0.45 / 0.20 / 0.05</td><td><code>module3_risk_scoring/config.py:87-92</code></td></tr>
+        <tr><td>Action costs</td><td>0.1 (log_event) → 1.0 (escalate_incident)</td><td><code>module5_responses/config.py:25-90</code></td></tr>
+        <tr><td>Safety floor (<code>d_crit ≥ 0.8</code> always surfaces)</td><td>hard-wired</td><td><code>src/risk_scorer.py:145-147</code></td></tr>
+        <tr><td>TM-02 baseline quarantine (devices &lt;14d history)</td><td>-30% threshold</td><td><code>src/risk_scorer.py:132</code></td></tr>
+        <tr><td>TM-04 jitter range</td><td>±10%</td><td><code>module2_detection/models/DAE.py:397</code></td></tr>
+        <tr><td>MVE p95 latency target</td><td>&lt; 150 ms</td><td>Module 4 online explainer</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Deployment checklist</h3>
+    <ol class="checklist">
+      <li><strong>Network:</strong> span port / TAP into the IoMT VLAN producing stable NetFlow-shape records with the 47-feature ingest schema.</li>
+      <li><strong>Keys:</strong> HSM- or KMS-provisioned ECDSA P-256 PEM, exported through <code>IOMT_AUDIT_SIGNING_KEY</code>. Do not ship the auto-bootstrap key into production.</li>
+      <li><strong>Storage:</strong> append-only filesystem (or equivalent WORM) for <code>results/reports/audit_log.jsonl</code> and the rotation archive.</li>
+      <li><strong>Identity:</strong> external SSO/SAML auth bootstraps <code>participant_id</code> + <code>sim_role</code> in the Module 6 session — codebase has no login flow.</li>
+      <li><strong>Egress:</strong> allow HTTPS to OpenAI / Anthropic only if you want LLM-enhanced MVE; otherwise the rule-based fallback is offline-safe.</li>
+      <li><strong>Rate-limit:</strong> firewall / NAC / WAF must enforce per-source throttling against the IDS endpoint — TM-04 jitter alone does not stop sustained probing.</li>
+      <li><strong>Drift response:</strong> operator owns the retraining trigger when Module 4 drift detection flags shift; codebase does not auto-retrain.</li>
+      <li><strong>Tenancy:</strong> one process + workspace + signing key + audit log per hospital. Reuse across sites is not supported.</li>
+      <li><strong>Compliance:</strong> HIPAA Safe Harbor is covered at ingest; GDPR / IEC 62443 obligations need separate evidence outside this codebase.</li>
+    </ol>
+
+    <div class="callout">
+      <div class="callout-title">single weakest link</div>
+      Rate-limiting and key management are both delegated to the
+      deployment layer. If either is absent, the named TM-04 defense and
+      the OOS-K5 caveat collapse — the threat model held in code no
+      longer matches reality on the host.
+    </div>
+  </section>
+
+  <div class="footnote">
+    Threat model &amp; scope · generated 2026-05-28 from a read of
+    <code>docs/rq1_threat_model_scope.md</code>,
+    <code>common/signed_pickle.py</code>,
+    <code>module5_responses/audit/signing.py</code>,
+    <code>module2_detection/models/DAE.py</code>,
+    <code>module3_risk_scoring/config.py</code>,
+    <code>config/attack_to_mitre_mapping.yaml</code>,
+    <code>tools/rq2_audit_mitre_coverage.py</code>, and the response /
+    routing constants in <code>module5_responses/config.py</code>.<br>
+    Companion document:
+    <a href="system_architecture.html">System Architecture</a> — pipeline
+    layout, modules, audit chain, quality gates, invariants.<br>
+    Render: open this file directly in any browser — self-contained, no
+    build step, fonts loaded from Google Fonts CDN.
+  </div>
+
+</div>
+</body>
+</html>

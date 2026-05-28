@@ -56,7 +56,7 @@ RESPONSE_FIELDS = {
     # Phase 4.1 / Sprint 2.5 — always-emit policy: pipeline writes the
     # canonical tier-policy default then demotes to False when stability
     # is UNSTABLE.
-    "auto_execute":               {"default": 1.0},
+    "auto_execute_recommended":   {"default": 1.0},  # Path B · commit 6 rename
 }
 
 

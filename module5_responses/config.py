@@ -157,7 +157,7 @@ TIER_POLICIES: dict[str, dict] = {
             "escalate_clinical",
         ],
         "max_response_min": 5,
-        "auto_execute": True,
+        "auto_execute_recommended": True,
     },
     "HIGH": {
         "priority": 2,
@@ -168,7 +168,7 @@ TIER_POLICIES: dict[str, dict] = {
             "enhanced_monitoring",
         ],
         "max_response_min": 15,
-        "auto_execute": True,
+        "auto_execute_recommended": True,
     },
     "MEDIUM": {
         "priority": 3,
@@ -188,19 +188,19 @@ TIER_POLICIES: dict[str, dict] = {
             "enhanced_monitoring",
         ],
         "max_response_min": 60,
-        "auto_execute": False,
+        "auto_execute_recommended": False,
     },
     "LOW": {
         "priority": 4,
         "default_actions": ["log_event", "enhanced_monitoring"],
         "max_response_min": 480,
-        "auto_execute": False,
+        "auto_execute_recommended": False,
     },
     "NORMAL": {
         "priority": 5,
         "default_actions": ["log_event"],
         "max_response_min": 0,
-        "auto_execute": False,
+        "auto_execute_recommended": False,
     },
 }
 
@@ -363,7 +363,7 @@ def export_response_policy_dict() -> dict:
             tier: {
                 "default_actions": list(p["default_actions"]),
                 "max_response_min": p["max_response_min"],
-                "auto_execute": p["auto_execute"],
+                "auto_execute_recommended": p["auto_execute_recommended"],
             }
             for tier, p in TIER_POLICIES.items()
             if tier != "NORMAL"

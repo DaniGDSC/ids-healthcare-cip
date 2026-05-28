@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 class RiskComponents(BaseModel):
@@ -120,11 +120,20 @@ class Response(BaseModel):
     # mismatch=False); the dashboard only surfaces it when
     # ``mismatch=True``.
     routing_warning: RoutingWarning | None = None
-    # Phase 4.1 — auto_execute may be demoted to False when the
-    # explanation is UNSTABLE (Phase 4 stability gate). Default True
-    # so legacy artefacts without the field continue to behave
-    # exactly as before.
-    auto_execute: bool = True
+    # Phase 4.1 — auto_execute_recommended may be demoted to False when
+    # the explanation is UNSTABLE (Phase 4 stability gate). Default True
+    # so legacy artefacts without the field continue to behave exactly
+    # as before.
+    # Path B · commit 6 — renamed from `auto_execute`; the new name
+    # makes clear that the field is *advisory only* (nothing in this
+    # codebase reads it to actually execute). ``validation_alias``
+    # accepts the legacy name from pre-rename on-disk artefacts.
+    auto_execute_recommended: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "auto_execute_recommended", "auto_execute"
+        ),
+    )
 
 
 class MVEPayload(BaseModel):

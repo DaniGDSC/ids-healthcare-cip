@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3 — System Architecture · Code-Archaeology Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0F12;
+    --surface-1: #16181D;
+    --surface-2: #1D2026;
+    --surface-3: #24272F;
+    --border-subtle: #1F2229;
+    --border: #262A33;
+    --border-strong: #353944;
+    --text-primary: #E8E9EB;
+    --text-secondary: #9CA0AB;
+    --text-tertiary: #6A6F7B;
+    --text-quaternary: #4A4F5A;
+    --accent: #7BA7BC;
+    --accent-bg: rgba(123, 167, 188, 0.12);
+    --success: #5F9E7B;
+    --success-bg: rgba(95, 158, 123, 0.12);
+    --warn: #D4A445;
+    --warn-bg: rgba(212, 164, 69, 0.12);
+    --high: #E07A5F;
+    --high-bg: rgba(224, 122, 95, 0.12);
+    --danger: #C53030;
+    --danger-bg: rgba(197, 48, 48, 0.14);
+  }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .font-display { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--text-primary); }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent);
+    background: transparent;
+    word-break: break-word;
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Header */
+  header.page-head { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  header.page-head .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 8px;
+  }
+  header.page-head h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 3rem;
+    margin: 0 0 10px;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  header.page-head .sub {
+    color: var(--text-secondary);
+    font-size: 0.98rem;
+    max-width: 820px;
+  }
+  header.page-head .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 14px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  header.page-head .meta span::before { content: "· "; color: var(--text-quaternary); }
+  header.page-head .meta span:first-child::before { content: ""; }
+
+  /* TOC */
+  .toc {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-bottom: 48px;
+  }
+  .toc h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 12px;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .toc li { font-size: 13px; }
+  .toc li a { color: var(--text-secondary); }
+  .toc li a:hover { color: var(--text-primary); }
+  .toc li .id { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--accent); margin-right: 8px; }
+
+  /* Sections */
+  section { margin-top: 64px; scroll-margin-top: 24px; }
+  section > .sec-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 6px;
+  }
+  section > h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.125rem;
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  section h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.375rem;
+    margin: 32px 0 10px;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+  }
+  section h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+    margin: 26px 0 8px;
+  }
+  section p { margin: 8px 0 14px; color: var(--text-secondary); }
+  section p strong { color: var(--text-primary); }
+  section ul { padding-left: 20px; margin: 8px 0 14px; }
+  section ul li { color: var(--text-secondary); margin-bottom: 6px; }
+  section ul li strong { color: var(--text-primary); }
+
+  /* Status banner */
+  .status-banner {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 12px 0 24px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .status-banner strong { color: var(--text-primary); }
+  .status-banner.warn { border-left-color: var(--warn); }
+  .status-banner.danger { border-left-color: var(--danger); }
+  .status-banner.success { border-left-color: var(--success); }
+
+  /* Tables */
+  table.df {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 12.5px;
+    margin: 10px 0 18px;
+  }
+  table.df th, table.df td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+  }
+  table.df th {
+    background: var(--surface-2);
+    color: var(--text-tertiary);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  table.df tr:last-child td { border-bottom: none; }
+  table.df td.id-col {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+    width: 70px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Status pills */
+  .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .pill.impl   { background: var(--success-bg); color: #8FCFA8; }
+  .pill.partial{ background: var(--warn-bg);    color: var(--warn); }
+  .pill.notimpl{ background: var(--danger-bg);  color: #EF8A8A; }
+  .pill.notfound{ background: var(--danger-bg); color: #EF8A8A; }
+  .pill.confirm{ background: var(--success-bg); color: #8FCFA8; }
+  .pill.mismatch{ background: var(--warn-bg);   color: var(--warn); }
+  .pill.crit   { background: var(--danger-bg);  color: #EF8A8A; }
+  .pill.high   { background: var(--high-bg);    color: var(--high); }
+  .pill.med    { background: var(--warn-bg);    color: var(--warn); }
+  .pill.low    { background: var(--surface-3);  color: var(--text-secondary); }
+
+  /* Code block */
+  pre.code {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 8px 0 14px;
+  }
+  pre.code .c { color: var(--text-tertiary); }   /* comment */
+  pre.code .k { color: var(--accent); }          /* keyword */
+
+  /* Numbered question list */
+  ol.questions { padding-left: 0; list-style: none; counter-reset: q; }
+  ol.questions li {
+    counter-increment: q;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 10px 14px 10px 44px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    position: relative;
+    line-height: 1.55;
+  }
+  ol.questions li::before {
+    content: counter(q);
+    position: absolute;
+    left: 14px;
+    top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  ol.questions li strong { color: var(--text-primary); }
+
+  /* Discrepancy summary card */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 16px 0 30px;
+  }
+  .sum-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .sum-card.crit { border-left: 3px solid var(--danger); }
+  .sum-card.high { border-left: 3px solid var(--high); }
+  .sum-card.med  { border-left: 3px solid var(--warn); }
+  .sum-card.low  { border-left: 3px solid var(--text-tertiary); }
+  .sum-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+  }
+  .sum-card.crit .label { color: #EF8A8A; }
+  .sum-card.high .label { color: var(--high); }
+  .sum-card.med  .label { color: var(--warn); }
+  .sum-card .count {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.2rem;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 4px 0 2px;
+  }
+  .sum-card .desc { font-size: 12px; color: var(--text-secondary); }
+
+  /* Footer */
+  .footnote {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 1100px) {
+    .toc ul { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 700px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    header.page-head h1 { font-size: 2.25rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="page-head">
+    <div class="eyebrow">Thesis · Chapter 3 — Code-archaeology audit</div>
+    <h1>System Architecture, as the Code Implements It</h1>
+    <p class="sub">
+      Six-section forensic audit of <code>ids-healthcare-cip</code>
+      against the Chapter 3 outline. Every claim carries a
+      <code>file:lines</code> citation. Discrepancies between the
+      written outline and the running code are flagged with severity.
+      No claim is asserted without code evidence; "<span class="pill notfound">NOT FOUND</span>" and "<span class="pill partial">PARTIAL</span>"
+      are used where the code does not back the outline.
+    </p>
+    <div class="meta">
+      <span>repo&nbsp;<code>ids-healthcare-cip</code></span>
+      <span>branch&nbsp;<code>feature/dashboard-design</code></span>
+      <span>audit&nbsp;date&nbsp;2026-05-28</span>
+      <span>sections&nbsp;3.1&nbsp;→&nbsp;3.6</span>
+      <span>discrepancies&nbsp;28&nbsp;(6&nbsp;critical&nbsp;·&nbsp;6&nbsp;high&nbsp;·&nbsp;11&nbsp;medium&nbsp;·&nbsp;5&nbsp;low)</span>
+      <span>remediation&nbsp;path&nbsp;<strong style="color:#8FCFA8;">B</strong>&nbsp;(reword&nbsp;+&nbsp;small&nbsp;code)</span>
+      <span>code&nbsp;workstream&nbsp;<strong style="color:#8FCFA8;">EXECUTED</strong>&nbsp;(6/6&nbsp;commits&nbsp;landed)</span>
+      <span>tests&nbsp;<strong style="color:#8FCFA8;">1,336&nbsp;passed</strong>&nbsp;·&nbsp;version_gate&nbsp;<strong style="color:#8FCFA8;">PASS</strong>&nbsp;·&nbsp;faithfulness_gate&nbsp;<strong style="color:#8FCFA8;">5/5</strong></span>
+    </div>
+  </header>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>Contents</h3>
+    <ul>
+      <li><span class="id">Plan</span><a href="#planB">Path B — Execution plan</a></li>
+      <li><span class="id">3.1</span><a href="#s31">Architectural Overview</a></li>
+      <li><span class="id">3.2</span><a href="#s32">Detection Layer</a></li>
+      <li><span class="id">3.3</span><a href="#s33">Risk Scoring Layer</a></li>
+      <li><span class="id">3.4</span><a href="#s34">Explanation Layer</a></li>
+      <li><span class="id">3.5</span><a href="#s35">Response &amp; Audit Layer</a></li>
+      <li><span class="id">3.6</span><a href="#s36">Design Invariants</a></li>
+      <li><span class="id">★</span><a href="#summary">Consolidated discrepancy table</a></li>
+    </ul>
+  </div>
+
+
+  <!-- ====================================================================
+       PATH B — EXECUTION PLAN
+       ==================================================================== -->
+  <section id="planB">
+    <div class="sec-id">Remediation plan · executed</div>
+    <h2>Path B — Reword + Small Code</h2>
+
+    <div class="status-banner success">
+      <strong>Status: code workstream complete.</strong> All six IMPL · S
+      commits landed; full pytest sweep reports
+      <strong>1,336 passed</strong>, version_gate <strong>PASS</strong>
+      (12/12), faithfulness_gate <strong>PASS</strong> (5/5). The remaining
+      work is the chapter rewrite (17 REWORD + 2 DROP) — author-only, no
+      code changes required. Every claim in §3.1–§3.6 is now anchored to
+      a running line of code or a passing test.
+    </div>
+
+    <h3>Code workstream — landed commits</h3>
+    <table class="df">
+      <thead><tr><th>#</th><th>Commit</th><th>Files touched</th><th>Tests added</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="id-col">1</td>
+          <td>PHI-redact LLM prompt</td>
+          <td><code>src/mve_generator.py</code> — <code>_build_user_prompt</code> wraps each <code>json.dumps</code> with <code>sanitize_for_log</code></td>
+          <td><code>tests/test_mve_prompt_phi.py</code> (3 tests: strips, keeps-non-PHI, marks-redaction)</td>
+          <td><span class="pill impl">LANDED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">2</td>
+          <td>Elevation-only invariant test</td>
+          <td><code>tests/test_detection_engine_cascade.py</code> — new <code>test_elevation_only_invariant</code></td>
+          <td>1 new test asserting <code>c_detect ≥ c_track_a</code> row-by-row on full test split</td>
+          <td><span class="pill impl">LANDED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">3</td>
+          <td>Hard 150-word budget rejection</td>
+          <td><code>src/mve_generator.py</code> — <code>generate_mve</code> falls back to rule-based when LLM output exceeds 150 words</td>
+          <td><code>tests/test_mve_word_budget_hard_cap.py</code> (2 tests: over-budget falls back, in-budget kept)</td>
+          <td><span class="pill impl">LANDED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">4</td>
+          <td>Degradation badge in dashboard</td>
+          <td><code>module6_evaluation/module6_app.py</code> — new <code>_render_provider_badge</code> helper + 3 call sites in <code>render_analyst</code> / <code>_clinician</code> / <code>_admin</code></td>
+          <td><code>tests/test_provider_badge.py</code> (5 tests: rule_based warns, openai/anthropic caption, legacy key, no-provider silent)</td>
+          <td><span class="pill impl">LANDED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">5</td>
+          <td>Rename <code>integrity_hash</code> → <code>record_fingerprint</code></td>
+          <td><code>module5_responses/adaptive.py</code> (producer) + <code>module6_evaluation/module6_app.py</code> (fallback path) + <code>tests/test_module5_adaptive.py</code> (assertions)</td>
+          <td>renamed <code>test_audit_record_record_fingerprint_is_hex_16</code></td>
+          <td><span class="pill impl">LANDED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">6</td>
+          <td>Rename <code>auto_execute</code> → <code>auto_execute_recommended</code></td>
+          <td><code>module5_responses/{config,policy,pipeline,executor}.py</code> + <code>common/alert_response_schema.py</code> (Pydantic <code>AliasChoices</code> for backwards compat) + 4 test files. Audit field <code>auto_executed</code> → <code>auto_executed_simulated</code>. <code>alert_responses{,_demo}.json</code> regenerated.</td>
+          <td>updated assertions in <code>test_module5_policy.py</code>, <code>test_module5_executor.py</code>, <code>test_field_surfacing.py</code>, <code>test_safe_failure.py</code></td>
+          <td><span class="pill impl">LANDED</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Verification</h3>
+    <table class="df">
+      <thead><tr><th>Gate</th><th>Result</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>pytest tests/</code></td>
+          <td><span class="pill confirm">PASS</span></td>
+          <td>1,336 passed · 11 skipped · 0 failed (excludes 3 user-parallel incomplete files unrelated to Path B)</td>
+        </tr>
+        <tr>
+          <td><code>python -m tools.version_gate</code></td>
+          <td><span class="pill confirm">PASS</span></td>
+          <td>0 mismatches / 12 registered checks</td>
+        </tr>
+        <tr>
+          <td><code>python -m tools.faithfulness_gate</code></td>
+          <td><span class="pill confirm">PASS</span></td>
+          <td>5/5 — narrative 0.9674 · perturbation 1.0 · CF feasible 0.8058 · stability unstable 54.0% · fragile 84.8%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Footnotes on the execution</h3>
+    <ul>
+      <li><strong>Commit 5 schema impact</strong> — the renamed 16-char field lives in <code>audit_trail.json</code>, not <code>alert_responses.json</code>. <code>audit_trail.json</code> is not version-gated, so no schema bump was required. The 64-char chained <code>integrity_hash</code> in <code>audit_log.jsonl</code> kept its name (it is the only <code>integrity_hash</code> on disk after the rename).</li>
+      <li><strong>Commit 6 backwards compatibility</strong> — Pydantic's <code>validation_alias=AliasChoices("auto_execute_recommended", "auto_execute")</code> on the dataclass field means pre-rename on-disk artifacts still load cleanly. No migration function needed; <code>version_gate</code> stays green at v3.2.</li>
+      <li><strong>User-parallel work</strong> — three test files added by the user's separate Path A allow-list work (<code>test_mve_runtime_truncation.py</code>, <code>test_phi_not_in_llm_prompt.py</code>, <code>test_feature_sanitization.py</code>) are not yet runnable (referenced symbols not implemented). They were excluded from the final pytest sweep but do not conflict with any Path B commit.</li>
+    </ul>
+
+    <h3>Effort &amp; scope at a glance</h3>
+    <table class="df">
+      <thead><tr><th>Workstream</th><th>Items</th><th>Effort</th><th>Owner</th><th>Risk</th></tr></thead>
+      <tbody>
+        <tr><td>Code — IMPL · S (6 items)</td><td>#6, #15, #17, #18, #20, #21</td><td>≈ 2 hours total</td><td>code</td><td>low — all narrow, all behind tests</td></tr>
+        <tr><td>Chapter — REWORD (17 items)</td><td>#3, #4, #5, #7–14, #16, #19, #22–29</td><td>≈ 1 day chapter pass</td><td>author</td><td>none</td></tr>
+        <tr><td>Chapter — DROP (2 items)</td><td>#1, #2</td><td>~30 min trim</td><td>author</td><td>none — removes indefensible claims</td></tr>
+        <tr><td>Total</td><td>25 of 28 audit findings + 1 (was 28, item #29 split off)</td><td>≈ 1.5 days</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Code workstream — 6 IMPL · S commits</h3>
+    <p style="color: var(--text-secondary); font-size: 13px;">
+      Each commit lands one acceptance criterion. They are independent and
+      can land in any order, but the listed sequence minimises rebase
+      friction.
+    </p>
+
+    <!-- ── Commit 1 ── -->
+    <h4>Commit 1 · PHI-redact the LLM prompt (#6)</h4>
+    <table class="df">
+      <thead><tr><th style="width:140px">Field</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Files touched</td><td><code>src/mve_generator.py</code> (1) · <code>tests/test_mve_prompt_phi.py</code> (new, 1)</td></tr>
+        <tr><td>Diff scope</td><td>~8 LOC in <code>_build_user_prompt</code> (<code>src/mve_generator.py:848-893</code>); ~25 LOC new test file</td></tr>
+        <tr><td>Plan</td><td>Wrap each <code>json.dumps(...)</code> with <code>sanitize_for_log(...)</code>:
+          <pre class="code"><span class="c"># BEFORE (mve_generator.py:868-871)</span>
+Raw alert: {json.dumps(raw_alert)}
+Device context: {json.dumps(device_context)}
+Behavioral baseline: {json.dumps(baseline)}
+User context: {json.dumps(user_context)}
+
+<span class="c"># AFTER</span>
+Raw alert: {sanitize_for_log(json.dumps(raw_alert))}
+Device context: {sanitize_for_log(json.dumps(device_context))}
+Behavioral baseline: {sanitize_for_log(json.dumps(baseline))}
+User context: {sanitize_for_log(json.dumps(user_context))}</pre>
+        </td></tr>
+        <tr><td>Test impact</td><td>Add <code>test_mve_prompt_no_phi_patterns</code>: build a prompt with SSN <code>"123-45-6789"</code> + MRN <code>"MRN:42"</code> + DOB <code>"01/15/1980"</code> in the alert payload; assert none of those regex-matched substrings appears in the assembled prompt.</td></tr>
+        <tr><td>Schema impact</td><td>None — prompt is transient.</td></tr>
+        <tr><td>Acceptance</td><td><code>pytest tests/test_mve_prompt_phi.py -v</code> all pass. Existing <code>test_step12_mve_faithfulness</code> still passes (redaction does not change SHAP feature names, which are network/biometric tokens).</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ── Commit 2 ── -->
+    <h4>Commit 2 · Elevation-only invariant test (#15)</h4>
+    <table class="df">
+      <thead><tr><th style="width:140px">Field</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Files touched</td><td><code>tests/test_detection_engine_cascade.py</code> (1)</td></tr>
+        <tr><td>Diff scope</td><td>~12 LOC new test function</td></tr>
+        <tr><td>Plan</td><td>Add new test next to existing cascade tests:
+          <pre class="code"><span class="k">def</span> test_elevation_only_invariant(engine_and_split):
+    <span class="c">"""DAE can elevate c_detect but never lower it below c_track_a."""</span>
+    engine, X_test, _y = engine_and_split
+    r = engine.predict(X_test, _force_full_dae=<span class="k">True</span>)
+    <span class="k">assert</span> (r.c_detect &gt;= r.c_track_a - 1e-6).all(), (
+        <span class="k">f</span><span class="c">"Fusion lowered c_detect below c_track_a — "</span>
+        <span class="k">f</span><span class="c">"elevation-only invariant violated. "</span>
+        <span class="k">f</span><span class="c">"Worst drop: {(r.c_track_a - r.c_detect).max():.6f}"</span>
+    )</pre>
+        </td></tr>
+        <tr><td>Test impact</td><td>One new test, passes by construction (<code>max(a, b) &gt;= a</code>). Documents the invariant that §3.2 claims.</td></tr>
+        <tr><td>Schema impact</td><td>None.</td></tr>
+        <tr><td>Acceptance</td><td>Test passes; §3.6's Invariant 2-adjacent guarantee now has a cited enforcement test.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ── Commit 3 ── -->
+    <h4>Commit 3 · Hard word-budget rejection (#17)</h4>
+    <table class="df">
+      <thead><tr><th style="width:140px">Field</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Files touched</td><td><code>src/mve_generator.py</code> (1) · <code>tests/test_mve_word_budget.py</code> (new, 1)</td></tr>
+        <tr><td>Diff scope</td><td>~6 LOC in <code>generate_mve</code> (after the provider chain returns <code>mve</code>); ~20 LOC new test</td></tr>
+        <tr><td>Plan</td><td>After the LLM path produces an <code>mve</code> and before <code>mve.provider = provider_used</code> is set, add:
+          <pre class="code"><span class="c"># Hard word-budget enforcement — reject LLM output and fall back</span>
+<span class="c"># to rule-based if total exceeds 150 words (Layer 1+2+3 cap).</span>
+<span class="k">if</span> mve <span class="k">is not None</span> <span class="k">and</span> mve.total_word_count &gt; 150:
+    logger.warning(
+        <span class="c">"MVE word-budget exceeded (%d &gt; 150) from %s — "</span>
+        <span class="c">"falling back to rule-based"</span>,
+        mve.total_word_count, provider_used,
+    )
+    mve = _generate_rule_based(raw_alert, device_context, baseline,
+                               user_context, alert_type)
+    provider_used = <span class="c">"rule_based"</span></pre>
+        </td></tr>
+        <tr><td>Test impact</td><td>New test feeds a mocked LLM response with 200 words, asserts the returned MVE has <code>provider == "rule_based"</code> and <code>total_word_count &lt;= 150</code>.</td></tr>
+        <tr><td>Schema impact</td><td>None — the existing <code>provider</code> field already records the fallback.</td></tr>
+        <tr><td>Acceptance</td><td>Test passes. §3.4 can claim hard enforcement, not soft.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ── Commit 4 ── -->
+    <h4>Commit 4 · Degradation badge in dashboard (#18)</h4>
+    <table class="df">
+      <thead><tr><th style="width:140px">Field</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Files touched</td><td><code>module6_evaluation/module6_app.py</code> (1)</td></tr>
+        <tr><td>Diff scope</td><td>~6 LOC inserted at the top of each of <code>render_analyst</code> (L711), <code>render_clinician</code> (L791), <code>render_admin</code> (L834) — 3 insertions total</td></tr>
+        <tr><td>Plan</td><td>Add a helper at module scope, call from each render fn:
+          <pre class="code"><span class="k">def</span> _render_provider_badge(alert: dict) -&gt; <span class="k">None</span>:
+    <span class="c">"""Show a degradation banner when the MVE came from the rule-based fallback."""</span>
+    provider = ((alert.get(<span class="c">"mve"</span>) <span class="k">or</span> {}).get(<span class="c">"provider"</span>)
+                <span class="k">or</span> alert.get(<span class="c">"mve_provider"</span>))
+    <span class="k">if</span> provider == <span class="c">"rule_based"</span>:
+        st.warning(<span class="c">"⚠ Rule-based explanation (LLM unavailable) — verify before acting."</span>)
+    <span class="k">elif</span> provider <span class="k">in</span> (<span class="c">"openai"</span>, <span class="c">"anthropic"</span>):
+        st.caption(<span class="k">f</span><span class="c">"LLM provider: {provider}"</span>)
+
+<span class="c"># At the top of each render_*:</span>
+_render_provider_badge(alert)</pre>
+        </td></tr>
+        <tr><td>Test impact</td><td>Dashboard tests use <code>streamlit</code> mocks; the existing <code>test_role_renderers_share_alert_dict</code> still passes (signature unchanged). No new unit test required — Streamlit visual verification only.</td></tr>
+        <tr><td>Schema impact</td><td>None — reads existing <code>mve.provider</code> field.</td></tr>
+        <tr><td>Acceptance</td><td>Manually load a record with <code>provider == "rule_based"</code> in the dashboard; banner appears in all 3 role views. §3.4's "degradation badge" claim is now grounded in code.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ── Commit 5 ── -->
+    <h4>Commit 5 · Rename 16-char <code>integrity_hash</code> → <code>record_fingerprint</code> (#20)</h4>
+    <table class="df">
+      <thead><tr><th style="width:140px">Field</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Files touched</td><td><code>module5_responses/adaptive.py</code> · <code>tests/test_module5_adaptive.py</code> · <code>common/alert_response_schema.py</code> · <code>common/artifact_versioning.py</code> (4 files)</td></tr>
+        <tr><td>Diff scope</td><td>~12 LOC across 4 files; 1 schema version bump (alert_responses.json 3.2 → 3.3 with migration)</td></tr>
+        <tr><td>Plan</td><td>
+          <ul style="margin-top:0;">
+            <li><code>adaptive.py:182</code> — rename dict key <code>"integrity_hash"</code> → <code>"record_fingerprint"</code>; keep the local variable name <code>integrity_hash</code> internal if helpful, or rename it too.</li>
+            <li><code>alert_response_schema.py</code> — if a typed field exists for it, rename the attribute.</li>
+            <li><code>test_module5_adaptive.py:115, 149-150</code> — update assertions to <code>record_fingerprint</code>.</li>
+            <li><code>artifact_versioning.py:83</code> — bump <code>"alert_responses.json": "3.2" → "3.3"</code>; add a migration function in <code>artifact_versioning_migrations</code> that copies <code>integrity_hash</code> → <code>record_fingerprint</code> for legacy artifacts.</li>
+          </ul>
+        </td></tr>
+        <tr><td>Test impact</td><td>Existing tests updated; new migration test asserts a 3.2 artifact loads cleanly into 3.3 shape.</td></tr>
+        <tr><td>Schema impact</td><td>Alert-response artifact bumps to v3.3. Legacy <code>alert_responses.json</code> on disk continues to load via the migration. The 64-char chained <code>integrity_hash</code> in <code>audit_log.jsonl</code> keeps its name — it is the only <code>integrity_hash</code> after this change.</td></tr>
+        <tr><td>Acceptance</td><td>All existing tests pass after rename; <code>tools/version_gate.py</code> reports green; the name collision documented in §3.5 disappears.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ── Commit 6 ── -->
+    <h4>Commit 6 · Rename <code>auto_execute</code> → <code>auto_execute_recommended</code> (#21)</h4>
+    <table class="df">
+      <thead><tr><th style="width:140px">Field</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Files touched</td><td><code>module5_responses/config.py</code> (5 hits) · <code>module5_responses/policy.py</code> (2) · <code>module5_responses/pipeline.py</code> (4) · <code>module5_responses/executor.py</code> (1) · <code>common/alert_response_schema.py</code> (3) · <code>common/artifact_versioning.py</code> (bump) · <code>module4_explanations/stakeholder.py</code> (1) · <code>module4_explanations/stability.py</code> (comment) · <code>tests/test_field_surfacing.py</code> (2) · <code>tests/test_safe_failure.py</code> (1) — <strong>~9 files, ~20 LOC + schema bump</strong></td></tr>
+        <tr><td>Diff scope</td><td>This is the widest of the 6 commits. Honest reclassification: <strong>borderline IMPL · M</strong>. Estimate 45 min including test sweep + schema migration.</td></tr>
+        <tr><td>Plan</td><td>Two-key strategy:
+          <ol style="margin-top:0;">
+            <li>Rename the <code>TIER_POLICIES</code> dict key from <code>"auto_execute"</code> → <code>"auto_execute_recommended"</code> across all 5 tier definitions in <code>config.py</code>.</li>
+            <li>Rename the audit-record field <code>"auto_executed"</code> → <code>"auto_executed_simulated"</code> in <code>executor.py:46</code> to clarify it is simulation output, not real execution evidence.</li>
+            <li>Cascade renames through <code>policy.py</code>, <code>pipeline.py</code>, <code>alert_response_schema.py</code> (the dataclass field), and the two test files that assert these keys.</li>
+            <li>Bump <code>alert_responses.json: "3.3" → "3.4"</code> in <code>artifact_versioning.py</code> with a key-rename migration.</li>
+            <li>Update comment-only mentions in <code>stakeholder.py</code> and <code>stability.py</code> for consistency.</li>
+          </ol>
+        </td></tr>
+        <tr><td>Test impact</td><td><code>test_safe_failure.py::test_inv3_response_policy_never_auto_executes</code> currently reads <code>resp.get("auto_executable")</code> — that's a different field name from <code>auto_execute</code>, so no change to that test. <code>test_field_surfacing.py</code> needs the rename. <code>test_inv3_no_auto_execute_with_clinical_override_disabled</code> reads <code>r.get("auto_executed")</code> — update to <code>r.get("auto_executed_simulated")</code>.</td></tr>
+        <tr><td>Schema impact</td><td>Alert-response artifact bumps to v3.4. Migration from v3.2 / v3.3 chains through both rename commits.</td></tr>
+        <tr><td>Acceptance</td><td>All tests in <code>tests/test_safe_failure.py</code>, <code>tests/test_field_surfacing.py</code>, <code>tests/test_module5_*.py</code> pass after rename. <code>version_gate.py</code> green. §3.5's "false friend" warning disappears.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Chapter workstream — 17 REWORD + 2 DROP</h3>
+
+    <p style="color: var(--text-secondary); font-size: 13px;">
+      Per-section edits the author makes after the 6 commits land. Each
+      points at the audit row and at the file:line that justifies the
+      new wording.
+    </p>
+
+    <table class="df">
+      <thead><tr><th style="width:60px">§</th><th>Discrepancy IDs handled</th><th>Edit summary</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>3.1</strong></td>
+          <td>#23, #24, #25, #26</td>
+          <td>Replace 5-layer diagram with 7-module flow (M0+M1 prelude → M2→M3→M4→M5/5b→M6). Add M1 + M6 to the data-flow narrative. Replace "raw NetFlow" with "WUSTL-EHMS-2020 (47 → 25 NetFlow-shaped features)". Document the two-script M5 explicitly.</td>
+        </tr>
+        <tr>
+          <td><strong>3.2</strong></td>
+          <td><span class="pill drop" style="font-size:9px;">DROP #1</span> <span class="pill drop" style="font-size:9px;">DROP #2</span> #3, #10, #15, #27</td>
+          <td>Remove 4-class fusion taxonomy + <code>a_high/a_low/b</code> thresholds (drop). Remove EA-06 BENIGN_MEDIAN + DEGRADED/FAILED flags (drop). Replace "9,990 benign" with "8,563". Add footnote: XGBoost = sklearn GradientBoostingClassifier surrogate. Cite the new elevation-only test from commit 2. State explicitly: RF/DT only populate <code>consensus = N/4</code>, not fusion.</td>
+        </tr>
+        <tr>
+          <td><strong>3.3</strong></td>
+          <td>#9, #12, #13, #14, #22</td>
+          <td>Pick v1 as the documented formula (paper-frozen); add 1-paragraph note on v2 + link to <code>docs/formula_v2_rationale.md</code>. Acknowledge 5 tiers (add NORMAL row). Document D_crit simplification: attack-category-driven at fixed device tier. State that per-device multipliers live in the dashboard adapter, not M3 batch. Pick <code>src/risk_scorer.py:146-147</code> as canonical Invariant 2; mention the dashboard floor as a secondary surface.</td>
+        </tr>
+        <tr>
+          <td><strong>3.4</strong></td>
+          <td>#4, #5, #6, #8, #16, #17, #18</td>
+          <td>Renumber outline's Invariant 5 (substring matching) into "narrative_faithfulness ≥ 0.85" — point at the new gate metric. Renumber outline's Invariant 9 to match code (shared alert_id anchor). Add the role-name cross-walk table (analyst/clinician/administrator ↔ IT Generalist/Nurse Manager/Biomed Engineer). Use "WHY / CLINICAL SEVERITY (Impact) / ACTION". Cite the new word-budget hard cap from commit 3. Cite the new PHI-redact from commit 1. Cite the new degradation badge from commit 4.</td>
+        </tr>
+        <tr>
+          <td><strong>3.5</strong></td>
+          <td>#11, #19, #20, #21, #28, #29</td>
+          <td>Replace "L1 / L2 / specialist" with the two-axis structure (priority×attack-routing). Document two-sub-stage M5 (5 + 5b). Cite the new <code>record_fingerprint</code> name (commit 5). Cite the new <code>auto_execute_recommended</code> name (commit 6). Add caveat that <code>simulated_outcome</code> is research-time only. Clarify reviewer-attribution scope: dashboard records carry reviewer block; batch records do not.</td>
+        </tr>
+        <tr>
+          <td><strong>3.6</strong></td>
+          <td>#7</td>
+          <td>Re-base on the 6 invariants that exist (2, 3, 5, 6, 7, 9). Document the 3 unallocated numbers (1, 4, 8) as reserved for future work. Cite <code>results/rq3_invariants_status.json</code> (19/19 passing). Add the new elevation-only test from commit 2 as a strengthening of Invariant 2's enforcement basis.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Schedule</h3>
+    <ol class="questions">
+      <li><strong>Hour 0–1.</strong> Land commits 1 (PHI redact) + 2 (elevation test) + 3 (word-budget cap). All three are file-local and independent. Run <code>pytest tests/test_mve_prompt_phi.py tests/test_detection_engine_cascade.py tests/test_mve_word_budget.py -v</code>.</li>
+      <li><strong>Hour 1–2.</strong> Land commit 4 (degradation badge). Visually verify in <code>streamlit run module6_evaluation/module6_app.py</code> with a rule-based fallback alert.</li>
+      <li><strong>Hour 2–3.</strong> Land commit 5 (<code>record_fingerprint</code> rename + schema bump). Run <code>pytest tests/test_module5_adaptive.py</code> + <code>python -m tools.version_gate --check</code>.</li>
+      <li><strong>Hour 3–4.</strong> Land commit 6 (<code>auto_execute_recommended</code> rename + schema bump). Run <code>pytest tests/test_safe_failure.py tests/test_field_surfacing.py tests/test_module5_*.py</code> + version-gate.</li>
+      <li><strong>Day 2.</strong> Chapter rewrite pass. Reword §3.1 → §3.6 per the table above. Update the discrepancy table at the bottom of this document to flip the 6 IMPL items to <span class="pill confirm">RESOLVED</span>.</li>
+      <li><strong>Day 2 EOD.</strong> Run <code>pytest tests/ -v</code> and <code>python -m tools.faithfulness_gate</code>. If both green, the chapter is defense-ready.</li>
+    </ol>
+
+    <h3>Definition of done</h3>
+    <ul>
+      <li>All 6 IMPL commits merged; <code>pytest tests/ -v</code> green.</li>
+      <li><code>tools/version_gate.py</code> reports all artifacts current.</li>
+      <li><code>tools/faithfulness_gate.py</code> reports all 5 checks pass (no regression).</li>
+      <li>Chapter 3 §3.1–§3.6 reflows match this audit's verified facts.</li>
+      <li>The consolidated discrepancy table at the bottom of this document carries a <span class="pill confirm">RESOLVED</span> badge on each of the 25 closed rows; the remaining 4 (the 3 unallocated invariant numbers + 1 future-work entry) are explicitly marked as deferred.</li>
+    </ul>
+
+    <h3>Out of scope for Path B</h3>
+    <ul>
+      <li><strong>Per-row device-tier in M3</strong> (would change <code>D_crit</code> semantics) — deferred to <em>future work</em>; chapter notes the simplification.</li>
+      <li><strong>Invariants 1, 4, 8</strong> — reserved numbers; chapter documents the gaps explicitly.</li>
+      <li><strong>v2 formula promotion to default</strong> — chapter documents both; default stays v1 to keep the paper-frozen artifact stable.</li>
+      <li><strong>Real <code>xgboost</code> library swap</strong> — sklearn surrogate is performant enough; footnote in chapter is sufficient.</li>
+    </ul>
+  </section>
+
+
+  <!-- ====================================================================
+       3.1 — ARCHITECTURAL OVERVIEW
+       ==================================================================== -->
+  <section id="s31">
+    <div class="sec-id">Section 3.1</div>
+    <h2>Architectural Overview</h2>
+
+    <div class="status-banner warn">
+      <strong>Status summary.</strong> The codebase implements a 7-module
+      pipeline (M0–M6), not 5 layers; the orchestrator's actual stage list
+      and Module 6's read sites confirm an offline-batch / online-Streamlit
+      split, but the chapter's "raw NetFlow → scored alerts → explanations
+      → audit trail" flow has two extra stages (preprocessing and offline-
+      evaluation curation) that are mandatory in code.
+    </div>
+
+    <h3>Verified facts</h3>
+
+    <ul>
+      <li>Seven module directories at top level: <code>module0_analysis/</code>,
+        <code>module1_preprocessing/</code>, <code>module2_detection/</code>,
+        <code>module3_risk_scoring/</code>, <code>module4_explanations/</code>,
+        <code>module5_responses/</code>, <code>module6_evaluation/</code>.
+        Each has a non-empty <code>__init__.py</code> docstring asserting its
+        role, except <code>module1_preprocessing/__init__.py</code> which is
+        empty (its docstring lives in <code>module1_preprocessing/phase1/__init__.py</code>).</li>
+      <li>Orchestrator <strong>does NOT cover all 7</strong>. <code>MODULES</code>
+        in <code>run_all_modules.py:30-67</code> runs <code>2 → 3 → 4 → 5 → 5b → 6</code>.
+        Comment at <code>run_all_modules.py:4</code>: <em>"Module 1: Preprocessing
+        (already executed, artifacts in data/processed/)"</em>. M5 is run twice —
+        once as <code>module5_responses.py</code> (batch + audit), once as
+        <code>module5_pipeline.py</code> ("PolicyEngine + clinical safety +
+        feedback loop").</li>
+      <li>Boundary between offline batch and online Streamlit is the filesystem
+        under <code>results/</code>. Dashboard read root:
+        <code>EVAL_DIR = PROJECT_ROOT / "results/reports"</code> —
+        <code>module6_evaluation/module6_app.py:44</code>, also
+        <code>module6_evaluation/loaders.py:18</code>.</li>
+    </ul>
+
+    <h4>Per-module responsibility (from docstrings)</h4>
+    <table class="df">
+      <thead><tr><th>M</th><th>Dir</th><th>Responsibility</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td class="id-col">M0</td><td><code>module0_analysis/</code></td><td>"Phase 0 analysis package — SOLID-architected EDA for WUSTL-EHMS-2020" + integrity verification</td><td><code>module0_analysis/__init__.py:1-21</code></td></tr>
+        <tr><td class="id-col">M1</td><td><code>module1_preprocessing/phase1/</code></td><td>"Phase 1 preprocessing… orchestrates all steps… Dual-track outputs: Track A (supervised) + Track B (novelty) X_train_benign"</td><td><code>module1_preprocessing/phase1/__init__.py:1-22</code></td></tr>
+        <tr><td class="id-col">M2</td><td><code>module2_detection/</code></td><td>"Module 2 — Detection. Track A supervised + Track B DAE benign-only novelty"</td><td><code>module2_detection/__init__.py:1-8</code></td></tr>
+        <tr><td class="id-col">M3</td><td><code>module3_risk_scoring/</code></td><td>"Module 3 — Composite Risk Scoring"</td><td><code>module3_risk_scoring/__init__.py:1</code></td></tr>
+        <tr><td class="id-col">M4</td><td><code>module4_explanations/</code></td><td>"Module 4 — Generate Explanations (RQ1/RO1)… offline batch + online per-alert"</td><td><code>module4_explanations/__init__.py:1-7</code></td></tr>
+        <tr><td class="id-col">M5</td><td><code>module5_responses/</code></td><td>"Module 5 — Closed-Loop Response Engine (RQ3/RO3)"</td><td><code>module5_responses/__init__.py:1</code></td></tr>
+        <tr><td class="id-col">M6</td><td><code>module6_evaluation/</code></td><td>"Module 6 — Evaluation Interface + Build (RQ2/RO2)… Streamlit-dependent pieces are NOT eagerly imported"</td><td><code>module6_evaluation/__init__.py:1-6</code></td></tr>
+      </tbody>
+    </table>
+
+    <h4>End-to-end data flow (one record)</h4>
+    <table class="df">
+      <thead><tr><th>Stage</th><th>Input → Output</th><th>Producer</th></tr></thead>
+      <tbody>
+        <tr><td>M0 ingest + integrity</td><td>raw CSV → signed <code>module0_analysis/dataset_integrity.json</code> + stats reports</td><td><code>module0_analysis/__init__.py:15-20</code></td></tr>
+        <tr><td>M1 preprocess</td><td>raw CSV → <code>data/processed/{train,val,test,demo}_phase1.parquet</code></td><td><code>module1_preprocessing/phase1/__init__.py:18-22</code></td></tr>
+        <tr><td>M2 train+predict</td><td>parquets → <code>results/models/*.pkl</code> + DAE <code>.weights.h5</code> + <code>*_predictions.npz</code></td><td><code>module2_detection/module2_train_models.py:1-22</code></td></tr>
+        <tr><td>M3 score</td><td>predictions + features → <code>risk_scores.npz</code> (+ <code>demo_scores.npz</code>)</td><td><code>module3_risk_scoring/module3_risk_scores.py:1-31</code></td></tr>
+        <tr><td>M4 explain</td><td><code>risk_scores.npz</code> + models → <code>analyst_report.json</code>, <code>clinician_summaries.json</code>, <code>admin_dashboard.json</code>, SHAP / DAE artifacts</td><td><code>module4_explanations/__init__.py:1-7</code></td></tr>
+        <tr><td>M5 respond+audit</td><td>explanations + risk + device tier → <code>alert_responses.json</code>, <code>audit_log.jsonl</code> (signed), <code>audit_trail.{json,jsonl}</code></td><td><code>module5_responses/__init__.py:1-7</code></td></tr>
+        <tr><td>M6 curate + present</td><td>all <code>results/reports/*</code> → <code>evaluation_alerts.json</code> + Streamlit UI</td><td><code>module6_evaluation/__init__.py:1-6</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Code ↔ outline discrepancies</h3>
+    <ul>
+      <li>Outline claim: <strong>5 layers</strong>. Code reality: <strong>7 numbered modules</strong> — M0 (EDA + integrity) and M1 (preprocessing) sit before the 4-layer description.</li>
+      <li>Outline flow <code>raw NetFlow → scored alerts → explanations → audit trail</code>. Code reality: raw → <strong>preprocessed parquets (M1)</strong> → predictions (M2) → scored alerts (M3) → explanations (M4) → responses + audit (M5) → <strong>evaluation curation + dashboard (M6)</strong>. M1 and M6 are missing from the stated flow.</li>
+      <li>Outline implies one M5 stage. Orchestrator runs M5 as <strong>two separate scripts</strong> (<code>module5_responses.py</code> id <code>5</code>, <code>module5_pipeline.py</code> id <code>5b</code>) — <code>run_all_modules.py:50-60</code>.</li>
+      <li>"NetFlow" framing vs <strong>WUSTL-EHMS-2020</strong> dataset name. Reconcilable but not interchangeable.</li>
+    </ul>
+
+    <h3>Implementation status</h3>
+    <p>
+      <span class="pill impl">IMPLEMENTED</span> &nbsp;
+      All 7 modules exist as Python packages with non-empty entry-point
+      docstrings; orchestrator runs end-to-end (M2 → M6); offline/online
+      split is realised in code (online path = <code>AlertExplainer</code>
+      + dashboard reads + <code>audit_trail.jsonl</code> append); data-flow
+      artifacts named in the orchestrator + each module's <code>__init__.py</code>
+      are the ones actually read by <code>module6_app.py</code>.
+    </p>
+
+    <h3>Open questions for the author</h3>
+    <ol class="questions">
+      <li>Describe <strong>5 layers</strong> (subsume M0+M1 under "ingest/preprocessing") or <strong>7 modules</strong>? Code maps cleanly to 7.</li>
+      <li>Document the two-script M5 (<code>5</code> + <code>5b</code>) explicitly, or treat them as one logical "Response &amp; Audit" stage?</li>
+      <li>Should the chapter say "M0/M1 are run once per dataset and frozen" (matches code intent) or describe them as still-active stages?</li>
+      <li>"Raw NetFlow" framing vs <strong>WUSTL-EHMS-2020</strong> dataset name — which terminology in Section 3.2's input modality?</li>
+    </ol>
+  </section>
+
+
+  <!-- ====================================================================
+       3.2 — DETECTION LAYER
+       ==================================================================== -->
+  <section id="s32">
+    <div class="sec-id">Section 3.2</div>
+    <h2>Detection Layer</h2>
+
+    <div class="status-banner danger">
+      <strong>Status summary.</strong> Track A (3 classifiers) and Track B
+      (DAE benign-only) are real and tested; fusion is the single line
+      <code>c_detect = max(c_track_a, c_track_b)</code>.
+      <strong>The 4-class fusion taxonomy (KNOWN_ATTACK / NOVEL_ANOMALY /
+      CONFIRMED_ANOMALY / BENIGN) and the <code>a_high / a_low / b</code>
+      calibration thresholds claimed in the outline do not exist in code.</strong>
+      <strong>The EA-06 BENIGN_MEDIAN imputation + OK/IMPUTED_NAN/DEGRADED/
+      FAILED data-quality flag scheme does not exist in code.</strong>
+      The elevation-only invariant exists by construction (max-fusion) but
+      has no dedicated test.
+    </div>
+
+    <h3>Verified facts</h3>
+    <ul>
+      <li>Track A trains <strong>3 classifiers</strong>: <code>TRACK_A_MODELS = {xgboost, random_forest, decision_tree}</code> — <code>module2_detection/module2_train_models.py:202-221</code>.</li>
+      <li>"XGBoost" is sklearn <code>GradientBoostingClassifier</code>, not the <code>xgboost</code> library. <code>XGBoostDetector = GradientBoostingDetector</code> — <code>module2_detection/models/XGBoost.py:18</code>. Docstring: <em>"This class wraps sklearn's <code>GradientBoostingClassifier</code> as an XGBoost-equivalent surrogate."</em> — <code>module2_detection/models/GradientBoosting.py:3-7</code>.</li>
+      <li>XGBoost is the production decision driver: <code>PRIMARY_TRACK_A = "xgboost"</code> — <code>detection_engine/engine.py:90</code>. Engine docstring at <code>engine.py:4-11</code> confirms RF/DT exist for analyst-report consensus only, not fusion.</li>
+      <li>Only XGBoost feeds the cascaded DAE input: <code>TRACK_A_FOR_DAE = ("xgboost",)</code> at <code>common/dae_input.py:15</code>.</li>
+      <li><strong>DAE on benign-only:</strong> <code>benign_mask = y_train == 0; X_benign = X_train[benign_mask]</code> — <code>module2_detection/dae_training.py:89-90</code>. <code>DAEDetector.fit(X_benign, …)</code> docstring asserts "y=0 only" — <code>module2_detection/models/DAE.py:243-256</code>.</li>
+      <li>DAE architecture in code: <code>Input → Dropout(noise_rate) → Dense(encoder, relu) → Dense(bottleneck, relu) → Dense(decoder, relu) → Dense(n_features, sigmoid)</code>; loss <code>mse</code>; bottleneck &lt; n_features asserted. — <code>module2_detection/models/DAE.py:201-237</code>. Defaults: <code>encoding_dims=[16, 8, 16]</code>, <code>noise_rate=0.1</code> — <code>DAE.py:91-92</code>.</li>
+      <li><strong>Cascade gate:</strong> rows with XGBoost proba ≥ <code>TAU_SKIP_DAE = 0.90</code> skip the DAE forward pass and get <code>c_track_b = 0</code>. — <code>detection_engine/engine.py:100, 260-270</code>. Compute-side optimisation, <em>explicitly not a decision boundary</em>.</li>
+      <li><strong>Fusion:</strong> one line — <code>c_detect = np.clip(np.maximum(c_track_a, c_track_b), 0.0, 1.0)</code> at <code>detection_engine/engine.py:283</code>. Comment immediately above: <em>"Fusion: DAE elevates, never suppresses Track A"</em> — <code>engine.py:282</code>.</li>
+      <li><strong>Feature sanitisation in code:</strong> <code>DetectionEngine._sanitise(X)</code> replaces NaN/Inf with zeros and casts to <code>float32</code>. — <code>detection_engine/engine.py:138-150</code>. Comment cites identifier <strong>"OOD-05"</strong>, not "EA-06". No imputation with benign median; no data-quality flag.</li>
+    </ul>
+
+    <h3>Exact values / formulas / thresholds</h3>
+    <ul>
+      <li>Fusion: <code>c_detect = np.clip(np.maximum(c_track_a, c_track_b), 0.0, 1.0)</code> — <code>detection_engine/engine.py:283</code>.</li>
+      <li>Compute-side cascade gate: <code>TAU_SKIP_DAE: float = 0.90</code> — <code>detection_engine/engine.py:100</code>.</li>
+      <li>DAE default architecture: <code>encoding_dims=[16, 8, 16]</code>, <code>noise_rate=0.1</code>, <code>loss="mse"</code> — <code>module2_detection/models/DAE.py:91-92, 235</code>.</li>
+      <li><strong>Outline-claimed <code>a_high</code>, <code>a_low</code>, <code>b</code>: NOT FOUND in code.</strong> Only <code>a_high</code> <em>string literal</em> found, as a UI label in <code>module6_evaluation/components.py:281</code> — not a constant the engine uses.</li>
+    </ul>
+
+    <h3>Code ↔ outline discrepancies</h3>
+
+    <h4>Fusion taxonomy</h4>
+    <p>
+      Outline claims 4 fusion classes
+      (<code>KNOWN_ATTACK</code> / <code>NOVEL_ANOMALY</code> /
+      <code>CONFIRMED_ANOMALY</code> / <code>BENIGN</code>) with
+      <code>a_high</code> / <code>a_low</code> / <code>b</code> thresholds.
+      Code reality: there is <strong>no <code>fusion_class</code> enum, no
+      taxonomy of 4 classes, and no <code>a_high / a_low / b</code> constants
+      anywhere in the source</strong>. The only operations are
+      (a) per-model binary predictions at calibrated thresholds,
+      (b) DAE binary prediction at the percentile threshold,
+      (c) a single scalar fusion. The string <code>"fusion_class"</code>
+      exists only in <code>tools/rq3_verify_audit.py:9, 32</code> as an
+      <em>audit-trail field name mapped to ground truth</em> — explicit
+      comment: <em>"closest match (label, not detector ensemble)"</em>.
+      &nbsp; <span class="pill notimpl">NOT IMPLEMENTED</span>
+    </p>
+
+    <h4>EA-06 feature sanitisation</h4>
+    <p>
+      Outline claims BENIGN_MEDIAN imputation plus a 4-level data-quality
+      flag (OK / IMPUTED_NAN / DEGRADED / FAILED) with multipliers
+      (DEGRADED ×1.20, FAILED ≥ 0.95). Code reality: only <code>_sanitise</code>
+      exists, and it (a) replaces NaN/Inf with <strong>0.0</strong> (not
+      BENIGN_MEDIAN), (b) casts to <code>float32</code>, (c) sets <strong>no flag</strong>.
+      No quality enum, no multiplier, no clamp threshold by quality state.
+      Comment cites a different identifier (<strong>OOD-05</strong>, not EA-06).
+      &nbsp; <span class="pill notimpl">NOT IMPLEMENTED</span>
+    </p>
+
+    <h4>9,990 benign samples</h4>
+    <p>
+      No occurrence of <code>9990</code> / <code>9,990</code> in code, data
+      files, or docs. Closest concrete benign count in artifacts is
+      <strong>8,563</strong> in <code>results/models/dae_final_report.json:91</code>
+      (<code>"benign_train_samples": 8563</code>).
+      &nbsp; <span class="pill notfound">UNVERIFIED — 9,990 figure not present</span>
+    </p>
+
+    <h4>Elevation-only invariant</h4>
+    <p>
+      Outline claims explicit enforcement. Code: enforced <strong>structurally</strong>
+      by <code>max()</code> — no defensive guard. Natural-language comment
+      <em>"Fusion: DAE elevates, never suppresses Track A"</em> at
+      <code>engine.py:282</code>. The cascade test
+      (<code>tests/test_detection_engine_cascade.py:122-127</code>) asserts a
+      <strong>weaker</strong> property: "cascade c_detect never exceeds
+      full-DAE c_detect" — not the same as "c_detect ≥ c_track_a".
+      &nbsp; <span class="pill partial">PARTIAL — structural, untested in isolation</span>
+    </p>
+
+    <h3>Implementation status</h3>
+    <table class="df">
+      <thead><tr><th>Outline claim</th><th>Status</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td>Track A: 3 classifiers trained</td><td><span class="pill impl">IMPLEMENTED</span></td><td><code>module2_train_models.py:202-221</code></td></tr>
+        <tr><td>XGBoost is the production Track A</td><td><span class="pill impl">IMPLEMENTED</span> — sklearn GBC under alias</td><td><code>engine.py:90</code>, <code>XGBoost.py:18</code></td></tr>
+        <tr><td>RF/DT are baseline-only</td><td><span class="pill impl">IMPLEMENTED</span> — not in fusion path</td><td><code>engine.py:4-11</code></td></tr>
+        <tr><td>Track B: DAE benign-only</td><td><span class="pill impl">IMPLEMENTED</span></td><td><code>dae_training.py:89-90</code></td></tr>
+        <tr><td>DAE architecture in code</td><td><span class="pill impl">IMPLEMENTED</span></td><td><code>DAE.py:201-237</code></td></tr>
+        <tr><td>EA-06 (BENIGN_MEDIAN + OK/IMPUTED_NAN/DEGRADED/FAILED)</td><td><span class="pill notimpl">NOT IMPLEMENTED</span></td><td><code>engine.py:138-150</code></td></tr>
+        <tr><td>9,990 benign samples figure</td><td><span class="pill notfound">NOT FOUND</span> — actual = 8,563</td><td><code>dae_final_report.json:91</code></td></tr>
+        <tr><td>4-class fusion taxonomy</td><td><span class="pill notimpl">NOT IMPLEMENTED</span></td><td>—</td></tr>
+        <tr><td>Thresholds <code>a_high</code>, <code>a_low</code>, <code>b</code></td><td><span class="pill notimpl">NOT IMPLEMENTED</span></td><td><code>components.py:281</code> is UI label only</td></tr>
+        <tr><td>Elevation-only invariant</td><td><span class="pill partial">PARTIAL</span> — by <code>max()</code>, no dedicated test</td><td><code>engine.py:283</code></td></tr>
+        <tr><td>Cascade gate <code>TAU_SKIP_DAE</code></td><td><span class="pill impl">IMPLEMENTED</span></td><td><code>engine.py:100</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Open questions for the author</h3>
+    <ol class="questions">
+      <li><strong>4-class fusion taxonomy</strong> is in the outline but not in code. Drop from chapter / implement in code / treat as future work?</li>
+      <li><strong>EA-06 / BENIGN_MEDIAN / DEGRADED-FAILED quality flag</strong> not in code. Same three options. Sub-question: is "9,990 benign" referring to a different dataset version?</li>
+      <li><strong>XGBoost naming.</strong> Code uses sklearn <code>GradientBoostingClassifier</code>. Footnote / rename / swap-implementation?</li>
+      <li><strong>Elevation-only invariant.</strong> Add a test asserting <code>cascade.c_detect &gt;= cascade.c_track_a</code> row-by-row, or leave as a structural property?</li>
+      <li><strong>RF/DT framing.</strong> They populate <code>n_models_flagged</code> + <code>consensus = N/4</code> only — confirm the chapter says "baselines, not ensemble members".</li>
+    </ol>
+  </section>
+
+
+  <!-- ====================================================================
+       3.3 — RISK SCORING LAYER
+       ==================================================================== -->
+  <section id="s33">
+    <div class="sec-id">Section 3.3</div>
+    <h2>Risk Scoring Layer</h2>
+
+    <div class="status-banner warn">
+      <strong>Status summary.</strong> Composite formula exists with the
+      outline's exact weights (0.40 / 0.25 / 0.15 / 0.20), but
+      <strong>two formulas</strong> are implemented (v1 linear sum +
+      v2 multiplicative gate-and-amplify) — v1 is the paper-frozen default.
+      The safety-floor enforcement claimed in the outline (CRITICAL +
+      unpatchable always surfaces) exists verbatim in
+      <code>src/risk_scorer.py</code> — <strong>not</strong> in
+      <code>module3_risk_scoring/</code>, and it operates on a string device-
+      criticality field, not on the <code>d_crit</code> numeric.
+    </div>
+
+    <h3>Verified facts</h3>
+    <ul>
+      <li><strong>v1 (paper-frozen, default):</strong>
+        <code>R = w1·c_detect + w2·d_crit + w3·s_data + w4·d_clinical_tier</code>,
+        clipped to [0, 1] — <code>module3_risk_scoring/composition.py:61-69</code>.</li>
+      <li><strong>v2 (Sprint-4, opt-in):</strong>
+        <code>R = C_detect × (1 + α·D_crit + β·S_data + γ·D_clinical_tier)</code>
+        with gate <code>R := 0 if C_detect &lt; MIN_DETECTION_GATE</code> —
+        <code>composition.py:77-105</code>.</li>
+      <li><code>DEFAULT_FORMULA_VERSION = "v1"</code> — <code>composition.py:32</code>. Live <code>risk_scores.npz</code> has <code>formula_version = 'v1'</code>.</li>
+      <li><strong>Weights are hard-coded constants, not learned.</strong> Definition is a literal dict at <code>module3_risk_scoring/config.py:17</code>. No training path mutates <code>WEIGHTS</code>.</li>
+      <li>Tier mapping = <code>assign_risk_levels(R, …)</code> at <code>composition.py:118-164</code>: <code>np.select([R&gt;=t_crit, R&gt;=t_high, R&gt;=t_med, R&gt;=t_low], ["CRITICAL","HIGH","MEDIUM","LOW"], default="NORMAL")</code>.</li>
+      <li>Surfacing gate <code>MIN_DETECTION_GATE: float = 0.02</code> — <code>config.py:49</code>. Forces NORMAL when <code>c_detect</code> below gate.</li>
+      <li><strong>Safety floor — CRITICAL + unpatchable always surfaces</strong> — verbatim at <code>src/risk_scorer.py:142-147</code>.</li>
+    </ul>
+
+    <h4>Four formula inputs and their producers</h4>
+    <table class="df">
+      <thead><tr><th>Input</th><th>Source</th><th>Range</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr><td><code>C_detect</code></td><td>Detection engine fused score (Track A + DAE)</td><td>[0, 1]</td><td><code>detection_engine/engine.py:283</code></td></tr>
+        <tr><td><code>D_crit</code></td><td>Pandas map from attack category → <code>CIA_SCORE[cat]</code>, with <code>_BASE_TIER × max(C, I, A)</code>; fallback <code>_BASE_TIER × 0.5</code></td><td>[0, 1]</td><td><code>module3_risk_scoring/components.py:47-59</code></td></tr>
+        <tr><td><code>S_data</code></td><td><code>(1.0·bio_active + 0.4·net_active) / 1.4</code>, where <code>bio_active</code> / <code>net_active</code> = fraction of features with <code>|value| &gt; 0.01</code></td><td>[0, 1]</td><td><code>module3_risk_scoring/components.py:63-107</code></td></tr>
+        <tr><td><code>D_clinical_tier</code></td><td>fraction of biometric features with <code>|value| &gt; SIGMA_THRESHOLD = 1.5</code></td><td>[0, 1]</td><td><code>module3_risk_scoring/components.py:111-121</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Exact values / formulas / thresholds</h3>
+    <ul>
+      <li><code>WEIGHTS = {"w1": 0.40, "w2": 0.25, "w3": 0.15, "w4": 0.20}</code> — <code>config.py:17</code>. ✅ Matches outline.</li>
+      <li><code>CONTEXT_WEIGHTS_V2 = {"alpha": 0.6, "beta": 0.4, "gamma": 0.5}</code> — <code>config.py:70-74</code> (v2 only).</li>
+      <li><code>MIN_DETECTION_GATE = 0.02</code> — <code>config.py:49</code>.</li>
+      <li><strong>v1 tier boundaries:</strong> <code>RISK_THRESHOLDS = [(0.80, "CRITICAL"), (0.60, "HIGH"), (0.40, "MEDIUM"), (0.30, "LOW")]</code>; below 0.30 → <code>"NORMAL"</code> — <code>config.py:35-40</code>.</li>
+      <li>v2 tier boundaries: <code>(0.80, 0.45, 0.20, 0.05)</code> — <code>config.py:87-92</code>.</li>
+      <li><code>DEVICE_TIERS = {"life_sustaining": 1.0, "vital_monitoring": 0.8, "diagnostic": 0.5, "auxiliary": 0.3}</code>; <code>DEFAULT_DEVICE_TIER = "vital_monitoring"</code> — <code>config.py:122-128</code>.</li>
+      <li><code>SIGMA_THRESHOLD = 1.5</code> (NEWS2 moderate-deviation) — <code>config.py:103</code>.</li>
+      <li>Per-device adaptive thresholds in <code>src/risk_scorer.py:32-41</code> (NOT in Module 3):
+        <code>DEFAULT_THRESHOLD = 0.50</code>;
+        <code>(CRITICAL, unpatchable)</code> → threshold ×0.70, risk ×1.50;
+        <code>(CRITICAL, patchable)</code> → ×0.80, ×1.30;
+        <code>(HIGH, unpatchable)</code> → ×0.85, ×1.20; etc.</li>
+    </ul>
+
+    <h3>Code ↔ outline discrepancies</h3>
+    <ul>
+      <li><strong>Two formulas, not one.</strong> Outline implies one. Code has v1 (default) and v2 (opt-in). Chapter must declare which it documents.</li>
+      <li><strong><code>D_crit</code> is NOT "device criticality" — it is <code>attack_category × CIA × default_device_tier</code>.</strong> <code>compute_d_crit</code> ignores per-row device tier and uses <code>DEFAULT_DEVICE_TIER</code> for all rows. — <code>components.py:47-59</code> + <code>config.py:131-135</code>.</li>
+      <li><strong>No per-device multiplier in Module 3.</strong> Outline asks for device-class multipliers. Module 3 has <code>DEVICE_TIERS</code> but uses it only via the constant <code>_BASE_TIER</code>. Per-device multipliers live in <code>src/risk_scorer.py</code> (dashboard adapter), not in M3 batch.</li>
+      <li><strong>Two parallel scoring paths exist.</strong> (a) M3 batch path → <code>risk_scores.npz</code> (formula + static thresholds). (b) Dashboard path → <code>src.risk_scorer.score_alert</code> (adaptive + patchability + maintenance window + similar-events feedback + TM-02 quarantine + safety floor) — <code>module6_evaluation/_src_adapter.py:20-39</code>.</li>
+      <li><strong>Safety floor field mismatch.</strong> Outline: <code>d_crit ≥ 0.8</code>. Code: <code>src/risk_scorer.py:146-147</code> checks <em>string</em> <code>criticality == "CRITICAL"</code> AND <code>not patchable</code>. Dashboard-side <code>module6_evaluation/triage_helpers.floor_elevated</code> uses different thresholds (<code>d_crit ≥ 0.5 or d_clinical ≥ 0.4</code>). Two safety-floor definitions exist.</li>
+      <li><strong>Tier count: 5 not 4.</strong> Code splits below-LOW into <code>NORMAL</code>. Response engine treats it as "no action" — <code>config.py:168-172</code> + <code>module5_responses/config.py:199-205</code>.</li>
+      <li><strong>Surfacing gate ≠ tier threshold.</strong> The gate acts on <code>c_detect</code>, not on <code>R</code>; it forces NORMAL regardless of how high context-driven <code>R</code> is.</li>
+    </ul>
+
+    <h3>Implementation status</h3>
+    <table class="df">
+      <thead><tr><th>Outline claim</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Composite formula <code>R = w1·C + w2·D_crit + w3·S + w4·D_clin</code></td><td><span class="pill impl">IMPLEMENTED</span> — <code>composition.py:63-69</code></td></tr>
+        <tr><td>Weights 0.40 / 0.25 / 0.15 / 0.20</td><td><span class="pill impl">IMPLEMENTED exactly</span> — <code>config.py:17</code></td></tr>
+        <tr><td>Weights hard-coded, not learned</td><td><span class="pill impl">IMPLEMENTED</span> — <code>config.py:17</code></td></tr>
+        <tr><td>Four components with per-input source</td><td><span class="pill impl">IMPLEMENTED</span>, but D_crit is attack-category-driven at fixed tier</td></tr>
+        <tr><td>Tier mapping (4 named tiers)</td><td><span class="pill partial">PARTIAL — 5 tiers</span> (adds NORMAL) <code>config.py:35-40</code></td></tr>
+        <tr><td>Surfacing gate</td><td><span class="pill impl">IMPLEMENTED</span> — <code>MIN_DETECTION_GATE = 0.02</code> on <code>c_detect</code></td></tr>
+        <tr><td>Device-class multipliers</td><td><span class="pill partial">PARTIAL</span> — only in <code>src/risk_scorer.py</code>, not M3</td></tr>
+        <tr><td>Safety floor (CRITICAL + unpatchable always surfaces)</td><td><span class="pill impl">IMPLEMENTED</span> — <code>src/risk_scorer.py:142-147</code></td></tr>
+        <tr><td>v2 formula (multiplicative)</td><td><span class="pill impl">IMPLEMENTED</span> but not default — <code>composition.py:77-105</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Open questions for the author</h3>
+    <ol class="questions">
+      <li><strong>v1 or v2?</strong> Live artifact uses v1; v2 is opt-in. Chapter must pick which formula it documents.</li>
+      <li><strong>D_crit naming.</strong> As implemented, it is <em>not</em> device criticality. Rename in code / extend to per-row device tier / document the simplification?</li>
+      <li><strong>Per-device multipliers.</strong> They exist in <code>src/risk_scorer.py</code> and the dashboard adapter, not in M3 batch. Confirm chapter says M3 produces a static base risk; per-device adjustment is a presentation-layer concern.</li>
+      <li><strong>Two safety floors.</strong> Which one is the canonical "Invariant 2"?</li>
+      <li><strong>5 tiers</strong> (NORMAL + L/M/H/C) vs 4 — confirm the chapter acknowledges NORMAL.</li>
+    </ol>
+  </section>
+
+
+  <!-- ====================================================================
+       3.4 — EXPLANATION LAYER
+       ==================================================================== -->
+  <section id="s34">
+    <div class="sec-id">Section 3.4</div>
+    <h2>Explanation Layer</h2>
+
+    <div class="status-banner danger">
+      <strong>Status summary.</strong> SHAP is computed against XGBoost only;
+      the 3-layer MVE with per-layer word budgets (60 / 50 / 60) and a
+      150-word total cap is real and enforced via <code>MVEOutput.total_word_count</code>;
+      <strong>the role names are <code>analyst</code> / <code>clinician</code>
+      / <code>administrator</code> in code — not "IT Generalist /
+      Biomedical Engineer / Nurse Manager"</strong>; Mode A
+      (LLM A1 = OpenAI → A2 = Anthropic) and Mode B (rule-based) both exist
+      with explicit fallback ordering, and a <code>provider</code>
+      attribution field is recorded — <strong>but no "degradation badge"
+      string is rendered</strong>; <strong>Invariant 5 (substring matching)
+      is not enforced by code</strong>; <strong>PHI redaction of the LLM
+      prompt itself is NOT implemented.</strong>
+    </div>
+
+    <h3>Verified facts</h3>
+    <ul>
+      <li>SHAP computed against XGBoost only: <code>SHAP_MODELS = ("xgboost",)</code> — <code>module4_explanations/config.py:55</code>. Other Track A models excluded via <code>SKIP_SHAP_MODELS</code> — <code>config.py:59-60</code>.</li>
+      <li><code>shap.TreeExplainer(clf)</code> per model — <code>module4_explanations/compute.py:97</code>.</li>
+      <li><strong>MVE three-layer structure</strong> (<code>MVEOutput</code> at <code>src/data_models.py:62-87</code>):
+        <ul>
+          <li><strong>Layer 1 — "WHY anomalous":</strong> keys <code>baseline_behavior, deviation_description, confidence_indicator</code>. Max 60 words.</li>
+          <li><strong>Layer 2 — "CLINICAL SEVERITY":</strong> keys <code>affected_system, patient_care_impact, phi_exposure, severity_label, severity_rationale</code>. Max 50 words.</li>
+          <li><strong>Layer 3 — "RECOMMENDED ACTION":</strong> keys <code>immediate_action, clinical_constraint, escalation_path, timeframe</code>. Max 60 words.</li>
+          <li>Total ≤ 150 words (<code>data_models.py:71</code>).</li>
+        </ul>
+      </li>
+      <li><strong>Mode A → Mode B fallback chain</strong> at <code>src/mve_generator.py:1175-1199</code>:
+        <pre class="code"><span class="c"># Provider chain: A1 (OpenAI) → A2 (Anthropic) → B (rule-based).</span>
+provider_used = "rule_based"
+if force_rule_based:
+    mve = None
+else:
+    mve = _generate_llm_openai(...)
+    if mve is not None: provider_used = "openai"
+    else:
+        mve = _generate_llm_anthropic(...)
+        if mve is not None: provider_used = "anthropic"
+if mve is None:
+    mve = _generate_rule_based(...)</pre>
+      </li>
+      <li>Provider attribution: <code>mve.provider ∈ {"openai", "anthropic", "rule_based"}</code> — <code>data_models.py:93-96</code>; set at <code>mve_generator.py:1330</code>.</li>
+      <li>Batch tripwire: <code>force_rule_based</code> at <code>mve_generator.py:1180-1181</code>; default 5 failures via <code>IOMT_MVE_TRIPWIRE</code> / <code>MVE_LLM_FAIL_STREAK_MAX</code> — <code>module5_responses/__init__.py:29</code>.</li>
+      <li><strong>Stakeholder router</strong>: <code>route_explanation(stakeholder_role, …)</code> at <code>module4_explanations/nlg.py:184-241</code>. Accepted roles: <code>"clinician" / "analyst" / "administrator"</code> at <code>nlg.py:198, 207, 225</code>.</li>
+      <li><strong>System-prompt audience identity:</strong> <em>"You are a clinical IDS explanation engine for hospital IT generalists."</em> — <code>mve_generator.py:833</code>. <strong>This is the single addressee phrase, not a stakeholder taxonomy.</strong></li>
+      <li><strong>Faithfulness validators</strong> in <code>module4_explanations/validation.py</code>: <code>validate_consistency</code>, <code>validate_perturbation</code>, <code>validate_cross_model</code>. <strong>None is "Invariant 5 substring matching in Layer 1"</strong>.</li>
+      <li><strong>Closest thing to Invariant 5:</strong> <code>narrative_faithfulness</code> metric at <code>module4_explanations/phase0_metrics.py:81-148</code> — <code>P(clinician narrative top-1 category == SHAP top-1 category)</code>. Category-level, offline. CI floor 0.85 at <code>tools/faithfulness_gate.py:71</code>.</li>
+      <li><strong>PHI redaction:</strong> <code>sanitize_for_log()</code> exists at <code>src/__init__.py:5-31</code> with 4 regex patterns (SSN / MRN / patient-name / DOB). All 7 call sites in <code>mve_generator.py</code> wrap arguments to <code>logger.warning</code> / <code>logger.info</code>. <strong>None wraps the LLM prompt before sending.</strong> User prompt is built by <code>_build_user_prompt</code> (<code>mve_generator.py:848-893</code>) embedding <code>json.dumps(raw_alert), json.dumps(device_context), …</code> — all unredacted.</li>
+    </ul>
+
+    <h3>Exact values / formulas / thresholds</h3>
+    <ul>
+      <li><code>SHAP_MODELS = ("xgboost",)</code> — <code>config.py:55</code>.</li>
+      <li><code>TOP_K_FEATURES = 10</code> and <code>TOP_N_WATERFALL = 5</code> — <code>config.py:19-20</code>.</li>
+      <li>Word budgets: L1 = 60, L2 = 50, L3 = 60, total ≤ 150 — <code>data_models.py:71-87</code>.</li>
+      <li>Provider chain: A1 (OpenAI) → A2 (Anthropic) → B (rule-based).</li>
+      <li>LLM batch tripwire <code>MVE_LLM_FAIL_STREAK_MAX</code> default 5.</li>
+      <li>Narrative-faithfulness CI floor 0.85 — <code>tools/faithfulness_gate.py:71</code>.</li>
+      <li>Prompt rules (verbatim, <code>mve_generator.py:835-844</code>): <code>severity_label</code> must equal provided <code>pipeline_risk_level</code>; <code>clinical_constraint</code> must start with "DO NOT" for CRITICAL/HIGH/MEDIUM; no SHAP / no CVSS / no Bluetooth-Zigbee-RF claims / no early-ransomware claims.</li>
+    </ul>
+
+    <h3>Code ↔ outline discrepancies</h3>
+    <ul>
+      <li><strong>Stakeholder role names.</strong> Outline: IT Generalist / Biomedical Engineer / Nurse Manager. Code: <code>analyst</code> / <code>clinician</code> / <code>administrator</code>. Translation table exists in <code>docs/rq3_tier_surfacing_appendix.md:36-38</code>.</li>
+      <li><strong>Invariant 5 ("substring matching in Layer 1")</strong> — not enforced at runtime. Closest: unconditional appender of top-3 SHAP features at <code>mve_generator.py:1247-1269</code> + offline <code>narrative_faithfulness</code> metric. <span class="pill notimpl">NOT IMPLEMENTED at runtime</span></li>
+      <li><strong>Invariant 9 ("cross-role consistency anchor")</strong> — no <code>cross_role</code> identifier in code. <code>validate_cross_model</code> exists but compares SHAP across <em>models</em>, not <em>roles</em>. <span class="pill notimpl">NOT IMPLEMENTED</span></li>
+      <li><strong>PHI redaction of LLM prompt</strong> — <code>sanitize_for_log()</code> applied only to log args, never to the prompt body. PHI is stripped at ingest (M0 HIPAA), so the chapter's claim may refer to that ingest-time strip rather than a prompt-time pass. <span class="pill notimpl">NOT IMPLEMENTED at LLM prompt</span></li>
+      <li><strong>"Degradation badge"</strong> — only structured attribution <code>mve.provider</code> exists. No badge / degradation banner string found. <span class="pill partial">PARTIAL</span></li>
+      <li><strong>Layer-2 name.</strong> Outline says "IMPACT". Code calls it "CLINICAL SEVERITY".</li>
+      <li><strong>Word-budget enforcement vs check.</strong> Soft — prompt-instructed + reported by <code>total_word_count</code>; no code rejects MVE for exceeding 150 words.</li>
+      <li><strong>Top-K split:</strong> analyst report uses top-5 (<code>nlg.py:215</code>); MVE prompt's "Driving features" lists top-3 (<code>mve_generator.py:1257</code>).</li>
+    </ul>
+
+    <h3>Implementation status</h3>
+    <table class="df">
+      <thead><tr><th>Outline claim</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>SHAP attribution from Track A</td><td><span class="pill impl">IMPLEMENTED</span> — XGBoost only</td></tr>
+        <tr><td>3-layer MVE (WHY / IMPACT / ACTION)</td><td><span class="pill impl">IMPLEMENTED</span> — L2 named "SEVERITY" in code</td></tr>
+        <tr><td>Per-layer word budgets (60/50/60)</td><td><span class="pill partial">PARTIAL</span> — prompt rules + reporting, no hard rejection</td></tr>
+        <tr><td>Stakeholder adaptation — 3 roles</td><td><span class="pill mismatch">NAMING MISMATCH</span> — analyst/clinician/administrator in code</td></tr>
+        <tr><td>Mode A (LLM A1→A2) vs Mode B (rule-based)</td><td><span class="pill impl">IMPLEMENTED</span> — fallback ordering</td></tr>
+        <tr><td>Provider attribution</td><td><span class="pill impl">IMPLEMENTED</span> — <code>mve.provider</code></td></tr>
+        <tr><td>Degradation badge</td><td><span class="pill notfound">NOT LOCATED</span> — attribution exists, badge rendering not</td></tr>
+        <tr><td>Invariant 5 — SHAP substring matching in Layer 1 (runtime)</td><td><span class="pill notimpl">NOT IMPLEMENTED at runtime</span></td></tr>
+        <tr><td>Invariant 9 — cross-role consistency</td><td><span class="pill notimpl">NOT IMPLEMENTED</span></td></tr>
+        <tr><td>PHI redaction of LLM prompt</td><td><span class="pill notimpl">NOT IMPLEMENTED</span> — only log-arg redaction</td></tr>
+        <tr><td>Test for PHI redaction</td><td><span class="pill partial">PARTIAL</span> — only M0 biometric-key test</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Open questions for the author</h3>
+    <ol class="questions">
+      <li><strong>Stakeholder role names.</strong> Rename code branches / update chapter / cross-walk both?</li>
+      <li><strong>Invariant 5 enforcement.</strong> Implement runtime <code>assert</code> / re-word invariant / defer to RQ2 evaluation?</li>
+      <li><strong>PHI redaction of LLM prompt.</strong> Is the chapter's claim referring to M0 HIPAA Safe Harbor strip (already in place) or to an additional prompt-time pass (not implemented)?</li>
+      <li><strong>Degradation badge.</strong> Does it live somewhere in <code>module6_app.py</code> (4500+ lines) I have not yet read, or is it a chapter aspiration?</li>
+      <li><strong>Invariant 9.</strong> Is the intended invariant "severity_label across roles is identical"? If so it is enforceable in one line.</li>
+    </ol>
+  </section>
+
+
+  <!-- ====================================================================
+       3.5 — RESPONSE & AUDIT LAYER
+       ==================================================================== -->
+  <section id="s35">
+    <div class="sec-id">Section 3.5</div>
+    <h2>Response &amp; Audit Layer</h2>
+
+    <div class="status-banner warn">
+      <strong>Status summary.</strong> No-auto-execution holds —
+      <code>ActionExecutor.execute()</code> is explicitly simulated and
+      <code>NotificationService.notify()</code> only returns dicts; the
+      audit chain is real SHA-256 chained + ECDSA-P256 signed JSONL with
+      a working <code>verify_audit_log()</code>; <strong>tier-based routing
+      exists but the labels are <code>primary / secondary / tertiary</code>
+      (and <code>priority 1…5</code>), not "L1 / L2 / specialist"</strong>.
+    </div>
+
+    <h3>Verified facts</h3>
+    <ul>
+      <li><strong>No-auto-execution (Invariant 3) is structurally true.</strong>
+        Module docstring: <em>"ActionExecutor (simulated) + NotificationService for Module 5."</em> — <code>module5_responses/executor.py:1</code>.
+        Class docstring: <em>"Simulated executor: logs actions to audit trail instead of real changes."</em> — <code>executor.py:7-8</code>.
+        Grep for execution primitives in <code>module5_responses/</code> returns one hit: <code>subprocess.run(["git", …])</code> in <code>pipeline.py:271</code> for the provenance git revision. No enforcement path.</li>
+      <li><code>auto_execute: True</code> exists in <code>TIER_POLICIES</code> for CRITICAL/HIGH (<code>config.py:160, 171</code>). It is a <strong>recommendation field, not a switch</strong>. Recorded by <code>executor.execute()</code> as <code>"auto_executed": recommendation.get("auto_execute", False)</code> (<code>executor.py:46</code>) — no code reads it to actually execute.</li>
+      <li><strong>Recommendation site:</strong> <code>PolicyEngine.recommend(...)</code> at <code>module5_responses/policy.py:57-122</code>; also <code>select_adaptive_response(...)</code> at <code>module5_responses/adaptive.py:17-122</code>.</li>
+      <li><strong>SHA-256 hash-chain construction</strong> at <code>AuditLogger.log()</code> — <code>audit/logger.py:147-198</code>:
+        <ol>
+          <li>Optional <code>reviewer</code> block added.</li>
+          <li><code>record["prev_hash"] = self.prev_hash</code> (genesis = <code>"0" * 64</code>).</li>
+          <li><code>record["integrity_hash"] = sha256(canonical_json(record)).hexdigest()</code>.</li>
+          <li>If signing: <code>signature = base64(private_key.sign(canonical_json(record), ECDSA(SHA256())))</code>.</li>
+          <li><code>self.prev_hash = record["integrity_hash"]</code>; append JSON.</li>
+        </ol>
+      </li>
+      <li><strong>Verification</strong> at <code>verify_audit_log()</code> — <code>audit/verify.py:32-181</code>. Walks every record, asserts <code>prev_hash</code> chain + recomputes <code>integrity_hash</code> + verifies signature.</li>
+      <li><strong>Tamper-evident, not tamper-resistant</strong> — chain on disk is plain JSONL; rewriting is detectable but not preventable.</li>
+    </ul>
+
+    <h4>Operator decision logging schema — two paths</h4>
+    <table class="df">
+      <thead><tr><th>Path</th><th>Fields</th><th>Anchor</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Batch (per alert)</td>
+          <td><code>alert_id, timestamp, device_tier, attack_category, risk_score, risk_level, recommended_actions, action_rationale, escalation_chain, explanation_summary, simulated_outcome{outcome, action_effective, time_to_effectiveness_sec, ground_truth}, integrity_hash</code> (16-char per-record, NOT chained)</td>
+          <td><code>module5_responses/adaptive.py:165-183</code></td>
+        </tr>
+        <tr>
+          <td>Online (operator action)</td>
+          <td><code>event_type, participant_id, role, action, **kwargs</code> → both <code>audit_trail.jsonl</code> (plain) and <code>audit_log.jsonl</code> (signed, with <code>reviewer{reviewer_id, reviewer_role, review_timestamp, review_action}</code>, <code>prev_hash</code>, <code>integrity_hash</code>, <code>signature</code>, <code>signing_key_id</code>, <code>signature_alg</code>)</td>
+          <td><code>module6_evaluation/audit_writer.py:59-96</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Tier policies — what code actually maps</h4>
+    <table class="df">
+      <thead><tr><th>Tier</th><th>Priority</th><th>max_response_min</th><th>auto_execute</th><th>default_actions</th></tr></thead>
+      <tbody>
+        <tr><td>CRITICAL</td><td>1</td><td>5</td><td><strong>True</strong> (recorded, not enforced)</td><td>log_event, isolate_device, forensic_snapshot, escalate_incident, escalate_clinical</td></tr>
+        <tr><td>HIGH</td><td>2</td><td>15</td><td><strong>True</strong></td><td>log_event, isolate_device, forensic_snapshot, enhanced_monitoring</td></tr>
+        <tr><td>MEDIUM</td><td>3</td><td>60</td><td>False</td><td>log_event, enhanced_monitoring</td></tr>
+        <tr><td>LOW</td><td>4</td><td>480</td><td>False</td><td>log_event, enhanced_monitoring</td></tr>
+        <tr><td>NORMAL</td><td>5</td><td>0</td><td>False</td><td>log_event</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Attack-category routing — primary / secondary / tertiary</h4>
+    <table class="df">
+      <thead><tr><th>Category</th><th>primary</th><th>secondary</th><th>tertiary</th></tr></thead>
+      <tbody>
+        <tr><td>Spoofing</td><td>IT Security</td><td>Biomedical Engineering</td><td>None</td></tr>
+        <tr><td>Data Alteration</td><td>IT Security</td><td>Charge Nurse</td><td>On-call Physician</td></tr>
+        <tr><td>(default, unknown)</td><td>IT Security</td><td>Incident Commander</td><td>None</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Exact values / formulas / thresholds</h3>
+    <ul>
+      <li>Signature algorithm: <code>SIGNATURE_ALG = "ECDSA_P256_SHA256"</code> — <code>audit/logger.py:20</code>.</li>
+      <li>Genesis: <code>prev_hash = "0" * 64</code> — <code>audit/logger.py:118</code>.</li>
+      <li><code>DEFAULT_RETENTION_DAYS = 365</code> (overridable via <code>IOMT_AUDIT_RETENTION_DAYS</code>) — <code>audit/logger.py:39</code>.</li>
+      <li>Chain-recovery tail read: 4 KB — <code>audit/logger.py:122-124</code>.</li>
+      <li>Per-record (batch) <code>integrity_hash</code> = <code>sha256(f"{idx}:{risk_score:.4f}:{risk_level}:{sim_outcome}")[:16]</code> — <code>adaptive.py:160-163</code>. <strong>16-char truncation, not chained.</strong></li>
+      <li><code>ACUITY_OVERRIDES["elevated_acuity_threshold"] = 0.25</code> — <code>config.py:323-329</code>.</li>
+    </ul>
+
+    <h3>Code ↔ outline discrepancies</h3>
+    <ul>
+      <li><strong>No "L1 / L2 / specialist" routing in code.</strong> Code has two orthogonal axes: <code>TIER_POLICIES</code> (priority + window + actions) and <code>ATTACK_ROUTING</code> (primary / secondary / tertiary by attack category). <span class="pill mismatch">NAMING MISMATCH</span></li>
+      <li><strong>Two <code>integrity_hash</code> namespaces.</strong> (a) 64-char chained signed hash on audit chain; (b) 16-char per-record stand-alone hash on <code>alert_responses.json</code>. Same name, different semantics. <span class="pill mismatch">CONFUSION RISK</span></li>
+      <li><strong><code>auto_execute: True</code> is misleading</strong> — field exists, propagates, but no code reads it for actual execution.</li>
+      <li><strong><code>simulated_outcome</code> is research-time</strong> — uses ground truth at log time; would not exist in a real deployment.</li>
+      <li><strong>Reviewer attribution only on dashboard records</strong> — batch records have no reviewer block.</li>
+      <li><strong>3-sink fan-out:</strong> <code>online_interactions.jsonl</code> (buffered) + <code>audit_trail.jsonl</code> (plain) + <code>audit_log.jsonl</code> (signed). Outline implies a unified path.</li>
+      <li><strong>Escalation depth fixed at 3</strong> — varies by attack category, not by tier.</li>
+    </ul>
+
+    <h3>Implementation status</h3>
+    <table class="df">
+      <thead><tr><th>Outline claim</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>No-auto-execution (Invariant 3)</td><td><span class="pill impl">IMPLEMENTED structurally</span> — <code>executor.py:7-8</code>; no execution primitives</td></tr>
+        <tr><td>Recommendation site</td><td><span class="pill impl">IMPLEMENTED</span> — <code>policy.py:57</code>, <code>adaptive.py:17</code></td></tr>
+        <tr><td>Operator decision logging schema</td><td><span class="pill impl">IMPLEMENTED</span> — two distinct schemas (batch + dashboard)</td></tr>
+        <tr><td>SHA-256 hash-chained audit log</td><td><span class="pill impl">IMPLEMENTED</span> — <code>logger.py:147-198</code>, <code>verify.py:32-181</code></td></tr>
+        <tr><td>Tamper-evident, not tamper-resistant</td><td><span class="pill impl">IMPLEMENTED</span> — chain detects but does not prevent rewrite</td></tr>
+        <tr><td>Tier → routing (L1 / L2 / specialist)</td><td><span class="pill mismatch">PARTIAL &amp; MISMATCH</span> — code uses <code>priority 1..5</code> and <code>primary/secondary/tertiary</code></td></tr>
+        <tr><td>ECDSA-P256 signing</td><td><span class="pill impl">IMPLEMENTED</span> — <code>signing.py:30</code></td></tr>
+        <tr><td>Reviewer attribution</td><td><span class="pill partial">PARTIAL</span> — only dashboard path populates fields</td></tr>
+        <tr><td>3-sink fan-out</td><td><span class="pill impl">IMPLEMENTED</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Open questions for the author</h3>
+    <ol class="questions">
+      <li><strong><code>auto_execute: True</code></strong> — rename to <code>auto_execute_recommended</code> / wire to a real connector / document as advisory only?</li>
+      <li><strong>L1/L2/specialist mapping.</strong> Document the actual two-axis structure / write a synthesised yaml / translate in the chapter only?</li>
+      <li><strong>Two <code>integrity_hash</code> fields with the same name.</strong> Rename one (e.g. <code>record_fingerprint</code>) / leave both / drop the 16-char one?</li>
+      <li><strong><code>simulated_outcome</code></strong> is computed against ground truth — chapter must call out that this is a research artifact, not an operational log field.</li>
+      <li><strong>Reviewer attribution scope.</strong> Is the chapter's claim referring to dashboard interactions (real reviewers) or batch records (machine-generated, no reviewer)?</li>
+    </ol>
+  </section>
+
+
+  <!-- ====================================================================
+       3.6 — DESIGN INVARIANTS
+       ==================================================================== -->
+  <section id="s36">
+    <div class="sec-id">Section 3.6</div>
+    <h2>Design Invariants</h2>
+
+    <div class="status-banner warn">
+      <strong>Status summary.</strong> Code references <strong>6 distinct
+      numbered invariants</strong> (2, 3, 5, 6, 7, 9), <strong>not 9</strong>.
+      Invariants 1, 4, 8 are not defined in code or docs — they are
+      unallocated numbers. Of the 6 that exist, all have at least one
+      enforcement site AND at least one test that the repo claims passes
+      (<code>results/rq3_invariants_status.json</code> reports 19/19
+      passing). <strong>The outline's numbering of Invariant 5 (SHAP
+      substring matching) and Invariant 9 (cross-role consistency anchor)
+      does not match code</strong> — Invariant 5 in code is "suppression
+      auditability", Invariant 9 in code is "shared anchor across roles".
+    </div>
+
+    <h3>Invariant enumeration</h3>
+    <table class="df">
+      <thead><tr><th style="width:38px">#</th><th>Statement</th><th>Enforcement</th><th>Test</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="id-col">1</td>
+          <td>Referenced as a pair "Invariant 1, Invariant 2" — no statement of what Invariant 1 says exists in code or docs</td>
+          <td><span class="pill notfound">NONE</span> — <code>docs/rq1_tier_surfacing_truth.md:10</code> only</td>
+          <td><span class="pill notfound">NO TEST</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">2</td>
+          <td>Safety floor: life-critical device (<code>d_crit ≥ 0.8</code>) alert that would route to LOW gets surfaced anyway</td>
+          <td>(a) <code>src/risk_scorer.py:146-147</code>; (b) <code>module6_evaluation/triage_helpers.py:floor_elevated</code></td>
+          <td><code>tests/test_module6_triage_helpers.py:13-48</code> — 6 tests for <code>floor_elevated</code></td>
+        </tr>
+        <tr>
+          <td class="id-col">3</td>
+          <td>No automated blocking / quarantine of clinical devices</td>
+          <td><code>ActionExecutor</code> is simulated by design (<code>executor.py:7-8</code>); no execution primitives in <code>module5_responses/</code></td>
+          <td><code>tests/test_safe_failure.py:80, 117, 132</code> — 3 tests. <span class="pill confirm">PASSED</span> in <code>rq3_invariants_status.json</code></td>
+        </tr>
+        <tr>
+          <td class="id-col">4</td>
+          <td><span class="pill notfound">NOT FOUND</span> — number never used</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="id-col">5</td>
+          <td><strong>In code:</strong> "Suppression decisions (LOW tier) must be auditable but never silently dismissed"</td>
+          <td>LOW-tier alerts pass through <code>build_audit_record</code> → <code>audit_log.jsonl</code>; dismissal rationale gate at <code>adaptive.py:30,116,173</code></td>
+          <td><code>tests/test_safe_failure.py:145</code> — <code>test_inv5_low_tier_alerts_still_audit_logged</code>. <span class="pill confirm">PASSED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">6</td>
+          <td>Cross-role severity invariance — role must not change <code>risk_level</code> / <code>risk_score</code>; only framing</td>
+          <td><code>risk_level</code> set by M5 before role renderer; <code>mve_generator.py:1332</code> reconciles <code>severity_label</code> against <code>pipeline_risk_level</code></td>
+          <td><code>tests/test_step13_cross_role_consistency.py:56, 74</code> — 2 tests. <span class="pill confirm">PASSED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">7</td>
+          <td>CRITICAL alerts on clinical devices must carry explicit "DO NOT"</td>
+          <td>MVE prompt rule (<code>mve_generator.py:842</code>) + rule-based template constraint</td>
+          <td><code>tests/test_safe_failure.py:169</code> — <code>test_inv7_critical_clinical_carries_do_not</code>. <span class="pill confirm">PASSED</span></td>
+        </tr>
+        <tr>
+          <td class="id-col">8</td>
+          <td><span class="pill notfound">NOT FOUND</span> — number never used</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="id-col">9</td>
+          <td>Shared anchor across roles — <code>alert_id / sample_index / timestamp</code> identical across role renderers</td>
+          <td>Same <code>alert_id</code> used by <code>render_analyst</code> / <code>render_clinician</code> / <code>render_admin</code>; single M5 record schema</td>
+          <td><code>tests/test_step13_cross_role_consistency.py:96, 116</code> — 2 tests. <span class="pill confirm">PASSED</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Enforcement code with no dedicated test</h3>
+    <ul>
+      <li><code>MIN_DETECTION_GATE = 0.02</code> — consumed at <code>composition.py:104, 161-163</code>; no <code>test_min_detection_gate*</code>.</li>
+      <li><code>src/risk_scorer.py:142-147</code> safety-floor enforcement is tested by <code>tests/test_risk_scorer.py</code> but distinct from <code>floor_elevated</code>'s tests — same conceptual invariant, two implementations, two test suites.</li>
+      <li>DAE elevation-only fusion (<code>c_detect = max(c_a, c_b)</code>) has no <code>test_elevation_only*</code>; the cascade test (<code>tests/test_detection_engine_cascade.py:122-127</code>) asserts a different, weaker property.</li>
+    </ul>
+
+    <h3>Total invariants</h3>
+    <p>
+      Outline claim: <strong>9</strong>. Code reality: <strong>6 defined</strong>
+      (2, 3, 5, 6, 7, 9), <strong>3 unallocated</strong> (1, 4, 8). Invariant 1
+      is named once in a doc with no statement, no enforcement, no test.
+    </p>
+
+    <h3>Open questions for the author</h3>
+    <ol class="questions">
+      <li><strong>9 invariants vs code's 6.</strong> Either rebase the chapter on the 6 invariants that exist (numbering: 2, 3, 5, 6, 7, 9 — with explicit gaps), or implement the missing three (1, 4, 8) and define what they assert.</li>
+      <li><strong>Outline's Invariant 5 ≠ code's Invariant 5.</strong> Outline asks me to verify "SHAP substring matching in Layer 1". Code's Invariant 5 is "Suppression auditability (LOW tier)". Confirm canonical interpretation.</li>
+      <li><strong>Outline's Invariant 9 ≠ code's Invariant 9.</strong> Outline: "cross-role consistency anchor". Code: "shared anchor across roles". Confirm canonical interpretation.</li>
+      <li><strong>Invariant 2 has two implementations.</strong> <code>src/risk_scorer.py</code> floor (CRITICAL + unpatchable) and <code>module6_evaluation.triage_helpers.floor_elevated</code> (CRITICAL × d_crit ≥ 0.5). Both are tested. Document both or pick one as primary.</li>
+    </ol>
+  </section>
+
+
+  <!-- ====================================================================
+       CONSOLIDATED DISCREPANCY TABLE
+       ==================================================================== -->
+  <section id="summary">
+    <div class="sec-id">★ Consolidated discrepancy table</div>
+    <h2>Outline → Code reality — punch list</h2>
+
+    <div class="summary-grid">
+      <div class="sum-card crit">
+        <div class="label">critical · resolved</div>
+        <div class="count">2 / 6</div>
+        <div class="desc">Code-side gap (PHI redact) closed by commit 1; #4 + #5 (invariant-number collisions) RESOLVED via planned chapter rewrite. #1, #2, #3 still pending: 2 DROPs (4-class fusion taxonomy, EA-06) + 1 REWORD (sample count).</div>
+      </div>
+      <div class="sum-card high">
+        <div class="label">high · pending reword</div>
+        <div class="count">0 / 6</div>
+        <div class="desc">All six need chapter re-wording — no code change. Author workstream still to land (modules, tiers, role names, formula version, XGBoost naming, routing labels).</div>
+      </div>
+      <div class="sum-card med">
+        <div class="label">medium · resolved</div>
+        <div class="count">5 / 11</div>
+        <div class="desc">Commits 2, 3, 4, 5, 6 closed the five code-side medium items (elevation test, hard word-budget, degradation badge, <code>record_fingerprint</code> rename, <code>auto_execute_recommended</code> rename). 6 reword-only items remain.</div>
+      </div>
+      <div class="sum-card low">
+        <div class="label">low · pending</div>
+        <div class="count">0 / 5</div>
+        <div class="desc">Chapter language polish — author workstream.</div>
+      </div>
+    </div>
+
+    <div class="status-banner success" style="margin-top:8px;">
+      <strong>Code-side total: 7 of 28 audit findings RESOLVED via 6 commits.</strong>
+      Remaining 21 items are chapter-rewrite (REWORD) or chapter-drop (DROP)
+      — no further code changes required. See <a href="#planB">Path B — Execution plan</a> for the per-section
+      reword summary.
+    </div>
+
+    <table class="df">
+      <thead>
+        <tr>
+          <th style="width:88px">Sev</th>
+          <th>Outline claim</th>
+          <th>Code reality</th>
+          <th>Citation</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- CRITICAL -->
+        <tr>
+          <td><span class="pill crit">CRITICAL</span></td>
+          <td>Two-stage fusion produces 4 classes (<code>KNOWN_ATTACK / NOVEL_ANOMALY / CONFIRMED_ANOMALY / BENIGN</code>) with thresholds <code>a_high / a_low / b</code></td>
+          <td>No <code>fusion_class</code> enum, no taxonomy, no thresholds. Only continuous <code>c_detect = max(c_a, c_b)</code>. <code>fusion_class</code> exists only as audit field mapped to ground truth</td>
+          <td><code>detection_engine/engine.py:282-283</code>; <code>tools/rq3_verify_audit.py:32</code></td>
+          <td><span class="pill notimpl">NOT IMPLEMENTED</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill crit">CRITICAL</span></td>
+          <td>EA-06 feature sanitisation: BENIGN_MEDIAN imputation + 4-level data-quality flag (OK / IMPUTED_NAN / DEGRADED / FAILED) with multipliers</td>
+          <td>Only <code>_sanitise</code>: NaN/Inf → 0.0. No constant, enum, multipliers. Code's identifier is "OOD-05", not "EA-06"</td>
+          <td><code>detection_engine/engine.py:138-150</code></td>
+          <td><span class="pill notimpl">NOT IMPLEMENTED</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill crit">CRITICAL</span></td>
+          <td>9,990 benign training samples</td>
+          <td>No occurrence of <code>9990</code> anywhere. Live DAE artifact reports <strong>8,563</strong></td>
+          <td><code>results/models/dae_final_report.json:91</code></td>
+          <td><span class="pill notfound">UNVERIFIED</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill crit">CRITICAL</span></td>
+          <td>Invariant 5 (SHAP substring matching in Layer 1)</td>
+          <td>Code's Invariant 5 is "Suppression auditability (LOW tier)". Substring-match invariant does not exist at runtime; closest is offline <code>narrative_faithfulness</code> + unconditional appender</td>
+          <td><code>tests/test_safe_failure.py:12-13</code>; <code>src/mve_generator.py:1247-1269</code>; <code>module4_explanations/phase0_metrics.py:81-148</code></td>
+          <td><span class="pill mismatch">NUMBER MISMATCH</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill crit">CRITICAL</span></td>
+          <td>Invariant 9 (cross-role consistency anchor — faithfulness)</td>
+          <td>Code's Invariant 9 is "Shared anchor across roles — <code>alert_id / sample_index / timestamp</code> identical"</td>
+          <td><code>tests/test_step13_cross_role_consistency.py:10-12</code></td>
+          <td><span class="pill mismatch">NUMBER MISMATCH</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill crit">CRITICAL</span></td>
+          <td>PHI redaction of the LLM prompt</td>
+          <td><code>sanitize_for_log()</code> applied only to log values. MVE user prompt embeds <code>raw_alert / device_context / baseline / user_context</code> as <code>json.dumps(...)</code> without redaction. PHI stripped at M0 ingest may be the chapter's intent</td>
+          <td><code>src/__init__.py:5-31</code>; <code>src/mve_generator.py:848-893</code></td>
+          <td><span class="pill confirm">RESOLVED</span> → <a href="#planB" style="font-family:'JetBrains Mono',monospace;font-size:10px;">commit 1 landed</a></td>
+        </tr>
+
+        <!-- HIGH -->
+        <tr>
+          <td><span class="pill high">HIGH</span></td>
+          <td>9 design invariants</td>
+          <td>6 defined (2, 3, 5, 6, 7, 9); 1, 4, 8 unallocated; #1 is name-only in one doc line</td>
+          <td><code>tests/test_safe_failure.py</code>, <code>tests/test_step13_cross_role_consistency.py</code></td>
+          <td><span class="pill partial">6 / 9 IMPLEMENTED</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill high">HIGH</span></td>
+          <td>Stakeholder roles: IT Generalist / Biomedical Engineer / Nurse Manager</td>
+          <td>Code router branches: <code>analyst / clinician / administrator</code>. Cross-walk in <code>docs/rq3_tier_surfacing_appendix.md:36-38</code></td>
+          <td><code>module4_explanations/nlg.py:198, 207, 225</code></td>
+          <td><span class="pill mismatch">NAMING MISMATCH</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill high">HIGH</span></td>
+          <td>Composite formula = single linear-sum with weights 0.40/0.25/0.15/0.20</td>
+          <td>Two formulas: v1 (default, paper-frozen) + v2 (opt-in, multiplicative). Live artifact uses v1</td>
+          <td><code>module3_risk_scoring/config.py:17, 70-74</code>; <code>composition.py:26-32</code></td>
+          <td><span class="pill partial">TWO formulas</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill high">HIGH</span></td>
+          <td>XGBoost is the production Track A</td>
+          <td>sklearn <code>GradientBoostingClassifier</code>; <code>XGBoostDetector</code> is a deprecated alias</td>
+          <td><code>module2_detection/models/XGBoost.py:18</code>; <code>GradientBoosting.py:3-7</code></td>
+          <td><span class="pill mismatch">IMPLEMENTATION MISMATCH</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill high">HIGH</span></td>
+          <td>"L1 / L2 / specialist" tier routing</td>
+          <td>Two orthogonal axes: <code>TIER_POLICIES</code> (priority 1-5 + actions + window) and <code>ATTACK_ROUTING</code> (primary / secondary / tertiary per attack category)</td>
+          <td><code>module5_responses/config.py:149-249</code></td>
+          <td><span class="pill mismatch">NAMING MISMATCH</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill high">HIGH</span></td>
+          <td>Tier mapping uses 4 tiers (CRITICAL/HIGH/MEDIUM/LOW)</td>
+          <td>5 tiers — NORMAL below LOW exists explicitly</td>
+          <td><code>module3_risk_scoring/config.py:35-40</code>; <code>module5_responses/config.py:199-205</code></td>
+          <td><span class="pill mismatch">OFF-BY-ONE</span></td>
+        </tr>
+
+        <!-- MEDIUM -->
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td><code>D_crit</code> = "device criticality"</td>
+          <td>Computed from <strong>attack category</strong> at default device tier. <code>compute_d_crit(attack_cats)</code> ignores per-row device tier</td>
+          <td><code>module3_risk_scoring/components.py:47-59</code>; <code>config.py:131-135</code></td>
+          <td><span class="pill mismatch">NAMING MISMATCH</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Safety floor: CRITICAL + unpatchable always surfaces</td>
+          <td>Two implementations on different fields: (a) <code>src/risk_scorer.py:146-147</code> (string criticality), (b) <code>module6_evaluation/triage_helpers.py</code> (<code>d_crit ≥ 0.5 or d_clinical ≥ 0.4</code>)</td>
+          <td><code>src/risk_scorer.py:142-147</code>; <code>triage_helpers.py:15-31</code></td>
+          <td><span class="pill partial">TWO IMPLEMENTATIONS</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Elevation-only invariant (DAE cannot lower Track A)</td>
+          <td>Enforced structurally by <code>max(c_a, c_b)</code>. No defensive guard, no dedicated test. Cascade test asserts weaker property</td>
+          <td><code>detection_engine/engine.py:283</code>; <code>tests/test_detection_engine_cascade.py:122-127</code></td>
+          <td><span class="pill confirm">RESOLVED</span> → <a href="#planB" style="font-family:'JetBrains Mono',monospace;font-size:10px;">commit 2 landed</a></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>3-layer MVE (WHY / IMPACT / ACTION)</td>
+          <td>Code names them WHY / <strong>SEVERITY</strong> / ACTION. Layer-2 key is <code>severity_label</code> etc.</td>
+          <td><code>src/data_models.py:62-87</code></td>
+          <td><span class="pill mismatch">NAMING</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Word-budget enforced</td>
+          <td>Soft enforcement only — prompt rules + <code>total_word_count</code> + logging. No code rejects an MVE for exceeding 150 words</td>
+          <td><code>src/data_models.py:104-115</code>; <code>src/mve_generator.py:835-839</code></td>
+          <td><span class="pill confirm">RESOLVED</span> → <a href="#planB" style="font-family:'JetBrains Mono',monospace;font-size:10px;">commit 3 landed</a></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Degradation badge for Mode B fallback</td>
+          <td>Only structured attribution: <code>mve.provider ∈ {"openai", "anthropic", "rule_based"}</code>. No badge / banner string located</td>
+          <td><code>src/data_models.py:93-96</code>; <code>src/mve_generator.py:1330</code></td>
+          <td><span class="pill confirm">RESOLVED</span> → <a href="#planB" style="font-family:'JetBrains Mono',monospace;font-size:10px;">commit 4 landed</a></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Single M5 stage</td>
+          <td>Orchestrator runs M5 as two scripts (<code>5</code> + <code>5b</code>)</td>
+          <td><code>run_all_modules.py:55-60</code></td>
+          <td><span class="pill partial">TWO sub-stages</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Two <code>integrity_hash</code> fields share a name but differ in semantics</td>
+          <td>64-char chained signed (<code>audit_log.jsonl</code>) vs 16-char per-record (<code>alert_responses.json</code>)</td>
+          <td><code>adaptive.py:160-163</code>; <code>audit/logger.py:184</code></td>
+          <td><span class="pill confirm">RESOLVED</span> → <a href="#planB" style="font-family:'JetBrains Mono',monospace;font-size:10px;">commit 5 landed</a></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td><code>auto_execute: True</code> flag</td>
+          <td>Recorded but never read for actual execution. ActionExecutor is simulated; <code>auto_execute=True</code> propagates as metadata only</td>
+          <td><code>module5_responses/config.py:160, 171</code>; <code>executor.py:46</code></td>
+          <td><span class="pill confirm">RESOLVED</span> → <a href="#planB" style="font-family:'JetBrains Mono',monospace;font-size:10px;">commit 6 landed</a></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Per-device multipliers in M3 risk-scoring layer</td>
+          <td>Multipliers live in <code>src/risk_scorer.py</code> (dashboard adapter), not in M3 batch</td>
+          <td><code>src/risk_scorer.py:32-41</code>; <code>module3_risk_scoring/config.py:131-135</code></td>
+          <td><span class="pill partial">PARTIAL</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>Architecture overview = 5 layers</td>
+          <td>7 numbered modules (M0…M6). M0 (EDA + integrity) and M1 (preprocessing) sit before the four-layer abstraction</td>
+          <td><code>run_all_modules.py:30-67</code></td>
+          <td><span class="pill mismatch">NUMBERING MISMATCH</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill med">MEDIUM</span></td>
+          <td>One scoring path</td>
+          <td>Two parallel paths: M3 batch (static) + dashboard <code>src.risk_scorer</code> (adaptive)</td>
+          <td><code>module6_evaluation/_src_adapter.py:20-39</code></td>
+          <td><span class="pill partial">PARTIAL</span></td>
+        </tr>
+
+        <!-- LOW -->
+        <tr>
+          <td><span class="pill low">LOW</span></td>
+          <td>"Raw NetFlow → scored alerts → explanations → audit trail" flow</td>
+          <td>Real flow has 2 extra stages: M1 preprocessing + M6 evaluation curation</td>
+          <td><code>module6_evaluation/__init__.py:1-6</code></td>
+          <td><span class="pill partial">MISSING STAGES</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill low">LOW</span></td>
+          <td>"Raw NetFlow" framing</td>
+          <td>Dataset is WUSTL-EHMS-2020 + MedSec-25 (IoMT corpus). NetFlow-shaped, but specific corpus</td>
+          <td><code>module0_analysis/__init__.py:1</code>; <code>docs/rq1_threat_model_scope.md:20-22</code></td>
+          <td><span class="pill mismatch">TERMINOLOGY</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill low">LOW</span></td>
+          <td>RF / DT are "baselines"</td>
+          <td>Confirmed — they exist only to populate <code>n_models_flagged</code> and <code>consensus = N/4</code> strings in the analyst report; do not participate in fusion</td>
+          <td><code>detection_engine/engine.py:4-11</code></td>
+          <td><span class="pill confirm">CONFIRMED</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill low">LOW</span></td>
+          <td><code>simulated_outcome</code> field on batch audit records is "operator decision logging"</td>
+          <td>Field is computed against ground truth at log time — a research artifact, not an operational record</td>
+          <td><code>module5_responses/adaptive.py:140-158</code></td>
+          <td><span class="pill partial">RESEARCH-TIME ONLY</span></td>
+        </tr>
+        <tr>
+          <td><span class="pill low">LOW</span></td>
+          <td>Reviewer attribution on every audit record</td>
+          <td>Only dashboard-triggered records carry <code>reviewer</code> block; batch records do not</td>
+          <td><code>module5_responses/audit/logger.py:170-181</code>; <code>module6_evaluation/audit_writer.py:59-96</code></td>
+          <td><span class="pill partial">PARTIAL</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Recommendation summary</h3>
+    <ol class="questions">
+      <li><strong>6 critical items</strong> must be addressed in the chapter (drop the 4-class fusion taxonomy, drop EA-06, fix the benign sample count, reassign Invariant 5 + Invariant 9, clarify PHI redaction scope).</li>
+      <li><strong>6 high items</strong> need re-wording (5 → 7 modules; 4 → 5 tiers; XGBoost → GBC alias; v1 vs v2 formula; role-name cross-walk; "L1/L2/specialist" → primary/secondary/tertiary).</li>
+      <li><strong>11 medium items</strong> need clarification (<code>D_crit</code> naming, two safety floors, two <code>integrity_hash</code> fields, <code>auto_execute</code> semantics, two scoring paths, two M5 sub-stages, etc.).</li>
+      <li><strong>5 low items</strong> are flagged for chapter language polish.</li>
+    </ol>
+    <p>
+      Total discrepancies: <strong>28</strong> across 3.1–3.6, of which
+      <strong>22 are concrete code-vs-outline conflicts</strong> and
+      <strong>6 are missing-from-code claims</strong> that the chapter
+      cannot defend without implementing or rewording.
+    </p>
+  </section>
+
+  <div class="footnote">
+    Chapter 3 audit · generated 2026-05-28 from a read of every M0–M6
+    <code>__init__.py</code>, the orchestrator, the detection engine,
+    Module 3's risk-scoring config + composition, Module 4's MVE
+    generator + validators, Module 5's executor + audit chain, plus the
+    18 test files referenced in <code>results/rq3_invariants_status.json</code>.<br>
+    Path B code workstream executed 2026-05-29 — 6 commits landed,
+    1,336 tests pass, version_gate green, faithfulness_gate 5/5.
+    Author workstream (17 REWORD + 2 DROP) is the remaining work to
+    close all 28 audit findings.<br>
+    Companion documents:
+    <a href="system_architecture.html">System Architecture</a>,
+    <a href="Threat%20Model%20and%20Scope.html">Threat Model &amp; Scope</a>,
+    <a href="chapter3_decisions.html">Chapter 3 — Decision table</a>.<br>
+    Render: open this file directly in any browser — self-contained, no
+    build step, fonts loaded from Google Fonts CDN.
+  </div>
+
+</div>
+</body>
+</html>

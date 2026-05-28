@@ -708,6 +708,25 @@ def process_alert(sample_index: int, alert_data: dict) -> dict:
 # ═══════════════════════════════════════════════════════════════════════
 
 
+def _render_provider_badge(alert: dict) -> None:
+    """Path B · commit 4 — surface a degradation banner when the MVE came
+    from the rule-based fallback (Mode B) instead of an LLM (Mode A).
+
+    Reads ``alert["mve"]["provider"]`` (or legacy ``alert["mve_provider"]``).
+    Anchors §3.4's "degradation badge" claim in code an operator sees at
+    triage time.
+    """
+    mve = alert.get("mve") or {}
+    provider = mve.get("provider") or alert.get("mve_provider")
+    if provider == "rule_based":
+        st.warning(
+            "⚠ Rule-based explanation (LLM unavailable) — "
+            "verify alert details independently before acting."
+        )
+    elif provider in ("openai", "anthropic"):
+        st.caption(f"Explanation provider: {provider}")
+
+
 def render_analyst(alert: dict):
     """Analyst view: SHAP plots + feature table + classification detail.
 
@@ -723,6 +742,9 @@ def render_analyst(alert: dict):
 
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
+
+    # Path B · commit 4 — degradation banner when MVE used the rule-based fallback
+    _render_provider_badge(alert)
 
     # Consensus + per-model breakdown surfaced at the top of the analyst
     # view — this is the meta-explanation that should frame how to read
@@ -795,6 +817,9 @@ def render_clinician(alert: dict):
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
 
+    # Path B · commit 4 — degradation banner when MVE used the rule-based fallback
+    _render_provider_badge(alert)
+
     nlg = alert.get("nlg_text", "")
     if nlg:
         st.warning(nlg)
@@ -839,6 +864,9 @@ def render_admin(alert: dict):
 
     # Gap 2: Device criticality badge
     render_device_criticality(alert)
+
+    # Path B · commit 4 — degradation banner when MVE used the rule-based fallback
+    _render_provider_badge(alert)
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Risk Score", f"{alert.get('risk_score', 0):.3f}")
@@ -1416,7 +1444,10 @@ def build_fda_record_for_alert(
         },
         sort_keys=True,
     )
-    integrity_hash = hashlib.sha256(payload.encode()).hexdigest()[:16]
+    # Path B · commit 5 — 16-char per-record fingerprint, renamed from
+    # ``integrity_hash``. The signed 64-char chained audit hash keeps
+    # the ``integrity_hash`` name in ``audit_log.jsonl``.
+    record_fingerprint = hashlib.sha256(payload.encode()).hexdigest()[:16]
     return {
         "alert_id": f"ALERT-{sample_idx:05d}",
         "timestamp": datetime.now().isoformat(),
@@ -1434,7 +1465,7 @@ def build_fda_record_for_alert(
             "time_to_effectiveness_sec": None,
             "ground_truth": alert.get("ground_truth", "unknown"),
         },
-        "integrity_hash": integrity_hash,
+        "record_fingerprint": record_fingerprint,
         "_source": "fallback (audit_trail.json not found)",
     }
 

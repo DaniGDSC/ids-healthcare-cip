@@ -157,8 +157,13 @@ def build_audit_record(
         sim_effective = True
         sim_tte_sec = None
 
+    # Path B · commit 5 — per-record fingerprint, renamed from
+    # ``integrity_hash`` to ``record_fingerprint``. The 16-char digest
+    # is a per-row content checksum (not a chained signed hash); the
+    # previous name collided with the 64-char ECDSA-signed chained hash
+    # in ``audit_log.jsonl`` which keeps the ``integrity_hash`` name.
     # M5-2: f-string avoids dict construction + json.dumps + encode per record.
-    integrity_hash = hashlib.sha256(
+    record_fingerprint = hashlib.sha256(
         f"{idx}:{risk_score:.4f}:{risk_level}:{sim_outcome}".encode()
     ).hexdigest()[:16]
 
@@ -179,7 +184,7 @@ def build_audit_record(
             "time_to_effectiveness_sec": sim_tte_sec,
             "ground_truth": ground_truth,
         },
-        "integrity_hash": integrity_hash,
+        "record_fingerprint": record_fingerprint,
     }
 
 

@@ -98,8 +98,8 @@ def build_all_records(
         # comes from the canonical tier policy and gets demoted below if
         # the explanation is UNSTABLE.
         from .config import TIER_POLICIES
-        response["auto_execute"] = bool(
-            TIER_POLICIES.get(level, TIER_POLICIES["LOW"]).get("auto_execute", False)
+        response["auto_execute_recommended"] = bool(
+            TIER_POLICIES.get(level, TIER_POLICIES["LOW"]).get("auto_execute_recommended", False)
         )
 
         # Phase 3.1 — attach the conditional playbook for this
@@ -126,7 +126,7 @@ def build_all_records(
         if idx in analyst_by_idx:
             stability_info = analyst_by_idx[idx].get("stability")
         if stability_info and stability_info.get("band") == "UNSTABLE":
-            response["auto_execute"] = False
+            response["auto_execute_recommended"] = False
             if "escalate_clinical" not in response["actions"]:
                 response["actions"].append("escalate_clinical")
                 response["action_descriptions"].append(
