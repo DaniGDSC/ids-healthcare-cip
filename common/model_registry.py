@@ -220,6 +220,7 @@ def get_baseline_thresholds() -> dict:
 
 def invalidate_cache() -> None:
     """Clear all cached model objects (test utility — not for production use)."""
+    _SIGNED_THRESHOLDS.clear()
     get_track_a_classifiers.cache_clear()
     get_baseline_classifiers.cache_clear()
     get_dae.cache_clear()

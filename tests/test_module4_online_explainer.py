@@ -82,3 +82,46 @@ def test_top_shap_helper_uses_compute_module():
     sv_row = np.array([0.1, -0.5, 0.3, 0.2])
     top = explainer._top_shap(sv_row, k=2)
     assert [t["feature"] for t in top] == ["b", "c"]
+
+
+def test_explain_reuses_precomputed_track_a_probas(monkeypatch):
+    """Hot path should not ask DetectionEngine to recompute Track A probas."""
+    from module4_explanations.online_explainer import AlertExplainer
+
+    class _FakeClassifier:
+        def predict_proba(self, x):
+            return np.array([[0.8, 0.2]], dtype=np.float32)
+
+    class _FakeDae:
+        threshold = 0.5
+
+        def reconstruction_error_decomposed(self, x_augmented):
+            return np.array([0.1], dtype=np.float32), np.zeros_like(x_augmented)
+
+    class _FakeEngine:
+        def __init__(self):
+            self.calls = []
+
+        def build_augmented(self, x_raw, probas=None):
+            self.calls.append(probas)
+            assert probas is not None
+            np.testing.assert_allclose(probas["xgboost"], np.array([0.2], dtype=np.float32))
+            return np.concatenate(
+                [x_raw.astype(np.float32), np.array([[0.2]], dtype=np.float32)],
+                axis=1,
+            )
+
+    fake_engine = _FakeEngine()
+    monkeypatch.setattr("detection_engine.get_shared_engine", lambda: fake_engine)
+
+    explainer = AlertExplainer.__new__(AlertExplainer)
+    explainer.feat_names = ("f1", "f2")
+    explainer.classifiers = {"xgboost": _FakeClassifier()}
+    explainer.explainers = {}
+    explainer.thresholds = {"xgboost": 0.5}
+    explainer.dae = _FakeDae()
+
+    out = explainer.explain(np.array([1.0, 2.0], dtype=np.float32), risk_score=0.1)
+
+    assert out["explanation_level"] == "minimal"
+    assert len(fake_engine.calls) == 1

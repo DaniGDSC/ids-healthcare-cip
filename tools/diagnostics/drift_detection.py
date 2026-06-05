@@ -69,8 +69,9 @@ def _split_paths(split: str) -> dict:
 def load_drift_data(split: str = "test") -> dict:
     """Load DAE reconstruction errors and training benign baseline for a split."""
     paths = _split_paths(split)
-    npz = dict(np.load(paths["dae_preds"], allow_pickle=True))
-    risk_npz = dict(np.load(paths["risk_npz"], allow_pickle=True))
+    npz = dict(np.load(paths["dae_preds"]))
+    from common.risk_scores_loader import load_risk_scores as _load_risk_scores
+    risk_npz = _load_risk_scores(paths["risk_npz"])
     # DAE is persisted as dae_detector.json + dae_model.weights.h5 (no
     # pickle on the load path — see DAE.from_artefacts). The model_registry
     # singleton caches it.

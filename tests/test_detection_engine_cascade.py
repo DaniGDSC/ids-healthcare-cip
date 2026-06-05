@@ -182,6 +182,32 @@ def test_x_augmented_shape_and_population(engine_and_split):
     )
 
 
+def test_build_augmented_reuses_precomputed_probas(monkeypatch):
+    """Precomputed Track A probas should bypass a second classifier pass."""
+    engine = DetectionEngine()
+    monkeypatch.setattr(engine, "_load", lambda: None)
+    engine._dae_expected_dim = 3
+
+    x_small = np.array(
+        [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]],
+        dtype=np.float32,
+    )
+    provided = {"xgboost": np.linspace(0.1, 0.4, len(x_small), dtype=np.float32)}
+
+    def _should_not_run(_X):
+        raise AssertionError("build_augmented recomputed Track A probas")
+
+    monkeypatch.setattr(engine, "_track_a_probas_all", _should_not_run)
+    x_aug = engine.build_augmented(x_small, probas=provided)
+
+    n_raw = x_small.shape[1]
+    np.testing.assert_array_equal(
+        x_aug[:, n_raw],
+        provided["xgboost"],
+        err_msg="Provided xgboost probas were not used in x_augmented.",
+    )
+
+
 def test_write_test_predictions_full_coverage(tmp_path, engine_and_split):
     """write_test_predictions must export per-row DAE scores for every test row."""
     engine, _X, _y = engine_and_split

@@ -227,23 +227,30 @@ class DetectionEngine:
 
     # ── Public API ─────────────────────────────────────────────────────
 
-    def build_augmented(self, X_raw: np.ndarray) -> np.ndarray:
-        """Build ``[X_raw || probas_for(TRACK_A_FOR_DAE)]``.
+    def _build_augmented_from_probas(
+        self,
+        X_clean: np.ndarray,
+        probas: dict[str, np.ndarray] | None = None,
+    ) -> np.ndarray:
+        """Build ``[X_clean || probas_for(TRACK_A_FOR_DAE)]`` from clean inputs.
 
-        This is the *only* function in the codebase that constructs the
-        cascaded DAE input. Asserts width consistency against the loaded
-        DAE so stale artifacts fail loudly here, not 100 lines downstream
-        inside a numpy broadcast.
+        ``probas`` lets hot-path callers reuse already-computed Track A
+        probabilities instead of forward-passing the same classifier twice.
+        When omitted, the helper computes them itself so existing call
+        sites keep the same behaviour.
         """
         self._load()
-        X_clean = self._sanitise(X_raw)
         n, n_raw = X_clean.shape
-
-        probas = self._track_a_probas_all(X_clean)
-        proba_cols = np.column_stack([probas[name] for name in TRACK_A_FOR_DAE]).astype(
-            np.float32
+        if probas is None:
+            probas = self._track_a_probas_all(X_clean)
+        missing = [name for name in TRACK_A_FOR_DAE if name not in probas]
+        if missing:
+            raise KeyError(
+                f"missing Track A probabilities for build_augmented: {missing}"
+            )
+        proba_cols = np.column_stack(
+            [np.asarray(probas[name], dtype=np.float32) for name in TRACK_A_FOR_DAE]
         )
-
         expected = self._dae_expected_dim
         actual = n_raw + proba_cols.shape[1]
         if expected != actual:
@@ -259,6 +266,27 @@ class DetectionEngine:
         X_aug[:, :n_raw] = X_clean
         X_aug[:, n_raw:] = proba_cols
         return X_aug
+
+    def build_augmented(
+        self,
+        X_raw: np.ndarray,
+        probas: dict[str, np.ndarray] | None = None,
+    ) -> np.ndarray:
+        """Build ``[X_raw || probas_for(TRACK_A_FOR_DAE)]``.
+
+        This is the *only* function in the codebase that constructs the
+        cascaded DAE input. Asserts width consistency against the loaded
+        DAE so stale artifacts fail loudly here, not 100 lines downstream
+        inside a numpy broadcast.
+
+        Args:
+            X_raw: Raw feature matrix ``(n, n_raw_features)``.
+            probas: Optional precomputed Track A probability arrays keyed
+                by model name. Supplying them avoids duplicate model
+                inference in hot paths such as ``AlertExplainer.explain``.
+        """
+        X_clean = self._sanitise(X_raw)
+        return self._build_augmented_from_probas(X_clean, probas)
 
     def predict(
         self,
@@ -301,22 +329,8 @@ class DetectionEngine:
         # Built for ALL rows even when most will be gated — the
         # column_stack is cheap and Module 4 reads x_augmented for the
         # full batch.
-        n, n_raw = X_clean.shape
-        proba_cols = np.column_stack([probas[name] for name in TRACK_A_FOR_DAE]).astype(
-            np.float32
-        )
-        expected = self._dae_expected_dim
-        actual = n_raw + proba_cols.shape[1]
-        if expected != actual:
-            raise ValueError(
-                f"DAE input width mismatch: expects {expected}, "
-                f"got {actual} (raw={n_raw} + "
-                f"|TRACK_A_FOR_DAE|={proba_cols.shape[1]}). "
-                f"Retrain DAE via module2_detection.dae_training."
-            )
-        x_aug = np.empty((n, expected), dtype=np.float32)
-        x_aug[:, :n_raw] = X_clean
-        x_aug[:, n_raw:] = proba_cols
+        n = X_clean.shape[0]
+        x_aug = self._build_augmented_from_probas(X_clean, probas)
 
         # Track B — DAE novelty, gated unless forced.
         c_track_b = np.zeros(n, dtype=np.float32)

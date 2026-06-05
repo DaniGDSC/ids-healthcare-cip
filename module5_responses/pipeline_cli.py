@@ -10,19 +10,22 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 from .audit import AuditLogger
-from .audit.signing import OUTPUT_DIR
 from .audit.logger import DEFAULT_RETENTION_DAYS
+from .audit.signing import OUTPUT_DIR
 from .executor import ActionExecutor, NotificationService
+from .loaders import (
+    PROJECT_ROOT,
+    load_attack_categories,
+    load_explanations,
+    load_risk_scores,
+)
 from .feedback import FeedbackLoop
 from .policy import PolicyEngine, export_response_policy
 from .worked_examples import run_worked_examples
 
 logger = logging.getLogger(__name__)
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _strict_json_default(obj):
@@ -46,6 +49,24 @@ def _strict_json_default(obj):
     )
 
 
+def _load_pipeline_inputs() -> tuple[dict, dict, dict, np.ndarray]:
+    """Load the canonical Module 5 inputs via shared loaders.
+
+    Centralising this keeps the CLI aligned with the signed risk-score
+    pair and the split-aware path conventions already used elsewhere in
+    Module 5.
+    """
+    risk_data = load_risk_scores(PROJECT_ROOT / "results/reports/risk_scores.npz")
+    analyst_by_idx, clinician_by_idx = load_explanations(
+        PROJECT_ROOT / "results/reports/analyst_report.json",
+        PROJECT_ROOT / "results/reports/clinician_summaries.json",
+    )
+    attack_cats = load_attack_categories(
+        PROJECT_ROOT / "data/processed/test_phase1.parquet",
+    )
+    return risk_data, analyst_by_idx, clinician_by_idx, attack_cats
+
+
 def main() -> None:
     logging.basicConfig(
         level=logging.INFO,
@@ -59,20 +80,7 @@ def main() -> None:
     logger.info("MODULE 5 — RESPONSE PIPELINE INTEGRATION (Tasks 5.1-5.8)")
     logger.info(sep)
 
-    risk_data = {
-        k: v
-        for k, v in np.load(
-            PROJECT_ROOT / "results/reports/risk_scores.npz", allow_pickle=True
-        ).items()
-    }
-    with open(PROJECT_ROOT / "results/reports/analyst_report.json") as f:
-        analyst_by_idx = {a["sample_index"]: a for a in json.load(f)}
-    with open(PROJECT_ROOT / "results/reports/clinician_summaries.json") as f:
-        clinician_by_idx = {s["sample_index"]: s for s in json.load(f)}
-    attack_cats = pd.read_parquet(
-        PROJECT_ROOT / "data/processed/test_phase1.parquet",
-        columns=["Attack Category"],
-    )["Attack Category"].values
+    risk_data, analyst_by_idx, clinician_by_idx, attack_cats = _load_pipeline_inputs()
 
     n_samples = len(risk_data["R"])
     logger.info("Loaded: %d samples", n_samples)

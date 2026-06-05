@@ -4,11 +4,13 @@ from __future__ import annotations
 import json
 import sys
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from common.risk_scores_loader import RiskScoresArtefact
 from module5_responses.audit.logger import AuditLogger
 from module5_responses.audit.retention import rotate_and_purge
 from module5_responses.audit.verify import verify_audit_log
@@ -38,14 +40,31 @@ def test_paths_demo_split_suffix():
 
 
 def test_paths_unknown_split_raises():
-    with pytest.raises(ValueError, match="unknown split"):
+    with pytest.raises(ValueError, match="not a valid Split"):
         _paths("staging")
 
 
-def test_load_risk_scores(tmp_path):
-    npz = tmp_path / "scores.npz"
-    np.savez(npz, R=np.array([0.1, 0.5, 0.9]), risk_levels=np.array(["LOW", "MEDIUM", "HIGH"]))
-    out = load_risk_scores(npz)
+def test_load_risk_scores(monkeypatch, tmp_path):
+    def fake_verified_load(path: Path) -> RiskScoresArtefact:
+        assert path == tmp_path / "scores.npz"
+        return RiskScoresArtefact(
+            R=np.array([0.1, 0.5, 0.9]),
+            c_detect=np.array([0.1, 0.5, 0.9]),
+            c_track_a=np.array([0.1, 0.5, 0.9]),
+            c_track_b=np.array([0.0, 0.0, 0.0]),
+            d_crit=np.array([0.2, 0.2, 0.2]),
+            s_data=np.array([0.3, 0.3, 0.3]),
+            d_clinical_tier=np.array([0.4, 0.4, 0.4]),
+            y_true=np.array([0, 1, 1]),
+            risk_level_codes=np.array([1, 2, 3], dtype=np.int8),
+            risk_levels=np.array(["LOW", "MEDIUM", "HIGH"]),
+            schema_version="2.0",
+            formula_version="v2",
+        )
+
+    monkeypatch.setattr("common.risk_scores_loader.load_risk_scores", fake_verified_load)
+
+    out = load_risk_scores(tmp_path / "scores.npz")
     assert "R" in out
     np.testing.assert_array_almost_equal(out["R"], [0.1, 0.5, 0.9])
 
@@ -148,6 +167,10 @@ def test_run_worked_examples_skips_missing_tier():
 
 
 def _make_logger(tmp_path):
+    from module5_responses.audit import signing as signing_mod
+
+    signing_mod._artefacts_present = lambda: []
+    signing_mod._read_pinned_key_id = lambda: None
     return AuditLogger(
         tmp_path / "audit.jsonl",
         signing_key_path=tmp_path / "priv.pem",
@@ -296,6 +319,75 @@ def test_main_dispatcher_default_routes_responses_cli(monkeypatch):
     from module5_responses.__main__ import main
     main()
     assert called.get("fired") is True
+
+
+def test_pipeline_cli_uses_shared_loaders(monkeypatch, tmp_path):
+    import module5_responses.pipeline_cli as cli
+
+    risk_data = {
+        "R": np.array([0.8]),
+        "risk_levels": np.array(["HIGH"]),
+        "y_true": np.array([1]),
+        "d_clinical_tier": np.array([0.7]),
+    }
+    analyst = {0: {"sample_index": 0}}
+    clinician = {0: {"sample_index": 0, "summary": "ok"}}
+    attack_cats = np.array(["Spoofing"])
+    scenarios = [{"risk_level": "HIGH"}]
+    feedback_output = {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "fpr": 0.0,
+        "fnr": 0.0,
+        "current_thresholds": {},
+        "suggested_threshold_change": {},
+        "adjustments": [],
+    }
+
+    monkeypatch.setattr(cli, "OUTPUT_DIR", tmp_path)
+    monkeypatch.setattr(cli, "load_risk_scores", lambda path: risk_data)
+    monkeypatch.setattr(cli, "load_explanations", lambda a, c: (analyst, clinician))
+    monkeypatch.setattr(cli, "load_attack_categories", lambda path: attack_cats)
+    monkeypatch.setattr(cli, "export_response_policy", lambda: None)
+    monkeypatch.setattr(cli, "run_worked_examples", lambda *args: scenarios)
+
+    class FakePolicyEngine:
+        def recommend(self, *args):
+            return {"actions": ["notify"]}
+
+    class FakeExecutor:
+        def execute(self, *args):
+            return {"event": "ok"}
+
+    class FakeAudit:
+        def __init__(self, path):
+            self.path = path
+
+        def log(self, _record):
+            return None
+
+    class FakeFeedback:
+        def record(self, *args):
+            return None
+
+        def compute_adjustments(self):
+            return feedback_output
+
+    class FakeNotifier:
+        def __init__(self):
+            self.notifications = []
+
+    monkeypatch.setattr(cli, "PolicyEngine", FakePolicyEngine)
+    monkeypatch.setattr(cli, "ActionExecutor", FakeExecutor)
+    monkeypatch.setattr(cli, "AuditLogger", FakeAudit)
+    monkeypatch.setattr(cli, "FeedbackLoop", FakeFeedback)
+    monkeypatch.setattr(cli, "NotificationService", FakeNotifier)
+
+    cli.main()
+
+    assert (tmp_path / "worked_examples.json").exists()
+    assert (tmp_path / "feedback_analysis.json").exists()
 
 
 # ── policy.export_response_policy artifact write ───────────────────────

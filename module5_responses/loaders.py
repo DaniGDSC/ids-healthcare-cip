@@ -1,11 +1,16 @@
-"""Module 5 data loaders — risk scores, explanations, attack categories."""
+"""Module 5 data loaders — risk scores, explanations, attack categories.
+
+This module intentionally preserves the legacy dict-shaped return values
+that older Module 5 callers expect, but routes path resolution and risk
+score loading through the canonical shared helpers so schema and split
+logic do not drift.
+"""
 from __future__ import annotations
 
 import json
 import logging
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -23,21 +28,14 @@ def _paths(split: str) -> dict:
     dashboard's fallback loader and downstream tooling).
     Demo = operator-clean (suffixed ``_demo`` everywhere).
     """
-    if split == "test":
-        scores_npz = "risk_scores.npz"
-        parquet = "test_phase1.parquet"
-        suffix = ""
-    elif split == "demo":
-        scores_npz = "demo_scores.npz"
-        parquet = "demo_phase1.parquet"
-        suffix = "_demo"
-    else:
-        raise ValueError(f"unknown split: {split!r} (expected 'test' or 'demo')")
+    from common import split_paths as sp
+
+    suffix = sp.suffix(split)
 
     return {
         "split": split,
-        "scores_npz": PROJECT_ROOT / "results/reports" / scores_npz,
-        "parquet": PROJECT_ROOT / "data/processed" / parquet,
+        "scores_npz": sp.risk_scores(split),
+        "parquet": sp.parquet(split),
         "analyst_json": PROJECT_ROOT / "results/reports" / f"analyst_report{suffix}.json",
         "clinician_json": PROJECT_ROOT / "results/reports" / f"clinician_summaries{suffix}.json",
         "out_alert_responses": OUTPUT_DIR / f"alert_responses{suffix}.json",
@@ -50,10 +48,29 @@ def _paths(split: str) -> dict:
 
 
 def load_risk_scores(scores_npz_path: Path | None = None) -> dict:
-    """Load Module 3 risk scores from the configured split's npz."""
+    """Load Module 3 risk scores through the verified shared loader.
+
+    Returns a plain dict view for backward compatibility with existing
+    Module 5 callers that expect ``risk_data["R"]`` style access.
+    """
+    from common.risk_scores_loader import load_risk_scores as _verified_load
+
     path = scores_npz_path or (PROJECT_ROOT / "results/reports/risk_scores.npz")
-    data = np.load(path, allow_pickle=True)
-    return {k: data[k] for k in data.files}
+    artefact = _verified_load(path)
+    return {
+        "R": artefact.R,
+        "c_detect": artefact.c_detect,
+        "c_track_a": artefact.c_track_a,
+        "c_track_b": artefact.c_track_b,
+        "d_crit": artefact.d_crit,
+        "s_data": artefact.s_data,
+        "d_clinical_tier": artefact.d_clinical_tier,
+        "y_true": artefact.y_true,
+        "risk_level_codes": artefact.risk_level_codes,
+        "risk_levels": artefact.risk_levels,
+        "schema_version": artefact.schema_version,
+        "formula_version": artefact.formula_version,
+    }
 
 
 def load_explanations(

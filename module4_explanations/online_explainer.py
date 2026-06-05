@@ -154,8 +154,10 @@ class AlertExplainer:
         # ── Step 1: Model predictions ──
         t0 = time.perf_counter()
         votes: dict[str, dict] = {}
+        track_a_probas: dict[str, np.ndarray] = {}
         for name, clf in self.classifiers.items():
             proba = float(clf.predict_proba(x_2d)[0, 1])
+            track_a_probas[name] = np.array([proba], dtype=np.float32)
             pred = int(proba >= self.thresholds[name])
             votes[name] = {"prediction": pred, "confidence": round(proba, 4)}
 
@@ -163,7 +165,9 @@ class AlertExplainer:
         # of constructing a fresh one per call. The lazy model registry
         # load now happens exactly once per process.
         from detection_engine import get_shared_engine
-        x_augmented = get_shared_engine().build_augmented(x_2d)
+        x_augmented = get_shared_engine().build_augmented(
+            x_2d, probas=track_a_probas,
+        )
         dae_error_arr, dae_per_feature = self.dae.reconstruction_error_decomposed(
             x_augmented,
         )
