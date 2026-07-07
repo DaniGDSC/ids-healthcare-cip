@@ -173,11 +173,183 @@ def plot_mve_alignment():
     return out
 
 
+def plot_explanation_quality_summary():
+    """Plot a compact explanation-quality summary across technical and user metrics."""
+    with open(PROJECT_ROOT / "results/rq2_mve_shap_alignment.json") as f:
+        alignment = json.load(f)
+    with open(PROJECT_ROOT / "results/rq2_shap_stability.json") as f:
+        stability = json.load(f)
+    with open(PROJECT_ROOT / "results/reports/evaluation_results.json") as f:
+        evaluation = json.load(f)
+
+    values = [
+        alignment["mode_b_rule_based_large_n"]["metrics"]["contains_at_least_2_pct"] / 100.0,
+        stability["summary"]["pct_stable"] / 100.0,
+        evaluation["metrics"]["with_xai"]["likert_comprehensibility"] / 5.0,
+        evaluation["metrics"]["with_xai"]["likert_actionability"] / 5.0,
+    ]
+    raw_labels = [
+        "Faithfulness\n(>=2 of top-3 SHAP)",
+        "Stability\n(% stable)",
+        "Comprehensibility\n(Likert / 5)",
+        "Actionability\n(Likert / 5)",
+    ]
+    raw_value_labels = ["100.0%", "86.2%", "4.03/5", "4.31/5"]
+    colors = [COLOR["mode_b"], COLOR["stable"], COLOR["mode_a"], "#D4A445"]
+
+    fig, ax = plt.subplots(figsize=(9.2, 5.8))
+    x = np.arange(len(values))
+    bars = ax.bar(
+        x,
+        values,
+        color=colors,
+        edgecolor="#262A33",
+        linewidth=0.6,
+        width=0.64,
+    )
+
+    for bar, label in zip(bars, raw_value_labels):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.025,
+            label,
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            family="monospace",
+            color="#262A33",
+        )
+
+    ax.axhline(0.95, color=COLOR["target"], linestyle="--", linewidth=1.0, alpha=0.6)
+    ax.text(3.45, 0.955, "faithfulness target", ha="right", va="bottom", fontsize=8.5, color=COLOR["target"])
+    ax.axhline(0.80, color=COLOR["diag"], linestyle=":", linewidth=1.0, alpha=0.7)
+    ax.text(3.45, 0.805, "stability target", ha="right", va="bottom", fontsize=8.5, color=COLOR["diag"])
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(raw_labels)
+    ax.set_ylim(0, 1.12)
+    ax.set_ylabel("Normalized score")
+    ax.set_title(
+        "Explanation quality summary - technical faithfulness and user-facing clarity",
+        loc="left",
+        pad=12,
+    )
+    ax.grid(True, alpha=0.25, linestyle="--", linewidth=0.6, axis="y")
+    ax.text(
+        0.02,
+        0.03,
+        "Likert metrics are normalized to a 0-1 scale for comparison.",
+        transform=ax.transAxes,
+        fontsize=9,
+        color="#6A6F7B",
+    )
+
+    out = OUT_DIR / "rq2_explanation_quality_summary.png"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
+def plot_decision_support_metrics():
+    """Plot core decision-support metrics with vs without XAI."""
+    with open(PROJECT_ROOT / "results/reports/evaluation_results.json") as f:
+        evaluation = json.load(f)["metrics"]
+
+    labels = [
+        "Accuracy",
+        "Confidence",
+        "Trust",
+        "Usefulness",
+        "Actionability",
+    ]
+    with_xai = [
+        evaluation["with_xai"]["decision_accuracy"],
+        evaluation["with_xai"]["mean_confidence"] / 5.0,
+        evaluation["with_xai"]["likert_trust"] / 5.0,
+        evaluation["with_xai"]["likert_usefulness"] / 5.0,
+        evaluation["with_xai"]["likert_actionability"] / 5.0,
+    ]
+    without_xai = [
+        evaluation["without_xai"]["decision_accuracy"],
+        evaluation["without_xai"]["mean_confidence"] / 5.0,
+        evaluation["without_xai"]["likert_trust"] / 5.0,
+        evaluation["without_xai"]["likert_usefulness"] / 5.0,
+        evaluation["without_xai"]["likert_actionability"] / 5.0,
+    ]
+    with_labels = ["0.92", "3.55/5", "4.35/5", "4.49/5", "4.31/5"]
+    without_labels = ["0.75", "2.97/5", "3.07/5", "3.43/5", "3.25/5"]
+
+    x = np.arange(len(labels))
+    width = 0.34
+    fig, ax = plt.subplots(figsize=(10.2, 5.9))
+
+    bars_without = ax.bar(
+        x - width / 2,
+        without_xai,
+        width,
+        color=COLOR["diag"],
+        edgecolor="#262A33",
+        linewidth=0.6,
+        label="Without XAI",
+    )
+    bars_with = ax.bar(
+        x + width / 2,
+        with_xai,
+        width,
+        color=COLOR["mode_b"],
+        edgecolor="#262A33",
+        linewidth=0.6,
+        label="With XAI",
+    )
+
+    for bars, value_labels in ((bars_without, without_labels), (bars_with, with_labels)):
+        for bar, text_label in zip(bars, value_labels):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.025,
+                text_label,
+                ha="center",
+                va="bottom",
+                fontsize=9,
+                family="monospace",
+                color="#262A33",
+            )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylim(0, 1.12)
+    ax.set_ylabel("Normalized score")
+    ax.set_title(
+        "Decision support metrics - operator performance with vs without XAI",
+        loc="left",
+        pad=12,
+    )
+    ax.legend(loc="upper left", frameon=False)
+    ax.grid(True, alpha=0.25, linestyle="--", linewidth=0.6, axis="y")
+    ax.text(
+        0.02,
+        0.03,
+        "Confidence and Likert metrics are normalized to a 0-1 scale for comparison.",
+        transform=ax.transAxes,
+        fontsize=9,
+        color="#6A6F7B",
+    )
+
+    out = OUT_DIR / "rq2_decision_support_metrics.png"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
 def main():
     print("[11] Plotting SHAP stability histogram...")
     print(f"  → {plot_stability_histogram()}")
     print("[12] Plotting MVE-SHAP alignment bar chart...")
     print(f"  → {plot_mve_alignment()}")
+    print("[13] Plotting explanation-quality summary chart...")
+    print(f"  → {plot_explanation_quality_summary()}")
+    print("[14] Plotting decision-support metrics chart...")
+    print(f"  → {plot_decision_support_metrics()}")
 
 
 if __name__ == "__main__":

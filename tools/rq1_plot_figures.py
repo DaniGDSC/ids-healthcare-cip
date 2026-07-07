@@ -444,6 +444,145 @@ def plot_weight_sensitivity():
     return out
 
 
+def plot_supervised_model_comparison():
+    """Compare F1 and AUC for the three supervised Track A models."""
+    with open(RESULTS / "rq1_ablation_track_a.json") as f:
+        ablation = json.load(f)
+
+    model_order = ("xgboost", "random_forest", "decision_tree")
+    labels = {
+        "xgboost": "XGBoost",
+        "random_forest": "Random Forest",
+        "decision_tree": "Decision Tree",
+    }
+    bar_colors = {
+        "f1": COLOR["track_a"],
+        "auc": COLOR["fused"],
+    }
+
+    f1_scores = []
+    auc_scores = []
+    display_labels = []
+    for model_name in model_order:
+        metrics = ablation["models"][model_name]["metrics_at_threshold_0.5"]
+        f1_scores.append(metrics["f1"])
+        auc_scores.append(metrics["auc"])
+        display_labels.append(labels[model_name])
+
+    x = np.arange(len(display_labels))
+    width = 0.34
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.8))
+    f1_bars = ax.bar(
+        x - width / 2,
+        f1_scores,
+        width,
+        color=bar_colors["f1"],
+        edgecolor="#262A33",
+        linewidth=0.5,
+        label="F1",
+    )
+    auc_bars = ax.bar(
+        x + width / 2,
+        auc_scores,
+        width,
+        color=bar_colors["auc"],
+        edgecolor="#262A33",
+        linewidth=0.5,
+        label="AUC",
+    )
+
+    for bars in (f1_bars, auc_bars):
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                height + 0.012,
+                f"{height:.3f}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+                color="#262A33",
+                family="monospace",
+            )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(display_labels)
+    ax.set_ylim(0, 1.08)
+    ax.set_ylabel("Score")
+    ax.set_title(
+        "Supervised model comparison - F1 and AUC on the Track A test set",
+        loc="left",
+        pad=12,
+    )
+    ax.grid(True, alpha=0.25, linestyle="--", linewidth=0.6, axis="y")
+    ax.legend(loc="upper right", frameon=False)
+
+    out = FIGURES / "supervised_model_f1_auc_comparison.png"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
+def plot_prioritization_layer_metrics():
+    """Plot prioritization-layer headline metrics as a compact bar chart."""
+    with open(RESULTS / "rq1_metrics.json") as f:
+        metrics = json.load(f)
+
+    operational_recall = 1.0 - metrics["primary_safety_metric"]["FNR_critical"]
+    surfaced_precision = metrics["surfacing_decision"]["precision"]
+    surfaced_recall = metrics["surfacing_decision"]["recall"]
+
+    labels = ["Operational Recall", "Surfaced Precision", "Surfaced Recall"]
+    values = [operational_recall, surfaced_precision, surfaced_recall]
+    colors = [COLOR["critical"], COLOR["track_a"], COLOR["fused"]]
+
+    fig, ax = plt.subplots(figsize=(8.2, 5.6))
+    bars = ax.bar(
+        labels,
+        values,
+        color=colors,
+        edgecolor="#262A33",
+        linewidth=0.6,
+        width=0.62,
+    )
+
+    for bar, value in zip(bars, values):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            value + 0.02,
+            f"{value:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            color="#262A33",
+            family="monospace",
+        )
+
+    ax.axhline(1.0, color="#9CA0AB", linestyle=":", linewidth=1.0, alpha=0.7)
+    ax.set_ylim(0, 1.08)
+    ax.set_ylabel("Score")
+    ax.set_title(
+        "Prioritization layer performance - operational recall and surfaced quality",
+        loc="left",
+        pad=12,
+    )
+    ax.grid(True, alpha=0.25, linestyle="--", linewidth=0.6, axis="y")
+    ax.text(
+        0.02,
+        0.03,
+        "Operational Recall = 1 - FNR_critical",
+        transform=ax.transAxes,
+        fontsize=9,
+        color="#6A6F7B",
+    )
+
+    out = FIGURES / "prioritization_layer_metrics.png"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
 def main():
     data = _load_data()
     print("[R6] ROC curves...")
@@ -458,6 +597,10 @@ def main():
     print(f"  -> {plot_device_correlation(data)}")
     print("[S7]  Weight sensitivity (R3 follow-up)...")
     print(f"  -> {plot_weight_sensitivity()}")
+    print("[S8]  Supervised-model F1/AUC comparison...")
+    print(f"  -> {plot_supervised_model_comparison()}")
+    print("[S9]  Prioritization-layer metrics...")
+    print(f"  -> {plot_prioritization_layer_metrics()}")
 
 
 if __name__ == "__main__":
